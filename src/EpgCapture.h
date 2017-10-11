@@ -42,6 +42,7 @@ namespace TVTest
 
 		CEpgCaptureManager();
 		~CEpgCaptureManager();
+
 		bool BeginCapture(
 			LPCTSTR pszTuner = nullptr,
 			const CChannelList *pChannelList = nullptr,

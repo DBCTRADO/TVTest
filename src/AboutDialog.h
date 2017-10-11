@@ -1,5 +1,5 @@
-#ifndef ABOUT_DIALOG_H
-#define ABOUT_DIALOG_H
+#ifndef TVTEST_ABOUT_DIALOG_H
+#define TVTEST_ABOUT_DIALOG_H
 
 
 #include "Dialog.h"
@@ -8,24 +8,30 @@
 #include "Graphics.h"
 
 
-class CAboutDialog
-	: public CBasicDialog
+namespace TVTest
 {
-public:
-	CAboutDialog();
-	~CAboutDialog();
-	bool Show(HWND hwndOwner) override;
 
-private:
-	CAeroGlass m_AeroGlass;
-	TVTest::Graphics::CImage m_LogoImage;
-	bool m_fDrawLogo;
-	DrawUtil::CFont m_Font;
-	DrawUtil::CFont m_LinkFont;
+	class CAboutDialog
+		: public CBasicDialog
+	{
+	public:
+		CAboutDialog();
+		~CAboutDialog();
 
-	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-	void ApplyStyle() override;
-};
+		bool Show(HWND hwndOwner) override;
+
+	private:
+		CAeroGlass m_AeroGlass;
+		Graphics::CImage m_LogoImage;
+		bool m_fDrawLogo;
+		DrawUtil::CFont m_Font;
+		DrawUtil::CFont m_LinkFont;
+
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		void ApplyStyle() override;
+	};
+
+}
 
 
 #endif

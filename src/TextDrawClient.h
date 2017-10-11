@@ -19,6 +19,7 @@ namespace TVTest
 
 		CTextDrawClient();
 		~CTextDrawClient();
+
 		bool Initialize(TextDrawEngine Engine, HWND hwnd);
 		void Finalize();
 		bool InitializeTextDraw(CTextDraw *pTextDraw);

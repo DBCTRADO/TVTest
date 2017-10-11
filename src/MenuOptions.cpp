@@ -10,6 +10,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define ITEM_STATE_VISIBLE 0x0001
 
 
@@ -223,7 +227,7 @@ int CMenuOptions::CommandToID(int Command) const
 }
 
 
-int CMenuOptions::GetIDFromString(const TVTest::String &Str) const
+int CMenuOptions::GetIDFromString(const String &Str) const
 {
 	if (Str.empty())
 		return MENU_ID_SEPARATOR;
@@ -494,3 +498,6 @@ void CMenuOptions::GetItemText(int ID, LPTSTR pszText, int MaxLength) const
 		GetAppClass().CommandList.GetCommandNameByID(ID, pszText, MaxLength);
 	}
 }
+
+
+}	// namespace TVTest

@@ -10,9 +10,9 @@
 #include "resource.h"
 #include "Common/DebugDef.h"
 
-using namespace TVTest;
 
-
+namespace TVTest
+{
 
 
 class CColorSchemeSaveDialog
@@ -100,12 +100,12 @@ bool CColorSchemeOptions::LoadSettings(CSettings &Settings)
 		return false;
 
 	// ver.0.9.0より前にあった「映像表示部の枠」の設定を反映させる
-	if (m_ColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN) == TVTest::Theme::BorderType::Sunken
+	if (m_ColorScheme->GetBorderType(CColorScheme::BORDER_SCREEN) == Theme::BorderType::Sunken
 			&& Settings.SetSection(TEXT("Settings"))) {
 		bool fClientEdge;
 
 		if (Settings.Read(TEXT("ClientEdge"), &fClientEdge) && !fClientEdge)
-			m_ColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN, TVTest::Theme::BorderType::None);
+			m_ColorScheme->SetBorderType(CColorScheme::BORDER_SCREEN, Theme::BorderType::None);
 	}
 
 	return true;
@@ -729,7 +729,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					}
 					DlgListBox_SetTopIndex(hDlg, IDC_COLORSCHEME_LIST, TopIndex);
 					::SendDlgItemMessage(hDlg, IDC_COLORSCHEME_LIST, WM_SETREDRAW, TRUE, 0);
-					::InvalidateDlgItem(hDlg, IDC_COLORSCHEME_LIST);
+					InvalidateDlgItem(hDlg, IDC_COLORSCHEME_LIST);
 				}
 			}
 			return TRUE;
@@ -817,7 +817,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			switch (::TrackPopupMenu(hmenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr)) {
 			case 1:
 				{
-					TVTest::String Buffer;
+					String Buffer;
 
 					for (int i = 0; i < CColorScheme::NUM_COLORS; i++) {
 						COLORREF cr = (COLORREF)DlgListBox_GetItemData(hDlg, IDC_COLORSCHEME_LIST, i);
@@ -835,7 +835,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 			case 2:
 				{
-					TVTest::String Buffer;
+					String Buffer;
 
 					for (int i = 0; i < CColorScheme::NUM_BORDERS; i++) {
 						switch (m_BorderList[i]) {
@@ -926,3 +926,6 @@ void CColorSchemeOptions::SetListItemSize()
 	DlgListBox_SetHorizontalExtent(
 		m_hDlg, IDC_COLORSCHEME_LIST, tm.tmHeight * 2 + MaxWidth + m_ColorListMargin * 3);
 }
+
+
+}	// namespace TVTest

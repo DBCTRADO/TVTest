@@ -2,6 +2,8 @@
 #include "ImageUtil.h"
 
 
+namespace TVTest
+{
 
 
 void CopyToRGB24(
@@ -75,3 +77,6 @@ void CopyToRGB24(
 		break;
 	}
 }
+
+
+}	// namespace TVTest

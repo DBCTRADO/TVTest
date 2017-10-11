@@ -3,6 +3,10 @@
 #include "DebugHelper.h"
 
 
+namespace TVTest
+{
+
+
 #define MAX_MODULE_ENTRIES 128
 
 
@@ -383,3 +387,6 @@ int CDebugHelper::FormatSymbolFromAddress(
 }
 
 #endif	// ENABLE_DEBUG_HELPER
+
+
+}	// namespace TVTest

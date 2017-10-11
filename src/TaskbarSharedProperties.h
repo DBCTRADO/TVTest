@@ -14,7 +14,8 @@ namespace TVTest
 	public:
 		CTaskbarSharedProperties();
 		~CTaskbarSharedProperties();
-		bool Open(LPCTSTR pszName,const CRecentChannelList *pRecentChannels);
+
+		bool Open(LPCTSTR pszName, const CRecentChannelList *pRecentChannels);
 		void Close();
 		bool IsOpened() const;
 		bool GetRecentChannelList(CRecentChannelList *pList);
@@ -29,7 +30,7 @@ namespace TVTest
 			DWORD MaxRecentChannels;
 			DWORD RecentChannelCount;
 
-			static const DWORD VERSION_CURRENT=0;
+			static const DWORD VERSION_CURRENT = 0;
 		};
 
 		struct RecentChannelInfo
@@ -51,13 +52,13 @@ namespace TVTest
 		SharedInfoHeader *m_pHeader;
 		DWORD m_LockTimeout;
 
-		static const DWORD MAX_RECENT_CHANNELS=20;
+		static const DWORD MAX_RECENT_CHANNELS = 20;
 
 		bool ValidateHeader(const SharedInfoHeader *pHeader) const;
 		void ReadRecentChannelList(
-			const SharedInfoHeader *pHeader,CRecentChannelList *pList) const;
+			const SharedInfoHeader *pHeader, CRecentChannelList *pList) const;
 		void TunerChannelInfoToRecentChannelInfo(
-			const CTunerChannelInfo *pTunerChInfo,RecentChannelInfo *pChannelInfo) const;
+			const CTunerChannelInfo *pTunerChInfo, RecentChannelInfo *pChannelInfo) const;
 	};
 
 }

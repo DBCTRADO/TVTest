@@ -49,13 +49,13 @@
 	#include "TVTestPlugin.h"
 
 	// プラグインクラス。CTVTestPlugin から派生させる
-	class CMyPlugin : public TVTest::CTVTestPlugin
+	class CMyPlugin : public CTVTestPlugin
 	{
 	public:
-		bool GetPluginInfo(TVTest::PluginInfo *pInfo) override
+		bool GetPluginInfo(PluginInfo *pInfo) override
 		{
 			// プラグインの情報を返す
-			pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
+			pInfo->Type           = PLUGIN_TYPE_NORMAL;
 			pInfo->Flags          = 0;
 			pInfo->pszPluginName  = L"サンプル";
 			pInfo->pszCopyright   = L"Copyright(c) 2010 Taro Yamada";
@@ -79,7 +79,7 @@
 	};
 
 	// CreatePluginClass 関数で、プラグインクラスのインスタンスを生成して返す
-	TVTest::CTVTestPlugin *CreatePluginClass()
+	CTVTestPlugin *CreatePluginClass()
 	{
 		return new CMyPlugin;
 	}
@@ -4257,7 +4257,7 @@ public:
 
 	以下は実装例です。
 
-	class CMyEventHandler : public TVTest::CTVTestEventHandler
+	class CMyEventHandler : public CTVTestEventHandler
 	{
 	public:
 		virtual bool OnPluginEnable(bool fEnable)
@@ -4527,23 +4527,23 @@ public:
 	#include "TVTestPlugin.h"
 
 	// プラグインクラスの宣言
-	class CMyPluginClass : public TVTest::CTVTestPlugin
+	class CMyPluginClass : public CTVTestPlugin
 	{
 		...
 	};
 
 	// クラスのインスタンスを生成する
-	TVTest::CTVTestPlugin *CreatePluginClass()
+	CTVTestPlugin *CreatePluginClass()
 	{
 		return new CMyPluginClass;
 	}
 */
 
 
-TVTest::CTVTestPlugin *CreatePluginClass();
+CTVTestPlugin *CreatePluginClass();
 
 HINSTANCE g_hinstDLL;             // DLL のインスタンスハンドル
-TVTest::CTVTestPlugin *g_pPlugin; // プラグインクラスへのポインタ
+CTVTestPlugin *g_pPlugin; // プラグインクラスへのポインタ
 
 
 // エントリポイント
@@ -4578,7 +4578,7 @@ TVTEST_EXPORT(DWORD) TVTGetVersion()
 // プラグインの情報を取得する
 // TVTGetVersion の次に呼ばれるので、プラグインの情報を PluginInfo 構造体に設定します。
 // FALSE が返された場合、すぐにアンロードされます。
-TVTEST_EXPORT(BOOL) TVTGetPluginInfo(TVTest::PluginInfo *pInfo)
+TVTEST_EXPORT(BOOL) TVTGetPluginInfo(PluginInfo *pInfo)
 {
 	return g_pPlugin->GetPluginInfo(pInfo);
 }
@@ -4586,7 +4586,7 @@ TVTEST_EXPORT(BOOL) TVTGetPluginInfo(TVTest::PluginInfo *pInfo)
 // 初期化を行う
 // TVTGetPluginInfo の次に呼ばれるので、初期化処理を行います。
 // FALSE が返された場合、すぐにアンロードされます。
-TVTEST_EXPORT(BOOL) TVTInitialize(TVTest::PluginParam *pParam)
+TVTEST_EXPORT(BOOL) TVTInitialize(PluginParam *pParam)
 {
 	g_pPlugin->SetPluginParam(pParam);
 	return g_pPlugin->Initialize();

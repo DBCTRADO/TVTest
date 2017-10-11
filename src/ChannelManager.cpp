@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CChannelManager::CChannelManager()
@@ -428,3 +430,6 @@ bool CChannelSpec::SetServiceID(int ServiceID)
 	m_ServiceID = ServiceID;
 	return true;
 }
+
+
+}	// namespace TVTest

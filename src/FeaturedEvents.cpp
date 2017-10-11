@@ -10,6 +10,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CFeaturedEventsSettings::CFeaturedEventsSettings()
@@ -29,7 +31,7 @@ CFeaturedEventsSettings::~CFeaturedEventsSettings()
 
 bool CFeaturedEventsSettings::ReadSettings(CSettings &Settings)
 {
-	TVTest::String Services;
+	String Services;
 	if (Settings.Read(TEXT("DefaultServices"), &Services))
 		m_DefaultServiceList.FromString(Services.c_str());
 
@@ -56,7 +58,7 @@ bool CFeaturedEventsSettings::WriteSettings(CSettings &Settings)
 {
 	Settings.Clear();
 
-	TVTest::String Services;
+	String Services;
 	m_DefaultServiceList.ToString(&Services);
 	Settings.Write(TEXT("DefaultServices"), Services);
 
@@ -289,13 +291,13 @@ static void InitServiceListView(
 
 		switch (App.NetworkDefinition.GetNetworkType(pChannelInfo->GetNetworkID())) {
 		default:
-		case TVTest::CNetworkDefinition::NetworkType::Terrestrial:
+		case CNetworkDefinition::NetworkType::Terrestrial:
 			lvi.iGroupId = GROUP_ID_TERRESTRIAL;
 			break;
-		case TVTest::CNetworkDefinition::NetworkType::BS:
+		case CNetworkDefinition::NetworkType::BS:
 			lvi.iGroupId = GROUP_ID_BS;
 			break;
-		case TVTest::CNetworkDefinition::NetworkType::CS:
+		case CNetworkDefinition::NetworkType::CS:
 			lvi.iGroupId = GROUP_ID_CS;
 			break;
 		}
@@ -992,7 +994,7 @@ void CFeaturedEventsDialog::UpdateSearchSettingsItem(HWND hDlg, int Item)
 	ListView_SetItemText(hwndList, Item, 1, const_cast<LPTSTR>(pSettings->Keyword.c_str()));
 
 	CEpgGenre EpgGenre;
-	TVTest::String Genre;
+	String Genre;
 
 	for (int i = 0; i < CEpgGenre::NUM_GENRE; i++) {
 		if ((pSettings->Genre1 & (1 << i)) != 0 || pSettings->Genre2[i] != 0) {
@@ -1103,3 +1105,6 @@ bool CFeaturedEvents::ShowDialog(HWND hwndOwner)
 
 	return true;
 }
+
+
+}	// namespace TVTest

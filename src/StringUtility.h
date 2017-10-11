@@ -8,68 +8,68 @@
 #include "LibISDB/LibISDB/Utilities/StringUtilities.hpp"
 
 
-LONGLONG StringToInt64(LPCTSTR pszString);
-ULONGLONG StringToUInt64(LPCTSTR pszString);
-bool Int64ToString(LONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 10);
-bool UInt64ToString(ULONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 10);
-bool StringIsDigit(LPCTSTR pszString);
-
-[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString);
-[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString);
-bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString);
-bool ReplaceString(LPWSTR *ppszString, LPCWSTR pszNewString);
-int RemoveTrailingWhitespace(LPTSTR pszString);
-LPTSTR SkipLeadingWhitespace(LPTSTR pszString);
-LPCTSTR SkipLeadingWhitespace(LPCTSTR pszString);
-
-inline bool IsStringEmpty(LPCSTR pszString) {
-	return pszString == nullptr || pszString[0] == '\0';
-}
-inline bool IsStringEmpty(LPCWSTR pszString) {
-	return pszString == nullptr || pszString[0] == L'\0';
-}
-inline LPCSTR NullToEmptyString(LPCSTR pszString) {
-	return pszString != nullptr ? pszString : "";
-}
-inline LPCWSTR NullToEmptyString(LPCWSTR pszString) {
-	return pszString != nullptr ? pszString : L"";
-}
-
-inline LPSTR StringNextChar(LPCSTR pszCur)
-{
-	return ::CharNextA(pszCur);
-}
-
-inline LPWSTR StringNextChar(LPCWSTR pszCur)
-{
-	if (*pszCur != L'\0') {
-		if (IS_SURROGATE_PAIR(*pszCur, *(pszCur + 1)))
-			return const_cast<LPWSTR>(pszCur + 2);
-	}
-	return ::CharNextW(pszCur);
-}
-
-inline LPSTR StringPrevChar(LPCSTR pszString, LPCSTR pszCur)
-{
-	return ::CharPrevA(pszString, pszCur);
-}
-
-inline LPWSTR StringPrevChar(LPCWSTR pszString, LPCWSTR pszCur)
-{
-	LPWSTR pPrev = ::CharPrevW(pszString, pszCur);
-	if (pPrev > pszString && IS_SURROGATE_PAIR(*(pPrev - 1), *pPrev))
-		pPrev--;
-	return pPrev;
-}
-
-template<typename T> int StringCharLength(T pszString)
-{
-	return (int)(StringNextChar(pszString) - pszString);
-}
-
-
 namespace TVTest
 {
+
+	LONGLONG StringToInt64(LPCTSTR pszString);
+	ULONGLONG StringToUInt64(LPCTSTR pszString);
+	bool Int64ToString(LONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 10);
+	bool UInt64ToString(ULONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 10);
+	bool StringIsDigit(LPCTSTR pszString);
+
+	[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString);
+	[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString);
+	bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString);
+	bool ReplaceString(LPWSTR *ppszString, LPCWSTR pszNewString);
+	int RemoveTrailingWhitespace(LPTSTR pszString);
+	LPTSTR SkipLeadingWhitespace(LPTSTR pszString);
+	LPCTSTR SkipLeadingWhitespace(LPCTSTR pszString);
+
+	inline bool IsStringEmpty(LPCSTR pszString) {
+		return pszString == nullptr || pszString[0] == '\0';
+	}
+	inline bool IsStringEmpty(LPCWSTR pszString) {
+		return pszString == nullptr || pszString[0] == L'\0';
+	}
+	inline LPCSTR NullToEmptyString(LPCSTR pszString) {
+		return pszString != nullptr ? pszString : "";
+	}
+	inline LPCWSTR NullToEmptyString(LPCWSTR pszString) {
+		return pszString != nullptr ? pszString : L"";
+	}
+
+	inline LPSTR StringNextChar(LPCSTR pszCur)
+	{
+		return ::CharNextA(pszCur);
+	}
+
+	inline LPWSTR StringNextChar(LPCWSTR pszCur)
+	{
+		if (*pszCur != L'\0') {
+			if (IS_SURROGATE_PAIR(*pszCur, *(pszCur + 1)))
+				return const_cast<LPWSTR>(pszCur + 2);
+		}
+		return ::CharNextW(pszCur);
+	}
+
+	inline LPSTR StringPrevChar(LPCSTR pszString, LPCSTR pszCur)
+	{
+		return ::CharPrevA(pszString, pszCur);
+	}
+
+	inline LPWSTR StringPrevChar(LPCWSTR pszString, LPCWSTR pszCur)
+	{
+		LPWSTR pPrev = ::CharPrevW(pszString, pszCur);
+		if (pPrev > pszString && IS_SURROGATE_PAIR(*(pPrev - 1), *pPrev))
+			pPrev--;
+		return pPrev;
+	}
+
+	template<typename T> int StringCharLength(T pszString)
+	{
+		return (int)(StringNextChar(pszString) - pszString);
+	}
+
 
 	typedef std::wstring String;
 	typedef std::string AnsiString;
@@ -174,7 +174,7 @@ namespace TVTest
 		return Str;
 	}
 
-}
+}	// namespace TVTest
 
 
 #endif

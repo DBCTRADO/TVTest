@@ -77,10 +77,13 @@
 #pragma comment(lib, "ShLwApi.lib")
 
 // トレース出力
+namespace TVTest
+{
+	void DebugTrace(LPCTSTR szFormat, ...);
+}
 #ifdef _DEBUG
 #undef TRACE
-#define TRACE ::DebugTrace
-void DebugTrace(LPCTSTR szFormat, ...);
+#define TRACE TVTest::DebugTrace
 #else
 #define TRACE __noop
 #endif
@@ -90,6 +93,9 @@ void DebugTrace(LPCTSTR szFormat, ...);
 #endif
 
 #ifdef NOMINMAX
-template<typename T> constexpr const T & min(const T &a, const T &b) { return a < b ? a : b; }
-template<typename T> constexpr const T & max(const T &a, const T &b) { return a > b ? a : b; }
+namespace TVTest
+{
+	template<typename T> constexpr const T & min(const T &a, const T &b) { return a < b ? a : b; }
+	template<typename T> constexpr const T & max(const T &a, const T &b) { return a > b ? a : b; }
+}
 #endif

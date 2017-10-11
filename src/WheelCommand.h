@@ -15,6 +15,7 @@ namespace TVTest
 		static const int MAX_COMMAND_TEXT = 64;
 
 		CWheelCommandManager();
+
 		int GetCommandCount() const;
 		int GetCommandID(int Index) const;
 		int GetCommandParsableName(int ID, LPTSTR pszName, int MaxName) const;

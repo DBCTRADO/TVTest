@@ -7,6 +7,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define MAX_LOGO_BYTES 1296
 
 #define PNG_SIGNATURE		"\x89PNG\r\n\x1A\n"
@@ -126,7 +130,7 @@ void CLogoManager::Clear()
 
 bool CLogoManager::SetLogoDirectory(LPCTSTR pszDirectory)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	m_LogoDirectory = pszDirectory;
 	return true;
@@ -135,7 +139,7 @@ bool CLogoManager::SetLogoDirectory(LPCTSTR pszDirectory)
 
 bool CLogoManager::SetSaveLogo(bool fSave)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	m_fSaveLogo = fSave;
 	return true;
@@ -144,7 +148,7 @@ bool CLogoManager::SetSaveLogo(bool fSave)
 
 bool CLogoManager::SetSaveLogoBmp(bool fSave)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	m_fSaveBmp = fSave;
 	return true;
@@ -153,7 +157,7 @@ bool CLogoManager::SetSaveLogoBmp(bool fSave)
 
 bool CLogoManager::AssociateLogoID(WORD NetworkID, WORD ServiceID, WORD LogoID)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	SetLogoIDMap(NetworkID, ServiceID, LogoID);
 	return true;
@@ -162,7 +166,7 @@ bool CLogoManager::AssociateLogoID(WORD NetworkID, WORD ServiceID, WORD LogoID)
 
 bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	if (m_LogoMap.empty())
 		return true;
@@ -223,7 +227,7 @@ OnError:
 
 bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	CNFile File;
 
@@ -297,7 +301,7 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 
 bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	if (m_LogoIDMap.empty())
 		return true;
@@ -330,7 +334,7 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 
 bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	m_fLogoIDMapUpdated = false;
 
@@ -370,7 +374,7 @@ bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 
 HBITMAP CLogoManager::GetLogoBitmap(WORD NetworkID, WORD LogoID, BYTE LogoType)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	ULONGLONG Key;
 	LogoMap::iterator itr;
@@ -405,7 +409,7 @@ HBITMAP CLogoManager::GetLogoBitmap(WORD NetworkID, WORD LogoID, BYTE LogoType)
 
 HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID, WORD ServiceID, BYTE LogoType)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 	LogoIDMap::iterator itr = m_LogoIDMap.find(GetIDMapKey(NetworkID, ServiceID));
 	if (itr == m_LogoIDMap.end())
 		return nullptr;
@@ -413,9 +417,9 @@ HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID, WORD ServiceID, BY
 }
 
 
-const TVTest::Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID, WORD LogoID, BYTE LogoType)
+const Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID, WORD LogoID, BYTE LogoType)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 	ULONGLONG Key = GetMapKey(NetworkID, LogoID, LogoType);
 	LogoMap::iterator itr = m_LogoMap.find(Key);
 	if (itr == m_LogoMap.end())
@@ -424,9 +428,9 @@ const TVTest::Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID, WORD 
 }
 
 
-const TVTest::Graphics::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID, WORD ServiceID, BYTE LogoType)
+const Graphics::CImage *CLogoManager::GetAssociatedLogoImage(WORD NetworkID, WORD ServiceID, BYTE LogoType)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 	LogoIDMap::iterator itr = m_LogoIDMap.find(GetIDMapKey(NetworkID, ServiceID));
 	if (itr == m_LogoIDMap.end())
 		return nullptr;
@@ -477,7 +481,7 @@ bool CLogoManager::SaveLogoIcon(
 
 bool CLogoManager::IsLogoAvailable(WORD NetworkID, WORD ServiceID, BYTE LogoType) const
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 	LogoMap::const_iterator itr = m_LogoMap.find(GetMapKey(NetworkID, ServiceID, LogoType));
 	return itr != m_LogoMap.end();
 }
@@ -485,7 +489,7 @@ bool CLogoManager::IsLogoAvailable(WORD NetworkID, WORD ServiceID, BYTE LogoType
 
 DWORD CLogoManager::GetAvailableLogoType(WORD NetworkID, WORD ServiceID) const
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	LogoIDMap::const_iterator itrID = m_LogoIDMap.find(GetIDMapKey(NetworkID, ServiceID));
 	if (itrID == m_LogoIDMap.end())
@@ -506,7 +510,7 @@ bool CLogoManager::GetLogoInfo(WORD NetworkID, WORD ServiceID, BYTE LogoType, Lo
 	if (pInfo == nullptr)
 		return false;
 
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	auto itrID = m_LogoIDMap.find(GetIDMapKey(NetworkID, ServiceID));
 	if (itrID == m_LogoIDMap.end())
@@ -536,7 +540,7 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 	if (Data.DataSize <= 93)
 		return;
 
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	const ULONGLONG Key = GetMapKey(Data.NetworkID, Data.LogoID, Data.LogoType);
 	LogoMap::iterator itr = m_LogoMap.find(Key);
@@ -578,7 +582,7 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 
 	if (fDataUpdated && (m_fSaveLogo || m_fSaveBmp)) {
 		TCHAR szDirectory[MAX_PATH], szFileName[MAX_PATH];
-		TVTest::CFilePath FilePath;
+		CFilePath FilePath;
 
 		if (!GetAbsolutePath(m_LogoDirectory.c_str(), szDirectory, lengthof(szDirectory)))
 			return;
@@ -773,7 +777,7 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 }
 
 
-const TVTest::Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
+const Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 {
 	if (!m_Image.IsCreated()) {
 		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
@@ -832,3 +836,6 @@ bool CLogoManager::CLogoData::SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFile
 	::GlobalFree(hDIB);
 	return fResult;
 }
+
+
+}	// namespace TVTest

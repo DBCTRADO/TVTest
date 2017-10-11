@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CGeneralOptions::CGeneralOptions()
@@ -117,7 +119,7 @@ bool CGeneralOptions::SetDefaultDriverName(LPCTSTR pszDriverName)
 }
 
 
-bool CGeneralOptions::GetFirstDriverName(TVTest::String *pDriverName) const
+bool CGeneralOptions::GetFirstDriverName(String *pDriverName) const
 {
 	switch (m_DefaultDriverType) {
 	case DefaultDriverType::None:
@@ -232,10 +234,10 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			{
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
-				TVTest::String FileName, InitDir;
+				String FileName, InitDir;
 
 				::GetDlgItemText(hDlg, IDC_OPTIONS_DEFAULTDRIVER, szFileName, lengthof(szFileName));
-				if (TVTest::PathUtil::Split(szFileName, &InitDir, &FileName)) {
+				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
 					::lstrcpy(szFileName, FileName.c_str());
 				} else {
 					GetAppClass().GetAppDirectory(&InitDir);
@@ -325,3 +327,6 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

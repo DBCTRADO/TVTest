@@ -8,6 +8,8 @@
 #pragma comment(lib,"dwmapi.lib")
 
 
+namespace TVTest
+{
 
 
 // コンポジションが有効か取得する
@@ -171,3 +173,6 @@ void CDoubleBufferingDraw::OnPaint(HWND hwnd)
 	}
 	::EndPaint(hwnd, &ps);
 }
+
+
+}	// namespace TVTest

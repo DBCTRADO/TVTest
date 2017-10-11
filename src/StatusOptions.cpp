@@ -9,6 +9,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const bool IS_HD =
 #ifndef TVTEST_FOR_1SEG
 	true
@@ -90,7 +94,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 	int NumItems;
 	if (Settings.Read(TEXT("NumItems"), &NumItems) && NumItems > 0) {
 		StatusItemInfoList ItemList;
-		TVTest::String ID;
+		String ID;
 
 		for (int i = 0; i < NumItems; i++) {
 			TCHAR szKey[32];
@@ -125,7 +129,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 					Item.IDText = ID;
 					size_t j = 0;
 					for (j = 0; j < ItemList.size(); j++) {
-						if (TVTest::StringUtility::CompareNoCase(ItemList[j].IDText, Item.IDText) == 0)
+						if (StringUtility::CompareNoCase(ItemList[j].IDText, Item.IDText) == 0)
 							break;
 					}
 					if (j < ItemList.size())
@@ -166,7 +170,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 		m_fChanged = true;
 
 	bool f;
-	if (TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("Font"), &m_ItemFont, true, &f)) {
+	if (StyleUtil::ReadFontSettings(Settings, TEXT("Font"), &m_ItemFont, true, &f)) {
 		if (!f)
 			m_fChanged = true;
 	}
@@ -210,7 +214,7 @@ bool CStatusOptions::WriteSettings(CSettings &Settings)
 
 	Settings.Write(TEXT("DPI"), m_DPI);
 
-	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("Font"), m_ItemFont);
+	StyleUtil::WriteFontSettings(Settings, TEXT("Font"), m_ItemFont);
 
 	Settings.Write(TEXT("MultiRow"), m_fMultiRow);
 	Settings.Write(TEXT("MaxRows"), m_MaxRows);
@@ -302,7 +306,7 @@ int CStatusOptions::RegisterItem(LPCTSTR pszID)
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		if (m_ItemList[i].ID < 0
-				&& TVTest::StringUtility::CompareNoCase(m_ItemList[i].IDText, Item.IDText) == 0) {
+				&& StringUtility::CompareNoCase(m_ItemList[i].IDText, Item.IDText) == 0) {
 			m_ItemList[i].ID = Item.ID;
 			break;
 		}
@@ -357,7 +361,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			m_ItemListSubclass.SetSubclass(::GetDlgItem(hDlg, IDC_STATUSOPTIONS_ITEMLIST));
 
 			m_CurSettingFont = m_ItemFont;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_STATUSOPTIONS_FONTINFO, m_CurSettingFont);
+			StyleUtil::SetFontInfoItem(hDlg, IDC_STATUSOPTIONS_FONTINFO, m_CurSettingFont);
 			DlgCheckBox_Check(hDlg, IDC_STATUSOPTIONS_MULTIROW, m_fMultiRow);
 			::SetDlgItemInt(hDlg, IDC_STATUSOPTIONS_MAXROWS, m_MaxRows, TRUE);
 			DlgUpDown_SetRange(hDlg, IDC_STATUSOPTIONS_MAXROWS_UPDOWN, 1, UD_MAXVAL);
@@ -496,11 +500,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case IDC_STATUSOPTIONS_CHOOSEFONT:
 			{
-				TVTest::Style::Font Font = m_CurSettingFont;
+				Style::Font Font = m_CurSettingFont;
 
-				if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &Font) && Font != m_CurSettingFont) {
+				if (StyleUtil::ChooseStyleFont(hDlg, &Font) && Font != m_CurSettingFont) {
 					m_CurSettingFont = Font;
-					TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_STATUSOPTIONS_FONTINFO, Font);
+					StyleUtil::SetFontInfoItem(hDlg, IDC_STATUSOPTIONS_FONTINFO, Font);
 					m_pStyleScaling->RealizeFontSize(&Font);
 					DrawUtil::CFont DrawFont(Font.LogFont);
 					m_ItemHeight = m_pStatusView->CalcItemHeight(DrawFont) + m_ItemMargin.Vert();
@@ -596,9 +600,9 @@ void CStatusOptions::ApplyStyle()
 	CBasicDialog::ApplyStyle();
 
 	if (m_hDlg != nullptr) {
-		m_ItemMargin = TVTest::Style::Margins(3);
+		m_ItemMargin = Style::Margins(3);
 		m_pStyleScaling->ToPixels(&m_ItemMargin);
-		m_CheckSize = TVTest::Style::Size(14, 14);
+		m_CheckSize = Style::Size(14, 14);
 		m_pStyleScaling->ToPixels(&m_CheckSize);
 		m_ItemHeight = m_pStatusView->GetItemHeight() + m_ItemMargin.Vert();
 	}
@@ -967,3 +971,6 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 
 	return CWindowSubclass::OnMessage(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

@@ -15,6 +15,7 @@ namespace TVTest
 		{
 		public:
 			virtual ~CEventHandler() = default;
+
 			virtual void OnBeginLoading() {}
 			virtual void OnEndLoading(bool fSuccess) {}
 		};

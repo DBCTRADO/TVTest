@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 bool IsTVTestWindow(HWND hwnd)
@@ -170,3 +172,6 @@ BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd, LPARAM lParam)
 	}
 	return TRUE;
 }
+
+
+}	// namespace TVTest

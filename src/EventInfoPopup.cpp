@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const LPCTSTR CEventInfoPopup::m_pszWindowClass = APP_NAME TEXT(" Event Info");
@@ -132,7 +134,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 	if (!m_EventInfo.ExtendedText.empty()) {
 		if (!m_EventInfo.EventText.empty())
 			Formatter.Append(TEXT("\r\n\r\n"));
-		TVTest::String Text;
+		String Text;
 		m_EventInfo.GetConcatenatedExtendedText(&Text);
 		Formatter.Append(Text.c_str());
 		Formatter.RemoveTrailingWhitespace();
@@ -404,7 +406,7 @@ void CEventInfoPopup::SetTitleColor(COLORREF BackColor, COLORREF TextColor)
 }
 
 
-bool CEventInfoPopup::SetFont(const TVTest::Style::Font &Font)
+bool CEventInfoPopup::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 
@@ -761,7 +763,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				if (m_pEventHandler != nullptr)
 					m_pEventHandler->OnMenuPopup(hmenu);
 				if (CRichEditUtil::IsSelected(m_hwndEdit)) {
-					const TVTest::CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
+					const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
 					if (KeywordSearch.GetSearchEngineCount() > 0) {
 						::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 						KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH, CEventHandler::COMMAND_FIRST - COMMAND_SEARCH);
@@ -1043,3 +1045,6 @@ CEventInfoPopupManager::CEventHandler::CEventHandler()
 	: m_pPopup(nullptr)
 {
 }
+
+
+}	// namespace TVTest

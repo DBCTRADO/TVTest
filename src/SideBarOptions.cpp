@@ -7,6 +7,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define ZOOM_ICON_FIRST 37
 
 static const CSideBar::SideBarItem ItemList[] = {
@@ -140,7 +144,7 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 
 		m_ItemNameList.clear();
 
-		TVTest::String Command;
+		String Command;
 
 		for (int i = 0; i < NumItems; i++) {
 			TCHAR szName[32];
@@ -407,7 +411,7 @@ void CSideBarOptions::ApplyItemList()
 
 bool CSideBarOptions::SetSideBarImage()
 {
-	TVTest::Style::Size IconSize = m_pSideBar->GetIconDrawSize();
+	Style::Size IconSize = m_pSideBar->GetIconDrawSize();
 	SIZE sz;
 	HBITMAP hbm = CreateImage(
 		IconSize.Width <= 16 && IconSize.Height <= 16 ? IconSizeType::Small : IconSizeType::Big,
@@ -479,7 +483,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			const int IconHeight = ::GetSystemMetrics(SM_CYSMICON);
 			SIZE sz;
 			HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
-			TVTest::Theme::IconList Bitmap;
+			Theme::IconList Bitmap;
 			Bitmap.Create(hbmIcons, sz.cx, sz.cy, IconWidth, IconHeight);
 			::DeleteObject(hbmIcons);
 			m_himlIcons = Bitmap.CreateImageList(IconColor);
@@ -806,3 +810,6 @@ bool CSideBarOptions::IsAvailableItem(int ID) const
 
 	return false;
 }
+
+
+}	// namespace TVTest

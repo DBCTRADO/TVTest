@@ -9,6 +9,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const struct {
 	LPCTSTR pszDescript;
 	LPCTSTR pszFormat;
@@ -27,11 +31,11 @@ static const struct {
 
 // 旧仕様互換用
 // ver.0.9.0 開発途中の変更なので長く残さなくていい
-static void TitleFormatMakeCompatible(TVTest::String &Str)
+static void TitleFormatMakeCompatible(String &Str)
 {
-	if (Str.find(L"%event-sep%") != TVTest::String::npos) {
-		TVTest::StringUtility::Replace(Str, L"%event-sep%", L"%sep-slash%");
-		TVTest::StringUtility::Replace(Str, L"- TVTest", L"%sep-hyphen% " APP_NAME);
+	if (Str.find(L"%event-sep%") != String::npos) {
+		StringUtility::Replace(Str, L"%event-sep%", L"%sep-slash%");
+		StringUtility::Replace(Str, L"- TVTest", L"%sep-hyphen% " APP_NAME);
 	}
 }
 
@@ -57,7 +61,7 @@ CViewOptions::CViewOptions()
 	, m_fNoMonitorLowPower(false)
 	, m_fNoMonitorLowPowerActiveOnly(false)
 {
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &m_TitleBarFont);
+	StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &m_TitleBarFont);
 }
 
 
@@ -110,7 +114,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("TaskbarTitleTextFormat"), &m_TaskbarTitleTextFormat);
 	TitleFormatMakeCompatible(m_TaskbarTitleTextFormat);
 	Settings.Read(TEXT("EnableTitleBarFont"), &m_fEnableTitleBarFont);
-	TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("TitleBarFont"), &m_TitleBarFont);
+	StyleUtil::ReadFontSettings(Settings, TEXT("TitleBarFont"), &m_TitleBarFont);
 	Settings.Read(TEXT("ShowLogo"), &m_fShowLogo);
 	Settings.Read(TEXT("LogoFileName"), &m_LogoFileName);
 	Settings.Read(TEXT("NoScreenSaver"), &m_fNoScreenSaver);
@@ -142,7 +146,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	*/
 	Settings.DeleteValue(TEXT("TitleEventTime"));
 	Settings.Write(TEXT("EnableTitleBarFont"), m_fEnableTitleBarFont);
-	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("TitleBarFont"), m_TitleBarFont);
+	StyleUtil::WriteFontSettings(Settings, TEXT("TitleBarFont"), m_TitleBarFont);
 	Settings.Write(TEXT("ShowLogo"), m_fShowLogo);
 	Settings.Write(TEXT("LogoFileName"), m_LogoFileName);
 	Settings.Write(TEXT("NoScreenSaver"), m_fNoScreenSaver);
@@ -203,7 +207,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			m_CurTitleBarFont = m_TitleBarFont;
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_TITLEBARFONT_ENABLE, m_fEnableTitleBarFont);
-			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_OPTIONS_TITLEBARFONT_INFO, m_CurTitleBarFont);
+			StyleUtil::SetFontInfoItem(hDlg, IDC_OPTIONS_TITLEBARFONT_INFO, m_CurTitleBarFont);
 			EnableDlgItems(
 				hDlg,
 				IDC_OPTIONS_TITLEBARFONT_INFO,
@@ -213,7 +217,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_SHOWLOGO, m_fShowLogo);
 			::SetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, m_LogoFileName.c_str());
 			::SendDlgItemMessage(hDlg, IDC_OPTIONS_LOGOFILENAME, EM_LIMITTEXT, MAX_PATH - 1, 0);
-			::EnableDlgItems(
+			EnableDlgItems(
 				hDlg, IDC_OPTIONS_LOGOFILENAME, IDC_OPTIONS_LOGOFILENAME_BROWSE,
 				m_fShowLogo);
 
@@ -268,8 +272,8 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return TRUE;
 
 		case IDC_OPTIONS_TITLEBARFONT_CHOOSE:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurTitleBarFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_OPTIONS_TITLEBARFONT_INFO, m_CurTitleBarFont);
+			if (StyleUtil::ChooseStyleFont(hDlg, &m_CurTitleBarFont))
+				StyleUtil::SetFontInfoItem(hDlg, IDC_OPTIONS_TITLEBARFONT_INFO, m_CurTitleBarFont);
 			return TRUE;
 
 		case IDC_OPTIONS_SHOWLOGO:
@@ -282,10 +286,10 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
-				TVTest::String FileName, InitDir;
+				String FileName, InitDir;
 
 				::GetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName, lengthof(szFileName));
-				if (TVTest::PathUtil::Split(szFileName, &InitDir, &FileName)) {
+				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
 					::lstrcpyn(szFileName, FileName.c_str(), MAX_PATH);
 				} else {
 					GetAppClass().GetAppDirectory(&InitDir);
@@ -345,7 +349,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					App.UICore.UpdateIcon();
 				}
 				{
-					TVTest::String Text;
+					String Text;
 					GetDlgItemString(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, &Text);
 					if (m_TitleTextFormat != Text) {
 						m_TitleTextFormat = std::move(Text);
@@ -354,7 +358,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 				{
 					bool fLogo = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SHOWLOGO);
-					TVTest::String FileName;
+					String FileName;
 
 					GetDlgItemString(hDlg, IDC_OPTIONS_LOGOFILENAME, &FileName);
 					if ((fLogo != m_fShowLogo) || (m_LogoFileName != FileName)) {
@@ -377,11 +381,11 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						fTitleBarFontChanged = true;
 				}
 				if (fTitleBarFontChanged) {
-					TVTest::Style::Font Font;
+					Style::Font Font;
 					if (m_fEnableTitleBarFont)
 						Font = m_TitleBarFont;
 					else
-						TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &Font);
+						StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &Font);
 					App.UICore.SetTitleFont(Font);
 					App.Panel.Frame.GetPanel()->SetTitleFont(Font);
 				}
@@ -403,3 +407,6 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

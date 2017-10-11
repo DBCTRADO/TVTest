@@ -8,6 +8,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define MAX_ZOOM_TEXT 64
 
 
@@ -272,23 +276,23 @@ void CZoomOptions::SetItemState(HWND hDlg)
 		::CheckRadioButton(
 			hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_TYPE_SIZE,
 			IDC_ZOOMOPTIONS_TYPE_RATE + static_cast<int>(Info.Type));
-		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_TYPE_SIZE, fCustom);
+		EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_TYPE_SIZE, fCustom);
 		::SetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_RATE, Info.Rate.GetPercentage(), TRUE);
 		::SetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_WIDTH, Info.Size.Width, TRUE);
 		::SetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_HEIGHT, Info.Size.Height, TRUE);
-		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_RATE_LABEL, IDC_ZOOMOPTIONS_RATE_UNIT, Info.Type == ZoomType::Rate);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_RATE, Info.Type == ZoomType::Rate && fCustom);
-		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_WIDTH_LABEL, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZoomType::Size);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_WIDTH, Info.Type == ZoomType::Size && fCustom);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_HEIGHT, Info.Type == ZoomType::Size && fCustom);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZoomType::Size && fCustom);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_UP, Sel > 0);
-		::EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_DOWN, Sel + 1 < NUM_ZOOM_COMMANDS);
+		EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_RATE_LABEL, IDC_ZOOMOPTIONS_RATE_UNIT, Info.Type == ZoomType::Rate);
+		EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_RATE, Info.Type == ZoomType::Rate && fCustom);
+		EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_WIDTH_LABEL, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZoomType::Size);
+		EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_WIDTH, Info.Type == ZoomType::Size && fCustom);
+		EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_HEIGHT, Info.Type == ZoomType::Size && fCustom);
+		EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_GETCURSIZE, Info.Type == ZoomType::Size && fCustom);
+		EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_UP, Sel > 0);
+		EnableDlgItem(hDlg, IDC_ZOOMOPTIONS_DOWN, Sel + 1 < NUM_ZOOM_COMMANDS);
 	} else {
 		::SetDlgItemText(hDlg, IDC_ZOOMOPTIONS_RATE, TEXT(""));
 		::SetDlgItemText(hDlg, IDC_ZOOMOPTIONS_WIDTH, TEXT(""));
 		::SetDlgItemText(hDlg, IDC_ZOOMOPTIONS_HEIGHT, TEXT(""));
-		::EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_DOWN, FALSE);
+		EnableDlgItems(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE, IDC_ZOOMOPTIONS_DOWN, FALSE);
 	}
 }
 
@@ -500,3 +504,6 @@ bool CZoomOptions::GetCommandName(int Command, LPTSTR pszName, int MaxLength)
 	FormatCommandText(Command, Info, pszName, MaxLength);
 	return true;
 }
+
+
+}	// namespace TVTest

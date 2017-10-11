@@ -16,12 +16,11 @@
 #pragma comment(lib,"imm32.lib")	// for ImmAssociateContext(Ex)
 
 
+namespace TVTest
+{
+
+
 #define MAIN_TITLE_TEXT APP_NAME
-
-
-using namespace TVTest;
-
-
 
 
 static int CalcZoomSize(int Size, int Rate, int Factor)
@@ -2980,7 +2979,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		//if (m_App.DriverOptions.IsChannelAutoUpdate(m_App.CoreEngine.GetDriverFileName()))
 		{
 			CTuningSpaceList TuningSpaceList(*m_App.ChannelManager.GetTuningSpaceList());
-			std::vector<TVTest::String> MessageList;
+			std::vector<String> MessageList;
 
 			TRACE(TEXT("チャンネルリスト自動更新開始\n"));
 			if (m_App.ChannelScan.AutoUpdateChannelList(&TuningSpaceList, &MessageList)) {
@@ -3272,10 +3271,10 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		{
 			OPENFILENAME ofn;
 			TCHAR szFileName[MAX_PATH];
-			TVTest::String Path, Name, InitDir;
+			String Path, Name, InitDir;
 
 			m_App.CoreEngine.GetDriverPath(&Path);
-			if (TVTest::PathUtil::Split(Path, &InitDir, &Name)) {
+			if (PathUtil::Split(Path, &InitDir, &Name)) {
 				::lstrcpyn(szFileName, Name.c_str(), MAX_PATH);
 			} else {
 				m_App.GetAppDirectory(&InitDir);
@@ -4883,10 +4882,10 @@ void CMainWindow::ShowChannelOSD()
 		else
 			pInfo = m_App.ChannelManager.GetCurrentChannelInfo();
 		if (pInfo != nullptr) {
-			TVTest::String Text;
+			String Text;
 
 			if (m_App.OSDOptions.GetChannelChangeType() != COSDOptions::ChannelChangeType::LogoOnly) {
-				TVTest::CEventVariableStringMap::EventInfo Event;
+				CEventVariableStringMap::EventInfo Event;
 
 				m_App.Core.GetVariableStringEventInfo(&Event);
 				if (Event.Event.EventName.empty()) {
@@ -4902,7 +4901,7 @@ void CMainWindow::ShowChannelOSD()
 						Event.Event = EventData;
 				}
 				CUICore::CTitleStringMap Map(m_App, &Event);
-				TVTest::FormatVariableString(&Map, m_App.OSDOptions.GetChannelChangeText(), &Text);
+				FormatVariableString(&Map, m_App.OSDOptions.GetChannelChangeText(), &Text);
 			}
 			m_App.OSDManager.ShowChannelOSD(pInfo, Text.c_str(), m_fWheelChannelChanging);
 		}
@@ -4948,7 +4947,7 @@ void CMainWindow::OnEventChanged()
 		LibISDB::EventInfo EventInfo;
 
 		if (m_App.CoreEngine.GetCurrentEventInfo(&EventInfo)) {
-			TVTest::String Text;
+			String Text;
 
 			if (EventInfo.StartTime.IsValid()) {
 				TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
@@ -5524,7 +5523,7 @@ void CMainWindow::SetTitleText(LPCTSTR pszTitleText, LPCTSTR pszWindowText)
 }
 
 
-bool CMainWindow::SetTitleFont(const TVTest::Style::Font &Font)
+bool CMainWindow::SetTitleFont(const Style::Font &Font)
 {
 	m_TitleBar.SetFont(Font);
 	const int Height = m_TitleBar.GetHeight();
@@ -5929,8 +5928,8 @@ void CMainWindow::DrawCustomFrame(bool fActive)
 {
 	HDC hdc = ::GetWindowDC(m_hwnd);
 	{
-		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
-		const TVTest::Theme::BackgroundStyle &Style =
+		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		const Theme::BackgroundStyle &Style =
 			fActive ? m_Theme.ActiveFrameStyle : m_Theme.FrameStyle;
 		RECT rc, rcEmpty;
 
@@ -6370,31 +6369,31 @@ int CMainWindow::GetNextChannel(bool fUp)
 }
 
 
-void CMainWindow::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CMainWindow::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CMainWindow::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CMainWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CMainWindow::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
-	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOW_FRAME, &m_Theme.FrameStyle);
-	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_WINDOW_ACTIVEFRAME, &m_Theme.ActiveFrameStyle);
+	pThemeManager->GetBackgroundStyle(Theme::CThemeManager::STYLE_WINDOW_FRAME, &m_Theme.FrameStyle);
+	pThemeManager->GetBackgroundStyle(Theme::CThemeManager::STYLE_WINDOW_ACTIVEFRAME, &m_Theme.ActiveFrameStyle);
 	if (m_fCustomFrame)
 		Redraw(nullptr, RDW_FRAME | RDW_INVALIDATE);
 
 	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
 
 	Theme::BorderStyle Border;
-	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_SCREEN, &Border);
+	pThemeManager->GetBorderStyle(Theme::CThemeManager::STYLE_SCREEN, &Border);
 	m_Display.GetViewWindow().SetBorder(Border);
 
 	m_TitleBar.SetTheme(pThemeManager);
@@ -6675,10 +6674,10 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner, CMainDisplay *pDisplay)
 		for (DWORD i = 0; ::EnumDisplayDevices(0, i, &dd, 0); i++) {
 			if ((dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER) == 0) {
 				if (::lstrcmpi(dd.DeviceName, mi.szDevice) == 0) {
-					const TVTest::Style::CStyleManager *pStyleManager = GetStyleManager();
+					const Style::CStyleManager *pStyleManager = GetStyleManager();
 					TCHAR szKey[64];
 					StdUtil::snprintf(szKey, lengthof(szKey), TEXT("fullscreen.monitor%d.margin"), MonitorNo);
-					TVTest::Style::Margins Margin;
+					Style::Margins Margin;
 					if (pStyleManager->Get(szKey, &Margin)) {
 						m_pStyleScaling->ToPixels(&Margin);
 						m_ScreenMargin = Margin;
@@ -6948,7 +6947,7 @@ void CMainWindow::CFullscreen::HideAllBars()
 }
 
 
-void CMainWindow::CFullscreen::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CMainWindow::CFullscreen::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	m_LayoutBase.SetBackColor(pThemeManager->GetColor(CColorScheme::COLOR_SPLITTER));
 }
@@ -7068,7 +7067,7 @@ void CMainWindow::CFullscreen::OnMouseMove()
 }
 
 
-void CMainWindow::CFullscreen::SetTitleFont(const TVTest::Style::Font &Font)
+void CMainWindow::CFullscreen::SetTitleFont(const Style::Font &Font)
 {
 	m_TitleBar.SetFont(Font);
 }
@@ -7176,7 +7175,7 @@ void CMainWindow::CFullscreen::OnBarHide(CBasicWindow &Window)
 
 
 void CMainWindow::CFullscreen::OnSharedBarVisibilityChange(
-	CBasicWindow &Window, TVTest::CUIBase &UIBase, bool fVisible)
+	CBasicWindow &Window, CUIBase &UIBase, bool fVisible)
 {
 	if (fVisible) {
 		Window.SetParent(&m_ViewWindow);
@@ -7268,7 +7267,7 @@ CMainWindow::MainWindowStyle::MainWindowStyle()
 	ResizingMargin = Style::Margins(SizingBorderX, SizingBorderY, SizingBorderX, SizingBorderY);
 }
 
-void CMainWindow::MainWindowStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CMainWindow::MainWindowStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = MainWindowStyle();
 	pStyleManager->Get(TEXT("screen.margin"), &ScreenMargin);
@@ -7277,8 +7276,8 @@ void CMainWindow::MainWindowStyle::SetStyle(const TVTest::Style::CStyleManager *
 }
 
 void CMainWindow::MainWindowStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&ScreenMargin);
 	pStyleScaling->ToPixels(&FullscreenMargin);
@@ -7605,21 +7604,21 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 				pPlugin->GetPluginCommandInfo(pszCommand);
 
 			if (pCommandInfo != nullptr) {
-				if ((pCommandInfo->GetFlags() & TVTest::PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON) != 0) {
-					TVTest::DrawCommandIconInfo Info;
+				if ((pCommandInfo->GetFlags() & PLUGIN_COMMAND_FLAG_NOTIFYDRAWICON) != 0) {
+					DrawCommandIconInfo Info;
 
 					Info.ID = pCommandInfo->GetID();
 					Info.Flags = 0;
 					Info.State = 0;
 					if (!!(pInfo->State & CSideBar::ItemState::Disabled))
-						Info.State |= TVTest::COMMAND_ICON_STATE_DISABLED;
+						Info.State |= COMMAND_ICON_STATE_DISABLED;
 					if (!!(pInfo->State & CSideBar::ItemState::Checked))
-						Info.State |= TVTest::COMMAND_ICON_STATE_CHECKED;
+						Info.State |= COMMAND_ICON_STATE_CHECKED;
 					if (!!(pInfo->State & CSideBar::ItemState::Hot))
-						Info.State |= TVTest::COMMAND_ICON_STATE_HOT;
-					if ((Info.State & TVTest::COMMAND_ICON_STATE_HOT) != 0)
+						Info.State |= COMMAND_ICON_STATE_HOT;
+					if ((Info.State & COMMAND_ICON_STATE_HOT) != 0)
 						Info.pszStyle = L"side-bar.item.hot";
-					else if ((Info.State & TVTest::COMMAND_ICON_STATE_CHECKED) != 0)
+					else if ((Info.State & COMMAND_ICON_STATE_CHECKED) != 0)
 						Info.pszStyle = L"side-bar.item.checked";
 					else
 						Info.pszStyle = L"side-bar.item";
@@ -7796,7 +7795,7 @@ CMainWindow::CEpgCaptureEventHandler::CEpgCaptureEventHandler(CMainWindow *pMain
 }
 
 void CMainWindow::CEpgCaptureEventHandler::OnBeginCapture(
-	TVTest::CEpgCaptureManager::BeginFlag Flags, TVTest::CEpgCaptureManager::BeginStatus Status)
+	CEpgCaptureManager::BeginFlag Flags, CEpgCaptureManager::BeginStatus Status)
 {
 	if (!(Status & CEpgCaptureManager::BeginStatus::Standby)) {
 		m_pMainWindow->StoreTunerResumeInfo();
@@ -7809,7 +7808,7 @@ void CMainWindow::CEpgCaptureEventHandler::OnBeginCapture(
 	m_pMainWindow->m_App.Epg.ProgramGuide.OnEpgCaptureBegin();
 }
 
-void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(TVTest::CEpgCaptureManager::EndFlag Flags)
+void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(CEpgCaptureManager::EndFlag Flags)
 {
 	CAppMain &App = m_pMainWindow->m_App;
 	HANDLE hThread;
@@ -7906,3 +7905,6 @@ void CMainWindow::CClockUpdateTimer::OnTimer()
 	if (pClockStatusItem != nullptr && pClockStatusItem->UpdateContent())
 		m_pMainWindow->PostMessage(WM_APP_UPDATECLOCK, 0, 0);
 }
+
+
+}	// namespace TVTest

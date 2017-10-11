@@ -9,6 +9,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define MAKE_ACCEL_PARAM(key, mod, global, appcommand) \
 	(((key) << 16) | ((mod) << 8) | ((global) ? 0x80 : 0x00) | (appcommand))
 #define GET_ACCEL_KEY(param)        ((WORD)((param) >> 16))
@@ -389,14 +393,14 @@ bool CAccelerator::UnregisterHotKey()
 bool CAccelerator::LoadSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("Settings"))) {
-		for (int i = 0; i <= static_cast<int>(TVTest::CChannelInputOptions::KeyType::Last_); i++) {
+		for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
 			int Value;
 
 			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("ChInputKeyMode%d"), i);
 			if (Settings.Read(szKey, &Value)) {
 				m_ChannelInputOptions.KeyInputMode[i] =
-					static_cast<TVTest::CChannelInputOptions::KeyInputModeType>(Value);
+					static_cast<CChannelInputOptions::KeyInputModeType>(Value);
 			} else {
 				// ver.0.9.0 より前との互換用
 				static const LPCTSTR KeyList[] = {
@@ -408,8 +412,8 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 
 				if (Settings.Read(KeyList[i], &f)) {
 					m_ChannelInputOptions.KeyInputMode[i] =
-						f ? TVTest::CChannelInputOptions::KeyInputModeType::SingleKey :
-						    TVTest::CChannelInputOptions::KeyInputModeType::Disabled;
+						f ? CChannelInputOptions::KeyInputModeType::SingleKey :
+						    CChannelInputOptions::KeyInputModeType::Disabled;
 				}
 			}
 		}
@@ -498,7 +502,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 bool CAccelerator::SaveSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("Settings"))) {
-		for (int i = 0; i <= static_cast<int>(TVTest::CChannelInputOptions::KeyType::Last_); i++) {
+		for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
 			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("ChInputKeyMode%d"), i);
 			Settings.Write(szKey, (int)m_ChannelInputOptions.KeyInputMode[i]);
@@ -965,7 +969,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ACCELERATOR_CHANNELINPUTOPTIONS:
 			{
-				TVTest::CChannelInputOptionsDialog Dialog(m_ChannelInputOptions);
+				CChannelInputOptionsDialog Dialog(m_ChannelInputOptions);
 
 				if (Dialog.Show(hDlg))
 					m_fChanged = true;
@@ -1168,3 +1172,6 @@ void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 	}
 	*/
 }
+
+
+}	// namespace TVTest

@@ -6,6 +6,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define VIEW_WINDOW_CLASS            APP_NAME TEXT(" View")
 #define VIDEO_CONTAINER_WINDOW_CLASS APP_NAME TEXT(" Video Container")
 
@@ -222,7 +226,7 @@ CViewWindow::CViewWindow()
 	, m_hwndMessage(nullptr)
 	, m_pEventHandler(nullptr)
 	, m_hbmLogo(nullptr)
-	, m_BorderStyle(TVTest::Theme::BorderType::None, RGB(128, 128, 128))
+	, m_BorderStyle(Theme::BorderType::None, RGB(128, 128, 128))
 	, m_fShowCursor(true)
 {
 }
@@ -289,12 +293,12 @@ bool CViewWindow::SetLogo(HBITMAP hbm)
 }
 
 
-void CViewWindow::SetBorder(const TVTest::Theme::BorderStyle &Style)
+void CViewWindow::SetBorder(const Theme::BorderStyle &Style)
 {
 	if (m_BorderStyle != Style) {
 		const bool fResize =
 			m_BorderStyle.Type != Style.Type
-			&& (m_BorderStyle.Type == TVTest::Theme::BorderType::None || Style.Type == TVTest::Theme::BorderType::None);
+			&& (m_BorderStyle.Type == Theme::BorderType::None || Style.Type == Theme::BorderType::None);
 		m_BorderStyle = Style;
 		if (m_hwnd) {
 			if (fResize)
@@ -305,7 +309,7 @@ void CViewWindow::SetBorder(const TVTest::Theme::BorderStyle &Style)
 }
 
 
-void CViewWindow::SetMargin(const TVTest::Style::Margins &Margin)
+void CViewWindow::SetMargin(const Style::Margins &Margin)
 {
 	if (m_Margin != Margin) {
 		m_Margin = Margin;
@@ -336,22 +340,22 @@ void CViewWindow::ShowCursor(bool fShow)
 
 bool CViewWindow::CalcClientRect(RECT *pRect) const
 {
-	TVTest::Theme::BorderStyle Border = m_BorderStyle;
+	Theme::BorderStyle Border = m_BorderStyle;
 	ConvertBorderWidthsInPixels(&Border);
-	if (!TVTest::Theme::SubtractBorderRect(Border, pRect))
+	if (!Theme::SubtractBorderRect(Border, pRect))
 		return false;
-	TVTest::Style::Subtract(pRect, m_Margin);
+	Style::Subtract(pRect, m_Margin);
 	return true;
 }
 
 
 bool CViewWindow::CalcWindowRect(RECT *pRect) const
 {
-	TVTest::Theme::BorderStyle Border = m_BorderStyle;
+	Theme::BorderStyle Border = m_BorderStyle;
 	ConvertBorderWidthsInPixels(&Border);
-	if (!TVTest::Theme::AddBorderRect(m_BorderStyle, pRect))
+	if (!Theme::AddBorderRect(m_BorderStyle, pRect))
 		return false;
-	TVTest::Style::Add(pRect, m_Margin);
+	Style::Add(pRect, m_Margin);
 	return true;
 }
 
@@ -406,7 +410,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				::FillRect(ps.hdc, &ps.rcPaint, hbr);
 			}
 			{
-				TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
+				Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
 				ThemeDraw.Draw(m_BorderStyle, rcClient);
 			}
 			::EndPaint(hwnd, &ps);
@@ -498,15 +502,15 @@ void CDisplayView::SetVisible(bool fVisible)
 }
 
 
-void CDisplayView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CDisplayView::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CDisplayView::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
@@ -564,49 +568,49 @@ void CDisplayView::DrawCloseButton(HDC hdc) const
 }
 
 
-bool CDisplayView::GetItemStyle(ItemType Type, TVTest::Theme::Style *pStyle) const
+bool CDisplayView::GetItemStyle(ItemType Type, Theme::Style *pStyle) const
 {
 	switch (Type) {
 	case ItemType::Normal:
 	case ItemType::Normal1:
 	case ItemType::Normal2:
-		pStyle->Back.Fill.Type = TVTest::Theme::FillType::Solid;
+		pStyle->Back.Fill.Type = Theme::FillType::Solid;
 		if (Type != ItemType::Normal2) {
 			pStyle->Back.Fill.Solid.Color.Set(48, 48, 48);
 		} else {
 			pStyle->Back.Fill.Solid.Color.Set(24, 24, 24);
 		}
-		pStyle->Back.Border.Type = TVTest::Theme::BorderType::None;
-		pStyle->Fore.Fill.Type = TVTest::Theme::FillType::Solid;
+		pStyle->Back.Border.Type = Theme::BorderType::None;
+		pStyle->Fore.Fill.Type = Theme::FillType::Solid;
 		pStyle->Fore.Fill.Solid.Color.Set(255, 255, 255);
 		break;
 
 	case ItemType::Hot:
-		pStyle->Back.Fill.Type = TVTest::Theme::FillType::Gradient;
-		pStyle->Back.Fill.Gradient.Type = TVTest::Theme::GradientType::Normal;
-		pStyle->Back.Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
+		pStyle->Back.Fill.Type = Theme::FillType::Gradient;
+		pStyle->Back.Fill.Gradient.Type = Theme::GradientType::Normal;
+		pStyle->Back.Fill.Gradient.Direction = Theme::GradientDirection::Vert;
 		pStyle->Back.Fill.Gradient.Color1.Set(128, 128, 128);
 		pStyle->Back.Fill.Gradient.Color2.Set(96, 96, 96);
-		pStyle->Back.Border.Type = TVTest::Theme::BorderType::Solid;
+		pStyle->Back.Border.Type = Theme::BorderType::Solid;
 		pStyle->Back.Border.Color.Set(144, 144, 144);
-		pStyle->Fore.Fill.Type = TVTest::Theme::FillType::Solid;
+		pStyle->Fore.Fill.Type = Theme::FillType::Solid;
 		pStyle->Fore.Fill.Solid.Color.Set(255, 255, 255);
 		break;
 
 	case ItemType::Selected:
 	case ItemType::Current:
-		pStyle->Back.Fill.Type = TVTest::Theme::FillType::Gradient;
-		pStyle->Back.Fill.Gradient.Type = TVTest::Theme::GradientType::Normal;
-		pStyle->Back.Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Vert;
+		pStyle->Back.Fill.Type = Theme::FillType::Gradient;
+		pStyle->Back.Fill.Gradient.Type = Theme::GradientType::Normal;
+		pStyle->Back.Fill.Gradient.Direction = Theme::GradientDirection::Vert;
 		pStyle->Back.Fill.Gradient.Color1.Set(96, 96, 96);
 		pStyle->Back.Fill.Gradient.Color2.Set(128, 128, 128);
 		if (Type == ItemType::Current) {
-			pStyle->Back.Border.Type = TVTest::Theme::BorderType::Solid;
+			pStyle->Back.Border.Type = Theme::BorderType::Solid;
 			pStyle->Back.Border.Color.Set(144, 144, 144);
 		} else {
-			pStyle->Back.Border.Type = TVTest::Theme::BorderType::None;
+			pStyle->Back.Border.Type = Theme::BorderType::None;
 		}
-		pStyle->Fore.Fill.Type = TVTest::Theme::FillType::Solid;
+		pStyle->Fore.Fill.Type = Theme::FillType::Solid;
 		pStyle->Fore.Fill.Solid.Color.Set(255, 255, 255);
 		break;
 
@@ -618,23 +622,23 @@ bool CDisplayView::GetItemStyle(ItemType Type, TVTest::Theme::Style *pStyle) con
 }
 
 
-bool CDisplayView::GetBackgroundStyle(BackgroundType Type, TVTest::Theme::BackgroundStyle *pStyle) const
+bool CDisplayView::GetBackgroundStyle(BackgroundType Type, Theme::BackgroundStyle *pStyle) const
 {
 	switch (Type) {
 	case BackgroundType::Content:
-		pStyle->Fill.Type = TVTest::Theme::FillType::Gradient;
-		pStyle->Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Horz;
+		pStyle->Fill.Type = Theme::FillType::Gradient;
+		pStyle->Fill.Gradient.Direction = Theme::GradientDirection::Horz;
 		pStyle->Fill.Gradient.Color1.Set(36, 36, 36);
 		pStyle->Fill.Gradient.Color2.Set(16, 16, 16);
-		pStyle->Border.Type = TVTest::Theme::BorderType::None;
+		pStyle->Border.Type = Theme::BorderType::None;
 		break;
 
 	case BackgroundType::Categories:
-		pStyle->Fill.Type = TVTest::Theme::FillType::Gradient;
-		pStyle->Fill.Gradient.Direction = TVTest::Theme::GradientDirection::Horz;
+		pStyle->Fill.Type = Theme::FillType::Gradient;
+		pStyle->Fill.Gradient.Direction = Theme::GradientDirection::Horz;
 		pStyle->Fill.Gradient.Color1.Set(24, 24, 80);
 		pStyle->Fill.Gradient.Color2.Set(24, 24, 32);
-		pStyle->Border.Type = TVTest::Theme::BorderType::None;
+		pStyle->Border.Type = Theme::BorderType::None;
 		break;
 
 	default:
@@ -720,9 +724,9 @@ CDisplayView::DisplayViewStyle::DisplayViewStyle()
 }
 
 
-void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CDisplayView::DisplayViewStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
-	TVTest::Style::IntValue Value;
+	Style::IntValue Value;
 
 	*this = DisplayViewStyle();
 	if (pStyleManager->Get(TEXT("display.text-size-ratio.horz"), &Value) && Value.Value > 0)
@@ -740,8 +744,8 @@ void CDisplayView::DisplayViewStyle::SetStyle(const TVTest::Style::CStyleManager
 
 
 void CDisplayView::DisplayViewStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&TextSizeMin);
 	pStyleScaling->ToPixels(&TextSizeMax);
@@ -887,3 +891,6 @@ void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView, UINT Messa
 	::MapWindowPoints(pView->GetHandle(), hwndParent, &pt, 1);
 	::SendMessage(hwndParent, Message, 0, MAKELPARAM(pt.x, pt.y));
 }
+
+
+}	// namespace TVTest

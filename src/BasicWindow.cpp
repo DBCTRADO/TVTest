@@ -4,6 +4,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CBasicWindow::CBasicWindow()
@@ -501,3 +503,6 @@ LRESULT CCustomWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 {
 	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

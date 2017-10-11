@@ -12,6 +12,8 @@
 #endif
 
 
+namespace TVTest
+{
 
 
 SIZE_T CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
@@ -207,7 +209,7 @@ bool CImageCodec::Init()
 		m_hLib = ::LoadLibrary(TEXT("TVTest_Image.dll"));
 		if (m_hLib == nullptr)
 			return false;
-		m_pSaveImage = reinterpret_cast<SaveImageFunc>(::GetProcAddress(m_hLib, "SaveImage"));
+		m_pSaveImage = reinterpret_cast<ImageDLL::SaveImageFunc>(::GetProcAddress(m_hLib, "SaveImage"));
 		if (m_pSaveImage == nullptr) {
 			::FreeLibrary(m_hLib);
 			m_hLib = nullptr;
@@ -228,7 +230,7 @@ bool CImageCodec::SaveImage(
 		return false;
 #endif
 
-	TVTest::ImageLib::ImageSaveInfo Info;
+	ImageLib::ImageSaveInfo Info;
 
 	Info.pszFileName = pszFileName;
 	Info.pszFormat = EnumSaveFormat(Format);
@@ -240,7 +242,7 @@ bool CImageCodec::SaveImage(
 #ifndef TVTEST_IMAGE_STATIC
 	return m_pSaveImage(&Info) != FALSE;
 #else
-	return TVTest::ImageLib::SaveImage(&Info) != FALSE;
+	return ImageLib::SaveImage(&Info) != FALSE;
 #endif
 }
 
@@ -285,12 +287,12 @@ HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
 	if (m_hLib == nullptr && !Init())
 		return nullptr;
 	auto pLoadAribPngFromMemory =
-		reinterpret_cast<LoadAribPngFromMemoryFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromMemory"));
+		reinterpret_cast<ImageDLL::LoadAribPngFromMemoryFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromMemory"));
 	if (pLoadAribPngFromMemory == nullptr)
 		return nullptr;
 	return pLoadAribPngFromMemory(pData, DataSize);
 #else
-	return TVTest::ImageLib::LoadAribPngFromMemory(pData, DataSize);
+	return ImageLib::LoadAribPngFromMemory(pData, DataSize);
 #endif
 }
 
@@ -301,11 +303,14 @@ HGLOBAL CImageCodec::LoadAribPngFromFile(LPCTSTR pszFileName)
 	if (m_hLib == nullptr && !Init())
 		return nullptr;
 	auto pLoadAribPngFromFile =
-		reinterpret_cast<LoadAribPngFromFileFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromFile"));
+		reinterpret_cast<ImageDLL::LoadAribPngFromFileFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromFile"));
 	if (pLoadAribPngFromFile == nullptr)
 		return nullptr;
 	return pLoadAribPngFromFile(pszFileName);
 #else
-	return TVTest::ImageLib::LoadAribPngFromFile(pszFileName);
+	return ImageLib::LoadAribPngFromFile(pszFileName);
 #endif
 }
+
+
+}	// namespace TVTest

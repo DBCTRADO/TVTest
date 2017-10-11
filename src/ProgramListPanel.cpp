@@ -9,22 +9,24 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 class CProgramItemInfo
 {
 public:
 	CProgramItemInfo(const LibISDB::EventInfo &EventInfo);
-	//~CProgramItemInfo();
+
 	const LibISDB::EventInfo &GetEventInfo() const { return m_EventInfo; }
 	WORD GetEventID() const { return m_EventID; }
 	int GetTitleLines() const { return m_NameLines; }
 	int GetTextLines() const { return m_TextLines; }
 	int GetLines() const { return m_NameLines + m_TextLines; }
-	int CalcTitleLines(TVTest::CTextDraw &DrawText, int Width);
-	int CalcTextLines(TVTest::CTextDraw &DrawText, int Width);
-	void DrawTitle(TVTest::CTextDraw &DrawText, const RECT &Rect, int LineHeight);
-	void DrawText(TVTest::CTextDraw &DrawText, const RECT &Rect, int LineHeight);
+	int CalcTitleLines(CTextDraw &DrawText, int Width);
+	int CalcTextLines(CTextDraw &DrawText, int Width);
+	void DrawTitle(CTextDraw &DrawText, const RECT &Rect, int LineHeight);
+	void DrawText(CTextDraw &DrawText, const RECT &Rect, int LineHeight);
 	SIZE GetTimeSize(HDC hdc) const;
 	bool IsChanged(const CProgramItemInfo *pItem) const;
 
@@ -38,7 +40,7 @@ private:
 	int m_NameLines;
 	int m_TextLines;
 
-	TVTest::String GetEventText() const;
+	String GetEventText() const;
 	void GetEventTitleText(LPTSTR pszText, int MaxLength) const;
 	void GetEventTimeText(LPTSTR pszText, int MaxLength) const;
 };
@@ -53,7 +55,7 @@ CProgramItemInfo::CProgramItemInfo(const LibISDB::EventInfo &EventInfo)
 }
 
 
-int CProgramItemInfo::CalcTitleLines(TVTest::CTextDraw &DrawText, int Width)
+int CProgramItemInfo::CalcTitleLines(CTextDraw &DrawText, int Width)
 {
 	TCHAR szText[MAX_EVENT_TITLE];
 
@@ -63,9 +65,9 @@ int CProgramItemInfo::CalcTitleLines(TVTest::CTextDraw &DrawText, int Width)
 }
 
 
-int CProgramItemInfo::CalcTextLines(TVTest::CTextDraw &DrawText, int Width)
+int CProgramItemInfo::CalcTextLines(CTextDraw &DrawText, int Width)
 {
-	TVTest::String Text = GetEventText();
+	String Text = GetEventText();
 
 	if (!Text.empty())
 		m_TextLines = DrawText.CalcLineCount(Text.c_str(), Width);
@@ -75,7 +77,7 @@ int CProgramItemInfo::CalcTextLines(TVTest::CTextDraw &DrawText, int Width)
 }
 
 
-void CProgramItemInfo::DrawTitle(TVTest::CTextDraw &DrawText, const RECT &Rect, int LineHeight)
+void CProgramItemInfo::DrawTitle(CTextDraw &DrawText, const RECT &Rect, int LineHeight)
 {
 	TCHAR szText[MAX_EVENT_TITLE];
 
@@ -84,9 +86,9 @@ void CProgramItemInfo::DrawTitle(TVTest::CTextDraw &DrawText, const RECT &Rect, 
 }
 
 
-void CProgramItemInfo::DrawText(TVTest::CTextDraw &DrawText, const RECT &Rect, int LineHeight)
+void CProgramItemInfo::DrawText(CTextDraw &DrawText, const RECT &Rect, int LineHeight)
 {
-	TVTest::String Text = GetEventText();
+	String Text = GetEventText();
 	if (!Text.empty()) {
 		DrawText.Draw(Text.c_str(), Rect, LineHeight);
 	}
@@ -112,7 +114,7 @@ bool CProgramItemInfo::IsChanged(const CProgramItemInfo *pItem) const
 }
 
 
-TVTest::String CProgramItemInfo::GetEventText() const
+String CProgramItemInfo::GetEventText() const
 {
 	return EpgUtil::GetEventDisplayText(m_EventInfo);
 }
@@ -237,15 +239,15 @@ bool CProgramListPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int 
 }
 
 
-void CProgramListPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CProgramListPanel::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CProgramListPanel::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 
@@ -254,38 +256,38 @@ void CProgramListPanel::NormalizeStyle(
 }
 
 
-void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CProgramListPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	ProgramListPanelTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNEL,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNEL,
 		&Theme.ChannelNameStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CURCHANNEL,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CURCHANNEL,
 		&Theme.CurChannelNameStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNELBUTTON,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNELBUTTON,
 		&Theme.ChannelButtonStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNELBUTTON_HOT,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CHANNELBUTTON_HOT,
 		&Theme.ChannelButtonHotStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_EVENT,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_EVENT,
 		&Theme.EventTextStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CUREVENT,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CUREVENT,
 		&Theme.CurEventTextStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_TITLE,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_TITLE,
 		&Theme.EventNameStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CURTITLE,
+		Theme::CThemeManager::STYLE_PROGRAMLISTPANEL_CURTITLE,
 		&Theme.CurEventNameStyle);
 	Theme.MarginColor =
 		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
 	pThemeManager->GetBackgroundStyle(
-		TVTest::Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
 		&Theme.FeaturedMarkStyle);
 
 	SetProgramListPanelTheme(Theme);
@@ -294,7 +296,7 @@ void CProgramListPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 }
 
 
-bool CProgramListPanel::SetFont(const TVTest::Style::Font &Font)
+bool CProgramListPanel::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 
@@ -471,7 +473,7 @@ void CProgramListPanel::GetHeaderRect(RECT *pRect) const
 void CProgramListPanel::GetChannelButtonRect(RECT *pRect) const
 {
 	GetHeaderRect(pRect);
-	TVTest::Style::Subtract(pRect, m_Style.ChannelPadding);
+	Style::Subtract(pRect, m_Style.ChannelPadding);
 	int Width = m_Style.ChannelButtonIconSize.Width + m_Style.ChannelButtonPadding.Horz();
 	int Height = m_Style.ChannelButtonIconSize.Height + m_Style.ChannelButtonPadding.Vert();
 	pRect->left = pRect->right - Width;
@@ -500,10 +502,10 @@ void CProgramListPanel::CalcChannelHeight()
 void CProgramListPanel::CalcDimensions()
 {
 	HDC hdc = ::GetDC(m_hwnd);
-	TVTest::CTextDraw DrawText;
+	CTextDraw DrawText;
 	RECT rc;
 	GetClientRect(&rc);
-	DrawText.Begin(hdc, rc, TVTest::CTextDraw::Flag::JapaneseHyphnation);
+	DrawText.Begin(hdc, rc, CTextDraw::Flag::JapaneseHyphnation);
 	GetProgramListRect(&rc);
 	HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
 	m_TotalLines = 0;
@@ -594,7 +596,7 @@ bool CProgramListPanel::GetProgramListPanelTheme(ProgramListPanelTheme *pTheme) 
 }
 
 
-bool CProgramListPanel::SetEventInfoFont(const TVTest::Style::Font &Font)
+bool CProgramListPanel::SetEventInfoFont(const Style::Font &Font)
 {
 	return m_EventInfoPopup.SetFont(Font);
 }
@@ -1175,10 +1177,10 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 	RECT rc, rcMargin;
 	GetClientRect(&rc);
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
-	TVTest::CTextDraw DrawText;
-	DrawText.Begin(hdc, rc, TVTest::CTextDraw::Flag::JapaneseHyphnation);
+	CTextDraw DrawText;
+	DrawText.Begin(hdc, rc, CTextDraw::Flag::JapaneseHyphnation);
 
 	const int LineHeight = m_FontHeight + m_Style.LineSpacing;
 
@@ -1194,13 +1196,13 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 
 	GetHeaderRect(&rc);
 	if (IsRectIntersect(&rc, prcPaint)) {
-		const TVTest::Theme::Style &ChannelStyle =
+		const Theme::Style &ChannelStyle =
 			fCurChannel ? m_Theme.CurChannelNameStyle : m_Theme.ChannelNameStyle;
 
 		ThemeDraw.Draw(ChannelStyle.Back, rc);
 
 		if (!IsStringEmpty(m_SelectedChannel.GetName())) {
-			TVTest::Style::Subtract(&rc, m_Style.ChannelPadding);
+			Style::Subtract(&rc, m_Style.ChannelPadding);
 
 			HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 				m_SelectedChannel.GetNetworkID(), m_SelectedChannel.GetServiceID(),
@@ -1221,7 +1223,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 				m_Style.ChannelButtonMargin +
 				m_Style.ChannelButtonIconSize.Width +
 				m_Style.ChannelButtonPadding.Horz();
-			TVTest::Style::Subtract(&rc, m_Style.ChannelNameMargin);
+			Style::Subtract(&rc, m_Style.ChannelNameMargin);
 			DrawUtil::SelectObject(hdc, m_TitleFont);
 			ThemeDraw.Draw(
 				ChannelStyle.Fore, rc, m_SelectedChannel.GetName(),
@@ -1229,13 +1231,13 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 		}
 
 		GetChannelButtonRect(&rc);
-		const TVTest::Theme::Style &ButtonStyle =
+		const Theme::Style &ButtonStyle =
 			m_HotItem == ITEM_CHANNELLISTBUTTON ?
 			m_Theme.ChannelButtonHotStyle : m_Theme.ChannelButtonStyle;
-		if (ButtonStyle.Back.Border.Type != TVTest::Theme::BorderType::None
+		if (ButtonStyle.Back.Border.Type != Theme::BorderType::None
 				|| ButtonStyle.Back.Fill != ChannelStyle.Back.Fill)
 			ThemeDraw.Draw(ButtonStyle.Back, rc);
-		TVTest::Style::Subtract(&rc, m_Style.ChannelButtonPadding);
+		Style::Subtract(&rc, m_Style.ChannelButtonPadding);
 		DrawUtil::SelectObject(hdc, m_IconFont);
 		ThemeDraw.Draw(ButtonStyle.Fore, rc, TEXT("6"), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
@@ -1248,7 +1250,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 		::FillRect(hdc, &rc, hbr);
 		DrawUtil::SelectObject(hdc, m_Font);
 		::SetTextColor(hdc, m_Theme.EventTextStyle.Fore.Fill.GetSolidColor());
-		TVTest::Style::Subtract(&rc, m_Style.TitlePadding);
+		Style::Subtract(&rc, m_Style.TitlePadding);
 		DrawText.Draw(TEXT("番組表の取得中です..."), rc, LineHeight);
 	} else {
 		HRGN hrgn = ::CreateRectRgnIndirect(&rc);
@@ -1283,14 +1285,14 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 				if (m_fUseEpgColorScheme) {
 					::SetTextColor(hdc, m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 				} else {
-					const TVTest::Theme::Style &Style =
+					const Theme::Style &Style =
 						fCur ? m_Theme.CurEventNameStyle : m_Theme.EventNameStyle;
 					::SetTextColor(hdc, Style.Fore.Fill.GetSolidColor());
 					ThemeDraw.Draw(Style.Back, rc);
 				}
 
 				RECT rcTitle = rc;
-				TVTest::Style::Subtract(&rcTitle, m_Style.TitlePadding);
+				Style::Subtract(&rcTitle, m_Style.TitlePadding);
 				DrawUtil::SelectObject(hdc, m_TitleFont);
 
 				if (m_fShowFeaturedMark
@@ -1302,7 +1304,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 						rcMark.top = rcTitle.top;
 						rcMark.right = rcMark.left + sz.cx;
 						rcMark.bottom = rcMark.top + sz.cy;
-						TVTest::Style::Subtract(&rcMark, m_Style.FeaturedMarkMargin);
+						Style::Subtract(&rcMark, m_Style.FeaturedMarkMargin);
 					} else {
 						rcMark.left = rc.left + 1;
 						rcMark.top = rc.top + 1;
@@ -1322,7 +1324,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 				if (m_fUseEpgColorScheme) {
 					::SetTextColor(hdc, m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTTEXT));
 				} else {
-					const TVTest::Theme::Style &Style =
+					const Theme::Style &Style =
 						fCur ? m_Theme.CurEventTextStyle : m_Theme.EventTextStyle;
 					::SetTextColor(hdc, Style.Fore.Fill.GetSolidColor());
 					ThemeDraw.Draw(Style.Back, rc);
@@ -1459,7 +1461,7 @@ CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
 }
 
 
-void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CProgramListPanel::ProgramListPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = ProgramListPanelStyle();
 	pStyleManager->Get(TEXT("program-list-panel.channel.padding"), &ChannelPadding);
@@ -1478,8 +1480,8 @@ void CProgramListPanel::ProgramListPanelStyle::SetStyle(const TVTest::Style::CSt
 
 
 void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&ChannelPadding);
 	pStyleScaling->ToPixels(&ChannelLogoMargin);
@@ -1494,3 +1496,6 @@ void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(
 	pStyleScaling->ToPixels(&FeaturedMarkSize);
 	pStyleScaling->ToPixels(&FeaturedMarkMargin);
 }
+
+
+}	// namespace TVTest

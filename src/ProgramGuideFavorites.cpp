@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CProgramGuideFavorites::CProgramGuideFavorites()
@@ -398,9 +400,9 @@ void CProgramGuideFavoritesDialog::SetItemState(HWND hDlg)
 		::SetDlgItemText(
 			hDlg, IDC_PROGRAMGUIDEFAVORITES_NAME,
 			pInfo->Label.c_str());
-		::EnableDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_UP, Sel > 0);
-		::EnableDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_DOWN, Sel + 1 < ListView_GetItemCount(hwndList));
-		::EnableDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_DELETE, true);
+		EnableDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_UP, Sel > 0);
+		EnableDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_DOWN, Sel + 1 < ListView_GetItemCount(hwndList));
+		EnableDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_DELETE, true);
 	} else {
 		EnableDlgItems(
 			hDlg,
@@ -431,3 +433,6 @@ CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavoritesDialog::GetCurItemIn
 
 	return nullptr;
 }
+
+
+}	// namespace TVTest

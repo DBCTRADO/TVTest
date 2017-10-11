@@ -4,6 +4,10 @@
 #include "DrawUtil.h"
 
 
+namespace TVTest
+{
+
+
 #define PALETTE_WINDOW_CLASS APP_NAME TEXT(" Color Palette")
 
 
@@ -350,3 +354,6 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

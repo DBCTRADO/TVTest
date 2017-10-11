@@ -6,9 +6,11 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 typedef IBonDriver *(*CreateBonDriverFunc)();
-
-
 
 
 CDriverInfo::CDriverInfo(LPCTSTR pszFileName)
@@ -44,7 +46,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	}
 
 	if (!m_fChannelFileLoaded) {
-		TVTest::String ChannelFileName;
+		String ChannelFileName;
 
 		App.Core.GetChannelFileName(pszFileName, &ChannelFileName);
 		if (m_TuningSpaceList.LoadFromFile(ChannelFileName.c_str())) {
@@ -72,7 +74,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 	}
 
 	if (fUseDriver && !m_fDriverSpaceLoaded) {
-		TVTest::CFilePath FilePath;
+		CFilePath FilePath;
 
 		if (::PathIsRelative(pszFileName)) {
 			App.CoreEngine.GetDriverDirectoryPath(&FilePath);
@@ -84,7 +86,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 
 		HMODULE hLib = ::GetModuleHandle(FilePath.c_str());
 		if (hLib != nullptr) {
-			TVTest::String CurDriverPath;
+			String CurDriverPath;
 
 			if (App.CoreEngine.GetDriverPath(&CurDriverPath)
 					&& IsEqualFileName(FilePath.c_str(), CurDriverPath.c_str())) {
@@ -104,7 +106,7 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 
 					for (NumSpaces = 0; pBonDriver2->EnumTuningSpace(NumSpaces) != nullptr; NumSpaces++);
 					m_DriverSpaceList.Reserve(NumSpaces);
-					TVTest::StringUtility::Assign(m_TunerName, pBonDriver2->GetTunerName());
+					StringUtility::Assign(m_TunerName, pBonDriver2->GetTunerName());
 					for (int i = 0; i < NumSpaces; i++) {
 						CTuningSpaceInfo *pTuningSpaceInfo = m_DriverSpaceList.GetTuningSpaceInfo(i);
 						LPCTSTR pszName = pBonDriver2->EnumTuningSpace(i);
@@ -304,8 +306,8 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 		Info.TunerMask = it->Name;
 		Info.Spec.Flags = TunerSpec::Flag::None;
 
-		std::vector<TVTest::String> Attributes;
-		if (TVTest::StringUtility::Split(it->Value, TEXT("|"), &Attributes)) {
+		std::vector<String> Attributes;
+		if (StringUtility::Split(it->Value, TEXT("|"), &Attributes)) {
 			static const struct {
 				LPCTSTR pszName;
 				TunerSpec::Flag Flag;
@@ -318,8 +320,8 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 			};
 			for (int i = 0; i < lengthof(FlagList); i++) {
 				for (auto itAttr = Attributes.begin(); itAttr != Attributes.end(); ++itAttr) {
-					TVTest::StringUtility::Trim(*itAttr);
-					if (TVTest::StringUtility::CompareNoCase(*itAttr, FlagList[i].pszName) == 0) {
+					StringUtility::Trim(*itAttr);
+					if (StringUtility::CompareNoCase(*itAttr, FlagList[i].pszName) == 0) {
 						Info.Spec.Flags |= FlagList[i].Flag;
 						break;
 					}
@@ -352,3 +354,6 @@ bool CDriverManager::GetTunerSpec(LPCTSTR pszTunerName, TunerSpec *pSpec) const
 
 	return false;
 }
+
+
+}	// namespace TVTest

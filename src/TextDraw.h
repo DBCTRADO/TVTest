@@ -46,6 +46,7 @@ namespace TVTest
 
 		CTextDraw();
 		~CTextDraw();
+
 		bool SetEngine(CTextDrawEngine *pEngine);
 		bool Begin(HDC hdc, const RECT &Rect, Flag Flags = Flag::None);
 		void End();
@@ -89,6 +90,7 @@ namespace TVTest
 		typedef CTextDraw::TextMetrics TextMetrics;
 
 		virtual ~CTextDrawEngine() = default;
+
 		virtual void Finalize();
 		virtual bool BeginDraw(HDC hdc, const RECT &Rect);
 		virtual bool EndDraw();
@@ -110,6 +112,7 @@ namespace TVTest
 	public:
 		CTextDrawEngine_GDI();
 		~CTextDrawEngine_GDI();
+
 		void Finalize() override;
 		bool BeginDraw(HDC hdc, const RECT &Rect) override;
 		bool EndDraw() override;
@@ -135,6 +138,7 @@ namespace TVTest
 	public:
 		CTextDrawEngine_DirectWrite(CDirectWriteRenderer &Renderer);
 		~CTextDrawEngine_DirectWrite();
+
 		void Finalize() override;
 		bool BeginDraw(HDC hdc, const RECT &Rect) override;
 		bool EndDraw() override;

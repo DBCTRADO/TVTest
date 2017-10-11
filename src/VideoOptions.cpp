@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const CVideoOptions::RendererInfo CVideoOptions::m_RendererList[] = {
@@ -149,7 +151,7 @@ LPCTSTR CVideoOptions::GetMpeg2DecoderName() const
 
 void CVideoOptions::SetMpeg2DecoderName(LPCTSTR pszDecoderName)
 {
-	TVTest::StringUtility::Assign(m_Mpeg2DecoderName, pszDecoderName);
+	StringUtility::Assign(m_Mpeg2DecoderName, pszDecoderName);
 }
 
 
@@ -161,7 +163,7 @@ LPCTSTR CVideoOptions::GetH264DecoderName() const
 
 void CVideoOptions::SetH264DecoderName(LPCTSTR pszDecoderName)
 {
-	TVTest::StringUtility::Assign(m_H264DecoderName, pszDecoderName);
+	StringUtility::Assign(m_H264DecoderName, pszDecoderName);
 }
 
 
@@ -173,7 +175,7 @@ LPCTSTR CVideoOptions::GetH265DecoderName() const
 
 void CVideoOptions::SetH265DecoderName(LPCTSTR pszDecoderName)
 {
-	TVTest::StringUtility::Assign(m_H265DecoderName, pszDecoderName);
+	StringUtility::Assign(m_H265DecoderName, pszDecoderName);
 }
 
 
@@ -331,18 +333,18 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 
 void CVideoOptions::SetVideoDecoderList(
-	int ID, const GUID &SubType, BYTE StreamType, const TVTest::String &DecoderName)
+	int ID, const GUID &SubType, BYTE StreamType, const String &DecoderName)
 {
 	LPCWSTR pszDefaultDecoderName =
 		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
 		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
 
 	LibISDB::DirectShow::FilterFinder FilterFinder;
-	std::vector<TVTest::String> FilterList;
+	std::vector<String> FilterList;
 	if (FilterFinder.FindFilters(&MEDIATYPE_Video, &SubType)) {
 		FilterList.reserve(FilterFinder.GetFilterCount());
 		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
-			TVTest::String FilterName;
+			String FilterName;
 
 			if (FilterFinder.GetFilterInfo(i, nullptr, &FilterName)
 					&& (pszDefaultDecoderName == nullptr
@@ -364,7 +366,7 @@ void CVideoOptions::SetVideoDecoderList(
 		if (FilterList.size() > 1) {
 			std::sort(
 				FilterList.begin(), FilterList.end(),
-				[](const TVTest::String Filter1, const TVTest::String & Filter2) {
+				[](const String Filter1, const String & Filter2) {
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,
 						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
@@ -376,7 +378,7 @@ void CVideoOptions::SetVideoDecoderList(
 			DlgComboBox_AddString(m_hDlg, ID, FilterList[i].c_str());
 		}
 
-		TVTest::String Text;
+		String Text;
 
 		Text = TEXT("自動");
 		if (!DecoderName.empty()) {
@@ -400,7 +402,7 @@ void CVideoOptions::SetVideoDecoderList(
 
 
 void CVideoOptions::GetVideoDecoderSetting(
-	int ID, BYTE StreamType, TVTest::String *pDecoderName)
+	int ID, BYTE StreamType, String *pDecoderName)
 {
 	TCHAR szDecoder[MAX_VIDEO_DECODER_NAME];
 	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
@@ -416,3 +418,6 @@ void CVideoOptions::GetVideoDecoderSetting(
 			SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 	}
 }
+
+
+}	// namespace TVTest

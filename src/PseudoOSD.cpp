@@ -5,6 +5,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 // タイマーの識別子
 #define TIMER_ID_HIDE      0x0001U
 #define TIMER_ID_ANIMATION 0x0002U
@@ -229,7 +233,7 @@ bool CPseudoOSD::IsVisible() const
 
 bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int IconHeight, ImageEffect Effect)
 {
-	TVTest::StringUtility::Assign(m_Text, pszText);
+	StringUtility::Assign(m_Text, pszText);
 	m_hbmIcon = hbmIcon;
 	if (hbmIcon != nullptr) {
 		m_IconWidth = IconWidth;
@@ -355,18 +359,18 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 		}
 		::SelectObject(hdc, hfontOld);
 	} else {
-		TVTest::Graphics::CCanvas Canvas(hdc);
+		Graphics::CCanvas Canvas(hdc);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);
 		if (!!(m_TextStyle & TextStyle::Outline)) {
 			fResult = Canvas.GetOutlineTextSize(
 				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)),
-				TVTest::Graphics::TextFlag::Draw_Antialias | TVTest::Graphics::TextFlag::Draw_Hinting,
+				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting,
 				pSize);
 		} else {
 			fResult = Canvas.GetTextSize(
 				m_Text.c_str(), lf,
-				TVTest::Graphics::TextFlag::Draw_Antialias | TVTest::Graphics::TextFlag::Draw_Hinting,
+				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting,
 				pSize);
 		}
 	}
@@ -507,13 +511,13 @@ void CPseudoOSD::UpdateLayeredWindow()
 	HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmSurface));
 
 	{
-		TVTest::Graphics::CCanvas Canvas(hdcSrc);
+		Graphics::CCanvas Canvas(hdcSrc);
 
 		::SetRect(&rc, 0, 0, Width, Height);
 
 		if (!m_Text.empty()) {
 			if (m_hbmIcon != nullptr) {
-				TVTest::Graphics::CImage Image;
+				Graphics::CImage Image;
 
 				Image.CreateFromBitmap(m_hbmIcon);
 				int IconWidth;
@@ -541,11 +545,11 @@ void CPseudoOSD::UpdateLayeredWindow()
 			}
 
 			if (!!(m_TextStyle & TextStyle::FillBackground)) {
-				TVTest::Graphics::CBrush BackBrush(0, 0, 0, 128);
+				Graphics::CBrush BackBrush(0, 0, 0, 128);
 				Canvas.FillRect(&BackBrush, rc);
 			}
 
-			TVTest::Graphics::CBrush TextBrush(
+			Graphics::CBrush TextBrush(
 				GetRValue(m_crTextColor),
 				GetGValue(m_crTextColor),
 				GetBValue(m_crTextColor),
@@ -553,29 +557,29 @@ void CPseudoOSD::UpdateLayeredWindow()
 			LOGFONT lf;
 			m_Font.GetLogFont(&lf);
 
-			TVTest::Graphics::TextFlag DrawTextFlags =
-				TVTest::Graphics::TextFlag::Format_NoWrap |
-				TVTest::Graphics::TextFlag::Draw_Antialias | TVTest::Graphics::TextFlag::Draw_Hinting;
+			Graphics::TextFlag DrawTextFlags =
+				Graphics::TextFlag::Format_NoWrap |
+				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
 			if (!!(m_TextStyle & TextStyle::Right))
-				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_Right;
+				DrawTextFlags |= Graphics::TextFlag::Format_Right;
 			else if (!!(m_TextStyle & TextStyle::HorzCenter))
-				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_HorzCenter;
+				DrawTextFlags |= Graphics::TextFlag::Format_HorzCenter;
 			if (!!(m_TextStyle & TextStyle::Bottom))
-				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_Bottom;
+				DrawTextFlags |= Graphics::TextFlag::Format_Bottom;
 			if (!!(m_TextStyle & TextStyle::VertCenter))
-				DrawTextFlags |= TVTest::Graphics::TextFlag::Format_VertCenter;
+				DrawTextFlags |= Graphics::TextFlag::Format_VertCenter;
 
 			if (!!(m_TextStyle & TextStyle::Outline)) {
 				Canvas.DrawOutlineText(
 					m_Text.c_str(), lf, rc, &TextBrush,
-					TVTest::Graphics::CColor(0, 0, 0, 160),
+					Graphics::CColor(0, 0, 0, 160),
 					GetOutlineWidth(abs(lf.lfHeight)),
 					DrawTextFlags);
 			} else {
 				Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
 			}
 		} else if (m_hbm != nullptr) {
-			TVTest::Graphics::CImage Image;
+			Graphics::CImage Image;
 			if (Image.CreateFromBitmap(m_hbm)) {
 				Canvas.DrawImage(&Image, 0, 0);
 				BITMAP bm;
@@ -720,3 +724,6 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

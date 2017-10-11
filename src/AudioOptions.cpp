@@ -10,6 +10,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const size_t MAX_LANGUAGE_TEXT_LENGTH = LibISDB::MAX_LANGUAGE_TEXT_LENGTH + 16;
 
 
@@ -98,10 +102,10 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("DownMixSurround"), &m_fDownMixSurround);
 
 	Settings.Read(TEXT("UseCustomSurroundMixingMatrix"), &m_fUseCustomSurroundMixingMatrix);
-	TVTest::String Buffer;
+	String Buffer;
 	if (Settings.Read(TEXT("SurroundMixingMatrix"), &Buffer) && !Buffer.empty()) {
-		std::vector<TVTest::String> List;
-		if (TVTest::StringUtility::Split(Buffer, TEXT(","), &List) && List.size() >= 6 * 6) {
+		std::vector<String> List;
+		if (StringUtility::Split(Buffer, TEXT(","), &List) && List.size() >= 6 * 6) {
 			for (int i = 0; i < 6; i++) {
 				for (int j = 0; j < 6; j++) {
 					double Value = std::_tcstod(List[i * 6 + j].c_str(), nullptr);
@@ -115,8 +119,8 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("UseCustomDownMixMatrix"), &m_fUseCustomDownMixMatrix);
 	if (Settings.Read(TEXT("DownMixMatrix"), &Buffer) && !Buffer.empty()) {
-		std::vector<TVTest::String> List;
-		if (TVTest::StringUtility::Split(Buffer, TEXT(","), &List) && List.size() >= 2 * 6) {
+		std::vector<String> List;
+		if (StringUtility::Split(Buffer, TEXT(","), &List) && List.size() >= 2 * 6) {
 			for (int i = 0; i < 2; i++) {
 				for (int j = 0; j < 6; j++) {
 					double Value = std::_tcstod(List[i * 6 + j].c_str(), nullptr);
@@ -133,7 +137,7 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	m_LanguagePriority.clear();
 	for (int i = 0;; i++) {
 		TCHAR szKey[32];
-		TVTest::String Value;
+		String Value;
 		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("LangPriority%d"), i);
 		if (!Settings.Read(szKey, &Value) || Value.length() < 3)
 			break;
@@ -158,7 +162,7 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DownMixSurround"), m_fDownMixSurround);
 
 	Settings.Write(TEXT("UseCustomSurroundMixingMatrix"), m_fUseCustomSurroundMixingMatrix);
-	TVTest::String Buffer;
+	String Buffer;
 	for (int i = 0; i < 6; i++) {
 		for (int j = 0; j < 6; j++) {
 			if (!Buffer.empty())
@@ -258,7 +262,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					LPCTSTR pszName = DevEnum.GetDeviceFriendlyName(i);
 					DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIODEVICE, pszName);
 					if (Sel == 0 && !m_AudioDeviceName.empty()
-							&& TVTest::StringUtility::CompareNoCase(m_AudioDeviceName, pszName) == 0)
+							&& StringUtility::CompareNoCase(m_AudioDeviceName, pszName) == 0)
 						Sel = i + 1;
 				}
 			}
@@ -281,14 +285,14 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						InputTypes, lengthof(InputTypes),
 						OutputTypes, lengthof(OutputTypes),
 						0/*MERIT_DO_NOT_USE*/)) {
-				TVTest::String AudioFilter;
+				String AudioFilter;
 				CLSID idAudioFilter;
 
 				for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
 					if (FilterFinder.GetFilterInfo(i, &idAudioFilter, &AudioFilter)) {
 						DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOFILTER, AudioFilter.c_str());
 						if (Sel == 0 && !m_AudioFilterName.empty()
-								&& TVTest::StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) == 0)
+								&& StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) == 0)
 							Sel = i + 1;
 					}
 				}
@@ -447,20 +451,20 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TVTest::String AudioDevice;
+				String AudioDevice;
 				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIODEVICE);
 				if (Sel > 0)
 					GetDlgComboBoxItemString(hDlg, IDC_OPTIONS_AUDIODEVICE, Sel, &AudioDevice);
-				if (TVTest::StringUtility::CompareNoCase(m_AudioDeviceName, AudioDevice) != 0) {
+				if (StringUtility::CompareNoCase(m_AudioDeviceName, AudioDevice) != 0) {
 					m_AudioDeviceName = std::move(AudioDevice);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
-				TVTest::String AudioFilter;
+				String AudioFilter;
 				Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOFILTER);
 				if (Sel > 0)
 					GetDlgComboBoxItemString(hDlg, IDC_OPTIONS_AUDIOFILTER, Sel, &AudioFilter);
-				if (TVTest::StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) != 0) {
+				if (StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) != 0) {
 					m_AudioFilterName = std::move(AudioFilter);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
@@ -671,3 +675,6 @@ void CAudioOptions::CSurroundOptionsDialog::SetDownMixMatrix(
 		}
 	}
 }
+
+
+}	// namespace TVTest

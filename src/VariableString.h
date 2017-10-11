@@ -76,6 +76,7 @@ namespace TVTest
 
 		CEventVariableStringMap();
 		CEventVariableStringMap(const EventInfo &Info);
+
 		bool BeginFormat() override;
 		bool NormalizeString(String *pString) const override;
 		bool GetParameterList(ParameterGroupList *pList) const override;

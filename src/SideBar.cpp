@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const int CSideBar::ICON_WIDTH = 16;
@@ -61,35 +63,35 @@ bool CSideBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CSideBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CSideBar::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CSideBar::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CSideBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CSideBar::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	SideBarTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM,
+		Theme::CThemeManager::STYLE_SIDEBAR_ITEM,
 		&Theme.ItemStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM_HOT,
+		Theme::CThemeManager::STYLE_SIDEBAR_ITEM_HOT,
 		&Theme.HighlightItemStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_SIDEBAR_ITEM_CHECKED,
+		Theme::CThemeManager::STYLE_SIDEBAR_ITEM_CHECKED,
 		&Theme.CheckItemStyle);
 	pThemeManager->GetBorderStyle(
-		TVTest::Theme::CThemeManager::STYLE_SIDEBAR,
+		Theme::CThemeManager::STYLE_SIDEBAR,
 		&Theme.Border);
 
 	SetSideBarTheme(Theme);
@@ -98,10 +100,10 @@ void CSideBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 int CSideBar::GetBarWidth() const
 {
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
 	RECT rcBorder;
-	TVTest::Theme::GetBorderWidths(Border, &rcBorder);
+	Theme::GetBorderWidths(Border, &rcBorder);
 	int Width;
 	if (m_fVertical) {
 		Width = m_Style.IconSize.Width + m_Style.ItemPadding.Horz() + rcBorder.left + rcBorder.right;
@@ -356,7 +358,7 @@ void CSideBar::SetEventHandler(CEventHandler *pHandler)
 }
 
 
-TVTest::Style::Size CSideBar::GetIconDrawSize() const
+Style::Size CSideBar::GetIconDrawSize() const
 {
 	return m_Style.IconSize;
 }
@@ -523,9 +525,9 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				int x, y;
 
 				::GetWindowRect(hwnd, &rcBar);
-				TVTest::Theme::BorderStyle Border = m_Theme.Border;
+				Theme::BorderStyle Border = m_Theme.Border;
 				ConvertBorderWidthsInPixels(&Border);
-				TVTest::Theme::SubtractBorderRect(Border, &rcBar);
+				Theme::SubtractBorderRect(Border, &rcBar);
 				::GetWindowRect(pnmh->hwndFrom, &rcTip);
 				x = rcBar.right;
 				y = rcTip.top;
@@ -597,10 +599,10 @@ void CSideBar::GetItemRect(int Item, RECT *pRect) const
 				Offset += ItemWidth;
 		}
 	}
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
 	RECT rcBorder;
-	TVTest::Theme::GetBorderWidths(Border, &rcBorder);
+	Theme::GetBorderWidths(Border, &rcBorder);
 	if (m_fVertical) {
 		pRect->left = rcBorder.left;
 		pRect->right = rcBorder.left + ItemWidth;
@@ -655,7 +657,7 @@ void CSideBar::UpdateTooltipsRect()
 
 void CSideBar::SetTooltipFont()
 {
-	TVTest::Style::Font Font;
+	Style::Font Font;
 
 	GetSystemFont(DrawUtil::FontType::Status, &Font);
 	CreateDrawFont(Font, &m_TooltipFont);
@@ -677,12 +679,12 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 		rc.right = PaintRect.right;
 	}
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
-	TVTest::Theme::BackgroundStyle BackStyle;
+	Theme::BackgroundStyle BackStyle;
 	BackStyle = m_Theme.ItemStyle.Back;
-	if (!m_fVertical && BackStyle.Fill.Type == TVTest::Theme::FillType::Gradient)
-		BackStyle.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
+	if (!m_fVertical && BackStyle.Fill.Type == Theme::FillType::Gradient)
+		BackStyle.Fill.Gradient.Rotate(Theme::GradientStyle::RotateType::Right);
 	ThemeDraw.Draw(BackStyle, rc);
 
 	HDC hdcMemory = ::CreateCompatibleDC(hdc);
@@ -699,18 +701,18 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 			RECT rcItem;
 
 			if (fHot) {
-				TVTest::Theme::Style Style = m_Theme.HighlightItemStyle;
-				if (!m_fVertical && Style.Back.Fill.Type == TVTest::Theme::FillType::Gradient)
-					Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
+				Theme::Style Style = m_Theme.HighlightItemStyle;
+				if (!m_fVertical && Style.Back.Fill.Type == Theme::FillType::Gradient)
+					Style.Back.Fill.Gradient.Rotate(Theme::GradientStyle::RotateType::Right);
 				if (m_ItemList[i].IsChecked())
 					Style.Back.Border = m_Theme.CheckItemStyle.Back.Border;
 				ThemeDraw.Draw(Style.Back, rc);
 				ForeColor = m_Theme.HighlightItemStyle.Fore.Fill.GetSolidColor();
 			} else {
 				if (m_ItemList[i].IsChecked()) {
-					TVTest::Theme::Style Style = m_Theme.CheckItemStyle;
-					if (!m_fVertical && Style.Back.Fill.Type == TVTest::Theme::FillType::Gradient)
-						Style.Back.Fill.Gradient.Rotate(TVTest::Theme::GradientStyle::RotateType::Right);
+					Theme::Style Style = m_Theme.CheckItemStyle;
+					if (!m_fVertical && Style.Back.Fill.Type == Theme::FillType::Gradient)
+						Style.Back.Fill.Gradient.Rotate(Theme::GradientStyle::RotateType::Right);
 					ThemeDraw.Draw(Style.Back, rc);
 					ForeColor = m_Theme.CheckItemStyle.Fore.Fill.GetSolidColor();
 				} else {
@@ -786,7 +788,7 @@ CSideBar::SideBarStyle::SideBarStyle()
 }
 
 
-void CSideBar::SideBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CSideBar::SideBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = SideBarStyle();
 	pStyleManager->Get(TEXT("side-bar.item.icon"), &IconSize);
@@ -796,10 +798,13 @@ void CSideBar::SideBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyle
 
 
 void CSideBar::SideBarStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&IconSize);
 	pStyleScaling->ToPixels(&ItemPadding);
 	pStyleScaling->ToPixels(&SeparatorWidth);
 }
+
+
+}	// namespace TVTest

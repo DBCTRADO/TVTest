@@ -5,6 +5,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define NOTIFICATION_BAR_WINDOW_CLASS APP_NAME TEXT(" Notification Bar")
 
 
@@ -60,23 +64,23 @@ bool CNotificationBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int I
 }
 
 
-void CNotificationBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CNotificationBar::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CNotificationBar::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CNotificationBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CNotificationBar::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
-	pThemeManager->GetBackgroundStyle(TVTest::Theme::CThemeManager::STYLE_NOTIFICATIONBAR, &m_BackStyle);
+	pThemeManager->GetBackgroundStyle(Theme::CThemeManager::STYLE_NOTIFICATIONBAR, &m_BackStyle);
 
 	m_TextColor[(int)MessageType::Info] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT);
@@ -168,7 +172,7 @@ bool CNotificationBar::Hide()
 }
 
 
-bool CNotificationBar::SetFont(const TVTest::Style::Font &Font)
+bool CNotificationBar::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 	if (m_hwnd != nullptr)
@@ -179,7 +183,7 @@ bool CNotificationBar::SetFont(const TVTest::Style::Font &Font)
 
 void CNotificationBar::CalcBarHeight()
 {
-	int FontHeight = TVTest::Style::GetFontHeight(
+	int FontHeight = Style::GetFontHeight(
 		m_hwnd, m_Font.GetHandle(), m_Style.TextExtraHeight);
 	int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
 	int TextHeight = FontHeight + m_Style.TextMargin.Vert();
@@ -236,14 +240,14 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 			::GetClientRect(hwnd, &rc);
 
 			{
-				TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
+				Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));
 				ThemeDraw.Draw(m_BackStyle, rc);
 			}
 
 			if (!m_MessageQueue.empty()) {
 				const MessageInfo &Info = m_MessageQueue.front();
 
-				TVTest::Style::Subtract(&rc, m_Style.Padding);
+				Style::Subtract(&rc, m_Style.Padding);
 				if (rc.left < rc.right) {
 					const int TypeIndex = static_cast<int>(Info.Type);
 
@@ -259,7 +263,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 							0, nullptr, DI_NORMAL);
 						rc.left += m_Style.IconSize.Width + m_Style.IconMargin.Right;
 					}
-					TVTest::Style::Subtract(&rc, m_Style.TextMargin);
+					Style::Subtract(&rc, m_Style.TextMargin);
 					DrawUtil::DrawText(
 						ps.hdc, Info.Text.c_str(), rc,
 						DT_SINGLELINE | DT_LEFT | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS,
@@ -377,7 +381,7 @@ CNotificationBar::NotificationBarStyle::NotificationBarStyle()
 }
 
 
-void CNotificationBar::NotificationBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CNotificationBar::NotificationBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = NotificationBarStyle();
 	pStyleManager->Get(TEXT("notification-bar.padding"), &Padding);
@@ -389,8 +393,8 @@ void CNotificationBar::NotificationBarStyle::SetStyle(const TVTest::Style::CStyl
 
 
 void CNotificationBar::NotificationBarStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&Padding);
 	pStyleScaling->ToPixels(&IconSize);
@@ -398,3 +402,6 @@ void CNotificationBar::NotificationBarStyle::NormalizeStyle(
 	pStyleScaling->ToPixels(&TextMargin);
 	pStyleScaling->ToPixels(&TextExtraHeight);
 }
+
+
+}	// namespace TVTest

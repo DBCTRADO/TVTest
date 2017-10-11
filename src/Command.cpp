@@ -7,6 +7,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const struct {
 	LPCTSTR pszText;
 	WORD ID;
@@ -329,7 +333,7 @@ int CCommandList::ParseText(LPCTSTR pszText) const
 	if (IsStringEmpty(pszText))
 		return 0;
 
-	auto itr = m_CommandTextMap.find(TVTest::String(pszText));
+	auto itr = m_CommandTextMap.find(String(pszText));
 	if (itr == m_CommandTextMap.end())
 		return 0;
 
@@ -355,10 +359,10 @@ bool CCommandList::RegisterCommand(
 
 	m_CommandList.push_back(Info);
 #ifndef _DEBUG
-	m_CommandTextMap.insert(std::pair<TVTest::String, int>(Info.Text, ID));
+	m_CommandTextMap.insert(std::pair<String, int>(Info.Text, ID));
 	m_CommandIDMap.insert(std::pair<int, size_t>(ID, m_CommandList.size() - 1));
 #else
-	if (!m_CommandTextMap.insert(std::pair<TVTest::String, int>(Info.Text, ID)).second
+	if (!m_CommandTextMap.insert(std::pair<String, int>(Info.Text, ID)).second
 			|| !m_CommandIDMap.insert(std::pair<int, size_t>(ID, m_CommandList.size() - 1)).second) {
 		// 識別子重複
 		::DebugBreak();
@@ -451,3 +455,6 @@ void CCommandList::RegisterDefaultCommands()
 	for (int i = 0; i < lengthof(DefaultCommandList); i++)
 		RegisterCommand(DefaultCommandList[i].ID, DefaultCommandList[i].pszText);
 }
+
+
+}	// namespace TVTest

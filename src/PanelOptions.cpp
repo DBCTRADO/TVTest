@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CPanelOptions::CPanelOptions()
@@ -21,8 +23,8 @@ CPanelOptions::CPanelOptions()
 	, m_fTabTooltip(true)
 	, m_fProgramInfoUseRichEdit(true)
 {
-	TVTest::StyleUtil::GetDefaultUIFont(&m_Font);
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_CaptionFont);
+	StyleUtil::GetDefaultUIFont(&m_Font);
+	StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_CaptionFont);
 
 	static const struct {
 		LPCTSTR pszID;
@@ -84,11 +86,11 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 		GetAppClass().Panel.Frame.SetPanelOpacity(m_Opacity * 255 / 100);
 
 	bool f;
-	if (TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("PanelFont"), &m_Font, true, &f)) {
+	if (StyleUtil::ReadFontSettings(Settings, TEXT("PanelFont"), &m_Font, true, &f)) {
 		if (!f)
 			m_fChanged = true;
 	}
-	if (TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("CaptionPanelFont"), &m_CaptionFont, false, &f)) {
+	if (StyleUtil::ReadFontSettings(Settings, TEXT("CaptionPanelFont"), &m_CaptionFont, false, &f)) {
 		if (!f)
 			m_fChanged = true;
 	}
@@ -103,7 +105,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 	int TabCount;
 	if (Settings.Read(TEXT("PanelTabCount"), &TabCount) && TabCount > 0) {
 		PanelItemInfoList ItemList;
-		TVTest::String ID;
+		String ID;
 
 		for (int i = 0; i < TabCount; i++) {
 			TCHAR szName[32];
@@ -139,7 +141,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 
 #if 0
 		for (size_t i = 0; i < m_AvailItemList.size(); i++) {
-			const TVTest::String &ID = m_AvailItemList[i].ID;
+			const String &ID = m_AvailItemList[i].ID;
 			if (std::find_if(
 					ItemList.begin(), ItemList.end(),
 					[&](const PanelItemInfo & Item) -> bool {
@@ -173,8 +175,8 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelTabStyle"), (int)m_TabStyle);
 	Settings.Write(TEXT("PanelTabTooltip"), m_fTabTooltip);
 
-	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("PanelFont"), m_Font);
-	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("CaptionPanelFont"), m_CaptionFont);
+	StyleUtil::WriteFontSettings(Settings, TEXT("PanelFont"), m_Font);
+	StyleUtil::WriteFontSettings(Settings, TEXT("CaptionPanelFont"), m_CaptionFont);
 	Settings.Write(TEXT("CaptionPanelFontSpec"), m_fSpecCaptionFont);
 
 	// アイテムリスト
@@ -267,7 +269,7 @@ bool CPanelOptions::SetPanelItemVisibility(int ID, bool fVisible)
 
 	m_AvailItemList[ID].fVisible = fVisible;
 
-	const TVTest::String &IDText = m_AvailItemList[ID].ID;
+	const String &IDText = m_AvailItemList[ID].ID;
 	for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it) {
 		if (CompareID(it->ID, IDText)) {
 			it->fVisible = fVisible;
@@ -286,7 +288,7 @@ bool CPanelOptions::GetPanelItemVisibility(int ID) const
 	if (ID < 0 || ID >= (int)m_AvailItemList.size())
 		return false;
 
-	const TVTest::String &IDText = m_AvailItemList[ID].ID;
+	const String &IDText = m_AvailItemList[ID].ID;
 	for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it) {
 		if (CompareID(it->ID, IDText))
 			return it->fVisible;
@@ -359,20 +361,20 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				UDM_SETRANGE, 0, MAKELPARAM(100, 20));
 
 			m_CurSettingFont = m_Font;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_FONTINFO, m_Font);
+			StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_FONTINFO, m_Font);
 			DlgCheckBox_Check(hDlg, IDC_PANELOPTIONS_SPECCAPTIONFONT, m_fSpecCaptionFont);
 			EnableDlgItems(
 				hDlg, IDC_PANELOPTIONS_CAPTIONFONT_INFO,
 				IDC_PANELOPTIONS_CAPTIONFONT_CHOOSE,
 				m_fSpecCaptionFont);
 			m_CurSettingCaptionFont = m_CaptionFont;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_CAPTIONFONT_INFO, m_CaptionFont);
+			StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_CAPTIONFONT_INFO, m_CaptionFont);
 
 			m_ItemListView.Attach(::GetDlgItem(hDlg, IDC_PANELOPTIONS_ITEMLIST));
 			m_ItemListView.InitCheckList();
 			PanelItemInfoList ItemList(m_ItemList);
 			for (size_t i = 0; i < m_AvailItemList.size(); i++) {
-				const TVTest::String &ID = m_AvailItemList[i].ID;
+				const String &ID = m_AvailItemList[i].ID;
 				if (std::find_if(
 							ItemList.begin(), ItemList.end(),
 							[&](const PanelItemInfo & Item) -> bool {
@@ -456,8 +458,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			return TRUE;
 
 		case IDC_PANELOPTIONS_CHOOSEFONT:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_FONTINFO, m_CurSettingFont);
+			if (StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingFont))
+				StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_FONTINFO, m_CurSettingFont);
 			return TRUE;
 
 		case IDC_PANELOPTIONS_SPECCAPTIONFONT:
@@ -468,8 +470,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			return TRUE;
 
 		case IDC_PANELOPTIONS_CAPTIONFONT_CHOOSE:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingCaptionFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_CAPTIONFONT_INFO, m_CurSettingCaptionFont);
+			if (StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingCaptionFont))
+				StyleUtil::SetFontInfoItem(hDlg, IDC_PANELOPTIONS_CAPTIONFONT_INFO, m_CurSettingCaptionFont);
 			return TRUE;
 		}
 		return TRUE;
@@ -563,14 +565,14 @@ void CPanelOptions::UpdateItemListControlsState()
 {
 	int Sel = m_ItemListView.GetSelectedItem();
 
-	::EnableDlgItem(m_hDlg, IDC_PANELOPTIONS_ITEMLIST_UP, Sel > 0);
-	::EnableDlgItem(
+	EnableDlgItem(m_hDlg, IDC_PANELOPTIONS_ITEMLIST_UP, Sel > 0);
+	EnableDlgItem(
 		m_hDlg, IDC_PANELOPTIONS_ITEMLIST_DOWN,
 		Sel >= 0 && Sel + 1 < m_ItemListView.GetItemCount());
 }
 
 
-int CPanelOptions::GetItemIDFromIDText(const TVTest::String &IDText) const
+int CPanelOptions::GetItemIDFromIDText(const String &IDText) const
 {
 	for (int i = 0; i < (int)m_AvailItemList.size(); i++) {
 		if (CompareID(m_AvailItemList[i].ID, IDText))
@@ -579,3 +581,6 @@ int CPanelOptions::GetItemIDFromIDText(const TVTest::String &IDText) const
 
 	return -1;
 }
+
+
+}	// namespace TVTest

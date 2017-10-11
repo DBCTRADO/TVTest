@@ -5,6 +5,8 @@
 #include "Help.h"
 
 
+namespace TVTest
+{
 
 
 CHtmlHelp::CHtmlHelp()
@@ -82,3 +84,6 @@ bool CHtmlHelp::PreTranslateMessage(MSG *pmsg)
 	return m_pHtmlHelp != nullptr
 		&& (*m_pHtmlHelp)(nullptr, nullptr, HH_PRETRANSLATEMESSAGE, reinterpret_cast<DWORD_PTR>(pmsg));
 }
+
+
+}	// namespace TVTest

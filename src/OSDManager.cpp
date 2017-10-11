@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 COSDManager::COSDManager(const COSDOptions *pOptions)
@@ -149,7 +151,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 		if (hbmLogo != nullptr) {
 			if (fChanging)
 				ImageEffect = CPseudoOSD::ImageEffect::Dark;
-			else if (TVTest::StringUtility::CompareNoCase(m_Style.LogoEffect, TEXT("gloss")) == 0)
+			else if (StringUtility::CompareNoCase(m_Style.LogoEffect, TEXT("gloss")) == 0)
 				ImageEffect = CPseudoOSD::ImageEffect::Gloss;
 		}
 
@@ -366,15 +368,15 @@ bool COSDManager::CompositeText(
 }
 
 
-void COSDManager::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void COSDManager::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void COSDManager::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
@@ -395,9 +397,9 @@ COSDManager::OSDStyle::OSDStyle()
 }
 
 
-void COSDManager::OSDStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void COSDManager::OSDStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
-	TVTest::Style::IntValue Value;
+	Style::IntValue Value;
 
 	*this = OSDStyle();
 	pStyleManager->Get(TEXT("osd.margin"), &Margin);
@@ -414,11 +416,14 @@ void COSDManager::OSDStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleM
 
 
 void COSDManager::OSDStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&Margin);
 	pStyleScaling->ToPixels(&LogoSize);
 	pStyleScaling->ToPixels(&VolumeMargin);
 	pStyleScaling->ToPixels(&VolumeTextSizeMin);
 }
+
+
+}	// namespace TVTest

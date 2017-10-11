@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CPlaybackOptions::CPlaybackOptions()
@@ -267,3 +269,6 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

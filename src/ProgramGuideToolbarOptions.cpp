@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CProgramGuideToolbarOptions::CProgramGuideToolbarOptions(CProgramGuideFrameSettings &FrameSettings)
@@ -202,3 +204,6 @@ void CProgramGuideToolbarOptions::UpdateItemState()
 		m_hDlg, IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_DOWN,
 		Sel >= 0 && Sel + 1 < m_ItemListView.GetItemCount());
 }
+
+
+}	// namespace TVTest

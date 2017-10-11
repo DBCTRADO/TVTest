@@ -7,9 +7,11 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const size_t MAX_INFO_TEXT = 256;
-
-
 
 
 CAboutDialog::CAboutDialog()
@@ -241,7 +243,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			rcClient.left = rcLogo.right;
 
 			if (m_fDrawLogo) {
-				TVTest::Graphics::CCanvas Canvas(ps.hdc);
+				Graphics::CCanvas Canvas(ps.hdc);
 
 				Canvas.Clear(0, 0, 0, 0);
 				Canvas.DrawImage(
@@ -252,17 +254,17 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				rc.bottom = rcHeader.bottom;
 				Canvas.FillGradient(
 					Colors.Header1, Colors.Header2, rc,
-					TVTest::Graphics::GradientDirection::Vert);
+					Graphics::GradientDirection::Vert);
 				rc.top = rc.bottom;
 				rc.bottom = rc.top + 8;
 				Canvas.FillGradient(
 					Colors.HeaderShadow, Colors.Info1, rc,
-					TVTest::Graphics::GradientDirection::Vert);
+					Graphics::GradientDirection::Vert);
 				rc.top = rc.bottom;
 				rc.bottom = rcClient.bottom;
 				Canvas.FillGradient(
 					Colors.Info1, Colors.Info2, rc,
-					TVTest::Graphics::GradientDirection::Vert);
+					Graphics::GradientDirection::Vert);
 			} else {
 				rc = rcClient;
 				rc.bottom = rcHeader.bottom;
@@ -321,7 +323,7 @@ void CAboutDialog::ApplyStyle()
 	CBasicDialog::ApplyStyle();
 
 	if (m_hDlg != nullptr) {
-		TVTest::Style::Font Font;
+		Style::Font Font;
 		GetSystemFont(DrawUtil::FontType::Message, &Font);
 		CreateDrawFont(Font, &m_Font);
 		LOGFONT lf;
@@ -330,3 +332,6 @@ void CAboutDialog::ApplyStyle()
 		m_LinkFont.Create(&lf);
 	}
 }
+
+
+}	// namespace TVTest

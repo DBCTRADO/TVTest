@@ -7,26 +7,31 @@
 #include "ListView.h"
 
 
-class CProgramGuideToolbarOptions
-	: public CBasicDialog
+namespace TVTest
 {
-public:
-	CProgramGuideToolbarOptions(CProgramGuideFrameSettings &FrameSettings);
-	~CProgramGuideToolbarOptions();
 
-// CBasicDialog
-	bool Show(HWND hwndOwner) override;
+	class CProgramGuideToolbarOptions
+		: public CBasicDialog
+	{
+	public:
+		CProgramGuideToolbarOptions(CProgramGuideFrameSettings &FrameSettings);
+		~CProgramGuideToolbarOptions();
 
-private:
-	CProgramGuideFrameSettings &m_FrameSettings;
-	TVTest::CListView m_ItemListView;
+	// CBasicDialog
+		bool Show(HWND hwndOwner) override;
 
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	private:
+		CProgramGuideFrameSettings &m_FrameSettings;
+		CListView m_ItemListView;
 
-// CProgramGuideToolbarOptions
-	void UpdateItemState();
-};
+	// CBasicDialog
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	// CProgramGuideToolbarOptions
+		void UpdateItemState();
+	};
+
+}	// namespace TVTest
 
 
 #endif

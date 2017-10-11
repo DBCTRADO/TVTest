@@ -10,6 +10,9 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
 
 void CEventSearchServiceList::Clear()
 {
@@ -73,7 +76,7 @@ CEventSearchServiceList::Iterator CEventSearchServiceList::End() const
 }
 
 
-bool CEventSearchServiceList::ToString(TVTest::String *pString) const
+bool CEventSearchServiceList::ToString(String *pString) const
 {
 	if (pString == nullptr)
 		return false;
@@ -218,16 +221,16 @@ void CEventSearchSettings::Clear()
 }
 
 
-bool CEventSearchSettings::ToString(TVTest::String *pString) const
+bool CEventSearchSettings::ToString(String *pString) const
 {
-	TVTest::String Buffer;
+	String Buffer;
 
 	pString->clear();
 
-	TVTest::StringUtility::Encode(Name.c_str(), &Buffer);
+	StringUtility::Encode(Name.c_str(), &Buffer);
 	*pString += Buffer;
 	*pString += TEXT(",");
-	TVTest::StringUtility::Encode(Keyword.c_str(), &Buffer);
+	StringUtility::Encode(Keyword.c_str(), &Buffer);
 	*pString += Buffer;
 
 	unsigned int Flags = 0;
@@ -274,7 +277,7 @@ bool CEventSearchSettings::ToString(TVTest::String *pString) const
 		szGenre2[0] = _T('\0');
 	}
 
-	TVTest::StringUtility::Format(
+	StringUtility::Format(
 		Buffer,
 		TEXT(",%u,%d,%s,%u,%d:%02d,%d:%02d,%u,%u,%d,%d"),
 		Flags,
@@ -301,18 +304,18 @@ bool CEventSearchSettings::ToString(TVTest::String *pString) const
 
 bool CEventSearchSettings::FromString(LPCTSTR pszString)
 {
-	std::vector<TVTest::String> Value;
+	std::vector<String> Value;
 
-	TVTest::StringUtility::Split(TVTest::String(pszString), L",", &Value);
+	StringUtility::Split(String(pszString), L",", &Value);
 
 	for (size_t i = 0; i < Value.size(); i++) {
 		switch (i) {
 		case 0:
-			TVTest::StringUtility::Decode(Value[i].c_str(), &Name);
+			StringUtility::Decode(Value[i].c_str(), &Name);
 			break;
 
 		case 1:
-			TVTest::StringUtility::Decode(Value[i].c_str(), &Keyword);
+			StringUtility::Decode(Value[i].c_str(), &Keyword);
 			break;
 
 		case 2:
@@ -531,7 +534,7 @@ bool CEventSearchSettingsList::Load(CSettings &Settings, LPCTSTR pszPrefix)
 	Clear();
 
 	TCHAR szKey[256];
-	TVTest::String Value;
+	String Value;
 
 	for (int i = 0;; i++) {
 		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("%s%d"), pszPrefix, i);
@@ -550,7 +553,7 @@ bool CEventSearchSettingsList::Load(CSettings &Settings, LPCTSTR pszPrefix)
 bool CEventSearchSettingsList::Save(CSettings &Settings, LPCTSTR pszPrefix) const
 {
 	TCHAR szKey[256];
-	TVTest::String Value;
+	String Value;
 
 	for (size_t i = 0; i < m_List.size(); i++) {
 		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("%s%d"), pszPrefix, (int)i);
@@ -583,11 +586,11 @@ bool CEventSearcher::BeginSearch(const CEventSearchSettings &Settings)
 	if (Settings.fRegExp && !Settings.Keyword.empty()) {
 		if (!m_RegExp.Initialize())
 			return false;
-		TVTest::CRegExp::PatternFlag Flags = TVTest::CRegExp::PatternFlag::None;
+		CRegExp::PatternFlag Flags = CRegExp::PatternFlag::None;
 		if (Settings.fIgnoreCase)
-			Flags |= TVTest::CRegExp::PatternFlag::IgnoreCase;
+			Flags |= CRegExp::PatternFlag::IgnoreCase;
 		if (Settings.fIgnoreWidth)
-			Flags |= TVTest::CRegExp::PatternFlag::IgnoreWidth;
+			Flags |= CRegExp::PatternFlag::IgnoreWidth;
 		if (!m_RegExp.SetPattern(Settings.Keyword.c_str(), Flags))
 			return false;
 	}
@@ -858,7 +861,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 		return false;
 
 	for (auto it = m_KeywordHistory.begin(); it != m_KeywordHistory.end(); ++it) {
-		if (TVTest::StringUtility::CompareNoCase(*it, pszKeyword) == 0) {
+		if (StringUtility::CompareNoCase(*it, pszKeyword) == 0) {
 			if (it == m_KeywordHistory.begin()
 					&& it->compare(pszKeyword) == 0)
 				return true;
@@ -867,7 +870,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 		}
 	}
 
-	m_KeywordHistory.push_front(TVTest::String(pszKeyword));
+	m_KeywordHistory.push_front(String(pszKeyword));
 
 	if (m_KeywordHistory.size() > (size_t)m_MaxKeywordHistory) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin() + m_MaxKeywordHistory, m_KeywordHistory.end());
@@ -1995,7 +1998,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			::SendDlgItemMessage(hDlg, IDC_PROGRAMSEARCH_INFO, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		}
 
-		TVTest::SetWindowIcon(hDlg, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDI_SEARCH));
+		SetWindowIcon(hDlg, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDI_SEARCH));
 
 		ApplyPosition();
 
@@ -2136,7 +2139,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				if (Sel >= 0) {
 					LVITEM lvi;
 					TCHAR szText[256];
-					TVTest::String Text;
+					String Text;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -2170,7 +2173,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case EN_MSGFILTER:
 			if (reinterpret_cast<MSGFILTER*>(lParam)->msg == WM_RBUTTONUP) {
-				TVTest::EventInfoUtil::EventInfoContextMenu(hDlg, ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
+				EventInfoUtil::EventInfoContextMenu(hDlg, ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
 			}
 			return TRUE;
 
@@ -2361,7 +2364,7 @@ int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventIn
 }
 
 
-void CProgramSearchDialog::FormatEventInfoText(const LibISDB::EventInfo *pEventInfo, TVTest::String *pText) const
+void CProgramSearchDialog::FormatEventInfoText(const LibISDB::EventInfo *pEventInfo, String *pText) const
 {
 	pText->clear();
 
@@ -2382,8 +2385,8 @@ void CProgramSearchDialog::FormatEventInfoText(const LibISDB::EventInfo *pEventI
 		*pText += ExtendedText;
 	}
 
-	TVTest::String::size_type Pos = pText->find_last_not_of(TEXT("\r\n"));
-	if (Pos != TVTest::String::npos && pText->length() > Pos + 2)
+	String::size_type Pos = pText->find_last_not_of(TEXT("\r\n"));
+	if (Pos != String::npos && pText->length() > Pos + 2)
 		pText->resize(Pos + 2);
 }
 
@@ -2441,7 +2444,7 @@ void CProgramSearchDialog::HighlightKeyword()
 
 			if (m_SearchSettings.fRegExp) {
 				LPCTSTR q = szText;
-				TVTest::CRegExp::TextRange Range;
+				CRegExp::TextRange Range;
 
 				while (*q != _T('\0') && m_Searcher.GetRegExp().Match(q, &Range)) {
 					q += Range.Start;
@@ -2637,3 +2640,6 @@ bool CProgramSearchDialog::CEventHandler::Match(const LibISDB::EventInfo *pEvent
 {
 	return m_pSearcher->Match(pEventInfo);
 }
+
+
+}	// namespace TVTest

@@ -8,6 +8,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const UINT MEGA_BYTES = 1024 * 1024;
 
 // 書き出しバッファサイズの制限(バイト単位)
@@ -65,7 +69,7 @@ bool CRecordOptions::Apply(DWORD Flags)
 bool CRecordOptions::ReadSettings(CSettings &Settings)
 {
 	TCHAR szPath[MAX_PATH];
-	TVTest::String Path;
+	String Path;
 	unsigned int Value;
 
 	// 古いバージョンの互換用
@@ -89,7 +93,7 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 	// 古いバージョンの互換用
 	bool fAddTime;
 	if (Settings.Read(TEXT("AddRecordTime"), &fAddTime) && fAddTime) {
-		TVTest::String Extension;
+		String Extension;
 		m_FileName.GetExtension(&Extension);
 		m_FileName.RemoveExtension();
 		m_FileName += TEXT("%date%_%time%");
@@ -421,13 +425,13 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case IDC_RECORDOPTIONS_FILENAME:
 			if (HIWORD(wParam) == EN_CHANGE) {
 				TCHAR szFormat[MAX_PATH];
-				TVTest::String FileName;
+				String FileName;
 
 				::GetDlgItemText(hDlg, IDC_RECORDOPTIONS_FILENAME, szFormat, lengthof(szFormat));
 				if (szFormat[0] != '\0') {
-					TVTest::CEventVariableStringMap EventVarStrMap;
+					CEventVariableStringMap EventVarStrMap;
 					EventVarStrMap.SetSampleEventInfo();
-					TVTest::FormatVariableString(&EventVarStrMap, szFormat, &FileName);
+					FormatVariableString(&EventVarStrMap, szFormat, &FileName);
 				}
 				::SetDlgItemText(hDlg, IDC_RECORDOPTIONS_FILENAMEPREVIEW, FileName.c_str());
 			}
@@ -441,7 +445,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORDOPTIONS_FILENAMEFORMAT), &rc);
 				pt.x = rc.left;
 				pt.y = rc.bottom;
-				TVTest::CEventVariableStringMap EventVarStrMap;
+				CEventVariableStringMap EventVarStrMap;
 				EventVarStrMap.InputParameter(hDlg, IDC_RECORDOPTIONS_FILENAME, pt);
 			}
 			return TRUE;
@@ -483,7 +487,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TVTest::String SaveFolder, FileName;
+				String SaveFolder, FileName;
 
 				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, &SaveFolder);
 				CAppMain::CreateDirectoryResult CreateDirResult =
@@ -499,7 +503,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_FILENAME, &FileName);
 				if (!FileName.empty()) {
-					TVTest::String Message;
+					String Message;
 					if (!IsValidFileName(FileName.c_str(), FileNameValidateFlag::AllowDelimiter, &Message)) {
 						SettingError();
 						::SendDlgItemMessage(hDlg, IDC_RECORDOPTIONS_FILENAME, EM_SETSEL, 0, -1);
@@ -575,3 +579,6 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

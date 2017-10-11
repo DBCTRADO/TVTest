@@ -8,6 +8,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 const LPCTSTR CChannelPanel::m_pszClassName = APP_NAME TEXT(" Channel Panel");
 HINSTANCE CChannelPanel::m_hinst = nullptr;
 
@@ -83,15 +87,15 @@ bool CChannelPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CChannelPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CChannelPanel::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CChannelPanel::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 
@@ -100,37 +104,37 @@ void CChannelPanel::NormalizeStyle(
 }
 
 
-void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CChannelPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	ChannelPanelTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CHANNELNAME,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_CHANNELNAME,
 		&Theme.ChannelNameStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELNAME,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELNAME,
 		&Theme.CurChannelNameStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_EVENTNAME1,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_EVENTNAME1,
 		&Theme.EventStyle[0]);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_EVENTNAME2,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_EVENTNAME2,
 		&Theme.EventStyle[1]);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME1,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME1,
 		&Theme.CurChannelEventStyle[0]);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME2,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_CURCHANNELEVENTNAME2,
 		&Theme.CurChannelEventStyle[1]);
 	Theme.MarginColor = pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
 	pThemeManager->GetBackgroundStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_FEATUREDMARK,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_FEATUREDMARK,
 		&Theme.FeaturedMarkStyle);
 	pThemeManager->GetBackgroundStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_PROGRESS,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_PROGRESS,
 		&Theme.ProgressStyle);
 	pThemeManager->GetBackgroundStyle(
-		TVTest::Theme::CThemeManager::STYLE_CHANNELPANEL_CURPROGRESS,
+		Theme::CThemeManager::STYLE_CHANNELPANEL_CURPROGRESS,
 		&Theme.CurProgressStyle);
 
 	SetChannelPanelTheme(Theme);
@@ -139,7 +143,7 @@ void CChannelPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
-bool CChannelPanel::SetFont(const TVTest::Style::Font &Font)
+bool CChannelPanel::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 
@@ -456,7 +460,7 @@ bool CChannelPanel::GetChannelPanelTheme(ChannelPanelTheme *pTheme) const
 }
 
 
-bool CChannelPanel::SetEventInfoFont(const TVTest::Style::Font &Font)
+bool CChannelPanel::SetEventInfoFont(const Style::Font &Font)
 {
 	return m_EventInfoPopup.SetFont(Font);
 }
@@ -865,7 +869,7 @@ void CChannelPanel::ApplyStyle()
 		if (m_Tooltip.IsCreated())
 			SetTooltipFont();
 
-		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+		static const Theme::IconList::ResourceInfo ResourceList[] = {
 			{MAKEINTRESOURCE(IDB_CHEVRON10), 10, 10},
 			{MAKEINTRESOURCE(IDB_CHEVRON20), 20, 20},
 		};
@@ -911,13 +915,13 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 	COLORREF crOldTextColor = ::GetTextColor(hdcDst);
 	int OldBkMode = ::SetBkMode(hdcDst, TRANSPARENT);
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
 
-	TVTest::CTextDraw TextDraw;
+	CTextDraw TextDraw;
 	TextDraw.Begin(
 		hdcDst, rcClient,
-		TVTest::CTextDraw::Flag::JapaneseHyphnation |
-		TVTest::CTextDraw::Flag::EndEllipsis);
+		CTextDraw::Flag::JapaneseHyphnation |
+		CTextDraw::Flag::EndEllipsis);
 
 	RECT rcItem;
 	rcItem.left = 0;
@@ -939,13 +943,13 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 
 			rc.bottom = rc.top + m_ChannelNameHeight;
 
-			const TVTest::Theme::Style &Style =
+			const Theme::Style &Style =
 				fCurrent ? m_Theme.CurChannelNameStyle : m_Theme.ChannelNameStyle;
 			DrawUtil::SelectObject(hdcDst, m_ChannelFont);
 			::SetTextColor(hdcDst, Style.Fore.Fill.GetSolidColor());
 			ThemeDraw.Draw(Style.Back, rc);
 			RECT rcName = rc;
-			TVTest::Style::Subtract(&rcName, m_Style.ChannelNameMargin);
+			Style::Subtract(&rcName, m_Style.ChannelNameMargin);
 			rcName.right -= m_Style.ChannelChevronMargin + m_Style.ChannelChevronSize.Width;
 			pChannelInfo->DrawChannelName(hdcDst, &rcName, m_Style.ChannelLogoMargin);
 			m_Chevron.Draw(
@@ -969,7 +973,7 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 						CEpgTheme::DrawContentBackgroundFlag::Separator);
 					::SetTextColor(hdcDst, m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 				} else {
-					const TVTest::Theme::Style &Style =
+					const Theme::Style &Style =
 						(fCurrent ? m_Theme.CurChannelEventStyle : m_Theme.EventStyle)[j % 2];
 					ThemeDraw.Draw(Style.Back, &rcContent);
 					if (m_fShowGenreColor && pChannelInfo->IsEventEnabled(j)) {
@@ -989,13 +993,13 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 						&& m_FeaturedEventsMatcher.IsMatch(pChannelInfo->GetEventInfo(j))) {
 					RECT rcMark = rcContent;
 					rcMark.right = m_Style.EventNameMargin.Left;
-					TVTest::Style::Subtract(&rcMark, m_Style.FeaturedMarkMargin);
+					Style::Subtract(&rcMark, m_Style.FeaturedMarkMargin);
 					rcMark.bottom = rcMark.top + (rcMark.right - rcMark.left);
 					ThemeDraw.Draw(m_Theme.FeaturedMarkStyle, rcMark);
 				}
 
 				RECT rcText = rc;
-				TVTest::Style::Subtract(&rcText, m_Style.EventNameMargin);
+				Style::Subtract(&rcText, m_Style.EventNameMargin);
 
 				if (m_fShowProgressBar && j == 0 && pChannelInfo->IsEventEnabled(0)) {
 					const LibISDB::EventInfo &EventInfo = pChannelInfo->GetEventInfo(0);
@@ -1500,7 +1504,7 @@ int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText, int MaxLen
 
 
 void CChannelPanel::CChannelEventInfo::DrawChannelName(
-	HDC hdc, const RECT *pRect, const TVTest::Style::Margins &LogoMargins)
+	HDC hdc, const RECT *pRect, const Style::Margins &LogoMargins)
 {
 	RECT rc = *pRect;
 
@@ -1543,7 +1547,7 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 
 
 void CChannelPanel::CChannelEventInfo::DrawEventName(
-	int Index, TVTest::CTextDraw &TextDraw, const RECT &Rect, int LineHeight)
+	int Index, CTextDraw &TextDraw, const RECT &Rect, int LineHeight)
 {
 	if (IsEventEnabled(Index)) {
 		const LibISDB::EventInfo &Info = m_EventList[Index];
@@ -1569,7 +1573,7 @@ CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
 }
 
 
-void CChannelPanel::ChannelPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CChannelPanel::ChannelPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = ChannelPanelStyle();
 	pStyleManager->Get(TEXT("channel-list-panel.channel-name.margin"), &ChannelNameMargin);
@@ -1582,8 +1586,8 @@ void CChannelPanel::ChannelPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 
 
 void CChannelPanel::ChannelPanelStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&ChannelNameMargin);
 	pStyleScaling->ToPixels(&ChannelLogoMargin);
@@ -1592,3 +1596,6 @@ void CChannelPanel::ChannelPanelStyle::NormalizeStyle(
 	pStyleScaling->ToPixels(&EventNameMargin);
 	pStyleScaling->ToPixels(&FeaturedMarkMargin);
 }
+
+
+}	// namespace TVTest

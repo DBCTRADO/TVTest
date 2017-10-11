@@ -6,6 +6,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 LONGLONG StringToInt64(LPCTSTR pszString)
 {
 	return _tcstoi64(pszString, nullptr, 0);
@@ -141,11 +145,9 @@ LPCTSTR SkipLeadingWhitespace(LPCTSTR pszString)
 }
 
 
-namespace TVTest
-{
-
 namespace StringUtility
 {
+
 
 void Reserve(String &Str, size_t Size)
 {
@@ -554,6 +556,7 @@ UINT64 HashNoCase64(const String &Str)
 	return FNVHash(Str.begin(), Str.end(), std::towlower, FNV_OFFSET_BASIS_64, FNV_PRIME_64);
 }
 
-}
 
-}
+}	// namespace StringUtility
+
+}	// namespace TVTest

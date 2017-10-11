@@ -4,6 +4,9 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
 namespace Layout
 {
 
@@ -101,7 +104,7 @@ void CWindowContainer::SetVisible(bool fVisible)
 }
 
 
-void CWindowContainer::SetWindow(CBasicWindow *pWindow, TVTest::CUIBase *pUIBase)
+void CWindowContainer::SetWindow(CBasicWindow *pWindow, CUIBase *pUIBase)
 {
 	if (m_pUIBase != nullptr)
 		RemoveUIChild(m_pUIBase);
@@ -901,3 +904,5 @@ CLayoutBase::CEventHandler::~CEventHandler()
 
 
 }	// namespace Layout
+
+}	// namespace TVTest

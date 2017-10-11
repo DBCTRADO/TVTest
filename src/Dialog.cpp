@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CBasicDialog::CBasicDialog()
@@ -169,7 +171,7 @@ int CBasicDialog::ShowDialog(HWND hwndOwner, HINSTANCE hinst, LPCTSTR pszTemplat
 		return -1;
 
 	// ダイアログは Per-Monitor DPI 対応
-	TVTest::PerMonitorDPIBlock DPIBlock;
+	PerMonitorDPIBlock DPIBlock;
 
 	return (int)::DialogBoxParam(
 		hinst, pszTemplate, hwndOwner, DialogProc,
@@ -183,7 +185,7 @@ bool CBasicDialog::CreateDialogWindow(HWND hwndOwner, HINSTANCE hinst, LPCTSTR p
 		return false;
 
 	// ダイアログは Per-Monitor DPI 対応
-	TVTest::PerMonitorDPIBlock DPIBlock;
+	PerMonitorDPIBlock DPIBlock;
 
 	if (::CreateDialogParam(
 				hinst, pszTemplate, hwndOwner, DialogProc,
@@ -644,3 +646,6 @@ void CResizableDialog::RealizeStyle()
 {
 	CBasicDialog::RealizeStyle();
 }
+
+
+}	// namespace TVTest

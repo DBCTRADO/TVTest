@@ -1,28 +1,33 @@
-#ifndef EPG_CHANNEL_SETTINGS_H
-#define EPG_CHANNEL_SETTINGS_H
+#ifndef TVTEST_EPG_CHANNEL_SETTINGS_H
+#define TVTEST_EPG_CHANNEL_SETTINGS_H
 
 
 #include "Dialog.h"
 #include "ChannelList.h"
 
 
-class CProgramGuide;
-
-class CEpgChannelSettings
-	: public CResizableDialog
+namespace TVTest
 {
-public:
-	CEpgChannelSettings(CProgramGuide *pProgramGuide);
-	~CEpgChannelSettings();
 
-	bool Show(HWND hwndOwner) override;
+	class CProgramGuide;
 
-private:
-	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+	class CEpgChannelSettings
+		: public CResizableDialog
+	{
+	public:
+		CEpgChannelSettings(CProgramGuide *pProgramGuide);
+		~CEpgChannelSettings();
 
-	CProgramGuide *m_pProgramGuide;
-	CChannelList m_ChannelList;
-};
+		bool Show(HWND hwndOwner) override;
+
+	private:
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+		CProgramGuide *m_pProgramGuide;
+		CChannelList m_ChannelList;
+	};
+
+}	// namespace TVTest
 
 
 #endif

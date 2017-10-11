@@ -14,6 +14,9 @@
 
 
 
+namespace TVTest
+{
+
 
 CTooltip::CTooltip()
 	: m_hwndTooltip(nullptr)
@@ -345,3 +348,6 @@ bool CBalloonTip::Hide()
 	::SendMessage(m_hwndToolTips, TTM_TRACKACTIVATE, FALSE, (LPARAM)&ti);
 	return true;
 }
+
+
+}	// namespace TVTest

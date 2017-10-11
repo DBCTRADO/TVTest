@@ -7,6 +7,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define NUM_BUTTONS 4
 
 enum {
@@ -82,35 +86,35 @@ void CTitleBar::SetVisible(bool fVisible)
 }
 
 
-void CTitleBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CTitleBar::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CTitleBar::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CTitleBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CTitleBar::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	TitleBarTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_TITLEBAR_CAPTION,
+		Theme::CThemeManager::STYLE_TITLEBAR_CAPTION,
 		&Theme.CaptionStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
+		Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
 		&Theme.IconStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
+		Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
 		&Theme.HighlightIconStyle);
 	pThemeManager->GetBorderStyle(
-		TVTest::Theme::CThemeManager::STYLE_TITLEBAR,
+		Theme::CThemeManager::STYLE_TITLEBAR,
 		&Theme.Border);
 
 	SetTitleBarTheme(Theme);
@@ -146,8 +150,8 @@ int CTitleBar::GetButtonHeight() const
 
 bool CTitleBar::SetLabel(LPCTSTR pszLabel)
 {
-	if (TVTest::StringUtility::Compare(m_Label, pszLabel) != 0) {
-		TVTest::StringUtility::Assign(m_Label, pszLabel);
+	if (StringUtility::Compare(m_Label, pszLabel) != 0) {
+		StringUtility::Assign(m_Label, pszLabel);
 		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_LABEL);
 	}
@@ -206,7 +210,7 @@ bool CTitleBar::GetTitleBarTheme(TitleBarTheme *pTheme) const
 }
 
 
-bool CTitleBar::SetFont(const TVTest::Style::Font &Font)
+bool CTitleBar::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 
@@ -479,7 +483,7 @@ void CTitleBar::AdjustSize()
 
 int CTitleBar::CalcFontHeight() const
 {
-	return TVTest::Style::GetFontHeight(m_hwnd, m_Font.GetHandle(), m_Style.LabelExtraHeight);
+	return Style::GetFontHeight(m_hwnd, m_Font.GetHandle(), m_Style.LabelExtraHeight);
 }
 
 
@@ -491,10 +495,10 @@ bool CTitleBar::GetItemRect(int Item, RECT *pRect) const
 	RECT rc;
 
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border, &rc);
-	TVTest::Style::Subtract(&rc, m_Style.Padding);
+	Theme::SubtractBorderRect(Border, &rc);
+	Style::Subtract(&rc, m_Style.Padding);
 	const int ButtonWidth = GetButtonWidth();
 	int ButtonPos = rc.right - NUM_BUTTONS * ButtonWidth;
 	if (ButtonPos < 0)
@@ -575,12 +579,12 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 	COLORREF crOldTextColor = ::GetTextColor(hdc);
 	COLORREF crOldBkColor = ::GetBkColor(hdc);
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border, &rc);
+	Theme::SubtractBorderRect(Border, &rc);
 	if (rc.left < PaintRect.left)
 		rc.left = PaintRect.left;
 	if (rc.right > PaintRect.right)
@@ -608,18 +612,18 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 					rc.left += m_Style.IconSize.Width;
 				}
 				if (!m_Label.empty()) {
-					TVTest::Style::Subtract(&rc, m_Style.LabelMargin);
+					Style::Subtract(&rc, m_Style.LabelMargin);
 					ThemeDraw.Draw(
 						m_Theme.CaptionStyle.Fore, rc, m_Label.c_str(),
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			} else {
-				const TVTest::Theme::Style &Style =
+				const Theme::Style &Style =
 					fHighlight ? m_Theme.HighlightIconStyle : m_Theme.IconStyle;
 
 				// とりあえず変にならないようにする。
 				// 背景を透過指定できるようにした方が良い。
-				if (Style.Back.Border.Type != TVTest::Theme::BorderType::None
+				if (Style.Back.Border.Type != Theme::BorderType::None
 						|| Style.Back.Fill != m_Theme.CaptionStyle.Back.Fill)
 					ThemeDraw.Draw(Style.Back, rc);
 				m_ButtonIcons.Draw(
@@ -656,7 +660,7 @@ void CTitleBar::ApplyStyle()
 	if (m_Tooltip.IsCreated())
 		m_Tooltip.SetFont(m_Font.GetHandle());
 
-	static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+	static const Theme::IconList::ResourceInfo ResourceList[] = {
 		{MAKEINTRESOURCE(IDB_TITLEBAR12), 12, 12},
 		{MAKEINTRESOURCE(IDB_TITLEBAR24), 24, 24},
 	};
@@ -704,7 +708,7 @@ CTitleBar::TitleBarStyle::TitleBarStyle()
 }
 
 
-void CTitleBar::TitleBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CTitleBar::TitleBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = TitleBarStyle();
 	pStyleManager->Get(TEXT("title-bar.padding"), &Padding);
@@ -718,8 +722,8 @@ void CTitleBar::TitleBarStyle::SetStyle(const TVTest::Style::CStyleManager *pSty
 
 
 void CTitleBar::TitleBarStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&Padding);
 	pStyleScaling->ToPixels(&LabelMargin);
@@ -729,3 +733,6 @@ void CTitleBar::TitleBarStyle::NormalizeStyle(
 	pStyleScaling->ToPixels(&ButtonIconSize);
 	pStyleScaling->ToPixels(&ButtonPadding);
 }
+
+
+}	// namespace TVTest

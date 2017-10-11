@@ -17,16 +17,17 @@ namespace TVTest
 			CThemeDraw(
 				const TVTest::Style::CStyleManager *pStyleManager,
 				const TVTest::Style::CStyleScaling *pStyleScaling);
+
 			bool Begin(HDC hdc);
 			void End();
-			bool Draw(const SolidStyle &Style,const RECT &Rect);
-			bool Draw(const GradientStyle &Style,const RECT &Rect);
-			bool Draw(const FillStyle &Style,const RECT &Rect);
-			bool Draw(const BackgroundStyle &Style,const RECT &Rect);
-			bool Draw(const BackgroundStyle &Style,RECT *pRect);
-			bool Draw(const ForegroundStyle &Style,const RECT &Rect,LPCTSTR pszText,UINT Flags);
-			bool Draw(const BorderStyle &Style,const RECT &Rect);
-			bool Draw(const BorderStyle &Style,RECT *pRect);
+			bool Draw(const SolidStyle &Style, const RECT &Rect);
+			bool Draw(const GradientStyle &Style, const RECT &Rect);
+			bool Draw(const FillStyle &Style, const RECT &Rect);
+			bool Draw(const BackgroundStyle &Style, const RECT &Rect);
+			bool Draw(const BackgroundStyle &Style, RECT *pRect);
+			bool Draw(const ForegroundStyle &Style, const RECT &Rect, LPCTSTR pszText, UINT Flags);
+			bool Draw(const BorderStyle &Style, const RECT &Rect);
+			bool Draw(const BorderStyle &Style, RECT *pRect);
 			const TVTest::Style::CStyleManager *GetStyleManager() const { return m_pStyleManager; }
 			const TVTest::Style::CStyleScaling *GetStyleScaling() const { return m_pStyleScaling; }
 

@@ -5,6 +5,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static CMessageDialog MessageDialog;
 
 
@@ -32,7 +36,7 @@ void CUISkin::ShowErrorMessage(LPCTSTR pszText) const
 void CUISkin::ShowErrorMessage(
 	const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle) const
 {
-	TVTest::String Text;
+	String Text;
 
 	Text = pErrorHandler->GetLastErrorText();
 	if (!IsStringEmpty(pErrorHandler->GetLastErrorAdvise())) {
@@ -58,3 +62,6 @@ void CUISkin::SetWheelChannelChanging(bool fChanging, DWORD Delay)
 		m_fWheelChannelChanging = false;
 	}
 }
+
+
+}	// namespace TVTest

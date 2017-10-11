@@ -14,6 +14,7 @@ namespace TVTest
 	public:
 		CDirectWriteSystem();
 		~CDirectWriteSystem();
+
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
@@ -33,6 +34,7 @@ namespace TVTest
 	{
 	public:
 		virtual ~CDirectWriteResource() = default;
+
 		virtual void Destroy() = 0;
 		virtual bool IsCreated() const = 0;
 	};
@@ -43,6 +45,7 @@ namespace TVTest
 	public:
 		CDirectWriteFont();
 		~CDirectWriteFont();
+
 		bool Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf);
 		void Destroy() override;
 		bool IsCreated() const override;
@@ -60,6 +63,7 @@ namespace TVTest
 	public:
 		CDirectWriteBrush();
 		~CDirectWriteBrush();
+
 		bool Create(CDirectWriteRenderer &Renderer, BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255);
 		void Destroy() override;
 		bool IsCreated() const override;
@@ -119,6 +123,7 @@ namespace TVTest
 
 		CDirectWriteRenderer(CDirectWriteSystem &System);
 		~CDirectWriteRenderer();
+
 		bool Initialize(HWND hwnd);
 		void Finalize();
 		bool IsInitialized() const;

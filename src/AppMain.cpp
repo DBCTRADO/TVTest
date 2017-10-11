@@ -7,9 +7,8 @@
 #include "Common/DebugDef.h"
 
 
-using namespace TVTest;
-
-
+namespace TVTest
+{
 
 
 static HANDLE GetCurrentThreadHandle()
@@ -225,7 +224,7 @@ HINSTANCE CAppMain::GetResourceInstance() const
 }
 
 
-bool CAppMain::GetAppFilePath(TVTest::String *pPath) const
+bool CAppMain::GetAppFilePath(String *pPath) const
 {
 	if (pPath == nullptr)
 		return false;
@@ -243,7 +242,7 @@ bool CAppMain::GetAppFilePath(TVTest::String *pPath) const
 }
 
 
-bool CAppMain::GetAppDirectory(TVTest::String *pDirectory) const
+bool CAppMain::GetAppDirectory(String *pDirectory) const
 {
 	if (pDirectory == nullptr)
 		return false;
@@ -316,10 +315,10 @@ void CAppMain::Initialize()
 		m_IniFileName = szModuleFileName;
 		m_IniFileName.RenameExtension(TEXT(".ini"));
 	} else {
-		if (TVTest::PathUtil::IsRelative(CmdLineOptions.m_IniFileName)) {
-			TVTest::CFilePath Dir(szModuleFileName);
+		if (PathUtil::IsRelative(CmdLineOptions.m_IniFileName)) {
+			CFilePath Dir(szModuleFileName);
 			Dir.RemoveFileName();
-			TVTest::PathUtil::RelativeToAbsolute(
+			PathUtil::RelativeToAbsolute(
 				&m_IniFileName, Dir, CmdLineOptions.m_IniFileName);
 		} else {
 			m_IniFileName = CmdLineOptions.m_IniFileName;
@@ -786,7 +785,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	// BonDriver の検索
 	{
-		TVTest::String Directory;
+		String Directory;
 		CoreEngine.GetDriverDirectoryPath(&Directory);
 		DriverManager.Find(Directory.c_str());
 	}
@@ -809,7 +808,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	GraphicsCore.Initialize();
 
-	TVTest::String DriverFileName;
+	String DriverFileName;
 
 	// 初期設定ダイアログの表示
 	if (m_fInitialSettings) {
@@ -1450,7 +1449,7 @@ void CAppMain::RegisterCommands()
 
 			pInfo->SetCommand(ID);
 
-			TVTest::String Text;
+			String Text;
 			Text = pszFileName;
 			Text += _T(':');
 			Text += pInfo->GetText();
@@ -1461,14 +1460,14 @@ void CAppMain::RegisterCommands()
 				pPlugin->GetPluginName(), pInfo->GetName());
 
 			CCommandList::CommandState State = CCommandList::CommandState::None;
-			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_DISABLED) != 0)
+			if ((pInfo->GetState() & PLUGIN_COMMAND_STATE_DISABLED) != 0)
 				State |= CCommandList::CommandState::Disabled;
-			if ((pInfo->GetState() & TVTest::PLUGIN_COMMAND_STATE_CHECKED) != 0)
+			if ((pInfo->GetState() & PLUGIN_COMMAND_STATE_CHECKED) != 0)
 				State |= CCommandList::CommandState::Checked;
 
 			CommandList.RegisterCommand(ID, Text.c_str(), szName, pInfo->GetName(), State);
 
-			if ((pInfo->GetFlags() & TVTest::PLUGIN_COMMAND_FLAG_ICONIZE) != 0)
+			if ((pInfo->GetFlags() & PLUGIN_COMMAND_FLAG_ICONIZE) != 0)
 				SideBarOptions.RegisterCommand(ID);
 
 			ID++;
@@ -1845,3 +1844,6 @@ bool CAppMain::CCaptureWindowEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 	m_App.MainWindow.SendMessage(WM_KEYDOWN, KeyCode, Flags);
 	return true;
 }
+
+
+}	// namespace TVTest

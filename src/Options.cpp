@@ -4,6 +4,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 COptionFrame *COptions::m_pFrame = nullptr;
@@ -54,3 +56,6 @@ void COptions::SettingError()
 	if (m_pFrame != nullptr)
 		m_pFrame->OnSettingError(this);
 }
+
+
+}	// namespace TVTest

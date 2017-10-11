@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CChannelHistory::CChannelHistory()
@@ -232,3 +234,6 @@ bool CRecentChannelList::WriteSettings(CSettings &Settings)
 	}
 	return true;
 }
+
+
+}	// namespace TVTest

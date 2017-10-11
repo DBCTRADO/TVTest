@@ -8,6 +8,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CStreamInfo::CStreamInfo()
@@ -162,7 +164,7 @@ void CStreamInfo::SetService()
 	const WORD TSID = pAnalyzer->GetTransportStreamID();
 	if (TSID != LibISDB::TRANSPORT_STREAM_ID_INVALID) {
 		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("TSID 0x%04x (%d)"), TSID, TSID);
-		TVTest::String TSName;
+		String TSName;
 		if (pAnalyzer->GetTSName(&TSName)) {
 			StdUtil::snprintf(szText + Length, lengthof(szText) - Length, TEXT(" %s"), TSName.c_str());
 		}
@@ -174,7 +176,7 @@ void CStreamInfo::SetService()
 	const WORD NID = pAnalyzer->GetNetworkID();
 	if (NID != LibISDB::NETWORK_ID_INVALID) {
 		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("NID 0x%04x (%d)"), NID, NID);
-		TVTest::String Name;
+		String Name;
 		if (pAnalyzer->GetNetworkName(&Name)) {
 			StdUtil::snprintf(szText + Length, lengthof(szText) - Length, TEXT(" %s"), Name.c_str());
 		}
@@ -535,3 +537,6 @@ int CStreamInfo::GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings,
 	*p = _T('\0');
 	return (int)(p - pszText);
 }
+
+
+}	// namespace TVTest

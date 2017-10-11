@@ -17,10 +17,12 @@ namespace TVTest
 		{
 		public:
 			CChannelProviderManager();
-			// CProgramGuideChannelProviderManager
+
+		// CProgramGuideChannelProviderManager
 			size_t GetChannelProviderCount() const override;
 			CProgramGuideChannelProvider *GetChannelProvider(size_t Index) const override;
-			// CChannelProviderManager
+
+		// CChannelProviderManager
 			bool Create(LPCTSTR pszDefaultTuner = nullptr);
 			void Clear();
 			int GetCurChannelProvider() const { return m_CurChannelProvider; }
@@ -91,7 +93,7 @@ namespace TVTest
 			: public CProgramGuideDisplay::CProgramGuideDisplayEventHandler
 			, protected CDisplayEventHandlerBase
 		{
-			// CProgramGuideDisplay::CProgramGuideDisplayEventHandler
+		// CProgramGuideDisplay::CProgramGuideDisplayEventHandler
 			bool OnHide() override;
 			bool SetAlwaysOnTop(bool fTop) override;
 			bool GetAlwaysOnTop() const override;

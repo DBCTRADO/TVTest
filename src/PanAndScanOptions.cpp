@@ -8,6 +8,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const int FACTOR_PERCENTAGE = 100;
 static const int HORZ_FACTOR = FACTOR_PERCENTAGE * 100;
 static const int VERT_FACTOR = FACTOR_PERCENTAGE * 100;
@@ -380,7 +384,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					HBRUSH hbr = ::CreateSolidBrush(RGB(128, 128, 128));
 					HPEN hpen = ::CreatePen(
 						PS_INSIDEFRAME,
-						m_pStyleScaling->ToPixels(1, TVTest::Style::UnitType::LogicalPixel),
+						m_pStyleScaling->ToPixels(1, Style::UnitType::LogicalPixel),
 						RGB(160, 160, 160));
 					HGDIOBJ hOldBrush = ::SelectObject(pdis->hDC, hbr);
 					HGDIOBJ hOldPen = ::SelectObject(pdis->hDC, hpen);
@@ -810,3 +814,6 @@ bool CPanAndScanOptions::GetCommandName(int Command, LPTSTR pszName, int MaxLeng
 	}
 	return true;
 }
+
+
+}	// namespace TVTest

@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CChannelInfo::CChannelInfo()
@@ -70,7 +72,7 @@ bool CChannelInfo::SetPhysicalChannel(int Channel)
 
 bool CChannelInfo::SetName(LPCTSTR pszName)
 {
-	TVTest::StringUtility::Assign(m_Name, pszName);
+	StringUtility::Assign(m_Name, pszName);
 	return true;
 }
 
@@ -124,7 +126,7 @@ CTunerChannelInfo &CTunerChannelInfo::operator=(const CChannelInfo &Src)
 
 void CTunerChannelInfo::SetTunerName(LPCTSTR pszName)
 {
-	TVTest::StringUtility::Assign(m_TunerName, pszName);
+	StringUtility::Assign(m_TunerName, pszName);
 }
 
 
@@ -841,7 +843,7 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 {
 	TRACE(TEXT("CTuningSpaceList::SaveToFile() : \"%s\"\n"), pszFileName);
 
-	TVTest::String Buffer;
+	String Buffer;
 
 	Buffer =
 		TEXT("; ") APP_NAME TEXT(" チャンネル設定ファイル\r\n")
@@ -862,7 +864,7 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 		for (int j = 0; j < pChannelList->NumChannels(); j++) {
 			const CChannelInfo *pChInfo = pChannelList->GetChannelInfo(j);
 			LPCTSTR pszName = pChInfo->GetName();
-			TVTest::String Name;
+			String Name;
 
 			// 必要に応じて " で囲む
 			if (pszName[0] == _T('#') || pszName[0] == _T(';')
@@ -1218,3 +1220,6 @@ Next:
 
 	return MakeTuningSpaceList(&m_AllChannelList);
 }
+
+
+}	// namespace TVTest

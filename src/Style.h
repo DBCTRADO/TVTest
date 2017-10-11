@@ -49,8 +49,10 @@ namespace TVTest
 
 			ValueTemplate() : Value(0), Unit(UnitType::Undefined) {}
 			ValueTemplate(T v, UnitType u = UnitType::LogicalPixel) : Value(v), Unit(u) {}
+
 			operator T() const { return Value; }
 			ValueTemplate<T> &operator=(T v) { Value = v; return *this; }
+
 			bool operator==(const ValueTemplate<T> &o) const { return Value == o.Value && Unit == o.Unit; }
 			bool operator!=(const ValueTemplate<T> &o) const { return !(*this == o); }
 			bool operator==(T v) const { return Value == v; }
@@ -67,6 +69,7 @@ namespace TVTest
 			Size() {}
 			Size(int w, int h, UnitType u = UnitType::LogicalPixel) : Width(w, u), Height(h, u) {}
 			Size(int w, UnitType wu, int h, UnitType hu) : Width(w, wu), Height(h, hu) {}
+
 			bool operator==(const Size &o) const { return Width == o.Width && Height == o.Height; }
 			bool operator!=(const Size &o) const { return !(*this == o); }
 		};
@@ -85,10 +88,12 @@ namespace TVTest
 				: Left(l, lu), Top(t, tu), Right(r, ru), Bottom(b, bu) {}
 			Margins(int m, UnitType u = UnitType::LogicalPixel)
 				: Left(m, u), Top(m, u), Right(m, u), Bottom(m, u) {}
+
 			bool operator==(const Margins &o) const {
 				return Left == o.Left && Top == o.Top && Right == o.Right && Bottom == o.Bottom;
 			}
 			bool operator!=(const Margins &o) const { return !(*this == o); }
+
 			int Horz() const { return Left + Right; }
 			int Vert() const { return Top + Bottom; }
 		};
@@ -102,6 +107,7 @@ namespace TVTest
 			Font() : LogFont() {}
 			Font(const LOGFONT &lf, int s, UnitType u = UnitType::Point)
 				: LogFont(lf), Size(s, u) {}
+
 			bool operator==(const Font &o) const {
 				return CompareLogFont(&LogFont, &o.LogFont) && Size == o.Size;
 			}
@@ -112,6 +118,7 @@ namespace TVTest
 		{
 		public:
 			CStyleScaling();
+
 			bool SetDPI(int DPI);
 			int GetDPI() const;
 			bool SetSystemDPI(int DPI);
@@ -139,6 +146,7 @@ namespace TVTest
 		{
 		public:
 			CStyleManager();
+
 			bool Load(LPCTSTR pszFileName);
 			bool Set(const StyleInfo &Info);
 			bool Get(LPCTSTR pszName, StyleInfo *pInfo) const;

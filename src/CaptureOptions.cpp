@@ -62,9 +62,9 @@ CCaptureVariableStringMap::CCaptureVariableStringMap(
 bool CCaptureVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 {
 	if (::lstrcmpi(pszKeyword, TEXT("width")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_ImageWidth);
+		StringUtility::Format(*pString, TEXT("%d"), m_ImageWidth);
 	} else if (::lstrcmpi(pszKeyword, TEXT("height")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_ImageHeight);
+		StringUtility::Format(*pString, TEXT("%d"), m_ImageHeight);
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword, pString);
 	}
@@ -86,9 +86,6 @@ bool CCaptureVariableStringMap::GetParameterList(ParameterGroupList *pList) cons
 
 	return true;
 }
-
-
-}	// namespace TVTest
 
 
 
@@ -166,9 +163,9 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 	}
 	Settings.Read(TEXT("CaptureIconSaveFile"), &m_fCaptureSaveToFile);
 	Settings.Read(TEXT("CaptureSetComment"), &m_fSetComment);
-	TVTest::String CommentFormat;
+	String CommentFormat;
 	if (Settings.Read(TEXT("CaptureCommentFormat"), &CommentFormat))
-		m_CommentFormat = TVTest::StringUtility::Decode(CommentFormat);
+		m_CommentFormat = StringUtility::Decode(CommentFormat);
 	Settings.Read(TEXT("JpegQuality"), &m_JPEGQuality);
 	Settings.Read(TEXT("PngCompressionLevel"), &m_PNGCompressionLevel);
 	int Size;
@@ -211,7 +208,7 @@ bool CCaptureOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CaptureSaveFormat"), m_ImageCodec.EnumSaveFormat(m_SaveFormat));
 	Settings.Write(TEXT("CaptureIconSaveFile"), m_fCaptureSaveToFile);
 	Settings.Write(TEXT("CaptureSetComment"), m_fSetComment);
-	Settings.Write(TEXT("CaptureCommentFormat"), TVTest::StringUtility::Encode(m_CommentFormat));
+	Settings.Write(TEXT("CaptureCommentFormat"), StringUtility::Encode(m_CommentFormat));
 	Settings.Write(TEXT("JpegQuality"), m_JPEGQuality);
 	Settings.Write(TEXT("PngCompressionLevel"), m_PNGCompressionLevel);
 	Settings.Write(TEXT("CaptureSizeType"), m_CaptureSizeType);
@@ -291,12 +288,12 @@ bool CCaptureOptions::GetCustomSize(int *pWidth, int *pHeight) const
 
 
 bool CCaptureOptions::GenerateFileName(
-	TVTest::String *pFileName, const CCaptureImage *pImage) const
+	String *pFileName, const CCaptureImage *pImage) const
 {
 	if (pFileName == nullptr)
 		return false;
 
-	TVTest::CFilePath SaveFolder;
+	CFilePath SaveFolder;
 
 	if (!m_SaveFolder.empty()) {
 		if (!GetAbsolutePath(m_SaveFolder, &SaveFolder))
@@ -306,14 +303,14 @@ bool CCaptureOptions::GenerateFileName(
 			return false;
 	}
 
-	TVTest::CEventVariableStringMap::EventInfo EventInfo;
+	CEventVariableStringMap::EventInfo EventInfo;
 	GetAppClass().Core.GetVariableStringEventInfo(&EventInfo);
-	TVTest::CCaptureVariableStringMap VarStrMap(EventInfo, pImage);
-	TVTest::String FileName;
+	CCaptureVariableStringMap VarStrMap(EventInfo, pImage);
+	String FileName;
 
 	VarStrMap.SetCurrentTime(&pImage->GetCaptureTime());
 
-	if (!TVTest::FormatVariableString(&VarStrMap, m_FileName.c_str(), &FileName)
+	if (!FormatVariableString(&VarStrMap, m_FileName.c_str(), &FileName)
 			|| FileName.empty())
 		return false;
 	SaveFolder.Append(FileName);
@@ -364,24 +361,24 @@ bool CCaptureOptions::GetOptionText(LPTSTR pszOption, int MaxLength) const
 
 
 bool CCaptureOptions::GetCommentText(
-	TVTest::String *pComment, const CCaptureImage *pImage) const
+	String *pComment, const CCaptureImage *pImage) const
 {
 	if (pComment == nullptr || pImage == nullptr)
 		return false;
 
-	TVTest::CEventVariableStringMap::EventInfo EventInfo;
+	CEventVariableStringMap::EventInfo EventInfo;
 	GetAppClass().Core.GetVariableStringEventInfo(&EventInfo);
-	TVTest::CCaptureVariableStringMap VarStrMap(EventInfo, pImage);
+	CCaptureVariableStringMap VarStrMap(EventInfo, pImage);
 
 	VarStrMap.SetCurrentTime(&pImage->GetCaptureTime());
 
-	return TVTest::FormatVariableString(&VarStrMap, m_CommentFormat.c_str(), pComment);
+	return FormatVariableString(&VarStrMap, m_CommentFormat.c_str(), pComment);
 }
 
 
 bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 {
-	TVTest::String FileName;
+	String FileName;
 	TCHAR szOption[16];
 	BITMAPINFO *pbmi;
 	BYTE *pBits;
@@ -410,7 +407,7 @@ int CCaptureOptions::TranslateCommand(int Command)
 
 bool CCaptureOptions::OpenSaveFolder() const
 {
-	TVTest::String Folder;
+	String Folder;
 
 	if (!m_SaveFolder.empty()) {
 		if (!GetAbsolutePath(m_SaveFolder, &Folder))
@@ -541,7 +538,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS), &rc);
 				pt.x = rc.left;
 				pt.y = rc.bottom;
-				TVTest::CCaptureVariableStringMap VarStrMap;
+				CCaptureVariableStringMap VarStrMap;
 				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_FILENAME, pt);
 			}
 			return TRUE;
@@ -577,7 +574,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS), &rc);
 				pt.x = rc.left;
 				pt.y = rc.bottom;
-				TVTest::CCaptureVariableStringMap VarStrMap;
+				CCaptureVariableStringMap VarStrMap;
 				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_COMMENT, pt);
 			}
 			return TRUE;
@@ -588,7 +585,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				TVTest::String SaveFolder;
+				String SaveFolder;
 				GetDlgItemString(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, &SaveFolder);
 				CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
@@ -601,7 +598,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					return TRUE;
 				}
 
-				TVTest::String FileName, Message;
+				String FileName, Message;
 				GetDlgItemString(hDlg, IDC_CAPTUREOPTIONS_FILENAME, &FileName);
 				if (!IsValidFileName(FileName.c_str(), FileNameValidateFlag::AllowDelimiter, &Message)) {
 					SettingError();
@@ -641,14 +638,14 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void CCaptureOptions::UpdateFileNamePreview()
 {
-	TVTest::String Format;
-	TVTest::String FileName;
+	String Format;
+	String FileName;
 
 	GetDlgItemString(m_hDlg, IDC_CAPTUREOPTIONS_FILENAME, &Format);
 	if (!Format.empty()) {
-		TVTest::CCaptureVariableStringMap VarStrMap;
+		CCaptureVariableStringMap VarStrMap;
 		VarStrMap.SetSampleEventInfo();
-		TVTest::FormatVariableString(&VarStrMap, Format.c_str(), &FileName);
+		FormatVariableString(&VarStrMap, Format.c_str(), &FileName);
 		if (!FileName.empty()) {
 			LPCTSTR pszExtension = m_ImageCodec.GetExtension(
 				(int)DlgComboBox_GetCurSel(m_hDlg, IDC_CAPTUREOPTIONS_FORMAT));
@@ -660,3 +657,6 @@ void CCaptureOptions::UpdateFileNamePreview()
 	}
 	::SetDlgItemText(m_hDlg, IDC_CAPTUREOPTIONS_FILENAME_PREVIEW, FileName.c_str());
 }
+
+
+}	// namespace TVTest

@@ -22,6 +22,7 @@ namespace TVTest
 
 		CFavoriteItem(ItemType Type) : m_Type(Type) {}
 		virtual ~CFavoriteItem() = default;
+
 		ItemType GetType() const { return m_Type; }
 		virtual CFavoriteItem *Duplicate() const = 0;
 		LPCTSTR GetName() const { return m_Name.c_str(); }
@@ -38,7 +39,9 @@ namespace TVTest
 	public:
 		CFavoriteFolder();
 		CFavoriteFolder(const CFavoriteFolder &Src);
+
 		CFavoriteFolder &operator=(const CFavoriteFolder &Src);
+
 		CFavoriteFolder *Duplicate() const override;
 		void Clear();
 		size_t GetItemCount() const;
@@ -62,6 +65,7 @@ namespace TVTest
 	public:
 		CFavoriteChannel(const CChannelInfo &ChannelInfo);
 		~CFavoriteChannel();
+
 		CFavoriteChannel *Duplicate() const override;
 		LPCTSTR GetBonDriverFileName() const { return m_BonDriverFileName.c_str(); }
 		bool SetBonDriverFileName(LPCTSTR pszFileName);
@@ -99,8 +103,10 @@ namespace TVTest
 
 		CFavoritesMenu();
 		~CFavoritesMenu();
-		bool Create(const CFavoriteFolder *pFolder, UINT Command,
-					HMENU hmenu, HWND hwnd, CreateFlag Flags);
+
+		bool Create(
+			const CFavoriteFolder *pFolder, UINT Command,
+			HMENU hmenu, HWND hwnd, CreateFlag Flags);
 		void Destroy();
 		bool Show(UINT Flags, int x, int y);
 		bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
@@ -154,6 +160,7 @@ namespace TVTest
 	public:
 		COrganizeFavoritesDialog(CFavoritesManager *pManager);
 		~COrganizeFavoritesDialog();
+
 		bool Show(HWND hwndOwner) override;
 
 	private:
@@ -189,6 +196,7 @@ namespace TVTest
 
 		CFavoritesManager();
 		~CFavoritesManager();
+
 		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
 		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }
 		bool AddChannel(const CChannelInfo *pChannelInfo, LPCTSTR pszBonDriverFileName);

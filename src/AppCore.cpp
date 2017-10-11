@@ -7,9 +7,8 @@
 #include "Common/DebugDef.h"
 
 
-using namespace TVTest;
-
-
+namespace TVTest
+{
 
 
 CAppCore::CAppCore(CAppMain &App)
@@ -46,7 +45,7 @@ void CAppCore::OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTi
 		std::string Message = pErrorHandler->GetLastErrorCode().message();
 		if (!Message.empty()) {
 			int Length = ::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), nullptr, 0);
-			TVTest::String Text(Length, TEXT('\0'));
+			String Text(Length, TEXT('\0'));
 			::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), &Text[0], Length);
 			m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), Text.c_str());
 		}
@@ -72,7 +71,7 @@ void CAppCore::SetSilent(bool fSilent)
 bool CAppCore::InitializeChannel()
 {
 	const bool fNetworkDriver = m_App.CoreEngine.IsNetworkDriver();
-	TVTest::String ChannelFilePath;
+	String ChannelFilePath;
 
 	m_App.ChannelManager.Reset();
 	m_App.ChannelManager.MakeDriverTuningSpaceList(m_App.CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>());
@@ -117,7 +116,7 @@ bool CAppCore::InitializeChannel()
 }
 
 
-bool CAppCore::GetChannelFileName(LPCTSTR pszDriverFileName, TVTest::String *pChannelFileName)
+bool CAppCore::GetChannelFileName(LPCTSTR pszDriverFileName, String *pChannelFileName)
 {
 	if (pChannelFileName == nullptr)
 		return false;
@@ -126,7 +125,7 @@ bool CAppCore::GetChannelFileName(LPCTSTR pszDriverFileName, TVTest::String *pCh
 		return false;
 
 	const bool fRelative = ::PathIsRelative(pszDriverFileName) != FALSE;
-	TVTest::CFilePath Path, Path2, Dir;
+	CFilePath Path, Path2, Dir;
 
 	if (fRelative) {
 		if (!m_App.CoreEngine.GetDriverDirectoryPath(&Dir))
@@ -1141,7 +1140,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName)
 
 	GetVariableStringEventInfo(&FormatInfo, 60 * 1000);
 
-	TVTest::String Path;
+	String Path;
 	if (!m_App.RecordManager.GenerateFilePath(FormatInfo, nullptr, &Path)) {
 		OnError(TEXT("録画ファイルのパスを作成できません。"));
 		return false;
@@ -1275,7 +1274,7 @@ bool CAppCore::StartReservedRecord()
 		OnError(&m_App.RecordManager, TEXT("録画を開始できません。"));
 		return false;
 	}
-	TVTest::String ActualFileName;
+	String ActualFileName;
 	m_App.RecordManager.GetRecordTask()->GetFileName(&ActualFileName);
 	m_App.AddLog(TEXT("録画開始 %s"), ActualFileName.c_str());
 
@@ -1303,7 +1302,7 @@ bool CAppCore::StopRecord()
 		return false;
 
 	const CRecordTask *pTask = m_App.RecordManager.GetRecordTask();
-	TVTest::String FileName;
+	String FileName;
 	pTask->GetFileName(&FileName);
 
 	m_App.RecordManager.StopRecord();
@@ -1430,7 +1429,7 @@ bool CAppCore::IsDriverNoSignalLevel(LPCTSTR pszFileName) const
 }
 
 
-void CAppCore::NotifyTSProcessorNetworkChanged(TVTest::CTSProcessorManager::FilterOpenFlag FilterOpenFlags)
+void CAppCore::NotifyTSProcessorNetworkChanged(CTSProcessorManager::FilterOpenFlag FilterOpenFlags)
 {
 	StreamIDInfo StreamID;
 
@@ -1445,7 +1444,7 @@ void CAppCore::NotifyTSProcessorNetworkChanged(TVTest::CTSProcessorManager::Filt
 
 
 bool CAppCore::GetVariableStringEventInfo(
-	TVTest::CEventVariableStringMap::EventInfo *pInfo, DWORD NextEventMargin) const
+	CEventVariableStringMap::EventInfo *pInfo, DWORD NextEventMargin) const
 {
 	if (pInfo == nullptr)
 		return false;
@@ -1500,3 +1499,6 @@ bool CAppCore::GetVariableStringEventInfo(
 
 	return true;
 }
+
+
+}	// namespace TVTest

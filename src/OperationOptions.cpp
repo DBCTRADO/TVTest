@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 COperationOptions::COperationOptions()
@@ -58,7 +60,7 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 		CM_WHEEL_ZOOM,
 		CM_WHEEL_ASPECTRATIO,
 	};
-	TVTest::String Command;
+	String Command;
 	if (Settings.Read(TEXT("WheelCommand"), &Command)) {
 		m_WheelCommand = m_WheelCommandManager.ParseCommand(Command.c_str());
 	} else if (Settings.Read(TEXT("WheelMode"), &Value)
@@ -127,7 +129,7 @@ bool COperationOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ChannelUpDownOrder"), (int)m_ChannelUpDownOrder);
 	Settings.Write(TEXT("ChannelUpDownSkipSubChannel"), m_fChannelUpDownSkipSubChannel);
 
-	TCHAR szCommand[TVTest::CWheelCommandManager::MAX_COMMAND_PARSABLE_NAME];
+	TCHAR szCommand[CWheelCommandManager::MAX_COMMAND_PARSABLE_NAME];
 	m_WheelCommandManager.GetCommandParsableName(m_WheelCommand, szCommand, lengthof(szCommand));
 	Settings.Write(TEXT("WheelCommand"), szCommand);
 	m_WheelCommandManager.GetCommandParsableName(m_WheelShiftCommand, szCommand, lengthof(szCommand));
@@ -321,7 +323,7 @@ void COperationOptions::InitWheelSettings(int ID, int CurCommand) const
 
 	for (int i = 0; i < CommandCount; i++) {
 		int Command = m_WheelCommandManager.GetCommandID(i);
-		TCHAR szText[TVTest::CWheelCommandManager::MAX_COMMAND_TEXT];
+		TCHAR szText[CWheelCommandManager::MAX_COMMAND_TEXT];
 		m_WheelCommandManager.GetCommandText(Command, szText, lengthof(szText));
 		LRESULT Index = DlgComboBox_AddString(m_hDlg, ID, szText);
 		DlgComboBox_SetItemData(m_hDlg, ID, Index, Command);
@@ -331,3 +333,6 @@ void COperationOptions::InitWheelSettings(int ID, int CurCommand) const
 
 	DlgComboBox_SetCurSel(m_hDlg, ID, Sel);
 }
+
+
+}	// namespace TVTest

@@ -8,6 +8,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define IDC_PROGRAMINFO		1000
 
 
@@ -88,33 +92,33 @@ bool CInformationPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int 
 }
 
 
-void CInformationPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CInformationPanel::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CInformationPanel::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CInformationPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PANEL_CONTENT,
+		Theme::CThemeManager::STYLE_PANEL_CONTENT,
 		&m_Theme.Style);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_EVENTINFO,
+		Theme::CThemeManager::STYLE_INFORMATIONPANEL_EVENTINFO,
 		&m_Theme.ProgramInfoStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON,
+		Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON,
 		&m_Theme.ButtonStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON_HOT,
+		Theme::CThemeManager::STYLE_INFORMATIONPANEL_BUTTON_HOT,
 		&m_Theme.ButtonHotStyle);
 
 	if (m_hwnd != nullptr) {
@@ -142,7 +146,7 @@ void CInformationPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManag
 }
 
 
-bool CInformationPanel::SetFont(const TVTest::Style::Font &Font)
+bool CInformationPanel::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 
@@ -303,7 +307,7 @@ bool CInformationPanel::SetProgramInfoRichEdit(bool fRichEdit)
 void CInformationPanel::UpdateProgramInfoText()
 {
 	if (m_hwndProgramInfo != nullptr) {
-		const TVTest::String &InfoText =
+		const String &InfoText =
 			static_cast<const CProgramInfoItem*>(m_ItemList[ITEM_PROGRAMINFO])->GetInfoText();
 
 		if (m_fUseRichEdit) {
@@ -423,11 +427,11 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		}
 
 		if (IsItemVisible(ITEM_PROGRAMINFO)) {
-			TVTest::Theme::BorderStyle Style = m_Theme.ProgramInfoStyle.Back.Border;
+			Theme::BorderStyle Style = m_Theme.ProgramInfoStyle.Back.Border;
 			ConvertBorderWidthsInPixels(&Style);
 			RECT rc;
 			GetItemRect(ITEM_PROGRAMINFO, &rc);
-			TVTest::Theme::SubtractBorderRect(Style, &rc);
+			Theme::SubtractBorderRect(Style, &rc);
 			::MoveWindow(
 				m_hwndProgramInfo, rc.left, rc.top,
 				rc.right - rc.left, rc.bottom - rc.top, TRUE);
@@ -541,7 +545,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 				switch (pMsgFilter->msg) {
 				case WM_RBUTTONUP:
-					TVTest::EventInfoUtil::EventInfoContextMenu(hwnd, m_hwndProgramInfo);
+					EventInfoUtil::EventInfoContextMenu(hwnd, m_hwndProgramInfo);
 					break;
 
 				case WM_LBUTTONDOWN:
@@ -716,8 +720,8 @@ void CInformationPanel::Draw(HDC hdc, const RECT &PaintRect)
 	}
 
 	if (IsItemVisible(ITEM_PROGRAMINFO)) {
-		if (m_Theme.ProgramInfoStyle.Back.Border.Type != TVTest::Theme::BorderType::None) {
-			TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		if (m_Theme.ProgramInfoStyle.Back.Border.Type != Theme::BorderType::None) {
+			Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 			GetItemRect(ITEM_PROGRAMINFO, &rc);
 			ThemeDraw.Draw(m_Theme.ProgramInfoStyle.Back.Border, rc);
@@ -734,7 +738,7 @@ bool CInformationPanel::GetDrawItemRect(int Item, RECT *pRect, const RECT &Paint
 		return false;
 	GetItemRect(Item, pRect);
 	pRect->bottom += m_Style.LineSpacing;
-	return ::IsRectIntersect(&PaintRect, pRect) != FALSE;
+	return IsRectIntersect(&PaintRect, pRect);
 }
 
 
@@ -752,7 +756,7 @@ void CInformationPanel::DrawItem(
 		hdcDst = hdc;
 		rcDraw = Rect;
 	}
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
 
 	::FillRect(hdcDst, &rcDraw, m_BackBrush.GetHandle());
 
@@ -773,17 +777,17 @@ void CInformationPanel::DrawItem(
 
 		const bool fEnabled = pItem->IsButtonEnabled(i);
 		const bool fHot = m_HotButton.Item == pItem->GetID() && m_HotButton.Button == i;
-		const TVTest::Theme::Style &Style =
+		const Theme::Style &Style =
 			fEnabled && fHot ? m_Theme.ButtonHotStyle : m_Theme.ButtonStyle;
 
 		ThemeDraw.Draw(Style.Back, &rc);
 		RECT rcText = rc;
-		TVTest::Style::Subtract(&rcText, m_Style.ItemButtonPadding);
-		TVTest::Theme::ForegroundStyle Fore;
+		Style::Subtract(&rcText, m_Style.ItemButtonPadding);
+		Theme::ForegroundStyle Fore;
 		if (fEnabled)
 			Fore.Fill = Style.Fore.Fill;
 		else
-			Fore.Fill = TVTest::Theme::MixStyle(Style.Fore.Fill, Style.Back.Fill);
+			Fore.Fill = Theme::MixStyle(Style.Fore.Fill, Style.Back.Fill);
 		pItem->DrawButton(hdcDst, ThemeDraw, Fore, rc, rcText, i);
 	}
 
@@ -921,7 +925,7 @@ CInformationPanel::InformationPanelStyle::InformationPanelStyle()
 }
 
 
-void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CInformationPanel::InformationPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = InformationPanelStyle();
 	pStyleManager->Get(TEXT("info-panel.button"), &ButtonSize);
@@ -932,8 +936,8 @@ void CInformationPanel::InformationPanelStyle::SetStyle(const TVTest::Style::CSt
 
 
 void CInformationPanel::InformationPanelStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&ButtonSize);
 	pStyleScaling->ToPixels(&LineSpacing);
@@ -959,8 +963,8 @@ void CInformationPanel::CItem::DrawItem(HDC hdc, const RECT &Rect, LPCTSTR pszTe
 
 
 void CInformationPanel::CItem::DrawButton(
-	HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw,
-	const TVTest::Theme::ForegroundStyle Style,
+	HDC hdc, Theme::CThemeDraw &ThemeDraw,
+	const Theme::ForegroundStyle Style,
 	const RECT &ButtonRect, const RECT &TextRect,
 	int Button)
 {
@@ -1513,7 +1517,7 @@ bool CInformationPanel::CServiceItem::Update()
 {
 	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 	const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
-	TVTest::String ServiceName;
+	String ServiceName;
 
 	if (pAnalyzer != nullptr
 			&& pAnalyzer->GetServiceName(CoreEngine.GetServiceIndex(), &ServiceName)) {
@@ -1629,8 +1633,8 @@ void CInformationPanel::CProgramInfoItem::Draw(HDC hdc, const RECT &Rect)
 
 
 void CInformationPanel::CProgramInfoItem::DrawButton(
-	HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw,
-	const TVTest::Theme::ForegroundStyle Style,
+	HDC hdc, Theme::CThemeDraw &ThemeDraw,
+	const Theme::ForegroundStyle Style,
 	const RECT &ButtonRect, const RECT &TextRect,
 	int Button)
 {
@@ -1713,3 +1717,6 @@ void CInformationPanel::CProgramInfoItem::SetNext(bool fNext)
 		Update();
 	}
 }
+
+
+}	// namespace TVTest

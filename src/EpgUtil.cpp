@@ -6,6 +6,9 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
 namespace EpgUtil
 {
 
@@ -356,7 +359,7 @@ bool GetEventGenre(
 }
 
 
-TVTest::String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
+String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
 {
 	if (!EventInfo.EventText.empty()) {
 		LPCTSTR p = EventInfo.EventText.c_str();
@@ -365,17 +368,17 @@ TVTest::String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
 				p++;
 				continue;
 			}
-			return TVTest::String(p);
+			return String(p);
 		}
 	}
 
 	if (!EventInfo.ExtendedText.empty()) {
-		TVTest::String Text;
+		String Text;
 
 		for (auto it = EventInfo.ExtendedText.begin(); it != EventInfo.ExtendedText.end(); ++it) {
 			if (!it->Description.empty()
 					&& (it != EventInfo.ExtendedText.begin()
-						|| it->Description.find(TEXT("番組内容")) == TVTest::String::npos)) {
+						|| it->Description.find(TEXT("番組内容")) == String::npos)) {
 				Text += it->Description;
 				Text += TEXT("\r\n");
 			}
@@ -390,7 +393,7 @@ TVTest::String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
 		return Text;
 	}
 
-	return TVTest::String();
+	return String();
 }
 
 }
@@ -894,7 +897,7 @@ CEpgTheme::CEpgTheme()
 }
 
 
-void CEpgTheme::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CEpgTheme::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	m_ColorList[COLOR_EVENTNAME] =
 		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_EVENTTITLE);
@@ -908,7 +911,7 @@ void CEpgTheme::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
-bool CEpgTheme::SetColor(int Type, const TVTest::Theme::ThemeColor &Color)
+bool CEpgTheme::SetColor(int Type, const Theme::ThemeColor &Color)
 {
 	if (Type < 0 || Type >= NUM_COLORS)
 		return false;
@@ -917,15 +920,15 @@ bool CEpgTheme::SetColor(int Type, const TVTest::Theme::ThemeColor &Color)
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetColor(int Type) const
+Theme::ThemeColor CEpgTheme::GetColor(int Type) const
 {
 	if (Type < 0 || Type >= NUM_COLORS)
-		return TVTest::Theme::ThemeColor();
+		return Theme::ThemeColor();
 	return m_ColorList[Type];
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
+Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
 {
 	return m_ColorList[
 		Genre >= 0 && Genre <= CEpgGenre::GENRE_LAST ?
@@ -934,7 +937,7 @@ TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const LibISDB::EventInfo &EventInfo) const
+Theme::ThemeColor CEpgTheme::GetGenreColor(const LibISDB::EventInfo &EventInfo) const
 {
 	int Genre;
 
@@ -945,14 +948,14 @@ TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const LibISDB::EventInfo &Eve
 }
 
 
-TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 	int Genre, ContentStyleFlag Flags) const
 {
 	return GetContentBackgroundStyle(GetGenreColor(Genre), Flags);
 }
 
 
-TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 	const LibISDB::EventInfo &EventInfo, ContentStyleFlag Flags) const
 {
 	return GetContentBackgroundStyle(GetGenreColor(EventInfo), Flags);
@@ -960,7 +963,7 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 
 
 bool CEpgTheme::DrawContentBackground(
-	HDC hdc, TVTest::Theme::CThemeDraw &ThemeDraw, const RECT &Rect,
+	HDC hdc, Theme::CThemeDraw &ThemeDraw, const RECT &Rect,
 	const LibISDB::EventInfo &EventInfo, DrawContentBackgroundFlag Flags) const
 {
 	if (hdc == nullptr)
@@ -975,7 +978,7 @@ bool CEpgTheme::DrawContentBackground(
 
 	if (!!(Flags & DrawContentBackgroundFlag::Separator)) {
 		RECT rc = Rect;
-		rc.bottom = rc.top + ThemeDraw.GetStyleScaling()->ToPixels(1, TVTest::Style::UnitType::LogicalPixel);
+		rc.bottom = rc.top + ThemeDraw.GetStyleScaling()->ToPixels(1, Style::UnitType::LogicalPixel);
 		DrawUtil::Fill(hdc, &rc, MixColor(GetGenreColor(EventInfo), RGB(0, 0, 0), 224));
 	}
 
@@ -983,17 +986,17 @@ bool CEpgTheme::DrawContentBackground(
 }
 
 
-TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	const TVTest::Theme::ThemeColor &Color, ContentStyleFlag Flags) const
+Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	const Theme::ThemeColor &Color, ContentStyleFlag Flags) const
 {
-	TVTest::Theme::BackgroundStyle BackStyle;
+	Theme::BackgroundStyle BackStyle;
 
 	if (!(Flags & ContentStyleFlag::Current)) {
-		BackStyle.Fill.Type = TVTest::Theme::FillType::Solid;
-		BackStyle.Fill.Solid = TVTest::Theme::SolidStyle(Color);
+		BackStyle.Fill.Type = Theme::FillType::Solid;
+		BackStyle.Fill.Solid = Theme::SolidStyle(Color);
 	} else {
 		double h, s, v, s1, v1;
-		TVTest::Theme::ThemeColor Color1, Color2;
+		Theme::ThemeColor Color1, Color2;
 		RGBToHSV(Color.Red, Color.Green, Color.Blue, &h, &s, &v);
 		s1 = s;
 		v1 = v;
@@ -1019,17 +1022,20 @@ TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 				v1 = 0.0;
 		}
 		Color2 = HSVToRGB(h, s1, v1);
-		BackStyle.Fill.Type = TVTest::Theme::FillType::Gradient;
-		BackStyle.Fill.Gradient = TVTest::Theme::GradientStyle(
-			TVTest::Theme::GradientType::Normal,
-			TVTest::Theme::GradientDirection::Vert,
+		BackStyle.Fill.Type = Theme::FillType::Gradient;
+		BackStyle.Fill.Gradient = Theme::GradientStyle(
+			Theme::GradientType::Normal,
+			Theme::GradientDirection::Vert,
 			Color1, Color2);
 	}
 
 #if 0
 	if (!!(Flags & ContentStyleFlag::NoBorder))
-		BackStyle.Border.Type = TVTest::Theme::BorderType::None;
+		BackStyle.Border.Type = Theme::BorderType::None;
 #endif
 
 	return BackStyle;
 }
+
+
+}	// namespace TVTest

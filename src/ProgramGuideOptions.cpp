@@ -9,6 +9,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define IEPG_ASSOCIATE_COMMAND TEXT("iEpgAssociate")
 
 
@@ -93,7 +97,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("ShowToolTip"), &f))
 			m_pProgramGuide->SetShowToolTip(f);
 
-		if (TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("Font"), &m_Font, true, &f)) {
+		if (StyleUtil::ReadFontSettings(Settings, TEXT("Font"), &m_Font, true, &f)) {
 			if (!f)
 				m_fChanged = true;
 		}
@@ -102,12 +106,12 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		Settings.Read(TEXT("UseDirectWrite"), &m_fUseDirectWrite);
 		m_pProgramGuide->SetTextDrawEngine(
 			m_fUseDirectWrite ?
-				TVTest::CTextDrawClient::TextDrawEngine::DirectWrite :
-				TVTest::CTextDrawClient::TextDrawEngine::GDI);
+				CTextDrawClient::TextDrawEngine::DirectWrite :
+				CTextDrawClient::TextDrawEngine::GDI);
 
 		unsigned int Mask;
 		if (Settings.Read(TEXT("DirectWriteRenderingParamsMask"), &Mask))
-			m_DirectWriteRenderingParams.Mask = static_cast<TVTest::CDirectWriteRenderer::RenderingParams::ParamFlag>(Mask);
+			m_DirectWriteRenderingParams.Mask = static_cast<CDirectWriteRenderer::RenderingParams::ParamFlag>(Mask);
 		Settings.Read(TEXT("DirectWriteGamma"), &m_DirectWriteRenderingParams.Gamma);
 		Settings.Read(TEXT("DirectWriteEnhancedContrast"), &m_DirectWriteRenderingParams.EnhancedContrast);
 		Settings.Read(TEXT("DirectWriteClearTypeLevel"), &m_DirectWriteRenderingParams.ClearTypeLevel);
@@ -199,7 +203,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 
 		if (Settings.Read(TEXT("ToolCount"), &NumTools) && NumTools > 0) {
 			CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
-			TVTest::String ToolName, Command;
+			String ToolName, Command;
 
 			for (unsigned int i = 0; i < NumTools; i++) {
 				TCHAR szName[32];
@@ -314,7 +318,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("WheelScrollLines"), m_WheelScrollLines);
 		Settings.Write(TEXT("ProgramLDoubleClick"), m_ProgramLDoubleClickCommand);
 
-		TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("Font"), m_Font);
+		StyleUtil::WriteFontSettings(Settings, TEXT("Font"), m_Font);
 
 		Settings.Write(TEXT("UseDirectWrite"), m_fUseDirectWrite);
 		Settings.Write(TEXT("DirectWriteRenderingParamsMask"), static_cast<unsigned int>(m_DirectWriteRenderingParams.Mask));
@@ -494,7 +498,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				CProgramGuide::MIN_LINES_PER_HOUR, CProgramGuide::MAX_LINES_PER_HOUR);
 
 			m_CurSettingFont = m_Font;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
+			StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
 
 			DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE, m_fUseDirectWrite);
 			EnableDlgItem(
@@ -551,10 +555,10 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
 
 				for (int j = 0; j < pPlugin->NumProgramGuideCommands(); j++) {
-					TVTest::ProgramGuideCommandInfo CommandInfo;
+					ProgramGuideCommandInfo CommandInfo;
 
 					pPlugin->GetProgramGuideCommandInfo(j, &CommandInfo);
-					if (CommandInfo.Type == TVTest::PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
+					if (CommandInfo.Type == PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
 						TCHAR szCommand[512];
 
 						StdUtil::snprintf(
@@ -568,7 +572,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
 							Index, reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
 						if (Sel < 0 && !m_ProgramLDoubleClickCommand.empty()
-								&& TVTest::StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, szCommand) == 0)
+								&& StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, szCommand) == 0)
 							Sel = (int)Index;
 					}
 				}
@@ -632,8 +636,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_PROGRAMGUIDEOPTIONS_CHOOSEFONT:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
+			if (StyleUtil::ChooseStyleFont(hDlg, &m_CurSettingFont))
+				StyleUtil::SetFontInfoItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_FONTINFO, m_CurSettingFont);
 			return TRUE;
 
 		case IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE:
@@ -646,13 +650,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS:
 			{
 				class CRenderingTester
-					: public TVTest::CDirectWriteOptionsDialog::CRenderingTester
+					: public CDirectWriteOptionsDialog::CRenderingTester
 				{
 				public:
 					CRenderingTester(
 						CProgramGuide *pProgramGuide,
-						const TVTest::CDirectWriteRenderer::RenderingParams &Params,
-						const TVTest::Style::Font &Font)
+						const CDirectWriteRenderer::RenderingParams &Params,
+						const Style::Font &Font)
 						: m_pProgramGuide(pProgramGuide)
 						, m_OldParams(Params)
 						, m_Font(Font)
@@ -661,14 +665,14 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					{
 					}
 
-					void Apply(const TVTest::CDirectWriteRenderer::RenderingParams &Params) override
+					void Apply(const CDirectWriteRenderer::RenderingParams &Params) override
 					{
 						if (!m_fApplied) {
-							TVTest::Style::Font Font;
+							Style::Font Font;
 
 							m_OldEngine = m_pProgramGuide->GetTextDrawEngine();
-							if (m_OldEngine != TVTest::CTextDrawClient::TextDrawEngine::DirectWrite)
-								m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine::DirectWrite);
+							if (m_OldEngine != CTextDrawClient::TextDrawEngine::DirectWrite)
+								m_pProgramGuide->SetTextDrawEngine(CTextDrawClient::TextDrawEngine::DirectWrite);
 							m_pProgramGuide->GetFont(&Font);
 							if (m_Font != Font) {
 								m_pProgramGuide->SetFont(m_Font);
@@ -683,7 +687,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					void Reset() override
 					{
 						if (m_fApplied) {
-							if (m_OldEngine != TVTest::CTextDrawClient::TextDrawEngine::DirectWrite)
+							if (m_OldEngine != CTextDrawClient::TextDrawEngine::DirectWrite)
 								m_pProgramGuide->SetTextDrawEngine(m_OldEngine);
 							if (m_fFontChanged)
 								m_pProgramGuide->SetFont(m_OldFont);
@@ -697,15 +701,15 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 				private:
 					CProgramGuide *m_pProgramGuide;
-					TVTest::CDirectWriteRenderer::RenderingParams m_OldParams;
-					TVTest::Style::Font m_Font;
-					TVTest::Style::Font m_OldFont;
+					CDirectWriteRenderer::RenderingParams m_OldParams;
+					Style::Font m_Font;
+					Style::Font m_OldFont;
 					bool m_fApplied;
 					bool m_fFontChanged;
-					TVTest::CTextDrawClient::TextDrawEngine m_OldEngine;
+					CTextDrawClient::TextDrawEngine m_OldEngine;
 				};
 
-				TVTest::CDirectWriteOptionsDialog Dialog(
+				CDirectWriteOptionsDialog Dialog(
 					&m_DirectWriteRenderingParams, m_CurSettingFont.LogFont);
 				CRenderingTester RenderingTester(
 					m_pProgramGuide, m_DirectWriteRenderingParams, m_CurSettingFont);
@@ -716,13 +720,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					if (RenderingTester.IsApplied()) {
 #if 0
 						if (!m_fUseDirectWrite)
-							m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::ENGINE_GDI);
+							m_pProgramGuide->SetTextDrawEngine(CTextDrawClient::ENGINE_GDI);
 						if (RenderingTester.IsFontChanged())
 							m_pProgramGuide->SetFont(m_Font);
 #else
 						if (!m_fUseDirectWrite) {
 							m_fUseDirectWrite = true;
-							m_pProgramGuide->SetTextDrawEngine(TVTest::CTextDrawClient::TextDrawEngine::DirectWrite);
+							m_pProgramGuide->SetTextDrawEngine(CTextDrawClient::TextDrawEngine::DirectWrite);
 						}
 						if (RenderingTester.IsFontChanged()) {
 							m_Font = m_CurSettingFont;
@@ -957,8 +961,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					m_fUseDirectWrite = fUseDirectWrite;
 					m_pProgramGuide->SetTextDrawEngine(
 						m_fUseDirectWrite ?
-							TVTest::CTextDrawClient::TextDrawEngine::DirectWrite :
-							TVTest::CTextDrawClient::TextDrawEngine::GDI);
+							CTextDrawClient::TextDrawEngine::DirectWrite :
+							CTextDrawClient::TextDrawEngine::GDI);
 				}
 
 				UINT VisibleEventIcons = 0;
@@ -1084,3 +1088,6 @@ void CProgramGuideOptions::DeleteAllTools()
 		}
 	}
 }
+
+
+}	// namespace TVTest

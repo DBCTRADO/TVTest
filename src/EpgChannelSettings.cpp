@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CEpgChannelSettings::CEpgChannelSettings(CProgramGuide *pProgramGuide)
@@ -173,3 +175,6 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

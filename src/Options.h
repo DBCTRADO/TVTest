@@ -1,53 +1,60 @@
-#ifndef OPTIONS_H
-#define OPTIONS_H
+#ifndef TVTEST_OPTIONS_H
+#define TVTEST_OPTIONS_H
 
 
 #include "Settings.h"
 #include "Dialog.h"
 
 
-class ABSTRACT_CLASS(COptionFrame)
+namespace TVTest
 {
-public:
-	virtual ~COptionFrame() = default;
-	virtual void ActivatePage(class COptions * pOptions) = 0;
-	virtual void OnSettingError(class COptions * pOptions) = 0;
-};
 
-class COptions
-	: public CBasicDialog
-	, public CSettingsBase
-{
-public:
-	enum {
-		UPDATE_GENERAL_BUILDMEDIAVIEWER = 0x00000001UL,
-		UPDATE_GENERAL_EVENTINFOFONT    = 0x00000002UL,
-		UPDATE_ALL                      = 0xFFFFFFFFUL
+	class ABSTRACT_CLASS(COptionFrame)
+	{
+	public:
+		virtual ~COptionFrame() = default;
+
+		virtual void ActivatePage(class COptions * pOptions) = 0;
+		virtual void OnSettingError(class COptions * pOptions) = 0;
 	};
 
-	COptions();
-	COptions(LPCTSTR pszSection);
-	virtual ~COptions();
-	DWORD GetUpdateFlags() const { return m_UpdateFlags; }
-	DWORD SetUpdateFlag(DWORD Flag);
-	void ClearUpdateFlags() { m_UpdateFlags = 0; }
-	virtual bool Apply(DWORD Flags) { return true; }
+	class COptions
+		: public CBasicDialog
+		, public CSettingsBase
+	{
+	public:
+		enum {
+			UPDATE_GENERAL_BUILDMEDIAVIEWER = 0x00000001UL,
+			UPDATE_GENERAL_EVENTINFOFONT    = 0x00000002UL,
+			UPDATE_ALL                      = 0xFFFFFFFFUL
+		};
 
-	static void SetFrame(COptionFrame *pFrame) { m_pFrame = pFrame; }
-	static void ClearGeneralUpdateFlags() { m_GeneralUpdateFlags = 0; }
-	static DWORD GetGeneralUpdateFlags() { return m_GeneralUpdateFlags; }
-	static DWORD SetGeneralUpdateFlag(DWORD Flag);
+		COptions();
+		COptions(LPCTSTR pszSection);
 
-protected:
-	void ActivatePage();
-	void SettingError();
+		virtual ~COptions();
+		DWORD GetUpdateFlags() const { return m_UpdateFlags; }
+		DWORD SetUpdateFlag(DWORD Flag);
+		void ClearUpdateFlags() { m_UpdateFlags = 0; }
+		virtual bool Apply(DWORD Flags) { return true; }
 
-	DWORD m_UpdateFlags;
+		static void SetFrame(COptionFrame *pFrame) { m_pFrame = pFrame; }
+		static void ClearGeneralUpdateFlags() { m_GeneralUpdateFlags = 0; }
+		static DWORD GetGeneralUpdateFlags() { return m_GeneralUpdateFlags; }
+		static DWORD SetGeneralUpdateFlag(DWORD Flag);
 
-private:
-	static COptionFrame *m_pFrame;
-	static DWORD m_GeneralUpdateFlags;
-};
+	protected:
+		void ActivatePage();
+		void SettingError();
+
+		DWORD m_UpdateFlags;
+
+	private:
+		static COptionFrame *m_pFrame;
+		static DWORD m_GeneralUpdateFlags;
+	};
+
+}	// namespace TVTest
 
 
 #endif

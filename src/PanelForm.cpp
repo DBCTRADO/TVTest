@@ -4,6 +4,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const LPCTSTR CPanelForm::m_pszClassName = APP_NAME TEXT(" Panel Form");
@@ -75,32 +77,32 @@ void CPanelForm::SetVisible(bool fVisible)
 }
 
 
-void CPanelForm::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanelForm::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CPanelForm::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CPanelForm::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CPanelForm::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	PanelFormTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PANEL_TAB,
+		Theme::CThemeManager::STYLE_PANEL_TAB,
 		&Theme.TabStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PANEL_CURTAB,
+		Theme::CThemeManager::STYLE_PANEL_CURTAB,
 		&Theme.CurTabStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PANEL_TABMARGIN,
+		Theme::CThemeManager::STYLE_PANEL_TABMARGIN,
 		&Theme.TabMarginStyle);
 	Theme.BackColor =
 		pThemeManager->GetColor(CColorScheme::COLOR_PANELBACK);
@@ -165,7 +167,7 @@ bool CPanelForm::SetCurTab(int Index)
 
 			GetClientRect(&rc);
 			rc.top = m_TabHeight;
-			TVTest::Style::Subtract(&rc, m_Style.ClientMargin);
+			Style::Subtract(&rc, m_Style.ClientMargin);
 			pWindow->m_pWindow->SetPosition(&rc);
 			pWindow->m_pWindow->OnActivate();
 			pWindow->m_pWindow->SetVisible(true);
@@ -311,7 +313,7 @@ int CPanelForm::GetTabID(int Index) const
 }
 
 
-bool CPanelForm::GetTabTitle(int ID, TVTest::String *pTitle) const
+bool CPanelForm::GetTabTitle(int ID, String *pTitle) const
 {
 	if (pTitle == nullptr)
 		return false;
@@ -352,7 +354,7 @@ bool CPanelForm::GetPanelFormTheme(PanelFormTheme *pTheme) const
 }
 
 
-bool CPanelForm::SetTabFont(const TVTest::Style::Font &Font)
+bool CPanelForm::SetTabFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 	if (m_hwnd != nullptr) {
@@ -363,7 +365,7 @@ bool CPanelForm::SetTabFont(const TVTest::Style::Font &Font)
 }
 
 
-bool CPanelForm::SetPageFont(const TVTest::Style::Font &Font)
+bool CPanelForm::SetPageFont(const Style::Font &Font)
 {
 	for (size_t i = 0; i < m_WindowList.size(); i++)
 		m_WindowList[i]->m_pWindow->SetFont(Font);
@@ -378,7 +380,7 @@ bool CPanelForm::GetPageClientRect(RECT *pRect) const
 	if (!GetClientRect(pRect))
 		return false;
 	pRect->top = m_TabHeight;
-	TVTest::Style::Subtract(pRect, m_Style.ClientMargin);
+	Style::Subtract(pRect, m_Style.ClientMargin);
 	return true;
 }
 
@@ -463,7 +465,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if (m_CurTab >= 0) {
 			RECT rc;
 			::SetRect(&rc, 0, m_TabHeight, LOWORD(lParam), HIWORD(lParam));
-			TVTest::Style::Subtract(&rc, m_Style.ClientMargin);
+			Style::Subtract(&rc, m_Style.ClientMargin);
 			m_WindowList[m_CurTab]->m_pWindow->SetPosition(&rc);
 		}
 		return 0;
@@ -642,7 +644,7 @@ int CPanelForm::HitTest(int x, int y) const
 void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 {
 	if (PaintRect.top < m_TabHeight) {
-		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		const int TabWidth = GetRealTabWidth();
 		COLORREF crOldTextColor;
 		int OldBkMode;
@@ -667,7 +669,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 				continue;
 
 			const bool fCur = Index == m_CurTab;
-			const TVTest::Theme::Style &Style = fCur ? m_Theme.CurTabStyle : m_Theme.TabStyle;
+			const Theme::Style &Style = fCur ? m_Theme.CurTabStyle : m_Theme.TabStyle;
 			RECT rcTab, rcContent, rcText;
 
 			rcTab = rc;
@@ -684,12 +686,12 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 			}
 
 			rcContent = rc;
-			TVTest::Style::Subtract(&rcContent, m_Style.TabPadding);
+			Style::Subtract(&rcContent, m_Style.TabPadding);
 			rcText = rcContent;
 
 			if (m_TabStyle != TabStyle::TextOnly) {
 				RECT rcIcon = rcContent;
-				TVTest::Style::Subtract(&rcIcon, m_Style.TabIconMargin);
+				Style::Subtract(&rcIcon, m_Style.TabIconMargin);
 				int x = rcIcon.left;
 				int y = rcIcon.top + ((rcIcon.bottom - rcIcon.top) - m_Style.TabIconSize.Height) / 2;
 				if (m_TabStyle == TabStyle::IconOnly)
@@ -718,7 +720,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 			}
 
 			if (m_TabStyle != TabStyle::IconOnly) {
-				TVTest::Style::Subtract(&rcText, m_Style.TabLabelMargin);
+				Style::Subtract(&rcText, m_Style.TabLabelMargin);
 				ThemeDraw.Draw(
 					Style.Fore, rcText, pWindow->m_Title.c_str(),
 					(m_TabStyle != TabStyle::TextOnly ? DT_LEFT : DT_CENTER)
@@ -823,7 +825,7 @@ CPanelForm::CPage::~CPage() = default;
 
 bool CPanelForm::CPage::CreateDefaultFont(DrawUtil::CFont *pFont)
 {
-	TVTest::Style::Font Font;
+	Style::Font Font;
 
 	if (!GetDefaultFont(&Font))
 		return false;
@@ -844,7 +846,7 @@ CPanelForm::PanelFormStyle::PanelFormStyle()
 }
 
 
-void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanelForm::PanelFormStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = PanelFormStyle();
 	pStyleManager->Get(TEXT("panel.tab.padding"), &TabPadding);
@@ -857,8 +859,8 @@ void CPanelForm::PanelFormStyle::SetStyle(const TVTest::Style::CStyleManager *pS
 
 
 void CPanelForm::PanelFormStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&TabPadding);
 	pStyleScaling->ToPixels(&TabIconSize);
@@ -867,3 +869,6 @@ void CPanelForm::PanelFormStyle::NormalizeStyle(
 	pStyleScaling->ToPixels(&TabIconLabelMargin);
 	pStyleScaling->ToPixels(&ClientMargin);
 }
+
+
+}	// namespace TVTest

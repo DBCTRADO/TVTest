@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CUICore::CUICore(CAppMain &App)
@@ -307,9 +309,9 @@ bool CUICore::SetAudioStream(int Stream)
 	else
 		ComponentTag = LibISDB::COMPONENT_TAG_INVALID;
 
-	TVTest::CAudioManager::AudioSelectInfo SelInfo;
+	CAudioManager::AudioSelectInfo SelInfo;
 	if (!m_App.AudioManager.GetAudioSelectInfoByID(
-				TVTest::CAudioManager::MakeID(Stream, ComponentTag),
+				CAudioManager::MakeID(Stream, ComponentTag),
 				&SelInfo))
 		return false;
 
@@ -319,12 +321,12 @@ bool CUICore::SetAudioStream(int Stream)
 
 bool CUICore::SelectAudio(int Index)
 {
-	TVTest::CAudioManager::AudioInfo Info;
+	CAudioManager::AudioInfo Info;
 
 	if (!m_App.AudioManager.GetAudioInfo(Index, &Info))
 		return false;
 
-	TVTest::CAudioManager::AudioSelectInfo SelInfo;
+	CAudioManager::AudioSelectInfo SelInfo;
 
 	SelInfo.ID = Info.ID;
 	SelInfo.DualMono = Info.DualMono;
@@ -339,7 +341,7 @@ bool CUICore::AutoSelectAudio()
 	if (Index >= 0)
 		return SelectAudio(Index);
 
-	TVTest::CAudioManager::AudioSelectInfo DefaultAudio;
+	CAudioManager::AudioSelectInfo DefaultAudio;
 	if (m_App.AudioManager.GetDefaultAudio(&DefaultAudio) < 0)
 		return false;
 
@@ -347,10 +349,10 @@ bool CUICore::AutoSelectAudio()
 }
 
 
-bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info, bool fUpdate)
+bool CUICore::SelectAudio(const CAudioManager::AudioSelectInfo &Info, bool fUpdate)
 {
 	int AudioIndex;
-	const BYTE ComponentTag = TVTest::CAudioManager::IDToComponentTag(Info.ID);
+	const BYTE ComponentTag = CAudioManager::IDToComponentTag(Info.ID);
 
 	if (ComponentTag != LibISDB::COMPONENT_TAG_INVALID) {
 		const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
@@ -361,7 +363,7 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info, bo
 			AudioIndex = -1;
 		}
 	} else {
-		AudioIndex = TVTest::CAudioManager::IDToStreamIndex(Info.ID);
+		AudioIndex = CAudioManager::IDToStreamIndex(Info.ID);
 	}
 
 	if (AudioIndex >= 0) {
@@ -369,13 +371,13 @@ bool CUICore::SelectAudio(const TVTest::CAudioManager::AudioSelectInfo &Info, bo
 			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Invalid;
 
 		switch (Info.DualMono) {
-		case TVTest::CAudioManager::DualMonoMode::Main:
+		case CAudioManager::DualMonoMode::Main:
 			DualMonoMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
 			break;
-		case TVTest::CAudioManager::DualMonoMode::Sub:
+		case CAudioManager::DualMonoMode::Sub:
 			DualMonoMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
 			break;
-		case TVTest::CAudioManager::DualMonoMode::Both:
+		case CAudioManager::DualMonoMode::Both:
 			DualMonoMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
 			break;
 		}
@@ -412,12 +414,12 @@ bool CUICore::SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMo
 	if (fUpdate) {
 		m_App.AudioManager.SetSelectedDualMonoMode(
 			Mode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main ?
-				TVTest::CAudioManager::DualMonoMode::Main :
+				CAudioManager::DualMonoMode::Main :
 			Mode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub ?
-				TVTest::CAudioManager::DualMonoMode::Sub :
+				CAudioManager::DualMonoMode::Sub :
 			Mode == LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both ?
-				TVTest::CAudioManager::DualMonoMode::Both :
-				TVTest::CAudioManager::DualMonoMode::Invalid);
+				CAudioManager::DualMonoMode::Both :
+				CAudioManager::DualMonoMode::Invalid);
 	}
 	m_App.AppEventManager.OnDualMonoModeChanged(Mode);
 	return true;
@@ -575,10 +577,10 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 				if (Pos < AudioInfo.Text.length() && AudioInfo.Text[Pos] == TEXT('\n'))
 					Pos++;
 				StdUtil::snprintf(szBuf + Pos, lengthof(szBuf) - Pos, TEXT("/%s"), AudioInfo.Text.c_str() + Pos);
-				TVTest::StringUtility::ToHalfWidthNoKatakana(
+				StringUtility::ToHalfWidthNoKatakana(
 					szBuf, szAudio, lengthof(szAudio));
 			} else {
-				TVTest::StringUtility::ToHalfWidthNoKatakana(
+				StringUtility::ToHalfWidthNoKatakana(
 					AudioInfo.Text.c_str(), szAudio, lengthof(szAudio));
 			}
 
@@ -723,9 +725,9 @@ bool CUICore::SetStandby(bool fStandby, bool fTransient)
 		m_fTransientStandby = fStandby && fTransient;
 		m_App.TaskTrayManager.SetStatus(
 			fStandby ?
-				TVTest::CTaskTrayManager::StatusFlag::Standby :
-				TVTest::CTaskTrayManager::StatusFlag::None,
-			TVTest::CTaskTrayManager::StatusFlag::Standby);
+				CTaskTrayManager::StatusFlag::Standby :
+				CTaskTrayManager::StatusFlag::None,
+			CTaskTrayManager::StatusFlag::Standby);
 		m_App.AppEventManager.OnStandbyChanged(fStandby);
 	}
 	return true;
@@ -1318,10 +1320,10 @@ bool CUICore::UpdateIcon()
 }
 
 
-static void RemoveMultipleSpaces(TVTest::String &Str)
+static void RemoveMultipleSpaces(String &Str)
 {
 	// 連続する空白を除去する
-	TVTest::String::size_type i, j;
+	String::size_type i, j;
 	for (i = 0; i < Str.length() && Str[i] == L' '; i++);
 	WCHAR LastChar = L'\0';
 	for (j = 0; i < Str.length(); i++) {
@@ -1359,14 +1361,14 @@ bool CUICore::UpdateTitle()
 	}
 
 	CTitleStringMap::EventInfo EventInfo;
-	TVTest::String TitleText, WindowText;
+	String TitleText, WindowText;
 
 	m_App.Core.GetVariableStringEventInfo(&EventInfo);
 	CTitleStringMap Map(m_App, &EventInfo);
-	TVTest::FormatVariableString(&Map, pszTitleTextFormat, &TitleText);
+	FormatVariableString(&Map, pszTitleTextFormat, &TitleText);
 	RemoveMultipleSpaces(TitleText);
 	if (pszWindowTextFormat != nullptr) {
-		TVTest::FormatVariableString(&Map, pszWindowTextFormat, &WindowText);
+		FormatVariableString(&Map, pszWindowTextFormat, &WindowText);
 		RemoveMultipleSpaces(WindowText);
 	}
 
@@ -1378,7 +1380,7 @@ bool CUICore::UpdateTitle()
 }
 
 
-bool CUICore::SetTitleFont(const TVTest::Style::Font &Font)
+bool CUICore::SetTitleFont(const Style::Font &Font)
 {
 	if (m_pSkin == nullptr)
 		return false;
@@ -1469,7 +1471,7 @@ const CColorScheme *CUICore::GetCurrentColorScheme() const
 // 配色を適用する
 bool CUICore::ApplyColorScheme(const CColorScheme *pColorScheme)
 {
-	TVTest::Theme::CThemeManager ThemeManager(pColorScheme);
+	Theme::CThemeManager ThemeManager(pColorScheme);
 
 	m_pColorScheme = pColorScheme;
 
@@ -1641,7 +1643,7 @@ CUICore::CTitleStringMap::CTitleStringMap(CAppMain &App, const EventInfo *pInfo)
 }
 
 
-bool CUICore::CTitleStringMap::GetLocalString(LPCWSTR pszKeyword, TVTest::String *pString)
+bool CUICore::CTitleStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 {
 	if (::lstrcmpi(pszKeyword, TEXT("event-time")) == 0) {
 		TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH + 1];
@@ -1872,3 +1874,6 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 
 	return false;
 }
+
+
+}	// namespace TVTest

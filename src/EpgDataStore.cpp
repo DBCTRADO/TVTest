@@ -126,7 +126,7 @@ bool CEpgDataStore::Save()
 
 	CAppMain &App = GetAppClass();
 
-	TVTest::String LockName;
+	String LockName;
 	LockName = m_EPGDataFile.GetFileName();
 	StringUtility::ToUpper(LockName);
 	StringUtility::Replace(LockName, TEXT('\\'), TEXT(':'));

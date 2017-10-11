@@ -8,7 +8,9 @@
 #include "resource.h"
 #include "Common/DebugDef.h"
 
-using namespace TVTest;
+
+namespace TVTest
+{
 
 
 static const LPCTSTR GradientDirectionList[] = {
@@ -530,7 +532,7 @@ bool CColorScheme::GetBorderStyle(int Border, Theme::BorderStyle *pStyle) const
 
 void CColorScheme::SetName(LPCTSTR pszName)
 {
-	TVTest::StringUtility::Assign(m_Name, pszName);
+	StringUtility::Assign(m_Name, pszName);
 }
 
 
@@ -877,7 +879,7 @@ bool CColorScheme::Save(LPCTSTR pszFileName, SaveFlag Flags) const
 
 bool CColorScheme::SetFileName(LPCTSTR pszFileName)
 {
-	TVTest::StringUtility::Assign(m_FileName, pszFileName);
+	StringUtility::Assign(m_FileName, pszFileName);
 	return true;
 }
 
@@ -1102,3 +1104,6 @@ void CColorSchemeList::SortByName()
 			});
 	}
 }
+
+
+}	// namespace TVTest

@@ -7,6 +7,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define PANEL_WINDOW_CLASS       APP_NAME TEXT(" Panel")
 #define PANEL_FRAME_WINDOW_CLASS APP_NAME TEXT(" Panel Frame")
 #define DROP_HELPER_WINDOW_CLASS APP_NAME TEXT(" Drop Helper")
@@ -66,32 +70,32 @@ bool CPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanel::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CPanel::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	PanelTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_PANEL_TITLE,
+		Theme::CThemeManager::STYLE_PANEL_TITLE,
 		&Theme.TitleStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
+		Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
 		&Theme.TitleIconStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
+		Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
 		&Theme.TitleIconHighlightStyle);
 
 	SetPanelTheme(Theme);
@@ -112,7 +116,7 @@ bool CPanel::SetWindow(CPanelContent *pContent, LPCTSTR pszTitle)
 		pContent->SetStyleScaling(m_pStyleScaling);
 		pContent->UpdateStyle();
 		pContent->SetVisible(true);
-		TVTest::StringUtility::Assign(m_Title, pszTitle);
+		StringUtility::Assign(m_Title, pszTitle);
 		GetPosition(&rc);
 		rc.right = rc.left + pContent->GetWidth();
 		SetPosition(&rc);
@@ -202,7 +206,7 @@ bool CPanel::GetContentRect(RECT *pRect) const
 }
 
 
-bool CPanel::SetTitleFont(const TVTest::Style::Font &Font)
+bool CPanel::SetTitleFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 	if (m_hwnd != nullptr) {
@@ -215,16 +219,16 @@ bool CPanel::SetTitleFont(const TVTest::Style::Font &Font)
 
 void CPanel::CalcDimensions()
 {
-	m_FontHeight = TVTest::Style::GetFontHeight(
+	m_FontHeight = Style::GetFontHeight(
 		m_hwnd, m_Font.GetHandle(), m_Style.TitleLabelExtraHeight);
 	int LabelHeight = m_FontHeight + m_Style.TitleLabelMargin.Vert();
 	int ButtonHeight =
 		m_Style.TitleButtonIconSize.Height +
 		m_Style.TitleButtonPadding.Vert();
-	TVTest::Theme::BorderStyle Border = m_Theme.TitleStyle.Back.Border;
+	Theme::BorderStyle Border = m_Theme.TitleStyle.Back.Border;
 	ConvertBorderWidthsInPixels(&Border);
 	RECT rcBorder;
-	TVTest::Theme::GetBorderWidths(Border, &rcBorder);
+	Theme::GetBorderWidths(Border, &rcBorder);
 	m_TitleHeight =
 		max(LabelHeight, ButtonHeight) + m_Style.TitlePadding.Vert() +
 		rcBorder.top + rcBorder.bottom;
@@ -234,16 +238,16 @@ void CPanel::CalcDimensions()
 void CPanel::Draw(HDC hdc, const RECT &PaintRect) const
 {
 	if (m_fShowTitle && PaintRect.top < m_TitleHeight) {
-		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		RECT rc;
 
 		GetTitleRect(&rc);
 		ThemeDraw.Draw(m_Theme.TitleStyle.Back, &rc);
 
 		if (!m_Title.empty()) {
-			TVTest::Style::Subtract(&rc, m_Style.TitlePadding);
+			Style::Subtract(&rc, m_Style.TitlePadding);
 			rc.right -= m_Style.TitleButtonIconSize.Width + m_Style.TitleButtonPadding.Horz();
-			TVTest::Style::Subtract(&rc, m_Style.TitleLabelMargin);
+			Style::Subtract(&rc, m_Style.TitleLabelMargin);
 			DrawUtil::DrawText(
 				hdc, m_Title.c_str(), rc,
 				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX,
@@ -251,9 +255,9 @@ void CPanel::Draw(HDC hdc, const RECT &PaintRect) const
 		}
 
 		GetCloseButtonRect(&rc);
-		const TVTest::Theme::Style &Style =
+		const Theme::Style &Style =
 			m_HotItem == ItemType::Close ? m_Theme.TitleIconHighlightStyle : m_Theme.TitleIconStyle;
-		if (Style.Back.Border.Type != TVTest::Theme::BorderType::None
+		if (Style.Back.Border.Type != Theme::BorderType::None
 				|| Style.Back.Fill != m_Theme.TitleStyle.Back.Fill)
 			ThemeDraw.Draw(Style.Back, rc);
 		DrawUtil::DrawText(
@@ -286,9 +290,9 @@ void CPanel::GetCloseButtonRect(RECT *pRect) const
 	RECT rc;
 
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border = m_Theme.TitleStyle.Back.Border;
+	Theme::BorderStyle Border = m_Theme.TitleStyle.Back.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border, &rc);
+	Theme::SubtractBorderRect(Border, &rc);
 	rc.right -= m_Style.TitlePadding.Right;
 	rc.left = rc.right - ButtonWidth;
 	rc.top =
@@ -518,7 +522,7 @@ CPanel::PanelStyle::PanelStyle()
 }
 
 
-void CPanel::PanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CPanel::PanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = PanelStyle();
 	pStyleManager->Get(TEXT("panel.title.padding"), &TitlePadding);
@@ -530,8 +534,8 @@ void CPanel::PanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleMana
 
 
 void CPanel::PanelStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&TitlePadding);
 	pStyleScaling->ToPixels(&TitleLabelMargin);
@@ -595,7 +599,7 @@ CPanelFrame::~CPanelFrame()
 
 bool CPanelFrame::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	TVTest::PerMonitorDPIBlock DPIBlock;
+	PerMonitorDPIBlock DPIBlock;
 
 	if (!CreateBasicWindow(
 				hwndParent, Style, ExStyle, ID,
@@ -804,7 +808,7 @@ bool CPanelFrame::SetPanelOpacity(int Opacity)
 }
 
 
-void CPanelFrame::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CPanelFrame::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	m_Panel.SetTheme(pThemeManager);
 }
@@ -1147,3 +1151,6 @@ LRESULT CDropHelper::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	return CCustomWindow::OnMessage(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const CTaskbarManager::CommandIconInfo CTaskbarManager::m_CommandIconList[] =
@@ -38,7 +40,7 @@ CTaskbarManager::~CTaskbarManager()
 
 void CTaskbarManager::SetAppID(LPCTSTR pszID)
 {
-	TVTest::StringUtility::Assign(m_AppID, pszID);
+	StringUtility::Assign(m_AppID, pszID);
 }
 
 
@@ -266,7 +268,7 @@ bool CTaskbarManager::SaveSettings(CSettings &Settings)
 HRESULT CTaskbarManager::InitializeJumpList()
 {
 	if (!m_SharedProperties.IsOpened()) {
-		TVTest::String PropName;
+		String PropName;
 
 		if (m_AppID.empty()) {
 			TCHAR szAppPath[MAX_PATH];
@@ -274,7 +276,7 @@ HRESULT CTaskbarManager::InitializeJumpList()
 			::CharLowerBuff(szAppPath, Length);
 			LibISDB::MD5Value Hash =
 				LibISDB::CalcMD5(reinterpret_cast<const uint8_t *>(szAppPath), Length * sizeof(TCHAR));
-			TVTest::StringUtility::Format(
+			StringUtility::Format(
 				PropName,
 				APP_NAME TEXT("_%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x_TaskbarProp"),
 				Hash.Value[ 0], Hash.Value[ 1], Hash.Value[ 2], Hash.Value[ 3], Hash.Value[ 4], Hash.Value[ 5], Hash.Value[ 6], Hash.Value[ 7],
@@ -569,7 +571,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 		const WORD ServiceID = pChannel->GetServiceID();
 		LPCWSTR pszTunerName = pChannel->GetTunerName();
 		JumpListItem Item;
-		TVTest::String Driver;
+		String Driver;
 		WCHAR szTuner[MAX_PATH];
 
 		Item.Title = pChannel->GetName();
@@ -578,7 +580,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			Driver += pszTunerName;
 			Driver += L'"';
 		}
-		TVTest::StringUtility::Format(
+		StringUtility::Format(
 			Item.Args, L"/jumplist /d %s /chspace %d /chi %d /nid %d /sid %d",
 			!Driver.empty() ? Driver.c_str() : pszTunerName,
 			pChannel->GetSpace(),
@@ -586,7 +588,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			NetworkID, ServiceID);
 		::lstrcpynW(szTuner, pszTunerName, lengthof(szTuner));
 		::PathRemoveExtensionW(szTuner);
-		TVTest::StringUtility::Format(
+		StringUtility::Format(
 			Item.Description, L"%s (%s)",
 			pChannel->GetName(),
 			::StrCmpNIW(szTuner, L"BonDriver_", 10) == 0 ? szTuner + 10 : szTuner);
@@ -674,3 +676,6 @@ int CTaskbarManager::GetCommandIcon(int Command) const
 
 	return 0;
 }
+
+
+}	// namespace TVTest

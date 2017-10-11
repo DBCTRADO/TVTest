@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CVideoDecoderOptions::CVideoDecoderOptions()
@@ -63,3 +65,6 @@ bool CVideoDecoderOptions::ApplyVideoDecoderSettings()
 
 	return true;
 }
+
+
+}	// namespace TVTest

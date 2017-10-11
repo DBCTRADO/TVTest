@@ -7,6 +7,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define DRIVER_FLAG_NOSIGNALLEVEL                0x00000001
 #define DRIVER_FLAG_PURGESTREAMONCHANNELCHANGE   0x00000004
 #define DRIVER_FLAG_ALLCHANNELS                  0x00000008
@@ -22,7 +26,7 @@
 
 class CDriverSettings
 {
-	TVTest::String m_FileName;
+	String m_FileName;
 	int m_InitialChannelType;
 	int m_InitialSpace;
 	int m_InitialChannel;
@@ -38,8 +42,9 @@ public:
 	bool m_fLastAllChannels;
 
 	CDriverSettings(LPCTSTR pszFileName);
+
 	LPCTSTR GetFileName() const { return m_FileName.c_str(); }
-	void SetFileName(LPCTSTR pszFileName) { TVTest::StringUtility::Assign(m_FileName, pszFileName); }
+	void SetFileName(LPCTSTR pszFileName) { StringUtility::Assign(m_FileName, pszFileName); }
 	enum {
 		INITIALCHANNEL_NONE,
 		INITIALCHANNEL_LAST,
@@ -897,3 +902,6 @@ CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
 			fPumpStreamSyncPlayback = true;
 	}
 }
+
+
+}	// namespace TVTest

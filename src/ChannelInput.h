@@ -44,6 +44,7 @@ namespace TVTest
 		};
 
 		CChannelInput(const CChannelInputOptions &Options);
+
 		bool BeginInput(int MaxDigits);
 		void EndInput();
 		bool IsInputting() const { return m_fInputting; }
@@ -67,11 +68,11 @@ namespace TVTest
 	public:
 		CChannelInputOptionsDialog(CChannelInputOptions &Options);
 
-		// CBasicDialog
+	// CBasicDialog
 		bool Show(HWND hwndOwner) override;
 
 	private:
-		// CBasicDialog
+	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CChannelInputOptions &m_Options;

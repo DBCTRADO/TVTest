@@ -9,6 +9,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 // スキャンスレッドから送られるメッセージ
 #define WM_APP_BEGINSCAN    (WM_APP + 0)
 #define WM_APP_CHANNELFOUND (WM_APP + 1)
@@ -316,7 +320,7 @@ bool CChannelScan::SetTuningSpaceList(const CTuningSpaceList *pTuningSpaceList)
 }
 
 
-bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std::vector<TVTest::String> *pMessageList)
+bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std::vector<String> *pMessageList)
 {
 	// スキャンされたチャンネルリストの自動更新(テスト)
 	// CSはネットワークが複数に分かれているのでこのままじゃ駄目
@@ -333,7 +337,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 		return false;
 
 	bool fUpdated = false;
-	TVTest::String Message;
+	String Message;
 
 	// 現在のチャンネルリストに存在しないサービスを探す
 	for (size_t TsIndex = 0; TsIndex < TsList.size(); TsIndex++) {
@@ -389,7 +393,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 							pChannelList->InsertChannel(Index, ChannelInfo);
 
 							if (pMessageList != nullptr) {
-								TVTest::StringUtility::Format(
+								StringUtility::Format(
 									Message,
 									TEXT("新しいサービス %d \"%s\" (NID %d TSID 0x%04x) を追加しました。"),
 									ChannelInfo.GetServiceID(),
@@ -407,7 +411,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 				}
 
 				if (!fInserted && pMessageList != nullptr) {
-					TVTest::StringUtility::Format(
+					StringUtility::Format(
 						Message,
 						TEXT("新しいサービス %d \"%s\" (NID %d TSID 0x%04x) が検出されましたが、当該 TS が見付かりません。"),
 						ServiceInfo.ServiceID,
@@ -466,7 +470,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 										pChannelList->InsertChannel(Index, ChannelInfo);
 
 										if (pMessageList != nullptr) {
-											TVTest::StringUtility::Format(
+											StringUtility::Format(
 												Message,
 												TEXT("サービス %d \"%s\" が TS 0x%04x から 0x%04x に移動しました。"),
 												ChannelInfo.GetServiceID(),
@@ -480,7 +484,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 										fUpdated = false;
 									} else {
 										if (pMessageList != nullptr) {
-											TVTest::StringUtility::Format(
+											StringUtility::Format(
 												Message,
 												TEXT("サービス %d \"%s\" の TS 0x%04x から 0x%04x への移動を検出しましたが、移動先 TS が見付かりません。"),
 												ServiceInfo.ServiceID,
@@ -504,7 +508,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 				} else {
 					// サービス削除
 					if (!fServiceMoved && pMessageList != nullptr) {
-						TVTest::StringUtility::Format(
+						StringUtility::Format(
 							Message,
 							TEXT("サービス %d \"%s\" は削除されました。"),
 							pChannelInfo->GetServiceID(),
@@ -635,7 +639,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, i
 		GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 	if (pSourceFilter == nullptr)
 		return false;
-	std::vector<TVTest::String> BonDriverChannelList;
+	std::vector<String> BonDriverChannelList;
 	LPCTSTR pszName;
 	for (int i = 0; (pszName = pSourceFilter->GetChannelName(Space, i)) != nullptr; i++) {
 		BonDriverChannelList.emplace_back(pszName);
@@ -1315,8 +1319,8 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				m_fCancelled = LOWORD(wParam) == IDCANCEL;
 				::SetEvent(m_hCancelEvent);
-				::EnableDlgItem(hDlg, IDOK, false);
-				::EnableDlgItem(hDlg, IDCANCEL, false);
+				EnableDlgItem(hDlg, IDOK, false);
+				EnableDlgItem(hDlg, IDCANCEL, false);
 			}
 			return TRUE;
 		}
@@ -1437,9 +1441,9 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (Result == ScanResult::SetChannelPartiallyFailed) {
 					const int ChannelCount = LOWORD(lParam);
 					const int ErrorCount = HIWORD(lParam);
-					TVTest::String Message;
+					String Message;
 					if (ErrorCount < ChannelCount) {
-						TVTest::StringUtility::Format(
+						StringUtility::Format(
 							Message,
 							TEXT("%dチャンネルのうち、%d回のチャンネル変更が BonDriver に受け付けられませんでした。\n")
 							TEXT("(受信できるチャンネルが全てスキャンできていれば問題はありません)"),
@@ -1883,3 +1887,6 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

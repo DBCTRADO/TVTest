@@ -3,6 +3,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 /*
@@ -484,3 +486,6 @@ LRESULT CWindowSubclass::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 {
 	return ::DefSubclassProc(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

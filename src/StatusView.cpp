@@ -4,6 +4,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CStatusItem::CStatusItem(int ID, const SizeValue &DefaultWidth)
@@ -167,7 +169,7 @@ void CStatusItem::DrawIcon(
 	if (hdc == nullptr)
 		return;
 
-	TVTest::Style::Size IconSize = m_pStatus->GetIconSize();
+	Style::Size IconSize = m_pStatus->GetIconSize();
 	COLORREF cr = ::GetTextColor(hdc);
 	//if (!fEnabled)
 	//	cr = MixColor(cr, ::GetBkColor(hdc));
@@ -190,8 +192,8 @@ CIconStatusItem::CIconStatusItem(int ID, int DefaultWidth)
 
 
 void CIconStatusItem::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_MinWidth = m_pStatus->GetIconSize().Width;
 	if (m_Width < m_MinWidth)
@@ -276,7 +278,7 @@ bool CStatusView::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CStatusView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CStatusView::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 
@@ -286,8 +288,8 @@ void CStatusView::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 
 
 void CStatusView::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 
@@ -296,7 +298,7 @@ void CStatusView::NormalizeStyle(
 }
 
 
-void CStatusView::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CStatusView::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	StatusViewTheme Theme;
 	GetStatusViewThemeFromThemeManager(pThemeManager, &Theme);
@@ -393,9 +395,9 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 			::SetRectEmpty(&rc);
 			rc.bottom = m_ItemHeight;
-			TVTest::Theme::BorderStyle Border = m_Theme.Border;
+			Theme::BorderStyle Border = m_Theme.Border;
 			ConvertBorderWidthsInPixels(&Border);
-			TVTest::Theme::AddBorderRect(Border, &rc);
+			Theme::AddBorderRect(Border, &rc);
 			::AdjustWindowRectEx(&rc, pcs->style, FALSE, pcs->dwExStyle);
 			::SetWindowPos(
 				hwnd, nullptr, 0, 0, pcs->cx, rc.bottom - rc.top,
@@ -683,9 +685,9 @@ bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 
 	RECT rc;
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border, &rc);
+	Theme::SubtractBorderRect(Border, &rc);
 	if (m_Rows > 1)
 		rc.bottom = rc.top + m_ItemHeight;
 	const int HorzMargin = m_Style.ItemPadding.Horz();
@@ -716,7 +718,7 @@ bool CStatusView::GetItemClientRect(int ID, RECT *pRect) const
 
 	if (!GetItemRect(ID, &rc))
 		return false;
-	TVTest::Style::Subtract(&rc, m_Style.ItemPadding);
+	Style::Subtract(&rc, m_Style.ItemPadding);
 	if (rc.right < rc.left)
 		rc.right = rc.left;
 	if (rc.bottom < rc.top)
@@ -733,9 +735,9 @@ int CStatusView::GetItemHeight() const
 	if (m_Rows > 1)
 		return m_ItemHeight;
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border, &rc);
+	Theme::SubtractBorderRect(Border, &rc);
 	return rc.bottom - rc.top;
 }
 
@@ -746,13 +748,13 @@ int CStatusView::CalcItemHeight(const DrawUtil::CFont &Font) const
 }
 
 
-const TVTest::Style::Margins &CStatusView::GetItemPadding() const
+const Style::Margins &CStatusView::GetItemPadding() const
 {
 	return m_Style.ItemPadding;
 }
 
 
-const TVTest::Style::Size &CStatusView::GetIconSize() const
+const Style::Size &CStatusView::GetIconSize() const
 {
 	return m_Style.IconSize;
 }
@@ -795,9 +797,9 @@ bool CStatusView::AdjustSize()
 	GetPosition(&rcWindow);
 	::SetRectEmpty(&rc);
 	rc.bottom = m_ItemHeight * m_Rows;
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::AddBorderRect(Border, &rc);
+	Theme::AddBorderRect(Border, &rc);
 	::AdjustWindowRectEx(&rc, GetWindowStyle(), FALSE, GetWindowExStyle());
 	int Height = rc.bottom - rc.top;
 	if (Height != rcWindow.bottom - rcWindow.top) {
@@ -833,22 +835,22 @@ void CStatusView::SetSingleText(LPCTSTR pszText)
 
 
 bool CStatusView::GetStatusViewThemeFromThemeManager(
-	const TVTest::Theme::CThemeManager *pThemeManager, StatusViewTheme *pTheme)
+	const Theme::CThemeManager *pThemeManager, StatusViewTheme *pTheme)
 {
 	if (pThemeManager == nullptr || pTheme == nullptr)
 		return false;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_ITEM,
+		Theme::CThemeManager::STYLE_STATUSBAR_ITEM,
 		&pTheme->ItemStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_BOTTOMITEM,
+		Theme::CThemeManager::STYLE_STATUSBAR_BOTTOMITEM,
 		&pTheme->BottomItemStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_ITEM_HOT,
+		Theme::CThemeManager::STYLE_STATUSBAR_ITEM_HOT,
 		&pTheme->HighlightItemStyle);
 	pThemeManager->GetBorderStyle(
-		TVTest::Theme::CThemeManager::STYLE_STATUSBAR,
+		Theme::CThemeManager::STYLE_STATUSBAR,
 		&pTheme->Border);
 
 	return true;
@@ -875,14 +877,14 @@ bool CStatusView::GetStatusViewTheme(StatusViewTheme *pTheme) const
 }
 
 
-void CStatusView::SetItemTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CStatusView::SetItemTheme(const Theme::CThemeManager *pThemeManager)
 {
 	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
 		(*itr)->SetTheme(pThemeManager);
 }
 
 
-bool CStatusView::SetFont(const TVTest::Style::Font &Font)
+bool CStatusView::SetFont(const Style::Font &Font)
 {
 	m_Font = Font;
 	m_DrawFont.Destroy();
@@ -901,7 +903,7 @@ bool CStatusView::SetFont(const TVTest::Style::Font &Font)
 }
 
 
-bool CStatusView::GetFont(TVTest::Style::Font *pFont) const
+bool CStatusView::GetFont(Style::Font *pFont) const
 {
 	if (pFont == nullptr)
 		return false;
@@ -1009,7 +1011,7 @@ bool CStatusView::SetItemOrder(const int *pOrderList)
 
 
 bool CStatusView::CreateItemPreviewFont(
-	const TVTest::Style::Font &Font, DrawUtil::CFont *pDrawFont) const
+	const Style::Font &Font, DrawUtil::CFont *pDrawFont) const
 {
 	return CreateDrawFont(Font, pDrawFont);
 }
@@ -1022,11 +1024,11 @@ bool CStatusView::DrawItemPreview(
 	if (pItem == nullptr || hdc == nullptr)
 		return false;
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 	HFONT hfontOld;
 	int OldBkMode;
 	COLORREF crOldTextColor, crOldBkColor;
-	const TVTest::Theme::Style &Style =
+	const Theme::Style &Style =
 		fHighlight ? m_Theme.HighlightItemStyle : m_Theme.ItemStyle;
 
 	if (hfont != nullptr)
@@ -1038,7 +1040,7 @@ bool CStatusView::DrawItemPreview(
 	crOldBkColor = ::SetBkColor(hdc, Style.Back.Fill.GetSolidColor());
 	ThemeDraw.Draw(Style.Back, ItemRect);
 	RECT rcDraw = ItemRect;
-	TVTest::Style::Subtract(&rcDraw, m_Style.ItemPadding);
+	Style::Subtract(&rcDraw, m_Style.ItemPadding);
 	unsigned int Flags = CStatusItem::DRAW_PREVIEW;
 	if (fHighlight)
 		Flags |= CStatusItem::DRAW_HIGHLIGHT;
@@ -1108,9 +1110,9 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 
 	GetClientRect(&rcClient);
 	rc = rcClient;
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border, &rc);
+	Theme::SubtractBorderRect(Border, &rc);
 	const int ItemHeight = m_Rows > 1 ? m_ItemHeight : rc.bottom - rc.top;
 
 	if (!m_fSingleMode) {
@@ -1138,13 +1140,13 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 	if (m_Rows > 1)
 		rc.bottom = rc.top + ItemHeight;
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 	if (m_fSingleMode) {
 		RECT rcRow = rc;
 
 		for (int i = 0; i < m_Rows; i++) {
-			const TVTest::Theme::Style &Style = i == 0 ? m_Theme.ItemStyle : m_Theme.BottomItemStyle;
+			const Theme::Style &Style = i == 0 ? m_Theme.ItemStyle : m_Theme.BottomItemStyle;
 
 			ThemeDraw.Draw(Style.Back.Fill, rcRow);
 			rcRow.top = rcRow.bottom;
@@ -1156,7 +1158,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 			m_Theme.ItemStyle.Fore, rc, m_SingleText.c_str(),
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 	} else {
-		TVTest::Theme::CThemeDraw ItemThemeDraw(BeginThemeDraw(hdcDst));
+		Theme::CThemeDraw ItemThemeDraw(BeginThemeDraw(hdcDst));
 		const int Left = rc.left;
 		int Row = 0;
 
@@ -1169,7 +1171,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 				rc.right = rc.left + pItem->GetActualWidth() + HorzMargin;
 				if (rc.right > pPaintRect->left && rc.left < pPaintRect->right) {
 					const bool fHighlight = i == m_HotItem;
-					const TVTest::Theme::Style &Style =
+					const Theme::Style &Style =
 						fHighlight ? m_Theme.HighlightItemStyle :
 						Row == 0 ? m_Theme.ItemStyle : m_Theme.BottomItemStyle;
 					RECT rcItem = rc;
@@ -1179,7 +1181,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 					::SetTextColor(hdcDst, Style.Fore.Fill.GetSolidColor());
 					::SetBkColor(hdcDst, Style.Back.Fill.GetSolidColor());
 					RECT rcDraw = rcItem;
-					TVTest::Style::Subtract(&rcDraw, m_Style.ItemPadding);
+					Style::Subtract(&rcDraw, m_Style.ItemPadding);
 					unsigned int Flags = 0;
 					if (fHighlight)
 						Flags |= CStatusItem::DRAW_HIGHLIGHT;
@@ -1234,9 +1236,9 @@ void CStatusView::CalcLayout()
 
 	RECT rc;
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border = m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(m_Theme.Border, &rc);
+	Theme::SubtractBorderRect(m_Theme.Border, &rc);
 	const int MaxRowWidth = rc.right - rc.left;
 
 	m_Rows = CalcRows(ItemList, MaxRowWidth);
@@ -1339,7 +1341,7 @@ int CStatusView::CalcRows(const std::vector<CStatusItem*> &ItemList, int MaxRowW
 int CStatusView::CalcTextHeight(const DrawUtil::CFont &Font, int *pFontHeight) const
 {
 	TEXTMETRIC tm;
-	int TextHeight = TVTest::Style::GetFontHeight(
+	int TextHeight = Style::GetFontHeight(
 		m_hwnd, Font.GetHandle(), m_Style.TextExtraHeight, &tm);
 	if (pFontHeight != nullptr)
 		*pFontHeight = tm.tmHeight - tm.tmInternalLeading;
@@ -1421,7 +1423,7 @@ CStatusView::StatusViewStyle::StatusViewStyle()
 }
 
 
-void CStatusView::StatusViewStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CStatusView::StatusViewStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = StatusViewStyle();
 	pStyleManager->Get(TEXT("status-bar.item.padding"), &ItemPadding);
@@ -1431,10 +1433,13 @@ void CStatusView::StatusViewStyle::SetStyle(const TVTest::Style::CStyleManager *
 
 
 void CStatusView::StatusViewStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&ItemPadding);
 	pStyleScaling->ToPixels(&TextExtraHeight);
 	pStyleScaling->ToPixels(&IconSize);
 }
+
+
+}	// namespace TVTest

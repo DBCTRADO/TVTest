@@ -4,6 +4,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 enum {
 	RAWINPUT_DETAILS     = 0x0209,
 	RAWINPUT_GUIDE       = 0x008D,
@@ -161,3 +165,6 @@ int CRawInput::KeyDataToIndex(int Data) const
 	}
 	return -1;
 }
+
+
+}	// namespace TVTest

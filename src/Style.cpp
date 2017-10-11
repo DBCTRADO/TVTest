@@ -396,9 +396,9 @@ bool CStyleManager::AssignFontSizeFromLogFont(Font *pFont)
 
 	pFont->Size.Value = ::MulDiv(abs(pFont->LogFont.lfHeight), 72, TVTest::GetSystemDPI());
 	if (pFont->Size.Value != 0)
-		pFont->Size.Unit = TVTest::Style::UnitType::Point;
+		pFont->Size.Unit = Style::UnitType::Point;
 	else
-		pFont->Size.Unit = TVTest::Style::UnitType::Undefined;
+		pFont->Size.Unit = Style::UnitType::Undefined;
 
 	return true;
 }

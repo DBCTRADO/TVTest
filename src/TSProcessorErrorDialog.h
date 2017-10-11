@@ -15,6 +15,7 @@ namespace TVTest
 	public:
 		CTSProcessorErrorDialog(CTSProcessor *pTSProcessor);
 		~CTSProcessorErrorDialog();
+
 		bool Show(HWND hwndOwner) override;
 		void SetMessage(LPCTSTR pszMessage);
 		void SetDevice(const String &Device);

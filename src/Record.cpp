@@ -10,6 +10,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CRecordingSettings::CRecordingSettings()
@@ -173,7 +175,7 @@ bool CRecordTask::Start(LPCTSTR pszFileName, const CRecordingSettings &Settings)
 			RecOptions.MaxPendingSize += Settings.m_TimeShiftBufferSize;
 
 		if (!Settings.m_WritePlugin.empty()) {
-			TVTest::String WritePlugin;
+			String WritePlugin;
 			if (::PathIsFileSpec(Settings.m_WritePlugin.c_str())) {
 				TCHAR szPath[MAX_PATH];
 				GetAppClass().GetAppDirectory(szPath);
@@ -341,7 +343,7 @@ LONGLONG CRecordTask::GetWroteSize() const
 }
 
 
-bool CRecordTask::GetFileName(TVTest::String *pFileName) const
+bool CRecordTask::GetFileName(String *pFileName) const
 {
 	if (!m_RecordingTask) {
 		if (pFileName != nullptr)
@@ -377,11 +379,11 @@ LONGLONG CRecordTask::GetFreeSpace() const
 	if (m_State == State::Stop)
 		return -1;
 
-	TVTest::String FileName;
+	String FileName;
 	if (!GetFileName(&FileName))
 		return -1;
-	TVTest::String::size_type Pos = FileName.find_last_of(TEXT("\\/"));
-	if (Pos == TVTest::String::npos)
+	String::size_type Pos = FileName.find_last_of(TEXT("\\/"));
+	if (Pos == String::npos)
 		return -1;
 	FileName.resize(Pos + 1);
 	ULARGE_INTEGER FreeSpace;
@@ -425,7 +427,7 @@ bool CRecordManager::SetFileName(LPCTSTR pszFileName)
 {
 	if (m_fRecording)
 		return false;
-	TVTest::StringUtility::Assign(m_FileName, pszFileName);
+	StringUtility::Assign(m_FileName, pszFileName);
 	return true;
 }
 
@@ -852,7 +854,7 @@ bool CRecordManager::ChangeStopTimeDialog(HWND hwndOwner)
 
 bool CRecordManager::GenerateFilePath(
 	const FileNameFormatInfo &FormatInfo, LPCWSTR pszFormat,
-	TVTest::String *pFilePath) const
+	String *pFilePath) const
 {
 	if (pFilePath == nullptr)
 		return false;
@@ -864,8 +866,8 @@ bool CRecordManager::GenerateFilePath(
 			return false;
 	}
 
-	TVTest::CEventVariableStringMap VarStrMap(FormatInfo);
-	TVTest::String FileName;
+	CEventVariableStringMap VarStrMap(FormatInfo);
+	String FileName;
 
 	if (m_fReserved && m_StartTimeSpec.Type == TimeSpecType::DateTime) {
 		SYSTEMTIME st;
@@ -875,7 +877,7 @@ bool CRecordManager::GenerateFilePath(
 		VarStrMap.SetCurrentTime(&Time);
 	}
 
-	if (!TVTest::FormatVariableString(
+	if (!FormatVariableString(
 				&VarStrMap, pszFormat != nullptr ? pszFormat : m_FileName.c_str(),
 				&FileName)
 			|| FileName.empty())
@@ -933,7 +935,7 @@ bool CRecordManager::SetCurServiceOnly(bool fOnly)
 }
 
 
-bool CRecordManager::GetWritePluginList(std::vector<TVTest::String> *pList)
+bool CRecordManager::GetWritePluginList(std::vector<String> *pList)
 {
 	if (pList == nullptr)
 		return false;
@@ -951,15 +953,15 @@ bool CRecordManager::GetWritePluginList(std::vector<TVTest::String> *pList)
 		return false;
 	do {
 		if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-			pList->push_back(TVTest::String(fd.cFileName));
+			pList->push_back(String(fd.cFileName));
 	} while (::FindNextFile(hFind, &fd));
 	::FindClose(hFind);
 
 	if (pList->size() > 1) {
 		std::sort(
 			pList->begin(), pList->end(),
-			[](const TVTest::String & Lib1, const TVTest::String & Lib2) {
-				return TVTest::StringUtility::CompareNoCase(Lib1, Lib2) < 0;
+			[](const String & Lib1, const String & Lib2) {
+				return StringUtility::CompareNoCase(Lib1, Lib2) < 0;
 			});
 	}
 
@@ -1246,13 +1248,13 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 		case IDC_RECORD_FILENAME:
 			if (HIWORD(wParam) == EN_CHANGE) {
 				TCHAR szFormat[MAX_PATH];
-				TVTest::String FileName;
+				String FileName;
 
 				DlgEdit_GetText(hDlg, IDC_RECORD_FILENAME, szFormat, lengthof(szFormat));
 				if (szFormat[0] != '\0') {
-					TVTest::CEventVariableStringMap EventVarStrMap;
+					CEventVariableStringMap EventVarStrMap;
 					EventVarStrMap.SetSampleEventInfo();
-					TVTest::FormatVariableString(&EventVarStrMap, szFormat, &FileName);
+					FormatVariableString(&EventVarStrMap, szFormat, &FileName);
 				}
 				DlgEdit_SetText(hDlg, IDC_RECORD_FILENAMEPREVIEW, FileName.c_str());
 			}
@@ -1266,7 +1268,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORD_FILENAMEFORMAT), &rc);
 				pt.x = rc.left;
 				pt.y = rc.bottom;
-				TVTest::CEventVariableStringMap EventVarStrMap;
+				CEventVariableStringMap EventVarStrMap;
 				EventVarStrMap.InputParameter(hDlg, IDC_RECORD_FILENAME, pt);
 			}
 			return TRUE;
@@ -1383,8 +1385,8 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					TCHAR szFile[MAX_PATH];
 
 					GetDlgItemText(hDlg, IDC_RECORD_FILENAME, szFile, MAX_PATH);
-					TVTest::CFilePath FilePath(szFile);
-					TVTest::String Dir, FileName;
+					CFilePath FilePath(szFile);
+					String Dir, FileName;
 					FilePath.Split(&Dir, &FileName);
 					if (FilePath.empty() || FileName.empty()) {
 						::MessageBox(
@@ -1395,7 +1397,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						return TRUE;
 					}
 
-					TVTest::String Message;
+					String Message;
 					if (!IsValidFileName(FileName.c_str(), FileNameValidateFlag::None, &Message)) {
 						::MessageBox(hDlg, Message.c_str(), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						SetDlgItemFocus(hDlg, IDC_RECORD_FILENAME);
@@ -1506,3 +1508,6 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

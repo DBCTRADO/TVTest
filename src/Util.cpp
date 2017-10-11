@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 int HexCharToInt(TCHAR Code)
@@ -405,18 +407,18 @@ int CopyToMenuText(LPCTSTR pszSrcText, LPTSTR pszDstText, int MaxLength)
 }
 
 
-TVTest::String FormatMenuString(const TVTest::String &Str)
+String FormatMenuString(const String &Str)
 {
-	TVTest::String Temp(Str);
-	TVTest::StringUtility::Replace(Temp, L"&", L"&&");
+	String Temp(Str);
+	StringUtility::Replace(Temp, L"&", L"&&");
 	return Temp;
 }
 
 
-TVTest::String FormatMenuString(LPCWSTR pszText)
+String FormatMenuString(LPCWSTR pszText)
 {
-	TVTest::String Temp(pszText);
-	TVTest::StringUtility::Replace(Temp, L"&", L"&&");
+	String Temp(pszText);
+	StringUtility::Replace(Temp, L"&", L"&&");
 	return Temp;
 }
 
@@ -442,7 +444,7 @@ void InitOpenFileName(OPENFILENAME *pofn)
 
 bool FileOpenDialog(OPENFILENAME *pofn)
 {
-	TVTest::SystemDPIBlock SystemDPI;
+	SystemDPIBlock SystemDPI;
 
 	return ::GetOpenFileName(pofn) != FALSE;
 }
@@ -450,7 +452,7 @@ bool FileOpenDialog(OPENFILENAME *pofn)
 
 bool FileSaveDialog(OPENFILENAME *pofn)
 {
-	TVTest::SystemDPIBlock SystemDPI;
+	SystemDPIBlock SystemDPI;
 
 	return ::GetSaveFileName(pofn) != FALSE;
 }
@@ -488,7 +490,7 @@ bool ChooseColorDialog(HWND hwndOwner, COLORREF *pcrResult)
 	cc.Flags = CC_RGBINIT | CC_FULLOPEN;
 
 	{
-		TVTest::SystemDPIBlock SystemDPI;
+		SystemDPIBlock SystemDPI;
 
 		if (!ChooseColor(&cc))
 			return false;
@@ -509,7 +511,7 @@ bool ChooseFontDialog(HWND hwndOwner, LOGFONT *plf, int *pPointSize)
 	cf.Flags = CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT | CF_SCREENFONTS;
 
 	{
-		TVTest::SystemDPIBlock SystemDPI;
+		SystemDPIBlock SystemDPI;
 
 		if (!ChooseFont(&cf))
 			return false;
@@ -554,7 +556,7 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 	bi.lParam = (LPARAM)pszDirectory;
 
 	{
-		TVTest::SystemDPIBlock SystemDPI;
+		SystemDPIBlock SystemDPI;
 
 		pidl = SHBrowseForFolder(&bi);
 		if (pidl == nullptr)
@@ -650,7 +652,7 @@ bool IsEqualFileName(LPCWSTR pszFileName1, LPCWSTR pszFileName2)
 }
 
 
-bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, TVTest::String *pMessage)
+bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pMessage)
 {
 	if (pszFileName == nullptr || pszFileName[0] == _T('\0')) {
 		if (pMessage != nullptr)
@@ -706,11 +708,11 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, TVTest::St
 				|| (!fAllowDelimiter && *p == _T('\\'))) {
 			if (pMessage != nullptr) {
 				if (*p <= 31) {
-					TVTest::StringUtility::Format(
+					StringUtility::Format(
 						*pMessage,
 						TEXT("ファイル名に使用できない文字 %#02x が含まれています。"), *p);
 				} else {
-					TVTest::StringUtility::Format(
+					StringUtility::Format(
 						*pMessage,
 						TEXT("ファイル名に使用できない文字 %c が含まれています。"), *p);
 				}
@@ -739,7 +741,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, TVTest::St
 }
 
 
-bool MakeUniqueFileName(TVTest::String *pFileName, size_t MaxLength, LPCTSTR pszNumberFormat)
+bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFormat)
 {
 	if (pFileName == nullptr || pFileName->empty())
 		return false;
@@ -749,7 +751,7 @@ bool MakeUniqueFileName(TVTest::String *pFileName, size_t MaxLength, LPCTSTR psz
 	if (DirLength == 0 || DirLength > MaxLength - 1)
 		return false;
 
-	TVTest::String Path(*pFileName);
+	String Path(*pFileName);
 
 	LPCTSTR pszExtension = ::PathFindExtension(pszFileName);
 	size_t ExtensionLength = ::lstrlen(pszExtension);
@@ -765,9 +767,9 @@ bool MakeUniqueFileName(TVTest::String *pFileName, size_t MaxLength, LPCTSTR psz
 
 	if (::PathFileExists(Path.c_str())) {
 		static const int MAX_NUMBER = 1000;
-		TVTest::String BaseName(
+		String BaseName(
 			pFileName->substr(DirLength, pFileName->length() - DirLength - ExtensionLength));
-		TVTest::String Name;
+		String Name;
 
 		if (IsStringEmpty(pszNumberFormat))
 			pszNumberFormat = TEXT("-%d");
@@ -823,7 +825,7 @@ bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength)
 }
 
 
-bool GetAbsolutePath(const TVTest::String &FilePath, TVTest::String *pAbsolutePath)
+bool GetAbsolutePath(const String &FilePath, String *pAbsolutePath)
 {
 	if (pAbsolutePath == nullptr)
 		return false;
@@ -833,12 +835,12 @@ bool GetAbsolutePath(const TVTest::String &FilePath, TVTest::String *pAbsolutePa
 	if (FilePath.empty())
 		return false;
 
-	if (TVTest::PathUtil::IsRelative(FilePath)) {
+	if (PathUtil::IsRelative(FilePath)) {
 		TCHAR szDir[MAX_PATH];
 		::GetModuleFileName(nullptr, szDir, _countof(szDir));
 		::PathRemoveFileSpec(szDir);
 
-		if (!TVTest::PathUtil::RelativeToAbsolute(pAbsolutePath, TVTest::String(szDir), FilePath))
+		if (!PathUtil::RelativeToAbsolute(pAbsolutePath, String(szDir), FilePath))
 			return false;
 	} else {
 		pAbsolutePath->assign(FilePath);
@@ -1321,7 +1323,7 @@ void CStaticStringFormatter::AppendFormatV(LPCTSTR pszFormat, va_list Args)
 void CStaticStringFormatter::RemoveTrailingWhitespace()
 {
 	if (m_Length > 0) {
-		m_Length -= ::RemoveTrailingWhitespace(m_pBuffer);
+		m_Length -= TVTest::RemoveTrailingWhitespace(m_pBuffer);
 	}
 }
 
@@ -1514,6 +1516,7 @@ bool CBasicSecurityAttributes::Initialize()
 namespace Util
 {
 
+
 HMODULE LoadSystemLibrary(LPCTSTR pszName)
 {
 	TCHAR szPath[MAX_PATH];
@@ -1527,6 +1530,7 @@ HMODULE LoadSystemLibrary(LPCTSTR pszName)
 
 namespace OS
 {
+
 
 static bool VerifyOSVersion(
 	DWORD Major, BYTE MajorOperator,
@@ -1656,6 +1660,7 @@ bool IsWindows10AnniversaryUpdateOrLater()
 	return CheckOSVersionLater(10, 0, 14393);
 }
 
+
 }	// namespace OS
 
 
@@ -1695,4 +1700,7 @@ void CALLBACK CTimer::TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 	static_cast<CTimer*>(lpParameter)->OnTimer();
 }
 
+
 }	// namespace Util
+
+}	// namespace TVTest

@@ -1,7 +1,10 @@
 #include "stdafx.h"
 
 
-#ifdef _DEBUG
+namespace TVTest
+{
+
+
 void DebugTrace(LPCTSTR szFormat, ...)
 {
 	TCHAR szTempStr[1024];
@@ -22,4 +25,6 @@ void DebugTrace(LPCTSTR szFormat, ...)
 
 	::OutputDebugString(szTempStr);
 }
-#endif
+
+
+}	// namespace TVTest

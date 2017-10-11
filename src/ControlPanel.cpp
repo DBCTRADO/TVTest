@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const LPCTSTR CControlPanel::m_pszClassName = APP_NAME TEXT(" Control Panel");
@@ -56,7 +58,7 @@ bool CControlPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CControlPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CControlPanel::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 
@@ -66,8 +68,8 @@ void CControlPanel::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
 
 
 void CControlPanel::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 
@@ -76,18 +78,18 @@ void CControlPanel::NormalizeStyle(
 }
 
 
-void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CControlPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	ControlPanelTheme Theme;
 
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM,
+		Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM,
 		&Theme.ItemStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_HOT,
+		Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_HOT,
 		&Theme.OverItemStyle);
 	pThemeManager->GetStyle(
-		TVTest::Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_CHECKED,
+		Theme::CThemeManager::STYLE_CONTROLPANEL_ITEM_CHECKED,
 		&Theme.CheckedItemStyle);
 	Theme.MarginColor =
 		pThemeManager->GetColor(CColorScheme::COLOR_CONTROLPANELMARGIN);
@@ -96,7 +98,7 @@ void CControlPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
-bool CControlPanel::SetFont(const TVTest::Style::Font &Font)
+bool CControlPanel::SetFont(const Style::Font &Font)
 {
 	m_StyleFont = Font;
 	if (m_hwnd != nullptr) {
@@ -229,13 +231,13 @@ bool CControlPanel::CheckRadioItem(int FirstID, int LastID, int CheckID)
 }
 
 
-const TVTest::Style::Margins &CControlPanel::GetItemPadding() const
+const Style::Margins &CControlPanel::GetItemPadding() const
 {
 	return m_Style.ItemPadding;
 }
 
 
-const TVTest::Style::Size &CControlPanel::GetIconSize() const
+const Style::Size &CControlPanel::GetIconSize() const
 {
 	return m_Style.IconSize;
 }
@@ -265,7 +267,7 @@ bool CControlPanel::CalcTextSize(LPCTSTR pszText, SIZE *pSize)
 
 int CControlPanel::CalcFontHeight() const
 {
-	return TVTest::Style::GetFontHeight(
+	return Style::GetFontHeight(
 		m_hwnd, m_Font.GetHandle(), m_Style.TextExtraHeight);
 }
 
@@ -321,7 +323,7 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 	::SetRect(&rcOffscreen, 0, 0, Width, MaxHeight);
 	::SetRect(&rcDest, m_Style.Padding.Left, -1, m_Style.Padding.Left + Width, 0);
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcOffscreen));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcOffscreen));
 
 	for (int i = 0; i < (int)m_ItemList.size(); i++) {
 		CControlPanelItem *pItem = m_ItemList[i].get();
@@ -347,7 +349,7 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 				crBack = m_Theme.OverItemStyle.Back.Fill.GetSolidColor();
 				ThemeDraw.Draw(m_Theme.OverItemStyle.Back, rc);
 			} else {
-				TVTest::Theme::Style Style =
+				Theme::Style Style =
 					pItem->GetCheck() ? m_Theme.CheckedItemStyle : m_Theme.ItemStyle;
 
 				crText = Style.Fore.Fill.GetSolidColor();
@@ -574,7 +576,7 @@ CControlPanel::ControlPanelStyle::ControlPanelStyle()
 }
 
 
-void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CControlPanel::ControlPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = ControlPanelStyle();
 	pStyleManager->Get(TEXT("control-panel.padding"), &Padding);
@@ -585,8 +587,8 @@ void CControlPanel::ControlPanelStyle::SetStyle(const TVTest::Style::CStyleManag
 
 
 void CControlPanel::ControlPanelStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&Padding);
 	pStyleScaling->ToPixels(&ItemPadding);
@@ -706,3 +708,6 @@ void CControlPanelItem::GetMenuPos(POINT *pPos) const
 	pPos->y = m_Position.bottom;
 	::ClientToScreen(m_pControlPanel->GetHandle(), pPos);
 }
+
+
+}	// namespace TVTest

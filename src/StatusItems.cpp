@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CChannelStatusItem::CChannelStatusItem()
@@ -184,7 +186,7 @@ void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 	else
 		crBar = MixColor(crText, ::GetBkColor(hdc), 128);
 	::InflateRect(&rc, -m_Style.BarBorderWidth, -m_Style.BarBorderWidth);
-	TVTest::Style::Subtract(&rc, m_Style.BarPadding);
+	Style::Subtract(&rc, m_Style.BarPadding);
 	rc.right = rc.left + (rc.right - rc.left) * pUICore->GetVolume() / CCoreEngine::MAX_VOLUME;
 	DrawUtil::Fill(hdc, &rc, crBar);
 }
@@ -212,7 +214,7 @@ void CVolumeStatusItem::OnMouseMove(int x, int y)
 
 	GetRect(&rcItem);
 	GetClientRect(&rcClient);
-	TVTest::Style::Subtract(&rcClient, m_Style.BarPadding);
+	Style::Subtract(&rcClient, m_Style.BarPadding);
 	Volume = (x - (rcClient.left - rcItem.left)) * CCoreEngine::MAX_VOLUME / ((rcClient.right - rcClient.left) - 1);
 	if (Volume < 0)
 		Volume = 0;
@@ -228,7 +230,7 @@ bool CVolumeStatusItem::OnMouseWheel(int x, int y, bool fHorz, int Delta, int *p
 	return true;
 }
 
-void CVolumeStatusItem::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CVolumeStatusItem::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style = VolumeStatusStyle();
 	pStyleManager->Get(TEXT("status-bar.volume.bar.height"), &m_Style.BarHeight);
@@ -237,8 +239,8 @@ void CVolumeStatusItem::SetStyle(const TVTest::Style::CStyleManager *pStyleManag
 }
 
 void CVolumeStatusItem::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&m_Style.BarHeight);
 	pStyleScaling->ToPixels(&m_Style.BarPadding);
@@ -270,9 +272,9 @@ void CAudioChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dr
 
 	const LibISDB::ViewerFilter *pViewer = App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer != nullptr && pViewer->IsSPDIFPassthrough()) {
-		TVTest::Style::Size IconSize = m_pStatus->GetIconSize();
+		Style::Size IconSize = m_pStatus->GetIconSize();
 		if (!m_Icons.IsCreated()) {
-			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			static const Theme::IconList::ResourceInfo ResourceList[] = {
 				{MAKEINTRESOURCE(IDB_PASSTHROUGH16), 16, 16},
 				{MAKEINTRESOURCE(IDB_PASSTHROUGH32), 32, 32},
 			};
@@ -532,7 +534,7 @@ void CRecordStatusItem::OnFontChanged()
 		SetTipFont();
 }
 
-void CRecordStatusItem::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CRecordStatusItem::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	SetCircleColor(pThemeManager->GetColor(CColorScheme::COLOR_STATUSRECORDINGCIRCLE));
 }
@@ -562,11 +564,11 @@ CCaptureStatusItem::CCaptureStatusItem()
 void CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
 {
 	if (!m_Icons.IsCreated()) {
-		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+		static const Theme::IconList::ResourceInfo ResourceList[] = {
 			{MAKEINTRESOURCE(IDB_CAPTURE16), 16, 16},
 			{MAKEINTRESOURCE(IDB_CAPTURE32), 32, 32},
 		};
-		TVTest::Style::Size IconSize = m_pStatus->GetIconSize();
+		Style::Size IconSize = m_pStatus->GetIconSize();
 		m_Icons.Load(
 			GetAppClass().GetResourceInstance(),
 			IconSize.Width, IconSize.Height,
@@ -849,8 +851,8 @@ CProgramInfoStatusItem::CProgramInfoStatusItem()
 	, m_fNext(false)
 	, m_fShowProgress(true)
 	, m_fEnablePopupInfo(true)
-	, m_ProgressBackStyle(TVTest::Theme::FillStyle(TVTest::Theme::SolidStyle(TVTest::Theme::ThemeColor(160, 160, 160))))
-	, m_ProgressElapsedStyle(TVTest::Theme::FillStyle(TVTest::Theme::SolidStyle(TVTest::Theme::ThemeColor(0, 0, 128))))
+	, m_ProgressBackStyle(Theme::FillStyle(Theme::SolidStyle(Theme::ThemeColor(160, 160, 160))))
+	, m_ProgressElapsedStyle(Theme::FillStyle(Theme::SolidStyle(Theme::ThemeColor(0, 0, 128))))
 	, m_fValidProgress(false)
 {
 }
@@ -863,7 +865,7 @@ void CProgramInfoStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dra
 	}
 
 	if (m_fShowProgress && m_fValidProgress) {
-		TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		RECT rcProgress = DrawRect;
 		rcProgress.top = rcProgress.bottom - (DrawRect.bottom - DrawRect.top) / 3;
 		ThemeDraw.Draw(m_ProgressBackStyle, &rcProgress);
@@ -976,15 +978,15 @@ bool CProgramInfoStatusItem::OnMouseHover(int x, int y)
 	return true;
 }
 
-void CProgramInfoStatusItem::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CProgramInfoStatusItem::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	m_EpgTheme.SetTheme(pThemeManager);
 
 	pThemeManager->GetBackgroundStyle(
-		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS,
+		Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS,
 		&m_ProgressBackStyle);
 	pThemeManager->GetBackgroundStyle(
-		TVTest::Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS_ELAPSED,
+		Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS_ELAPSED,
 		&m_ProgressElapsedStyle);
 }
 
@@ -1257,11 +1259,11 @@ CFavoritesStatusItem::CFavoritesStatusItem()
 void CFavoritesStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
 {
 	if (!m_Icons.IsCreated()) {
-		static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+		static const Theme::IconList::ResourceInfo ResourceList[] = {
 			{MAKEINTRESOURCE(IDB_STATUSBAR_FAVORITES16), 16, 16},
 			{MAKEINTRESOURCE(IDB_STATUSBAR_FAVORITES32), 32, 32},
 		};
-		TVTest::Style::Size IconSize = m_pStatus->GetIconSize();
+		Style::Size IconSize = m_pStatus->GetIconSize();
 		m_Icons.Load(
 			GetAppClass().GetResourceInstance(),
 			IconSize.Width, IconSize.Height,
@@ -1285,3 +1287,6 @@ void CFavoritesStatusItem::OnRButtonDown(int x, int y)
 {
 	GetAppClass().UICore.DoCommand(CM_ADDTOFAVORITES);
 }
+
+
+}	// namespace TVTest

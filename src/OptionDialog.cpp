@@ -8,6 +8,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 COptionDialog::COptionDialog()
@@ -180,10 +182,10 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 						::DeleteObject(ii.hbmColor);
 						::DeleteObject(ii.hbmMask);
-						TVTest::Graphics::CImage Image;
+						Graphics::CImage Image;
 						Image.CreateFromBitmap(hbm);
 						::DeleteObject(hbm);
-						TVTest::Graphics::CCanvas Canvas(pdis->hDC);
+						Graphics::CCanvas Canvas(pdis->hDC);
 						Canvas.SetComposition(true);
 						Canvas.DrawImage(rc.left, y, m_IconWidth, m_IconHeight, &Image, 0, 0, IconWidth, IconHeight);
 						if (fSelected)
@@ -351,3 +353,6 @@ void COptionDialog::OnSettingError(COptions *pOptions)
 		}
 	}
 }
+
+
+}	// namespace TVTest

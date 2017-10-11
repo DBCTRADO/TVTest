@@ -2,6 +2,13 @@
 #define TVTEST_GRAPHICS_H
 
 
+#ifdef NOMINMAX
+namespace Gdiplus
+{
+	using TVTest::min;
+	using TVTest::max;
+}
+#endif
 #include <gdiplus.h>
 #include <memory>
 
@@ -59,7 +66,9 @@ namespace TVTest
 		public:
 			CImage() = default;
 			CImage(const CImage &Src);
+
 			CImage &operator=(const CImage &Src);
+
 			void Free();
 			bool LoadFromFile(LPCWSTR pszFileName);
 			bool LoadFromResource(HINSTANCE hinst, LPCWSTR pszName);
@@ -84,6 +93,7 @@ namespace TVTest
 			CBrush() = default;
 			CBrush(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			CBrush(const CColor &Color);
+
 			void Free();
 			bool CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			bool CreateSolidBrush(const CColor &Color);
@@ -112,6 +122,7 @@ namespace TVTest
 		public:
 			CCanvas(HDC hdc);
 			CCanvas(CImage *pImage);
+
 			bool Clear(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			bool SetComposition(bool fComposite);
 			bool DrawImage(CImage *pImage, int x, int y);
@@ -148,6 +159,7 @@ namespace TVTest
 		public:
 			CGraphicsCore();
 			~CGraphicsCore();
+
 			bool Initialize();
 			void Finalize();
 			bool IsInitialized() const { return m_fInitialized; }

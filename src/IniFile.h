@@ -26,25 +26,26 @@ namespace TVTest
 
 			CEntry() {}
 			CEntry(const String &Text);
-			CEntry(LPCWSTR pszName,LPCWSTR pszValue);
+			CEntry(LPCWSTR pszName, LPCWSTR pszValue);
 		};
 
 		typedef std::vector<CEntry> EntryArray;
 
 		CIniFile();
 		~CIniFile();
-		bool Open(LPCWSTR pszFileName,UINT Flags);
+
+		bool Open(LPCWSTR pszFileName, UINT Flags);
 		bool Close();
 		bool SelectSection(LPCWSTR pszSection);
 		bool IsSectionExists(LPCWSTR pszSection);
 		bool DeleteSection(LPCWSTR pszSection);
 		bool ClearSection(LPCWSTR pszSection);
 		bool ClearSection();
-		bool GetValue(LPCWSTR pszName,String *pValue);
-		bool SetValue(LPCWSTR pszName,LPCWSTR pszValue);
+		bool GetValue(LPCWSTR pszName, String *pValue);
+		bool SetValue(LPCWSTR pszName, LPCWSTR pszValue);
 		bool IsValueExists(LPCWSTR pszName);
 		bool DeleteValue(LPCWSTR pszName);
-		bool GetSectionEntries(LPCWSTR pszSection,EntryArray *pEntries);
+		bool GetSectionEntries(LPCWSTR pszSection, EntryArray *pEntries);
 		bool GetEntries(EntryArray *pEntries);
 
 	private:
@@ -63,8 +64,8 @@ namespace TVTest
 		bool Parse(LPCWSTR pszBuffer);
 		SectionList::iterator FindSection(LPCWSTR pszName);
 		SectionList::const_iterator FindSection(LPCWSTR pszName) const;
-		EntryList::iterator FindValue(EntryList &Entries,LPCWSTR pszName);
-		EntryList::const_iterator FindValue(const EntryList &Entries,LPCWSTR pszName) const;
+		EntryList::iterator FindValue(EntryList &Entries, LPCWSTR pszName);
+		EntryList::const_iterator FindValue(const EntryList &Entries, LPCWSTR pszName) const;
 		bool CreateSection(LPCWSTR pszName);
 		CSectionData *GetCurSection();
 

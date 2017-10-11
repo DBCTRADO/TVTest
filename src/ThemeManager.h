@@ -79,13 +79,14 @@ namespace TVTest
 			};
 
 			CThemeManager(const CColorScheme *pColorScheme);
+
 			ThemeColor GetColor(int Type) const;
 			ThemeColor GetColor(LPCTSTR pszName) const;
-			bool GetStyle(int Type,Style *pStyle) const;
-			bool GetFillStyle(int Type,FillStyle *pStyle) const;
-			bool GetBorderStyle(int Type,BorderStyle *pStyle) const;
-			bool GetBackgroundStyle(int Type,BackgroundStyle *pStyle) const;
-			bool GetForegroundStyle(int Type,ForegroundStyle *pStyle) const;
+			bool GetStyle(int Type, Style *pStyle) const;
+			bool GetFillStyle(int Type, FillStyle *pStyle) const;
+			bool GetBorderStyle(int Type, BorderStyle *pStyle) const;
+			bool GetBackgroundStyle(int Type, BackgroundStyle *pStyle) const;
+			bool GetForegroundStyle(int Type, ForegroundStyle *pStyle) const;
 			LPCTSTR GetStyleName(int Type) const;
 			int ParseStyleName(LPCTSTR pszName) const;
 

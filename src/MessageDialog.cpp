@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CMessageDialog::CMessageDialog()
@@ -265,13 +267,16 @@ bool CMessageDialog::Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPC
 				 Type == MessageType::Error ? MB_ICONSTOP : 0)) == IDOK;
 	}
 
-	TVTest::StringUtility::Assign(m_Text, pszText);
-	TVTest::StringUtility::Assign(m_Title, pszTitle);
-	TVTest::StringUtility::Assign(m_SystemMessage, pszSystemMessage);
-	TVTest::StringUtility::Assign(m_Caption, pszCaption);
+	StringUtility::Assign(m_Text, pszText);
+	StringUtility::Assign(m_Title, pszTitle);
+	StringUtility::Assign(m_SystemMessage, pszSystemMessage);
+	StringUtility::Assign(m_Caption, pszCaption);
 	m_MessageType = Type;
 	return ::DialogBoxParam(
 		GetAppClass().GetResourceInstance(),
 		MAKEINTRESOURCE(IDD_ERROR), hwndOwner, DlgProc,
 		reinterpret_cast<LPARAM>(this)) == IDOK;
 }
+
+
+}	// namespace TVTest

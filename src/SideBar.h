@@ -1,5 +1,5 @@
-#ifndef SIDE_BAR_H
-#define SIDE_BAR_H
+#ifndef TVTEST_SIDE_BAR_H
+#define TVTEST_SIDE_BAR_H
 
 
 #include <vector>
@@ -12,158 +12,164 @@
 #include "WindowUtil.h"
 
 
-class CSideBar
-	: public CCustomWindow
-	, public TVTest::CUIBase
+namespace TVTest
 {
-public:
-	static constexpr int ITEM_SEPARATOR = 0;
 
-	enum class ItemState : unsigned int {
-		None     = 0x0000U,
-		Disabled = 0x0001U,
-		Checked  = 0x0002U,
-		Hot      = 0x0004U,
-	};
-
-	struct SideBarItem
+	class CSideBar
+		: public CCustomWindow
+		, public CUIBase
 	{
-		int Command;
-		int Icon;
-		ItemState State;
-
-		bool IsDisabled() const { return EnumAnd(State, ItemState::Disabled) == ItemState::Disabled; }
-		bool IsEnabled() const { return !IsDisabled(); }
-		bool IsChecked() const { return EnumAnd(State, ItemState::Checked) == ItemState::Checked; }
-	};
-
-	struct SideBarTheme
-	{
-		TVTest::Theme::Style ItemStyle;
-		TVTest::Theme::Style HighlightItemStyle;
-		TVTest::Theme::Style CheckItemStyle;
-		TVTest::Theme::BorderStyle Border;
-	};
-
-	struct DrawIconInfo
-	{
-		int Command;
-		ItemState State;
-		HDC hdc;
-		RECT IconRect;
-		COLORREF Color;
-		BYTE Opacity;
-		HDC hdcBuffer;
-	};
-
-	class ABSTRACT_CLASS(CEventHandler)
-	{
-	protected:
-		CSideBar *m_pSideBar;
-
 	public:
-		CEventHandler();
-		virtual ~CEventHandler();
-		virtual void OnCommand(int Command) {}
-		virtual void OnRButtonUp(int x, int y) {}
-		virtual void OnMouseLeave() {}
-		virtual bool GetTooltipText(int Command, LPTSTR pszText, int MaxText) { return false; }
-		virtual bool DrawIcon(const DrawIconInfo * pInfo) { return false; }
-		virtual void OnBarWidthChanged(int BarWidth) {}
-		virtual void OnStyleChanged() {}
-		friend class CSideBar;
-	};
+		static constexpr int ITEM_SEPARATOR = 0;
 
-	static bool Initialize(HINSTANCE hinst);
+		enum class ItemState : unsigned int {
+			None     = 0x0000U,
+			Disabled = 0x0001U,
+			Checked  = 0x0002U,
+			Hot      = 0x0004U,
+		};
 
-	CSideBar(const CCommandList *pCommandList);
-	~CSideBar();
+		struct SideBarItem
+		{
+			int Command;
+			int Icon;
+			ItemState State;
 
-// CBasicWindow
-	bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+			bool IsDisabled() const { return EnumAnd(State, ItemState::Disabled) == ItemState::Disabled; }
+			bool IsEnabled() const { return !IsDisabled(); }
+			bool IsChecked() const { return EnumAnd(State, ItemState::Checked) == ItemState::Checked; }
+		};
 
-// CUIBase
-	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(
-		const TVTest::Style::CStyleManager *pStyleManager,
-		const TVTest::Style::CStyleScaling *pStyleScaling) override;
-	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
+		struct SideBarTheme
+		{
+			Theme::Style ItemStyle;
+			Theme::Style HighlightItemStyle;
+			Theme::Style CheckItemStyle;
+			Theme::BorderStyle Border;
+		};
 
-// CSideBar
-	int GetBarWidth() const;
-	bool SetIconImage(HBITMAP hbm, int Width, int Height);
-	void DeleteAllItems();
-	bool AddItem(const SideBarItem *pItem);
-	bool AddItems(const SideBarItem *pItemList, int NumItems);
-	bool AddSeparator();
-	int GetItemCount() const;
-	int GetItemCommand(int Index) const;
-	int CommandToIndex(int Command) const;
-	bool EnableItem(int Command, bool fEnable);
-	bool EnableItemByIndex(int Index, bool fEnable);
-	bool IsItemEnabled(int Command) const;
-	bool CheckItem(int Command, bool fCheck);
-	bool CheckItemByIndex(int Index, bool fCheck);
-	bool CheckRadioItem(int First, int Last, int Check);
-	bool IsItemChecked(int Command) const;
-	bool RedrawItem(int Command);
-	bool SetSideBarTheme(const SideBarTheme &Theme);
-	bool GetSideBarTheme(SideBarTheme *pTheme) const;
-	void ShowToolTips(bool fShow);
-	void SetVertical(bool fVertical);
-	bool GetVertical() const { return m_fVertical; }
-	void SetEventHandler(CEventHandler *pHandler);
-	const CCommandList *GetCommandList() const { return m_pCommandList; }
-	TVTest::Style::Size GetIconDrawSize() const;
+		struct DrawIconInfo
+		{
+			int Command;
+			ItemState State;
+			HDC hdc;
+			RECT IconRect;
+			COLORREF Color;
+			BYTE Opacity;
+			HDC hdcBuffer;
+		};
 
-protected:
-	struct SideBarStyle
-	{
-		TVTest::Style::Size IconSize;
-		TVTest::Style::Margins ItemPadding;
-		TVTest::Style::IntValue SeparatorWidth;
+		class ABSTRACT_CLASS(CEventHandler)
+		{
+		protected:
+			CSideBar *m_pSideBar;
 
-		SideBarStyle();
-		void SetStyle(const TVTest::Style::CStyleManager *pStyleManager);
+		public:
+			CEventHandler();
+			virtual ~CEventHandler();
+
+			virtual void OnCommand(int Command) {}
+			virtual void OnRButtonUp(int x, int y) {}
+			virtual void OnMouseLeave() {}
+			virtual bool GetTooltipText(int Command, LPTSTR pszText, int MaxText) { return false; }
+			virtual bool DrawIcon(const DrawIconInfo * pInfo) { return false; }
+			virtual void OnBarWidthChanged(int BarWidth) {}
+			virtual void OnStyleChanged() {}
+			friend class CSideBar;
+		};
+
+		static bool Initialize(HINSTANCE hinst);
+
+		CSideBar(const CCommandList *pCommandList);
+		~CSideBar();
+
+	// CBasicWindow
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+
+	// CUIBase
+		void SetStyle(const Style::CStyleManager *pStyleManager) override;
 		void NormalizeStyle(
-			const TVTest::Style::CStyleManager *pStyleManager,
-			const TVTest::Style::CStyleScaling *pStyleScaling);
+			const Style::CStyleManager *pStyleManager,
+			const Style::CStyleScaling *pStyleScaling) override;
+		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
+
+	// CSideBar
+		int GetBarWidth() const;
+		bool SetIconImage(HBITMAP hbm, int Width, int Height);
+		void DeleteAllItems();
+		bool AddItem(const SideBarItem *pItem);
+		bool AddItems(const SideBarItem *pItemList, int NumItems);
+		bool AddSeparator();
+		int GetItemCount() const;
+		int GetItemCommand(int Index) const;
+		int CommandToIndex(int Command) const;
+		bool EnableItem(int Command, bool fEnable);
+		bool EnableItemByIndex(int Index, bool fEnable);
+		bool IsItemEnabled(int Command) const;
+		bool CheckItem(int Command, bool fCheck);
+		bool CheckItemByIndex(int Index, bool fCheck);
+		bool CheckRadioItem(int First, int Last, int Check);
+		bool IsItemChecked(int Command) const;
+		bool RedrawItem(int Command);
+		bool SetSideBarTheme(const SideBarTheme &Theme);
+		bool GetSideBarTheme(SideBarTheme *pTheme) const;
+		void ShowToolTips(bool fShow);
+		void SetVertical(bool fVertical);
+		bool GetVertical() const { return m_fVertical; }
+		void SetEventHandler(CEventHandler *pHandler);
+		const CCommandList *GetCommandList() const { return m_pCommandList; }
+		Style::Size GetIconDrawSize() const;
+
+	protected:
+		struct SideBarStyle
+		{
+			Style::Size IconSize;
+			Style::Margins ItemPadding;
+			Style::IntValue SeparatorWidth;
+
+			SideBarStyle();
+			void SetStyle(const Style::CStyleManager *pStyleManager);
+			void NormalizeStyle(
+				const Style::CStyleManager *pStyleManager,
+				const Style::CStyleScaling *pStyleScaling);
+		};
+
+		SideBarStyle m_Style;
+		CTooltip m_Tooltip;
+		DrawUtil::CFont m_TooltipFont;
+		bool m_fShowTooltips;
+		DrawUtil::CMonoColorIconList m_Icons;
+		bool m_fVertical;
+		SideBarTheme m_Theme;
+		std::vector<SideBarItem> m_ItemList;
+		int m_HotItem;
+		int m_ClickItem;
+		CMouseLeaveTrack m_MouseLeaveTrack;
+		CEventHandler *m_pEventHandler;
+		const CCommandList *m_pCommandList;
+
+		static const int ICON_WIDTH;
+		static const int ICON_HEIGHT;
+		static const LPCTSTR CLASS_NAME;
+		static HINSTANCE m_hinst;
+
+		void GetItemRect(int Item, RECT *pRect) const;
+		void UpdateItem(int Item);
+		int HitTest(int x, int y) const;
+		void UpdateTooltipsRect();
+		void SetTooltipFont();
+		void Draw(HDC hdc, const RECT &PaintRect);
+
+	// CCustomWindow
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	// CUIBase
+		void RealizeStyle() override;
 	};
 
-	SideBarStyle m_Style;
-	CTooltip m_Tooltip;
-	DrawUtil::CFont m_TooltipFont;
-	bool m_fShowTooltips;
-	DrawUtil::CMonoColorIconList m_Icons;
-	bool m_fVertical;
-	SideBarTheme m_Theme;
-	std::vector<SideBarItem> m_ItemList;
-	int m_HotItem;
-	int m_ClickItem;
-	CMouseLeaveTrack m_MouseLeaveTrack;
-	CEventHandler *m_pEventHandler;
-	const CCommandList *m_pCommandList;
+	TVTEST_ENUM_FLAGS(CSideBar::ItemState)
 
-	static const int ICON_WIDTH;
-	static const int ICON_HEIGHT;
-	static const LPCTSTR CLASS_NAME;
-	static HINSTANCE m_hinst;
-
-	void GetItemRect(int Item, RECT *pRect) const;
-	void UpdateItem(int Item);
-	int HitTest(int x, int y) const;
-	void UpdateTooltipsRect();
-	void SetTooltipFont();
-	void Draw(HDC hdc, const RECT &PaintRect);
-
-// CCustomWindow
-	LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
-// CUIBase
-	void RealizeStyle() override;
-};
-
-TVTEST_ENUM_FLAGS(CSideBar::ItemState)
+}	// namespace TVTest
 
 
 #endif

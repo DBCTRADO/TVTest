@@ -10,24 +10,26 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 class CEpgVariableStringMap
-	: public TVTest::CEventVariableStringMap
+	: public CEventVariableStringMap
 {
 public:
 	CEpgVariableStringMap();
 	CEpgVariableStringMap(const EventInfo &Info);
-	bool NormalizeString(TVTest::String *pString) const override { return false; }
+	bool NormalizeString(String *pString) const override { return false; }
 	bool GetParameterList(ParameterGroupList *pList) const override;
-	const TVTest::String &GetiEpgFileName() const { return m_iEpgFileName; }
+	const String &GetiEpgFileName() const { return m_iEpgFileName; }
 
 private:
-	bool GetLocalString(LPCWSTR pszKeyword, TVTest::String *pString) override;
+	bool GetLocalString(LPCWSTR pszKeyword, String *pString) override;
 
 	static const ParameterInfo m_EpgParameterList[];
 
-	TVTest::String m_iEpgFileName;
+	String m_iEpgFileName;
 };
 
 
@@ -53,7 +55,7 @@ CEpgVariableStringMap::CEpgVariableStringMap(const EventInfo &Info)
 }
 
 
-bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword, TVTest::String *pString)
+bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 {
 	if (::lstrcmpi(pszKeyword, TEXT("tvpid")) == 0) {
 		if (m_iEpgFileName.empty()) {
@@ -65,17 +67,17 @@ bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword, TVTest::String *p
 		}
 		*pString = m_iEpgFileName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("eid")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.EventID);
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("nid")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetNetworkID());
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetNetworkID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("tsid")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetTransportStreamID());
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetTransportStreamID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("sid")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetServiceID());
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetServiceID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("duration-sec")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.Duration);
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.Duration);
 	} else if (::lstrcmpi(pszKeyword, TEXT("duration-min")) == 0) {
-		TVTest::StringUtility::Format(*pString, TEXT("%d"), (m_EventInfo.Event.Duration + 59) / 60);
+		StringUtility::Format(*pString, TEXT("%d"), (m_EventInfo.Event.Duration + 59) / 60);
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword, pString);
 	}
@@ -106,7 +108,7 @@ CProgramGuideTool::CProgramGuideTool()
 }
 
 
-CProgramGuideTool::CProgramGuideTool(const TVTest::String &Name, const TVTest::String &Command)
+CProgramGuideTool::CProgramGuideTool(const String &Name, const String &Command)
 	: m_Name(Name)
 	, m_Command(Command)
 {
@@ -115,8 +117,8 @@ CProgramGuideTool::CProgramGuideTool(const TVTest::String &Name, const TVTest::S
 
 CProgramGuideTool::CProgramGuideTool(LPCTSTR pszName, LPCTSTR pszCommand)
 {
-	TVTest::StringUtility::Assign(m_Name, pszName);
-	TVTest::StringUtility::Assign(m_Command, pszCommand);
+	StringUtility::Assign(m_Name, pszName);
+	StringUtility::Assign(m_Command, pszCommand);
 }
 
 
@@ -163,16 +165,16 @@ bool CProgramGuideTool::Execute(
 	while (*p == _T(' '))
 		p++;
 
-	TVTest::CEventVariableStringMap::EventInfo Info;
+	CEventVariableStringMap::EventInfo Info;
 	Info.Channel = pServiceInfo->GetChannelInfo();
 	Info.Event = *pEventInfo;
 	Info.ServiceName = pServiceInfo->GetServiceName();
 	Info.TOTTime.NowLocal();
 
 	CEpgVariableStringMap VarStrMap(Info);
-	TVTest::String Parameter;
-	TVTest::FormatVariableString(&VarStrMap, p, &Parameter);
-	const TVTest::String &iEpgFileName = VarStrMap.GetiEpgFileName();
+	String Parameter;
+	FormatVariableString(&VarStrMap, p, &Parameter);
+	const String &iEpgFileName = VarStrMap.GetiEpgFileName();
 	if (!iEpgFileName.empty()) {
 		if (!pServiceInfo->SaveiEpgFile(pEventInfo, iEpgFileName.c_str(), true)) {
 			::MessageBox(
@@ -273,9 +275,9 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 		case IDC_PROGRAMGUIDETOOL_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TVTest::String Command;
+				String Command;
 				TCHAR szFileName[MAX_PATH];
-				TVTest::String Directory;
+				String Directory;
 
 				GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, &Command);
 				if (!Command.empty()) {
@@ -293,8 +295,8 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = MAX_PATH;
 				if (szFileName[0] != '\0') {
-					TVTest::String Name;
-					if (TVTest::PathUtil::Split(szFileName, &Directory, &Name)) {
+					String Name;
+					if (PathUtil::Split(szFileName, &Directory, &Name)) {
 						ofn.lpstrInitialDir = Directory.c_str();
 						::lstrcpy(szFileName, Name.c_str());
 					}
@@ -400,3 +402,6 @@ const CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index) const
 		return nullptr;
 	return m_ToolList[Index].get();
 }
+
+
+}	// namespace TVTest

@@ -15,6 +15,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 static const int CATEGORY_ICON_WIDTH = 32, CATEGORY_ICON_HEIGHT = 32;
 
 enum {
@@ -43,7 +47,7 @@ public:
 	void LayOut(const CHomeDisplay::StyleInfo &Style, HDC hdc, const RECT &ContentRect) override;
 	void Draw(
 		HDC hdc, const CHomeDisplay::StyleInfo &Style, const RECT &ContentRect, const RECT &PaintRect,
-		TVTest::Theme::CThemeDraw &ThemeDraw) const override;
+		Theme::CThemeDraw &ThemeDraw) const override;
 	bool GetCurItemRect(RECT *pRect) const override;
 	bool SetFocus(bool fFocus) override;
 	bool IsFocused() const override { return m_HotItem >= 0; }
@@ -128,7 +132,7 @@ void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC 
 
 void CChannelListCategoryBase::Draw(
 	HDC hdc, const CHomeDisplay::StyleInfo &Style, const RECT &ContentRect, const RECT &PaintRect,
-	TVTest::Theme::CThemeDraw &ThemeDraw) const
+	Theme::CThemeDraw &ThemeDraw) const
 {
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		RECT rcItem, rc;
@@ -137,7 +141,7 @@ void CChannelListCategoryBase::Draw(
 		if (!IsRectIntersect(&rcItem, &PaintRect))
 			continue;
 		const CChannelItemBase *pItem = m_ItemList[i].get();
-		const TVTest::Theme::Style *pItemStyle;
+		const Theme::Style *pItemStyle;
 		if (i == m_HotItem) {
 			pItemStyle = &Style.ItemHotStyle;
 		} else {
@@ -482,11 +486,11 @@ private:
 	class CChannelItem
 		: public CChannelItemBase
 	{
-		TVTest::String m_BonDriverFileName;
+		String m_BonDriverFileName;
 		bool m_fForceBonDriverChange;
 
 	public:
-		CChannelItem(const TVTest::CFavoriteChannel &Channel)
+		CChannelItem(const CFavoriteChannel &Channel)
 			: CChannelItemBase(Channel.GetChannelInfo())
 			, m_BonDriverFileName(Channel.GetBonDriverFileName())
 			, m_fForceBonDriverChange(Channel.GetForceBonDriverChange())
@@ -508,11 +512,11 @@ CFavoritesCategory::CFavoritesCategory(CHomeDisplay *pHomeDisplay)
 bool CFavoritesCategory::Create()
 {
 	class CItemEnumerator
-		: public TVTest::CFavoriteItemEnumerator
+		: public CFavoriteItemEnumerator
 	{
 		ItemList &m_ItemList;
 
-		bool ChannelItem(TVTest::CFavoriteFolder &Folder, TVTest::CFavoriteChannel &Channel) override
+		bool ChannelItem(CFavoriteFolder &Folder, CFavoriteChannel &Channel) override
 		{
 			m_ItemList.emplace_back(new CChannelItem(Channel));
 			return true;
@@ -525,7 +529,7 @@ bool CFavoritesCategory::Create()
 		}
 	};
 
-	TVTest::CFavoritesManager &FavoritesManager = GetAppClass().FavoritesManager;
+	CFavoritesManager &FavoritesManager = GetAppClass().FavoritesManager;
 	CItemEnumerator ItemEnumerator(m_ItemList);
 
 	Clear();
@@ -574,7 +578,7 @@ private:
 	class CChannelItem
 		: public CChannelItemBase
 	{
-		TVTest::String m_BonDriverFileName;
+		String m_BonDriverFileName;
 
 	public:
 		CChannelItem(const CTunerChannelInfo *pChannel)
@@ -657,7 +661,7 @@ public:
 	void LayOut(const CHomeDisplay::StyleInfo &Style, HDC hdc, const RECT &ContentRect) override;
 	void Draw(
 		HDC hdc, const CHomeDisplay::StyleInfo &Style, const RECT &ContentRect, const RECT &PaintRect,
-		TVTest::Theme::CThemeDraw &ThemeDraw) const override;
+		Theme::CThemeDraw &ThemeDraw) const override;
 	bool GetCurItemRect(RECT *pRect) const override;
 	bool SetFocus(bool fFocus) override;
 	bool IsFocused() const override { return m_HotItem >= 0; }
@@ -685,7 +689,7 @@ private:
 		void SetExpanded(bool fExpanded) { m_fExpanded = fExpanded; }
 		void SetLogo(HBITMAP hbm);
 		HBITMAP GetStretchedLogo(int Width, int Height) const;
-		bool GetEventText(TVTest::String *pText) const;
+		bool GetEventText(String *pText) const;
 
 	private:
 		CChannelInfo m_ChannelInfo;
@@ -695,7 +699,7 @@ private:
 		HBITMAP m_hbmLogo;
 		mutable DrawUtil::CBitmap m_StretchedLogo;
 
-		static void AppendEventText(TVTest::String *pString, LPCWSTR pszText);
+		static void AppendEventText(String *pString, LPCWSTR pszText);
 	};
 
 	RECT m_Rect;
@@ -761,10 +765,10 @@ bool CFeaturedEventsCategory::Create()
 
 void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC hdc, const RECT &ContentRect)
 {
-	TVTest::CTextDraw DrawText;
+	CTextDraw DrawText;
 	RECT rc;
 	m_pHomeDisplay->GetClientRect(&rc);
-	DrawText.Begin(hdc, rc, TVTest::CTextDraw::Flag::JapaneseHyphnation);
+	DrawText.Begin(hdc, rc, CTextDraw::Flag::JapaneseHyphnation);
 
 	const CFeaturedEventsSettings &Settings = GetAppClass().FeaturedEvents.GetSettings();
 	int ItemBaseHeight = 2 * Style.FontHeight + Style.ItemMargins.Vert();
@@ -780,7 +784,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 
 	const int EventTextWidth =
 		(ContentRect.right - ContentRect.left) - Style.ItemMargins.Horz() - Style.FontHeight;
-	TVTest::String Text;
+	String Text;
 
 	m_ChannelNameWidth = 0;
 
@@ -819,7 +823,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 
 void CFeaturedEventsCategory::Draw(
 	HDC hdc, const CHomeDisplay::StyleInfo &Style, const RECT &ContentRect, const RECT &PaintRect,
-	TVTest::Theme::CThemeDraw &ThemeDraw) const
+	Theme::CThemeDraw &ThemeDraw) const
 {
 	const CFeaturedEventsSettings &Settings = GetAppClass().FeaturedEvents.GetSettings();
 
@@ -831,19 +835,19 @@ void CFeaturedEventsCategory::Draw(
 			pszText = TEXT("検索された番組はありません。");
 		}
 		RECT rc = ContentRect;
-		TVTest::Style::Subtract(&rc, Style.ItemMargins);
+		Style::Subtract(&rc, Style.ItemMargins);
 		::SetTextColor(hdc, Style.BannerTextColor);
 		::DrawText(hdc, pszText, -1, &rc, DT_LEFT | DT_NOPREFIX | DT_WORDBREAK);
 		return;
 	}
 
-	TVTest::CTextDraw DrawText;
+	CTextDraw DrawText;
 	RECT rcClient;
 	m_pHomeDisplay->GetClientRect(&rcClient);
 	DrawText.Begin(
 		hdc, rcClient,
-		TVTest::CTextDraw::Flag::EndEllipsis |
-		TVTest::CTextDraw::Flag::JapaneseHyphnation);
+		CTextDraw::Flag::EndEllipsis |
+		CTextDraw::Flag::JapaneseHyphnation);
 
 	HFONT hfontText = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
 	LOGFONT lf;
@@ -859,7 +863,7 @@ void CFeaturedEventsCategory::Draw(
 			continue;
 		const CEventItem *pItem = m_ItemList[i].get();
 		const CChannelInfo &ChannelInfo = pItem->GetChannelInfo();
-		const TVTest::Theme::Style *pItemStyle;
+		const Theme::Style *pItemStyle;
 		if (i == m_HotItem) {
 			pItemStyle = &Style.ItemHotStyle;
 		} else {
@@ -909,7 +913,7 @@ void CFeaturedEventsCategory::Draw(
 		}
 
 		if (Settings.GetShowEventText() || pItem->IsExpanded()) {
-			TVTest::String Text;
+			String Text;
 
 			if (pItem->GetEventText(&Text)) {
 				rc.left = rcItem.left + Style.ItemMargins.Left + Style.FontHeight;
@@ -1318,7 +1322,7 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width, int Hei
 }
 
 
-bool CFeaturedEventsCategory::CEventItem::GetEventText(TVTest::String *pText) const
+bool CFeaturedEventsCategory::CEventItem::GetEventText(String *pText) const
 {
 	pText->clear();
 	if (!m_EventInfo.EventText.empty())
@@ -1332,7 +1336,7 @@ bool CFeaturedEventsCategory::CEventItem::GetEventText(TVTest::String *pText) co
 }
 
 
-void CFeaturedEventsCategory::CEventItem::AppendEventText(TVTest::String *pString, LPCWSTR pszText)
+void CFeaturedEventsCategory::CEventItem::AppendEventText(String *pString, LPCWSTR pszText)
 {
 	bool fFirst = true;
 	LPCWSTR p = pszText;
@@ -1614,7 +1618,7 @@ void CHomeDisplay::SetEventHandler(CHomeDisplayEventHandler *pEventHandler)
 }
 
 
-bool CHomeDisplay::SetFont(const TVTest::Style::Font &Font, bool fAutoSize)
+bool CHomeDisplay::SetFont(const Style::Font &Font, bool fAutoSize)
 {
 	m_StyleFont = Font;
 	m_fAutoFontSize = fAutoSize;
@@ -2031,7 +2035,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 	if (m_CurCategory >= 0)
 		pCategory = m_CategoryList[m_CurCategory].get();
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 	if (PaintRect.left < m_CategoriesAreaWidth) {
 		RECT rcCategories = rcClient;
@@ -2045,7 +2049,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 
 		for (size_t i = 0; i < m_CategoryList.size(); i++) {
 			const CCategory *pCategory = m_CategoryList[i].get();
-			const TVTest::Theme::Style *pStyle =
+			const Theme::Style *pStyle =
 				((int)i == m_CurCategory) ?
 					(pCategory->IsFocused() ? &m_HomeDisplayStyle.CategoryItemSelStyle : &m_HomeDisplayStyle.CategoryItemCurStyle) :
 					(&m_HomeDisplayStyle.CategoryItemStyle);
@@ -2053,7 +2057,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 			rcItem.bottom = rcItem.top + m_CategoryItemHeight;
 			ThemeDraw.Draw(pStyle->Back, rcItem);
 			RECT rc = rcItem;
-			TVTest::Style::Subtract(&rc, m_HomeDisplayStyle.CategoryItemMargins);
+			Style::Subtract(&rc, m_HomeDisplayStyle.CategoryItemMargins);
 			::ImageList_Draw(
 				m_himlIcons, pCategory->GetIconIndex(),
 				hdc, rc.left, rc.top + ((rc.bottom - rc.top) - CATEGORY_ICON_HEIGHT) / 2, ILD_TRANSPARENT);
@@ -2071,7 +2075,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 		ThemeDraw.Draw(m_HomeDisplayStyle.ContentBackStyle, rcContent);
 
 		if (pCategory != nullptr) {
-			TVTest::Style::Subtract(&rcContent, m_Style.ContentMargin);
+			Style::Subtract(&rcContent, m_Style.ContentMargin);
 			if (rcContent.left < rcContent.right) {
 				HRGN hrgn = ::CreateRectRgnIndirect(&rcContent);
 				::SelectClipRgn(hdc, hrgn);
@@ -2172,7 +2176,7 @@ void CHomeDisplay::SetScrollBar()
 void CHomeDisplay::GetContentAreaRect(RECT *pRect) const
 {
 	GetClientRect(pRect);
-	TVTest::Style::Subtract(pRect, m_Style.ContentMargin);
+	Style::Subtract(pRect, m_Style.ContentMargin);
 	pRect->left += m_CategoriesAreaWidth;
 	pRect->right -= m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
 	if (pRect->right < pRect->left)
@@ -2273,3 +2277,6 @@ CHomeDisplay::CCategory::CCategory(CHomeDisplay *pHomeDisplay)
 	: m_pHomeDisplay(pHomeDisplay)
 {
 }
+
+
+}	// namespace TVTest

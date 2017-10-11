@@ -8,6 +8,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CController::CController()
@@ -813,3 +815,6 @@ bool CControllerManager::ControllerSettings::operator==(const ControllerSettings
 
 	return true;
 }
+
+
+}	// namespace TVTest

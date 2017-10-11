@@ -5,10 +5,11 @@
 #include "Common/DebugDef.h"
 
 
-using namespace TVTest;
+static TVTest::CAppMain g_App;
 
 
-static CAppMain g_App;
+namespace TVTest
+{
 
 
 const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
@@ -167,6 +168,9 @@ CServiceUpdateInfo::CServiceUpdateInfo(LibISDB::TSEngine *pEngine, LibISDB::Anal
 }
 
 
+}	// namespace TVTest
+
+
 
 
 // エントリポイント
@@ -180,8 +184,8 @@ int APIENTRY _tWinMain(
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF/* | _CRTDBG_CHECK_ALWAYS_DF*/);
 #else
-	CDebugHelper::Initialize();
-	CDebugHelper::SetExceptionFilterMode(CDebugHelper::ExceptionFilterMode::Dialog);
+	TVTest::CDebugHelper::Initialize();
+	TVTest::CDebugHelper::SetExceptionFilterMode(TVTest::CDebugHelper::ExceptionFilterMode::Dialog);
 #endif
 
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);

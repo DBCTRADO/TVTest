@@ -9,6 +9,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CEpgOptions::CEpgOptions()
@@ -32,7 +34,7 @@ CEpgOptions::CEpgOptions()
 	}
 #endif
 
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_EventInfoFont);
+	StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_EventInfoFont);
 }
 
 
@@ -87,7 +89,7 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 	}
 
 	bool f;
-	if (TVTest::StyleUtil::ReadFontSettings(Settings, TEXT("EventInfoFont"), &m_EventInfoFont, false, &f)) {
+	if (StyleUtil::ReadFontSettings(Settings, TEXT("EventInfoFont"), &m_EventInfoFont, false, &f)) {
 		if (!f)
 			m_fChanged = true;
 	}
@@ -115,7 +117,7 @@ bool CEpgOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("SaveBmpLogo"), LogoManager.GetSaveLogoBmp());
 	Settings.Write(TEXT("LogoDirectory"), LogoManager.GetLogoDirectory());
 
-	TVTest::StyleUtil::WriteFontSettings(Settings, TEXT("EventInfoFont"), m_EventInfoFont);
+	StyleUtil::WriteFontSettings(Settings, TEXT("EventInfoFont"), m_EventInfoFont);
 
 	return true;
 }
@@ -132,7 +134,7 @@ bool CEpgOptions::Create(HWND hwndOwner)
 bool CEpgOptions::LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 {
 	if (m_fSaveEpgFile) {
-		TVTest::CFilePath FilePath;
+		CFilePath FilePath;
 
 		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
 			return false;
@@ -149,17 +151,17 @@ bool CEpgOptions::LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 
 
 bool CEpgOptions::AsyncLoadEpgFile(
-	LibISDB::EPGDatabase *pEPGDatabase, TVTest::CEpgDataStore::CEventHandler *pEventHandler)
+	LibISDB::EPGDatabase *pEPGDatabase, CEpgDataStore::CEventHandler *pEventHandler)
 {
 	if (m_fSaveEpgFile) {
-		TVTest::CFilePath FilePath;
+		CFilePath FilePath;
 
 		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
 			return false;
 		if (FilePath.IsFileExists()) {
 			GetAppClass().AddLog(TEXT("EPG データを \"%s\" から読み込みます..."), FilePath.c_str());
 			m_EpgDataStore.SetEventHandler(pEventHandler);
-			if (!m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str(), TVTest::CEpgDataStore::OpenFlag::LoadBackground))
+			if (!m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str(), CEpgDataStore::OpenFlag::LoadBackground))
 				return false;
 			if (!m_EpgDataStore.LoadAsync())
 				return false;
@@ -187,7 +189,7 @@ bool CEpgOptions::SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 	bool fOK = true;
 
 	if (m_fSaveEpgFile) {
-		TVTest::String FilePath;
+		String FilePath;
 
 		if (!pEPGDatabase->IsUpdated())
 			return true;
@@ -220,7 +222,7 @@ bool CEpgOptions::LoadEDCBData()
 	bool fOK = true;
 
 	if (m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
-		TVTest::String Path;
+		String Path;
 
 		if (!GetAbsolutePath(m_EDCBDataFolder, &Path))
 			return false;
@@ -238,7 +240,7 @@ bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 	bool fOK = true;
 
 	if (m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
-		TVTest::String Path;
+		String Path;
 
 		if (!GetAbsolutePath(m_EDCBDataFolder, &Path))
 			return false;
@@ -270,7 +272,7 @@ bool CEpgOptions::LoadLogoFile()
 	if (m_fSaveLogoFile && !m_LogoFileName.empty()) {
 		CAppMain &App = GetAppClass();
 		CLogoManager &LogoManager = App.LogoManager;
-		TVTest::CFilePath FilePath;
+		CFilePath FilePath;
 
 		if (!GetAbsolutePath(m_LogoFileName, &FilePath))
 			return false;
@@ -303,7 +305,7 @@ bool CEpgOptions::SaveLogoFile()
 	if (m_fSaveLogoFile && !m_LogoFileName.empty()) {
 		CAppMain &App = GetAppClass();
 		CLogoManager &LogoManager = App.LogoManager;
-		TVTest::CFilePath FilePath;
+		CFilePath FilePath;
 
 		if (!GetAbsolutePath(m_LogoFileName, &FilePath))
 			return false;
@@ -334,7 +336,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			CLogoManager &LogoManager = GetAppClass().LogoManager;
 
 			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_SAVEEPGFILE, m_fSaveEpgFile);
-			::EnableDlgItems(
+			EnableDlgItems(
 				hDlg, IDC_EPGOPTIONS_EPGFILENAME_LABEL,
 				IDC_EPGOPTIONS_EPGFILENAME_BROWSE, m_fSaveEpgFile);
 			::SendDlgItemMessage(
@@ -367,7 +369,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, LogoManager.GetLogoDirectory());
 
 			m_CurEventInfoFont = m_EventInfoFont;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
+			StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
 		}
 		return TRUE;
 
@@ -468,8 +470,8 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return TRUE;
 
 		case IDC_EVENTINFOOPTIONS_FONT_CHOOSE:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg, &m_CurEventInfoFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
+			if (StyleUtil::ChooseStyleFont(hDlg, &m_CurEventInfoFont))
+				StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
 			return TRUE;
 		}
 		return TRUE;
@@ -502,7 +504,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				GetDlgItemString(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, &m_LogoFileName);
 				LogoManager.SetSaveLogo(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVERAWLOGO));
 				LogoManager.SetSaveLogoBmp(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVEBMPLOGO));
-				TVTest::String Path;
+				String Path;
 				GetDlgItemString(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, &Path);
 				LogoManager.SetLogoDirectory(Path.c_str());
 
@@ -520,3 +522,6 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

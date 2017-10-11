@@ -6,63 +6,68 @@
 #include "GUIUtil.h"
 
 
-namespace ProgramGuide
+namespace TVTest
 {
-	class CServiceInfo;
-}
+
+	namespace ProgramGuide
+	{
+		class CServiceInfo;
+	}
 
 
-class CProgramGuideTool
-{
-public:
-	CProgramGuideTool();
-	CProgramGuideTool(const TVTest::String &Name, const TVTest::String &Command);
-	CProgramGuideTool(LPCTSTR pszName, LPCTSTR pszCommand);
-	LPCTSTR GetName() const { return m_Name.c_str(); }
-	LPCTSTR GetCommand() const { return m_Command.c_str(); }
-	bool GetPath(LPTSTR pszPath, int MaxLength) const;
-	HICON GetIcon();
-	bool Execute(
-		const ProgramGuide::CServiceInfo *pServiceInfo,
-		const LibISDB::EventInfo *pEventInfo, HWND hwnd);
-	bool ShowDialog(HWND hwndOwner);
-
-private:
-	class CProgramGuideToolDialog
-		: public CBasicDialog
+	class CProgramGuideTool
 	{
 	public:
-		CProgramGuideToolDialog(CProgramGuideTool *pTool);
-		bool Show(HWND hwndOwner) override;
+		CProgramGuideTool();
+		CProgramGuideTool(const String &Name, const String &Command);
+		CProgramGuideTool(LPCTSTR pszName, LPCTSTR pszCommand);
+		LPCTSTR GetName() const { return m_Name.c_str(); }
+		LPCTSTR GetCommand() const { return m_Command.c_str(); }
+		bool GetPath(LPTSTR pszPath, int MaxLength) const;
+		HICON GetIcon();
+		bool Execute(
+			const ProgramGuide::CServiceInfo *pServiceInfo,
+			const LibISDB::EventInfo *pEventInfo, HWND hwnd);
+		bool ShowDialog(HWND hwndOwner);
 
 	private:
-		CProgramGuideTool *m_pTool;
+		class CProgramGuideToolDialog
+			: public CBasicDialog
+		{
+		public:
+			CProgramGuideToolDialog(CProgramGuideTool *pTool);
+			bool Show(HWND hwndOwner) override;
 
-		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		private:
+			CProgramGuideTool *m_pTool;
+
+			INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		};
+
+		String m_Name;
+		String m_Command;
+		CIcon m_Icon;
+
+		static bool GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileName, int MaxFileName);
 	};
 
-	TVTest::String m_Name;
-	TVTest::String m_Command;
-	TVTest::CIcon m_Icon;
+	class CProgramGuideToolList
+	{
+	public:
+		CProgramGuideToolList();
+		CProgramGuideToolList(const CProgramGuideToolList &Src);
+		CProgramGuideToolList &operator=(const CProgramGuideToolList &Src);
+		void Clear();
+		bool Add(CProgramGuideTool *pTool);
+		CProgramGuideTool *GetTool(size_t Index);
+		const CProgramGuideTool *GetTool(size_t Index) const;
+		size_t NumTools() const { return m_ToolList.size(); }
 
-	static bool GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileName, int MaxFileName);
-};
+	private:
+		std::vector<std::unique_ptr<CProgramGuideTool>> m_ToolList;
+	};
 
-class CProgramGuideToolList
-{
-public:
-	CProgramGuideToolList();
-	CProgramGuideToolList(const CProgramGuideToolList &Src);
-	CProgramGuideToolList &operator=(const CProgramGuideToolList &Src);
-	void Clear();
-	bool Add(CProgramGuideTool *pTool);
-	CProgramGuideTool *GetTool(size_t Index);
-	const CProgramGuideTool *GetTool(size_t Index) const;
-	size_t NumTools() const { return m_ToolList.size(); }
-
-private:
-	std::vector<std::unique_ptr<CProgramGuideTool>> m_ToolList;
-};
+}	// namespace TVTest
 
 
 #endif

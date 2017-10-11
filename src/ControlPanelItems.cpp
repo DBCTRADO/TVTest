@@ -7,6 +7,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 void CTunerControlItem::CalcSize(int Width, SIZE *pSize)
@@ -33,7 +35,7 @@ void CTunerControlItem::Draw(HDC hdc, const RECT &Rect)
 		pszText = TEXT("<チューナー>");
 	}
 	RECT rc = Rect;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	::DrawText(
 		hdc, pszText, -1, &rc,
 		DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
@@ -83,7 +85,7 @@ void CChannelControlItem::Draw(HDC hdc, const RECT &Rect)
 		::lstrcpy(szText, TEXT("<チャンネル>"));
 	}
 	RECT rc = Rect;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	::DrawText(
 		hdc, szText, -1, &rc,
 		DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
@@ -124,7 +126,7 @@ void CVideoControlItem::Draw(HDC hdc, const RECT &Rect)
 		CoreEngine.GetOriginalVideoHeight(),
 		App.UICore.GetZoomPercentage());
 	RECT rc = Rect;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	::DrawText(
 		hdc, szText, -1, &rc,
 		DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
@@ -149,7 +151,7 @@ void CVideoControlItem::OnRButtonDown(int x, int y)
 
 void CVolumeControlItem::CalcSize(int Width, SIZE *pSize)
 {
-	const TVTest::Style::Margins &Padding = m_pControlPanel->GetItemPadding();
+	const Style::Margins &Padding = m_pControlPanel->GetItemPadding();
 	pSize->cx = Width;
 	pSize->cy = m_Style.BarHeight + Padding.Vert();
 }
@@ -172,7 +174,7 @@ void CVolumeControlItem::Draw(HDC hdc, const RECT &Rect)
 	hpenOld = SelectPen(hdc, hpen);
 	hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
 	rc = Rect;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	rc.top += ((rc.bottom - rc.top) - m_Style.BarHeight) / 2;
 	rc.bottom = rc.top + m_Style.BarHeight;
 	::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
@@ -184,7 +186,7 @@ void CVolumeControlItem::Draw(HDC hdc, const RECT &Rect)
 	else
 		BarColor = MixColor(TextColor, ::GetBkColor(hdc));
 	::InflateRect(&rc, -m_Style.BarBorderWidth, -m_Style.BarBorderWidth);
-	TVTest::Style::Subtract(&rc, m_Style.BarPadding);
+	Style::Subtract(&rc, m_Style.BarPadding);
 	rc.right = rc.left + (rc.right - rc.left) * UICore.GetVolume() / CCoreEngine::MAX_VOLUME;
 	DrawUtil::Fill(hdc, &rc, BarColor);
 }
@@ -208,8 +210,8 @@ void CVolumeControlItem::OnMouseMove(int x, int y)
 	int Volume;
 
 	rc = m_Position;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
-	TVTest::Style::Subtract(&rc, m_Style.BarPadding);
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_Style.BarPadding);
 	Volume = (x - rc.left) * CCoreEngine::MAX_VOLUME / ((rc.right - rc.left) - 1);
 	if (Volume < 0)
 		Volume = 0;
@@ -219,7 +221,7 @@ void CVolumeControlItem::OnMouseMove(int x, int y)
 		UICore.SetVolume(Volume, false);
 }
 
-void CVolumeControlItem::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CVolumeControlItem::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style = VolumeControlStyle();
 	pStyleManager->Get(TEXT("control-panel.volume.bar.height"), &m_Style.BarHeight);
@@ -228,8 +230,8 @@ void CVolumeControlItem::SetStyle(const TVTest::Style::CStyleManager *pStyleMana
 }
 
 void CVolumeControlItem::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&m_Style.BarHeight);
 	pStyleScaling->ToPixels(&m_Style.BarPadding);
@@ -256,13 +258,13 @@ void CAudioControlItem::Draw(HDC hdc, const RECT &Rect)
 {
 	CAppMain &App = GetAppClass();
 	RECT rc = Rect;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 
 	const LibISDB::ViewerFilter *pViewer = App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer != nullptr && pViewer->IsSPDIFPassthrough()) {
-		TVTest::Style::Size IconSize = m_pControlPanel->GetIconSize();
+		Style::Size IconSize = m_pControlPanel->GetIconSize();
 		if (!m_Icons.IsCreated()) {
-			static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+			static const Theme::IconList::ResourceInfo ResourceList[] = {
 				{MAKEINTRESOURCE(IDB_PASSTHROUGH16), 16, 16},
 				{MAKEINTRESOURCE(IDB_PASSTHROUGH32), 32, 32},
 			};
@@ -312,7 +314,7 @@ CControlPanelButton::CControlPanelButton(int Command, LPCTSTR pszText, bool fBre
 
 void CControlPanelButton::CalcSize(int Width, SIZE *pSize)
 {
-	const TVTest::Style::Margins &Padding = m_pControlPanel->GetItemPadding();
+	const Style::Margins &Padding = m_pControlPanel->GetItemPadding();
 
 	if (m_Width < 0)
 		CalcTextSize(m_Text.c_str(), pSize);
@@ -325,8 +327,11 @@ void CControlPanelButton::CalcSize(int Width, SIZE *pSize)
 void CControlPanelButton::Draw(HDC hdc, const RECT &Rect)
 {
 	RECT rc = Rect;
-	TVTest::Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
+	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	::DrawText(
 		hdc, m_Text.c_str(), -1, &rc,
 		DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
 }
+
+
+}	// namespace TVTest

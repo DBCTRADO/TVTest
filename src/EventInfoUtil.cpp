@@ -26,7 +26,7 @@ bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit)
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
 
 	if (CRichEditUtil::IsSelected(hwndEdit)) {
-		const TVTest::CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
+		const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
 		if (KeywordSearch.GetSearchEngineCount() > 0) {
 			::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 			KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH);

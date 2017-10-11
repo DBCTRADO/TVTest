@@ -6,22 +6,28 @@
 #include "LibISDB/LibISDB/Windows/Viewer/DirectShow/KnownDecoderManager.hpp"
 
 
-class CVideoDecoderOptions
-	: public CSettingsBase
+namespace TVTest
 {
-public:
-	typedef LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings VideoDecoderSettings;
 
-	CVideoDecoderOptions();
-	bool ReadSettings(CSettings &Settings) override;
-	bool WriteSettings(CSettings &Settings) override;
-	bool ApplyVideoDecoderSettings();
-	void SetVideoDecoderSettings(const VideoDecoderSettings &Settings) { m_VideoDecoderSettings = Settings; }
-	const VideoDecoderSettings &GetVideoDecoderSettings() const { m_VideoDecoderSettings; }
+	class CVideoDecoderOptions
+		: public CSettingsBase
+	{
+	public:
+		typedef LibISDB::DirectShow::KnownDecoderManager::VideoDecoderSettings VideoDecoderSettings;
 
-private:
-	VideoDecoderSettings m_VideoDecoderSettings;
-};
+		CVideoDecoderOptions();
+
+		bool ReadSettings(CSettings &Settings) override;
+		bool WriteSettings(CSettings &Settings) override;
+		bool ApplyVideoDecoderSettings();
+		void SetVideoDecoderSettings(const VideoDecoderSettings &Settings) { m_VideoDecoderSettings = Settings; }
+		const VideoDecoderSettings &GetVideoDecoderSettings() const { m_VideoDecoderSettings; }
+
+	private:
+		VideoDecoderSettings m_VideoDecoderSettings;
+	};
+
+}	// namespace TVTest
 
 
 #endif

@@ -4,7 +4,9 @@
 #include <utility>
 #include "Common/DebugDef.h"
 
-using namespace TVTest;
+
+namespace TVTest
+{
 
 
 static unsigned int StrToUInt(LPCTSTR pszValue)
@@ -190,7 +192,7 @@ bool CSettings::Write(LPCTSTR pszValueName, LPCTSTR pszData)
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName, TVTest::String *pValue)
+bool CSettings::Read(LPCTSTR pszValueName, String *pValue)
 {
 	if (!(m_OpenFlags & OpenFlag::Read))
 		return false;
@@ -198,7 +200,7 @@ bool CSettings::Read(LPCTSTR pszValueName, TVTest::String *pValue)
 	if (pValue == nullptr)
 		return false;
 
-	TVTest::String Value;
+	String Value;
 	if (!m_IniFile.GetValue(pszValueName, &Value))
 		return false;
 
@@ -208,7 +210,7 @@ bool CSettings::Read(LPCTSTR pszValueName, TVTest::String *pValue)
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName, const TVTest::String &Value)
+bool CSettings::Write(LPCTSTR pszValueName, const String &Value)
 {
 	return Write(pszValueName, Value.c_str());
 }
@@ -243,7 +245,7 @@ bool CSettings::Read(LPCTSTR pszValueName, double *pData)
 	if (pData == nullptr)
 		return false;
 
-	TVTest::String Value;
+	String Value;
 
 	if (!Read(pszValueName, &Value))
 		return false;
@@ -432,3 +434,6 @@ bool CSettingsBase::SaveSettings(LPCTSTR pszFileName)
 		return false;
 	return SaveSettings(Settings);
 }
+
+
+}	// namespace TVTest

@@ -3,9 +3,15 @@
 #include "AppMain.h"
 #include "CaptionPanel.h"
 #include "EpgUtil.h"
+#include "Settings.h"
+#include "LibISDB/LibISDB/Utilities/MD5.hpp"
 #include "resource.h"
 #include <utility>
 #include "Common/DebugDef.h"
+
+
+namespace TVTest
+{
 
 
 #define WM_APP_ADD_CAPTION WM_APP
@@ -74,7 +80,7 @@ bool CCaptionPanel::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CCaptionPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	SetColor(
 		pThemeManager->GetColor(CColorScheme::COLOR_CAPTIONPANELBACK),
@@ -82,7 +88,7 @@ void CCaptionPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 }
 
 
-bool CCaptionPanel::SetFont(const TVTest::Style::Font &Font)
+bool CCaptionPanel::SetFont(const Style::Font &Font)
 {
 	m_CaptionFont = Font;
 	if (m_hwnd != nullptr) {
@@ -133,7 +139,7 @@ void CCaptionPanel::SetColor(COLORREF BackColor, COLORREF TextColor)
 
 void CCaptionPanel::Reset()
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	ClearCaptionList();
 	if (m_hwndEdit != nullptr)
@@ -192,7 +198,7 @@ void CCaptionPanel::AppendQueuedText(BYTE Language)
 	LanguageInfo &Lang = m_LanguageList[Language];
 
 	if (!Lang.CaptionList.empty() || !Lang.NextCaption.empty()) {
-		TVTest::String Text;
+		String Text;
 
 		for (auto it = Lang.CaptionList.begin(); it != Lang.CaptionList.end(); ++it)
 			Text += *it;
@@ -213,7 +219,7 @@ void CCaptionPanel::AddNextCaption(BYTE Language)
 				|| (Lang.LanguageCode != LibISDB::LANGUAGE_CODE_JPN &&
 					Lang.LanguageCode != LibISDB::LANGUAGE_CODE_ZHO &&
 					Lang.LanguageCode != LibISDB::LANGUAGE_CODE_KOR)) {
-			TVTest::StringUtility::ToHalfWidthNoKatakana(Lang.NextCaption);
+			StringUtility::ToHalfWidthNoKatakana(Lang.NextCaption);
 		}
 	}
 
@@ -228,7 +234,7 @@ void CCaptionPanel::AddNextCaption(BYTE Language)
 
 bool CCaptionPanel::SetLanguage(BYTE Language)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	if (Language >= m_LanguageList.size())
 		return false;
@@ -247,7 +253,7 @@ bool CCaptionPanel::SetLanguage(BYTE Language)
 			End = Length - 1;
 			for (int i = Length - 2; Lang.CaptionList.size() < MAX_QUEUE_TEXT; i--) {
 				if (i < 0 || pszBuffer[i] == _T('\n')) {
-					Lang.CaptionList.push_front(TVTest::String(pszBuffer + (i + 1), End - i));
+					Lang.CaptionList.push_front(String(pszBuffer + (i + 1), End - i));
 					if (i < 0)
 						break;
 					End = i;
@@ -291,7 +297,7 @@ void CCaptionPanel::OnCommand(int Command)
 
 	case CM_CAPTIONPANEL_CLEAR:
 		{
-			TVTest::BlockLock Lock(m_Lock);
+			BlockLock Lock(m_Lock);
 
 			ClearCaptionList();
 			::SetWindowText(m_hwndEdit, TEXT(""));
@@ -464,7 +470,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_APP_ADD_CAPTION:
 		{
-			TVTest::BlockLock Lock(m_Lock);
+			BlockLock Lock(m_Lock);
 			const int LangIndex = (int)wParam;
 
 			if (LangIndex >= 0 && (size_t)LangIndex < m_LanguageList.size()) {
@@ -531,7 +537,7 @@ void CCaptionPanel::RealizeStyle()
 
 void CCaptionPanel::OnActivate()
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	AppendQueuedText(m_CurLanguage);
 
@@ -547,7 +553,7 @@ void CCaptionPanel::OnDeactivate()
 
 void CCaptionPanel::OnLanguageUpdate(LibISDB::CaptionFilter *pFilter, LibISDB::CaptionParser *pParser)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	const int LanguageNum = pFilter->GetLanguageCount();
 	const int OldLanguageNum = (int)m_LanguageList.size();
@@ -572,7 +578,7 @@ void CCaptionPanel::OnCaption(
 	uint8_t Language, const LibISDB::CharType *pText,
 	const LibISDB::ARIBStringDecoder::FormatList *pFormatList)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	if (Language >= m_LanguageList.size() || m_hwnd == nullptr || !m_fEnable)
 		return;
@@ -722,10 +728,6 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 
 
 
-#include "Settings.h"
-#include "LibISDB/LibISDB/Utilities/MD5.hpp"
-
-
 CCaptionDRCSMap::CCaptionDRCSMap()
 	: m_pBuffer(nullptr)
 	, m_fSaveBMP(false)
@@ -744,7 +746,7 @@ CCaptionDRCSMap::~CCaptionDRCSMap()
 
 void CCaptionDRCSMap::Clear()
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	m_HashMap.clear();
 	m_CodeMap.clear();
@@ -757,7 +759,7 @@ void CCaptionDRCSMap::Clear()
 
 void CCaptionDRCSMap::Reset()
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	m_CodeMap.clear();
 }
@@ -765,7 +767,7 @@ void CCaptionDRCSMap::Reset()
 
 bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	Clear();
 
@@ -774,7 +776,7 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 		if (Settings.SetSection(TEXT("Settings"))) {
 			Settings.Read(TEXT("SaveBMP"), &m_fSaveBMP);
 			Settings.Read(TEXT("SaveRaw"), &m_fSaveRaw);
-			TVTest::String Dir;
+			String Dir;
 			if (Settings.Read(TEXT("SaveDirectory"), &Dir) && !Dir.empty()) {
 				GetAbsolutePath(Dir, &m_SaveDirectory);
 			}
@@ -837,7 +839,7 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 
 LPCTSTR CCaptionDRCSMap::GetString(WORD Code)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 	CodeMap::iterator itr = m_CodeMap.find(Code);
 
 	if (itr != m_CodeMap.end()) {
@@ -858,9 +860,9 @@ static void MakeSaveFileName(const uint8_t *pMD5, LPTSTR pszFileName, LPCTSTR ps
 	::lstrcpy(pszFileName + 32, pszExtension);
 }
 
-bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSBitmap *pBitmap)
+bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 {
-	TVTest::BlockLock Lock(m_Lock);
+	BlockLock Lock(m_Lock);
 
 	const LibISDB::MD5Value MD5 = LibISDB::CalcMD5(pBitmap->pData, pBitmap->DataSize);
 	TRACE(
@@ -877,7 +879,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSB
 	if (m_fSaveBMP) {
 		TCHAR szFileName[40];
 		MakeSaveFileName(MD5.Value, szFileName, TEXT(".bmp"));
-		TVTest::CFilePath FilePath(m_SaveDirectory);
+		CFilePath FilePath(m_SaveDirectory);
 		FilePath.Append(szFileName);
 		if (!FilePath.IsExists())
 			SaveBMP(pBitmap, FilePath.c_str());
@@ -885,7 +887,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSB
 	if (m_fSaveRaw) {
 		TCHAR szFileName[40];
 		MakeSaveFileName(MD5.Value, szFileName, TEXT(".drcs"));
-		TVTest::CFilePath FilePath(m_SaveDirectory);
+		CFilePath FilePath(m_SaveDirectory);
 		FilePath.Append(szFileName);
 		if (!FilePath.IsExists())
 			SaveRaw(pBitmap, FilePath.c_str());
@@ -894,7 +896,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const LibISDB::CaptionParser::DRCSB
 }
 
 
-bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName)
+bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
 	HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
@@ -1009,7 +1011,7 @@ bool CCaptionDRCSMap::SaveBMP(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 }
 
 
-bool CCaptionDRCSMap::SaveRaw(const LibISDB::CaptionParser::DRCSBitmap *pBitmap, LPCTSTR pszFileName)
+bool CCaptionDRCSMap::SaveRaw(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
 	HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
@@ -1025,3 +1027,6 @@ bool CCaptionDRCSMap::SaveRaw(const LibISDB::CaptionParser::DRCSBitmap *pBitmap,
 	::CloseHandle(hFile);
 	return true;
 }
+
+
+}	// namespace TVTest

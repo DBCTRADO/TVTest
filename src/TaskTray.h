@@ -24,6 +24,7 @@ namespace TVTest
 
 		CTaskTrayManager();
 		~CTaskTrayManager();
+
 		bool Initialize(HWND hwnd, UINT Message);
 		void Finalize();
 		bool SetResident(bool fResident);

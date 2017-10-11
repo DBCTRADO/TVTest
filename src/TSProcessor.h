@@ -129,7 +129,7 @@ namespace TVTest
 		bool IsModuleLoaded() const;
 		bool GetModuleInfo(FilterModuleInfo *pInfo) const;
 		bool GetModuleInfo(LPCWSTR pszModule, ModuleInfo *pInfo) const;
-		const TVTest::String &GetModuleName() const { return m_ModuleName; }
+		const String &GetModuleName() const { return m_ModuleName; }
 
 		int GetDeviceCount() const;
 		bool GetDeviceInfo(int Device, FilterDeviceInfo *pInfo) const;

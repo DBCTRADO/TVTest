@@ -1,35 +1,42 @@
-#ifndef STREAM_INFO_H
-#define STREAM_INFO_H
+#ifndef TVTEST_STREAM_INFO_H
+#define TVTEST_STREAM_INFO_H
 
 
 #include "Dialog.h"
 
 
-class CStreamInfo
-	: public CResizableDialog
+namespace TVTest
 {
-public:
-	class CEventHandler
+
+	class CStreamInfo
+		: public CResizableDialog
 	{
 	public:
-		virtual ~CEventHandler() = default;
-		virtual void OnRestoreSettings() {}
-		virtual bool OnClose() { return true; }
+		class CEventHandler
+		{
+		public:
+			virtual ~CEventHandler() = default;
+
+			virtual void OnRestoreSettings() {}
+			virtual bool OnClose() { return true; }
+		};
+
+		CStreamInfo();
+		~CStreamInfo();
+
+		bool Create(HWND hwndOwner);
+		void SetEventHandler(CEventHandler *pHandler);
+
+	private:
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		void SetService();
+		static int GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings, LPTSTR pszText, int MaxText, int Level = 0);
+
+		CEventHandler *m_pEventHandler;
+		bool m_fCreateFirst;
 	};
 
-	CStreamInfo();
-	~CStreamInfo();
-	bool Create(HWND hwndOwner);
-	void SetEventHandler(CEventHandler *pHandler);
-
-private:
-	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-	void SetService();
-	static int GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings, LPTSTR pszText, int MaxText, int Level = 0);
-
-	CEventHandler *m_pEventHandler;
-	bool m_fCreateFirst;
-};
+}	// namespace TVTest
 
 
 #endif

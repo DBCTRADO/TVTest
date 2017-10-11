@@ -4,6 +4,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const LPCTSTR CRichEditUtil::m_pszURLChars =
@@ -409,3 +411,6 @@ bool CRichEditUtil::OpenLink(HWND hwndEdit, const CHARRANGE &Range)
 
 	return true;
 }
+
+
+}	// namespace TVTest

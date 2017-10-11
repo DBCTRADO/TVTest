@@ -41,6 +41,7 @@ namespace TVTest
 		};
 
 		CNetworkDefinition();
+
 		bool LoadSettings(CSettings &Settings);
 		const NetworkInfo *GetNetworkInfoByID(WORD NetworkID) const;
 		NetworkType GetNetworkType(WORD NetworkID) const;

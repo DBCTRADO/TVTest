@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 class CArgsParser
@@ -19,7 +21,7 @@ public:
 	bool IsSwitch() const;
 	bool IsOption(LPCWSTR pszOption) const;
 	bool GetOption(LPCWSTR pszOption, bool *pValue);
-	bool GetOption(LPCWSTR pszOption, TVTest::String *pValue);
+	bool GetOption(LPCWSTR pszOption, String *pValue);
 	bool GetOption(LPCWSTR pszOption, LPTSTR pszValue, int MaxLength);
 	bool GetOption(LPCWSTR pszOption, int *pValue);
 	bool GetOption(LPCWSTR pszOption, DWORD *pValue);
@@ -79,11 +81,11 @@ bool CArgsParser::GetOption(LPCWSTR pszOption, bool *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption, TVTest::String *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption, String *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next()) {
-			TVTest::StringUtility::Assign(*pValue, GetText());
+			StringUtility::Assign(*pValue, GetText());
 			return true;
 		}
 	}
@@ -623,3 +625,6 @@ bool CCommandLineOptions::IsChannelSpecified() const
 		|| (m_ChannelIndex >= 0 && m_TuningSpace >= 0)
 		|| m_ServiceID > 0 || m_NetworkID > 0 || m_TransportStreamID > 0;
 }
+
+
+}	// namespace TVTest

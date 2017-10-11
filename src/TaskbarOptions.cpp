@@ -6,6 +6,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const int CTaskbarOptions::m_DefaultTaskList[] = {
@@ -56,11 +58,11 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 		const CCommandList &CommandList = GetAppClass().CommandList;
 		for (int i = 0; TaskCount; i++) {
 			TCHAR szKey[32];
-			TVTest::String Command;
+			String Command;
 			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("Task%d"), i);
 			if (!Settings.Read(szKey, &Command))
 				break;
-			TVTest::StringUtility::Trim(Command);
+			StringUtility::Trim(Command);
 			if (Command.empty()) {
 				m_TaskList.push_back(0);	// Separator
 			} else {
@@ -118,3 +120,6 @@ void CTaskbarOptions::SetEnableJumpList(bool fEnable)
 		GetAppClass().TaskbarManager.ReinitializeJumpList();
 	}
 }
+
+
+}	// namespace TVTest

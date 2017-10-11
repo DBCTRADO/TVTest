@@ -9,6 +9,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define CAPTURE_WINDOW_CLASS			APP_NAME TEXT(" Capture Window")
 #define CAPTURE_PREVIEW_WINDOW_CLASS	APP_NAME TEXT(" Capture Preview")
 #define CAPTURE_TITLE_TEXT TEXT("キャプチャ")
@@ -137,13 +141,13 @@ bool CCaptureImage::UnlockData()
 
 void CCaptureImage::SetComment(LPCTSTR pszComment)
 {
-	TVTest::StringUtility::Assign(m_Comment, pszComment);
+	StringUtility::Assign(m_Comment, pszComment);
 }
 
 
 LPCTSTR CCaptureImage::GetComment() const
 {
-	return TVTest::StringUtility::GetCStrOrNull(m_Comment);
+	return StringUtility::GetCStrOrNull(m_Comment);
 }
 
 
@@ -389,7 +393,7 @@ bool CCaptureWindow::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 }
 
 
-void CCaptureWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CCaptureWindow::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	m_Status.SetTheme(pThemeManager);
 }
@@ -498,11 +502,11 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		//m_Status.SetEventHandler(pThis);
 		if (m_Status.NumItems() == 0) {
 			if (!m_StatusIcons.IsCreated()) {
-				static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
+				static const Theme::IconList::ResourceInfo ResourceList[] = {
 					{MAKEINTRESOURCE(IDB_CAPTURE16), 16, 16},
 					{MAKEINTRESOURCE(IDB_CAPTURE32), 32, 32},
 				};
-				TVTest::Style::Size IconSize = m_Status.GetIconSize();
+				Style::Size IconSize = m_Status.GetIconSize();
 				m_StatusIcons.Load(
 					GetAppClass().GetResourceInstance(),
 					IconSize.Width, IconSize.Height,
@@ -623,7 +627,7 @@ bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 
 
 CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(
-	CCaptureWindow *pCaptureWindow, TVTest::Theme::IconList &Icons)
+	CCaptureWindow *pCaptureWindow, Theme::IconList &Icons)
 	: CIconStatusItem(STATUS_ITEM_CAPTURE, pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
@@ -653,7 +657,7 @@ void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x, int y)
 
 
 CCaptureWindow::CSaveStatusItem::CSaveStatusItem(
-	CCaptureWindow *pCaptureWindow, TVTest::Theme::IconList &Icons)
+	CCaptureWindow *pCaptureWindow, Theme::IconList &Icons)
 	: CIconStatusItem(STATUS_ITEM_SAVE, pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
@@ -672,7 +676,7 @@ void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x, int y)
 
 
 CCaptureWindow::CCopyStatusItem::CCopyStatusItem(
-	CCaptureWindow *pCaptureWindow, TVTest::Theme::IconList &Icons)
+	CCaptureWindow *pCaptureWindow, Theme::IconList &Icons)
 	: CIconStatusItem(STATUS_ITEM_COPY, pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
@@ -738,3 +742,6 @@ void CImageSaveThread::SaveProc(void *pParam)
 	_endthread();
 }
 */
+
+
+}	// namespace TVTest

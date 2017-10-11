@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CMainPanel::CMainPanel()
@@ -93,7 +95,7 @@ bool CMainPanel::IsAttached()
 }
 
 
-void CMainPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CMainPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	Frame.SetTheme(pThemeManager);
 	Form.SetTheme(pThemeManager);
@@ -417,7 +419,7 @@ void CMainPanel::CFormEventHandler::OnTabRButtonUp(int x, int y)
 
 		m_pForm->GetTabInfo(i, &TabInfo);
 		if (TabInfo.fVisible && CM_PANEL_FIRST + TabInfo.ID <= CM_PANEL_LAST) {
-			TVTest::String Title;
+			String Title;
 			TCHAR szMenu[64];
 
 			m_pForm->GetTabTitle(TabInfo.ID, &Title);
@@ -464,3 +466,6 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 			App.UICore.DoCommandAsync(CM_CHANNEL_FIRST + Index);
 	}
 }
+
+
+}	// namespace TVTest

@@ -8,6 +8,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 static int MyTrackPopupMenu(
@@ -501,11 +503,11 @@ bool CChannelMenuLogo::DrawLogo(HDC hdc, int x, int y, const CChannelInfo &Chann
 		return true;
 	}
 
-	TVTest::Graphics::CImage LogoImage;
+	Graphics::CImage LogoImage;
 
 	LogoImage.CreateFromBitmap(hbmLogo);
 
-	TVTest::Graphics::CCanvas Canvas(hdc);
+	Graphics::CCanvas Canvas(hdc);
 	const int Margin = m_LogoHeight <= 16 ? 1 : 2;
 
 	Canvas.SetComposition(true);
@@ -517,12 +519,12 @@ bool CChannelMenuLogo::DrawLogo(HDC hdc, int x, int y, const CChannelInfo &Chann
 			x, y, m_LogoWidth, m_LogoHeight,
 			&m_FrameImage, 0, 0, m_LogoWidth, m_LogoHeight);
 	} else {
-		TVTest::Graphics::CImage TempImage;
+		Graphics::CImage TempImage;
 		const int DrawWidth = m_FrameImage.GetWidth(), DrawHeight = m_FrameImage.GetHeight();
 
 		TempImage.Create(DrawWidth, DrawHeight, 32);
 		{
-			TVTest::Graphics::CCanvas TempCanvas(&TempImage);
+			Graphics::CCanvas TempCanvas(&TempImage);
 
 			TempCanvas.Clear(0, 0, 0, 0);
 			TempCanvas.SetComposition(true);
@@ -1555,7 +1557,7 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 	if (DPI != 0)
 		m_DPI = DPI;
 	else
-		m_DPI = TVTest::GetMonitorDPI(hMonitor);
+		m_DPI = GetMonitorDPI(hMonitor);
 
 	HWND hwnd = ::CreateWindowEx(
 		WS_EX_NOACTIVATE | WS_EX_TOPMOST, DROPDOWNMENU_WINDOW_CLASS,
@@ -1832,7 +1834,7 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 CDropDownMenu::CItem::CItem(int Command, LPCTSTR pszText)
 	: m_Command(Command)
-	, m_Text(TVTest::StringFromCStr(pszText))
+	, m_Text(StringFromCStr(pszText))
 	, m_Width(0)
 {
 }
@@ -1845,7 +1847,7 @@ CDropDownMenu::CItem::~CItem()
 
 void CDropDownMenu::CItem::SetText(LPCTSTR pszText)
 {
-	TVTest::StringUtility::Assign(m_Text, pszText);
+	StringUtility::Assign(m_Text, pszText);
 }
 
 
@@ -1871,3 +1873,6 @@ void CDropDownMenu::CItem::Draw(HDC hdc, const RECT *pRect)
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 	}
 }
+
+
+}	// namespace TVTest

@@ -4,6 +4,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CEpgDataLoader::CEpgDataLoader()
@@ -209,3 +211,6 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 
 
 CEpgDataLoader::CEventHandler::~CEventHandler() = default;
+
+
+}	// namespace TVTest

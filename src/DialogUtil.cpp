@@ -5,6 +5,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 void EnableDlgItem(HWND hDlg, int ID, bool fEnable)
@@ -211,7 +213,7 @@ LPTSTR GetDlgItemString(HWND hDlg, int ID)
 }
 
 
-bool GetDlgItemString(HWND hDlg, int ID, TVTest::String *pString)
+bool GetDlgItemString(HWND hDlg, int ID, String *pString)
 {
 	if (pString == nullptr)
 		return false;
@@ -228,7 +230,7 @@ bool GetDlgItemString(HWND hDlg, int ID, TVTest::String *pString)
 }
 
 
-bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pString)
+bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, String *pString)
 {
 	if (hDlg == nullptr || pString == nullptr)
 		return false;
@@ -246,7 +248,7 @@ bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pStri
 }
 
 
-bool GetDlgComboBoxItemString(HWND hDlg, int ID, int Index, TVTest::String *pString)
+bool GetDlgComboBoxItemString(HWND hDlg, int ID, int Index, String *pString)
 {
 	if (hDlg == nullptr || pString == nullptr)
 		return false;
@@ -528,3 +530,6 @@ bool InitDropDownButtonWithText(HWND hDlg, int ID)
 
 	return true;
 }
+
+
+}	// namespace TVTest

@@ -7,10 +7,10 @@
 #include "ChannelDisplay.h"
 
 
-class CAppMain;
-
 namespace TVTest
 {
+
+	class CAppMain;
 
 	class CMainDisplay
 	{
@@ -20,7 +20,7 @@ namespace TVTest
 			, protected CDisplayEventHandlerBase
 		{
 			void OnClose() override;
-			void OnMouseMessage(UINT Msg,int x,int y) override;
+			void OnMouseMessage(UINT Msg, int x, int y) override;
 		};
 
 		class CChannelDisplayEventHandler
@@ -29,20 +29,22 @@ namespace TVTest
 		{
 		public:
 			CChannelDisplayEventHandler(CAppMain &App);
-			void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace) override;
-			void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo) override;
+
+			void OnTunerSelect(LPCTSTR pszDriverFileName, int TuningSpace) override;
+			void OnChannelSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo) override;
 			void OnClose() override;
-			void OnMouseMessage(UINT Msg,int x,int y) override;
+			void OnMouseMessage(UINT Msg, int x, int y) override;
 
 		private:
 			CAppMain &m_App;
 		};
 
 		CMainDisplay(CAppMain &App);
-		bool Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage);
+
+		bool Create(HWND hwndParent, int ViewID, int ContainerID, HWND hwndMessage);
 		bool EnableViewer(bool fEnable);
 		bool IsViewerEnabled() const { return m_fViewerEnabled; }
-		bool BuildViewer(BYTE VideoStreamType=0);
+		bool BuildViewer(BYTE VideoStreamType = 0);
 		bool CloseViewer();
 		CViewWindow &GetViewWindow() { return m_ViewWindow; }
 		const CViewWindow &GetViewWindow() const { return m_ViewWindow; }

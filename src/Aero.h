@@ -1,39 +1,45 @@
-#ifndef AERO_H
-#define AERO_H
+#ifndef TVTEST_AERO_H
+#define TVTEST_AERO_H
 
 
-class CAeroGlass
+namespace TVTest
 {
-public:
-	bool IsEnabled();
-	bool ApplyAeroGlass(HWND hwnd, const RECT *pRect);
-	bool EnableNcRendering(HWND hwnd, bool fEnable);
-};
 
-class CBufferedPaint
-{
-public:
-	CBufferedPaint();
-	~CBufferedPaint();
-	HDC Begin(HDC hdc, const RECT *pRect, bool fErase = false);
-	bool End(bool fUpdate = true);
-	bool Clear(const RECT *pRect = nullptr);
-	bool SetAlpha(BYTE Alpha);
-	bool SetOpaque() { return SetAlpha(255); }
+	class CAeroGlass
+	{
+	public:
+		bool IsEnabled();
+		bool ApplyAeroGlass(HWND hwnd, const RECT *pRect);
+		bool EnableNcRendering(HWND hwnd, bool fEnable);
+	};
 
-	static bool Initialize();
-	static bool IsSupported();
+	class CBufferedPaint
+	{
+	public:
+		CBufferedPaint();
+		~CBufferedPaint();
 
-private:
-	HANDLE m_hPaintBuffer;
-};
+		HDC Begin(HDC hdc, const RECT *pRect, bool fErase = false);
+		bool End(bool fUpdate = true);
+		bool Clear(const RECT *pRect = nullptr);
+		bool SetAlpha(BYTE Alpha);
+		bool SetOpaque() { return SetAlpha(255); }
 
-class CDoubleBufferingDraw
-{
-public:
-	virtual void Draw(HDC hdc, const RECT &PaintRect) = 0;
-	void OnPaint(HWND hwnd);
-};
+		static bool Initialize();
+		static bool IsSupported();
+
+	private:
+		HANDLE m_hPaintBuffer;
+	};
+
+	class CDoubleBufferingDraw
+	{
+	public:
+		virtual void Draw(HDC hdc, const RECT &PaintRect) = 0;
+		void OnPaint(HWND hwnd);
+	};
+
+}
 
 
 #endif

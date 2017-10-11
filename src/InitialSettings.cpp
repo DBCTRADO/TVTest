@@ -13,6 +13,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
@@ -149,10 +151,10 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
-				TVTest::String FileName, InitDir;
+				String FileName, InitDir;
 
 				::GetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, szFileName, lengthof(szFileName));
-				if (TVTest::PathUtil::Split(szFileName, &InitDir, &FileName)) {
+				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
 					::lstrcpy(szFileName, FileName.c_str());
 				} else {
 					GetAppClass().GetAppDirectory(&InitDir);
@@ -220,7 +222,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					::MessageBox(hDlg, szMessage, TEXT("お知らせ"), MB_OK | MB_ICONINFORMATION);
 				}
 
-				TVTest::String Mpeg2DecoderName, H264DecoderName, H265DecoderName;
+				String Mpeg2DecoderName, H264DecoderName, H265DecoderName;
 				if (fMpeg2Decoder)
 					GetDecoderSetting(IDC_INITIALSETTINGS_MPEG2DECODER, &Mpeg2DecoderName);
 				if (fH264Decoder)
@@ -303,8 +305,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			::BeginPaint(hDlg, &ps);
 			{
-				TVTest::Graphics::CCanvas Canvas(ps.hdc);
-				TVTest::Graphics::CBrush Brush(::GetSysColor(COLOR_3DFACE));
+				Graphics::CCanvas Canvas(ps.hdc);
+				Graphics::CBrush Brush(::GetSysColor(COLOR_3DFACE));
 				RECT rc, rcClient;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_INITIALSETTINGS_LOGO), &rc);
@@ -354,13 +356,13 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
 		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
 	LibISDB::DirectShow::FilterFinder FilterFinder;
-	std::vector<TVTest::String> FilterList;
+	std::vector<String> FilterList;
 	int Sel = 0;
 
 	if (FilterFinder.FindFilters(&MEDIATYPE_Video, &SubType)) {
 		FilterList.reserve(FilterFinder.GetFilterCount());
 		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
-			TVTest::String FilterName;
+			String FilterName;
 
 			if (FilterFinder.GetFilterInfo(i, nullptr, &FilterName)
 					&& (pszDefaultDecoderName == nullptr
@@ -371,7 +373,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 		if (FilterList.size() > 1) {
 			std::sort(
 				FilterList.begin(), FilterList.end(),
-				[](const TVTest::String Filter1, const TVTest::String & Filter2) {
+				[](const String Filter1, const String & Filter2) {
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,
 						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
@@ -397,7 +399,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 }
 
 
-void CInitialSettings::GetDecoderSetting(int ID, TVTest::String *pDecoderName) const
+void CInitialSettings::GetDecoderSetting(int ID, String *pDecoderName) const
 {
 	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
 	if (Sel > 0) {
@@ -408,3 +410,6 @@ void CInitialSettings::GetDecoderSetting(int ID, TVTest::String *pDecoderName) c
 		pDecoderName->clear();
 	}
 }
+
+
+}	// namespace TVTest

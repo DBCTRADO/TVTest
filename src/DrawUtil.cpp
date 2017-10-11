@@ -6,6 +6,10 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
+
+
 #define DIVIDE_BY_255(v) ((((v) + 1) * 257) >> 16)
 
 
@@ -1459,12 +1463,12 @@ bool CMonoColorIconList::Draw(
 
 	// GdiAlphaBlend() はリサイズが汚いため、GDI+ を使う
 	if (DstWidth != m_IconWidth || DstHeight != m_IconHeight) {
-		TVTest::Graphics::CCanvas Canvas(hdc);
+		Graphics::CCanvas Canvas(hdc);
 
 		HBITMAP hbm = m_Bitmap.ExtractBitmap(IconIndex * m_IconWidth, 0, m_IconWidth, m_IconHeight, Color);
 		if (hbm != nullptr) {
 			{
-				TVTest::Graphics::CImage Image;
+				Graphics::CImage Image;
 				Image.CreateFromBitmap(hbm);
 				Canvas.DrawImage(
 					DstX, DstY, DstWidth, DstHeight,
@@ -1806,3 +1810,6 @@ void CUxTheme::ScaleMargins(MARGINS *pMargins, int Num, int Denom)
 	pMargins->cyTopHeight = ::MulDiv(pMargins->cyTopHeight, Num, Denom);
 	pMargins->cyBottomHeight = ::MulDiv(pMargins->cyBottomHeight, Num, Denom);
 }
+
+
+}	// namespace TVTest

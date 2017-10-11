@@ -37,6 +37,7 @@ namespace TVTest
 			CTunerMapDialog(
 				CTSProcessorOptions *pOptions,
 				CTSProcessorManager::TunerFilterInfo *pInfo);
+
 			bool Show(HWND hwndOwner) override;
 
 		private:
