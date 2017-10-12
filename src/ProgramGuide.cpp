@@ -2498,7 +2498,7 @@ void CProgramGuide::SetCaption()
 					Info.EndTime.OffsetHours(-1);
 					StdUtil::snprintf(
 						szText, lengthof(szText),
-						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d時 〜 %d/%d(%s) %d時"),
+						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d時 ～ %d/%d(%s) %d時"),
 						Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
 						Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 						Info.BeginningTime.Month,
@@ -2514,7 +2514,7 @@ void CProgramGuide::SetCaption()
 					Last.OffsetDays(6);
 					StdUtil::snprintf(
 						szText, lengthof(szText),
-						TITLE_TEXT TEXT(" - %s %d/%d(%s) 〜 %d/%d(%s)"),
+						TITLE_TEXT TEXT(" - %s %d/%d(%s) ～ %d/%d(%s)"),
 						m_ServiceList.GetItem(m_WeekListService)->GetServiceName(),
 						Info.BeginningTime.Month,
 						Info.BeginningTime.Day,
@@ -4481,7 +4481,7 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		::GetMenuItemInfo(hmenu, i, FALSE, &mii);
 		int Length = ::lstrlen(szText);
 		StringPrintf(
-			szText + Length, lengthof(szText) - Length, TEXT(" %d/%d(%s) %d時〜"),
+			szText + Length, lengthof(szText) - Length, TEXT(" %d/%d(%s) %d時～"),
 			Time.Month, Time.Day, GetDayOfWeekText(Time.DayOfWeek), Time.Hour);
 		::SetMenuItemInfo(hmenu, i, FALSE, &mii);
 	}
@@ -5318,7 +5318,7 @@ public:
 			m_pProgramGuide->GetCurrentDateInfo(&Info);
 			EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
 			StdUtil::snprintf(
-				szText, lengthof(szText), TEXT("%s%s%d/%d(%s) %d時〜"),
+				szText, lengthof(szText), TEXT("%s%s%d/%d(%s) %d時～"),
 				Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
 				Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 				Info.BeginningTime.Month, Info.BeginningTime.Day,
@@ -5347,7 +5347,7 @@ public:
 					m_pProgramGuide->GetDateInfo(i, &Info);
 					EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
 					StdUtil::snprintf(
-						szText, lengthof(szText), TEXT("%s%s%d/%d(%s) %d時〜"),
+						szText, lengthof(szText), TEXT("%s%s%d/%d(%s) %d時～"),
 						Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
 						Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 						Info.BeginningTime.Month,
@@ -6479,7 +6479,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 		if (TimeInfo.Command == CM_PROGRAMGUIDE_TIME_CURRENT) {
 			::lstrcpy(szText, TEXT("現在"));
 		} else {
-			StdUtil::snprintf(szText, lengthof(szText), TEXT("%d時〜"), TimeInfo.Hour);
+			StdUtil::snprintf(szText, lengthof(szText), TEXT("%d時～"), TimeInfo.Hour);
 		}
 		tbb.iString = reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData = MAKELONG(TimeInfo.Hour, TimeInfo.Offset);
@@ -6496,7 +6496,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 		TCHAR szText[32];
 		StdUtil::snprintf(
 			szText, lengthof(szText),
-			TEXT("%02d時〜"),	// %02d にしているのは幅を揃えるため
+			TEXT("%02d時～"),	// %02d にしているのは幅を揃えるため
 			TimeInfo.Hour);
 		RECT rc = {0, 0, 0, 0};
 		::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6559,7 +6559,7 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	if (fCurrent) {
 		::lstrcpy(szText, TEXT("現在"));
 	} else {
-		StdUtil::snprintf(szText, lengthof(szText), TEXT("%d時〜"), Hour);
+		StdUtil::snprintf(szText, lengthof(szText), TEXT("%d時～"), Hour);
 	}
 	RECT rc = pnmtb->nmcd.rc;
 	Style::Subtract(&rc, m_Padding);

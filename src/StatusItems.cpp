@@ -860,7 +860,7 @@ CProgramInfoStatusItem::CProgramInfoStatusItem()
 void CProgramInfoStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
 {
 	if ((Flags & DRAW_PREVIEW) != 0) {
-		DrawText(hdc, DrawRect, TEXT("1:00〜1:30 今日のニュース"));
+		DrawText(hdc, DrawRect, TEXT("1:00～1:30 今日のニュース"));
 		return;
 	}
 

@@ -23,7 +23,7 @@ namespace TVTest
 
 inline bool CharToHalfWidth(WCHAR &Char)
 {
-	if (Char >= L'！' && Char <= L'〜') {
+	if (Char >= L'！' && Char <= L'～') {
 		Char -= L'！' - L'!';
 	} else if (Char == L'　') {
 		Char = L' ';

@@ -787,7 +787,7 @@ struct RecordInfo
 	DWORD Mask;             // マスク(RECORD_MASK_???)
 	DWORD Flags;            // フラグ(RECORD_FLAG_???)
 	LPWSTR pszFileName;     // ファイル名(nullptrでデフォルト)
-	                        // %〜% で囲まれた置換キーワードを使用できます
+	                        // %～% で囲まれた置換キーワードを使用できます
 	int MaxFileName;        // ファイル名の最大長(MESSAGE_GETRECORDのみで使用)
 	FILETIME ReserveTime;   // 録画予約された時刻(MESSAGE_GETRECORDのみで使用)
 	                        // ローカル時刻(Flags に RECORD_FLAG_UTC を指定した場合 UTC)
