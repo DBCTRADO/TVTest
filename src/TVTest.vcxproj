@@ -749,6 +749,7 @@
     <ClInclude Include="AppMain.h" />
     <ClInclude Include="TVTestInterface.h" />
     <ClInclude Include="TVTestPlugin.h" />
+    <ClInclude Include="TVTestVersion.h" />
     <ClInclude Include="UIBase.h" />
     <ClInclude Include="UICore.h" />
     <ClInclude Include="UISkin.h" />

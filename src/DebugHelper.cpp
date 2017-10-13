@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "TVTest.h"
+#include "TVTestVersion.h"
 #include "DebugHelper.h"
 
 

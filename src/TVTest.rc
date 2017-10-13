@@ -2,6 +2,7 @@
 #include "commctrl.h"
 #include "resource.h"
 #include "TVTest.h"
+#include "TVTestVersion.h"
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 #pragma code_page(932)

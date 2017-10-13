@@ -10,6 +10,7 @@
 #include "LogoManager.h"
 #include "Controller.h"
 #include "TSProcessor.h"
+#include "TVTestVersion.h"
 #include "LibISDB/LibISDB/Base/ARIBString.hpp"
 #include "resource.h"
 #include <algorithm>

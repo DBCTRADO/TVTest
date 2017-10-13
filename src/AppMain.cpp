@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "AppUtil.h"
 #include "InitialSettings.h"
+#include "TVTestVersion.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 

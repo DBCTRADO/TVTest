@@ -3,6 +3,7 @@
 #include "AppMain.h"
 #include "AboutDialog.h"
 #include "DialogUtil.h"
+#include "TVTestVersion.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
