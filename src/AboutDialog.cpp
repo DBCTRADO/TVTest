@@ -66,6 +66,9 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			::SetWindowText(
 				hwndHeader,
 				ABOUT_VERSION_TEXT
+#ifdef VERSION_HASH
+				TEXT(" ") VERSION_HASH
+#endif
 				TEXT(" (")
 #ifdef _DEBUG
 				TEXT("Debug")

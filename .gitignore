@@ -306,3 +306,7 @@ __pycache__/
 
 # OpenCover UI analysis results
 OpenCover/
+
+
+# TVTest files
+TVTestVersionHash.h

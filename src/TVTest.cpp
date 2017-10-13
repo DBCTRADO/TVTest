@@ -192,7 +192,11 @@ int APIENTRY _tWinMain(
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
 	g_App.AddLog(
-		TEXT("******** ") ABOUT_VERSION_TEXT TEXT(" (")
+		TEXT("******** ") ABOUT_VERSION_TEXT
+#ifdef VERSION_HASH
+		TEXT(" ") VERSION_HASH
+#endif
+		TEXT(" (")
 #ifdef _DEBUG
 		TEXT("Debug")
 #else

@@ -186,6 +186,9 @@
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)TVTestVersionHashGen.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -237,6 +240,9 @@
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)TVTestVersionHashGen.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -295,6 +301,9 @@
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)TVTestVersionHashGen.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_MD|Win32'">
     <Midl>
@@ -353,6 +362,9 @@
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)TVTestVersionHashGen.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -411,6 +423,9 @@
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)TVTestVersionHashGen.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_MD|x64'">
     <Midl>
@@ -469,6 +484,9 @@
       <OutputManifestFile>$(IntDir)$(TargetName)$(TargetExt).embed.manifest</OutputManifestFile>
       <EnableDPIAwareness>false</EnableDPIAwareness>
     </Manifest>
+    <PreBuildEvent>
+      <Command>call "$(ProjectDir)TVTestVersionHashGen.bat"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Accelerator.cpp" />

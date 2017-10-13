@@ -303,6 +303,9 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 		if (s.File.hFile != INVALID_HANDLE_VALUE) {
 			static const char szHeader[] = APP_NAME_A " ver." VERSION_TEXT_A
+#ifdef VERSION_HASH_A
+				" " VERSION_HASH_A
+#endif
 #if defined(_M_IX86)
 				" (x86)"
 #elif defined(_M_AMD64)
