@@ -286,9 +286,8 @@ bool CBalloonTip::Initialize(HWND hwnd)
 
 	::SendMessage(m_hwndToolTips, TTM_SETMAXTIPWIDTH, 0, 320);
 
-	TOOLINFO ti;
+	TOOLINFO ti = {};
 
-	::ZeroMemory(&ti, sizeof(ti));
 	ti.cbSize = TTTOOLINFO_V1_SIZE;
 	ti.uFlags = TTF_SUBCLASS | TTF_TRACK;
 	ti.hwnd = hwnd;

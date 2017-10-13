@@ -1143,8 +1143,7 @@ void CProgramListPanel::ApplyStyle()
 	if (m_hwnd != nullptr) {
 		CreateDrawFontAndBoldFont(m_StyleFont, &m_Font, &m_TitleFont);
 
-		LOGFONT lf;
-		::ZeroMemory(&lf, sizeof(lf));
+		LOGFONT lf = {};
 		lf.lfHeight = -m_Style.ChannelButtonIconSize.Height;
 		lf.lfCharSet = SYMBOL_CHARSET;
 		::lstrcpy(lf.lfFaceName, TEXT("Marlett"));

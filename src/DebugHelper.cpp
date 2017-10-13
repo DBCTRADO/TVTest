@@ -208,7 +208,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 			}
 		}
 
-		::ZeroMemory(&s.Stack.StackFrame, sizeof(s.Stack.StackFrame));
+		s.Stack.StackFrame = STACKFRAME64();
 #if defined(_M_IX86)
 		s.Stack.StackFrame.AddrPC.Offset = ExceptionInfo->ContextRecord->Eip;
 		s.Stack.StackFrame.AddrPC.Mode = AddrModeFlat;

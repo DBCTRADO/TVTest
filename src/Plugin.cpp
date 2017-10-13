@@ -519,7 +519,7 @@ static void GetFavoriteItemInfo(
 	LPWSTR pStringBuffer = *ppStringBuffer;
 	size_t Length;
 
-	::ZeroMemory(pItemInfo, sizeof(FavoriteItemInfo));
+	*pItemInfo = FavoriteItemInfo();
 	pItemInfo->pszName = pStringBuffer;
 	Length = ::lstrlen(pItem->GetName()) + 1;
 	::CopyMemory(pStringBuffer, pItem->GetName(), Length * sizeof(WCHAR));
@@ -733,8 +733,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		SetErrorText(TEXT("TVTGetPluginInfo()関数のアドレスを取得できません。"));
 		return false;
 	}
-	PluginInfo PluginInfo;
-	::ZeroMemory(&PluginInfo, sizeof(PluginInfo));
+	PluginInfo PluginInfo = {};
 	if (!pGetPluginInfo(&PluginInfo)
 			|| IsStringEmpty(PluginInfo.pszPluginName)) {
 		::FreeLibrary(hLib);
@@ -3635,7 +3634,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			} else if (::lstrcmpiW(pInfo->pszName, L"StatusBarFont") == 0) {
 				Font = App.StatusOptions.GetFont();
 			} else {
-				::ZeroMemory(&pInfo->LogFont, sizeof(LOGFONT));
+				pInfo->LogFont = LOGFONT();
 				return FALSE;
 			}
 

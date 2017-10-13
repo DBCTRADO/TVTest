@@ -98,8 +98,7 @@ static ULONGLONG SystemTimeToUInt64(const SYSTEMTIME &Time)
 
 static SYSTEMTIME UInt64ToSystemTime(ULONGLONG Time)
 {
-	SYSTEMTIME st;
-	::ZeroMemory(&st, sizeof(st));
+	SYSTEMTIME st = {};
 	if (Time != 0) {
 		FILETIME ft;
 		Time *= FILETIME_SECOND;
@@ -205,9 +204,8 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		goto OnError;
 
 	for (LogoMap::const_iterator itr = m_LogoMap.begin(); itr != m_LogoMap.end(); ++itr) {
-		LogoImageHeader2 ImageHeader;
+		LogoImageHeader2 ImageHeader = {};
 
-		::ZeroMemory(&ImageHeader, sizeof(ImageHeader));
 		ImageHeader.NetworkID = itr->second->GetNetworkID();
 		ImageHeader.LogoID = itr->second->GetLogoID();
 		ImageHeader.LogoVersion = itr->second->GetLogoVersion();

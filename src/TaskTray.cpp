@@ -217,9 +217,8 @@ bool CTaskTrayManager::ShowMessage(LPCTSTR pszText, LPCTSTR pszTitle, int Icon, 
 	if (!NeedTrayIcon())
 		return false;
 
-	NOTIFYICONDATA nid;
+	NOTIFYICONDATA nid = {};
 
-	::ZeroMemory(&nid, sizeof(nid));
 	nid.cbSize = NOTIFYICONDATA_V2_SIZE;
 	nid.hWnd = m_hwnd;
 	nid.uID = 1;

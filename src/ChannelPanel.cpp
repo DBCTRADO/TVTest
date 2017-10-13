@@ -64,11 +64,10 @@ CChannelPanel::CChannelPanel()
 	, m_pEventHandler(nullptr)
 	, m_fDetailToolTip(false)
 	, m_pLogoManager(nullptr)
+	, m_UpdatedTime()
+	, m_CurTime()
 {
 	GetDefaultFont(&m_StyleFont);
-
-	::ZeroMemory(&m_UpdatedTime, sizeof(SYSTEMTIME));
-	::ZeroMemory(&m_CurTime, sizeof(SYSTEMTIME));
 }
 
 

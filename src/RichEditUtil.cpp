@@ -83,7 +83,7 @@ bool CRichEditUtil::LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT
 	if (hdc == nullptr || plf == nullptr || pcf == nullptr)
 		return false;
 
-	::ZeroMemory(pcf, sizeof(CHARFORMAT2));
+	*pcf = CHARFORMAT2();
 	pcf->cbSize = sizeof(CHARFORMAT2);
 	pcf->dwMask = CFM_CHARSET | CFM_COLOR | CFM_FACE | CFM_ITALIC | CFM_SIZE | CFM_STRIKEOUT | CFM_UNDERLINE | CFM_WEIGHT;
 	pcf->dwEffects = 0;

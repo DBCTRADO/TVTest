@@ -282,7 +282,7 @@ bool GetJSTTimeZoneInformation(TIME_ZONE_INFORMATION *pInfo)
 	if (pInfo == nullptr)
 		return false;
 
-	::ZeroMemory(pInfo, sizeof(TIME_ZONE_INFORMATION));
+	*pInfo = TIME_ZONE_INFORMATION();
 
 	bool fOK = false;
 	HKEY hkey;

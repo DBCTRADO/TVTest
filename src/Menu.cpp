@@ -379,9 +379,8 @@ void CMenuPainter::DrawIcon(HIMAGELIST himl, int Icon, HDC hdc, int x, int y, UI
 	if ((State & ODS_DISABLED) == 0) {
 		::ImageList_Draw(himl, Icon, hdc, x, y, ILD_TRANSPARENT);
 	} else {
-		IMAGELISTDRAWPARAMS ildp;
+		IMAGELISTDRAWPARAMS ildp = {};
 
-		::ZeroMemory(&ildp, sizeof(ildp));
 		ildp.cbSize = sizeof(ildp);
 		ildp.himl = himl;
 		ildp.i = Icon;

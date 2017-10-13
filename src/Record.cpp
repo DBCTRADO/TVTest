@@ -92,7 +92,7 @@ bool CRecordTime::GetTime(SYSTEMTIME *pTime) const
 
 void CRecordTime::Clear()
 {
-	::ZeroMemory(&m_Time, sizeof(m_Time));
+	m_Time = SYSTEMTIME();
 	m_TickTime = 0;
 }
 

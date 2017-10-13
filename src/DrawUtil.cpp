@@ -295,8 +295,7 @@ bool GlossOverlay(
 	if (Width <= 0 || Height <= 0)
 		return false;
 
-	BITMAPINFO bmi;
-	::ZeroMemory(&bmi, sizeof(bmi));
+	BITMAPINFO bmi = {};
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = Width;
 	bmi.bmiHeader.biHeight = -Height;
@@ -349,8 +348,7 @@ bool ColorOverlay(HDC hdc, const RECT *pRect, COLORREF Color, BYTE Opacity)
 	if (Width <= 0 || Height <= 0)
 		return false;
 
-	BITMAPINFO bmi;
-	::ZeroMemory(&bmi, sizeof(bmi));
+	BITMAPINFO bmi = {};
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = Width;
 	bmi.bmiHeader.biHeight = -Height;
@@ -536,10 +534,9 @@ HBITMAP CreateDIB(int Width, int Height, int BitCount, void **ppBits)
 	struct {
 		BITMAPINFOHEADER bmiHeader;
 		RGBQUAD bmiColors[256];
-	} bmi;
+	} bmi = {};
 	void *pBits;
 
-	::ZeroMemory(&bmi, sizeof(bmi));
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = Width;
 	bmi.bmiHeader.biHeight = Height;
@@ -692,7 +689,7 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 	if (pFont == nullptr)
 		return false;
 
-	::ZeroMemory(pFont, sizeof(LOGFONT));
+	*pFont = LOGFONT();
 
 	LOGFONT MessageFont;
 	if (GetSystemFont(FontType::Message, &MessageFont)) {

@@ -199,9 +199,8 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 		日付のみを指定した場合、その日の0時0分0秒からとする
 		時刻のみを指定した場合、次にその時刻が来る時とする
 	*/
-	SYSTEMTIME CurTime, Time;
+	SYSTEMTIME CurTime, Time = {};
 	::GetLocalTime(&CurTime);
-	::ZeroMemory(&Time, sizeof(Time));
 
 	WORD Date[3], TimeValue[3];
 	int DateCount = 0, TimeCount = 0;
