@@ -26,7 +26,7 @@ namespace TVTest
 	class CDebugHelper
 	{
 	public:
-		enum ExceptionFilterMode {
+		enum class ExceptionFilterMode {
 			Default,
 			None,
 			Dialog,
