@@ -121,6 +121,9 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_INITDIALOG:
 		{
 			COptions::ClearGeneralUpdateFlags();
+
+			DlgListBox_SetItemHeight(m_hDlg, IDC_OPTIONS_LIST, 0, m_ListItemHeight);
+
 			for (int i = 0; i < NUM_PAGES; i++) {
 				m_PageList[i].pOptions->ClearUpdateFlags();
 				DlgListBox_AddItem(hDlg, IDC_OPTIONS_LIST, i);
@@ -303,6 +306,12 @@ void COptionDialog::ApplyStyle()
 		lf.lfWeight = FW_BOLD;
 		m_TitleFont.Create(&lf);
 
+		HDC hdc = ::GetDC(m_hDlg);
+		const int FontHeight = m_Font.GetHeight(hdc, false);
+		::ReleaseDC(m_hDlg, hdc);
+
+		m_ListItemHeight = max(FontHeight, m_IconHeight) + m_ListMargin * 2;
+
 		if (m_himlIcons != nullptr)
 			::ImageList_Destroy(m_himlIcons);
 		m_himlIcons = ::ImageList_LoadImage(
@@ -319,15 +328,12 @@ void COptionDialog::RealizeStyle()
 	CBasicDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
-		HDC hdc = ::GetDC(m_hDlg);
-		int FontHeight = m_Font.GetHeight(hdc, false);
-		::ReleaseDC(m_hDlg, hdc);
-		DlgListBox_SetItemHeight(
-			m_hDlg, IDC_OPTIONS_LIST, 0,
-			max(FontHeight, m_IconHeight) + m_ListMargin * 2);
+		if (DlgListBox_GetCount(m_hDlg, IDC_OPTIONS_LIST) > 0) {
+			DlgListBox_SetItemHeight(m_hDlg, IDC_OPTIONS_LIST, 0, m_ListItemHeight);
 
-		for (int i = 0; i < NUM_PAGES; i++)
-			SetPagePos(i);
+			for (int i = 0; i < NUM_PAGES; i++)
+				SetPagePos(i);
+		}
 	}
 }
 

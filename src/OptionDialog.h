@@ -70,6 +70,7 @@ namespace TVTest
 		int m_IconHeight;
 		int m_ListMargin;
 		int m_IconTextMargin;
+		int m_ListItemHeight;
 
 		void CreatePage(int Page);
 		void SetPage(int Page);
