@@ -77,11 +77,6 @@ namespace TVTest
 				Standby   = 0x0002U,
 				Suspend   = 0x0004U,
 				EPGUpdate = 0x0008U,
-
-				VIEWERSUSPEND_MINIMIZE	= 0x0001U,
-				VIEWERSUSPEND_STANDBY	= 0x0002U,
-				VIEWERSUSPEND_SUSPEND	= 0x0004U,
-				VIEWERSUSPEND_EPGUPDATE	= 0x0008U
 			};
 
 			CChannelSpec Channel;
