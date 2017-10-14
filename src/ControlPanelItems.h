@@ -33,10 +33,10 @@ namespace TVTest
 	{
 	public:
 	// CControlPanelItem
-		void CalcSize(int Width, SIZE *pSize);
-		void Draw(HDC hdc, const RECT &Rect);
-		void OnLButtonDown(int x, int y);
-		void OnRButtonDown(int x, int y);
+		void CalcSize(int Width, SIZE *pSize) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 	};
 
 	class CChannelControlItem
@@ -44,10 +44,10 @@ namespace TVTest
 	{
 	public:
 	// CControlPanelItem
-		void CalcSize(int Width, SIZE *pSize);
-		void Draw(HDC hdc, const RECT &Rect);
-		void OnLButtonDown(int x, int y);
-		void OnRButtonDown(int x, int y);
+		void CalcSize(int Width, SIZE *pSize) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 	};
 
 	class CVideoControlItem
@@ -55,10 +55,10 @@ namespace TVTest
 	{
 	public:
 	// CControlPanelItem
-		void CalcSize(int Width, SIZE *pSize);
-		void Draw(HDC hdc, const RECT &Rect);
-		void OnLButtonDown(int x, int y);
-		void OnRButtonDown(int x, int y);
+		void CalcSize(int Width, SIZE *pSize) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 	};
 
 	class CVolumeControlItem
@@ -66,15 +66,15 @@ namespace TVTest
 	{
 	public:
 	// CControlPanelItem
-		void CalcSize(int Width, SIZE *pSize);
-		void Draw(HDC hdc, const RECT &Rect);
-		void OnLButtonDown(int x, int y);
-		void OnRButtonDown(int x, int y);
-		void OnMouseMove(int x, int y);
-		void SetStyle(const Style::CStyleManager *pStyleManager);
+		void CalcSize(int Width, SIZE *pSize) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		void OnMouseMove(int x, int y) override;
+		void SetStyle(const Style::CStyleManager *pStyleManager) override;
 		void NormalizeStyle(
 			const Style::CStyleManager *pStyleManager,
-			const Style::CStyleScaling *pStyleScaling);
+			const Style::CStyleScaling *pStyleScaling) override;
 
 	private:
 		struct VolumeControlStyle
@@ -94,10 +94,10 @@ namespace TVTest
 	{
 	public:
 	// CControlPanelItem
-		void CalcSize(int Width, SIZE *pSize);
-		void Draw(HDC hdc, const RECT &Rect);
-		void OnLButtonDown(int x, int y);
-		void OnRButtonDown(int x, int y);
+		void CalcSize(int Width, SIZE *pSize) override;
+		void Draw(HDC hdc, const RECT &Rect) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 
 	private:
 		Theme::IconList m_Icons;
@@ -113,8 +113,8 @@ namespace TVTest
 	public:
 		CControlPanelButton(int Command, LPCTSTR pszText, bool fBreak = true, int Width = -1);
 	// CControlPanelItem
-		virtual void CalcSize(int Width, SIZE *pSize);
-		virtual void Draw(HDC hdc, const RECT &Rect);
+		virtual void CalcSize(int Width, SIZE *pSize) override;
+		virtual void Draw(HDC hdc, const RECT &Rect) override;
 	};
 
 }	// namespace TVTest
