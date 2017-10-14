@@ -63,8 +63,12 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			HWND hwndLogo = ::GetDlgItem(hDlg, IDC_ABOUT_LOGO);
 			HWND hwndLink = ::GetDlgItem(hDlg, IDC_ABOUT_LINK);
 
-			::SetWindowText(
-				hwndHeader,
+			HDC hdc = ::GetDC(hDlg);
+			HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+			TCHAR szText[MAX_INFO_TEXT];
+
+			StringPrintf(
+				szText,
 				ABOUT_VERSION_TEXT
 #ifdef VERSION_HASH
 				TEXT(" ") VERSION_HASH
@@ -79,10 +83,10 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				TEXT(" ") VERSION_PLATFORM
 #endif
 				TEXT(")"));
+			::SetWindowText(hwndHeader, szText);
+			RECT rcHeaderText = {0, 0, 0, 0};
+			::DrawText(hdc, szText, -1, &rcHeaderText, DT_CALCRECT | DT_NOPREFIX);
 
-			HDC hdc = ::GetDC(hDlg);
-			HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-			TCHAR szText[MAX_INFO_TEXT];
 			int Length = StringPrintf(
 				szText,
 				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING TEXT("\r\n")
@@ -96,11 +100,16 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			RECT rcText = {0, 0, 0, 0};
 			::DrawText(hdc, szText, -1, &rcText, DT_CALCRECT | DT_NOPREFIX);
 			DrawUtil::SelectObject(hdc, m_LinkFont);
+
 			::GetWindowText(hwndLink, szText, lengthof(szText));
 			RECT rcLinkText = {0, 0, 0, 0};
 			::DrawText(hdc, szText, -1, &rcLinkText, DT_CALCRECT | DT_NOPREFIX);
+
 			::SelectObject(hdc, hfontOld);
 			::ReleaseDC(hDlg, hdc);
+
+			if (rcText.right < rcHeaderText.right)
+				rcText.right = rcHeaderText.right;
 			if (rcText.right < rcLinkText.right)
 				rcText.right = rcLinkText.right;
 
