@@ -177,6 +177,20 @@ namespace TVTest
 		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
 
 	private:
+		enum {
+			TIMER_ID_UPDATE              = 0x0001U,
+			TIMER_ID_OSD                 = 0x0002U,
+			TIMER_ID_DISPLAY             = 0x0004U,
+			TIMER_ID_WHEELCHANNELSELECT  = 0x0008U,
+			TIMER_ID_PROGRAMLISTUPDATE   = 0x0010U,
+			TIMER_ID_PROGRAMGUIDEUPDATE  = 0x0020U,
+			TIMER_ID_VIDEOSIZECHANGED    = 0x0040U,
+			TIMER_ID_RESETERRORCOUNT     = 0x0080U,
+			TIMER_ID_HIDETOOLTIP         = 0x0100U,
+			TIMER_ID_CHANNELNO           = 0x0200U,
+			TIMER_ID_HIDECURSOR          = 0x0400U,
+		};
+
 		struct MainWindowStyle
 		{
 			Style::Margins ScreenMargin;
@@ -451,6 +465,7 @@ namespace TVTest
 		CFullscreen m_Fullscreen;
 		CNotificationBar m_NotificationBar;
 		CCommandEventHandler m_CommandEventHandler;
+		CWindowTimerManager m_Timer;
 
 		MainWindowStyle m_Style;
 		MainWindowTheme m_Theme;
@@ -548,32 +563,6 @@ namespace TVTest
 		unsigned int m_ProgramListUpdateTimerCount;
 		bool m_fAlertedLowFreeSpace;
 
-		class CTimer
-		{
-			HWND m_hwnd;
-			UINT m_ID;
-
-		public:
-			CTimer(UINT ID) : m_hwnd(nullptr), m_ID(ID) {}
-
-			bool Begin(HWND hwnd, DWORD Interval) {
-				if (::SetTimer(hwnd, m_ID, Interval, nullptr) == 0) {
-					m_hwnd = nullptr;
-					return false;
-				}
-				m_hwnd = hwnd;
-				return true;
-			}
-			void End() {
-				if (m_hwnd != nullptr) {
-					::KillTimer(m_hwnd, m_ID);
-					m_hwnd = nullptr;
-				}
-			}
-			bool IsEnabled() const { return m_hwnd != nullptr; }
-		};
-		CTimer m_ResetErrorCountTimer;
-
 		class CDisplayBaseEventHandler
 			: public CDisplayBase::CEventHandler
 		{
@@ -585,7 +574,6 @@ namespace TVTest
 		CDisplayBaseEventHandler m_DisplayBaseEventHandler;
 
 		CChannelInput m_ChannelInput;
-		CTimer m_ChannelNoInputTimer;
 
 		CEpgCaptureEventHandler m_EpgCaptureEventHandler;
 
@@ -635,6 +623,9 @@ namespace TVTest
 		bool SetFullscreen(bool fFullscreen) override;
 		bool SetStandby(bool fStandby) override;
 		bool ShowVolumeOSD() override;
+		void PreventDisplaySleep(bool fPrevent) override;
+		void BeginWheelChannelSelect(DWORD Delay) override;
+		void EndWheelChannelSelect() override;
 
 	// CAppEventHandler
 		void OnTunerChanged() override;

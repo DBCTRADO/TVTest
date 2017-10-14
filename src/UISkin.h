@@ -16,21 +16,6 @@ namespace TVTest
 		: public CAppEventHandler
 	{
 	protected:
-		enum {
-			TIMER_ID_UPDATE = 1,
-			TIMER_ID_OSD,
-			TIMER_ID_DISPLAY,
-			TIMER_ID_WHEELCHANNELCHANGE,
-			TIMER_ID_PROGRAMLISTUPDATE,
-			TIMER_ID_PROGRAMGUIDEUPDATE,
-			TIMER_ID_VIDEOSIZECHANGED,
-			TIMER_ID_RESETERRORCOUNT,
-			TIMER_ID_HIDETOOLTIP,
-			TIMER_ID_CHANNELNO,
-			TIMER_ID_HIDECURSOR,
-			TIMER_ID_USER = 256
-		};
-
 		CUICore * m_pCore;
 		bool m_fWheelChannelChanging;
 
@@ -48,6 +33,9 @@ namespace TVTest
 		virtual bool SetFullscreen(bool fFullscreen) = 0;
 		virtual bool SetStandby(bool fStandby) = 0;
 		virtual bool ShowVolumeOSD() = 0;
+		virtual void PreventDisplaySleep(bool fPrevent) = 0;
+		virtual void BeginWheelChannelSelect(DWORD Delay) {}
+		virtual void EndWheelChannelSelect() {}
 
 		void SetWheelChannelChanging(bool fChanging, DWORD Delay = 0);
 

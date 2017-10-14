@@ -133,9 +133,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fFrameCut(false)
 	, m_ProgramListUpdateTimerCount(0)
 	, m_fAlertedLowFreeSpace(false)
-	, m_ResetErrorCountTimer(TIMER_ID_RESETERRORCOUNT)
 	, m_ChannelInput(App.Accelerator.GetChannelInputOptions())
-	, m_ChannelNoInputTimer(TIMER_ID_CHANNELNO)
 	, m_DisplayBaseEventHandler(this)
 	, m_EpgCaptureEventHandler(this)
 
@@ -1072,7 +1070,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			::GetCursorPos(&m_ptDragStartPos);
 			::GetWindowRect(hwnd, &m_rcDragStart);
 			::SetCapture(hwnd);
-			::KillTimer(hwnd, TIMER_ID_HIDECURSOR);
+			m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
 			::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
 			return 0;
 		}
@@ -1089,7 +1087,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			m_fDragging = false;
 			m_TitleBarManager.EndDrag();
 			if (m_App.ViewOptions.GetHideCursor())
-				::SetTimer(m_hwnd, TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY, nullptr);
+				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 		}
 		return 0;
 
@@ -1329,8 +1327,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			CServiceUpdateInfo *pInfo = reinterpret_cast<CServiceUpdateInfo*>(lParam);
 
 			if (pInfo->m_fStreamChanged) {
-				if (m_ResetErrorCountTimer.IsEnabled())
-					m_ResetErrorCountTimer.Begin(hwnd, 2000);
+				if (m_Timer.IsTimerEnabled(TIMER_ID_RESETERRORCOUNT))
+					m_Timer.BeginTimer(TIMER_ID_RESETERRORCOUNT, 2000);
 
 				m_Display.GetDisplayBase().SetVisible(false);
 			}
@@ -1469,7 +1467,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			表示されるまでにはタイムラグがあるため、後で調整を行う
 		*/
 		m_VideoSizeChangedTimerCount = 0;
-		::SetTimer(hwnd, TIMER_ID_VIDEOSIZECHANGED, 500, nullptr);
+		m_Timer.BeginTimer(TIMER_ID_VIDEOSIZECHANGED, 500);
 		if (m_AspectRatioResetTime != 0
 				&& !m_pCore->GetFullscreen()
 				&& IsViewerEnabled()
@@ -1895,12 +1893,13 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_App.EpgCaptureManager.SetEventHandler(&m_EpgCaptureEventHandler);
 
-	::SetTimer(m_hwnd, TIMER_ID_UPDATE, UPDATE_TIMER_INTERVAL, nullptr);
+	m_Timer.InitializeTimer(m_hwnd);
+	m_Timer.BeginTimer(TIMER_ID_UPDATE, UPDATE_TIMER_INTERVAL);
 
 	m_fShowCursor = true;
 	m_CursorTracker.Reset();
 	if (m_App.ViewOptions.GetHideCursor())
-		::SetTimer(m_hwnd, TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY, nullptr);
+		m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 
 	m_fCreated = true;
 
@@ -2180,7 +2179,7 @@ void CMainWindow::OnMouseMove(int x, int y)
 
 		if (m_CursorTracker.GetLastCursorPos() == pt) {
 			if (m_App.ViewOptions.GetHideCursor())
-				::SetTimer(m_hwnd, TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY, nullptr);
+				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 			return;
 		}
 
@@ -2261,9 +2260,9 @@ void CMainWindow::OnMouseMove(int x, int y)
 		}
 		if (m_App.ViewOptions.GetHideCursor()) {
 			if (fShowTitleBar || fShowStatusBar || fShowSideBar)
-				::KillTimer(m_hwnd, TIMER_ID_HIDECURSOR);
+				m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
 			else
-				::SetTimer(m_hwnd, TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY, nullptr);
+				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 		}
 	} else {
 		m_Fullscreen.OnMouseMove();
@@ -3769,7 +3768,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 						APP_NAME TEXT("の録画ファイルの保存先の空き容量が少なくなっています。"),
 						TEXT("空き容量が少なくなっています。"),
 						nullptr, CBalloonTip::ICON_WARNING);
-					::SetTimer(m_hwnd, TIMER_ID_HIDETOOLTIP, 10000, nullptr);
+					m_Timer.BeginTimer(TIMER_ID_HIDETOOLTIP, 10000);
 					ShowNotificationBar(
 						TEXT("録画ファイルの保存先の空き容量が少なくなっています"),
 						CNotificationBar::MessageType::Warning, 6000);
@@ -3784,7 +3783,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 	case TIMER_ID_OSD:
 		// OSD を消す
 		m_App.OSDManager.ClearOSD();
-		::KillTimer(hwnd, TIMER_ID_OSD);
+		m_Timer.EndTimer(TIMER_ID_OSD);
 		break;
 
 	case TIMER_ID_DISPLAY:
@@ -3792,7 +3791,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 		::SetThreadExecutionState(ES_DISPLAY_REQUIRED);
 		break;
 
-	case TIMER_ID_WHEELCHANNELCHANGE:
+	case TIMER_ID_WHEELCHANNELSELECT:
 		// ホイールでのチャンネル変更
 		{
 			const int Channel = m_App.ChannelManager.GetChangingChannel();
@@ -3828,14 +3827,14 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 			m_ProgramListUpdateTimerCount++;
 			// 更新頻度を下げる
 			if (m_ProgramListUpdateTimerCount >= 6 && m_ProgramListUpdateTimerCount <= 10)
-				::SetTimer(hwnd, TIMER_ID_PROGRAMLISTUPDATE, (m_ProgramListUpdateTimerCount - 5) * (60 * 1000), nullptr);
+				m_Timer.BeginTimer(TIMER_ID_PROGRAMLISTUPDATE, (m_ProgramListUpdateTimerCount - 5) * (60 * 1000));
 		}
 		break;
 
 	case TIMER_ID_PROGRAMGUIDEUPDATE:
 		// 番組表の取得
 		if (!m_App.EpgCaptureManager.ProcessCapture())
-			::SetTimer(m_hwnd, TIMER_ID_PROGRAMGUIDEUPDATE, 3000, nullptr);
+			m_Timer.BeginTimer(TIMER_ID_PROGRAMGUIDEUPDATE, 3000);
 		break;
 
 	case TIMER_ID_VIDEOSIZECHANGED:
@@ -3872,7 +3871,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 		m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 		m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
 		if (m_VideoSizeChangedTimerCount == 3)
-			::KillTimer(hwnd, TIMER_ID_VIDEOSIZECHANGED);
+			m_Timer.EndTimer(TIMER_ID_VIDEOSIZECHANGED);
 		else
 			m_VideoSizeChangedTimerCount++;
 		break;
@@ -3886,7 +3885,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 
 			if (pAnalyzer != nullptr && pAnalyzer->GetServiceCount() > 0) {
 				SendCommand(CM_RESETERRORCOUNT);
-				m_ResetErrorCountTimer.End();
+				m_Timer.EndTimer(TIMER_ID_RESETERRORCOUNT);
 			}
 		}
 		break;
@@ -3894,7 +3893,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 	case TIMER_ID_HIDETOOLTIP:
 		// ツールチップを非表示にする
 		m_App.NotifyBalloonTip.Hide();
-		::KillTimer(hwnd, TIMER_ID_HIDETOOLTIP);
+		m_Timer.EndTimer(TIMER_ID_HIDETOOLTIP);
 		break;
 
 	case TIMER_ID_CHANNELNO:
@@ -3918,7 +3917,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 					ShowCursor(false);
 			}
 		}
-		::KillTimer(hwnd, TIMER_ID_HIDECURSOR);
+		m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
 		break;
 	}
 }
@@ -4458,7 +4457,7 @@ bool CMainWindow::OnClose(HWND hwnd)
 
 	m_App.AddLog(TEXT("ウィンドウを閉じています..."));
 
-	::KillTimer(hwnd, TIMER_ID_UPDATE);
+	m_Timer.EndTimer(TIMER_ID_UPDATE);
 
 	//m_App.CoreEngine.EnableMediaViewer(false);
 
@@ -4503,7 +4502,7 @@ void CMainWindow::OnTunerChanged()
 	m_App.Panel.CaptionPanel.Reset();
 	m_App.Epg.ProgramGuide.ClearCurrentService();
 	ClearMenu(m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_SERVICE));
-	m_ResetErrorCountTimer.End();
+	m_Timer.EndTimer(TIMER_ID_RESETERRORCOUNT);
 	m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 	m_App.StatusView.UpdateItem(STATUS_ITEM_TUNER);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_CHANNEL);
@@ -4585,7 +4584,7 @@ void CMainWindow::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 	const bool fEpgLoading =
 		m_App.EpgOptions.IsEpgFileLoading() || m_App.EpgOptions.IsEDCBDataLoading();
 	m_App.Panel.EnableProgramListUpdate(!fEpgLoading);
-	::SetTimer(m_hwnd, TIMER_ID_PROGRAMLISTUPDATE, 10000, nullptr);
+	m_Timer.BeginTimer(TIMER_ID_PROGRAMLISTUPDATE, 10000);
 	m_ProgramListUpdateTimerCount = 0;
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
@@ -4634,9 +4633,9 @@ void CMainWindow::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 		m_App.TaskbarManager.UpdateJumpList();
 	}
 	if (m_App.DriverOptions.IsResetChannelChangeErrorCount(pszDriverFileName))
-		m_ResetErrorCountTimer.Begin(m_hwnd, 5000);
+		m_Timer.BeginTimer(TIMER_ID_RESETERRORCOUNT, 5000);
 	else
-		m_ResetErrorCountTimer.End();
+		m_Timer.EndTimer(TIMER_ID_RESETERRORCOUNT);
 	m_fForceResetPanAndScan = true;
 
 	m_pCore->UpdateTitle();
@@ -5019,7 +5018,7 @@ void CMainWindow::OnRecordingStarted()
 	//m_App.MainMenu.EnableItem(CM_RECORDSTOPTIME, true);
 	m_App.TaskbarManager.SetRecordingStatus(true);
 
-	m_ResetErrorCountTimer.End();
+	m_Timer.EndTimer(TIMER_ID_RESETERRORCOUNT);
 	m_fAlertedLowFreeSpace = false;
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Recording))
 		m_App.OSDManager.ShowOSD(TEXT("●録画"));
@@ -5552,6 +5551,28 @@ bool CMainWindow::SetTitleFont(const Style::Font &Font)
 bool CMainWindow::SetLogo(HBITMAP hbm)
 {
 	return m_Display.GetViewWindow().SetLogo(hbm);
+}
+
+
+void CMainWindow::PreventDisplaySleep(bool fPrevent)
+{
+	if (fPrevent)
+		m_Timer.BeginTimer(TIMER_ID_DISPLAY, 10000);
+	else
+		m_Timer.EndTimer(TIMER_ID_DISPLAY);
+}
+
+
+void CMainWindow::BeginWheelChannelSelect(DWORD Delay)
+{
+	if (Delay > 0)
+		m_Timer.BeginTimer(TIMER_ID_WHEELCHANNELSELECT, Delay);
+}
+
+
+void CMainWindow::EndWheelChannelSelect()
+{
+	m_Timer.EndTimer(TIMER_ID_WHEELCHANNELSELECT);
 }
 
 
@@ -6204,7 +6225,7 @@ void CMainWindow::EndChannelNoInput(bool fDetermine)
 			Number = m_ChannelInput.GetNumber();
 
 		m_ChannelInput.EndInput();
-		m_ChannelNoInputTimer.End();
+		m_Timer.EndTimer(TIMER_ID_CHANNELNO);
 		m_App.OSDManager.ClearOSD();
 
 		if (Number > 0) {
@@ -6249,7 +6270,7 @@ void CMainWindow::OnChannelNoInput()
 
 	const DWORD Timeout = m_App.Accelerator.GetChannelInputOptions().KeyTimeout;
 	if (Timeout > 0)
-		m_ChannelNoInputTimer.Begin(m_hwnd, Timeout);
+		m_Timer.BeginTimer(TIMER_ID_CHANNELNO, Timeout);
 }
 
 
@@ -6441,7 +6462,7 @@ bool CMainWindow::GetOSDClientInfo(COSDManager::OSDClientInfo *pInfo)
 
 bool CMainWindow::SetOSDHideTimer(DWORD Delay)
 {
-	return ::SetTimer(m_hwnd, TIMER_ID_OSD, Delay, nullptr) != 0;
+	return m_Timer.BeginTimer(TIMER_ID_OSD, Delay);
 }
 
 
@@ -7823,7 +7844,7 @@ void CMainWindow::CEpgCaptureEventHandler::OnEndCapture(CEpgCaptureManager::EndF
 	HANDLE hThread;
 	int OldPriority;
 
-	::KillTimer(m_pMainWindow->m_hwnd, TIMER_ID_PROGRAMGUIDEUPDATE);
+	m_pMainWindow->m_Timer.EndTimer(TIMER_ID_PROGRAMGUIDEUPDATE);
 
 	if (m_pMainWindow->m_pCore->GetStandby()) {
 		hThread = ::GetCurrentThread();
@@ -7855,7 +7876,7 @@ void CMainWindow::CEpgCaptureEventHandler::OnChannelChanged()
 {
 	CAppMain &App = m_pMainWindow->m_App;
 
-	::SetTimer(m_pMainWindow->m_hwnd, TIMER_ID_PROGRAMGUIDEUPDATE, 15000, nullptr);
+	m_pMainWindow->m_Timer.BeginTimer(TIMER_ID_PROGRAMGUIDEUPDATE, 15000);
 
 	App.Epg.ProgramGuide.SetEpgCaptureProgress(
 		App.EpgCaptureManager.GetCurChannel(),

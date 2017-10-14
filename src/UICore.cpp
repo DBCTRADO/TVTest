@@ -787,8 +787,6 @@ bool CUICore::SetAlwaysOnTop(bool fTop)
 
 bool CUICore::PreventDisplaySave(bool fPrevent)
 {
-	HWND hwnd = GetMainWindow();
-
 	if (fPrevent) {
 		bool fNoScreenSaver = m_App.ViewOptions.GetNoScreenSaver();
 		bool fNoMonitorLowPower = m_App.ViewOptions.GetNoMonitorLowPower();
@@ -802,8 +800,8 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 		}
 		if (!fNoMonitorLowPower || fNoMonitorLowPowerActiveOnly) {
 #if 1
-			if (hwnd != nullptr)
-				::KillTimer(hwnd, CUISkin::TIMER_ID_DISPLAY);
+			if (m_pSkin != nullptr)
+				m_pSkin->PreventDisplaySleep(false);
 #else
 			if (m_fPowerOffActiveOriginal) {
 				SystemParametersInfo(
@@ -832,9 +830,8 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 		}
 		if (fNoMonitorLowPower && !fNoMonitorLowPowerActiveOnly) {
 #if 1
-			// SetThreadExecutionState() を呼ぶタイマー
-			if (hwnd != nullptr)
-				::SetTimer(hwnd, CUISkin::TIMER_ID_DISPLAY, 10000, nullptr);
+			if (m_pSkin != nullptr)
+				m_pSkin->PreventDisplaySleep(true);
 #else
 			if (!m_fPowerOffActiveOriginal) {
 				if (!SystemParametersInfo(
@@ -861,8 +858,8 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 #endif
 		}
 	} else {
-		if (hwnd != nullptr)
-			::KillTimer(hwnd, CUISkin::TIMER_ID_DISPLAY);
+		if (m_pSkin != nullptr)
+			m_pSkin->PreventDisplaySleep(false);
 		if (m_fScreenSaverActiveOriginal) {
 			::SystemParametersInfo(
 				SPI_SETSCREENSAVEACTIVE, TRUE, nullptr,

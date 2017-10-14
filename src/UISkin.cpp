@@ -54,11 +54,10 @@ void CUISkin::ShowErrorMessage(
 void CUISkin::SetWheelChannelChanging(bool fChanging, DWORD Delay)
 {
 	if (fChanging) {
-		if (Delay > 0)
-			::SetTimer(GetMainWindow(), TIMER_ID_WHEELCHANNELCHANGE, Delay, nullptr);
+		BeginWheelChannelSelect(Delay);
 		m_fWheelChannelChanging = true;
 	} else if (m_fWheelChannelChanging) {
-		::KillTimer(GetMainWindow(), TIMER_ID_WHEELCHANNELCHANGE);
+		EndWheelChannelSelect();
 		m_fWheelChannelChanging = false;
 	}
 }
