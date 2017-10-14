@@ -555,8 +555,6 @@
     <ClCompile Include="GeneralOptions.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Help.cpp" />
-    <ClCompile Include="HelperClass\NCachedFile.cpp" />
-    <ClCompile Include="HelperClass\NFile.cpp" />
     <ClCompile Include="HomeDisplay.cpp" />
     <ClCompile Include="Image.cpp" />
     <ClCompile Include="InformationPanel.cpp" />
@@ -700,8 +698,6 @@
     <ClInclude Include="GeneralOptions.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Help.h" />
-    <ClInclude Include="HelperClass\NCachedFile.h" />
-    <ClInclude Include="HelperClass\NFile.h" />
     <ClInclude Include="Help\HelpID.h" />
     <ClInclude Include="HomeDisplay.h" />
     <ClInclude Include="Image.h" />

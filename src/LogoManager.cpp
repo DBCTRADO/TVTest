@@ -2,7 +2,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "LogoManager.h"
-#include "HelperClass/NFile.h"
+#include "LibISDB/LibISDB/Base/FileStream.hpp"
 #include "LibISDB/LibISDB/Utilities/CRC.hpp"
 #include "Common/DebugDef.h"
 
@@ -191,16 +191,20 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		}
 	}
 
-	CNFile File;
+	LibISDB::FileStream File;
 
-	if (!File.Open(pszFileName, CNFile::CNF_WRITE | CNFile::CNF_NEW))
+	if (!File.Open(
+				pszFileName,
+				LibISDB::FileStream::OpenFlag::Write |
+				LibISDB::FileStream::OpenFlag::Create |
+				LibISDB::FileStream::OpenFlag::Truncate))
 		return false;
 
 	LogoFileHeader FileHeader;
 	::CopyMemory(FileHeader.Type, LOGOFILEHEADER_TYPE, 8);
 	FileHeader.Version = LOGOFILEHEADER_VERSION;
 	FileHeader.NumImages = (DWORD)m_LogoMap.size();
-	if (!File.Write(&FileHeader, sizeof(FileHeader)))
+	if (File.Write(&FileHeader, sizeof(FileHeader)) != sizeof(FileHeader))
 		goto OnError;
 
 	for (LogoMap::const_iterator itr = m_LogoMap.begin(); itr != m_LogoMap.end(); ++itr) {
@@ -214,9 +218,9 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		ImageHeader.Time = SystemTimeToUInt64(itr->second->GetTime().ToSYSTEMTIME());
 		DWORD CRC = LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader, sizeof(ImageHeader));
 		CRC = LibISDB::CRC32MPEG2::Calc(itr->second->GetData(), ImageHeader.DataSize, CRC);
-		if (!File.Write(&ImageHeader, sizeof(ImageHeader))
-				|| !File.Write(itr->second->GetData(), ImageHeader.DataSize)
-				|| !File.Write(&CRC, sizeof(CRC)))
+		if (File.Write(&ImageHeader, sizeof(ImageHeader)) != sizeof(ImageHeader)
+				|| File.Write(itr->second->GetData(), ImageHeader.DataSize) != ImageHeader.DataSize
+				|| File.Write(&CRC, sizeof(CRC)) != sizeof(CRC))
 			goto OnError;
 	}
 
@@ -233,11 +237,13 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 {
 	BlockLock Lock(m_Lock);
 
-	CNFile File;
+	LibISDB::FileStream File;
 
 	if (!File.Open(
 				pszFileName,
-				CNFile::CNF_READ | CNFile::CNF_SHAREREAD | CNFile::CNF_SEQUENTIALREAD)) {
+				LibISDB::FileStream::OpenFlag::Read |
+				LibISDB::FileStream::OpenFlag::ShareRead |
+				LibISDB::FileStream::OpenFlag::SequentialRead)) {
 		TRACE(TEXT("CLogoManager::LoadLogoFile() : File open error \"%s\"\n"), pszFileName);
 		return false;
 	}
