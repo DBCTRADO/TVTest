@@ -5555,15 +5555,15 @@ bool CMainWindow::SetLogo(HBITMAP hbm)
 }
 
 
-bool CMainWindow::ShowProgramGuide(bool fShow, unsigned int Flags, const ProgramGuideSpaceInfo *pSpaceInfo)
+bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const ProgramGuideSpaceInfo *pSpaceInfo)
 {
 	if (m_App.Epg.fShowProgramGuide == fShow)
 		return true;
 
 	if (fShow) {
 		const bool fOnScreen =
-			(Flags & PROGRAMGUIDE_SHOW_POPUP) == 0
-			&& ((Flags & PROGRAMGUIDE_SHOW_ONSCREEN) != 0
+			!(Flags & ShowProgramGuideFlag::Popup)
+			&& (!!(Flags & ShowProgramGuideFlag::OnScreen)
 				|| m_App.ProgramGuideOptions.GetOnScreen()
 				|| (m_pCore->GetFullscreen() && ::GetSystemMetrics(SM_CMONITORS) == 1));
 

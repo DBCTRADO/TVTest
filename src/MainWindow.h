@@ -150,16 +150,19 @@ namespace TVTest
 		CStatusView &GetStatusView();
 		CSideBar &GetSideBar();
 
-		enum {
-			PROGRAMGUIDE_SHOW_ONSCREEN = 0x0001U,
-			PROGRAMGUIDE_SHOW_POPUP    = 0x0002U
+		enum class ShowProgramGuideFlag : unsigned int {
+			None     = 0x0000U,
+			OnScreen = 0x0001U,
+			Popup    = 0x0002U,
 		};
 		struct ProgramGuideSpaceInfo
 		{
 			LPCTSTR pszTuner;
 			LPCTSTR pszSpace;
 		};
-		bool ShowProgramGuide(bool fShow, unsigned int Flags = 0, const ProgramGuideSpaceInfo *pSpaceInfo = nullptr);
+		bool ShowProgramGuide(
+			bool fShow, ShowProgramGuideFlag Flags = ShowProgramGuideFlag::None,
+			const ProgramGuideSpaceInfo *pSpaceInfo = nullptr);
 
 		static bool Initialize(HINSTANCE hinst);
 
@@ -714,6 +717,7 @@ namespace TVTest
 	};
 
 	TVTEST_ENUM_FLAGS(CMainWindow::ResumeInfo::ViewerSuspendFlag)
+	TVTEST_ENUM_FLAGS(CMainWindow::ShowProgramGuideFlag)
 
 }	// namespace TVTest
 

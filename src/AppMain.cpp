@@ -1610,7 +1610,7 @@ void CAppMain::ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine)
 
 	MainWindow.ShowProgramGuide(
 		true,
-		UICore.GetFullscreen() ? 0 : CMainWindow::PROGRAMGUIDE_SHOW_POPUP,
+		UICore.GetFullscreen() ? CMainWindow::ShowProgramGuideFlag::None : CMainWindow::ShowProgramGuideFlag::Popup,
 		&SpaceInfo);
 }
 
