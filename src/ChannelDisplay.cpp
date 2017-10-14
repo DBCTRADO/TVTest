@@ -886,7 +886,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 								*pEventInfo, szText, lengthof(szText),
 								EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 							if (!pEventInfo->EventName.empty()) {
-								Length += StdUtil::snprintf(
+								Length += StringPrintf(
 									szText + Length, lengthof(szText) - Length,
 									TEXT("%s%s"),
 									Length > 0 ? TEXT(" ") : TEXT(""),
@@ -1339,9 +1339,9 @@ void CChannelDisplay::CTuner::GetDisplayName(int Space, LPTSTR pszName, int MaxN
 		if (pTuningSpace != nullptr) {
 			int Length = ::lstrlen(pszName);
 			if (!IsStringEmpty(pTuningSpace->GetName()))
-				StdUtil::snprintf(pszName + Length, MaxName - Length, TEXT(" [%s]"), pTuningSpace->GetName());
+				StringPrintf(pszName + Length, MaxName - Length, TEXT(" [%s]"), pTuningSpace->GetName());
 			else
-				StdUtil::snprintf(pszName + Length, MaxName - Length, TEXT(" [%d]"), Space + 1);
+				StringPrintf(pszName + Length, MaxName - Length, TEXT(" [%d]"), Space + 1);
 		}
 	}
 }

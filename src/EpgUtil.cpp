@@ -78,11 +78,11 @@ int FormatEventTime(
 	if (!!(Flags & FormatEventTimeFlag::Date)) {
 		int Length = 0;
 		if (!!(Flags & FormatEventTimeFlag::Year)) {
-			Length = StdUtil::snprintf(
-				szDate, lengthof(szDate), TEXT("%d/"),
+			Length = StringPrintf(
+				szDate, TEXT("%d/"),
 				stStart.wYear);
 		}
-		StdUtil::snprintf(
+		StringPrintf(
 			szDate + Length, lengthof(szDate) - Length,
 			TEXT("%d/%d(%s) "),
 			stStart.wMonth,
@@ -96,8 +96,8 @@ int FormatEventTime(
 		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("%02d:%02d") : TEXT("%d:%02d");
 	TCHAR szStartTime[32], szEndTime[32];
 
-	StdUtil::snprintf(
-		szStartTime, lengthof(szStartTime),
+	StringPrintf(
+		szStartTime,
 		pszTimeFormat,
 		stStart.wHour,
 		stStart.wMinute);
@@ -107,8 +107,8 @@ int FormatEventTime(
 		if (Duration > 0) {
 			SYSTEMTIME EndTime = stStart;
 			if (OffsetSystemTime(&EndTime, Duration * TimeConsts::SYSTEMTIME_SECOND)) {
-				StdUtil::snprintf(
-					szEndTime, lengthof(szEndTime), pszTimeFormat,
+				StringPrintf(
+					szEndTime, pszTimeFormat,
 					EndTime.wHour, EndTime.wMinute);
 			}
 		} else {
@@ -117,7 +117,7 @@ int FormatEventTime(
 		}
 	}
 
-	return StdUtil::snprintf(
+	return StringPrintf(
 		pszTime, MaxLength, TEXT("%s%s%s%s"),
 		szDate,
 		szStartTime,

@@ -110,7 +110,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < TabCount; i++) {
 			TCHAR szName[32];
 
-			StdUtil::snprintf(szName, lengthof(szName), TEXT("PanelTab%d_ID"), i);
+			StringPrintf(szName, TEXT("PanelTab%d_ID"), i);
 			if (!Settings.Read(szName, &ID) || ID.empty())
 				continue;
 
@@ -132,7 +132,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 			if (j < ItemList.size())
 				continue;
 
-			StdUtil::snprintf(szName, lengthof(szName), TEXT("PanelTab%d_Visible"), i);
+			StringPrintf(szName, TEXT("PanelTab%d_Visible"), i);
 			if (!Settings.Read(szName, &Item.fVisible))
 				Item.fVisible = true;
 
@@ -185,9 +185,9 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 		const PanelItemInfo &Item = m_ItemList[i];
 		TCHAR szName[32];
 
-		StdUtil::snprintf(szName, lengthof(szName), TEXT("PanelTab%d_ID"), i);
+		StringPrintf(szName, TEXT("PanelTab%d_ID"), i);
 		Settings.Write(szName, Item.ID);
-		StdUtil::snprintf(szName, lengthof(szName), TEXT("PanelTab%d_Visible"), i);
+		StringPrintf(szName, TEXT("PanelTab%d_Visible"), i);
 		Settings.Write(szName, Item.fVisible);
 	}
 

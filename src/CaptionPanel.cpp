@@ -705,7 +705,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 						m_pCaptionPanel->m_LanguageList[i].LanguageCode,
 						szText, lengthof(szText));
 					if (szText[0] == _T('\0'))
-						StdUtil::snprintf(szText, lengthof(szText), TEXT("言語%d"), i + 1);
+						StringPrintf(szText, TEXT("言語%d"), i + 1);
 					Menu.Append(CM_CAPTIONPANEL_LANGUAGE_FIRST + i, szText);
 				}
 				Menu.CheckRadioItem(

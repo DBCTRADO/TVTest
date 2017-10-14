@@ -692,8 +692,8 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		const int ErrorCode = ::GetLastError();
 		TCHAR szText[256];
 
-		StdUtil::snprintf(
-			szText, lengthof(szText),
+		StringPrintf(
+			szText,
 			TEXT("DLLがロードできません。(エラーコード 0x%lx)"), ErrorCode);
 		SetWin32Error(ErrorCode, szText);
 		switch (ErrorCode) {
@@ -1609,7 +1609,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			LibISDB::String Str;
 			if (Decoder.Decode(
 						static_cast<const uint8_t *>(pInfo->pSrcData), pInfo->SrcLength, &Str)) {
-				StdUtil::strncpy(pInfo->pszDest, pInfo->DestLength, Str.c_str());
+				StringCopy(pInfo->pszDest, Str.c_str(), pInfo->DestLength);
 			} else {
 				pInfo->pszDest[0] = '\0';
 			}
@@ -3392,7 +3392,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 					if (pRecordManager->IsRecording()) {
 						String FileName;
 						pRecordManager->GetRecordTask()->GetFileName(&FileName);
-						StdUtil::strncpy(pInfo->pszFileName, pInfo->MaxFileName, FileName.c_str());
+						StringCopy(pInfo->pszFileName, FileName.c_str(), pInfo->MaxFileName);
 					} else {
 						pInfo->pszFileName[0] = '\0';
 					}

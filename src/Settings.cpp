@@ -260,7 +260,7 @@ bool CSettings::Write(LPCTSTR pszValueName, double Data, int Digits)
 {
 	TCHAR szText[64];
 
-	StdUtil::snprintf(szText, lengthof(szText), TEXT("%.*f"), Digits, Data);
+	StringPrintf(szText, TEXT("%.*f"), Digits, Data);
 	return Write(pszValueName, szText);
 }
 

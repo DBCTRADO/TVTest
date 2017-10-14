@@ -1294,8 +1294,8 @@ void CStaticStringFormatter::Clear()
 void CStaticStringFormatter::Append(LPCTSTR pszString)
 {
 	if (pszString != nullptr && m_Length + 1 < m_BufferLength) {
-		size_t Length = StdUtil::strnlen(pszString, m_BufferLength - m_Length - 1);
-		StdUtil::strncpy(m_pBuffer + m_Length, Length + 1, pszString);
+		size_t Length = StringLength(pszString, m_BufferLength - m_Length - 1);
+		StringCopy(m_pBuffer + m_Length, pszString, Length + 1);
 		m_Length += Length;
 	}
 }
@@ -1314,7 +1314,7 @@ void CStaticStringFormatter::AppendFormat(LPCTSTR pszFormat, ...)
 void CStaticStringFormatter::AppendFormatV(LPCTSTR pszFormat, va_list Args)
 {
 	if (pszFormat != nullptr && m_Length + 1 < m_BufferLength) {
-		int Length = StdUtil::vsnprintf(m_pBuffer + m_Length, m_BufferLength - m_Length, pszFormat, Args);
+		int Length = StringPrintfV(m_pBuffer + m_Length, m_BufferLength - m_Length, pszFormat, Args);
 		if (Length >= 0)
 			m_Length += Length;
 	}

@@ -125,7 +125,7 @@ void CProgramItemInfo::GetEventTitleText(LPTSTR pszText, int MaxLength) const
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 	GetEventTimeText(szTime, lengthof(szTime));
-	StdUtil::snprintf(
+	StringPrintf(
 		pszText, MaxLength, TEXT("%s %s"),
 		szTime, m_EventInfo.EventName.c_str());
 }
@@ -1053,14 +1053,14 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					TCHAR szEndTime[16];
 					SYSTEMTIME stEnd;
 					if (EventInfo.m_Duration > 0 && EventInfo.GetEndTime(&stEnd)) {
-						StdUtil::snprintf(
-							szEndTime, lengthof(szEndTime),
+						StringPrintf(
+							szEndTime,
 							TEXT("～%d:%02d"), stEnd.wHour, stEnd.wMinute);
 					} else {
 						szEndTime[0] = '\0';
 					}
-					StdUtil::snprintf(
-						szText, lengthof(szText),
+					StringPrintf(
+						szText,
 						TEXT("%d/%d(%s) %d:%02d%s\n%s\n\n%s%s%s%s"),
 						EventInfo.m_StartTime.wMonth,
 						EventInfo.m_StartTime.wDay,

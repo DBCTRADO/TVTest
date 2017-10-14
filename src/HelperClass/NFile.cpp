@@ -4,7 +4,6 @@
 
 #include "stdafx.h"
 #include "NFile.h"
-#include "StdUtil.h"
 #include "../Common/DebugDef.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -120,7 +119,9 @@ const bool CNFile::Open(LPCTSTR lpszName, const UINT Flags)
 	}
 #endif
 
-	m_pszFileName = StdUtil::strdup(lpszName);
+	const size_t FileNameLength = ::lstrlen(lpszName) + 1;
+	m_pszFileName = new TCHAR[FileNameLength];
+	::CopyMemory(m_pszFileName, lpszName, FileNameLength * sizeof(TCHAR));
 
 	m_LastError = ERROR_SUCCESS;
 

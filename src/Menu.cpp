@@ -700,8 +700,8 @@ bool CChannelMenu::Create(
 
 		if (i == CurChannel)
 			DrawUtil::SelectObject(hdc, m_FontCurrent);
-		StdUtil::snprintf(
-			szText, lengthof(szText), TEXT("%d: %s"),
+		StringPrintf(
+			szText, TEXT("%d: %s"),
 			pChInfo->GetChannelNo(), pChInfo->GetName());
 		/*
 		m_MenuPainter.GetItemTextExtent(
@@ -869,8 +869,8 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	}
 
 	rc.right = rc.left + m_ChannelNameWidth;
-	StdUtil::snprintf(
-		szText, lengthof(szText), TEXT("%d: %s"),
+	StringPrintf(
+		szText, TEXT("%d: %s"),
 		pChInfo->GetChannelNo(), pChInfo->GetName());
 	::DrawText(
 		pdis->hDC, szText, -1, &rc,
@@ -1009,7 +1009,7 @@ int CChannelMenu::GetEventText(
 	EpgUtil::FormatEventTime(
 		*pEventInfo, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 
-	return StdUtil::snprintf(
+	return StringPrintf(
 		pszText, MaxLength, TEXT("%s %s"), szTime, pEventInfo->EventName.c_str());
 }
 

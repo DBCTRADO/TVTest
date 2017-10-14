@@ -214,8 +214,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 							::lstrcat(szCodecs, TEXT("/"));
 						::lstrcat(szCodecs, TEXT("H.265(HEVC)"));
 					}
-					StdUtil::snprintf(
-						szMessage, lengthof(szMessage),
+					StringPrintf(
+						szMessage,
 						TEXT("%s のデコーダが見付からないため、%s の映像は再生できません。\n")
 						TEXT("映像を再生するにはデコーダをインストールしてください。"),
 						szCodecs, szCodecs);

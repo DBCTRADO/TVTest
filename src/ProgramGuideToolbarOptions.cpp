@@ -51,7 +51,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 			for (int i = 1; i <= CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT; i++) {
 				TCHAR szText[4];
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), i);
+				StringPrintf(szText, TEXT("%d"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT, szText);
 			}
 			DlgComboBox_SetCurSel(
@@ -80,7 +80,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 					i <= CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MAX;
 					i++) {
 				TCHAR szText[4];
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), i);
+				StringPrintf(szText, TEXT("%d"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL, szText);
 			}
 			DlgComboBox_SetCurSel(
@@ -95,7 +95,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 					i <= CProgramGuideFrameSettings::TimeBarSettings::BUTTONCOUNT_MAX;
 					i++) {
 				TCHAR szText[4];
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), i);
+				StringPrintf(szText, TEXT("%d"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_MAXBUTTONCOUNT, szText);
 			}
 			DlgComboBox_SetCurSel(

@@ -556,7 +556,7 @@ void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, boo
 		case LibISDB::SERVICE_TYPE_DATA:            ::lstrcpy(szText, TEXT("データ/ワンセグ"));    break;
 		case LibISDB::SERVICE_TYPE_4K_TV:           ::lstrcpy(szText, TEXT("4K TV"));              break;
 		default:
-			StdUtil::snprintf(szText, lengthof(szText), TEXT("他(%02x)"), pChInfo->GetServiceType());
+			StringPrintf(szText, TEXT("他(%02x)"), pChInfo->GetServiceType());
 			break;
 		}
 	} else {
@@ -1155,8 +1155,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
 					} else {
 						TCHAR szText[32 + MAX_PATH];
-						StdUtil::snprintf(
-							szText, lengthof(szText),
+						StringPrintf(
+							szText,
 							TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
 						App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
 						::MessageBox(hDlg, szText, nullptr, MB_OK | MB_ICONEXCLAMATION);
@@ -1196,8 +1196,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 												::PathRenameExtension(szFileName, TEXT(".dll"));
 												App.Core.UpdateChannelList(szFileName, &m_TuningSpaceList);
 											} else {
-												StdUtil::snprintf(
-													szText, lengthof(szText),
+												StringPrintf(
+													szText,
 													TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
 												App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
 												if (::MessageBox(hDlg, szText, nullptr, MB_OKCANCEL | MB_ICONEXCLAMATION) != IDOK)
@@ -1337,7 +1337,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			CoreEngine.GetSignalLevelText(szSignalLevel, lengthof(szSignalLevel));
 			CoreEngine.GetBitRateText(szBitRate, lengthof(szBitRate));
-			StdUtil::snprintf(szText, lengthof(szText), TEXT("%s / %s"), szSignalLevel, szBitRate);
+			StringPrintf(szText, TEXT("%s / %s"), szSignalLevel, szBitRate);
 			::SetDlgItemText(hDlg, IDC_CHANNELSCAN_LEVEL, szText);
 		}
 		return TRUE;
@@ -1398,8 +1398,8 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			if (m_fIgnoreSignalLevel)
 				EstimateRemain += (NumChannels - CurChannel) * m_RetryCount * m_RetryInterval;
 			EstimateRemain = (EstimateRemain + 500) / 1000;
-			StdUtil::snprintf(
-				szText, lengthof(szText),
+			StringPrintf(
+				szText,
 				TEXT("チャンネル %d/%d をスキャンしています... (残り時間 %u:%02u)"),
 				CurChannel + 1, NumChannels,
 				EstimateRemain / 60, EstimateRemain % 60);
@@ -1817,20 +1817,20 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 		{
 			TCHAR szText[16];
 
-			StdUtil::snprintf(
-				szText, lengthof(szText), TEXT("%.2f"),
+			StringPrintf(
+				szText, TEXT("%.2f"),
 				m_pChannelScan->m_SignalLevelThreshold);
 			::SetDlgItemText(hDlg, IDC_CHANNELSCANSETTINGS_SIGNALLEVELTHRESHOLD, szText);
 
 			for (int i = 1; i <= 10; i++) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d 秒"), i);
+				StringPrintf(szText, TEXT("%d 秒"), i);
 				DlgComboBox_AddString(hDlg, IDC_CHANNELSCANSETTINGS_SCANWAIT, szText);
 			}
 			DlgComboBox_SetCurSel(
 				hDlg, IDC_CHANNELSCANSETTINGS_SCANWAIT,
 				m_pChannelScan->m_ScanWait / 1000 - 1);
 			for (int i = 0; i <= 10; i++) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d 秒"), i);
+				StringPrintf(szText, TEXT("%d 秒"), i);
 				DlgComboBox_AddString(hDlg, IDC_CHANNELSCANSETTINGS_RETRYCOUNT, szText);
 			}
 			DlgComboBox_SetCurSel(

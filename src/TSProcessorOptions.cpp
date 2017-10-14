@@ -521,19 +521,19 @@ void CTSProcessorOptions::UpdateTunerMapItem(int Index)
 	m_TunerMapListView.SetItemText(
 		Index, 0, !Settings.Tuner.empty() ? Settings.Tuner.c_str() : TEXT("(指定なし)"));
 	if (Settings.IsNetworkIDEnabled())
-		StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), Settings.NetworkID);
+		StringPrintf(szText, TEXT("%d"), Settings.NetworkID);
 	else
-		StdUtil::strncpy(szText, lengthof(szText), TEXT("(指定なし)"));
+		StringCopy(szText, TEXT("(指定なし)"));
 	m_TunerMapListView.SetItemText(Index, 1, szText);
 	if (Settings.IsTransportStreamIDEnabled())
-		StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), Settings.TransportStreamID);
+		StringPrintf(szText, TEXT("%d"), Settings.TransportStreamID);
 	else
-		StdUtil::strncpy(szText, lengthof(szText), TEXT("(指定なし)"));
+		StringCopy(szText, TEXT("(指定なし)"));
 	m_TunerMapListView.SetItemText(Index, 2, szText);
 	if (Settings.IsServiceIDEnabled())
-		StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), Settings.ServiceID);
+		StringPrintf(szText, TEXT("%d"), Settings.ServiceID);
 	else
-		StdUtil::strncpy(szText, lengthof(szText), TEXT("(指定なし)"));
+		StringCopy(szText, TEXT("(指定なし)"));
 	m_TunerMapListView.SetItemText(Index, 3, szText);
 	m_TunerMapListView.SetItemText(Index, 4, Settings.fEnableProcessing ? TEXT("有効") : TEXT("無効"));
 	m_TunerMapListView.SetItemText(Index, 5, Settings.Module.c_str());

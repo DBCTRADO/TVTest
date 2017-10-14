@@ -59,7 +59,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; TaskCount; i++) {
 			TCHAR szKey[32];
 			String Command;
-			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("Task%d"), i);
+			StringPrintf(szKey, TEXT("Task%d"), i);
 			if (!Settings.Read(szKey, &Command))
 				break;
 			StringUtility::Trim(Command);
@@ -92,7 +92,7 @@ bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 	const CCommandList &CommandList = GetAppClass().CommandList;
 	for (int i = 0; i < (int)m_TaskList.size(); i++) {
 		TCHAR szKey[32];
-		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("Task%d"), i);
+		StringPrintf(szKey, TEXT("Task%d"), i);
 		Settings.Write(szKey, CommandList.GetCommandText(m_TaskList[i]));
 	}
 #endif

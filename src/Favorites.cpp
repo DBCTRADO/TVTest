@@ -1187,7 +1187,7 @@ int CFavoritesMenu::GetEventText(
 	EpgUtil::FormatEventTime(
 		*pEventInfo, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 
-	return StdUtil::snprintf(
+	return StringPrintf(
 		pszText, MaxLength, TEXT("%s %s"),
 		szTime, pEventInfo->EventName.c_str());
 }
@@ -1264,18 +1264,18 @@ INT_PTR CFavoritePropertiesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, 
 
 			DlgCheckBox_Check(hDlg, IDC_FAVORITEPROP_FORCEBONDRIVERCHANGE, m_pChannel->GetForceBonDriverChange());
 
-			StdUtil::snprintf(
-				szText, lengthof(szText), TEXT("%d (0x%04x)"),
+			StringPrintf(
+				szText, TEXT("%d (0x%04x)"),
 				ChannelInfo.GetServiceID(),
 				ChannelInfo.GetServiceID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_SERVICEID, szText);
-			StdUtil::snprintf(
-				szText, lengthof(szText), TEXT("%d (0x%04x)"),
+			StringPrintf(
+				szText, TEXT("%d (0x%04x)"),
 				ChannelInfo.GetNetworkID(),
 				ChannelInfo.GetNetworkID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_NETWORKID, szText);
-			StdUtil::snprintf(
-				szText, lengthof(szText), TEXT("%d (0x%04x)"),
+			StringPrintf(
+				szText, TEXT("%d (0x%04x)"),
 				ChannelInfo.GetTransportStreamID(),
 				ChannelInfo.GetTransportStreamID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_TRANSPORTSTREAMID, szText);

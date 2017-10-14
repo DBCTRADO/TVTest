@@ -195,8 +195,8 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 			const ParameterInfo &Param = Group.ParameterList[j];
 
 			TCHAR szText[128];
-			StdUtil::snprintf(
-				szText, lengthof(szText), TEXT("%s\t%%%s%%"),
+			StringPrintf(
+				szText, TEXT("%s\t%%%s%%"),
 				Param.pszText, Param.pszParameter);
 			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, (i << 10) | (j + 1), szText);
 		}

@@ -26,7 +26,7 @@ void CAppCore::OnError(LPCTSTR pszText, ...)
 	TCHAR szText[1024];
 
 	va_start(Args, pszText);
-	StdUtil::vsnprintf(szText, lengthof(szText), pszText, Args);
+	StringPrintfV(szText, pszText, Args);
 	va_end(Args);
 	m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
 	if (!m_fSilent)
@@ -879,7 +879,7 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseCha
 		return false;
 #if 0
 	if (pChannelInfo != nullptr) {
-		int Length = StdUtil::snprintf(pszName, MaxLength, TEXT("#%d "), Index + 1);
+		int Length = StringPrintf(pszName, MaxLength, TEXT("#%d "), Index + 1);
 		pszName += Length;
 		MaxLength -= Length;
 	}

@@ -253,18 +253,18 @@ void CEventInfoPopup::FormatAudioInfo(
 		TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode, szLang1, lengthof(szLang1));
 		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode2, szLang2, lengthof(szLang2));
-		StdUtil::snprintf(
-			szAudioComponent, lengthof(szAudioComponent),
+		StringPrintf(
+			szAudioComponent,
 			TEXT(" [%s/%s]"), szLang1, szLang2);
 	} else {
 		TCHAR szLang[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode, szLang, lengthof(szLang));
-		StdUtil::snprintf(
-			szAudioComponent, lengthof(szAudioComponent),
+		StringPrintf(
+			szAudioComponent,
 			TEXT(" [%s]"), szLang);
 	}
 
-	StdUtil::snprintf(
+	StringPrintf(
 		pszText, MaxLength, TEXT("%s%s"),
 		pszAudio != nullptr ? pszAudio : TEXT("?"),
 		szAudioComponent);

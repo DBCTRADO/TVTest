@@ -1108,8 +1108,8 @@ void CInformationPanel::CVideoInfoItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[256];
 
-	StdUtil::snprintf(
-		szText, lengthof(szText),
+	StringPrintf(
+		szText,
 		TEXT("%d x %d [%d x %d (%d:%d)]"),
 		m_OriginalVideoWidth, m_OriginalVideoHeight,
 		m_DisplayVideoWidth, m_DisplayVideoHeight,
@@ -1281,7 +1281,7 @@ void CInformationPanel::CSignalLevelItem::Draw(HDC hdc, const RECT &Rect)
 	if (m_fShowSignalLevel) {
 		TCHAR szSignalLevel[32];
 		CoreEngine.GetSignalLevelText(m_SignalLevel, szSignalLevel, lengthof(szSignalLevel));
-		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("%s / "), szSignalLevel);
+		Length = StringPrintf(szText, TEXT("%s / "), szSignalLevel);
 	}
 	CoreEngine.GetBitRateText(m_BitRate, szText + Length, lengthof(szText) - Length);
 
@@ -1345,17 +1345,17 @@ void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc, const RECT &Rect)
 	int Length;
 
 	if (m_VideoBitRate < 1000 * 1000) {
-		Length = StdUtil::snprintf(
-			szText, lengthof(szText),
+		Length = StringPrintf(
+			szText,
 			TEXT("映像 %u kbps"),
 			(m_VideoBitRate + 500) / 1000);
 	} else {
-		Length = StdUtil::snprintf(
-			szText, lengthof(szText),
+		Length = StringPrintf(
+			szText,
 			TEXT("映像 %.2f Mbps"),
 			(double)(m_VideoBitRate) / (double)(1000 * 1000));
 	}
-	StdUtil::snprintf(
+	StringPrintf(
 		szText + Length, lengthof(szText) - Length,
 		TEXT(" / 音声 %u kbps"),
 		(m_AudioBitRate + 500) / 1000);
@@ -1407,13 +1407,13 @@ void CInformationPanel::CErrorItem::Draw(HDC hdc, const RECT &Rect)
 	TCHAR szText[256];
 	int Length;
 
-	Length = StdUtil::snprintf(
-		szText, lengthof(szText),
+	Length = StringPrintf(
+		szText,
 		TEXT("D %llu / E %llu"),
 		m_ContinuityErrorPacketCount,
 		m_ErrorPacketCount);
 	if (m_fShowScramble) {
-		StdUtil::snprintf(
+		StringPrintf(
 			szText + Length, lengthof(szText) - Length,
 			TEXT(" / S %llu"), m_ScramblePacketCount);
 	}
@@ -1476,14 +1476,14 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 		int Length;
 
 		unsigned int RecordSec = (unsigned int)(m_RecordTime / 1000);
-		Length = StdUtil::snprintf(
-			szText, lengthof(szText),
+		Length = StringPrintf(
+			szText,
 			TEXT("● %d:%02d:%02d"),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
 		if (m_WroteSize >= 0) {
 			unsigned int Size =
 				(unsigned int)(m_WroteSize / (ULONGLONG)(1024 * 1024 / 100));
-			Length += StdUtil::snprintf(
+			Length += StringPrintf(
 				szText + Length, lengthof(szText) - Length,
 				TEXT(" / %d.%02d MB"),
 				Size / 100, Size % 100);
@@ -1491,7 +1491,7 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 		if (m_DiskFreeSpace >= 0) {
 			unsigned int FreeSpace =
 				(unsigned int)(m_DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
-			StdUtil::snprintf(
+			StringPrintf(
 				szText + Length, lengthof(szText) - Length,
 				TEXT(" / %d.%02d GB空き"),
 				FreeSpace / 100, FreeSpace % 100);

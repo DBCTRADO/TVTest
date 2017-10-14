@@ -3,7 +3,6 @@
 #include "AppMain.h"
 #include "PanAndScanOptions.h"
 #include "DialogUtil.h"
-#include "HelperClass/StdUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -28,9 +27,9 @@ static void FormatValue(int Value, int Factor, LPTSTR pszText, size_t MaxLength)
 	else
 		Percentage = 0;
 	if (Percentage % 100 == 0)
-		StdUtil::snprintf(pszText, MaxLength, TEXT("%d"), Percentage / 100);
+		StringPrintf(pszText, MaxLength, TEXT("%d"), Percentage / 100);
 	else
-		StdUtil::snprintf(pszText, MaxLength, TEXT("%d.%02d"), Percentage / 100, abs(Percentage) % 100);
+		StringPrintf(pszText, MaxLength, TEXT("%d.%02d"), Percentage / 100, abs(Percentage) % 100);
 }
 
 
@@ -65,7 +64,7 @@ static int FormatPanAndScanInfo(const CCoreEngine::PanAndScanInfo &Info, LPTSTR 
 	FormatValue(Info.YPos, FACTOR_PERCENTAGE, szYPos, lengthof(szYPos));
 	FormatValue(Info.Width, FACTOR_PERCENTAGE, szWidth, lengthof(szWidth));
 	FormatValue(Info.Height, FACTOR_PERCENTAGE, szHeight, lengthof(szHeight));
-	return StdUtil::snprintf(
+	return StringPrintf(
 		pszText, MaxLength, TEXT("%s,%s,%s,%s,%d,%d"),
 		szXPos, szYPos, szWidth, szHeight, Info.XAspect, Info.YAspect);
 }
@@ -248,7 +247,7 @@ static void FormatInfo(const CPanAndScanOptions::PanAndScanInfo *pInfo, LPTSTR p
 	FormatValue(pInfo->Info.YPos, FACTOR_PERCENTAGE, szYPos, lengthof(szYPos));
 	FormatValue(pInfo->Info.Width, FACTOR_PERCENTAGE, szWidth, lengthof(szWidth));
 	FormatValue(pInfo->Info.Height, FACTOR_PERCENTAGE, szHeight, lengthof(szHeight));
-	StdUtil::snprintf(
+	StringPrintf(
 		pszText, MaxLength, TEXT("%s , %s / %s x %s / %d : %d"),
 		szXPos, szYPos, szWidth, szHeight, pInfo->Info.XAspect, pInfo->Info.YAspect);
 }
@@ -788,8 +787,8 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 		TCHAR szBuffer[256], szSettings[256];
 
 		FormatPanAndScanInfo(pInfo->Info, szSettings, lengthof(szSettings));
-		int Length = StdUtil::snprintf(
-			szBuffer, lengthof(szBuffer),
+		int Length = StringPrintf(
+			szBuffer,
 			TEXT("Preset%d.Name=%s\r\nPreset%d=%s\r\n"),
 			i, pInfo->szName, i, szSettings);
 		::WriteFile(hFile, szBuffer, Length * sizeof(TCHAR), &Write, nullptr);
@@ -806,9 +805,9 @@ bool CPanAndScanOptions::GetCommandName(int Command, LPTSTR pszName, int MaxLeng
 	if (Command < m_FirstID || Command > m_LastID)
 		return false;
 	const int Index = Command - m_FirstID;
-	int Length = StdUtil::snprintf(pszName, MaxLength, TEXT("パン&スキャン%d"), Index + 1);
+	int Length = StringPrintf(pszName, MaxLength, TEXT("パン&スキャン%d"), Index + 1);
 	if ((size_t)Index < m_PresetList.size()) {
-		StdUtil::snprintf(
+		StringPrintf(
 			pszName + Length, MaxLength - Length,
 			TEXT(" : %s"), m_PresetList[Index].szName);
 	}

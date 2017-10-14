@@ -150,7 +150,7 @@ bool CRegExpEngine_ECMAScript::GetName(LPTSTR pszName, size_t MaxLength) const
 	if (pszName == nullptr)
 		return false;
 
-	StdUtil::strncpy(pszName, MaxLength, TEXT("ECMAScript"));
+	StringCopy(pszName, TEXT("ECMAScript"), MaxLength);
 
 	return true;
 }
@@ -272,7 +272,7 @@ bool CRegExpEngine_VBScript::GetName(LPTSTR pszName, size_t MaxLength) const
 	if (pszName == nullptr)
 		return false;
 
-	StdUtil::strncpy(pszName, MaxLength, TEXT("VBScript"));
+	StringCopy(pszName, TEXT("VBScript"), MaxLength);
 
 	return true;
 }
@@ -426,7 +426,7 @@ bool CRegExpEngine_Bregonig::GetName(LPTSTR pszName, size_t MaxLength) const
 	if (pszName == nullptr)
 		return false;
 
-	StdUtil::strncpy(pszName, MaxLength, TEXT("bregonig.dll"));
+	StringCopy(pszName, TEXT("bregonig.dll"), MaxLength);
 
 	return true;
 }

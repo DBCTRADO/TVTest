@@ -331,7 +331,7 @@ static BOOL ServiceListViewGetInfoTip(
 	if (pChannelInfo == nullptr)
 		return FALSE;
 
-	StdUtil::snprintf(
+	StringPrintf(
 		pGetInfoTip->pszText, pGetInfoTip->cchTextMax,
 		TEXT("%s\r\nサービス: %d (0x%04x)\r\nネットワークID: %d (0x%04x)\r\nTSID: %d (0x%04x)"),
 		pChannelInfo->GetName(),

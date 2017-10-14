@@ -171,7 +171,7 @@ void CMainPanel::InitControlPanel()
 		TCHAR szText[4];
 		CControlPanelButton *pItem;
 
-		StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), i + 1);
+		StringPrintf(szText, TEXT("%d"), i + 1);
 		pItem = new CControlPanelButton(CM_CHANNELNO_FIRST + i, szText, i % 6 == 0, 1);
 		if (pList == nullptr || pList->FindChannelNo(i + 1) < 0)
 			pItem->SetEnable(false);

@@ -2,7 +2,6 @@
 #include <algorithm>
 #include "TVTest.h"
 #include "ChannelList.h"
-#include "HelperClass/StdUtil.h"
 #include "Common/DebugDef.h"
 
 
@@ -857,7 +856,7 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 			continue;
 
 		if (GetTuningSpaceName(i) != nullptr) {
-			StdUtil::snprintf(szText, lengthof(szText), TEXT(";#SPACE(%d,%s)\r\n"), i, GetTuningSpaceName(i));
+			StringPrintf(szText, TEXT(";#SPACE(%d,%s)\r\n"), i, GetTuningSpaceName(i));
 			Buffer += szText;
 		}
 
@@ -895,8 +894,8 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 				Name += _T('"');
 			}
 
-			StdUtil::snprintf(
-				szText, lengthof(szText),
+			StringPrintf(
+				szText,
 				TEXT("%s,%d,%d,%d,"),
 				Name.empty() ? pszName : Name.c_str(),
 				pChInfo->GetSpace(),
@@ -904,22 +903,22 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 				pChInfo->GetChannelNo());
 			Buffer += szText;
 			if (pChInfo->GetServiceType() != 0) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), pChInfo->GetServiceType());
+				StringPrintf(szText, TEXT("%d"), pChInfo->GetServiceType());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
 			if (pChInfo->GetServiceID() != 0) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), pChInfo->GetServiceID());
+				StringPrintf(szText, TEXT("%d"), pChInfo->GetServiceID());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
 			if (pChInfo->GetNetworkID() != 0) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), pChInfo->GetNetworkID());
+				StringPrintf(szText, TEXT("%d"), pChInfo->GetNetworkID());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
 			if (pChInfo->GetTransportStreamID() != 0) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("%d"), pChInfo->GetTransportStreamID());
+				StringPrintf(szText, TEXT("%d"), pChInfo->GetTransportStreamID());
 				Buffer += szText;
 			}
 			Buffer += _T(',');

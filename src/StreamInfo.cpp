@@ -141,7 +141,7 @@ static void FormatEsInfo(
 	LPTSTR pszText, int MaxText)
 {
 	LPCTSTR pszStreamType = LibISDB::GetStreamTypeText(Es.StreamType);
-	StdUtil::snprintf(
+	StringPrintf(
 		pszText, MaxText,
 		TEXT("%s%d : PID 0x%04x (%d) / stream type 0x%02x (%s) / component tag 0x%02x"),
 		pszName, Index + 1,
@@ -163,10 +163,10 @@ void CStreamInfo::SetService()
 
 	const WORD TSID = pAnalyzer->GetTransportStreamID();
 	if (TSID != LibISDB::TRANSPORT_STREAM_ID_INVALID) {
-		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("TSID 0x%04x (%d)"), TSID, TSID);
+		Length = StringPrintf(szText, TEXT("TSID 0x%04x (%d)"), TSID, TSID);
 		String TSName;
 		if (pAnalyzer->GetTSName(&TSName)) {
-			StdUtil::snprintf(szText + Length, lengthof(szText) - Length, TEXT(" %s"), TSName.c_str());
+			StringPrintf(szText + Length, lengthof(szText) - Length, TEXT(" %s"), TSName.c_str());
 		}
 	} else {
 		szText[0] = '\0';
@@ -175,10 +175,10 @@ void CStreamInfo::SetService()
 
 	const WORD NID = pAnalyzer->GetNetworkID();
 	if (NID != LibISDB::NETWORK_ID_INVALID) {
-		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("NID 0x%04x (%d)"), NID, NID);
+		Length = StringPrintf(szText, TEXT("NID 0x%04x (%d)"), NID, NID);
 		String Name;
 		if (pAnalyzer->GetNetworkName(&Name)) {
-			StdUtil::snprintf(szText + Length, lengthof(szText) - Length, TEXT(" %s"), Name.c_str());
+			StringPrintf(szText + Length, lengthof(szText) - Length, TEXT(" %s"), Name.c_str());
 		}
 	} else {
 		szText[0] = '\0';
@@ -211,17 +211,17 @@ void CStreamInfo::SetService()
 			tvis.hParent = hItem;
 			tvis.item.state = 0;
 			tvis.item.cChildren = 1;
-			Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("サービス%d"), i + 1);
+			Length = StringPrintf(szText, TEXT("サービス%d"), i + 1);
 			if (!ServiceInfo.ServiceName.empty())
-				Length += StdUtil::snprintf(
+				Length += StringPrintf(
 					szText + Length, lengthof(szText) - Length,
 					TEXT(" (%s)"), ServiceInfo.ServiceName.c_str());
 			ServiceID = ServiceInfo.ServiceID;
-			Length += StdUtil::snprintf(
+			Length += StringPrintf(
 				szText + Length, lengthof(szText) - Length,
 				TEXT(" : SID 0x%04x (%d)"), ServiceID, ServiceID);
 			if (ServiceInfo.ServiceType != LibISDB::SERVICE_TYPE_INVALID) {
-				StdUtil::snprintf(
+				StringPrintf(
 					szText + Length, lengthof(szText) - Length,
 					TEXT(" / Type 0x%02x"), ServiceInfo.ServiceType);
 			}
@@ -230,7 +230,7 @@ void CStreamInfo::SetService()
 
 			tvis.item.cChildren = 0;
 			PID = ServiceInfo.PMTPID;
-			StdUtil::snprintf(szText, lengthof(szText), TEXT("PMT : PID 0x%04x (%d)"), PID, PID);
+			StringPrintf(szText, TEXT("PMT : PID 0x%04x (%d)"), PID, PID);
 			TreeView_InsertItem(hwndTree, &tvis);
 
 			int NumVideoStreams = (int)ServiceInfo.VideoESList.size();
@@ -252,8 +252,8 @@ void CStreamInfo::SetService()
 			int NumCaptionStreams = (int)ServiceInfo.CaptionESList.size();
 			for (int j = 0; j < NumCaptionStreams; j++) {
 				PID = ServiceInfo.CaptionESList[j].PID;
-				StdUtil::snprintf(
-					szText, lengthof(szText),
+				StringPrintf(
+					szText,
 					TEXT("字幕%d : PID 0x%04x (%d) / component tag 0x%02x"),
 					j + 1, PID, PID, ServiceInfo.CaptionESList[j].ComponentTag);
 				TreeView_InsertItem(hwndTree, &tvis);
@@ -262,8 +262,8 @@ void CStreamInfo::SetService()
 			int NumDataStreams = (int)ServiceInfo.DataCarrouselESList.size();
 			for (int j = 0; j < NumDataStreams; j++) {
 				PID = ServiceInfo.DataCarrouselESList[j].PID;
-				StdUtil::snprintf(
-					szText, lengthof(szText),
+				StringPrintf(
+					szText,
 					TEXT("データ%d : PID 0x%04x (%d) / component tag 0x%02x"),
 					j + 1, PID, PID, ServiceInfo.DataCarrouselESList[j].ComponentTag);
 				TreeView_InsertItem(hwndTree, &tvis);
@@ -279,15 +279,15 @@ void CStreamInfo::SetService()
 
 			PID = ServiceInfo.PCRPID;
 			if (PID != LibISDB::PID_INVALID) {
-				StdUtil::snprintf(szText, lengthof(szText), TEXT("PCR : PID 0x%04x (%d)"), PID, PID);
+				StringPrintf(szText, TEXT("PCR : PID 0x%04x (%d)"), PID, PID);
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
 			int NumEcmStreams = (int)ServiceInfo.ECMList.size();
 			for (int j = 0; j < NumEcmStreams; j++) {
 				PID = ServiceInfo.ECMList[j].PID;
-				StdUtil::snprintf(
-					szText, lengthof(szText),
+				StringPrintf(
+					szText,
 					TEXT("ECM%d : PID 0x%04x (%d) / CA system ID 0x%02x"),
 					j + 1, PID, PID, ServiceInfo.ECMList[j].CASystemID);
 				TreeView_InsertItem(hwndTree, &tvis);
@@ -316,10 +316,10 @@ void CStreamInfo::SetService()
 				tvis.item.state = 0;
 				tvis.item.cChildren = 0;
 				if (!ServiceInfo.ServiceName.empty())
-					Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("%s"), ServiceInfo.ServiceName.c_str());
+					Length = StringPrintf(szText, TEXT("%s"), ServiceInfo.ServiceName.c_str());
 				else
-					Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("サービス%d"), i + 1);
-				StdUtil::snprintf(
+					Length = StringPrintf(szText, TEXT("サービス%d"), i + 1);
+				StringPrintf(
 					szText + Length, lengthof(szText) - Length,
 					TEXT(",%d,%d,%d,%d,%d,%d,%d"),
 					pChannelInfo->GetSpace(),
@@ -349,8 +349,8 @@ void CStreamInfo::SetService()
 				const LibISDB::AnalyzerFilter::NetworkStreamInfo &TsInfo = TsList[i];
 
 				if (TsInfo.OriginalNetworkID == NID) {
-					StdUtil::snprintf(
-						szText, lengthof(szText),
+					StringPrintf(
+						szText,
 						TEXT("TS%d : TSID 0x%04x (%d)"),
 						(int)i + 1,
 						TsInfo.TransportStreamID, TsInfo.TransportStreamID);
@@ -362,8 +362,8 @@ void CStreamInfo::SetService()
 					tvis.item.cChildren = 0;
 					for (size_t j = 0; j < TsInfo.ServiceList.size(); j++) {
 						const LibISDB::AnalyzerFilter::NetworkServiceInfo &ServiceInfo = TsInfo.ServiceList[j];
-						StdUtil::snprintf(
-							szText, lengthof(szText),
+						StringPrintf(
+							szText,
 							TEXT("サービス%d : SID 0x%04x (%d) / Type 0x%02x"),
 							(int)j + 1,
 							ServiceInfo.ServiceID, ServiceInfo.ServiceID,
@@ -391,8 +391,8 @@ void CStreamInfo::SetService()
 				const LibISDB::AnalyzerFilter::SDTStreamInfo &TsInfo = SdtList[i];
 
 				if (TsInfo.OriginalNetworkID == NID) {
-					StdUtil::snprintf(
-						szText, lengthof(szText),
+					StringPrintf(
+						szText,
 						TEXT("TS%d : TSID 0x%04x (%d)"),
 						(int)i + 1,
 						TsInfo.TransportStreamID, TsInfo.TransportStreamID);
@@ -404,8 +404,8 @@ void CStreamInfo::SetService()
 					tvis.item.cChildren = 0;
 					for (size_t j = 0; j < TsInfo.ServiceList.size(); j++) {
 						const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo = TsInfo.ServiceList[j];
-						StdUtil::snprintf(
-							szText, lengthof(szText),
+						StringPrintf(
+							szText,
 							TEXT("サービス%d (%s) : SID 0x%04x (%d) / Type 0x%02x / CA %d"),
 							(int)j + 1,
 							ServiceInfo.ServiceName.c_str(),
@@ -435,8 +435,8 @@ void CStreamInfo::SetService()
 				const LibISDB::AnalyzerFilter::TerrestrialDeliverySystemInfo &Info = TerrestrialList[i];
 				LPCTSTR pszArea = LibISDB::GetAreaText_ja(Info.AreaCode);
 
-				StdUtil::snprintf(
-					szText, lengthof(szText),
+				StringPrintf(
+					szText,
 					TEXT("TSID 0x%04x (%d) / エリア %s / ガードインターバル %s / 伝送モード %s"),
 					Info.TransportStreamID,
 					Info.TransportStreamID,
@@ -455,8 +455,8 @@ void CStreamInfo::SetService()
 				tvis.hParent = TreeView_InsertItem(hwndTree, &tvis);
 				tvis.item.cChildren = 0;
 				for (size_t j = 0; j < TerrestrialList[i].Frequency.size(); j++) {
-					StdUtil::snprintf(
-						szText, lengthof(szText), TEXT("周波数%d : %d MHz"),
+					StringPrintf(
+						szText, TEXT("周波数%d : %d MHz"),
 						(int)j + 1, TerrestrialList[i].Frequency[j] / 7);
 					TreeView_InsertItem(hwndTree, &tvis);
 				}
@@ -477,8 +477,8 @@ void CStreamInfo::SetService()
 				for (int i = 0; i < (int)SatelliteList.size(); i++) {
 					const LibISDB::AnalyzerFilter::SatelliteDeliverySystemInfo &Info = SatelliteList[i];
 
-					StdUtil::snprintf(
-						szText, lengthof(szText),
+					StringPrintf(
+						szText,
 						TEXT("TS%d : TSID 0x%04x (%d) / 周波数 %ld.%05ld GHz"),
 						i + 1,
 						Info.TransportStreamID,

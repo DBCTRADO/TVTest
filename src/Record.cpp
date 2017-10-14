@@ -3,7 +3,6 @@
 #include "AppMain.h"
 #include "Record.h"
 #include "DialogUtil.h"
-#include "StdUtil.h"
 #include "LibISDB/LibISDB/Windows/Base/EDCBPluginWriter.hpp"
 #include "resource.h"
 #include <algorithm>

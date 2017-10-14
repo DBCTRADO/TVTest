@@ -2,7 +2,6 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "ChannelPanel.h"
-#include "StdUtil.h"
 #include "DrawUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
@@ -1493,7 +1492,7 @@ int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText, int MaxLen
 	const LibISDB::EventInfo &Info = m_EventList[Index];
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 	EpgUtil::FormatEventTime(Info, szTime, lengthof(szTime));
-	return StdUtil::snprintf(
+	return StringPrintf(
 		pszText, MaxLength, TEXT("%s %s%s%s"),
 		szTime,
 		Info.EventName.c_str(),
@@ -1534,8 +1533,8 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 
 	TCHAR szText[MAX_CHANNEL_NAME + 16];
 	if (m_ChannelInfo.GetChannelNo() != 0)
-		StdUtil::snprintf(
-			szText, lengthof(szText), TEXT("%d: %s"),
+		StringPrintf(
+			szText, TEXT("%d: %s"),
 			m_ChannelInfo.GetChannelNo(), m_ChannelInfo.GetName());
 	else
 		::lstrcpyn(szText, m_ChannelInfo.GetName(), lengthof(szText));
@@ -1553,7 +1552,7 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(
 		TCHAR szText[256], szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 
 		EpgUtil::FormatEventTime(Info, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
-		StdUtil::snprintf(szText, lengthof(szText), TEXT("%s %s"), szTime, Info.EventName.c_str());
+		StringPrintf(szText, TEXT("%s %s"), szTime, Info.EventName.c_str());
 		TextDraw.Draw(szText, Rect, LineHeight);
 	}
 }

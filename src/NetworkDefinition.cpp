@@ -73,7 +73,7 @@ bool CNetworkDefinition::LoadSettings(CSettings &Settings)
 			TCHAR szKey[32];
 			String Value;
 
-			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("Assign%d"), i);
+			StringPrintf(szKey, TEXT("Assign%d"), i);
 			if (!Settings.Read(szKey, &Value))
 				break;
 

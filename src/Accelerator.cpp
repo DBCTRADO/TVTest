@@ -403,7 +403,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			TCHAR szKey[32];
 			int Value;
 
-			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("ChInputKeyMode%d"), i);
+			StringPrintf(szKey, TEXT("ChInputKeyMode%d"), i);
 			if (Settings.Read(szKey, &Value)) {
 				m_ChannelInputOptions.KeyInputMode[i] =
 					static_cast<CChannelInputOptions::KeyInputModeType>(Value);
@@ -510,7 +510,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("Settings"))) {
 		for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
-			StdUtil::snprintf(szKey, lengthof(szKey), TEXT("ChInputKeyMode%d"), i);
+			StringPrintf(szKey, TEXT("ChInputKeyMode%d"), i);
 			Settings.Write(szKey, (int)m_ChannelInputOptions.KeyInputMode[i]);
 		}
 		Settings.Write(TEXT("ChInputKeyTimeout"), m_ChannelInputOptions.KeyTimeout);
@@ -864,8 +864,8 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szCommand[CCommandList::MAX_COMMAND_NAME], szText[CCommandList::MAX_COMMAND_NAME + 128];
 
 						m_pCommandList->GetCommandName(i, szCommand, lengthof(szCommand));
-						StdUtil::snprintf(
-							szText, lengthof(szText),
+						StringPrintf(
+							szText,
 							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONQUESTION) != IDYES)
@@ -909,8 +909,8 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szCommand[CCommandList::MAX_COMMAND_NAME], szText[CCommandList::MAX_COMMAND_NAME + 128];
 
 						m_pCommandList->GetCommandName(i, szCommand, lengthof(szCommand));
-						StdUtil::snprintf(
-							szText, lengthof(szText),
+						StringPrintf(
+							szText,
 							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONQUESTION) != IDYES)

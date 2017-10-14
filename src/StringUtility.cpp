@@ -371,7 +371,7 @@ bool ToHalfWidthNoKatakana(LPCWSTR pszSrc, LPWSTR pszDst, String::size_type DstL
 		pszDst[0] = L'\0';
 		return false;
 	}
-	StdUtil::strncpy(pszDst, DstLength, Buf.c_str());
+	StringCopy(pszDst, Buf.c_str(), DstLength);
 	return true;
 }
 
@@ -456,7 +456,7 @@ bool Encode(LPCWSTR pszSrc, String *pDst, LPCWSTR pszEncodeChars)
 			fEncode = ::StrChr(pszEncodeChars, *p) != nullptr;
 		if (fEncode) {
 			WCHAR szCode[8];
-			StdUtil::snprintf(szCode, _countof(szCode), L"%%%04X", *p);
+			StringPrintf(szCode, L"%%%04X", *p);
 			*pDst += szCode;
 		} else {
 			pDst->push_back(*p);

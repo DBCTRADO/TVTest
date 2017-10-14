@@ -54,8 +54,8 @@ void SetFontInfoItem(HWND hDlg, int ID, const Style::Font &Font)
 		Size = CalcFontPointHeight(hdc, &Font.LogFont);
 		::ReleaseDC(hDlg, hdc);
 	}
-	StdUtil::snprintf(
-		szText, lengthof(szText), TEXT("%s, %d pt"),
+	StringPrintf(
+		szText, TEXT("%s, %d pt"),
 		Font.LogFont.lfFaceName, Size);
 	SetDlgItemText(hDlg, ID, szText);
 }

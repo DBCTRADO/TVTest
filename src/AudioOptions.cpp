@@ -21,7 +21,7 @@ static const int MAX_FORMAT_DOUBLE_LENGTH = 16;
 
 static void FormatDouble(double Value, LPTSTR pszString, int MaxString)
 {
-	int Length = StdUtil::snprintf(pszString, MaxString, TEXT("%.4f"), Value);
+	int Length = StringPrintf(pszString, MaxString, TEXT("%.4f"), Value);
 	int i;
 	for (i = Length - 1; i > 1; i--) {
 		if (pszString[i] != TEXT('0')) {
@@ -138,7 +138,7 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	for (int i = 0;; i++) {
 		TCHAR szKey[32];
 		String Value;
-		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("LangPriority%d"), i);
+		StringPrintf(szKey, TEXT("LangPriority%d"), i);
 		if (!Settings.Read(szKey, &Value) || Value.length() < 3)
 			break;
 		AudioLanguageInfo Info;
@@ -190,13 +190,13 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EnableLangPriority"), m_fEnableLanguagePriority);
 	for (int i = 0;; i++) {
 		TCHAR szKey[32];
-		StdUtil::snprintf(szKey, lengthof(szKey), TEXT("LangPriority%d"), i);
+		StringPrintf(szKey, TEXT("LangPriority%d"), i);
 
 		if (i < (int)m_LanguagePriority.size()) {
 			const DWORD Lang = m_LanguagePriority[i].Language;
 			TCHAR szValue[8];
-			StdUtil::snprintf(
-				szValue, lengthof(szValue), TEXT("%c%c%c%s"),
+			StringPrintf(
+				szValue, TEXT("%c%c%c%s"),
 				(Lang >> 16), (Lang >> 8) & 0xFF, Lang & 0xFF,
 				m_LanguagePriority[i].fSub ? TEXT("2") : TEXT(""));
 			Settings.Write(szKey, szValue);

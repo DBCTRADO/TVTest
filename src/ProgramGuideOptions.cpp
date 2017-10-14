@@ -565,8 +565,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					if (CommandInfo.Type == PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
 						TCHAR szCommand[512];
 
-						StdUtil::snprintf(
-							szCommand, lengthof(szCommand), TEXT("%s:%s"),
+						StringPrintf(
+							szCommand, TEXT("%s:%s"),
 							::PathFindFileName(pPlugin->GetFileName()),
 							CommandInfo.pszText);
 						LRESULT Index = DlgComboBox_AddString(

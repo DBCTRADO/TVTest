@@ -3,7 +3,6 @@
 #include "AppMain.h"
 #include "Logger.h"
 #include "DialogUtil.h"
-#include "StdUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -173,7 +172,7 @@ bool CLogger::AddLogV(CLogItem::LogType Type, LPCTSTR pszText, va_list Args)
 		return false;
 
 	TCHAR szText[MAX_LOG_TEXT_LENGTH];
-	StdUtil::vsnprintf(szText, lengthof(szText), pszText, Args);
+	StringPrintfV(szText, pszText, Args);
 	AddLogRaw(Type, szText);
 
 	return true;
@@ -474,8 +473,8 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				} else {
 					TCHAR szMessage[MAX_PATH + 64];
 
-					StdUtil::snprintf(
-						szMessage, lengthof(szMessage),
+					StringPrintf(
+						szMessage,
 						TEXT("ログを \"%s\" に保存しました。"), szFileName);
 					::MessageBox(hDlg, szMessage, TEXT("ログ保存"), MB_OK | MB_ICONINFORMATION);
 				}

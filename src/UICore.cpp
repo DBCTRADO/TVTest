@@ -563,7 +563,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 			break;
 
 		default:
-			StdUtil::snprintf(szFormat, lengthof(szFormat), TEXT("[%dch]"), NumChannels);
+			StringPrintf(szFormat, TEXT("[%dch]"), NumChannels);
 			break;
 		}
 
@@ -572,11 +572,11 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 			LibISDB::String::size_type Pos = AudioInfo.Text.find(TEXT('\r'));
 			if (Pos != LibISDB::String::npos) {
 				TCHAR szBuf[64];
-				StdUtil::strncpy(szBuf, Pos, AudioInfo.Text.c_str());
+				StringCopy(szBuf, AudioInfo.Text.c_str(), Pos);
 				Pos++;
 				if (Pos < AudioInfo.Text.length() && AudioInfo.Text[Pos] == TEXT('\n'))
 					Pos++;
-				StdUtil::snprintf(szBuf + Pos, lengthof(szBuf) - Pos, TEXT("/%s"), AudioInfo.Text.c_str() + Pos);
+				StringPrintf(szBuf + Pos, lengthof(szBuf) - Pos, TEXT("/%s"), AudioInfo.Text.c_str() + Pos);
 				StringUtility::ToHalfWidthNoKatakana(
 					szBuf, szAudio, lengthof(szAudio));
 			} else {
@@ -656,11 +656,11 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 			if (!AudioInfo.Text.empty()) {
 				LibISDB::String::size_type Pos = AudioInfo.Text.find(TEXT('\r'));
 				if (Pos != LibISDB::String::npos) {
-					StdUtil::strncpy(szAudio1, min(lengthof(szAudio1), Pos), AudioInfo.Text.c_str());
+					StringCopy(szAudio1, AudioInfo.Text.c_str(), min(lengthof(szAudio1), Pos));
 					Pos++;
 					if (Pos < AudioInfo.Text.length() && AudioInfo.Text[Pos] == TEXT('\n'))
 						Pos++;
-					StdUtil::strncpy(szAudio2, lengthof(szAudio2), AudioInfo.Text.c_str() + Pos);
+					StringCopy(szAudio2, AudioInfo.Text.c_str() + Pos, lengthof(szAudio2));
 				}
 			}
 			if (AudioInfo.ESMultiLingualFlag
@@ -684,7 +684,7 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 				::lstrcpyn(pszText, szAudio2, MaxLength);
 				break;
 			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
-				StdUtil::snprintf(pszText, MaxLength, TEXT("%s+%s"), szAudio1, szAudio2);
+				StringPrintf(pszText, MaxLength, TEXT("%s+%s"), szAudio1, szAudio2);
 				break;
 			default:
 				return false;
@@ -693,7 +693,7 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 			TCHAR szText[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 			if (AudioInfo.Text.empty())
 				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode, szText, lengthof(szText));
-			StdUtil::snprintf(
+			StringPrintf(
 				pszText, MaxLength, TEXT("音声%d: %s"),
 				GetAudioStream() + 1,
 				AudioInfo.Text.empty() ? szText : AudioInfo.Text.c_str());
@@ -702,12 +702,12 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 			&& GetStereoMode() != LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo) {
 		int Pos = 0;
 		if (GetNumAudioStreams() > 1)
-			Pos = StdUtil::snprintf(pszText, MaxLength, TEXT("音声%d: "), GetAudioStream() + 1);
-		StdUtil::snprintf(
+			Pos = StringPrintf(pszText, MaxLength, TEXT("音声%d: "), GetAudioStream() + 1);
+		StringPrintf(
 			pszText + Pos, MaxLength - Pos, TEXT("ステレオ%s"),
 			GetStereoMode() == LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left ? TEXT("左") : TEXT("右"));
 	} else {
-		StdUtil::snprintf(pszText, MaxLength, TEXT("音声%d"), GetAudioStream() + 1);
+		StringPrintf(pszText, MaxLength, TEXT("音声%d"), GetAudioStream() + 1);
 	}
 
 	return true;
@@ -1033,8 +1033,8 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 			TCHAR szText[MAX_CHANNEL_NAME + 4];
 
 			if (pChInfo->IsEnabled()) {
-				StdUtil::snprintf(
-					szText, lengthof(szText), TEXT("%d: %s"),
+				StringPrintf(
+					szText, TEXT("%d: %s"),
 					fControlKeyID ? pChInfo->GetChannelNo() : i + 1, pChInfo->GetName());
 				::AppendMenu(
 					hmenu,
@@ -1080,12 +1080,12 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 			const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(i);
 
 			hmenuSpace = ::CreatePopupMenu();
-			Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("&%d: "), i);
+			Length = StringPrintf(szText, TEXT("&%d: "), i);
 			pszName = m_App.ChannelManager.GetTuningSpaceName(i);
 			if (pszName != nullptr) {
 				CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
 			} else {
-				StdUtil::snprintf(
+				StringPrintf(
 					szText + Length, lengthof(szText) - Length,
 					TEXT("チューニング空間%d"), i);
 			}
@@ -1721,12 +1721,12 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 	for (int i = 0; i < ChannelManager.NumSpaces(); i++) {
 		pChannelList = ChannelManager.GetChannelList(i);
 		hmenuSpace = ::CreatePopupMenu();
-		Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("&%d: "), i);
+		Length = StringPrintf(szText, TEXT("&%d: "), i);
 		pszName = ChannelManager.GetTuningSpaceName(i);
 		if (!IsStringEmpty(pszName))
 			CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
 		else
-			StdUtil::snprintf(szText + Length, lengthof(szText) - Length, TEXT("チューニング空間%d"), i);
+			StringPrintf(szText + Length, lengthof(szText) - Length, TEXT("チューニング空間%d"), i);
 		m_Menu.Append(
 			hmenuSpace, szText,
 			pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
@@ -1774,11 +1774,11 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 				Command += pChannelList->NumChannels();
 				if (hmenuSpace != hmenuDriver) {
 					pszName = pTuningSpaceList->GetTuningSpaceName(j);
-					Length = StdUtil::snprintf(szText, lengthof(szText), TEXT("&%d: "), j);
+					Length = StringPrintf(szText, TEXT("&%d: "), j);
 					if (!IsStringEmpty(pszName)) {
 						CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
 					} else {
-						StdUtil::snprintf(
+						StringPrintf(
 							szText + Length, lengthof(szText) - Length,
 							TEXT("チューニング空間%d"), j);
 					}
@@ -1790,8 +1790,8 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 			if (!IsStringEmpty(pDriverInfo->GetTunerName())) {
 				TCHAR szTemp[lengthof(szText)];
 
-				StdUtil::snprintf(
-					szTemp, lengthof(szTemp), TEXT("%s [%s]"),
+				StringPrintf(
+					szTemp, TEXT("%s [%s]"),
 					pDriverInfo->GetTunerName(),
 					szFileName);
 				CopyToMenuText(szTemp, szText, lengthof(szText));

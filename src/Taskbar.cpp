@@ -355,10 +355,10 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 				WCHAR szTitle[CCommandList::MAX_COMMAND_NAME];
 
 				if (Command == CM_PROGRAMGUIDE) {
-					StdUtil::strncpy(szArgs, lengthof(szArgs), L"/jumplist /s /epgonly");
+					StringCopy(szArgs, L"/jumplist /s /epgonly");
 				} else {
-					StdUtil::snprintf(
-						szArgs, lengthof(szArgs), L"/jumplist /s /command %s",
+					StringPrintf(
+						szArgs, L"/jumplist /s /command %s",
 						App.CommandList.GetCommandTextByID(Command));
 				}
 				App.CommandList.GetCommandNameByID(Command, szTitle, lengthof(szTitle));
@@ -597,8 +597,8 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			TCHAR szIconPath[MAX_PATH];
 			TCHAR szFileName[16];
 
-			StdUtil::snprintf(
-				szFileName, lengthof(szFileName),
+			StringPrintf(
+				szFileName,
 				TEXT("%04x%04x.ico"), NetworkID, ServiceID);
 			::PathCombine(szIconPath, szIconDir, szFileName);
 

@@ -3,7 +3,6 @@
 #include "AppMain.h"
 #include "ZoomOptions.h"
 #include "DialogUtil.h"
-#include "HelperClass/StdUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -175,8 +174,8 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 		TCHAR szName[32];
 
 		::wsprintf(szName, TEXT("ZoomList%d"), i);
-		StdUtil::snprintf(
-			szText, lengthof(szText), TEXT("%s,%d"),
+		StringPrintf(
+			szText, TEXT("%s,%d"),
 			pCommandList->GetCommandTextByID(m_DefaultZoomList[Index].Command),
 			Info.fVisible ? 1 : 0);
 		Settings.Write(szName, szText);
@@ -201,11 +200,11 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 			UINT Flags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
 
 			if (Info.Type == ZoomType::Rate) {
-				int Length = StdUtil::snprintf(
-					szText, lengthof(szText), TEXT("%d%%"),
+				int Length = StringPrintf(
+					szText, TEXT("%d%%"),
 					Info.Rate.GetPercentage());
 				if (Info.Rate.Rate * 100 % Info.Rate.Factor != 0) {
-					StdUtil::snprintf(
+					StringPrintf(
 						szText + Length, lengthof(szText) - Length, TEXT(" (%d/%d)"),
 						Info.Rate.Rate, Info.Rate.Factor);
 				}
@@ -216,8 +215,8 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 					fRateCheck = true;
 				}
 			} else {
-				StdUtil::snprintf(
-					szText, lengthof(szText), TEXT("%d x %d"),
+				StringPrintf(
+					szText, TEXT("%d x %d"),
 					Info.Size.Width, Info.Size.Height);
 				if (!fSizeCheck
 						&& pCurZoom != nullptr
@@ -261,9 +260,9 @@ void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR p
 	int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, MaxLength);
 	if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
 		if (Info.Type == ZoomType::Rate)
-			StdUtil::snprintf(pszText + Length, MaxLength - Length, TEXT(" : %d%%"), Info.Rate.GetPercentage());
+			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d%%"), Info.Rate.GetPercentage());
 		else if (Info.Type == ZoomType::Size)
-			StdUtil::snprintf(pszText + Length, MaxLength - Length, TEXT(" : %d x %d"), Info.Size.Width, Info.Size.Height);
+			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d x %d"), Info.Size.Width, Info.Size.Height);
 	}
 }
 

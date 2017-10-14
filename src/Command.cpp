@@ -2,7 +2,6 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "Command.h"
-#include "HelperClass/StdUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 

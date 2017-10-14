@@ -567,8 +567,8 @@ bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 	CSettings Settings;
 	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OpenFlag::Write)) {
 		TCHAR szMessage[64 + MAX_PATH];
-		StdUtil::snprintf(
-			szMessage, lengthof(szMessage),
+		StringPrintf(
+			szMessage,
 			TEXT("設定ファイル \"%s\" を開けません。"),
 			m_IniFileName.c_str());
 		AddLog(CLogItem::LogType::Error, TEXT("%s"), szMessage);
@@ -1309,15 +1309,15 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 	TCHAR szMessage[MAX_PATH + 80];
 
 	if (!GetAbsolutePath(pszDirectory, szPath)) {
-		StdUtil::snprintf(
-			szMessage, lengthof(szMessage),
+		StringPrintf(
+			szMessage,
 			TEXT("フォルダ \"%s\" のパスが長過ぎます。"), szPath);
 		::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return CreateDirectoryResult::Error;
 	}
 
 	if (!::PathIsDirectory(szPath)) {
-		StdUtil::snprintf(szMessage, lengthof(szMessage), pszMessage, szPath);
+		StringPrintf(szMessage, pszMessage, szPath);
 		if (::MessageBox(
 					hwnd, szMessage, TEXT("フォルダ作成の確認"),
 					MB_YESNO | MB_ICONQUESTION) != IDYES)
@@ -1325,8 +1325,8 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 
 		int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
-			StdUtil::snprintf(
-				szMessage, lengthof(szMessage),
+			StringPrintf(
+				szMessage,
 				TEXT("フォルダ \"%s\" を作成できません。(エラーコード %#x)"), szPath, Result);
 			AddLog(CLogItem::LogType::Error, szMessage);
 			::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
@@ -1411,7 +1411,7 @@ void CAppMain::RegisterCommands()
 		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(szName, lengthof(szName), TEXT("BonDriver切替 : %s"), pszFileName);
+		StringPrintf(szName, TEXT("BonDriver切替 : %s"), pszFileName);
 		CommandList.RegisterCommand(CM_DRIVER_FIRST + i, pszFileName, szName);
 	}
 
@@ -1421,12 +1421,12 @@ void CAppMain::RegisterCommands()
 		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
 		//TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
 
-		StdUtil::snprintf(
-			szName, lengthof(szName),
+		StringPrintf(
+			szName,
 			TEXT("プラグイン有効/無効 : %s"), pPlugin->GetPluginName());
 		/*
-		StdUtil::snprintf(
-			szShortName, lengthof(szShortName),
+		StringPrintf(
+			szShortName,
 			TEXT("%s 有効/無効"), pPlugin->GetPluginName());
 		*/
 		CommandList.RegisterCommand(
@@ -1456,8 +1456,8 @@ void CAppMain::RegisterCommands()
 			Text += pInfo->GetText();
 
 			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-			StdUtil::snprintf(
-				szName, lengthof(szName), TEXT("%s : %s"),
+			StringPrintf(
+				szName, TEXT("%s : %s"),
 				pPlugin->GetPluginName(), pInfo->GetName());
 
 			CCommandList::CommandState State = CCommandList::CommandState::None;

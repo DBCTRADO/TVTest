@@ -480,8 +480,8 @@ void CCaptureWindow::SetTitle()
 			BITMAPINFOHEADER bmih;
 
 			if (m_Image->GetBitmapInfoHeader(&bmih)) {
-				StdUtil::snprintf(
-					szTitle, lengthof(szTitle),
+				StringPrintf(
+					szTitle,
 					TEXT("%s - %d x %d (%d bpp)"),
 					CAPTURE_TITLE_TEXT, bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount);
 			}

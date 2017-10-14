@@ -83,8 +83,8 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			HDC hdc = ::GetDC(hDlg);
 			HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 			TCHAR szText[MAX_INFO_TEXT];
-			int Length = StdUtil::snprintf(
-				szText, lengthof(szText),
+			int Length = StringPrintf(
+				szText,
 				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING TEXT("\r\n")
 #ifdef _MSC_FULL_VER
 				TEXT("Compiled with MSVC %d.%d.%d.%d\r\n"),

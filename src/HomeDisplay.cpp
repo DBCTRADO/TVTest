@@ -181,7 +181,7 @@ void CChannelListCategoryBase::Draw(
 					*pEventInfo, szText, lengthof(szText),
 					EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 				if (!pEventInfo->EventName.empty()) {
-					Length += StdUtil::snprintf(
+					Length += StringPrintf(
 						szText + Length, lengthof(szText) - Length,
 						TEXT("%s%s"),
 						Length > 0 ? TEXT(" ") : TEXT(""),

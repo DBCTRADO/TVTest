@@ -30,9 +30,6 @@
     <ClCompile Include="HelperClass\NFile.cpp">
       <Filter>HelperClass\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HelperClass\StdUtil.cpp">
-      <Filter>HelperClass\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Accelerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -453,9 +450,6 @@
       <Filter>HelperClass\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HelperClass\NFile.h">
-      <Filter>HelperClass\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HelperClass\StdUtil.h">
       <Filter>HelperClass\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Accelerator.h">
