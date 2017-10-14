@@ -7346,6 +7346,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	case WM_CREATE:
 		InitializeUI();
 		OnWindowCreate(hwnd, m_pStyleScaling, true);
+		SetAeroGlass();
 		m_fCreated = true;
 		return 0;
 
