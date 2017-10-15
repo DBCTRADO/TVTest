@@ -27,9 +27,22 @@ namespace TVTest
 		bool SetDirectWriteRenderingParams(const CDirectWriteRenderer::RenderingParams &Params);
 
 	private:
+		class CDirectWriteEngine
+		{
+		public:
+			CDirectWriteEngine(CDirectWriteSystem &System);
+
+			bool Initialize(HWND hwnd);
+			void Finalize();
+
+			CDirectWriteRenderer Renderer;
+			CTextDrawEngine_DirectWrite Engine;
+		};
+
+		CDirectWriteEngine *GetDirectWriteEngine();
+
 		TextDrawEngine m_Engine;
-		CDirectWriteRenderer m_DirectWriteRenderer;
-		CTextDrawEngine_DirectWrite m_DirectWriteEngine;
+		std::unique_ptr<CDirectWriteEngine> m_DirectWriteEngine;
 	};
 
 }	// namespace TVTest

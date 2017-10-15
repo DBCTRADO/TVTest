@@ -737,8 +737,6 @@ CCaptionDRCSMap::CCaptionDRCSMap()
 	, m_fSaveBMP(false)
 	, m_fSaveRaw(false)
 {
-	GetAppClass().GetAppDirectory(&m_SaveDirectory);
-	m_SaveDirectory.Append(TEXT("DRCS"));
 }
 
 
@@ -880,6 +878,14 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 		if (!m_CodeMap.insert(std::pair<WORD, LPCTSTR>(Code, itr->second)).second)
 			m_CodeMap[Code] = itr->second;
 	}
+
+	if (m_fSaveBMP || m_fSaveRaw) {
+		if (m_SaveDirectory.empty()) {
+			GetAppClass().GetAppDirectory(&m_SaveDirectory);
+			m_SaveDirectory.Append(TEXT("DRCS"));
+		}
+	}
+
 	if (m_fSaveBMP) {
 		TCHAR szFileName[40];
 		MakeSaveFileName(MD5.Value, szFileName, TEXT(".bmp"));

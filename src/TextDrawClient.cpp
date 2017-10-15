@@ -11,8 +11,6 @@ namespace TVTest
 
 CTextDrawClient::CTextDrawClient()
 	: m_Engine(TextDrawEngine::Undefined)
-	, m_DirectWriteRenderer(GetAppClass().DirectWriteSystem)
-	, m_DirectWriteEngine(m_DirectWriteRenderer)
 {
 }
 
@@ -35,12 +33,10 @@ bool CTextDrawClient::Initialize(TextDrawEngine Engine, HWND hwnd)
 		break;
 
 	case TextDrawEngine::DirectWrite:
-		if (!m_DirectWriteRenderer.GetSystem().Initialize()) {
+		if (!GetDirectWriteEngine()->Initialize(hwnd)) {
 			GetAppClass().AddLog(CLogItem::LogType::Error, TEXT("DirectWrite の初期化ができません。"));
 			return false;
 		}
-		if (!m_DirectWriteRenderer.Initialize(hwnd))
-			return false;
 		break;
 
 	default:
@@ -57,8 +53,8 @@ void CTextDrawClient::Finalize()
 {
 	switch (m_Engine) {
 	case TextDrawEngine::DirectWrite:
-		m_DirectWriteEngine.Finalize();
-		m_DirectWriteRenderer.Finalize();
+		if (m_DirectWriteEngine)
+			m_DirectWriteEngine->Finalize();
 		break;
 	}
 
@@ -77,7 +73,7 @@ bool CTextDrawClient::InitializeTextDraw(CTextDraw *pTextDraw)
 		break;
 
 	case TextDrawEngine::DirectWrite:
-		pTextDraw->SetEngine(&m_DirectWriteEngine);
+		pTextDraw->SetEngine(&GetDirectWriteEngine()->Engine);
 		break;
 
 	default:
@@ -90,13 +86,47 @@ bool CTextDrawClient::InitializeTextDraw(CTextDraw *pTextDraw)
 
 bool CTextDrawClient::SetMaxFontCache(std::size_t MaxCache)
 {
-	return m_DirectWriteEngine.SetMaxFontCache(MaxCache);
+	return GetDirectWriteEngine()->Engine.SetMaxFontCache(MaxCache);
 }
 
 
 bool CTextDrawClient::SetDirectWriteRenderingParams(const CDirectWriteRenderer::RenderingParams &Params)
 {
-	return m_DirectWriteRenderer.SetRenderingParams(Params);
+	return GetDirectWriteEngine()->Renderer.SetRenderingParams(Params);
+}
+
+
+CTextDrawClient::CDirectWriteEngine *CTextDrawClient::GetDirectWriteEngine()
+{
+	if (!m_DirectWriteEngine)
+		m_DirectWriteEngine = std::make_unique<CDirectWriteEngine>(GetAppClass().DirectWriteSystem);
+	return m_DirectWriteEngine.get();
+}
+
+
+
+
+CTextDrawClient::CDirectWriteEngine::CDirectWriteEngine(CDirectWriteSystem &System)
+	: Renderer(System)
+	, Engine(Renderer)
+{
+}
+
+
+bool CTextDrawClient::CDirectWriteEngine::Initialize(HWND hwnd)
+{
+	if (!Renderer.GetSystem().Initialize())
+		return false;
+	if (!Renderer.Initialize(hwnd))
+		return false;
+	return true;
+}
+
+
+void CTextDrawClient::CDirectWriteEngine::Finalize()
+{
+	Engine.Finalize();
+	Renderer.Finalize();
 }
 
 

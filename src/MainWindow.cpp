@@ -97,7 +97,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fPanelVerticalAlign(false)
 	, m_fCustomFrame(false)
 	, m_CustomFrameWidth(0)
-	, m_ThinFrameWidth(GetHairlineWidth())
 
 	, m_fEnablePlayback(true)
 
@@ -144,6 +143,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	int DPI = GetMonitorDPI(::MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY));
 	if (DPI == 0)
 		DPI = GetSystemDPI();
+
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
 	static const int DefaultWidth = 960, DefaultHeight = 540;
@@ -156,6 +156,8 @@ CMainWindow::CMainWindow(CAppMain &App)
 		(::GetSystemMetrics(SM_CXSCREEN) - m_WindowPosition.Width) / 2;
 	m_WindowPosition.Top =
 		(::GetSystemMetrics(SM_CYSCREEN) - m_WindowPosition.Height) / 2;
+
+	m_ThinFrameWidth = std::max(::MulDiv(1, DPI, 96), 1);
 
 	if (Util::OS::IsWindows10()) {
 		m_fCustomFrame = true;

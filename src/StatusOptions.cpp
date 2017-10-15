@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "DialogUtil.h"
 #include "StyleUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -35,7 +36,7 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	: COptions(TEXT("Status"))
 	, m_pStatusView(pStatusView)
 	, m_ItemID(STATUS_ITEM_LAST + 1)
-	, m_DPI(GetStyleManager()->GetSystemDPI())
+	, m_DPI(GetSystemDPI())
 	, m_fShowTOTTime(false)
 	, m_fInterpolateTOTTime(true)
 	, m_fEnablePopupProgramInfo(true)

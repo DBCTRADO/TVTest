@@ -58,7 +58,8 @@ namespace TVTest
 			int HelpID;
 		};
 
-		static const PageInfo m_PageList[NUM_PAGES];
+		static bool m_fInitialized;
+		static PageInfo m_PageList[NUM_PAGES];
 
 		int m_CurrentPage;
 		int m_StartPage;
@@ -72,6 +73,7 @@ namespace TVTest
 		int m_IconTextMargin;
 		int m_ListItemHeight;
 
+		void Initialize();
 		void CreatePage(int Page);
 		void SetPage(int Page);
 		void SetPagePos(int Page);

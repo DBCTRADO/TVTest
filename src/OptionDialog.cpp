@@ -12,16 +12,39 @@ namespace TVTest
 {
 
 
+bool COptionDialog::m_fInitialized = false;
+
+COptionDialog::PageInfo COptionDialog::m_PageList[NUM_PAGES] = {
+	{TEXT("一般"),               nullptr, HELP_ID_OPTIONS_GENERAL},
+	{TEXT("表示"),               nullptr, HELP_ID_OPTIONS_VIEW},
+	{TEXT("OSD"),                nullptr, HELP_ID_OPTIONS_OSD},
+	{TEXT("ステータスバー"),     nullptr, HELP_ID_OPTIONS_STATUSBAR},
+	{TEXT("サイドバー"),         nullptr, HELP_ID_OPTIONS_SIDEBAR},
+	{TEXT("メニュー"),           nullptr, HELP_ID_OPTIONS_MENU},
+	{TEXT("パネル"),             nullptr, HELP_ID_OPTIONS_PANEL},
+	{TEXT("テーマ/配色"),        nullptr, HELP_ID_OPTIONS_COLORSCHEME},
+	{TEXT("操作"),               nullptr, HELP_ID_OPTIONS_OPERATION},
+	{TEXT("キー割り当て"),       nullptr, HELP_ID_OPTIONS_ACCELERATOR},
+	{TEXT("リモコン"),           nullptr, HELP_ID_OPTIONS_CONTROLLER},
+	{TEXT("BonDriver設定"),      nullptr, HELP_ID_OPTIONS_DRIVER},
+	{TEXT("映像"),               nullptr, HELP_ID_OPTIONS_VIDEO},
+	{TEXT("音声"),               nullptr, HELP_ID_OPTIONS_AUDIO},
+	{TEXT("再生"),               nullptr, HELP_ID_OPTIONS_PLAYBACK},
+	{TEXT("録画"),               nullptr, HELP_ID_OPTIONS_RECORD},
+	{TEXT("キャプチャ"),         nullptr, HELP_ID_OPTIONS_CAPTURE},
+	{TEXT("チャンネルスキャン"), nullptr, HELP_ID_OPTIONS_CHANNELSCAN},
+	{TEXT("EPG/番組情報"),       nullptr, HELP_ID_OPTIONS_EPG},
+	{TEXT("EPG番組表"),          nullptr, HELP_ID_OPTIONS_PROGRAMGUIDE},
+	{TEXT("プラグイン"),         nullptr, HELP_ID_OPTIONS_PLUGIN},
+	{TEXT("TSプロセッサー"),     nullptr, HELP_ID_OPTIONS_TSPROCESSOR},
+	{TEXT("ログ"),               nullptr, HELP_ID_OPTIONS_LOG},
+};
+
+
 COptionDialog::COptionDialog()
 	: m_CurrentPage(0)
 	, m_himlIcons(nullptr)
 {
-	for (int i = 0; i < NUM_PAGES; i++) {
-		COptions *pOptions = m_PageList[i].pOptions;
-
-		pOptions->SetStyleScaling(m_pStyleScaling);
-		RegisterUIChild(pOptions);
-	}
 }
 
 
@@ -35,6 +58,12 @@ bool COptionDialog::Show(HWND hwndOwner, int StartPage)
 {
 	if (m_hDlg != nullptr)
 		return false;
+
+	if (!m_fInitialized) {
+		Initialize();
+		m_fInitialized = true;
+	}
+
 	COptions::SetFrame(this);
 	for (int i = 0; i < NUM_PAGES; i++)
 		m_PageList[i].pOptions->SetStyleScaling(m_pStyleScaling);
@@ -66,6 +95,43 @@ bool COptionDialog::SetCurrentPage(int Page)
 		}
 	}
 	return true;
+}
+
+
+void COptionDialog::Initialize()
+{
+	CAppMain &App = GetAppClass();
+
+	m_PageList[PAGE_GENERAL     ].pOptions = &App.GeneralOptions;
+	m_PageList[PAGE_VIEW        ].pOptions = &App.ViewOptions;
+	m_PageList[PAGE_OSD         ].pOptions = &App.OSDOptions;
+	m_PageList[PAGE_STATUS      ].pOptions = &App.StatusOptions;
+	m_PageList[PAGE_SIDEBAR     ].pOptions = &App.SideBarOptions;
+	m_PageList[PAGE_MENU        ].pOptions = &App.MenuOptions;
+	m_PageList[PAGE_PANEL       ].pOptions = &App.PanelOptions;
+	m_PageList[PAGE_COLORSCHEME ].pOptions = &App.ColorSchemeOptions;
+	m_PageList[PAGE_OPERATION   ].pOptions = &App.OperationOptions;
+	m_PageList[PAGE_ACCELERATOR ].pOptions = &App.Accelerator;
+	m_PageList[PAGE_CONTROLLER  ].pOptions = &App.ControllerManager;
+	m_PageList[PAGE_DRIVER      ].pOptions = &App.DriverOptions;
+	m_PageList[PAGE_VIDEO       ].pOptions = &App.VideoOptions;
+	m_PageList[PAGE_AUDIO       ].pOptions = &App.AudioOptions;
+	m_PageList[PAGE_PLAYBACK    ].pOptions = &App.PlaybackOptions;
+	m_PageList[PAGE_RECORD      ].pOptions = &App.RecordOptions;
+	m_PageList[PAGE_CAPTURE     ].pOptions = &App.CaptureOptions;
+	m_PageList[PAGE_CHANNELSCAN ].pOptions = &App.ChannelScan;
+	m_PageList[PAGE_EPG         ].pOptions = &App.EpgOptions;
+	m_PageList[PAGE_PROGRAMGUIDE].pOptions = &App.ProgramGuideOptions;
+	m_PageList[PAGE_PLUGIN      ].pOptions = &App.PluginOptions;
+	m_PageList[PAGE_TSPROCESSOR ].pOptions = &App.TSProcessorOptions;
+	m_PageList[PAGE_LOG         ].pOptions = &App.Logger;
+
+	for (int i = 0; i < NUM_PAGES; i++) {
+		COptions *pOptions = m_PageList[i].pOptions;
+
+		pOptions->SetStyleScaling(m_pStyleScaling);
+		RegisterUIChild(pOptions);
+	}
 }
 
 

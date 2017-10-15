@@ -6,45 +6,14 @@
 #include "Common/DebugDef.h"
 
 
-static TVTest::CAppMain g_App;
-
-
 namespace TVTest
 {
 
 
-const COptionDialog::PageInfo COptionDialog::m_PageList[] = {
-	{TEXT("一般"),               &g_App.GeneralOptions,      HELP_ID_OPTIONS_GENERAL},
-	{TEXT("表示"),               &g_App.ViewOptions,         HELP_ID_OPTIONS_VIEW},
-	{TEXT("OSD"),                &g_App.OSDOptions,          HELP_ID_OPTIONS_OSD},
-	{TEXT("ステータスバー"),     &g_App.StatusOptions,       HELP_ID_OPTIONS_STATUSBAR},
-	{TEXT("サイドバー"),         &g_App.SideBarOptions,      HELP_ID_OPTIONS_SIDEBAR},
-	{TEXT("メニュー"),           &g_App.MenuOptions,         HELP_ID_OPTIONS_MENU},
-	{TEXT("パネル"),             &g_App.PanelOptions,        HELP_ID_OPTIONS_PANEL},
-	{TEXT("テーマ/配色"),        &g_App.ColorSchemeOptions,  HELP_ID_OPTIONS_COLORSCHEME},
-	{TEXT("操作"),               &g_App.OperationOptions,    HELP_ID_OPTIONS_OPERATION},
-	{TEXT("キー割り当て"),       &g_App.Accelerator,         HELP_ID_OPTIONS_ACCELERATOR},
-	{TEXT("リモコン"),           &g_App.ControllerManager,   HELP_ID_OPTIONS_CONTROLLER},
-	{TEXT("BonDriver設定"),      &g_App.DriverOptions,       HELP_ID_OPTIONS_DRIVER},
-	{TEXT("映像"),               &g_App.VideoOptions,        HELP_ID_OPTIONS_VIDEO},
-	{TEXT("音声"),               &g_App.AudioOptions,        HELP_ID_OPTIONS_AUDIO},
-	{TEXT("再生"),               &g_App.PlaybackOptions,     HELP_ID_OPTIONS_PLAYBACK},
-	{TEXT("録画"),               &g_App.RecordOptions,       HELP_ID_OPTIONS_RECORD},
-	{TEXT("キャプチャ"),         &g_App.CaptureOptions,      HELP_ID_OPTIONS_CAPTURE},
-	{TEXT("チャンネルスキャン"), &g_App.ChannelScan,         HELP_ID_OPTIONS_CHANNELSCAN},
-	{TEXT("EPG/番組情報"),       &g_App.EpgOptions,          HELP_ID_OPTIONS_EPG},
-	{TEXT("EPG番組表"),          &g_App.ProgramGuideOptions, HELP_ID_OPTIONS_PROGRAMGUIDE},
-	{TEXT("プラグイン"),         &g_App.PluginOptions,       HELP_ID_OPTIONS_PLUGIN},
-	{TEXT("TSプロセッサー"),     &g_App.TSProcessorOptions,  HELP_ID_OPTIONS_TSPROCESSOR},
-	{TEXT("ログ"),               &g_App.Logger,              HELP_ID_OPTIONS_LOG},
-};
-
-
-
-
 CAppMain &GetAppClass()
 {
-	return g_App;
+	static CAppMain App;
+	return App;
 }
 
 
@@ -99,7 +68,7 @@ bool CTotTimeAdjuster::AdjustTime()
 				// バッファがあるので少し時刻を戻す
 				OffsetSystemTime(&st, -2 * TimeConsts::SYSTEMTIME_SECOND);
 				if (::SetLocalTime(&st)) {
-					g_App.AddLog(
+					GetAppClass().AddLog(
 						TEXT("TOTで時刻合わせを行いました。(%d/%d/%d %d:%02d:%02d)"),
 						st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 					fOK = true;
@@ -125,7 +94,7 @@ void CEpgLoadEventHandler::OnEndLoading(bool fSuccess)
 {
 	TRACE(TEXT("End EPG file loading : %s\n"), fSuccess ? TEXT("Succeeded") : TEXT("Failed"));
 	if (fSuccess)
-		g_App.MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
+		GetAppClass().MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
 }
 
 
@@ -139,8 +108,9 @@ void CEpgLoadEventHandler::OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDataba
 {
 	TRACE(TEXT("End EDCB data loading : %s\n"), fSuccess ? TEXT("Succeeded") : TEXT("Failed"));
 	if (fSuccess) {
-		if (g_App.EPGDatabase.Merge(pEPGDatabase, LibISDB::EPGDatabase::MergeFlag::Database)) {
-			g_App.MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
+		CAppMain &App = GetAppClass();
+		if (App.EPGDatabase.Merge(pEPGDatabase, LibISDB::EPGDatabase::MergeFlag::Database)) {
+			App.MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
 		}
 	}
 }
@@ -191,7 +161,9 @@ int APIENTRY _tWinMain(
 
 	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
-	g_App.AddLog(
+	TVTest::CAppMain &App = TVTest::GetAppClass();
+
+	App.AddLog(
 		TEXT("******** ") ABOUT_VERSION_TEXT
 #ifdef VERSION_HASH
 		TEXT(" ") VERSION_HASH
@@ -206,25 +178,25 @@ int APIENTRY _tWinMain(
 		TEXT(" ") VERSION_PLATFORM
 #endif
 		TEXT(") 起動 ********"));
-	g_App.AddLog(TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING);
+	App.AddLog(TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING);
 #ifdef _MSC_FULL_VER
-	g_App.AddLog(
+	App.AddLog(
 		TEXT("Compiled with MSVC %d.%d.%d.%d"),
 		_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD);
 #endif
 
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE | COINIT_SPEED_OVER_MEMORY);
 
-	const int Result = g_App.Main(hInstance, pszCmdLine, nCmdShow);
+	const int Result = App.Main(hInstance, pszCmdLine, nCmdShow);
 
 	CoUninitialize();
 
-	g_App.AddLog(TEXT("******** 終了 ********"));
-	if (g_App.CmdLineOptions.m_fSaveLog && !g_App.Logger.GetOutputToFile()) {
+	App.AddLog(TEXT("******** 終了 ********"));
+	if (App.CmdLineOptions.m_fSaveLog && !App.Logger.GetOutputToFile()) {
 		TCHAR szFileName[MAX_PATH];
 
-		if (g_App.Logger.GetDefaultLogFileName(szFileName, lengthof(szFileName)))
-			g_App.Logger.SaveToFile(szFileName, true);
+		if (App.Logger.GetDefaultLogFileName(szFileName, lengthof(szFileName)))
+			App.Logger.SaveToFile(szFileName, true);
 	}
 
 	return Result;
