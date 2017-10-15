@@ -496,13 +496,7 @@ bool CAppMain::LoadSettings()
 		if (Settings.Read(TEXT("CaptureStatusBar"), &f))
 			CaptureWindow.ShowStatusBar(f);
 
-		if (Settings.Read(TEXT("StreamInfoLeft"), &Left)
-				&& Settings.Read(TEXT("StreamInfoTop"), &Top)) {
-			StreamInfo.GetPosition(nullptr, nullptr, &Width, &Height);
-			Settings.Read(TEXT("StreamInfoWidth"), &Width);
-			Settings.Read(TEXT("StreamInfoHeight"), &Height);
-			StreamInfo.SetPosition(Left, Top, Width, Height);
-		}
+		StreamInfo.LoadSettings(Settings);
 
 		CBasicDialog::Position Pos;
 		if (Settings.Read(TEXT("OrganizeFavoritesLeft"), &Pos.x)
@@ -627,13 +621,7 @@ bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 			Settings.Write(TEXT("CapturePreviewHeight"), Height);
 			Settings.Write(TEXT("CaptureStatusBar"), CaptureWindow.IsStatusBarVisible());
 
-			if (StreamInfo.IsPositionSet()) {
-				StreamInfo.GetPosition(&Pos);
-				Settings.Write(TEXT("StreamInfoLeft"), Pos.x);
-				Settings.Write(TEXT("StreamInfoTop"), Pos.y);
-				Settings.Write(TEXT("StreamInfoWidth"), Pos.Width);
-				Settings.Write(TEXT("StreamInfoHeight"), Pos.Height);
-			}
+			StreamInfo.SaveSettings(Settings);
 
 			if (FavoritesManager.IsOrganizeDialogPosSet()) {
 				FavoritesManager.GetOrganizeDialogPos(&Pos);
@@ -777,7 +765,14 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		INITCOMMONCONTROLSEX iccex;
 
 		iccex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-		iccex.dwICC = ICC_UPDOWN_CLASS | ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_DATE_CLASSES | ICC_PROGRESS_CLASS;
+		iccex.dwICC =
+			ICC_UPDOWN_CLASS |
+			ICC_BAR_CLASSES |
+			ICC_LISTVIEW_CLASSES |
+			ICC_TREEVIEW_CLASSES |
+			ICC_DATE_CLASSES |
+			ICC_PROGRESS_CLASS |
+			ICC_TAB_CLASSES;
 		::InitCommonControlsEx(&iccex);
 	}
 
@@ -873,6 +868,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	CDropDownMenu::Initialize(m_hInst);
 	CHomeDisplay::Initialize(m_hInst);
 	CChannelDisplay::Initialize(m_hInst);
+	CStreamInfo::Initialize(m_hInst);
 
 	// ウィンドウ位置とサイズの設定
 	if (CmdLineOptions.m_fMaximize)
@@ -1214,8 +1210,6 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	// メッセージループ
 	MSG msg;
-
-	UICore.RegisterModelessDialog(&StreamInfo);
 
 	while (::GetMessage(&msg, nullptr, 0, 0) > 0) {
 		if (HtmlHelpClass.PreTranslateMessage(&msg)

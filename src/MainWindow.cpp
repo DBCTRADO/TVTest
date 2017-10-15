@@ -2908,16 +2908,15 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 	case CM_STREAMINFO:
 		{
-			if (!m_App.StreamInfo.IsVisible()) {
+			if (!m_App.StreamInfo.GetVisible()) {
 				if (!m_App.StreamInfo.IsCreated())
 					m_App.StreamInfo.Create(hwnd);
-				else
-					m_App.StreamInfo.SetVisible(true);
+				m_App.StreamInfo.SetVisible(true);
 			} else {
 				m_App.StreamInfo.Destroy();
 			}
 
-			m_pCore->SetCommandCheckedState(CM_STREAMINFO, m_App.StreamInfo.IsVisible());
+			m_pCore->SetCommandCheckedState(CM_STREAMINFO, m_App.StreamInfo.GetVisible());
 		}
 		return;
 
