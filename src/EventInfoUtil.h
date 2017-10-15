@@ -8,7 +8,7 @@ namespace TVTest
 	namespace EventInfoUtil
 	{
 
-		bool EventInfoContextMenu(HWND hwndParent,HWND hwndEdit);
+		bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit);
 
 	}	// namespace EventInfoUtil
 
