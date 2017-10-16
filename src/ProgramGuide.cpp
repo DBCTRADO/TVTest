@@ -5186,8 +5186,6 @@ void CProgramGuide::ProgramGuideStyle::NormalizeStyle(
 
 
 
-#include "Menu.h"
-
 namespace ProgramGuideBar
 {
 
