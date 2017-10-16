@@ -421,7 +421,6 @@ CRecordManager::CRecordManager()
 	, m_Client(RecordClient::User)
 	, m_pTSEngine(nullptr)
 	, m_pRecorderFilter(nullptr)
-	//, m_ExistsOperation(EXISTS_CONFIRM)
 {
 	m_StartTimeSpec.Type = TimeSpecType::NotSpecified;
 	m_StopTimeSpec.Type = TimeSpecType::NotSpecified;
@@ -449,17 +448,6 @@ bool CRecordManager::SetFileName(LPCTSTR pszFileName)
 	StringUtility::Assign(m_FileName, pszFileName);
 	return true;
 }
-
-
-/*
-bool CRecordManager::SetFileExistsOperation(FileExistsOperation Operation)
-{
-	if (m_fRecording)
-		return false;
-	m_ExistsOperation = Operation;
-	return true;
-}
-*/
 
 
 bool CRecordManager::GetStartTime(SYSTEMTIME *pTime) const
@@ -774,103 +762,6 @@ bool CRecordManager::RecordDialog(HWND hwndOwner)
 }
 
 
-#if 0
-
-INT_PTR CALLBACK CRecordManager::StopTimeDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg) {
-	case WM_INITDIALOG:
-		{
-			CRecordManager *pThis = reinterpret_cast<CRecordManager*>(lParam);
-			FILETIME ft;;
-
-			SetProp(hDlg, TEXT("This"), pThis);
-			CheckDlgButton(
-				hDlg, IDC_RECORDSTOPTIME_ENABLE,
-				pThis->m_StopTimeSpec.Type != TimeSpecType::NotSpecified ? BST_CHECKED : BST_UNCHECKED);
-			EnableDlgItem(
-				hDlg, IDC_RECORDSTOPTIME_TIME,
-				pThis->m_StopTimeSpec.Type != TimeSpecType::NotSpecified);
-			SetDateTimeFormat(hDlg, IDC_RECORDSTOPTIME_TIME);
-			if (pThis->m_StopTimeSpec.Type == TimeSpecType::DateTime) {
-				ft = pThis->m_StopTimeSpec.Time.DateTime;
-			} else if (pThis->m_StopTimeSpec.Type == TimeSpecType::Duration) {
-				pThis->GetStartTime(&ft);
-				ft += (LONGLONG)pThis->m_StopTimeSpec.Time.Duration * FILETIME_MILLISECOND;
-			}
-			DateTime_SetFiletime(GetDlgItem(hDlg, IDC_RECORDSTOPTIME_TIME), GDT_VALID, &ft);
-		}
-		return TRUE;
-
-	case WM_COMMAND:
-		switch (LOWORD(wParam)) {
-		case IDC_RECORDSTOPTIME_ENABLE:
-			EnableDlgItem(
-				hDlg, IDC_RECORDSTOPTIME_TIME,
-				IsDlgButtonChecked(hDlg, IDC_RECORDSTOPTIME_ENABLE) == BST_CHECKED);
-			return TRUE;
-
-		case IDOK:
-			{
-				CRecordManager *pThis = GetThis(hDlg);
-				bool fStopTimeSpec;
-				SYSTEMTIME st;
-
-				fStopTimeSpec = IsDlgButtonChecked(hDlg, IDC_RECORDSTOPTIME_ENABLE) == BST_CHECKED;
-				if (fStopTimeSpec) {
-					FILETIME ft, ftCur;
-					TimeSpecInfo TimeSpec;
-
-					if (DateTime_GetSystemtime(
-								GetDlgItem(hDlg, IDC_RECORDSTOPTIME_TIME), &st) != GDT_VALID) {
-						MessageBox(
-							hDlg, TEXT("時間の取得エラー。"), nullptr,
-							MB_OK | MB_ICONEXCLAMATION);
-						return TRUE;
-					}
-					SystemTimeToFileTime(&st, &ft);
-					GetLocalTime(&st);
-					SystemTimeToFileTime(&st, &ftCur);
-					if (CompareFileTime(&ft, &ftCur) <= 0) {
-						MessageBox(
-							hDlg,
-							TEXT("指定された停止時間を既に過ぎています。"),
-							nullptr, MB_OK | MB_ICONEXCLAMATION);
-						SetFocus(GetDlgItem(hDlg, IDC_RECORDSTOPTIME_TIME));
-						return TRUE;
-					}
-					TimeSpec.Type = TimeSpecType::DateTime;
-					TimeSpec.Time.DateTime = ft;
-					pThis->SetStopTimeSpec(&TimeSpec);
-				} else {
-					pThis->SetStopTimeSpec(nullptr);
-				}
-			}
-		case IDCANCEL:
-			EndDialog(hDlg, LOWORD(wParam));
-		}
-		return TRUE;
-
-	case WM_DESTROY:
-		::RemoveProp(hDlg, TEXT("This"));
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-
-bool CRecordManager::ChangeStopTimeDialog(HWND hwndOwner)
-{
-	return DialogBoxParam(
-		GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE(IDD_RECORDSTOPTIME), hwndOwner,
-		StopTimeDlgProc, reinterpret_cast<LPARAM>(this)) == IDOK;
-}
-
-#endif
-
-
 bool CRecordManager::GenerateFilePath(
 	const FileNameFormatInfo &FormatInfo, LPCWSTR pszFormat,
 	String *pFilePath) const
@@ -911,40 +802,6 @@ bool CRecordManager::GenerateFilePath(
 
 	return true;
 }
-
-
-/*
-bool CRecordManager::DoFileExistsOperation(HWND hwndOwner, LPTSTR pszFileName)
-{
-	lstrcpy(pszFileName, m_FileName.c_str());
-	switch (m_ExistsOperation) {
-	case EXISTS_CONFIRM:
-		if (PathFileExists(m_FileName.c_str())
-				&& MessageBox(hwndOwner,
-					TEXT("ファイルが既に存在します。\n上書きしますか?"),
-					TEXT("上書きの確認"), MB_OKCANCEL | MB_ICONQUESTION) != IDOK)
-			return false;
-		break;
-	case EXISTS_SEQUENCIALNUMBER:
-		if (PathFileExists(m_FileName.c_str())) {
-			TCHAR szFileName[MAX_PATH];
-			LPTSTR pszExtension, p;
-
-			pszExtension=PathFindExtension(m_FileName.c_str());
-			lstrcpy(szFileName, m_FileName.c_str());
-			p = PathFindExtension(szFileName);
-			for (int i = 0;; i++) {
-				wsprintf(p, TEXT("%d%s"), i + 1, pszExtension);
-				if (!PathFileExists(szFileName))
-					break;
-			}
-			lstrcpy(pszFileName, szFileName);
-		}
-		break;
-	}
-	return true;
-}
-*/
 
 
 bool CRecordManager::SetCurServiceOnly(bool fOnly)

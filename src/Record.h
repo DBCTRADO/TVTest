@@ -149,14 +149,6 @@ namespace TVTest
 			Plugin,
 		};
 
-		/*
-		enum FileExistsOperation {
-			EXISTS_OVERWRITE,
-			EXISTS_CONFIRM,
-			EXISTS_SEQUENCIALNUMBER
-		};
-		*/
-
 		typedef CEventVariableStringMap::EventInfo FileNameFormatInfo;
 
 	private:
@@ -186,7 +178,6 @@ namespace TVTest
 		CRecordTask m_RecordTask;
 		LibISDB::TSEngine *m_pTSEngine;
 		LibISDB::RecorderFilter *m_pRecorderFilter;
-		//FileExistsOperation m_ExistsOperation;
 		CRecordingSettings m_Settings;
 		CRecordingSettings m_ReserveSettings;
 
@@ -199,10 +190,6 @@ namespace TVTest
 		void Terminate();
 		bool SetFileName(LPCTSTR pszFileName);
 		LPCTSTR GetFileName() const { return StringUtility::GetCStrOrNull(m_FileName); }
-		/*
-		bool SetFileExistsOperation(FileExistsOperation Operation);
-		FileExistsOperation GetFileExistsOperation() const { return m_ExistsOperation; }
-		*/
 		bool GetStartTime(SYSTEMTIME *pTime) const;
 		bool GetReserveTime(SYSTEMTIME *pTime) const;
 		bool GetReservedStartTime(SYSTEMTIME *pTime) const;
@@ -237,7 +224,6 @@ namespace TVTest
 		bool GenerateFilePath(
 			const FileNameFormatInfo &FormatInfo, LPCWSTR pszFormat,
 			String *pFilePath) const;
-		//bool DoFileExistsOperation(HWND hwndOwner, LPTSTR pszFileName);
 
 		CRecordingSettings &GetRecordingSettings() { return m_Settings; }
 		const CRecordingSettings &GetRecordingSettings() const { return m_Settings; }
