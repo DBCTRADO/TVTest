@@ -1056,6 +1056,8 @@ CStreamInfo::CStreamInfo()
 
 	for (auto &Page : m_PageList)
 		RegisterUIChild(Page.Dialog.get());
+
+	SetStyleScaling(&m_StyleScaling);
 }
 
 
