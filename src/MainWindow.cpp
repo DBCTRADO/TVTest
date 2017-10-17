@@ -7212,6 +7212,9 @@ void CMainWindow::CFullscreen::ShowSideBar(bool fShow)
 
 void CMainWindow::CFullscreen::OnBarHide(CBasicWindow &Window)
 {
+	if (!GetVisible())
+		return;
+
 	POINT pt;
 	RECT rc;
 
