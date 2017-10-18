@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_FAVORITES_H
 #define TVTEST_FAVORITES_H
 
@@ -15,14 +35,14 @@ namespace TVTest
 	class ABSTRACT_CLASS(CFavoriteItem)
 	{
 	public:
-		enum ItemType
-		{
-			ITEM_FOLDER,
-			ITEM_CHANNEL
+		enum class ItemType {
+			Folder,
+			Channel,
 		};
 
 		CFavoriteItem(ItemType Type) : m_Type(Type) {}
-		virtual ~CFavoriteItem() {}
+		virtual ~CFavoriteItem() = default;
+
 		ItemType GetType() const { return m_Type; }
 		virtual CFavoriteItem *Duplicate() const = 0;
 		LPCTSTR GetName() const { return m_Name.c_str(); }
@@ -33,13 +53,15 @@ namespace TVTest
 		String m_Name;
 	};
 
-	class CFavoriteFolder : public CFavoriteItem
+	class CFavoriteFolder
+		: public CFavoriteItem
 	{
 	public:
 		CFavoriteFolder();
 		CFavoriteFolder(const CFavoriteFolder &Src);
-		~CFavoriteFolder();
+
 		CFavoriteFolder &operator=(const CFavoriteFolder &Src);
+
 		CFavoriteFolder *Duplicate() const override;
 		void Clear();
 		size_t GetItemCount() const;
@@ -47,28 +69,30 @@ namespace TVTest
 		CFavoriteItem *GetItem(size_t Index);
 		const CFavoriteItem *GetItem(size_t Index) const;
 		bool AddItem(CFavoriteItem *pItem);
-		bool AddItem(size_t Pos,CFavoriteItem *pItem);
+		bool AddItem(size_t Pos, CFavoriteItem *pItem);
 		bool DeleteItem(size_t Index);
 		CFavoriteItem *RemoveItem(size_t Index);
-		bool MoveItem(size_t From,size_t To);
+		bool MoveItem(size_t From, size_t To);
 		CFavoriteFolder *FindSubFolder(LPCTSTR pszName);
 
 	private:
-		std::vector<CFavoriteItem*> m_Children;
+		std::vector<std::unique_ptr<CFavoriteItem>> m_Children;
 	};
 
-	class CFavoriteChannel : public CFavoriteItem
+	class CFavoriteChannel
+		: public CFavoriteItem
 	{
 	public:
 		CFavoriteChannel(const CChannelInfo &ChannelInfo);
 		~CFavoriteChannel();
+
 		CFavoriteChannel *Duplicate() const override;
 		LPCTSTR GetBonDriverFileName() const { return m_BonDriverFileName.c_str(); }
 		bool SetBonDriverFileName(LPCTSTR pszFileName);
 		const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 		bool SetChannelInfo(const CChannelInfo &ChannelInfo);
 		bool GetForceBonDriverChange() const { return m_fForceBonDriverChange; }
-		void SetForceBonDriverChange(bool fForce) { m_fForceBonDriverChange=fForce; }
+		void SetForceBonDriverChange(bool fForce) { m_fForceBonDriverChange = fForce; }
 
 	private:
 		String m_BonDriverFileName;
@@ -82,37 +106,45 @@ namespace TVTest
 		bool EnumItems(CFavoriteFolder &Folder);
 
 	protected:
-		virtual bool ChannelItem(CFavoriteFolder &Folder,CFavoriteChannel &Channel) { return true; }
+		virtual bool ChannelItem(CFavoriteFolder &Folder, CFavoriteChannel &Channel) { return true; }
 		virtual bool FolderItem(CFavoriteFolder &Folder) { return true; }
 	};
 
 	class CFavoritesMenu
 	{
 	public:
-		enum {
-			FLAG_SHOWEVENTINFO	=0x0001,
-			FLAG_SHOWLOGO		=0x0002,
-			FLAG_SHOWTOOLTIP	=0x0004,
-			FLAG_SHARED			=0x1000
+		enum class CreateFlag : unsigned int {
+			None          = 0x0000U,
+			ShowEventInfo = 0x0001U,
+			ShowLogo      = 0x0002U,
+			ShowToolTip   = 0x0004U,
+			Shared        = 0x1000U,
 		};
 
 		CFavoritesMenu();
 		~CFavoritesMenu();
-		bool Create(const CFavoriteFolder *pFolder,UINT Command,
-					HMENU hmenu,HWND hwnd,unsigned int Flags);
+
+		bool Create(
+			const CFavoriteFolder *pFolder, UINT Command,
+			HMENU hmenu, HWND hwnd, CreateFlag Flags);
 		void Destroy();
-		bool Show(UINT Flags,int x,int y);
-		bool OnMeasureItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
-		bool OnDrawItem(HWND hwnd,WPARAM wParam,LPARAM lParam);
-		bool OnMenuSelect(HWND hwnd,WPARAM wParam,LPARAM lParam);
-		bool OnUninitMenuPopup(HWND hwnd,WPARAM wParam,LPARAM lParam);
+		bool Show(UINT Flags, int x, int y);
+		bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
 	private:
-		class CMenuItem;
+		class ABSTRACT_CLASS(CMenuItem)
+		{
+		public:
+			virtual ~CMenuItem() = default;
+		};
+
 		class CFolderItem;
 		class CChannelItem;
 
-		unsigned int m_Flags;
+		CreateFlag m_Flags;
 		HWND m_hwnd;
 		HMENU m_hmenu;
 		UINT m_FirstCommand;
@@ -129,34 +161,37 @@ namespace TVTest
 		MARGINS m_Margins;
 		int m_MenuLogoMargin;
 		CTooltip m_Tooltip;
-		SYSTEMTIME m_BaseTime;
-		std::vector<CMenuItem*> m_ItemList;
+		LibISDB::DateTime m_BaseTime;
+		std::vector<std::unique_ptr<CMenuItem>> m_ItemList;
 		HIMAGELIST m_himlIcons;
 		CChannelMenuLogo m_Logo;
 
-		void SetFolderMenu(HMENU hmenu,int MenuPos,HDC hdc,UINT *pCommand,const CFavoriteFolder *pFolder);
-		int GetEventText(const CEventInfoData *pEventInfo,
-						 LPTSTR pszText,int MaxLength) const;
+		void SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCommand, const CFavoriteFolder *pFolder);
+		int GetEventText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const;
 		void CreateFont(HDC hdc);
-		static void GetBaseTime(SYSTEMTIME *pTime);
+		static void GetBaseTime(LibISDB::DateTime *pTime);
 	};
 
-	class COrganizeFavoritesDialog : public CResizableDialog
+	TVTEST_ENUM_FLAGS(CFavoritesMenu::CreateFlag)
+
+	class COrganizeFavoritesDialog
+		: public CResizableDialog
 	{
 	public:
 		COrganizeFavoritesDialog(CFavoritesManager *pManager);
 		~COrganizeFavoritesDialog();
+
 		bool Show(HWND hwndOwner) override;
 
 	private:
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-		void InsertTreeItems(HWND hwndTree,HTREEITEM hParent,const CFavoriteFolder *pFolder);
-		HTREEITEM CopyTreeItems(HWND hwndTree,HTREEITEM hSrcItem,HTREEITEM hParent,HTREEITEM hInsertAfter);
-		void GetTreeItems(HWND hwndTree,HTREEITEM hParent,CFavoriteFolder *pFolder);
-		CFavoriteItem *GetItem(HWND hwndTree,HTREEITEM hItem);
+		void InsertTreeItems(HWND hwndTree, HTREEITEM hParent, const CFavoriteFolder *pFolder);
+		HTREEITEM CopyTreeItems(HWND hwndTree, HTREEITEM hSrcItem, HTREEITEM hParent, HTREEITEM hInsertAfter);
+		void GetTreeItems(HWND hwndTree, HTREEITEM hParent, CFavoriteFolder *pFolder);
+		CFavoriteItem *GetItem(HWND hwndTree, HTREEITEM hItem);
 
-		static LRESULT CALLBACK EditHookProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+		static LRESULT CALLBACK EditHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		CFavoritesManager *m_pManager;
 
@@ -181,25 +216,27 @@ namespace TVTest
 
 		CFavoritesManager();
 		~CFavoritesManager();
+
 		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
 		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }
-		bool AddChannel(const CChannelInfo *pChannelInfo,LPCTSTR pszBonDriverFileName);
+		bool AddChannel(const CChannelInfo *pChannelInfo, LPCTSTR pszBonDriverFileName);
 		bool SetMenu(HMENU hmenu);
-		bool GetChannelByCommand(int Command,ChannelInfo *pInfo) const;
+		bool GetChannelByCommand(int Command, ChannelInfo *pInfo) const;
 		bool Load(LPCTSTR pszFileName);
 		bool Save(LPCTSTR pszFileName) const;
 		bool GetModified() const { return m_fModified; }
-		void SetModified(bool fModified) { m_fModified=fModified; }
+		void SetModified(bool fModified) { m_fModified = fModified; }
 		bool ShowOrganizeDialog(HWND hwndOwner);
 		bool GetOrganizeDialogPos(CBasicDialog::Position *pPos) const;
 		bool SetOrganizeDialogPos(const CBasicDialog::Position &Pos);
 		bool IsOrganizeDialogPosSet() const;
 
 	private:
-		void SetFolderMenu(HMENU hmenu,int MenuPos,int *pCommand,const CFavoriteFolder *pFolder) const;
-		bool GetChannelByCommandSub(const CFavoriteFolder *pFolder,
-									int Command,int *pBaseCommand,ChannelInfo *pInfo) const;
-		void SaveFolder(const CFavoriteFolder *pFolder,const String &Path,String *pBuffer) const;
+		void SetFolderMenu(HMENU hmenu, int MenuPos, int *pCommand, const CFavoriteFolder *pFolder) const;
+		bool GetChannelByCommandSub(
+			const CFavoriteFolder *pFolder,
+			int Command, int *pBaseCommand, ChannelInfo *pInfo) const;
+		void SaveFolder(const CFavoriteFolder *pFolder, const String &Path, String *pBuffer) const;
 
 		CFavoriteFolder m_RootFolder;
 		bool m_fModified;

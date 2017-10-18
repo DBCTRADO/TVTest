@@ -1,37 +1,65 @@
-#ifndef RAW_INPUT_H
-#define RAW_INPUT_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 
-class CRawInput
+#ifndef TVTEST_RAW_INPUT_H
+#define TVTEST_RAW_INPUT_H
+
+
+namespace TVTest
 {
-public:
-	class CEventHandler {
+
+	class CRawInput
+	{
 	public:
-		CEventHandler() {}
-		virtual ~CEventHandler() {}
-		virtual void OnInput(int Type)=0;
-		virtual void OnUnknownInput(const BYTE *pData,int Size) {}
+		class CEventHandler
+		{
+		public:
+			virtual ~CEventHandler() = default;
+
+			virtual void OnInput(int Type) = 0;
+			virtual void OnUnknownInput(const BYTE *pData, int Size) {}
+		};
+
+	protected:
+		typedef BOOL (WINAPI *RegisterRawInputDevicesFunc)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
+		typedef UINT (WINAPI *GetRawInputDataFunc)(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
+
+		RegisterRawInputDevicesFunc m_pRegisterRawInputDevices;
+		GetRawInputDataFunc m_pGetRawInputData;
+		CEventHandler *m_pEventHandler;
+
+	public:
+		CRawInput();
+		~CRawInput();
+
+		bool Initialize(HWND hwnd);
+		LRESULT OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		void SetEventHandler(CEventHandler *pHandler);
+		CEventHandler *GetEventHandler() const { return m_pEventHandler; }
+		int NumKeyTypes() const;
+		LPCTSTR GetKeyText(int Key) const;
+		int GetKeyData(int Key) const;
+		int KeyDataToIndex(int Data) const;
 	};
 
-protected:
-	typedef BOOL (WINAPI *RegisterRawInputDevicesFunc)(PCRAWINPUTDEVICE pRawInputDevices,UINT uiNumDevices,UINT cbSize);
-	typedef UINT (WINAPI *GetRawInputDataFunc)(HRAWINPUT hRawInput,UINT uiCommand,LPVOID pData,PUINT pcbSize,UINT cbSizeHeader);
-	RegisterRawInputDevicesFunc m_pRegisterRawInputDevices;
-	GetRawInputDataFunc m_pGetRawInputData;
-	CEventHandler *m_pEventHandler;
-
-public:
-	CRawInput();
-	~CRawInput();
-	bool Initialize(HWND hwnd);
-	LRESULT OnInput(HWND hwnd,WPARAM wParam,LPARAM lParam);
-	void SetEventHandler(CEventHandler *pHandler);
-	CEventHandler *GetEventHandler() const { return m_pEventHandler; }
-	int NumKeyTypes() const;
-	LPCTSTR GetKeyText(int Key) const;
-	int GetKeyData(int Key) const;
-	int KeyDataToIndex(int Data) const;
-};
+}	// namespace TVTest
 
 
 #endif

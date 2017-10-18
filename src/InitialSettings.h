@@ -1,5 +1,25 @@
-#ifndef INITIAL_SETTINGS_H
-#define INITIAL_SETTINGS_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
+#ifndef TVTEST_INITIAL_SETTINGS_H
+#define TVTEST_INITIAL_SETTINGS_H
 
 
 #include "DriverManager.h"
@@ -9,43 +29,48 @@
 #include "Graphics.h"
 
 
-class CInitialSettings : public CBasicDialog
+namespace TVTest
 {
-public:
-	enum { MAX_DECODER_NAME=128 };
 
-	CInitialSettings(const CDriverManager *pDriverManager);
-	~CInitialSettings();
+	class CInitialSettings
+		: public CBasicDialog
+	{
+	public:
+		static constexpr size_t MAX_DECODER_NAME = 128;
 
-// CBasicDialog
-	bool Show(HWND hwndOwner) override;
+		CInitialSettings(const CDriverManager *pDriverManager);
+		~CInitialSettings();
 
-	LPCTSTR GetDriverFileName() const { return m_szDriverFileName; }
-	bool GetDriverFileName(LPTSTR pszFileName,int MaxLength) const;
-	LPCTSTR GetMpeg2DecoderName() const { return m_Mpeg2DecoderName.c_str(); }
-	LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
-	LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
-	CVideoRenderer::RendererType GetVideoRenderer() const { return m_VideoRenderer; }
-	LPCTSTR GetRecordFolder() const { return m_RecordFolder.c_str(); }
+	// CBasicDialog
+		bool Show(HWND hwndOwner) override;
 
-private:
-	const CDriverManager *m_pDriverManager;
-	TCHAR m_szDriverFileName[MAX_PATH];
-	TVTest::String m_Mpeg2DecoderName;
-	TVTest::String m_H264DecoderName;
-	TVTest::String m_H265DecoderName;
-	CVideoRenderer::RendererType m_VideoRenderer;
-	TVTest::String m_RecordFolder;
-	CAeroGlass m_AeroGlass;
-	TVTest::Graphics::CImage m_LogoImage;
-	bool m_fDrawLogo;
+		LPCTSTR GetDriverFileName() const { return m_DriverFileName.c_str(); }
+		LPCTSTR GetMpeg2DecoderName() const { return m_Mpeg2DecoderName.c_str(); }
+		LPCTSTR GetH264DecoderName() const { return m_H264DecoderName.c_str(); }
+		LPCTSTR GetH265DecoderName() const { return m_H265DecoderName.c_str(); }
+		LibISDB::DirectShow::VideoRenderer::RendererType GetVideoRenderer() const { return m_VideoRenderer; }
+		LPCTSTR GetRecordFolder() const { return m_RecordFolder.c_str(); }
 
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	private:
+		const CDriverManager *m_pDriverManager;
+		CFilePath m_DriverFileName;
+		String m_Mpeg2DecoderName;
+		String m_H264DecoderName;
+		String m_H265DecoderName;
+		LibISDB::DirectShow::VideoRenderer::RendererType m_VideoRenderer;
+		String m_RecordFolder;
+		CAeroGlass m_AeroGlass;
+		Graphics::CImage m_LogoImage;
+		bool m_fDrawLogo;
 
-	void InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName);
-	void GetDecoderSetting(int ID,TVTest::String *pDecoderName) const;
-};
+	// CBasicDialog
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+		void InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszDecoderName);
+		void GetDecoderSetting(int ID, String *pDecoderName) const;
+	};
+
+}	// namespace TVTest
 
 
 #endif

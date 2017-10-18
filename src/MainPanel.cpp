@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -5,6 +25,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CMainPanel::CMainPanel()
@@ -26,40 +48,40 @@ bool CMainPanel::IsFloating() const
 }
 
 
-bool CMainPanel::OnOwnerWindowPosChanging(const RECT *pOldRect,const RECT *pNewRect)
+bool CMainPanel::OnOwnerWindowPosChanging(const RECT *pOldRect, const RECT *pNewRect)
 {
 	if (fShowPanelWindow && GetAppClass().PanelOptions.GetAttachToMainWindow()
 			&& IsFloating()) {
 		RECT rc;
-		int XOffset,YOffset;
-		bool fAttached=false;
+		int XOffset, YOffset;
+		bool fAttached = false;
 
 		Frame.GetPosition(&rc);
-		XOffset=YOffset=0;
-		if (rc.top<pOldRect->bottom && rc.bottom>pOldRect->top) {
-			if (rc.right==pOldRect->left) {
-				XOffset=pNewRect->left-rc.right;
-				fAttached=true;
-			} else if (rc.left==pOldRect->right) {
-				XOffset=pNewRect->right-rc.left;
-				fAttached=true;
+		XOffset = YOffset = 0;
+		if (rc.top < pOldRect->bottom && rc.bottom > pOldRect->top) {
+			if (rc.right == pOldRect->left) {
+				XOffset = pNewRect->left - rc.right;
+				fAttached = true;
+			} else if (rc.left == pOldRect->right) {
+				XOffset = pNewRect->right - rc.left;
+				fAttached = true;
 			}
 			if (fAttached)
-				YOffset=pNewRect->top-pOldRect->top;
+				YOffset = pNewRect->top - pOldRect->top;
 		}
-		if (!fAttached && rc.left<pOldRect->right && rc.right>pOldRect->left) {
-			if (rc.bottom==pOldRect->top) {
-				YOffset=pNewRect->top-rc.bottom;
-				fAttached=true;
-			} else if (rc.top==pOldRect->bottom) {
-				YOffset=pNewRect->bottom-rc.top;
-				fAttached=true;
+		if (!fAttached && rc.left < pOldRect->right && rc.right > pOldRect->left) {
+			if (rc.bottom == pOldRect->top) {
+				YOffset = pNewRect->top - rc.bottom;
+				fAttached = true;
+			} else if (rc.top == pOldRect->bottom) {
+				YOffset = pNewRect->bottom - rc.top;
+				fAttached = true;
 			}
 			if (fAttached)
-				XOffset=pNewRect->left-pOldRect->left;
+				XOffset = pNewRect->left - pOldRect->left;
 		}
-		if (XOffset!=0 || YOffset!=0) {
-			::OffsetRect(&rc,XOffset,YOffset);
+		if (XOffset != 0 || YOffset != 0) {
+			::OffsetRect(&rc, XOffset, YOffset);
 			Frame.SetPosition(&rc);
 			Frame.MoveToMonitorInside();
 		}
@@ -71,29 +93,29 @@ bool CMainPanel::OnOwnerWindowPosChanging(const RECT *pOldRect,const RECT *pNewR
 
 bool CMainPanel::IsAttached()
 {
-	CAppMain &App=GetAppClass();
-	bool fAttached=false;
+	CAppMain &App = GetAppClass();
+	bool fAttached = false;
 
 	if (fShowPanelWindow && App.PanelOptions.GetAttachToMainWindow()
 			&& IsFloating()) {
-		RECT rcPanel,rcMain;
+		RECT rcPanel, rcMain;
 
 		Frame.GetPosition(&rcPanel);
 		App.MainWindow.GetPosition(&rcMain);
-		if (rcPanel.top<rcMain.bottom && rcPanel.bottom>rcMain.top) {
-			if (rcPanel.right==rcMain.left || rcPanel.left==rcMain.right)
-				fAttached=true;
+		if (rcPanel.top < rcMain.bottom && rcPanel.bottom > rcMain.top) {
+			if (rcPanel.right == rcMain.left || rcPanel.left == rcMain.right)
+				fAttached = true;
 		}
-		if (!fAttached && rcPanel.left<rcMain.right && rcPanel.right>rcMain.left) {
-			if (rcPanel.bottom==rcMain.top || rcPanel.top==rcMain.bottom)
-				fAttached=true;
+		if (!fAttached && rcPanel.left < rcMain.right && rcPanel.right > rcMain.left) {
+			if (rcPanel.bottom == rcMain.top || rcPanel.top == rcMain.bottom)
+				fAttached = true;
 		}
 	}
 	return fAttached;
 }
 
 
-void CMainPanel::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CMainPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	Frame.SetTheme(pThemeManager);
 	Form.SetTheme(pThemeManager);
@@ -132,15 +154,11 @@ void CMainPanel::UpdateInformationPanel()
 
 void CMainPanel::UpdateProgramListPanel()
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 	CChannelInfo ChInfo;
 
 	if (App.Core.GetCurrentStreamChannelInfo(&ChInfo)
-			&& ChInfo.GetServiceID()!=0) {
-		App.EpgProgramList.UpdateService(
-			ChInfo.GetNetworkID(),
-			ChInfo.GetTransportStreamID(),
-			ChInfo.GetServiceID());
+			&& ChInfo.GetServiceID() != 0) {
 		ProgramListPanel.UpdateProgramList(&ChInfo);
 	}
 }
@@ -148,7 +166,7 @@ void CMainPanel::UpdateProgramListPanel()
 
 void CMainPanel::UpdateChannelPanel()
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 	Util::CWaitCursor WaitCursor;
 
 	if (ChannelPanel.IsChannelListEmpty()) {
@@ -157,7 +175,7 @@ void CMainPanel::UpdateChannelPanel()
 			!App.EpgOptions.IsEpgFileLoading());
 	} else {
 		if (!App.EpgOptions.IsEpgFileLoading())
-			ChannelPanel.UpdateAllChannels(false);
+			ChannelPanel.UpdateAllChannels();
 	}
 	ChannelPanel.SetCurrentChannel(App.ChannelManager.GetCurrentChannel());
 }
@@ -168,14 +186,14 @@ void CMainPanel::InitControlPanel()
 	ControlPanel.AddItem(new CTunerControlItem);
 	ControlPanel.AddItem(new CChannelControlItem);
 
-	const CChannelList *pList=GetAppClass().ChannelManager.GetCurrentChannelList();
-	for (int i=0;i<12;i++) {
+	const CChannelList *pList = GetAppClass().ChannelManager.GetCurrentChannelList();
+	for (int i = 0; i < 12; i++) {
 		TCHAR szText[4];
 		CControlPanelButton *pItem;
 
-		StdUtil::snprintf(szText,lengthof(szText),TEXT("%d"),i+1);
-		pItem=new CControlPanelButton(CM_CHANNELNO_FIRST+i,szText,i%6==0,1);
-		if (pList==nullptr || pList->FindChannelNo(i+1)<0)
+		StringPrintf(szText, TEXT("%d"), i + 1);
+		pItem = new CControlPanelButton(CM_CHANNELNO_FIRST + i, szText, i % 6 == 0, 1);
+		if (pList == nullptr || pList->FindChannelNo(i + 1) < 0)
 			pItem->SetEnable(false);
 		ControlPanel.AddItem(pItem);
 	}
@@ -188,22 +206,22 @@ void CMainPanel::InitControlPanel()
 
 void CMainPanel::UpdateControlPanel()
 {
-	CAppMain &App=GetAppClass();
-	const CChannelList *pList=App.ChannelManager.GetCurrentChannelList();
-	const CChannelInfo *pCurChannel=App.ChannelManager.GetCurrentChannelInfo();
+	CAppMain &App = GetAppClass();
+	const CChannelList *pList = App.ChannelManager.GetCurrentChannelList();
+	const CChannelInfo *pCurChannel = App.ChannelManager.GetCurrentChannelInfo();
 
-	for (int i=0;i<12;i++) {
-		CControlPanelItem *pItem=ControlPanel.GetItem(CONTROLPANEL_ITEM_CHANNEL_1+i);
-		if (pItem!=nullptr) {
-			pItem->SetEnable(pList!=nullptr && pList->FindChannelNo(i+1)>=0);
+	for (int i = 0; i < 12; i++) {
+		CControlPanelItem *pItem = ControlPanel.GetItem(CONTROLPANEL_ITEM_CHANNEL_1 + i);
+		if (pItem != nullptr) {
+			pItem->SetEnable(pList != nullptr && pList->FindChannelNo(i + 1) >= 0);
 			pItem->SetCheck(false);
 		}
 	}
-	if (pCurChannel!=nullptr) {
-		if (pCurChannel->GetChannelNo()>=1 && pCurChannel->GetChannelNo()<=12) {
+	if (pCurChannel != nullptr) {
+		if (pCurChannel->GetChannelNo() >= 1 && pCurChannel->GetChannelNo() <= 12) {
 			ControlPanel.CheckRadioItem(
-				CM_CHANNELNO_FIRST,CM_CHANNELNO_LAST,
-				CM_CHANNELNO_FIRST+pCurChannel->GetChannelNo()-1);
+				CM_CHANNELNO_FIRST, CM_CHANNELNO_LAST,
+				CM_CHANNELNO_FIRST + pCurChannel->GetChannelNo() - 1);
 		}
 	}
 }
@@ -228,56 +246,56 @@ bool CMainPanel::CFrameEventHandler::OnMoving(RECT *pRect)
 	if (!m_pFrame->GetFloating())
 		return false;
 
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 	POINT pt;
 	RECT rc;
 
 	::GetCursorPos(&pt);
-	pt.x=m_ptStartPos.x+(pt.x-m_ptDragStartCursorPos.x);
-	pt.y=m_ptStartPos.y+(pt.y-m_ptDragStartCursorPos.y);
-	::OffsetRect(pRect,pt.x-pRect->left,pt.y-pRect->top);
+	pt.x = m_ptStartPos.x + (pt.x - m_ptDragStartCursorPos.x);
+	pt.y = m_ptStartPos.y + (pt.y - m_ptDragStartCursorPos.y);
+	::OffsetRect(pRect, pt.x - pRect->left, pt.y - pRect->top);
 	if (App.PanelOptions.GetSnapAtMainWindow()) {
-		// メインウィンドウにスナップさせる
-		int SnapMargin=App.PanelOptions.GetSnapMargin();
-		int XOffset,YOffset;
+		// 繝｡繧､繝ｳ繧ｦ繧｣繝ｳ繝峨え縺ｫ繧ｹ繝翫ャ繝励＆縺帙ｋ
+		int SnapMargin = App.PanelOptions.GetSnapMargin();
+		int XOffset, YOffset;
 		bool fSnap;
 
 		App.MainWindow.GetPosition(&rc);
-		XOffset=YOffset=0;
-		fSnap=false;
-		if (pRect->top<rc.bottom && pRect->bottom>rc.top) {
-			if (pRect->right>=rc.left-SnapMargin && pRect->right<=rc.left+SnapMargin) {
-				XOffset=rc.left-pRect->right;
-				fSnap=true;
-			} else if (pRect->left>=rc.right-SnapMargin && pRect->left<=rc.right+SnapMargin) {
-				XOffset=rc.right-pRect->left;
-				fSnap=true;
+		XOffset = YOffset = 0;
+		fSnap = false;
+		if (pRect->top < rc.bottom && pRect->bottom > rc.top) {
+			if (pRect->right >= rc.left - SnapMargin && pRect->right <= rc.left + SnapMargin) {
+				XOffset = rc.left - pRect->right;
+				fSnap = true;
+			} else if (pRect->left >= rc.right - SnapMargin && pRect->left <= rc.right + SnapMargin) {
+				XOffset = rc.right - pRect->left;
+				fSnap = true;
 			}
 			if (fSnap) {
-				if (pRect->top>=rc.top-SnapMargin && pRect->top<=rc.top+SnapMargin) {
-					YOffset=rc.top-pRect->top;
-				} else if (pRect->bottom>=rc.bottom-SnapMargin && pRect->bottom<=rc.bottom+SnapMargin) {
-					YOffset=rc.bottom-pRect->bottom;
+				if (pRect->top >= rc.top - SnapMargin && pRect->top <= rc.top + SnapMargin) {
+					YOffset = rc.top - pRect->top;
+				} else if (pRect->bottom >= rc.bottom - SnapMargin && pRect->bottom <= rc.bottom + SnapMargin) {
+					YOffset = rc.bottom - pRect->bottom;
 				}
 			}
 		}
-		if (!fSnap && pRect->left<rc.right && pRect->right>rc.left) {
-			if (pRect->bottom>=rc.top-SnapMargin && pRect->bottom<=rc.top+SnapMargin) {
-				YOffset=rc.top-pRect->bottom;
-				fSnap=true;
-			} else if (pRect->top>=rc.bottom-SnapMargin && pRect->top<=rc.bottom+SnapMargin) {
-				YOffset=rc.bottom-pRect->top;
-				fSnap=true;
+		if (!fSnap && pRect->left < rc.right && pRect->right > rc.left) {
+			if (pRect->bottom >= rc.top - SnapMargin && pRect->bottom <= rc.top + SnapMargin) {
+				YOffset = rc.top - pRect->bottom;
+				fSnap = true;
+			} else if (pRect->top >= rc.bottom - SnapMargin && pRect->top <= rc.bottom + SnapMargin) {
+				YOffset = rc.bottom - pRect->top;
+				fSnap = true;
 			}
 			if (fSnap) {
-				if (pRect->left>=rc.left-SnapMargin && pRect->left<=rc.left+SnapMargin) {
-					XOffset=rc.left-pRect->left;
-				} else if (pRect->right>=rc.right-SnapMargin && pRect->right<=rc.right+SnapMargin) {
-					XOffset=rc.right-pRect->right;
+				if (pRect->left >= rc.left - SnapMargin && pRect->left <= rc.left + SnapMargin) {
+					XOffset = rc.left - pRect->left;
+				} else if (pRect->right >= rc.right - SnapMargin && pRect->right <= rc.right + SnapMargin) {
+					XOffset = rc.right - pRect->right;
 				}
 			}
 		}
-		::OffsetRect(pRect,XOffset,YOffset);
+		::OffsetRect(pRect, XOffset, YOffset);
 	}
 
 	return true;
@@ -290,25 +308,25 @@ bool CMainPanel::CFrameEventHandler::OnEnterSizeMove()
 		return false;
 
 	::GetCursorPos(&m_ptDragStartCursorPos);
-	int x,y;
-	m_pFrame->GetPosition(&x,&y,NULL,NULL);
-	m_ptStartPos.x=x;
-	m_ptStartPos.y=y;
+	int x, y;
+	m_pFrame->GetPosition(&x, &y, nullptr, nullptr);
+	m_ptStartPos.x = x;
+	m_ptStartPos.y = y;
 
 	return true;
 }
 
 
-bool CMainPanel::CFrameEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
+bool CMainPanel::CFrameEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 {
-	GetAppClass().MainWindow.SendMessage(WM_KEYDOWN,KeyCode,Flags);
+	GetAppClass().MainWindow.SendMessage(WM_KEYDOWN, KeyCode, Flags);
 	return true;
 }
 
 
-bool CMainPanel::CFrameEventHandler::OnMouseWheel(WPARAM wParam,LPARAM lParam)
+bool CMainPanel::CFrameEventHandler::OnMouseWheel(WPARAM wParam, LPARAM lParam)
 {
-	SendMessage(GetAppClass().MainWindow.GetVideoHostWindow(),WM_MOUSEWHEEL,wParam,lParam);
+	SendMessage(GetAppClass().MainWindow.GetVideoHostWindow(), WM_MOUSEWHEEL, wParam, lParam);
 	return true;
 }
 
@@ -318,59 +336,59 @@ void CMainPanel::CFrameEventHandler::OnVisibleChange(bool fVisible)
 	if (!m_pFrame->GetFloating())
 		return;
 
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
 	if (!fVisible) {
-		m_SnapEdge=EDGE_NONE;
+		m_SnapEdge = EDGE_NONE;
 		if (App.PanelOptions.GetAttachToMainWindow()) {
-			RECT rcPanel,rcMain;
+			RECT rcPanel, rcMain;
 
 			m_pFrame->GetPosition(&rcPanel);
 			App.MainWindow.GetPosition(&rcMain);
-			if (rcPanel.top<rcMain.bottom && rcPanel.bottom>rcMain.top) {
-				if (rcPanel.right==rcMain.left)
-					m_SnapEdge=EDGE_LEFT;
-				else if (rcPanel.left==rcMain.right)
-					m_SnapEdge=EDGE_RIGHT;
-				if (m_SnapEdge!=EDGE_NONE)
-					m_AttachOffset=rcPanel.top-rcMain.top;
+			if (rcPanel.top < rcMain.bottom && rcPanel.bottom > rcMain.top) {
+				if (rcPanel.right == rcMain.left)
+					m_SnapEdge = EDGE_LEFT;
+				else if (rcPanel.left == rcMain.right)
+					m_SnapEdge = EDGE_RIGHT;
+				if (m_SnapEdge != EDGE_NONE)
+					m_AttachOffset = rcPanel.top - rcMain.top;
 			}
-			if (rcPanel.left<rcMain.right && rcPanel.right>rcMain.left) {
-				if (rcPanel.bottom==rcMain.top)
-					m_SnapEdge=EDGE_TOP;
-				else if (rcPanel.top==rcMain.bottom)
-					m_SnapEdge=EDGE_BOTTOM;
-				if (m_SnapEdge!=EDGE_NONE)
-					m_AttachOffset=rcPanel.left-rcMain.left;
+			if (rcPanel.left < rcMain.right && rcPanel.right > rcMain.left) {
+				if (rcPanel.bottom == rcMain.top)
+					m_SnapEdge = EDGE_TOP;
+				else if (rcPanel.top == rcMain.bottom)
+					m_SnapEdge = EDGE_BOTTOM;
+				if (m_SnapEdge != EDGE_NONE)
+					m_AttachOffset = rcPanel.left - rcMain.left;
 			}
 		}
 	} else {
-		if (m_SnapEdge!=EDGE_NONE) {
-			RECT rcPanel,rcMain;
-			int x,y;
+		if (m_SnapEdge != EDGE_NONE) {
+			RECT rcPanel, rcMain;
+			int x, y;
 
 			m_pFrame->GetPosition(&rcPanel);
-			OffsetRect(&rcPanel,-rcPanel.left,-rcPanel.top);
+			OffsetRect(&rcPanel, -rcPanel.left, -rcPanel.top);
 			App.MainWindow.GetPosition(&rcMain);
 			switch (m_SnapEdge) {
 			case EDGE_LEFT:
-				x=rcMain.left-rcPanel.right;
-				y=rcMain.top+m_AttachOffset;
+				x = rcMain.left - rcPanel.right;
+				y = rcMain.top + m_AttachOffset;
 				break;
 			case EDGE_RIGHT:
-				x=rcMain.right;
-				y=rcMain.top+m_AttachOffset;
+				x = rcMain.right;
+				y = rcMain.top + m_AttachOffset;
 				break;
 			case EDGE_TOP:
-				y=rcMain.top-rcPanel.bottom;
-				x=rcMain.left+m_AttachOffset;
+				y = rcMain.top - rcPanel.bottom;
+				x = rcMain.left + m_AttachOffset;
 				break;
 			case EDGE_BOTTOM:
-				y=rcMain.bottom;
-				x=rcMain.left+m_AttachOffset;
+				y = rcMain.bottom;
+				x = rcMain.left + m_AttachOffset;
 				break;
 			}
-			m_pFrame->SetPosition(x,y,rcPanel.right,rcPanel.bottom);
+			m_pFrame->SetPosition(x, y, rcPanel.right, rcPanel.bottom);
 			m_pFrame->MoveToMonitorInside();
 		}
 	}
@@ -402,67 +420,72 @@ void CMainPanel::CFormEventHandler::OnSelChange()
 }
 
 
-void CMainPanel::CFormEventHandler::OnRButtonUp(int x,int y)
+void CMainPanel::CFormEventHandler::OnRButtonUp(int x, int y)
 {
 	GetAppClass().UICore.PopupMenu();
 }
 
 
-void CMainPanel::CFormEventHandler::OnTabRButtonUp(int x,int y)
+void CMainPanel::CFormEventHandler::OnTabRButtonUp(int x, int y)
 {
 	CPopupMenu Menu;
 	Menu.Create();
 
-	int Cur=-1;
-	int VisibleCount=0;
+	int Cur = -1;
+	int VisibleCount = 0;
 
-	for (int i=0;i<m_pForm->NumPages();i++) {
+	for (int i = 0; i < m_pForm->NumPages(); i++) {
 		CPanelForm::TabInfo TabInfo;
 
-		m_pForm->GetTabInfo(i,&TabInfo);
-		if (TabInfo.fVisible && CM_PANEL_FIRST+TabInfo.ID<=CM_PANEL_LAST) {
-			TVTest::String Title;
+		m_pForm->GetTabInfo(i, &TabInfo);
+		if (TabInfo.fVisible && CM_PANEL_FIRST + TabInfo.ID <= CM_PANEL_LAST) {
+			String Title;
 			TCHAR szMenu[64];
 
-			m_pForm->GetTabTitle(TabInfo.ID,&Title);
-			CopyToMenuText(Title.c_str(),szMenu,lengthof(szMenu));
-			Menu.Append(CM_PANEL_FIRST+TabInfo.ID,szMenu);
-			if (TabInfo.ID==m_pForm->GetCurPageID())
-				Cur=VisibleCount;
+			m_pForm->GetTabTitle(TabInfo.ID, &Title);
+			CopyToMenuText(Title.c_str(), szMenu, lengthof(szMenu));
+			Menu.Append(CM_PANEL_FIRST + TabInfo.ID, szMenu);
+			if (TabInfo.ID == m_pForm->GetCurPageID())
+				Cur = VisibleCount;
 			VisibleCount++;
 		}
 	}
 
-	if (VisibleCount>0) {
-		if (Cur>=0)
-			Menu.CheckRadioItem(0,VisibleCount-1,Cur,MF_BYPOSITION);
-		POINT pt={x,y};
-		::ClientToScreen(m_pForm->GetHandle(),&pt);
-		Menu.Show(GetAppClass().UICore.GetMainWindow(),&pt,TPM_RIGHTBUTTON);
+	if (VisibleCount > 0) {
+		if (Cur >= 0)
+			Menu.CheckRadioItem(0, VisibleCount - 1, Cur, MF_BYPOSITION);
+		POINT pt = {x, y};
+		::ClientToScreen(m_pForm->GetHandle(), &pt);
+		Menu.Show(GetAppClass().UICore.GetMainWindow(), &pt, TPM_RIGHTBUTTON);
 	}
 }
 
 
-bool CMainPanel::CFormEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
+bool CMainPanel::CFormEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 {
-	GetAppClass().MainWindow.SendMessage(WM_KEYDOWN,KeyCode,Flags);
+	GetAppClass().MainWindow.SendMessage(WM_KEYDOWN, KeyCode, Flags);
 	return true;
 }
 
 
 void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *pChannelInfo)
 {
-	CAppMain &App=GetAppClass();
-	const CChannelList *pList=App.ChannelManager.GetCurrentChannelList();
+	CAppMain &App = GetAppClass();
+	const CChannelList *pList = App.ChannelManager.GetCurrentChannelList();
 
-	if (pList!=NULL) {
-		int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
-									 pChannelInfo->GetChannelIndex(),
-									 pChannelInfo->GetServiceID());
-		if (Index<0 && pChannelInfo->GetServiceID()>0)
-			Index=pList->FindByIndex(pChannelInfo->GetSpace(),
-									 pChannelInfo->GetChannelIndex());
-		if (Index>=0)
-			App.UICore.DoCommandAsync(CM_CHANNEL_FIRST+Index);
+	if (pList != nullptr) {
+		int Index = pList->FindByIndex(
+			pChannelInfo->GetSpace(),
+			pChannelInfo->GetChannelIndex(),
+			pChannelInfo->GetServiceID());
+		if (Index < 0 && pChannelInfo->GetServiceID() > 0)
+			Index = pList->FindByIndex(
+				pChannelInfo->GetSpace(),
+				pChannelInfo->GetChannelIndex());
+		if (Index >= 0)
+			App.UICore.DoCommandAsync(CM_CHANNEL_FIRST + Index);
 	}
 }
+
+
+}	// namespace TVTest

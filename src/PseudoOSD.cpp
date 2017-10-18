@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "PseudoOSD.h"
@@ -5,46 +25,54 @@
 #include "Common/DebugDef.h"
 
 
-// É^ÉCÉ}Å[ÇÃéØï éq
-#define TIMER_ID_HIDE		0x0001U
-#define TIMER_ID_ANIMATION	0x0002U
+namespace TVTest
+{
 
-#define ANIMATION_FRAMES	4	// ÉAÉjÉÅÅ[ÉVÉáÉìÇÃíiäKêî
-#define ANIMATION_INTERVAL	50	// ÉAÉjÉÅÅ[ÉVÉáÉìÇÃä‘äu
+namespace
+{
+
+// „Çø„Ç§„Éû„Éº„ÅÆË≠òÂà•Â≠ê
+constexpr UINT TIMER_ID_HIDE      = 0x0001U;
+constexpr UINT TIMER_ID_ANIMATION = 0x0002U;
+
+constexpr int ANIMATION_FRAMES = 4;      // „Ç¢„Éã„É°„Éº„Ç∑„Éß„É≥„ÅÆÊÆµÈöéÊï∞
+constexpr DWORD ANIMATION_INTERVAL = 50; // „Ç¢„Éã„É°„Éº„Ç∑„Éß„É≥„ÅÆÈñìÈöî
+
+}
 
 
 
 
 static float GetOutlineWidth(int FontSize)
 {
-	return (float)FontSize/5.0f;
+	return (float)FontSize / 5.0f;
 }
 
 
 
 
-const LPCTSTR CPseudoOSD::m_pszWindowClass=APP_NAME TEXT(" Pseudo OSD");
-HINSTANCE CPseudoOSD::m_hinst=NULL;
+const LPCTSTR CPseudoOSD::m_pszWindowClass = APP_NAME TEXT(" Pseudo OSD");
+HINSTANCE CPseudoOSD::m_hinst = nullptr;
 
 
 bool CPseudoOSD::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst==NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW;
-		wc.lpfnWndProc=WndProc;
-		wc.cbClsExtra=0;
-		wc.cbWndExtra=0;
-		wc.hInstance=hinst;
-		wc.hIcon=NULL;
-		wc.hCursor=NULL;
-		wc.hbrBackground=NULL;
-		wc.lpszMenuName=NULL;
-		wc.lpszClassName=m_pszWindowClass;
-		if (::RegisterClass(&wc)==0)
+		wc.style = CS_HREDRAW;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hinst;
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
+		wc.lpszClassName = m_pszWindowClass;
+		if (::RegisterClass(&wc) == 0)
 			return false;
-		m_hinst=hinst;
+		m_hinst = hinst;
 	}
 	return true;
 }
@@ -54,30 +82,30 @@ bool CPseudoOSD::IsPseudoOSD(HWND hwnd)
 {
 	TCHAR szClass[64];
 
-	return ::GetClassName(hwnd,szClass,lengthof(szClass))>0
-		&& ::lstrcmpi(szClass,m_pszWindowClass)==0;
+	return ::GetClassName(hwnd, szClass, lengthof(szClass)) > 0
+		&& ::lstrcmpi(szClass, m_pszWindowClass) == 0;
 }
 
 
 CPseudoOSD::CPseudoOSD()
-	: m_hwnd(NULL)
-	, m_crBackColor(RGB(16,0,16))
-	, m_crTextColor(RGB(0,255,128))
-	, m_TextStyle(TEXT_STYLE_OUTLINE)
-	, m_hbmIcon(NULL)
+	: m_hwnd(nullptr)
+	, m_crBackColor(RGB(16, 0, 16))
+	, m_crTextColor(RGB(0, 255, 128))
+	, m_TextStyle(TextStyle::Outline)
+	, m_hbmIcon(nullptr)
 	, m_IconWidth(0)
 	, m_IconHeight(0)
-	, m_hbm(NULL)
-	, m_ImageEffect(0)
+	, m_hbm(nullptr)
+	, m_ImageEffect(ImageEffect::None)
 {
 	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FONT_DEFAULT,&lf);
+	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &lf);
 	m_Font.Create(&lf);
 
-	m_Position.Left=0;
-	m_Position.Top=0;
-	m_Position.Width=0;
-	m_Position.Height=0;
+	m_Position.Left = 0;
+	m_Position.Top = 0;
+	m_Position.Width = 0;
+	m_Position.Height = 0;
 }
 
 
@@ -87,112 +115,118 @@ CPseudoOSD::~CPseudoOSD()
 }
 
 
-bool CPseudoOSD::Create(HWND hwndParent,bool fLayeredWindow)
+bool CPseudoOSD::Create(HWND hwndParent, bool fLayeredWindow)
 {
-	if (m_hwnd!=NULL) {
-		if (::GetParent(m_hwnd)==hwndParent
-				&& m_fLayeredWindow==fLayeredWindow)
+	if (m_hwnd != nullptr) {
+		if (::GetParent(m_hwnd) == hwndParent
+				&& m_fLayeredWindow == fLayeredWindow)
 			return true;
 		Destroy();
 	}
 
-	m_fLayeredWindow=fLayeredWindow;
-	m_fPopupLayeredWindow=
+	m_fLayeredWindow = fLayeredWindow;
+	m_fPopupLayeredWindow =
 		fLayeredWindow && !Util::OS::IsWindows8OrLater();
-	m_hwndParent=hwndParent;
+	m_hwndParent = hwndParent;
 
 	if (m_fPopupLayeredWindow) {
 		POINT pt;
 		RECT rc;
 
-		pt.x=m_Position.Left;
-		pt.y=m_Position.Top;
-		::ClientToScreen(hwndParent,&pt);
-		if (::CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE,
-							 m_pszWindowClass,NULL,WS_POPUP,
-							 pt.x,pt.y,m_Position.Width,m_Position.Height,
-							 hwndParent,NULL,m_hinst,this)==NULL)
+		pt.x = m_Position.Left;
+		pt.y = m_Position.Top;
+		::ClientToScreen(hwndParent, &pt);
+		if (::CreateWindowEx(
+					WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE,
+					m_pszWindowClass, nullptr, WS_POPUP,
+					pt.x, pt.y, m_Position.Width, m_Position.Height,
+					hwndParent, nullptr, m_hinst, this) == nullptr)
 			return false;
-		::GetWindowRect(hwndParent,&rc);
-		m_ParentPosition.x=rc.left;
-		m_ParentPosition.y=rc.top;
+		::GetWindowRect(hwndParent, &rc);
+		m_ParentPosition.x = rc.left;
+		m_ParentPosition.y = rc.top;
 		return true;
 	}
 
-	return ::CreateWindowEx(fLayeredWindow?(WS_EX_LAYERED | WS_EX_TRANSPARENT):0,
-							m_pszWindowClass,NULL,WS_CHILD,
-							m_Position.Left,m_Position.Top,
-							m_Position.Width,m_Position.Height,
-							hwndParent,NULL,m_hinst,this)!=NULL;
+	return ::CreateWindowEx(
+		fLayeredWindow ? (WS_EX_LAYERED | WS_EX_TRANSPARENT) : 0,
+		m_pszWindowClass, nullptr, WS_CHILD,
+		m_Position.Left, m_Position.Top,
+		m_Position.Width, m_Position.Height,
+		hwndParent, nullptr, m_hinst, this) != nullptr;
 }
 
 
 bool CPseudoOSD::Destroy()
 {
-	if (m_hwnd!=NULL)
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 	return true;
 }
 
 
-bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
+bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == nullptr)
 		return false;
 
 	if (m_fPopupLayeredWindow) {
-		if (Time>0) {
+		if (Time > 0) {
 			POINT pt;
 
-			pt.x=m_Position.Left;
-			pt.y=m_Position.Top;
-			::ClientToScreen(m_hwndParent,&pt);
-			m_Timer.BeginTimer(TIMER_ID_HIDE,Time);
+			pt.x = m_Position.Left;
+			pt.y = m_Position.Top;
+			::ClientToScreen(m_hwndParent, &pt);
+			m_Timer.BeginTimer(TIMER_ID_HIDE, Time);
 			if (fAnimation) {
-				m_AnimationCount=0;
-				::SetWindowPos(m_hwnd,NULL,pt.x,pt.y,
-							   m_Position.Width/ANIMATION_FRAMES,m_Position.Height,
-							   SWP_NOZORDER | SWP_NOACTIVATE);
-				m_Timer.BeginTimer(TIMER_ID_ANIMATION,ANIMATION_INTERVAL);
+				m_AnimationCount = 0;
+				::SetWindowPos(
+					m_hwnd, nullptr, pt.x, pt.y,
+					m_Position.Width / ANIMATION_FRAMES, m_Position.Height,
+					SWP_NOZORDER | SWP_NOACTIVATE);
+				m_Timer.BeginTimer(TIMER_ID_ANIMATION, ANIMATION_INTERVAL);
 			} else {
-				::SetWindowPos(m_hwnd,NULL,pt.x,pt.y,
-							   m_Position.Width,m_Position.Height,
-							   SWP_NOZORDER | SWP_NOACTIVATE);
+				::SetWindowPos(
+					m_hwnd, nullptr, pt.x, pt.y,
+					m_Position.Width, m_Position.Height,
+					SWP_NOZORDER | SWP_NOACTIVATE);
 			}
 		} else {
 			m_Timer.EndTimer(TIMER_ID_HIDE);
 		}
 		UpdateLayeredWindow();
-		::ShowWindow(m_hwnd,SW_SHOWNA);
+		::ShowWindow(m_hwnd, SW_SHOWNA);
 		::UpdateWindow(m_hwnd);
 		return true;
 	}
 
-	if (Time>0) {
-		m_Timer.BeginTimer(TIMER_ID_HIDE,Time);
+	if (Time > 0) {
+		m_Timer.BeginTimer(TIMER_ID_HIDE, Time);
 		if (fAnimation) {
-			m_AnimationCount=0;
-			::MoveWindow(m_hwnd,m_Position.Left,m_Position.Top,
-						 m_Position.Width/ANIMATION_FRAMES,m_Position.Height,
-						 TRUE);
-			m_Timer.BeginTimer(TIMER_ID_ANIMATION,ANIMATION_INTERVAL);
+			m_AnimationCount = 0;
+			::MoveWindow(
+				m_hwnd, m_Position.Left, m_Position.Top,
+				m_Position.Width / ANIMATION_FRAMES, m_Position.Height,
+				TRUE);
+			m_Timer.BeginTimer(TIMER_ID_ANIMATION, ANIMATION_INTERVAL);
 		} else {
-			::MoveWindow(m_hwnd,m_Position.Left,m_Position.Top,
-						 m_Position.Width,m_Position.Height,TRUE);
+			::MoveWindow(
+				m_hwnd, m_Position.Left, m_Position.Top,
+				m_Position.Width, m_Position.Height, TRUE);
 		}
 	} else {
 		m_Timer.EndTimer(TIMER_ID_HIDE);
 	}
 	if (m_fLayeredWindow) {
 		UpdateLayeredWindow();
-		::ShowWindow(m_hwnd,SW_SHOW);
+		::ShowWindow(m_hwnd, SW_SHOW);
 		::BringWindowToTop(m_hwnd);
 		::UpdateWindow(m_hwnd);
 	} else {
 		if (::IsWindowVisible(m_hwnd)) {
-			::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		} else {
-			::ShowWindow(m_hwnd,SW_SHOW);
+			::ShowWindow(m_hwnd, SW_SHOW);
 			::BringWindowToTop(m_hwnd);
 			::UpdateWindow(m_hwnd);
 		}
@@ -204,69 +238,70 @@ bool CPseudoOSD::Show(DWORD Time,bool fAnimation)
 
 bool CPseudoOSD::Hide()
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == nullptr)
 		return false;
-	::ShowWindow(m_hwnd,SW_HIDE);
+	::ShowWindow(m_hwnd, SW_HIDE);
 	m_Text.clear();
-	m_hbm=NULL;
+	m_hbm = nullptr;
 	return true;
 }
 
 
 bool CPseudoOSD::IsVisible() const
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == nullptr)
 		return false;
-	return ::IsWindowVisible(m_hwnd)!=FALSE;
+	return ::IsWindowVisible(m_hwnd) != FALSE;
 }
 
 
-bool CPseudoOSD::SetText(LPCTSTR pszText,HBITMAP hbmIcon,int IconWidth,int IconHeight,unsigned int ImageEffect)
+bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int IconHeight, ImageEffect Effect)
 {
-	TVTest::StringUtility::Assign(m_Text,pszText);
-	m_hbmIcon=hbmIcon;
-	if (hbmIcon!=NULL) {
-		m_IconWidth=IconWidth;
-		m_IconHeight=IconHeight;
-		m_ImageEffect=ImageEffect;
+	StringUtility::Assign(m_Text, pszText);
+	m_hbmIcon = hbmIcon;
+	if (hbmIcon != nullptr) {
+		m_IconWidth = IconWidth;
+		m_IconHeight = IconHeight;
+		m_ImageEffect = Effect;
 	} else {
-		m_IconWidth=0;
-		m_IconHeight=0;
+		m_IconWidth = 0;
+		m_IconHeight = 0;
 	}
-	m_hbm=NULL;
+	m_hbm = nullptr;
 	/*
 	if (IsVisible()) {
 		if (m_fLayeredWindow)
 			UpdateLayeredWindow();
 		else
-			::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 	}
 	*/
 	return true;
 }
 
 
-bool CPseudoOSD::SetPosition(int Left,int Top,int Width,int Height)
+bool CPseudoOSD::SetPosition(int Left, int Top, int Width, int Height)
 {
-	if (Width<=0 || Height<=0)
+	if (Width <= 0 || Height <= 0)
 		return false;
 
-	m_Position.Left=Left;
-	m_Position.Top=Top;
-	m_Position.Width=Width;
-	m_Position.Height=Height;
+	m_Position.Left = Left;
+	m_Position.Top = Top;
+	m_Position.Width = Width;
+	m_Position.Height = Height;
 
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != nullptr) {
 		if (m_fPopupLayeredWindow) {
 			POINT pt;
 
-			pt.x=Left;
-			pt.y=Top;
-			::ClientToScreen(m_hwndParent,&pt);
-			::SetWindowPos(m_hwnd,NULL,pt.x,pt.y,Width,Height,
-						   SWP_NOZORDER | SWP_NOACTIVATE);
+			pt.x = Left;
+			pt.y = Top;
+			::ClientToScreen(m_hwndParent, &pt);
+			::SetWindowPos(
+				m_hwnd, nullptr, pt.x, pt.y, Width, Height,
+				SWP_NOZORDER | SWP_NOACTIVATE);
 		} else {
-			::SetWindowPos(m_hwnd,HWND_TOP,Left,Top,Width,Height,0);
+			::SetWindowPos(m_hwnd, HWND_TOP, Left, Top, Width, Height, 0);
 		}
 	}
 
@@ -274,25 +309,25 @@ bool CPseudoOSD::SetPosition(int Left,int Top,int Width,int Height)
 }
 
 
-void CPseudoOSD::GetPosition(int *pLeft,int *pTop,int *pWidth,int *pHeight) const
+void CPseudoOSD::GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const
 {
 	if (pLeft)
-		*pLeft=m_Position.Left;
+		*pLeft = m_Position.Left;
 	if (pTop)
-		*pTop=m_Position.Top;
+		*pTop = m_Position.Top;
 	if (pWidth)
-		*pWidth=m_Position.Width;
+		*pWidth = m_Position.Width;
 	if (pHeight)
-		*pHeight=m_Position.Height;
+		*pHeight = m_Position.Height;
 }
 
 
 void CPseudoOSD::SetTextColor(COLORREF crText)
 {
-	m_crTextColor=crText;
+	m_crTextColor = crText;
 	/*
-	if (m_hwnd!=NULL)
-		::InvalidateRect(m_hwnd,NULL,TRUE);
+	if (m_hwnd != nullptr)
+		::InvalidateRect(m_hwnd, nullptr, TRUE);
 	*/
 }
 
@@ -303,15 +338,15 @@ bool CPseudoOSD::SetTextHeight(int Height)
 
 	if (!m_Font.GetLogFont(&lf))
 		return false;
-	lf.lfWidth=0;
-	lf.lfHeight=-Height;
+	lf.lfWidth = 0;
+	lf.lfHeight = -Height;
 	return m_Font.Create(&lf);
 }
 
 
-bool CPseudoOSD::SetTextStyle(unsigned int Style)
+bool CPseudoOSD::SetTextStyle(TextStyle Style)
 {
-	m_TextStyle=Style;
+	m_TextStyle = Style;
 	return true;
 }
 
@@ -324,8 +359,8 @@ bool CPseudoOSD::SetFont(const LOGFONT &Font)
 
 bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 {
-	pSize->cx=0;
-	pSize->cy=0;
+	pSize->cx = 0;
+	pSize->cy = 0;
 
 	if (m_Text.empty())
 		return true;
@@ -333,39 +368,39 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 	HDC hdc;
 	bool fResult;
 
-	if (m_hwnd!=NULL)
-		hdc=::GetDC(m_hwnd);
+	if (m_hwnd != nullptr)
+		hdc = ::GetDC(m_hwnd);
 	else
-		hdc=::CreateCompatibleDC(NULL);
+		hdc = ::CreateCompatibleDC(nullptr);
 
 	if (!m_fLayeredWindow) {
-		HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-		RECT rc={0,0,0,0};
-		fResult=::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,DT_CALCRECT | DT_NOPREFIX)!=0;
+		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+		RECT rc = {0, 0, 0, 0};
+		fResult = ::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, DT_CALCRECT | DT_NOPREFIX) != 0;
 		if (fResult) {
-			pSize->cx=rc.right-rc.left;
-			pSize->cy=rc.bottom-rc.top;
+			pSize->cx = rc.right - rc.left;
+			pSize->cy = rc.bottom - rc.top;
 		}
-		::SelectObject(hdc,hfontOld);
+		::SelectObject(hdc, hfontOld);
 	} else {
-		TVTest::Graphics::CCanvas Canvas(hdc);
+		Graphics::CCanvas Canvas(hdc);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);
-		if ((m_TextStyle & TEXT_STYLE_OUTLINE)!=0) {
-			fResult=Canvas.GetOutlineTextSize(
-				m_Text.c_str(),lf,GetOutlineWidth(abs(lf.lfHeight)),
-				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
+		if (!!(m_TextStyle & TextStyle::Outline)) {
+			fResult = Canvas.GetOutlineTextSize(
+				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)),
+				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting,
 				pSize);
 		} else {
-			fResult=Canvas.GetTextSize(
-				m_Text.c_str(),lf,
-				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING,
+			fResult = Canvas.GetTextSize(
+				m_Text.c_str(), lf,
+				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting,
 				pSize);
 		}
 	}
 
-	if (m_hwnd!=NULL)
-		::ReleaseDC(m_hwnd,hdc);
+	if (m_hwnd != nullptr)
+		::ReleaseDC(m_hwnd, hdc);
 	else
 		::DeleteDC(hdc);
 
@@ -373,26 +408,26 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 }
 
 
-bool CPseudoOSD::SetImage(HBITMAP hbm,unsigned int ImageEffect)
+bool CPseudoOSD::SetImage(HBITMAP hbm, ImageEffect Effect)
 {
-	m_hbm=hbm;
+	m_hbm = hbm;
 	m_Text.clear();
-	m_hbmIcon=NULL;
-	m_ImageEffect=ImageEffect;
+	m_hbmIcon = nullptr;
+	m_ImageEffect = Effect;
 #if 0
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != nullptr) {
 		/*
 		BITMAP bm;
 
-		::GetObject(m_hbm,sizeof(BITMAP),&bm);
-		m_Position.Width=bm.bmWidth;
-		m_Position.Height=bm.bmHeight;
-		::MoveWindow(m_hwnd,Left,Top,bm.bmWidth,bm.bmHeight,TRUE);
+		::GetObject(m_hbm, sizeof(BITMAP), &bm);
+		m_Position.Width = bm.bmWidth;
+		m_Position.Height = bm.bmHeight;
+		::MoveWindow(m_hwnd, Left, Top, bm.bmWidth, bm.bmHeight, TRUE);
 		*/
 		if (m_fLayeredWindow)
 			UpdateLayeredWindow();
 		else
-			::RedrawWindow(m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 	}
 #endif
 	return true;
@@ -401,208 +436,212 @@ bool CPseudoOSD::SetImage(HBITMAP hbm,unsigned int ImageEffect)
 
 void CPseudoOSD::OnParentMove()
 {
-	if (m_hwnd!=NULL && m_fPopupLayeredWindow) {
-		RECT rcParent,rc;
+	if (m_hwnd != nullptr && m_fPopupLayeredWindow) {
+		RECT rcParent, rc;
 
-		::GetWindowRect(m_hwndParent,&rcParent);
-		::GetWindowRect(m_hwnd,&rc);
-		::OffsetRect(&rc,
-					 rcParent.left-m_ParentPosition.x,
-					 rcParent.top-m_ParentPosition.y);
-		::SetWindowPos(m_hwnd,NULL,rc.left,rc.top,
-					   rc.right-rc.left,rc.bottom-rc.top,
-					   SWP_NOZORDER | SWP_NOACTIVATE);
-		m_ParentPosition.x=rcParent.left;
-		m_ParentPosition.y=rcParent.top;
+		::GetWindowRect(m_hwndParent, &rcParent);
+		::GetWindowRect(m_hwnd, &rc);
+		::OffsetRect(
+			&rc,
+			rcParent.left - m_ParentPosition.x,
+			rcParent.top - m_ParentPosition.y);
+		::SetWindowPos(
+			m_hwnd, nullptr, rc.left, rc.top,
+			rc.right - rc.left, rc.bottom - rc.top,
+			SWP_NOZORDER | SWP_NOACTIVATE);
+		m_ParentPosition.x = rcParent.left;
+		m_ParentPosition.y = rcParent.top;
 	}
 }
 
 
-void CPseudoOSD::Draw(HDC hdc,const RECT &PaintRect) const
+void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 {
 	RECT rc;
 
-	::GetClientRect(m_hwnd,&rc);
+	::GetClientRect(m_hwnd, &rc);
 	if (!m_Text.empty()) {
 		HFONT hfontOld;
 		COLORREF crOldTextColor;
 		int OldBkMode;
 
-		DrawUtil::Fill(hdc,&PaintRect,m_crBackColor);
-		if (m_hbmIcon!=NULL) {
+		DrawUtil::Fill(hdc, &PaintRect, m_crBackColor);
+		if (m_hbmIcon != nullptr) {
 			int IconWidth;
 			if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
-				IconWidth=m_IconWidth*(m_AnimationCount+1)/ANIMATION_FRAMES;
+				IconWidth = m_IconWidth * (m_AnimationCount + 1) / ANIMATION_FRAMES;
 			else
-				IconWidth=m_IconWidth;
-			DrawUtil::DrawBitmap(hdc,
-								 0,(rc.bottom-m_IconHeight)/2,
-								 IconWidth,m_IconHeight,
-								 m_hbmIcon);
+				IconWidth = m_IconWidth;
+			DrawUtil::DrawBitmap(
+				hdc,
+				0, (rc.bottom - m_IconHeight) / 2,
+				IconWidth, m_IconHeight,
+				m_hbmIcon);
 			RECT rcIcon;
-			rcIcon.left=0;
-			rcIcon.top=(rc.bottom-m_IconHeight)/2;
-			rcIcon.right=rcIcon.left+IconWidth;
-			rcIcon.bottom=rcIcon.top+m_IconHeight;
-			DrawImageEffect(hdc,&rcIcon);
-			rc.left+=IconWidth;
+			rcIcon.left = 0;
+			rcIcon.top = (rc.bottom - m_IconHeight) / 2;
+			rcIcon.right = rcIcon.left + IconWidth;
+			rcIcon.bottom = rcIcon.top + m_IconHeight;
+			DrawImageEffect(hdc, &rcIcon);
+			rc.left += IconWidth;
 		}
-		hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-		crOldTextColor=::SetTextColor(hdc,m_crTextColor);
-		OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-		::DrawText(hdc,m_Text.data(),(int)m_Text.length(),&rc,
-				   DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-		::SetBkMode(hdc,OldBkMode);
-		::SetTextColor(hdc,crOldTextColor);
-		::SelectObject(hdc,hfontOld);
-	} else if (m_hbm!=NULL) {
+		hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+		crOldTextColor = ::SetTextColor(hdc, m_crTextColor);
+		OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+		::DrawText(
+			hdc, m_Text.data(), (int)m_Text.length(), &rc,
+			DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+		::SetBkMode(hdc, OldBkMode);
+		::SetTextColor(hdc, crOldTextColor);
+		::SelectObject(hdc, hfontOld);
+	} else if (m_hbm != nullptr) {
 		BITMAP bm;
-		::GetObject(m_hbm,sizeof(BITMAP),&bm);
-		RECT rcBitmap={0,0,bm.bmWidth,bm.bmHeight};
-		DrawUtil::DrawBitmap(hdc,0,0,rc.right,rc.bottom,
-							 m_hbm,&rcBitmap);
-		DrawImageEffect(hdc,&rc);
+		::GetObject(m_hbm, sizeof(BITMAP), &bm);
+		RECT rcBitmap = {0, 0, bm.bmWidth, bm.bmHeight};
+		DrawUtil::DrawBitmap(hdc, 0, 0, rc.right, rc.bottom, m_hbm, &rcBitmap);
+		DrawImageEffect(hdc, &rc);
 	}
 }
 
 
-void CPseudoOSD::DrawImageEffect(HDC hdc,const RECT *pRect) const
+void CPseudoOSD::DrawImageEffect(HDC hdc, const RECT *pRect) const
 {
-	if ((m_ImageEffect&IMAGEEFFECT_GLOSS)!=0)
-		DrawUtil::GlossOverlay(hdc,pRect);
-	if ((m_ImageEffect&IMAGEEFFECT_DARK)!=0)
-		DrawUtil::ColorOverlay(hdc,pRect,RGB(0,0,0),64);
+	if (!!(m_ImageEffect & ImageEffect::Gloss))
+		DrawUtil::GlossOverlay(hdc, pRect);
+	if (!!(m_ImageEffect & ImageEffect::Dark))
+		DrawUtil::ColorOverlay(hdc, pRect, RGB(0, 0, 0), 64);
 }
 
 
 void CPseudoOSD::UpdateLayeredWindow()
 {
 	RECT rc;
-	int Width,Height;
+	int Width, Height;
 
-	::GetWindowRect(m_hwnd,&rc);
-	Width=rc.right-rc.left;
-	Height=rc.bottom-rc.top;
-	if (Width<1 || Height<1)
+	::GetWindowRect(m_hwnd, &rc);
+	Width = rc.right - rc.left;
+	Height = rc.bottom - rc.top;
+	if (Width < 1 || Height < 1)
 		return;
 
 	void *pBits;
-	HBITMAP hbmSurface=DrawUtil::CreateDIB(Width,Height,32,&pBits);
-	if (hbmSurface==NULL)
+	HBITMAP hbmSurface = DrawUtil::CreateDIB(Width, Height, 32, &pBits);
+	if (hbmSurface == nullptr)
 		return;
-	::ZeroMemory(pBits,Width*4*Height);
+	::ZeroMemory(pBits, Width * 4 * Height);
 
-	HDC hdc=::GetDC(m_hwnd);
-	HDC hdcSrc=::CreateCompatibleDC(hdc);
-	HBITMAP hbmOld=static_cast<HBITMAP>(::SelectObject(hdcSrc,hbmSurface));
+	HDC hdc = ::GetDC(m_hwnd);
+	HDC hdcSrc = ::CreateCompatibleDC(hdc);
+	HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmSurface));
 
 	{
-		TVTest::Graphics::CCanvas Canvas(hdcSrc);
+		Graphics::CCanvas Canvas(hdcSrc);
 
-		::SetRect(&rc,0,0,Width,Height);
+		::SetRect(&rc, 0, 0, Width, Height);
 
 		if (!m_Text.empty()) {
-			if (m_hbmIcon!=NULL) {
-				TVTest::Graphics::CImage Image;
+			if (m_hbmIcon != nullptr) {
+				Graphics::CImage Image;
 
 				Image.CreateFromBitmap(m_hbmIcon);
 				int IconWidth;
 				if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
-					IconWidth=m_IconWidth*(m_AnimationCount+1)/ANIMATION_FRAMES;
+					IconWidth = m_IconWidth * (m_AnimationCount + 1) / ANIMATION_FRAMES;
 				else
-					IconWidth=m_IconWidth;
-				Canvas.DrawImage(0,(Height-m_IconHeight)/2,
-								 IconWidth,m_IconHeight,
-								 &Image,0,0,m_IconWidth,m_IconHeight);
+					IconWidth = m_IconWidth;
+				Canvas.DrawImage(
+					0, (Height - m_IconHeight) / 2,
+					IconWidth, m_IconHeight,
+					&Image, 0, 0, m_IconWidth, m_IconHeight);
 				RECT rcIcon;
-				rcIcon.left=0;
-				rcIcon.top=(Height-m_IconHeight)/2;
-				rcIcon.right=rcIcon.left+IconWidth;
-				rcIcon.bottom=rcIcon.top+m_IconHeight;
-				if (rcIcon.top<0)
-					rcIcon.top=0;
-				if (rcIcon.right>Width)
-					rcIcon.right=Width;
-				if (rcIcon.bottom>Height)
-					rcIcon.bottom=Height;
-				DrawImageEffect(hdcSrc,&rcIcon);
-				rc.left+=IconWidth;
+				rcIcon.left = 0;
+				rcIcon.top = (Height - m_IconHeight) / 2;
+				rcIcon.right = rcIcon.left + IconWidth;
+				rcIcon.bottom = rcIcon.top + m_IconHeight;
+				if (rcIcon.top < 0)
+					rcIcon.top = 0;
+				if (rcIcon.right > Width)
+					rcIcon.right = Width;
+				if (rcIcon.bottom > Height)
+					rcIcon.bottom = Height;
+				DrawImageEffect(hdcSrc, &rcIcon);
+				rc.left += IconWidth;
 			}
 
-			if ((m_TextStyle & TEXT_STYLE_FILL_BACKGROUND)!=0) {
-				TVTest::Graphics::CBrush BackBrush(0,0,0,128);
-				Canvas.FillRect(&BackBrush,rc);
+			if (!!(m_TextStyle & TextStyle::FillBackground)) {
+				Graphics::CBrush BackBrush(0, 0, 0, 128);
+				Canvas.FillRect(&BackBrush, rc);
 			}
 
-			TVTest::Graphics::CBrush TextBrush(
+			Graphics::CBrush TextBrush(
 				GetRValue(m_crTextColor),
 				GetGValue(m_crTextColor),
 				GetBValue(m_crTextColor),
-				254);	// 255Ç…Ç∑ÇÈÇ∆ï`âÊÇ™Ç®Ç©ÇµÇ≠Ç»ÇÈ
+				254);	// 255„Å´„Åô„Çã„Å®ÊèèÁîª„Åå„Åä„Åã„Åó„Åè„Å™„Çã
 			LOGFONT lf;
 			m_Font.GetLogFont(&lf);
 
-			UINT DrawTextFlags=
-				TVTest::Graphics::TEXT_FORMAT_NO_WRAP |
-				TVTest::Graphics::TEXT_DRAW_ANTIALIAS | TVTest::Graphics::TEXT_DRAW_HINTING;
-			if ((m_TextStyle & TEXT_STYLE_RIGHT)!=0)
-				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_RIGHT;
-			else if ((m_TextStyle & TEXT_STYLE_HORZ_CENTER)!=0)
-				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_HORZ_CENTER;
-			if ((m_TextStyle & TEXT_STYLE_BOTTOM)!=0)
-				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_BOTTOM;
-			if ((m_TextStyle & TEXT_STYLE_VERT_CENTER)!=0)
-				DrawTextFlags|=TVTest::Graphics::TEXT_FORMAT_VERT_CENTER;
+			Graphics::TextFlag DrawTextFlags =
+				Graphics::TextFlag::Format_NoWrap |
+				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
+			if (!!(m_TextStyle & TextStyle::Right))
+				DrawTextFlags |= Graphics::TextFlag::Format_Right;
+			else if (!!(m_TextStyle & TextStyle::HorzCenter))
+				DrawTextFlags |= Graphics::TextFlag::Format_HorzCenter;
+			if (!!(m_TextStyle & TextStyle::Bottom))
+				DrawTextFlags |= Graphics::TextFlag::Format_Bottom;
+			if (!!(m_TextStyle & TextStyle::VertCenter))
+				DrawTextFlags |= Graphics::TextFlag::Format_VertCenter;
 
-			if ((m_TextStyle & TEXT_STYLE_OUTLINE)!=0) {
+			if (!!(m_TextStyle & TextStyle::Outline)) {
 				Canvas.DrawOutlineText(
-					m_Text.c_str(),lf,rc,&TextBrush,
-					TVTest::Graphics::CColor(0,0,0,160),
+					m_Text.c_str(), lf, rc, &TextBrush,
+					Graphics::CColor(0, 0, 0, 160),
 					GetOutlineWidth(abs(lf.lfHeight)),
 					DrawTextFlags);
 			} else {
-				Canvas.DrawText(m_Text.c_str(),lf,rc,&TextBrush,DrawTextFlags);
+				Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
 			}
-		} else if (m_hbm!=NULL) {
-			TVTest::Graphics::CImage Image;
+		} else if (m_hbm != nullptr) {
+			Graphics::CImage Image;
 			if (Image.CreateFromBitmap(m_hbm)) {
-				Canvas.DrawImage(&Image,0,0);
+				Canvas.DrawImage(&Image, 0, 0);
 				BITMAP bm;
-				::GetObject(m_hbm,sizeof(BITMAP),&bm);
-				RECT rcBitmap={0,0,bm.bmWidth,bm.bmHeight};
-				DrawImageEffect(hdcSrc,&rcBitmap);
+				::GetObject(m_hbm, sizeof(BITMAP), &bm);
+				RECT rcBitmap = {0, 0, bm.bmWidth, bm.bmHeight};
+				DrawImageEffect(hdcSrc, &rcBitmap);
 			}
 		}
 	}
 
-	SIZE sz={Width,Height};
-	POINT ptSrc={0,0};
-	BLENDFUNCTION blend={AC_SRC_OVER,0,255,AC_SRC_ALPHA};
-	::UpdateLayeredWindow(m_hwnd,hdc,NULL,&sz,hdcSrc,&ptSrc,0,&blend,ULW_ALPHA);
+	SIZE sz = {Width, Height};
+	POINT ptSrc = {0, 0};
+	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+	::UpdateLayeredWindow(m_hwnd, hdc, nullptr, &sz, hdcSrc, &ptSrc, 0, &blend, ULW_ALPHA);
 
-	::SelectObject(hdcSrc,hbmOld);
+	::SelectObject(hdcSrc, hbmOld);
 	::DeleteDC(hdcSrc);
-	::ReleaseDC(m_hwnd,hdc);
+	::ReleaseDC(m_hwnd, hdc);
 	::DeleteObject(hbmSurface);
 }
 
 
 CPseudoOSD *CPseudoOSD::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CPseudoOSD*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
+	return reinterpret_cast<CPseudoOSD*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CPseudoOSD *pThis=static_cast<CPseudoOSD*>(pcs->lpCreateParams);
+			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			CPseudoOSD *pThis = static_cast<CPseudoOSD*>(pcs->lpCreateParams);
 
-			pThis->m_hwnd=hwnd;
-			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
+			pThis->m_hwnd = hwnd;
+			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 
 			pThis->m_Timer.InitializeTimer(hwnd);
 		}
@@ -610,7 +649,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_SIZE:
 		{
-			CPseudoOSD *pThis=GetThis(hwnd);
+			CPseudoOSD *pThis = GetThis(hwnd);
 
 			if (pThis->m_fLayeredWindow && ::IsWindowVisible(hwnd))
 				pThis->UpdateLayeredWindow();
@@ -619,19 +658,19 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 
 	case WM_PAINT:
 		{
-			CPseudoOSD *pThis=GetThis(hwnd);
+			CPseudoOSD *pThis = GetThis(hwnd);
 			PAINTSTRUCT ps;
 
-			::BeginPaint(hwnd,&ps);
+			::BeginPaint(hwnd, &ps);
 			if (!pThis->m_fLayeredWindow)
-				pThis->Draw(ps.hdc,ps.rcPaint);
-			::EndPaint(hwnd,&ps);
+				pThis->Draw(ps.hdc, ps.rcPaint);
+			::EndPaint(hwnd, &ps);
 		}
 		return 0;
 
 	case WM_TIMER:
 		{
-			CPseudoOSD *pThis=GetThis(hwnd);
+			CPseudoOSD *pThis = GetThis(hwnd);
 
 			switch (wParam) {
 			case TIMER_ID_HIDE:
@@ -645,19 +684,21 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 				if (pThis->m_fPopupLayeredWindow) {
 					RECT rc;
 
-					::GetWindowRect(hwnd,&rc);
-					::SetWindowPos(hwnd,NULL,rc.left,rc.top,
-								   pThis->m_Position.Width*(pThis->m_AnimationCount+1)/ANIMATION_FRAMES,
-								   pThis->m_Position.Height,
-								   SWP_NOZORDER | SWP_NOACTIVATE);
+					::GetWindowRect(hwnd, &rc);
+					::SetWindowPos(
+						hwnd, nullptr, rc.left, rc.top,
+						pThis->m_Position.Width * (pThis->m_AnimationCount + 1) / ANIMATION_FRAMES,
+						pThis->m_Position.Height,
+						SWP_NOZORDER | SWP_NOACTIVATE);
 				} else {
-					::MoveWindow(hwnd,pThis->m_Position.Left,pThis->m_Position.Top,
-								 pThis->m_Position.Width*(pThis->m_AnimationCount+1)/ANIMATION_FRAMES,
-								 pThis->m_Position.Height,
-								 TRUE);
+					::MoveWindow(
+						hwnd, pThis->m_Position.Left, pThis->m_Position.Top,
+						pThis->m_Position.Width * (pThis->m_AnimationCount + 1) / ANIMATION_FRAMES,
+						pThis->m_Position.Height,
+						TRUE);
 				}
 				::UpdateWindow(hwnd);
-				if (pThis->m_AnimationCount+1==ANIMATION_FRAMES) {
+				if (pThis->m_AnimationCount + 1 == ANIMATION_FRAMES) {
 					pThis->m_Timer.EndTimer(TIMER_ID_ANIMATION);
 				}
 				break;
@@ -676,34 +717,37 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lP
 	case WM_MBUTTONDBLCLK:
 	case WM_MOUSEMOVE:
 		{
-			CPseudoOSD *pThis=GetThis(hwnd);
+			CPseudoOSD *pThis = GetThis(hwnd);
 			POINT pt;
 			RECT rc;
 
-			pt.x=GET_X_LPARAM(lParam);
-			pt.y=GET_Y_LPARAM(lParam);
-			::MapWindowPoints(hwnd,pThis->m_hwndParent,&pt,1);
-			::GetClientRect(pThis->m_hwndParent,&rc);
-			if (::PtInRect(&rc,pt))
-				return ::SendMessage(pThis->m_hwndParent,uMsg,wParam,MAKELPARAM(pt.x,pt.y));
+			pt.x = GET_X_LPARAM(lParam);
+			pt.y = GET_Y_LPARAM(lParam);
+			::MapWindowPoints(hwnd, pThis->m_hwndParent, &pt, 1);
+			::GetClientRect(pThis->m_hwndParent, &rc);
+			if (::PtInRect(&rc, pt))
+				return ::SendMessage(pThis->m_hwndParent, uMsg, wParam, MAKELPARAM(pt.x, pt.y));
 		}
 		return 0;
 
 	case WM_SETCURSOR:
 		{
-			CPseudoOSD *pThis=GetThis(hwnd);
+			CPseudoOSD *pThis = GetThis(hwnd);
 
-			return ::SendMessage(pThis->m_hwndParent,uMsg,wParam,lParam);
+			return ::SendMessage(pThis->m_hwndParent, uMsg, wParam, lParam);
 		}
 
 	case WM_DESTROY:
 		{
-			CPseudoOSD *pThis=GetThis(hwnd);
+			CPseudoOSD *pThis = GetThis(hwnd);
 
-			pThis->m_hwnd=NULL;
+			pThis->m_hwnd = nullptr;
 		}
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+
+
+}	// namespace TVTest

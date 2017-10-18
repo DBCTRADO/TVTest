@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_INI_FILE_H
 #define TVTEST_INI_FILE_H
 
@@ -26,25 +46,26 @@ namespace TVTest
 
 			CEntry() {}
 			CEntry(const String &Text);
-			CEntry(LPCWSTR pszName,LPCWSTR pszValue);
+			CEntry(LPCWSTR pszName, LPCWSTR pszValue);
 		};
 
 		typedef std::vector<CEntry> EntryArray;
 
 		CIniFile();
 		~CIniFile();
-		bool Open(LPCWSTR pszFileName,UINT Flags);
+
+		bool Open(LPCWSTR pszFileName, UINT Flags);
 		bool Close();
 		bool SelectSection(LPCWSTR pszSection);
 		bool IsSectionExists(LPCWSTR pszSection);
 		bool DeleteSection(LPCWSTR pszSection);
 		bool ClearSection(LPCWSTR pszSection);
 		bool ClearSection();
-		bool GetValue(LPCWSTR pszName,String *pValue);
-		bool SetValue(LPCWSTR pszName,LPCWSTR pszValue);
+		bool GetValue(LPCWSTR pszName, String *pValue);
+		bool SetValue(LPCWSTR pszName, LPCWSTR pszValue);
 		bool IsValueExists(LPCWSTR pszName);
 		bool DeleteValue(LPCWSTR pszName);
-		bool GetSectionEntries(LPCWSTR pszSection,EntryArray *pEntries);
+		bool GetSectionEntries(LPCWSTR pszSection, EntryArray *pEntries);
 		bool GetEntries(EntryArray *pEntries);
 
 	private:
@@ -63,8 +84,8 @@ namespace TVTest
 		bool Parse(LPCWSTR pszBuffer);
 		SectionList::iterator FindSection(LPCWSTR pszName);
 		SectionList::const_iterator FindSection(LPCWSTR pszName) const;
-		EntryList::iterator FindValue(EntryList &Entries,LPCWSTR pszName);
-		EntryList::const_iterator FindValue(const EntryList &Entries,LPCWSTR pszName) const;
+		EntryList::iterator FindValue(EntryList &Entries, LPCWSTR pszName);
+		EntryList::const_iterator FindValue(const EntryList &Entries, LPCWSTR pszName) const;
 		bool CreateSection(LPCWSTR pszName);
 		CSectionData *GetCurSection();
 

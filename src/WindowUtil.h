@@ -1,85 +1,114 @@
-#ifndef WINDOW_UTIL_H
-#define WINDOW_UTIL_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 
-void SnapWindow(HWND hwnd,RECT *prc,int Margin,HWND hwndExclude=NULL);
-bool IsMessageInQueue(HWND hwnd,UINT Message);
+#ifndef TVTEST_WINDOW_UTIL_H
+#define TVTEST_WINDOW_UTIL_H
 
 
-class CMouseLeaveTrack
+namespace TVTest
 {
-public:
-	CMouseLeaveTrack();
-	void Initialize(HWND hwnd);
-	bool OnMouseMove();
-	bool OnMouseLeave();
-	bool OnNcMouseMove();
-	bool OnNcMouseLeave();
-	bool OnMessage(UINT Msg,WPARAM wParam,LPARAM lParam);
-	bool IsClientTrack() const { return m_fClientTrack; }
-	bool IsNonClientTrack() const { return m_fNonClientTrack; }
 
-protected:
-	HWND m_hwnd;
-	bool m_fClientTrack;
-	bool m_fNonClientTrack;
+	void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude = nullptr);
+	bool IsMessageInQueue(HWND hwnd, UINT Message);
 
-	bool IsCursorInWindow() const;
-};
 
-class CMouseWheelHandler
-{
-public:
-	CMouseWheelHandler();
-	void Reset();
-	void ResetDelta();
-	int OnWheel(int Delta);
-	int OnMouseWheel(WPARAM wParam,int ScrollLines=0);
-	int OnMouseHWheel(WPARAM wParam,int ScrollChars=0);
-	int GetDeltaSum() const { return m_DeltaSum; }
-	int GetLastDelta() const { return m_LastDelta; }
-	DWORD GetLastTime() const { return m_LastTime; }
-	int GetDefaultScrollLines() const;
-	int GetDefaultScrollChars() const;
+	class CMouseLeaveTrack
+	{
+	public:
+		CMouseLeaveTrack();
 
-protected:
-	int m_DeltaSum;
-	int m_LastDelta;
-	DWORD m_LastTime;
-};
+		void Initialize(HWND hwnd);
+		bool OnMouseMove();
+		bool OnMouseLeave();
+		bool OnNcMouseMove();
+		bool OnNcMouseLeave();
+		bool OnMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+		bool IsClientTrack() const { return m_fClientTrack; }
+		bool IsNonClientTrack() const { return m_fNonClientTrack; }
 
-class CWindowTimerManager
-{
-public:
-	CWindowTimerManager();
-	void InitializeTimer(HWND hwnd);
-	bool BeginTimer(unsigned int ID,DWORD Interval);
-	void EndTimer(unsigned int ID);
-	void EndAllTimers();
-	bool IsTimerEnabled(unsigned int ID) const;
+	protected:
+		HWND m_hwnd;
+		bool m_fClientTrack;
+		bool m_fNonClientTrack;
 
-protected:
-	HWND m_hwndTimer;
-	unsigned int m_TimerIDs;
-};
+		bool IsCursorInWindow() const;
+	};
 
-class CWindowSubclass
-{
-public:
-	CWindowSubclass();
-	virtual ~CWindowSubclass();
-	bool SetSubclass(HWND hwnd);
-	void RemoveSubclass();
+	class CMouseWheelHandler
+	{
+	public:
+		CMouseWheelHandler();
 
-protected:
-	HWND m_hwnd;
+		void Reset();
+		void ResetDelta();
+		int OnWheel(int Delta);
+		int OnMouseWheel(WPARAM wParam, int ScrollLines = 0);
+		int OnMouseHWheel(WPARAM wParam, int ScrollChars = 0);
+		int GetDeltaSum() const { return m_DeltaSum; }
+		int GetLastDelta() const { return m_LastDelta; }
+		DWORD GetLastTime() const { return m_LastTime; }
+		int GetDefaultScrollLines() const;
+		int GetDefaultScrollChars() const;
 
-	static LRESULT CALLBACK SubclassProc(
-		HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
-		UINT_PTR uIdSubclass,DWORD_PTR dwRefData);
-	virtual LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	virtual void OnSubclassRemoved() {}
-};
+	protected:
+		int m_DeltaSum;
+		int m_LastDelta;
+		DWORD m_LastTime;
+	};
+
+	class CWindowTimerManager
+	{
+	public:
+		CWindowTimerManager();
+
+		void InitializeTimer(HWND hwnd);
+		bool BeginTimer(unsigned int ID, DWORD Interval);
+		void EndTimer(unsigned int ID);
+		void EndAllTimers();
+		bool IsTimerEnabled(unsigned int ID) const;
+
+	protected:
+		HWND m_hwndTimer;
+		unsigned int m_TimerIDs;
+	};
+
+	class CWindowSubclass
+	{
+	public:
+		CWindowSubclass();
+		virtual ~CWindowSubclass();
+
+		bool SetSubclass(HWND hwnd);
+		void RemoveSubclass();
+
+	protected:
+		HWND m_hwnd;
+
+		static LRESULT CALLBACK SubclassProc(
+			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+		virtual LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		virtual void OnSubclassRemoved() {}
+	};
+
+}	// namespace TVTest
 
 
 #endif

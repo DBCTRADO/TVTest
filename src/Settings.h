@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_SETTINGS_H
 #define TVTEST_SETTINGS_H
 
@@ -6,71 +26,82 @@
 #include "IniFile.h"
 
 
-class CSettings
+namespace TVTest
 {
-	TVTest::CIniFile m_IniFile;
-	unsigned int m_OpenFlags;
 
-public:
-	enum {
-		OPEN_READ           = 0x00000001U,
-		OPEN_WRITE          = 0x00000002U,
-		OPEN_WRITE_VOLATILE = 0x00000004U
+	class CSettings
+	{
+	public:
+		enum class OpenFlag : unsigned int {
+			None          = 0x0000U,
+			Read          = 0x0001U,
+			Write         = 0x0002U,
+			WriteVolatile = 0x0004U,
+		};
+
+		typedef CIniFile::CEntry CEntry;
+		typedef CIniFile::EntryArray EntryList;
+
+		CSettings();
+		~CSettings();
+
+		bool Open(LPCTSTR pszFileName, OpenFlag Flags);
+		void Close();
+		bool IsOpened() const;
+		bool Clear();
+		bool SetSection(LPCTSTR pszSection);
+		bool IsSectionExists(LPCTSTR pszSection);
+		bool GetEntries(EntryList *pEntries);
+		bool IsValueExists(LPCTSTR pszValueName);
+		bool DeleteValue(LPCTSTR pszValueName);
+		bool Read(LPCTSTR pszValueName, int *pData);
+		bool Write(LPCTSTR pszValueName, int Data);
+		bool Read(LPCTSTR pszValueName, unsigned int *pData);
+		bool Write(LPCTSTR pszValueName, unsigned int Data);
+		bool Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max);
+		bool Write(LPCTSTR pszValueName, LPCTSTR pszData);
+		bool Read(LPCTSTR pszValueName, String *pValue);
+		bool Write(LPCTSTR pszValueName, const String &Value);
+		bool Read(LPCTSTR pszValueName, bool *pfData);
+		bool Write(LPCTSTR pszValueName, bool fData);
+		bool Read(LPCTSTR pszValueName, double *pData);
+		bool Write(LPCTSTR pszValueName, double Data, int Digits);
+		bool Read(LPCTSTR pszValueName, float *pData);
+		bool ReadColor(LPCTSTR pszValueName, COLORREF *pcrData);
+		bool WriteColor(LPCTSTR pszValueName, COLORREF crData);
+		bool Read(LPCTSTR pszValueName, LOGFONT *pFont);
+		bool Write(LPCTSTR pszValueName, const LOGFONT *pFont);
+
+	private:
+		CIniFile m_IniFile;
+		OpenFlag m_OpenFlags;
 	};
 
-	typedef TVTest::CIniFile::CEntry CEntry;
-	typedef TVTest::CIniFile::EntryArray EntryList;
+	TVTEST_ENUM_FLAGS(CSettings::OpenFlag)
 
-	CSettings();
-	~CSettings();
-	bool Open(LPCTSTR pszFileName,unsigned int Flags);
-	void Close();
-	bool IsOpened() const;
-	bool Clear();
-	bool SetSection(LPCTSTR pszSection);
-	bool IsSectionExists(LPCTSTR pszSection);
-	bool GetEntries(EntryList *pEntries);
-	bool IsValueExists(LPCTSTR pszValueName);
-	bool DeleteValue(LPCTSTR pszValueName);
-	bool Read(LPCTSTR pszValueName,int *pData);
-	bool Write(LPCTSTR pszValueName,int Data);
-	bool Read(LPCTSTR pszValueName,unsigned int *pData);
-	bool Write(LPCTSTR pszValueName,unsigned int Data);
-	bool Read(LPCTSTR pszValueName,LPTSTR pszData,unsigned int Max);
-	bool Write(LPCTSTR pszValueName,LPCTSTR pszData);
-	bool Read(LPCTSTR pszValueName,TVTest::String *pValue);
-	bool Write(LPCTSTR pszValueName,const TVTest::String &Value);
-	bool Read(LPCTSTR pszValueName,bool *pfData);
-	bool Write(LPCTSTR pszValueName,bool fData);
-	bool Read(LPCTSTR pszValueName,double *pData);
-	bool Write(LPCTSTR pszValueName,double Data,int Digits);
-	bool Read(LPCTSTR pszValueName,float *pData);
-	bool ReadColor(LPCTSTR pszValueName,COLORREF *pcrData);
-	bool WriteColor(LPCTSTR pszValueName,COLORREF crData);
-	bool Read(LPCTSTR pszValueName,LOGFONT *pFont);
-	bool Write(LPCTSTR pszValueName,const LOGFONT *pFont);
-};
+	class ABSTRACT_CLASS(CSettingsBase)
+	{
+	public:
+		CSettingsBase();
+		CSettingsBase(LPCTSTR pszSection);
+		virtual ~CSettingsBase() = default;
 
-class ABSTRACT_CLASS(CSettingsBase)
-{
-public:
-	CSettingsBase();
-	CSettingsBase(LPCTSTR pszSection);
-	virtual ~CSettingsBase();
-	virtual bool ReadSettings(CSettings &Settings) { return false; }
-	virtual bool WriteSettings(CSettings &Settings) { return false; }
-	virtual bool LoadSettings(CSettings &Settings);
-	virtual bool SaveSettings(CSettings &Settings);
-	bool LoadSettings(LPCTSTR pszFileName);
-	bool SaveSettings(LPCTSTR pszFileName);
-	bool IsChanged() const { return m_fChanged; }
-	void SetChanged() { m_fChanged=true; }
-	void ClearChanged() { m_fChanged=false; }
+		virtual bool ReadSettings(CSettings &Settings) { return false; }
+		virtual bool WriteSettings(CSettings &Settings) { return false; }
+		virtual bool LoadSettings(CSettings &Settings);
+		virtual bool SaveSettings(CSettings &Settings);
+		bool LoadSettings(LPCTSTR pszFileName);
+		bool SaveSettings(LPCTSTR pszFileName);
+		bool IsChanged() const { return m_fChanged; }
+		void SetChanged() { m_fChanged = true; }
+		void ClearChanged() { m_fChanged = false; }
 
-protected:
-	LPCTSTR m_pszSection;
-	bool m_fChanged;
-};
+	protected:
+		LPCTSTR m_pszSection;
+		bool m_fChanged;
+	};
+
+}	// namespace TVTest
 
 
 #endif

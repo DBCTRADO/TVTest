@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -10,9 +30,7 @@ namespace TVTest
 
 
 CTextDrawClient::CTextDrawClient()
-	: m_Engine(ENGINE_UNDEFINED)
-	, m_DirectWriteRenderer(GetAppClass().DirectWriteSystem)
-	, m_DirectWriteEngine(m_DirectWriteRenderer)
+	: m_Engine(TextDrawEngine::Undefined)
 {
 }
 
@@ -23,7 +41,7 @@ CTextDrawClient::~CTextDrawClient()
 }
 
 
-bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
+bool CTextDrawClient::Initialize(TextDrawEngine Engine, HWND hwnd)
 {
 	Finalize();
 
@@ -31,16 +49,14 @@ bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
 		return false;
 
 	switch (Engine) {
-	case ENGINE_GDI:
+	case TextDrawEngine::GDI:
 		break;
 
-	case ENGINE_DIRECTWRITE:
-		if (!m_DirectWriteRenderer.GetSystem().Initialize()) {
-			GetAppClass().AddLog(CLogItem::TYPE_ERROR,TEXT("DirectWrite ‚Ì‰Šú‰»‚ª‚Å‚«‚Ü‚¹‚ñB"));
+	case TextDrawEngine::DirectWrite:
+		if (!GetDirectWriteEngine()->Initialize(hwnd)) {
+			GetAppClass().AddLog(CLogItem::LogType::Error, TEXT("DirectWrite ã®åˆæœŸåŒ–ãŒã§ãã¾ã›ã‚“ã€‚"));
 			return false;
 		}
-		if (!m_DirectWriteRenderer.Initialize(hwnd))
-			return false;
 		break;
 
 	default:
@@ -56,13 +72,13 @@ bool CTextDrawClient::Initialize(TextDrawEngine Engine,HWND hwnd)
 void CTextDrawClient::Finalize()
 {
 	switch (m_Engine) {
-	case ENGINE_DIRECTWRITE:
-		m_DirectWriteEngine.Finalize();
-		m_DirectWriteRenderer.Finalize();
+	case TextDrawEngine::DirectWrite:
+		if (m_DirectWriteEngine)
+			m_DirectWriteEngine->Finalize();
 		break;
 	}
 
-	m_Engine = ENGINE_UNDEFINED;
+	m_Engine = TextDrawEngine::Undefined;
 }
 
 
@@ -72,12 +88,12 @@ bool CTextDrawClient::InitializeTextDraw(CTextDraw *pTextDraw)
 		return false;
 
 	switch (m_Engine) {
-	case ENGINE_GDI:
+	case TextDrawEngine::GDI:
 		pTextDraw->SetEngine(nullptr);
 		break;
 
-	case ENGINE_DIRECTWRITE:
-		pTextDraw->SetEngine(&m_DirectWriteEngine);
+	case TextDrawEngine::DirectWrite:
+		pTextDraw->SetEngine(&GetDirectWriteEngine()->Engine);
 		break;
 
 	default:
@@ -90,13 +106,47 @@ bool CTextDrawClient::InitializeTextDraw(CTextDraw *pTextDraw)
 
 bool CTextDrawClient::SetMaxFontCache(std::size_t MaxCache)
 {
-	return m_DirectWriteEngine.SetMaxFontCache(MaxCache);
+	return GetDirectWriteEngine()->Engine.SetMaxFontCache(MaxCache);
 }
 
 
 bool CTextDrawClient::SetDirectWriteRenderingParams(const CDirectWriteRenderer::RenderingParams &Params)
 {
-	return m_DirectWriteRenderer.SetRenderingParams(Params);
+	return GetDirectWriteEngine()->Renderer.SetRenderingParams(Params);
+}
+
+
+CTextDrawClient::CDirectWriteEngine *CTextDrawClient::GetDirectWriteEngine()
+{
+	if (!m_DirectWriteEngine)
+		m_DirectWriteEngine = std::make_unique<CDirectWriteEngine>(GetAppClass().DirectWriteSystem);
+	return m_DirectWriteEngine.get();
+}
+
+
+
+
+CTextDrawClient::CDirectWriteEngine::CDirectWriteEngine(CDirectWriteSystem &System)
+	: Renderer(System)
+	, Engine(Renderer)
+{
+}
+
+
+bool CTextDrawClient::CDirectWriteEngine::Initialize(HWND hwnd)
+{
+	if (!Renderer.GetSystem().Initialize())
+		return false;
+	if (!Renderer.Initialize(hwnd))
+		return false;
+	return true;
+}
+
+
+void CTextDrawClient::CDirectWriteEngine::Finalize()
+{
+	Engine.Finalize();
+	Renderer.Finalize();
 }
 
 

@@ -1,65 +1,92 @@
-#ifndef PROGRAM_GUIDE_FAVORITES_H
-#define PROGRAM_GUIDE_FAVORITES_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
+#ifndef TVTEST_PROGRAM_GUIDE_FAVORITES_H
+#define TVTEST_PROGRAM_GUIDE_FAVORITES_H
 
 
 #include <vector>
 #include "Dialog.h"
 
 
-class CProgramGuideFavorites
+namespace TVTest
 {
-public:
-	struct FavoriteInfo
-	{
-		TVTest::String Name;
-		TVTest::String GroupID;
-		TVTest::String Label;
-		COLORREF BackColor;
-		COLORREF TextColor;
 
-		void SetDefaultColors();
+	class CProgramGuideFavorites
+	{
+	public:
+		struct FavoriteInfo
+		{
+			String Name;
+			String GroupID;
+			String Label;
+			COLORREF BackColor;
+			COLORREF TextColor;
+
+			void SetDefaultColors();
+		};
+
+		CProgramGuideFavorites();
+
+		void Clear();
+		size_t GetCount() const;
+		bool Add(const FavoriteInfo &Info);
+		bool Get(size_t Index, FavoriteInfo *pInfo) const;
+		FavoriteInfo *Get(size_t Index);
+		const FavoriteInfo *Get(size_t Index) const;
+		bool Set(size_t Index, const FavoriteInfo &Info);
+		bool GetFixedWidth() const { return m_fFixedWidth; }
+		void SetFixedWidth(bool fFixed) { m_fFixedWidth = fFixed; }
+
+	private:
+		std::vector<FavoriteInfo> m_List;
+		bool m_fFixedWidth;
 	};
 
-	CProgramGuideFavorites();
-	void Clear();
-	size_t GetCount() const;
-	bool Add(const FavoriteInfo &Info);
-	bool Get(size_t Index,FavoriteInfo *pInfo) const;
-	FavoriteInfo *Get(size_t Index);
-	const FavoriteInfo *Get(size_t Index) const;
-	bool Set(size_t Index,const FavoriteInfo &Info);
-	bool GetFixedWidth() const { return m_fFixedWidth; }
-	void SetFixedWidth(bool fFixed) { m_fFixedWidth=fFixed; }
+	class CProgramGuideFavoritesDialog
+		: public CBasicDialog
+	{
+	public:
+		CProgramGuideFavoritesDialog(const CProgramGuideFavorites &Favorites);
+		~CProgramGuideFavoritesDialog();
 
-private:
-	std::vector<FavoriteInfo> m_List;
-	bool m_fFixedWidth;
-};
+	// CBasicDialog
+		bool Show(HWND hwndOwner) override;
 
-class CProgramGuideFavoritesDialog : public CBasicDialog
-{
-public:
-	CProgramGuideFavoritesDialog(const CProgramGuideFavorites &Favorites);
-	~CProgramGuideFavoritesDialog();
+	// CProgramGuideFavoritesDialog
+		void AddNewItem(const CProgramGuideFavorites::FavoriteInfo &Info);
+		const CProgramGuideFavorites &GetFavorites() const { return m_Favorites; }
 
-// CBasicDialog
-	bool Show(HWND hwndOwner) override;
+	private:
+		CProgramGuideFavorites m_Favorites;
+		int m_CurItem;
+		bool m_fChanging;
 
-// CProgramGuideFavoritesDialog
-	void AddNewItem(const CProgramGuideFavorites::FavoriteInfo &Info);
-	const CProgramGuideFavorites &GetFavorites() const { return m_Favorites; }
+	// CBasicDialog
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-private:
-	CProgramGuideFavorites m_Favorites;
-	int m_CurItem;
-	bool m_fChanging;
+		void SetItemState(HWND hDlg);
+		CProgramGuideFavorites::FavoriteInfo *GetCurItemInfo();
+	};
 
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-	void SetItemState(HWND hDlg);
-	CProgramGuideFavorites::FavoriteInfo *GetCurItemInfo();
-};
+}	// namespace TVTest
 
 
 #endif

@@ -1,7 +1,27 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
-#include "BonTsEngine/TsInformation.h"
+#include "LibISDB/LibISDB/TS/TSInformation.hpp"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -18,14 +38,15 @@ CMainDisplay::CMainDisplay(CAppMain &App)
 }
 
 
-bool CMainDisplay::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage)
+bool CMainDisplay::Create(HWND hwndParent, int ViewID, int ContainerID, HWND hwndMessage)
 {
-	m_ViewWindow.Create(hwndParent,
-		WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ViewID);
+	m_ViewWindow.Create(
+		hwndParent, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, ViewID);
 	m_ViewWindow.SetMessageWindow(hwndMessage);
-	m_VideoContainer.Create(m_ViewWindow.GetHandle(),
-		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,0,ContainerID,
-		&m_App.CoreEngine.m_DtvEngine);
+	m_VideoContainer.Create(
+		m_ViewWindow.GetHandle(),
+		WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, ContainerID,
+		m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>());
 	m_ViewWindow.SetVideoContainer(&m_VideoContainer);
 
 	m_DisplayBase.SetParent(&m_VideoContainer);
@@ -37,17 +58,21 @@ bool CMainDisplay::Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMe
 
 bool CMainDisplay::EnableViewer(bool fEnable)
 {
-	if (m_fViewerEnabled!=fEnable) {
-		if (fEnable && !m_App.CoreEngine.m_DtvEngine.m_MediaViewer.IsOpen())
+	if (m_fViewerEnabled != fEnable) {
+		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+		if (pViewer == nullptr)
+			return false;
+		if (fEnable && !pViewer->IsOpen())
 			return false;
 		if (fEnable || (!fEnable && !m_DisplayBase.IsVisible()))
 			m_VideoContainer.SetVisible(fEnable);
-		m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetVisible(fEnable);
+		pViewer->SetVisible(fEnable);
 		if (!m_App.CoreEngine.EnableMediaViewer(fEnable))
 			return false;
 		if (m_App.PlaybackOptions.GetMinTimerResolution())
 			m_App.CoreEngine.SetMinTimerResolution(fEnable);
-		m_fViewerEnabled=fEnable;
+		m_fViewerEnabled = fEnable;
 		m_App.AppEventManager.OnPlaybackStateChanged(fEnable);
 	}
 	return true;
@@ -56,36 +81,30 @@ bool CMainDisplay::EnableViewer(bool fEnable)
 
 bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 {
-	if (VideoStreamType==0) {
-		VideoStreamType=m_App.CoreEngine.m_DtvEngine.GetVideoStreamType();
-		if (VideoStreamType==STREAM_TYPE_UNINITIALIZED)
+	if (VideoStreamType == 0) {
+		VideoStreamType = m_App.CoreEngine.GetVideoStreamType();
+		if (VideoStreamType == LibISDB::STREAM_TYPE_UNINITIALIZED)
 			return false;
 	}
-	LPCWSTR pszVideoDecoder=nullptr;
+	LPCWSTR pszVideoDecoder = nullptr;
 
 	switch (VideoStreamType) {
-#ifdef BONTSENGINE_MPEG2_SUPPORT
-	case STREAM_TYPE_MPEG2_VIDEO:
-		pszVideoDecoder=m_App.VideoOptions.GetMpeg2DecoderName();
+	case LibISDB::STREAM_TYPE_MPEG2_VIDEO:
+		pszVideoDecoder = m_App.VideoOptions.GetMpeg2DecoderName();
 		break;
-#endif
 
-#ifdef BONTSENGINE_H264_SUPPORT
-	case STREAM_TYPE_H264:
-		pszVideoDecoder=m_App.VideoOptions.GetH264DecoderName();
+	case LibISDB::STREAM_TYPE_H264:
+		pszVideoDecoder = m_App.VideoOptions.GetH264DecoderName();
 		break;
-#endif
 
-#ifdef BONTSENGINE_H265_SUPPORT
-	case STREAM_TYPE_H265:
-		pszVideoDecoder=m_App.VideoOptions.GetH265DecoderName();
+	case LibISDB::STREAM_TYPE_H265:
+		pszVideoDecoder = m_App.VideoOptions.GetH265DecoderName();
 		break;
-#endif
 
 	default:
-		if (m_App.CoreEngine.m_DtvEngine.GetAudioStreamNum()==0)
+		if (m_App.CoreEngine.GetAudioStreamCount() == 0)
 			return false;
-		VideoStreamType=STREAM_TYPE_INVALID;
+		VideoStreamType = LibISDB::STREAM_TYPE_INVALID;
 		break;
 	}
 
@@ -93,24 +112,33 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 		EnableViewer(false);
 
 	m_App.AddLog(
-		TEXT("DirectShowÇÃèâä˙âªÇçsÇ¢Ç‹Ç∑(%s)..."),
-		VideoStreamType==STREAM_TYPE_INVALID?
-			TEXT("âfëúÇ»Çµ"):
-			TsEngine::GetStreamTypeText(VideoStreamType));
+		TEXT("DirectShow„ÅÆÂàùÊúüÂåñ„ÇíË°å„ÅÑ„Åæ„Åô(%s)..."),
+		VideoStreamType == LibISDB::STREAM_TYPE_INVALID ?
+			TEXT("Êò†ÂÉè„Å™„Åó") :
+			LibISDB::GetStreamTypeText(VideoStreamType));
 
-	m_App.CoreEngine.m_DtvEngine.m_MediaViewer.SetAudioFilter(m_App.AudioOptions.GetAudioFilterName());
-	if (!m_App.CoreEngine.BuildMediaViewer(
-			m_VideoContainer.GetHandle(),
-			m_VideoContainer.GetHandle(),
-			m_App.VideoOptions.GetVideoRendererType(),
-			VideoStreamType,pszVideoDecoder,
-			m_App.AudioOptions.GetAudioDeviceName())) {
-		m_App.Core.OnError(&m_App.CoreEngine,TEXT("DirectShowÇÃèâä˙âªÇ™Ç≈Ç´Ç‹ÇπÇÒÅB"));
+	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	if (pViewer == nullptr)
+		return false;
+
+	LibISDB::ViewerFilter::OpenSettings OpenSettings;
+
+	OpenSettings.hwndRender = m_VideoContainer.GetHandle();
+	OpenSettings.hwndMessageDrain = m_VideoContainer.GetHandle();
+	OpenSettings.VideoRenderer = m_App.VideoOptions.GetVideoRendererType();
+	OpenSettings.VideoStreamType = VideoStreamType;
+	OpenSettings.pszVideoDecoder = pszVideoDecoder;
+	OpenSettings.pszAudioDevice = m_App.AudioOptions.GetAudioDeviceName();
+	if (m_App.AudioOptions.GetAudioFilterName() != nullptr)
+		OpenSettings.AudioFilterList.emplace_back(m_App.AudioOptions.GetAudioFilterName());
+
+	if (!m_App.CoreEngine.BuildMediaViewer(OpenSettings)) {
+		m_App.Core.OnError(&m_App.CoreEngine, TEXT("DirectShow„ÅÆÂàùÊúüÂåñ„Åå„Åß„Åç„Åæ„Åõ„Çì„ÄÇ"));
 		return false;
 	}
 	m_App.AudioOptions.ApplyMediaViewerOptions();
 
-	m_App.AddLog(TEXT("DirectShowÇÃèâä˙âªÇçsÇ¢Ç‹ÇµÇΩÅB"));
+	m_App.AddLog(TEXT("DirectShow„ÅÆÂàùÊúüÂåñ„ÇíË°å„ÅÑ„Åæ„Åó„Åü„ÄÇ"));
 
 	return true;
 }
@@ -138,9 +166,9 @@ void CMainDisplay::CHomeDisplayEventHandler::OnClose()
 }
 
 
-void CMainDisplay::CHomeDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+void CMainDisplay::CHomeDisplayEventHandler::OnMouseMessage(UINT Msg, int x, int y)
 {
-	RelayMouseMessage(m_pHomeDisplay,Msg,x,y);
+	RelayMouseMessage(m_pHomeDisplay, Msg, x, y);
 }
 
 
@@ -153,20 +181,20 @@ CMainDisplay::CChannelDisplayEventHandler::CChannelDisplayEventHandler(CAppMain 
 
 
 void CMainDisplay::CChannelDisplayEventHandler::OnTunerSelect(
-	LPCTSTR pszDriverFileName,int TuningSpace)
+	LPCTSTR pszDriverFileName, int TuningSpace)
 {
 	if (m_App.CoreEngine.IsTunerOpen()
-			&& IsEqualFileName(m_App.CoreEngine.GetDriverFileName(),pszDriverFileName)) {
+			&& IsEqualFileName(m_App.CoreEngine.GetDriverFileName(), pszDriverFileName)) {
 		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
 	} else {
 		if (!m_App.UICore.ConfirmChannelChange())
 			return;
 
 		if (m_App.Core.OpenTuner(pszDriverFileName)) {
-			if (TuningSpace!=SPACE_NOTSPECIFIED) {
-				m_App.UICore.DoCommand(CM_SPACE_FIRST+TuningSpace);
-				if (TuningSpace==SPACE_ALL
-						|| TuningSpace==m_App.RestoreChannelInfo.Space)
+			if (TuningSpace != SPACE_NOTSPECIFIED) {
+				m_App.UICore.DoCommand(CM_SPACE_FIRST + TuningSpace);
+				if (TuningSpace == SPACE_ALL
+						|| TuningSpace == m_App.RestoreChannelInfo.Space)
 					m_App.Core.RestoreChannel();
 			} else {
 				m_App.Core.RestoreChannel();
@@ -178,7 +206,7 @@ void CMainDisplay::CChannelDisplayEventHandler::OnTunerSelect(
 
 
 void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
-	LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo)
+	LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo)
 {
 	if (!m_App.UICore.ConfirmChannelChange())
 		return;
@@ -186,25 +214,27 @@ void CMainDisplay::CChannelDisplayEventHandler::OnChannelSelect(
 	if (m_App.Core.OpenTuner(pszDriverFileName)) {
 		int Space;
 		if (m_App.RestoreChannelInfo.fAllChannels)
-			Space=CChannelManager::SPACE_ALL;
+			Space = CChannelManager::SPACE_ALL;
 		else
-			Space=pChannelInfo->GetSpace();
-		const CChannelList *pList=m_App.ChannelManager.GetChannelList(Space);
-		if (pList!=NULL) {
-			int Index=pList->FindByIndex(pChannelInfo->GetSpace(),
-										 pChannelInfo->GetChannelIndex(),
-										 pChannelInfo->GetServiceID());
+			Space = pChannelInfo->GetSpace();
+		const CChannelList *pList = m_App.ChannelManager.GetChannelList(Space);
+		if (pList != nullptr) {
+			int Index = pList->FindByIndex(
+				pChannelInfo->GetSpace(),
+				pChannelInfo->GetChannelIndex(),
+				pChannelInfo->GetServiceID());
 
-			if (Index<0 && Space==CChannelManager::SPACE_ALL) {
-				Space=pChannelInfo->GetSpace();
-				pList=m_App.ChannelManager.GetChannelList(Space);
-				if (pList!=NULL)
-					Index=pList->FindByIndex(-1,
-											 pChannelInfo->GetChannelIndex(),
-											 pChannelInfo->GetServiceID());
+			if (Index < 0 && Space == CChannelManager::SPACE_ALL) {
+				Space = pChannelInfo->GetSpace();
+				pList = m_App.ChannelManager.GetChannelList(Space);
+				if (pList != nullptr)
+					Index = pList->FindByIndex(
+						-1,
+						pChannelInfo->GetChannelIndex(),
+						pChannelInfo->GetServiceID());
 			}
-			if (Index>=0)
-				m_App.Core.SetChannel(Space,Index);
+			if (Index >= 0)
+				m_App.Core.SetChannel(Space, Index);
 		}
 		m_App.UICore.DoCommand(CM_CHANNELDISPLAY);
 	}
@@ -217,9 +247,9 @@ void CMainDisplay::CChannelDisplayEventHandler::OnClose()
 }
 
 
-void CMainDisplay::CChannelDisplayEventHandler::OnMouseMessage(UINT Msg,int x,int y)
+void CMainDisplay::CChannelDisplayEventHandler::OnMouseMessage(UINT Msg, int x, int y)
 {
-	RelayMouseMessage(m_pChannelDisplay,Msg,x,y);
+	RelayMouseMessage(m_pChannelDisplay, Msg, x, y);
 }
 
 

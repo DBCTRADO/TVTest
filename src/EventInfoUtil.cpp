@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -13,35 +33,35 @@ namespace EventInfoUtil
 {
 
 
-bool EventInfoContextMenu(HWND hwndParent,HWND hwndEdit)
+bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit)
 {
 	enum {
-		COMMAND_COPY=1,
+		COMMAND_COPY = 1,
 		COMMAND_SELECTALL,
 		COMMAND_SEARCH
 	};
-	HMENU hmenu=::CreatePopupMenu();
+	HMENU hmenu = ::CreatePopupMenu();
 
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_COPY,TEXT("ƒRƒs[(&C)"));
-	::AppendMenu(hmenu,MF_STRING | MF_ENABLED,COMMAND_SELECTALL,TEXT("‚·‚×‚Ä‘I‘ð(&A)"));
+	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("ã‚³ãƒ”ãƒ¼(&C)"));
+	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("ã™ã¹ã¦é¸æŠž(&A)"));
 
 	if (CRichEditUtil::IsSelected(hwndEdit)) {
-		const TVTest::CKeywordSearch &KeywordSearch=GetAppClass().KeywordSearch;
-		if (KeywordSearch.GetSearchEngineCount()>0) {
-			::AppendMenu(hmenu,MF_SEPARATOR,0,nullptr);
-			KeywordSearch.InitializeMenu(hmenu,COMMAND_SEARCH);
+		const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
+		if (KeywordSearch.GetSearchEngineCount() > 0) {
+			::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
+			KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH);
 		}
 	}
 
 	POINT pt;
 	::GetCursorPos(&pt);
-	int Command=::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON | TPM_RETURNCMD,pt.x,pt.y,0,hwndParent,nullptr);
+	int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwndParent, nullptr);
 	::DestroyMenu(hmenu);
 
 	switch (Command) {
 	case COMMAND_COPY:
 		if (CRichEditUtil::IsSelected(hwndEdit)) {
-			::SendMessage(hwndEdit,WM_COPY,0,0);
+			::SendMessage(hwndEdit, WM_COPY, 0, 0);
 		} else {
 			CRichEditUtil::CopyAllText(hwndEdit);
 		}
@@ -52,10 +72,10 @@ bool EventInfoContextMenu(HWND hwndParent,HWND hwndEdit)
 		break;
 
 	default:
-		if (Command>=COMMAND_SEARCH) {
-			LPTSTR pszKeyword=CRichEditUtil::GetSelectedText(hwndEdit);
-			if (pszKeyword!=nullptr) {
-				GetAppClass().KeywordSearch.Search(Command-COMMAND_SEARCH,pszKeyword);
+		if (Command >= COMMAND_SEARCH) {
+			LPTSTR pszKeyword = CRichEditUtil::GetSelectedText(hwndEdit);
+			if (pszKeyword != nullptr) {
+				GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, pszKeyword);
 				delete [] pszKeyword;
 			}
 			break;

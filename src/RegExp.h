@@ -1,57 +1,86 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_REGEXP_H
 #define TVTEST_REGEXP_H
 
 
-// std::regex ‘Î‰ž
+// std::regex å¯¾å¿œ
 #define TVTEST_STD_REGEX_SUPPORT
-// VBScript RegExp ‘Î‰ž
+// VBScript RegExp å¯¾å¿œ
 //#define TVTEST_VBSCRIPT_REGEXP_SUPPORT
-// bregonig.dll ‘Î‰ž
+// bregonig.dll å¯¾å¿œ
 #define TVTEST_BREGONIG_SUPPORT
+
+
+#include <memory>
 
 
 namespace TVTest
 {
 
+	class CRegExpEngine;
+
 	class CRegExp
 	{
 	public:
-		enum {
-			FLAG_IGNORE_CASE  = 0x0001U,
-			FLAG_IGNORE_WIDTH = 0x0002U
+		enum class PatternFlag : unsigned int {
+			None        = 0x0000U,
+			IgnoreCase  = 0x0001U,
+			IgnoreWidth = 0x0002U,
 		};
 
-		struct TextRange {
+		struct TextRange
+		{
 			size_t Start;
 			size_t Length;
 		};
 
-		CRegExp();
-		~CRegExp();
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
-		bool SetPattern(LPCTSTR pszPattern, UINT Flags = 0);
+		bool SetPattern(LPCTSTR pszPattern, PatternFlag Flags = PatternFlag::None);
 		void ClearPattern();
-		bool Match(LPCTSTR pText, size_t Length, TextRange *pRange = NULL);
-		bool Match(LPCTSTR pszText, TextRange *pRange = NULL);
-		bool Match(const String &Text, TextRange *pRange = NULL);
+		bool Match(LPCTSTR pText, size_t Length, TextRange *pRange = nullptr);
+		bool Match(LPCTSTR pszText, TextRange *pRange = nullptr);
+		bool Match(const String &Text, TextRange *pRange = nullptr);
 		bool GetEngineName(LPTSTR pszName, size_t MaxLength) const;
 
 	private:
-		class CRegExpEngine *m_pEngine;
+		struct RegExpEngineDeleter { void operator()(CRegExpEngine *p) const; };
+		std::unique_ptr<CRegExpEngine, RegExpEngineDeleter> m_Engine;
 	};
+
+	TVTEST_ENUM_FLAGS(CRegExp::PatternFlag)
 
 	class ABSTRACT_CLASS(CRegExpEngine)
 	{
 	public:
 		CRegExpEngine();
-		virtual ~CRegExpEngine();
+		virtual ~CRegExpEngine() = default;
+
 		virtual bool GetName(LPTSTR pszName, size_t MaxLength) const = 0;
 		virtual bool Initialize() = 0;
 		virtual void Finalize() = 0;
 		virtual bool IsInitialized() const = 0;
-		virtual bool SetPattern(LPCTSTR pszPattern, UINT Flags) = 0;
+		virtual bool SetPattern(LPCTSTR pszPattern, CRegExp::PatternFlag Flags) = 0;
 		virtual void ClearPattern();
 		virtual bool Match(LPCTSTR pText, size_t Length, CRegExp::TextRange *pRange) = 0;
 
@@ -61,7 +90,7 @@ namespace TVTest
 		void MapTargetString(String &Text) const;
 
 		String m_Pattern;
-		UINT m_Flags;
+		CRegExp::PatternFlag m_Flags;
 	};
 
 }
