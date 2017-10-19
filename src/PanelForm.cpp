@@ -77,8 +77,8 @@ CPanelForm::~CPanelForm()
 {
 	Destroy();
 
-	for (auto it = m_WindowList.begin(); it != m_WindowList.end(); ++it) {
-		(*it)->m_pWindow->OnFormDelete();
+	for (const auto &e : m_WindowList) {
+		e->m_pWindow->OnFormDelete();
 	}
 }
 
@@ -387,8 +387,8 @@ bool CPanelForm::SetTabFont(const Style::Font &Font)
 
 bool CPanelForm::SetPageFont(const Style::Font &Font)
 {
-	for (size_t i = 0; i < m_WindowList.size(); i++)
-		m_WindowList[i]->m_pWindow->SetFont(Font);
+	for (auto &e : m_WindowList)
+		e->m_pWindow->SetFont(Font);
 	return true;
 }
 
@@ -591,10 +591,9 @@ void CPanelForm::CalcTabSize()
 		int MaxWidth = 0;
 		SIZE sz;
 
-		for (size_t i = 0; i < m_WindowList.size(); i++) {
-			const CWindowInfo *pWindow = m_WindowList[i].get();
-			if (pWindow->m_fVisible) {
-				::GetTextExtentPoint32(hdc, pWindow->m_Title.data(), (int)pWindow->m_Title.length(), &sz);
+		for (const auto &Window : m_WindowList) {
+			if (Window->m_fVisible) {
+				::GetTextExtentPoint32(hdc, Window->m_Title.data(), (int)Window->m_Title.length(), &sz);
 				if (sz.cx > MaxWidth)
 					MaxWidth = sz.cx;
 			}
@@ -617,8 +616,8 @@ int CPanelForm::GetRealTabWidth() const
 {
 	if (m_fFitTabWidth) {
 		int NumVisibleTabs = 0;
-		for (size_t i = 0; i < m_WindowList.size(); i++) {
-			if (m_WindowList[i]->m_fVisible)
+		for (const auto &Window : m_WindowList) {
+			if (Window->m_fVisible)
 				NumVisibleTabs++;
 		}
 		RECT rc;
@@ -649,8 +648,7 @@ int CPanelForm::HitTest(int x, int y) const
 	pt.x = x;
 	pt.y = y;
 	::SetRect(&rc, 0, 0, TabWidth, m_TabHeight);
-	for (size_t i = 0; i < m_TabOrder.size(); i++) {
-		int Index = m_TabOrder[i];
+	for (int Index : m_TabOrder) {
 		if (m_WindowList[Index]->m_fVisible) {
 			if (::PtInRect(&rc, pt))
 				return Index;
@@ -681,8 +679,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 		rc.right = TabWidth;
 		rc.bottom = m_TabHeight;
 
-		for (int i = 0; i < (int)m_TabOrder.size(); i++) {
-			int Index = m_TabOrder[i];
+		for (int Index : m_TabOrder) {
 			const CWindowInfo *pWindow = m_WindowList[Index].get();
 
 			if (!pWindow->m_fVisible)
@@ -796,8 +793,8 @@ void CPanelForm::UpdateTooltip()
 	rc.top = 0;
 	rc.bottom = m_TabHeight;
 
-	for (size_t i = 0; i < m_TabOrder.size(); i++) {
-		const CWindowInfo *pInfo = m_WindowList[m_TabOrder[i]].get();
+	for (int Index : m_TabOrder) {
+		const CWindowInfo *pInfo = m_WindowList[Index].get();
 
 		if (pInfo->m_fVisible) {
 			rc.right = rc.left + TabWidth;

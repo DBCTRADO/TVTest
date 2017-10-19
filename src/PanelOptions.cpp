@@ -290,9 +290,9 @@ bool CPanelOptions::SetPanelItemVisibility(int ID, bool fVisible)
 	m_AvailItemList[ID].fVisible = fVisible;
 
 	const String &IDText = m_AvailItemList[ID].ID;
-	for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it) {
-		if (CompareID(it->ID, IDText)) {
-			it->fVisible = fVisible;
+	for (PanelItemInfo &Item : m_ItemList) {
+		if (CompareID(Item.ID, IDText)) {
+			Item.fVisible = fVisible;
 			break;
 		}
 	}
@@ -309,9 +309,9 @@ bool CPanelOptions::GetPanelItemVisibility(int ID) const
 		return false;
 
 	const String &IDText = m_AvailItemList[ID].ID;
-	for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it) {
-		if (CompareID(it->ID, IDText))
-			return it->fVisible;
+	for (const PanelItemInfo &Item : m_ItemList) {
+		if (CompareID(Item.ID, IDText))
+			return Item.fVisible;
 	}
 
 	return m_AvailItemList[ID].fVisible;
@@ -327,11 +327,11 @@ bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 
 	TabOrder.reserve(m_AvailItemList.size());
 
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		int ID = GetItemIDFromIDText(m_ItemList[i].ID);
+	for (const PanelItemInfo &Item : m_ItemList) {
+		int ID = GetItemIDFromIDText(Item.ID);
 		if (ID >= 0) {
 			TabOrder.push_back(ID);
-			pPanelForm->SetTabVisible(ID, m_ItemList[i].fVisible);
+			pPanelForm->SetTabVisible(ID, Item.fVisible);
 		}
 	}
 
@@ -393,21 +393,20 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			m_ItemListView.Attach(::GetDlgItem(hDlg, IDC_PANELOPTIONS_ITEMLIST));
 			m_ItemListView.InitCheckList();
 			PanelItemInfoList ItemList(m_ItemList);
-			for (size_t i = 0; i < m_AvailItemList.size(); i++) {
-				const String &ID = m_AvailItemList[i].ID;
+			for (const PanelItemInfo &e : m_AvailItemList) {
+				const String &ID = e.ID;
 				if (std::find_if(
 							ItemList.begin(), ItemList.end(),
 							[&](const PanelItemInfo & Item) -> bool {
 								return CompareID(Item.ID, ID); }) == ItemList.end()) {
 					PanelItemInfo Item;
 					Item.ID = ID;
-					Item.fVisible = m_AvailItemList[i].fVisible;
+					Item.fVisible = e.fVisible;
 					ItemList.push_back(Item);
 				}
 			}
 			int ItemCount = 0;
-			for (int i = 0; i < (int)ItemList.size(); i++) {
-				const PanelItemInfo &Item = ItemList[i];
+			for (const PanelItemInfo &Item : ItemList) {
 				int ID = GetItemIDFromIDText(Item.ID);
 				if (ID >= 0) {
 					m_ItemListView.InsertItem(ItemCount, m_AvailItemList[ID].Title.c_str(), ID);
@@ -439,8 +438,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				TEXT("アイコンのみ"),
 				TEXT("アイコンと文字"),
 			};
-			for (int i = 0; i < lengthof(TabStyleList); i++)
-				DlgComboBox_AddString(hDlg, IDC_PANELOPTIONS_TABSTYLE, TabStyleList[i]);
+			for (LPCTSTR pszText : TabStyleList)
+				DlgComboBox_AddString(hDlg, IDC_PANELOPTIONS_TABSTYLE, pszText);
 			DlgComboBox_SetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE, (int)m_TabStyle);
 
 			DlgCheckBox_Check(hDlg, IDC_PANELOPTIONS_TABTOOLTIP, m_fTabTooltip);

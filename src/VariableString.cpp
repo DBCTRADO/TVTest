@@ -161,23 +161,27 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 	Group.ParameterList.reserve(VarList.size());
 
-	for (auto it = VarList.begin(); it != VarList.end(); ++it) {
+	for (const auto &Var : VarList) {
 		bool fFound = false;
 
 		for (size_t i = 0; i < pList->size() - 1; i++) {
-			for (size_t j = 0; j < (*pList)[i].ParameterList.size(); j++) {
-				if (::lstrcmpiW((*pList)[i].ParameterList[j].pszParameter, it->pszKeyword) == 0) {
-					fFound = true;
-					break;
-				}
+			const auto &ParameterList = (*pList)[i].ParameterList;
+			auto it = std::find_if(
+				ParameterList.begin(),
+				ParameterList.end(),
+				[&](const ParameterInfo &Info) -> bool {
+					return ::lstrcmpiW(Info.pszParameter, Var.pszKeyword) == 0; });
+			if (it != ParameterList.end()) {
+				fFound = true;
+				break;
 			}
 		}
 
 		if (!fFound) {
 			ParameterInfo Info;
 
-			Info.pszParameter = it->pszKeyword;
-			Info.pszText = it->pszDescription;
+			Info.pszParameter = Var.pszKeyword;
+			Info.pszText = Var.pszDescription;
 			Group.ParameterList.push_back(Info);
 		}
 	}
@@ -315,8 +319,8 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 		TEXT("day-of-week"),
 	};
 
-	for (int i = 0; i < lengthof(ParameterList); i++) {
-		if (::lstrcmpi(ParameterList[i], pszKeyword) == 0)
+	for (LPCTSTR e : ParameterList) {
+		if (::lstrcmpi(e, pszKeyword) == 0)
 			return true;
 	}
 
@@ -447,7 +451,7 @@ bool CEventVariableStringMap::NormalizeString(String *pString) const
 		return false;
 
 	// ファイル名に使用できない文字を置き換える
-	for (auto i = pString->begin(); i != pString->end(); ++i) {
+	for (auto &e : *pString) {
 		static const struct {
 			WCHAR From;
 			WCHAR To;
@@ -463,9 +467,9 @@ bool CEventVariableStringMap::NormalizeString(String *pString) const
 			{L'|',	L'｜'},
 		};
 
-		for (int j = 0; j < lengthof(CharMap); j++) {
-			if (CharMap[j].From == *i) {
-				*i = CharMap[j].To;
+		for (const auto &Map : CharMap) {
+			if (Map.From == e) {
+				e = Map.To;
 				break;
 			}
 		}
@@ -604,17 +608,17 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 		{nullptr,              EventParams,         lengthof(EventParams),         Flag::None},
 	};
 
-	for (int i = 0; i < lengthof(GroupList); i++) {
-		if (!(GroupList[i].Flags & m_Flags)) {
+	for (const auto &e : GroupList) {
+		if (!(e.Flags & m_Flags)) {
 			pList->emplace_back();
 			ParameterGroup &Group = pList->back();
 
-			if (GroupList[i].pszText != nullptr)
-				Group.Text = GroupList[i].pszText;
+			if (e.pszText != nullptr)
+				Group.Text = e.pszText;
 			Group.ParameterList.insert(
 				Group.ParameterList.begin(),
-				GroupList[i].pList,
-				GroupList[i].pList + GroupList[i].ListLength);
+				e.pList,
+				e.pList + e.ListLength);
 		}
 	}
 

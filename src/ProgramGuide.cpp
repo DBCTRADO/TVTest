@@ -1166,9 +1166,8 @@ void CProgramGuide::SetTheme(const Theme::CThemeManager *pThemeManager)
 		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,        COLOR_TIMELINE},
 		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,     COLOR_CURTIMELINE},
 	};
-	for (int i = 0; i < lengthof(ProgramGuideColorMap); i++) {
-		m_Theme.ColorList[ProgramGuideColorMap[i].To] =
-			pThemeManager->GetColor(ProgramGuideColorMap[i].From);
+	for (const auto &e : ProgramGuideColorMap) {
+		m_Theme.ColorList[e.To] = pThemeManager->GetColor(e.From);
 	}
 
 	pThemeManager->GetFillStyle(
@@ -2896,10 +2895,10 @@ bool CProgramGuide::GetExcludeServiceList(ServiceInfoList *pList) const
 
 bool CProgramGuide::IsExcludeService(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const
 {
-	for (auto i = m_ExcludeServiceList.begin(); i != m_ExcludeServiceList.end(); i++) {
-		if ((NetworkID == 0 || i->NetworkID == NetworkID)
-				&& (TransportStreamID == 0 || i->TransportStreamID == TransportStreamID)
-				&& i->ServiceID == ServiceID)
+	for (const auto &e : m_ExcludeServiceList) {
+		if ((NetworkID == 0 || e.NetworkID == NetworkID)
+				&& (TransportStreamID == 0 || e.TransportStreamID == TransportStreamID)
+				&& e.ServiceID == ServiceID)
 			return true;
 	}
 	return false;
@@ -4181,9 +4180,9 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				{VK_END,   WM_VSCROLL, SB_BOTTOM},
 			};
 
-			for (int i = 0; i < lengthof(KeyMap); i++) {
-				if (wParam == (WPARAM)KeyMap[i].KeyCode) {
-					::SendMessage(hwnd, KeyMap[i].Message, KeyMap[i].Request, 0);
+			for (const auto &e : KeyMap) {
+				if (wParam == (WPARAM)e.KeyCode) {
+					::SendMessage(hwnd, e.Message, e.Request, 0);
 					return 0;
 				}
 			}
@@ -6424,9 +6423,9 @@ void CTimeToolbar::ChangeTime()
 			if (!Times.empty()) {
 				std::vector<int> Hours;
 				Hours.reserve(Times.size());
-				for (auto itr = Times.begin(); itr != Times.end(); ++itr) {
+				for (const String &e : Times) {
 					try {
-						int Hour = std::stoi(*itr, nullptr, 10);
+						int Hour = std::stoi(e, nullptr, 10);
 						if (Hour >= 0)
 							Hours.push_back(Hour);
 					} catch (...) {
@@ -6618,8 +6617,8 @@ CProgramGuideFrameBase::CProgramGuideFrameBase(CProgramGuide *pProgramGuide, CPr
 
 CProgramGuideFrameBase::~CProgramGuideFrameBase()
 {
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		delete m_ToolbarList[i];
+	for (auto e : m_ToolbarList)
+		delete e;
 }
 
 
@@ -6641,8 +6640,8 @@ void CProgramGuideFrameBase::SetTheme(const Theme::CThemeManager *pThemeManager)
 		Theme.TimeStyle[i].Fore.Fill.Solid.Color = TimeTextColor;
 	}
 
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		m_ToolbarList[i]->SetTheme(Theme);
+	for (auto e : m_ToolbarList)
+		e->SetTheme(Theme);
 }
 
 
@@ -6686,15 +6685,15 @@ bool CProgramGuideFrameBase::GetToolbarVisible(int Toolbar) const
 
 void CProgramGuideFrameBase::OnDateChanged()
 {
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		m_ToolbarList[i]->OnDateChanged();
+	for (auto e : m_ToolbarList)
+		e->OnDateChanged();
 }
 
 
 void CProgramGuideFrameBase::OnSpaceChanged()
 {
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		m_ToolbarList[i]->OnSpaceChanged();
+	for (auto e : m_ToolbarList)
+		e->OnSpaceChanged();
 }
 
 
@@ -6706,8 +6705,8 @@ void CProgramGuideFrameBase::OnListModeChanged()
 
 void CProgramGuideFrameBase::OnTimeRangeChanged()
 {
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		m_ToolbarList[i]->OnTimeRangeChanged();
+	for (auto e : m_ToolbarList)
+		e->OnTimeRangeChanged();
 
 	OnLayoutChange();
 }
@@ -6715,8 +6714,8 @@ void CProgramGuideFrameBase::OnTimeRangeChanged()
 
 void CProgramGuideFrameBase::OnFavoritesChanged()
 {
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		m_ToolbarList[i]->OnFavoritesChanged();
+	for (auto e : m_ToolbarList)
+		e->OnFavoritesChanged();
 
 	OnLayoutChange();
 }
@@ -6820,8 +6819,8 @@ void CProgramGuideFrameBase::OnWindowCreate(
 {
 	CUIBase *pUIBase = GetUIBase();
 
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		pUIBase->RegisterUIChild(m_ToolbarList[i]->GetUIBase());
+	for (auto e : m_ToolbarList)
+		pUIBase->RegisterUIChild(e->GetUIBase());
 	pUIBase->SetStyleScaling(pStyleScaling);
 
 	m_pProgramGuide->SetFrame(this);
@@ -6854,8 +6853,8 @@ void CProgramGuideFrameBase::OnWindowDestroy()
 
 	m_pProgramGuide->SetFrame(nullptr);
 
-	for (int i = 0; i < lengthof(m_ToolbarList); i++)
-		m_ToolbarList[i]->DestroyBar();
+	for (auto e : m_ToolbarList)
+		e->DestroyBar();
 }
 
 
@@ -6939,8 +6938,8 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 			HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 			int HitTestCode = LOWORD(lParam);
 
-			for (int i = 0; i < lengthof(m_ToolbarList); i++) {
-				if (m_ToolbarList[i]->OnSetCursor(hwndCursor, HitTestCode))
+			for (auto e : m_ToolbarList) {
+				if (e->OnSetCursor(hwndCursor, HitTestCode))
 					return TRUE;
 			}
 		}
@@ -6950,8 +6949,8 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 		{
 			LRESULT Result;
 
-			for (int i = 0; i < lengthof(m_ToolbarList); i++) {
-				if (m_ToolbarList[i]->OnNotify(lParam, &Result))
+			for (auto e : m_ToolbarList) {
+				if (e->OnNotify(lParam, &Result))
 					return Result;
 			}
 		}

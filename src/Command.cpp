@@ -262,9 +262,9 @@ int CCommandList::GetCommandName(int Index, LPTSTR pszName, int MaxLength) const
 	const int ID = Info.ID;
 	int Length = 0;
 
-	for (size_t i = 0; i < m_CustomizerList.size(); i++) {
-		if (m_CustomizerList[i]->IsCommandValid(ID)) {
-			if (m_CustomizerList[i]->GetCommandName(ID, pszName, MaxLength))
+	for (CCommandCustomizer *pCustomizer : m_CustomizerList) {
+		if (pCustomizer->IsCommandValid(ID)) {
+			if (pCustomizer->GetCommandName(ID, pszName, MaxLength))
 				Length = ::lstrlen(pszName);
 			break;
 		}
@@ -306,9 +306,9 @@ int CCommandList::GetCommandShortName(int Index, LPTSTR pszName, int MaxLength) 
 	const int ID = Info.ID;
 	int Length = 0;
 
-	for (size_t i = 0; i < m_CustomizerList.size(); i++) {
-		if (m_CustomizerList[i]->IsCommandValid(ID)) {
-			if (m_CustomizerList[i]->GetCommandName(ID, pszName, MaxLength))
+	for (CCommandCustomizer *pCustomizer : m_CustomizerList) {
+		if (pCustomizer->IsCommandValid(ID)) {
+			if (pCustomizer->GetCommandName(ID, pszName, MaxLength))
 				Length = ::lstrlen(pszName);
 			break;
 		}
@@ -471,8 +471,8 @@ void CCommandList::RegisterDefaultCommands()
 	m_CommandTextMap.rehash(ReserveSize);
 	m_CommandIDMap.rehash(ReserveSize);
 
-	for (int i = 0; i < lengthof(DefaultCommandList); i++)
-		RegisterCommand(DefaultCommandList[i].ID, DefaultCommandList[i].pszText);
+	for (const auto &e : DefaultCommandList)
+		RegisterCommand(e.ID, e.pszText);
 }
 
 

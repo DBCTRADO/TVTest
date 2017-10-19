@@ -227,19 +227,19 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 	if (File.Write(&FileHeader, sizeof(FileHeader)) != sizeof(FileHeader))
 		goto OnError;
 
-	for (LogoMap::const_iterator itr = m_LogoMap.begin(); itr != m_LogoMap.end(); ++itr) {
+	for (const auto &e : m_LogoMap) {
 		LogoImageHeader2 ImageHeader = {};
 
-		ImageHeader.NetworkID = itr->second->GetNetworkID();
-		ImageHeader.LogoID = itr->second->GetLogoID();
-		ImageHeader.LogoVersion = itr->second->GetLogoVersion();
-		ImageHeader.LogoType = itr->second->GetLogoType();
-		ImageHeader.DataSize = itr->second->GetDataSize();
-		ImageHeader.Time = SystemTimeToUInt64(itr->second->GetTime().ToSYSTEMTIME());
+		ImageHeader.NetworkID = e.second->GetNetworkID();
+		ImageHeader.LogoID = e.second->GetLogoID();
+		ImageHeader.LogoVersion = e.second->GetLogoVersion();
+		ImageHeader.LogoType = e.second->GetLogoType();
+		ImageHeader.DataSize = e.second->GetDataSize();
+		ImageHeader.Time = SystemTimeToUInt64(e.second->GetTime().ToSYSTEMTIME());
 		DWORD CRC = LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader, sizeof(ImageHeader));
-		CRC = LibISDB::CRC32MPEG2::Calc(itr->second->GetData(), ImageHeader.DataSize, CRC);
+		CRC = LibISDB::CRC32MPEG2::Calc(e.second->GetData(), ImageHeader.DataSize, CRC);
 		if (File.Write(&ImageHeader, sizeof(ImageHeader)) != sizeof(ImageHeader)
-				|| File.Write(itr->second->GetData(), ImageHeader.DataSize) != ImageHeader.DataSize
+				|| File.Write(e.second->GetData(), ImageHeader.DataSize) != ImageHeader.DataSize
 				|| File.Write(&CRC, sizeof(CRC)) != sizeof(CRC))
 			goto OnError;
 	}
@@ -351,11 +351,11 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 		}
 	}
 
-	for (LogoIDMap::const_iterator itr = m_LogoIDMap.begin(); itr != m_LogoIDMap.end(); ++itr) {
+	for (const auto &e : m_LogoIDMap) {
 		TCHAR szKey[16], szText[16];
 
-		::wsprintf(szKey, TEXT("%08lX"), itr->first);
-		::wsprintf(szText, TEXT("%d"), itr->second);
+		::wsprintf(szKey, TEXT("%08lX"), e.first);
+		::wsprintf(szText, TEXT("%d"), e.second);
 		::WritePrivateProfileString(TEXT("LogoIDMap"), szKey, szText, pszFileName);
 	}
 	return true;
@@ -604,8 +604,7 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 		m_fLogoUpdated = true;
 
 	if (Data.ServiceList.size() > 0) {
-		for (size_t i = 0; i < Data.ServiceList.size(); i++) {
-			const LibISDB::LogoDownloaderFilter::LogoService &Service = Data.ServiceList[i];
+		for (const auto &Service : Data.ServiceList) {
 			SetLogoIDMap(Service.NetworkID, Service.ServiceID, Data.LogoID, fUpdated);
 		}
 	}

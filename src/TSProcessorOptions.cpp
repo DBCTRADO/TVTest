@@ -98,8 +98,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			if (m_TSProcessorManager.GetTSProcessorList(&TSProcessorList)
 					&& !TSProcessorList.empty()) {
 
-				for (auto it = TSProcessorList.begin(); it != TSProcessorList.end(); ++it) {
-					CTSProcessor *pTSProcessor = *it;
+				for (CTSProcessor *pTSProcessor : TSProcessorList) {
 					GUID guid;
 					String Name;
 
@@ -244,9 +243,9 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			{
 				UpdateCurSettings();
 
-				for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it) {
-					GUID guid = (*it)->m_guid;
-					m_TSProcessorManager.SetTSProcessorSettings(it->release());
+				for (auto &e : m_SettingsList) {
+					GUID guid = e->m_guid;
+					m_TSProcessorManager.SetTSProcessorSettings(e.release());
 					m_TSProcessorManager.ApplyTSProcessorSettings(guid, false);
 				}
 				m_SettingsList.clear();
@@ -439,8 +438,8 @@ void CTSProcessorOptions::UpdateItemsState()
 
 		DlgComboBox_Clear(m_hDlg, IDC_TSPROCESSOR_DEFAULTMODULE);
 		pTSProcessor->GetModuleList(&m_ModuleList);
-		for (auto it = m_ModuleList.begin(); it != m_ModuleList.end(); ++it)
-			DlgComboBox_AddString(m_hDlg, IDC_TSPROCESSOR_DEFAULTMODULE, it->c_str());
+		for (const String &e : m_ModuleList)
+			DlgComboBox_AddString(m_hDlg, IDC_TSPROCESSOR_DEFAULTMODULE, e.c_str());
 		if (pTSProcessor->IsFilterModuleSupported()) {
 			::SetDlgItemText(
 				m_hDlg, IDC_TSPROCESSOR_DEFAULTMODULE,
@@ -504,12 +503,12 @@ void CTSProcessorOptions::UpdateDeviceFilterList(HWND hDlg, int ModuleID, int De
 	if (pModuleInfo != nullptr) {
 		int DeviceSel = -1, FilterSel = -1;
 
-		for (auto itDev = pModuleInfo->DeviceList.begin(); itDev != pModuleInfo->DeviceList.end(); ++itDev) {
-			DlgComboBox_AddString(hDlg, DeviceID, itDev->Name.c_str());
-			if (StringUtility::CompareNoCase(DeviceName, itDev->Name) == 0) {
-				for (auto itDec = itDev->FilterList.begin(); itDec != itDev->FilterList.end(); ++itDec) {
-					DlgComboBox_AddString(hDlg, FilterID, itDec->c_str());
-					if (StringUtility::CompareNoCase(FilterName, *itDec) == 0)
+		for (const auto &Dev : pModuleInfo->DeviceList) {
+			DlgComboBox_AddString(hDlg, DeviceID, Dev.Name.c_str());
+			if (StringUtility::CompareNoCase(DeviceName, Dev.Name) == 0) {
+				for (const String &Filter : Dev.FilterList) {
+					DlgComboBox_AddString(hDlg, FilterID, Filter.c_str());
+					if (StringUtility::CompareNoCase(FilterName, Filter) == 0)
 						FilterSel = (int)DlgComboBox_GetCount(hDlg, FilterID) - 1;
 				}
 				DeviceSel = (int)DlgComboBox_GetCount(hDlg, DeviceID) - 1;
@@ -617,8 +616,8 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg, UINT uMsg, WPAR
 				m_pInfo->fEnableProcessing ?
 				IDC_TSPROCESSORTUNERMAP_ENABLEPROCESSING :
 				IDC_TSPROCESSORTUNERMAP_DISABLEPROCESSING);
-			for (auto it = m_pOptions->m_ModuleList.begin(); it != m_pOptions->m_ModuleList.end(); ++it)
-				DlgComboBox_AddString(hDlg, IDC_TSPROCESSORTUNERMAP_MODULE, it->c_str());
+			for (const String &e : m_pOptions->m_ModuleList)
+				DlgComboBox_AddString(hDlg, IDC_TSPROCESSORTUNERMAP_MODULE, e.c_str());
 			::SetDlgItemText(hDlg, IDC_TSPROCESSORTUNERMAP_MODULE, m_pInfo->Module.c_str());
 			::SetDlgItemText(hDlg, IDC_TSPROCESSORTUNERMAP_DEVICE, m_pInfo->Device.c_str());
 			::SetDlgItemText(hDlg, IDC_TSPROCESSORTUNERMAP_FILTER, m_pInfo->Filter.c_str());

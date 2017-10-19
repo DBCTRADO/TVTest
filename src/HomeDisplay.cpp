@@ -138,9 +138,8 @@ void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC 
 	m_LogoWidth = (m_LogoHeight * 16 + 4) / 9;
 
 	m_ChannelNameWidth = Style.FontHeight * 8;
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		const CChannelItemBase *pItem = m_ItemList[i].get();
-		LPCTSTR pszName = pItem->GetName();
+	for (const auto &e : m_ItemList) {
+		LPCTSTR pszName = e->GetName();
 		SIZE sz;
 
 		if (::GetTextExtentPoint32(hdc, pszName, ::lstrlen(pszName), &sz)
@@ -325,51 +324,50 @@ void CChannelListCategoryBase::UpdateChannelInfo()
 
 	LibISDB::GetCurrentEPGTime(&CurTime);
 
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CChannelItemBase *pItem = m_ItemList[i].get();
+	for (const auto &Item : m_ItemList) {
 		LibISDB::EventInfo EventInfo;
 
 		if (EPGDatabase.GetEventInfo(
-					pItem->GetNetworkID(),
-					pItem->GetTransportStreamID(),
-					pItem->GetServiceID(),
+					Item->GetNetworkID(),
+					Item->GetTransportStreamID(),
+					Item->GetServiceID(),
 					CurTime, &EventInfo)) {
-			pItem->SetEvent(0, &EventInfo);
+			Item->SetEvent(0, &EventInfo);
 			LibISDB::DateTime EndTime;
 			if (EventInfo.StartTime.IsValid()
 					&& EventInfo.Duration > 0
 					&& EventInfo.GetEndTime(&EndTime)
 					&& EPGDatabase.GetEventInfo(
-						pItem->GetNetworkID(),
-						pItem->GetTransportStreamID(),
-						pItem->GetServiceID(),
+						Item->GetNetworkID(),
+						Item->GetTransportStreamID(),
+						Item->GetServiceID(),
 						EndTime, &EventInfo)) {
-				pItem->SetEvent(1, &EventInfo);
+				Item->SetEvent(1, &EventInfo);
 			} else {
-				pItem->SetEvent(1, nullptr);
+				Item->SetEvent(1, nullptr);
 			}
 		} else {
-			pItem->SetEvent(0, nullptr);
+			Item->SetEvent(0, nullptr);
 			if (EPGDatabase.GetNextEventInfo(
-						pItem->GetNetworkID(),
-						pItem->GetTransportStreamID(),
-						pItem->GetServiceID(),
+						Item->GetNetworkID(),
+						Item->GetTransportStreamID(),
+						Item->GetServiceID(),
 						CurTime, &EventInfo)
 					&& EventInfo.StartTime.DiffSeconds(CurTime) < 8 * 60 * 60) {
-				pItem->SetEvent(1, &EventInfo);
+				Item->SetEvent(1, &EventInfo);
 			} else {
-				pItem->SetEvent(1, nullptr);
+				Item->SetEvent(1, nullptr);
 			}
 		}
 
 		HBITMAP hbmLogo = LogoManager.GetAssociatedLogoBitmap(
-			pItem->GetNetworkID(), pItem->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
+			Item->GetNetworkID(), Item->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
 		if (hbmLogo != nullptr)
-			pItem->SetSmallLogo(hbmLogo);
+			Item->SetSmallLogo(hbmLogo);
 		hbmLogo = LogoManager.GetAssociatedLogoBitmap(
-			pItem->GetNetworkID(), pItem->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
+			Item->GetNetworkID(), Item->GetServiceID(), CLogoManager::LOGOTYPE_BIG);
 		if (hbmLogo != nullptr)
-			pItem->SetBigLogo(hbmLogo);
+			Item->SetBigLogo(hbmLogo);
 	}
 }
 
@@ -808,33 +806,31 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 
 	m_ChannelNameWidth = 0;
 
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CEventItem *pItem = m_ItemList[i].get();
-
-		LPCTSTR pszName = pItem->GetChannelInfo().GetName();
+	for (const auto &Item : m_ItemList) {
+		LPCTSTR pszName = Item->GetChannelInfo().GetName();
 		SIZE sz;
 		if (::GetTextExtentPoint32(hdc, pszName, ::lstrlen(pszName), &sz)
 				&& sz.cx > m_ChannelNameWidth)
 			m_ChannelNameWidth = sz.cx;
 
-		pItem->SetLogo(
+		Item->SetLogo(
 			LogoManager.GetAssociatedLogoBitmap(
-				pItem->GetChannelInfo().GetNetworkID(),
-				pItem->GetChannelInfo().GetServiceID(),
+				Item->GetChannelInfo().GetNetworkID(),
+				Item->GetChannelInfo().GetServiceID(),
 				m_LogoHeight <= 14 ? CLogoManager::LOGOTYPE_SMALL : CLogoManager::LOGOTYPE_BIG));
 
 		int Height = m_ItemHeight;
-		if (pItem->GetEventText(&Text)) {
+		if (Item->GetEventText(&Text)) {
 			int Lines = DrawText.CalcLineCount(Text.c_str(), EventTextWidth);
 			if (!Settings.GetShowEventText()
 					|| Lines > Settings.GetEventTextLines()) {
 				Height = ItemBaseHeight + Lines * Style.FontHeight;
-				if (pItem->IsExpanded()) {
+				if (Item->IsExpanded()) {
 					m_Height += Height - m_ItemHeight;
 				}
 			}
 		}
-		pItem->SetExpandedHeight(Height);
+		Item->SetExpandedHeight(Height);
 	}
 
 	DrawText.End();
@@ -1577,8 +1573,8 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 			m_CurCategory = CurCategory;
 	}
 
-	for (auto itr = m_CategoryList.begin(); itr != m_CategoryList.end(); ++itr)
-		(*itr)->ReadSettings(Settings);
+	for (auto &e : m_CategoryList)
+		e->ReadSettings(Settings);
 
 	return true;
 }
@@ -1600,8 +1596,8 @@ bool CHomeDisplay::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("CurCategory"), m_CurCategory);
 	}
 
-	for (auto itr = m_CategoryList.begin(); itr != m_CategoryList.end(); ++itr)
-		(*itr)->WriteSettings(Settings);
+	for (auto &e : m_CategoryList)
+		e->WriteSettings(Settings);
 
 	return true;
 }
@@ -1615,8 +1611,8 @@ void CHomeDisplay::Clear()
 
 bool CHomeDisplay::UpdateContents()
 {
-	for (size_t i = 0; i < m_CategoryList.size(); i++)
-		m_CategoryList[i]->Create();
+	for (auto &e : m_CategoryList)
+		e->Create();
 
 	if (m_hwnd != nullptr) {
 		LayOut();
@@ -1767,8 +1763,8 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			m_hinst, MAKEINTRESOURCE(IDB_HOME),
 			CATEGORY_ICON_WIDTH, 1, 0, IMAGE_BITMAP, LR_CREATEDIBSECTION);
 
-		for (auto itr = m_CategoryList.begin(); itr != m_CategoryList.end(); ++itr)
-			(*itr)->OnWindowCreate();
+		for (auto &e : m_CategoryList)
+			e->OnWindowCreate();
 		return 0;
 
 	case WM_SIZE:
@@ -2010,8 +2006,8 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return 0;
 
 	case WM_DESTROY:
-		for (auto itr = m_CategoryList.begin(); itr != m_CategoryList.end(); ++itr)
-			(*itr)->OnWindowDestroy();
+		for (auto &e : m_CategoryList)
+			e->OnWindowDestroy();
 
 		if (m_himlIcons != nullptr) {
 			::ImageList_Destroy(m_himlIcons);
@@ -2135,9 +2131,9 @@ void CHomeDisplay::LayOut()
 	m_HomeDisplayStyle.FontHeight = m_Font.GetHeight(hdc);
 
 	int CategoryTextWidth = 0;
-	for (size_t i = 0; i < m_CategoryList.size(); i++) {
+	for (const auto &e : m_CategoryList) {
 		RECT rc = {0, 0, 0, 0};
-		::DrawText(hdc, m_CategoryList[i]->GetTitle(), -1, &rc, DT_CALCRECT);
+		::DrawText(hdc, e->GetTitle(), -1, &rc, DT_CALCRECT);
 		if (rc.right > CategoryTextWidth)
 			CategoryTextWidth = rc.right;
 	}

@@ -271,8 +271,8 @@ INT_PTR CBasicDialog::HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		StorePosition();
 
 		if (!m_ItemList.empty()) {
-			for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it)
-				SetWindowFont(it->hwnd, m_hOriginalFont, FALSE);
+			for (const auto &e : m_ItemList)
+				SetWindowFont(e.hwnd, m_hOriginalFont, FALSE);
 			m_ItemList.clear();
 		}
 		if (m_hOriginalFont != nullptr)
@@ -410,9 +410,9 @@ void CBasicDialog::RealizeStyle()
 
 			HDWP hdwp = ::BeginDeferWindowPos(static_cast<int>(m_ItemList.size()));
 
-			for (auto it = m_ItemList.begin(); it != m_ItemList.end(); ++it) {
-				HWND hwnd = it->hwnd;
-				RECT rc = it->rcOriginal;
+			for (const auto &e : m_ItemList) {
+				HWND hwnd = e.hwnd;
+				RECT rc = e.rcOriginal;
 
 				rc.left = ::MulDiv(rc.left, DPI, m_OriginalDPI);
 				rc.top = ::MulDiv(rc.top, DPI, m_OriginalDPI);
@@ -544,10 +544,10 @@ void CResizableDialog::DoLayout()
 
 	HDWP hdwp = ::BeginDeferWindowPos(static_cast<int>(m_ControlList.size()));
 
-	for (size_t i = 0; i < m_ControlList.size(); i++) {
-		rc = m_ControlList[i].rcOriginal;
+	for (const auto &e : m_ControlList) {
+		rc = e.rcOriginal;
 
-		const int DPI = m_ControlList[i].DPI;
+		const int DPI = e.DPI;
 		if (DPI != m_CurrentDPI) {
 			rc.left = ::MulDiv(rc.left, m_CurrentDPI, DPI);
 			rc.top = ::MulDiv(rc.top, m_CurrentDPI, DPI);
@@ -555,16 +555,16 @@ void CResizableDialog::DoLayout()
 			rc.bottom = ::MulDiv(rc.bottom, m_CurrentDPI, DPI);
 		}
 
-		if (!!(m_ControlList[i].Align & AlignFlag::Right)) {
+		if (!!(e.Align & AlignFlag::Right)) {
 			rc.right += Width - m_ScaledClientSize.cx;
-			if (!(m_ControlList[i].Align & AlignFlag::Left))
+			if (!(e.Align & AlignFlag::Left))
 				rc.left += Width - m_ScaledClientSize.cx;
 			if (rc.right < rc.left)
 				rc.right = rc.left;
 		}
-		if (!!(m_ControlList[i].Align & AlignFlag::Bottom)) {
+		if (!!(e.Align & AlignFlag::Bottom)) {
 			rc.bottom += Height - m_ScaledClientSize.cy;
-			if (!(m_ControlList[i].Align & AlignFlag::Top))
+			if (!(e.Align & AlignFlag::Top))
 				rc.top += Height - m_ScaledClientSize.cy;
 			if (rc.bottom < rc.top)
 				rc.bottom = rc.top;
@@ -572,12 +572,12 @@ void CResizableDialog::DoLayout()
 
 		if (hdwp != nullptr) {
 			::DeferWindowPos(
-				hdwp, ::GetDlgItem(m_hDlg, m_ControlList[i].ID), nullptr,
+				hdwp, ::GetDlgItem(m_hDlg, e.ID), nullptr,
 				rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
 		} else {
 			::SetWindowPos(
-				::GetDlgItem(m_hDlg, m_ControlList[i].ID), nullptr,
+				::GetDlgItem(m_hDlg, e.ID), nullptr,
 				rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
 		}
@@ -628,10 +628,10 @@ bool CResizableDialog::AddControls(int FirstID, int LastID, AlignFlag Align)
 
 bool CResizableDialog::UpdateControlPosition(int ID)
 {
-	for (size_t i = 0; i < m_ControlList.size(); i++) {
-		if (m_ControlList[i].ID == ID) {
-			GetDlgItemRect(m_hDlg, ID, &m_ControlList[i].rcOriginal);
-			m_ControlList[i].DPI = m_CurrentDPI;
+	for (auto &e : m_ControlList) {
+		if (e.ID == ID) {
+			GetDlgItemRect(m_hDlg, ID, &e.rcOriginal);
+			e.DPI = m_CurrentDPI;
 			return true;
 		}
 	}

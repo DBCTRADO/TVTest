@@ -73,26 +73,26 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 		if (!Settings.GetEntries(&Entries))
 			return false;
 
-		for (auto itr = Entries.begin(); itr != Entries.end(); ++itr) {
-			if (!itr->Name.empty() && !itr->Value.empty()) {
-				StringUtility::Trim(itr->Value);
-				if (!itr->Value.empty()) {
-					if (std::_istdigit(itr->Value[0])
-							|| itr->Value[0] == _T('-') || itr->Value[0] == _T('+')) {
+		for (auto &e : Entries) {
+			if (!e.Name.empty() && !e.Value.empty()) {
+				StringUtility::Trim(e.Value);
+				if (!e.Value.empty()) {
+					if (std::_istdigit(e.Value[0])
+							|| e.Value[0] == _T('-') || e.Value[0] == _T('+')) {
 						IntValue Value;
-						if (ParseValue(itr->Value.c_str(), &Value))
-							Set(itr->Name.c_str(), Value);
-					} else if (StringUtility::CompareNoCase(itr->Value, TEXT("true")) == 0
-							|| StringUtility::CompareNoCase(itr->Value, TEXT("false")) == 0) {
-						Set(itr->Name.c_str(), itr->Value[0] == _T('t'));
-					} else if (itr->Value.length() >= 2
-							&& itr->Value.front() == _T('\"')
-							&& itr->Value.back() == _T('\"')) {
-						Set(itr->Name.c_str(), itr->Value.substr(1, itr->Value.length() - 2));
+						if (ParseValue(e.Value.c_str(), &Value))
+							Set(e.Name.c_str(), Value);
+					} else if (StringUtility::CompareNoCase(e.Value, TEXT("true")) == 0
+							|| StringUtility::CompareNoCase(e.Value, TEXT("false")) == 0) {
+						Set(e.Name.c_str(), e.Value[0] == _T('t'));
+					} else if (e.Value.length() >= 2
+							&& e.Value.front() == _T('\"')
+							&& e.Value.back() == _T('\"')) {
+						Set(e.Name.c_str(), e.Value.substr(1, e.Value.length() - 2));
 					}
 #ifdef _DEBUG
 					else {
-						TRACE(TEXT("Invalid style : %s=%s\n"), itr->Name.c_str(), itr->Value.c_str());
+						TRACE(TEXT("Invalid style : %s=%s\n"), e.Name.c_str(), e.Value.c_str());
 					}
 #endif
 				}

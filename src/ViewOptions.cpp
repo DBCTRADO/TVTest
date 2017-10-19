@@ -207,10 +207,8 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					TEXT("幅のみ変える"),
 					TEXT("幅と高さを変える"),
 				};
-				for (int i = 0; i < lengthof(AdjustWindowModeList); i++) {
-					DlgComboBox_AddString(
-						hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW,
-						AdjustWindowModeList[i]);
+				for (LPCTSTR e : AdjustWindowModeList) {
+					DlgComboBox_AddString(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW, e);
 				}
 				DlgComboBox_SetCurSel(
 					hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW,

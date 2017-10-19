@@ -338,10 +338,10 @@ CPropertyPageFrame::CPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages
 
 CPropertyPageFrame::~CPropertyPageFrame()
 {
-	for (auto it = m_PageList.begin(); it != m_PageList.end(); ++it) {
-		it->pPropPage->SetObjects(0, nullptr);
-		it->pPropPage->SetPageSite(nullptr);
-		it->pPropPage->Release();
+	for (auto &e : m_PageList) {
+		e.pPropPage->SetObjects(0, nullptr);
+		e.pPropPage->SetPageSite(nullptr);
+		e.pPropPage->Release();
 	}
 
 	m_pPageSite->Release();
@@ -444,9 +444,9 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDOK:
-			for (auto it = m_PageList.begin(); it != m_PageList.end(); ++it) {
-				if (it->fActivated)
-					it->pPropPage->Apply();
+			for (auto &e : m_PageList) {
+				if (e.fActivated)
+					e.pPropPage->Apply();
 			}
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
@@ -468,10 +468,10 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		break;
 
 	case WM_DESTROY:
-		for (auto it = m_PageList.begin(); it != m_PageList.end(); ++it) {
-			if (it->fActivated) {
-				it->pPropPage->Deactivate();
-				it->fActivated = false;
+		for (auto &e : m_PageList) {
+			if (e.fActivated) {
+				e.pPropPage->Deactivate();
+				e.fActivated = false;
 			}
 		}
 		return TRUE;

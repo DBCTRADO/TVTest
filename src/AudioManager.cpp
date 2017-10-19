@@ -100,11 +100,11 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 		const CAudioOptions::AudioLanguageList &PriorityList = AudioOptions.GetLanguagePriority();
 
 		if (!PriorityList.empty()) {
-			for (auto itPriority = PriorityList.begin(); itPriority != PriorityList.end(); ++itPriority) {
+			for (auto const &Priority : PriorityList) {
 				for (auto itAudio = m_AudioList.begin(); itAudio != m_AudioList.end(); ++itAudio) {
-					if (itAudio->Language == itPriority->Language
+					if (itAudio->Language == Priority.Language
 							&& itAudio->DualMono != DualMonoMode::Both) {
-						if (!itPriority->fSub
+						if (!Priority.fSub
 								|| itAudio != m_AudioList.begin()
 								|| itAudio->DualMono == CAudioManager::DualMonoMode::Sub) {
 							if (pSelectInfo != nullptr) {

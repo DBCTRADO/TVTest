@@ -115,12 +115,12 @@ bool CVariableManager::GetVariableList(std::vector<VariableInfo> *pList) const
 	pList->clear();
 	pList->reserve(m_VariableList.size());
 
-	for (auto it = m_VariableList.begin(); it != m_VariableList.end(); ++it) {
+	for (const auto &e : m_VariableList) {
 		VariableInfo Info;
 
-		Info.pszKeyword = it->Keyword.c_str();
-		Info.pszDescription = it->Description.c_str();
-		Info.Flags = it->Flags;
+		Info.pszKeyword = e.Keyword.c_str();
+		Info.pszDescription = e.Description.c_str();
+		Info.Flags = e.Flags;
 
 		pList->push_back(Info);
 	}

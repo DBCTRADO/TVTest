@@ -361,10 +361,10 @@ void CLogger::GetLogText(String *pText) const
 {
 	BlockLock Lock(m_Lock);
 
-	for (auto itr = m_LogList.begin(); itr != m_LogList.end(); ++itr) {
+	for (const auto &e : m_LogList) {
 		WCHAR szText[MAX_LOG_TEXT_LENGTH];
 
-		(*itr)->Format(szText, lengthof(szText));
+		e->Format(szText, lengthof(szText));
 		*pText += szText;
 		*pText += L"\r\n";
 	}
@@ -375,10 +375,10 @@ void CLogger::GetLogText(AnsiString *pText) const
 {
 	BlockLock Lock(m_Lock);
 
-	for (auto itr = m_LogList.begin(); itr != m_LogList.end(); ++itr) {
+	for (const auto &e : m_LogList) {
 		char szText[MAX_LOG_TEXT_LENGTH];
 
-		(*itr)->Format(szText, lengthof(szText));
+		e->Format(szText, lengthof(szText));
 		*pText += szText;
 		*pText += "\r\n";
 	}
@@ -414,8 +414,8 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				::GetSystemMetrics(SM_CXSMICON),
 				::GetSystemMetrics(SM_CYSMICON),
 				ILC_COLOR32, lengthof(IconList), 1);
-			for (int i = 0; i < lengthof(IconList); i++) {
-				HICON hico = LoadSystemIcon(IconList[i], IconSizeType::Small);
+			for (LPCTSTR pszIcon : IconList) {
+				HICON hico = LoadSystemIcon(pszIcon, IconSizeType::Small);
 				::ImageList_AddIcon(himl, hico);
 				::DestroyIcon(hico);
 			}
@@ -439,8 +439,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			lvi.iItem = 0;
 			m_Lock.Lock();
 			ListView_SetItemCount(hwndList, (int)m_LogList.size());
-			for (auto itr = m_LogList.begin(); itr != m_LogList.end(); ++itr) {
-				const CLogItem *pLogItem = itr->get();
+			for (const auto &e : m_LogList) {
 				TCHAR szTime[64];
 
 				lvi.mask = LVIF_TEXT;
@@ -450,14 +449,14 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				lvi.mask = LVIF_TEXT;
 				lvi.iSubItem = COLUMN_TIME;
-				pLogItem->FormatTime(szTime, lengthof(szTime));
+				e->FormatTime(szTime, lengthof(szTime));
 				lvi.pszText = szTime;
 				ListView_SetItem(hwndList, &lvi);
 
 				lvi.mask = LVIF_TEXT | LVIF_IMAGE;
 				lvi.iSubItem = COLUMN_TEXT;
-				lvi.iImage = (int)pLogItem->GetType();
-				lvi.pszText = const_cast<LPTSTR>(pLogItem->GetText());
+				lvi.iImage = (int)e->GetType();
+				lvi.pszText = const_cast<LPTSTR>(e->GetText());
 				ListView_SetItem(hwndList, &lvi);
 
 				lvi.iItem++;

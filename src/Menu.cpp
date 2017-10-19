@@ -114,9 +114,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 			mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_STRING;
 			mii.dwTypeData = szText;
 
-			for (auto itr = pItemList->begin(); itr != pItemList->end(); ++itr) {
-				int ID = *itr;
-
+			for (int ID : *pItemList) {
 				if (ID < 0) {
 					::AppendMenu(hmenuCustom, MF_SEPARATOR, 0, nullptr);
 				} else if (ID >= CM_COMMAND_FIRST) {
@@ -1341,8 +1339,8 @@ void CIconMenu::Finalize()
 	m_hmenu = nullptr;
 	m_ItemList.clear();
 	if (!m_BitmapList.empty()) {
-		for (auto i = m_BitmapList.begin(); i != m_BitmapList.end(); i++)
-			::DeleteObject(*i);
+		for (HBITMAP hbm : m_BitmapList)
+			::DeleteObject(hbm);
 		m_BitmapList.clear();
 	}
 }
@@ -1360,11 +1358,11 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd, HMENU hmenu)
 	for (int i = 0; i < Count; i++) {
 		mii.fMask = MIIM_ID | MIIM_STATE | MIIM_DATA;
 		if (::GetMenuItemInfo(hmenu, i, TRUE, &mii)) {
-			for (auto itrItem = m_ItemList.begin(); itrItem != m_ItemList.end(); ++itrItem) {
-				if (itrItem->ID == mii.wID) {
+			for (const ItemIconInfo &Item : m_ItemList) {
+				if (Item.ID == mii.wID) {
 					mii.fMask = MIIM_STATE | MIIM_BITMAP | MIIM_DATA;
-					mii.dwItemData = (mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (itrItem->Icon + 1);
-					mii.hbmpItem = m_BitmapList[itrItem->Icon];
+					mii.dwItemData = (mii.dwItemData & ~ITEM_DATA_IMAGEMASK) | (Item.Icon + 1);
+					mii.hbmpItem = m_BitmapList[Item.Icon];
 					if ((mii.dwItemData & ITEM_DATA_CHECKED) != 0) {
 						mii.fState |= MFS_CHECKED;
 					}
@@ -1590,8 +1588,8 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 	HDC hdc = ::GetDC(hwnd);
 	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 	int MaxWidth = 0;
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		int Width = m_ItemList[i]->GetWidth(hdc);
+	for (const auto &Item : m_ItemList) {
+		int Width = Item->GetWidth(hdc);
 		if (Width > MaxWidth)
 			MaxWidth = Width;
 	}

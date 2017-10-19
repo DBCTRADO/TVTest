@@ -78,8 +78,8 @@ bool CEventSearchServiceList::IsExists(WORD NetworkID, WORD TSID, WORD ServiceID
 
 void CEventSearchServiceList::Combine(const CEventSearchServiceList &List)
 {
-	for (auto it = List.m_ServiceList.begin(); it != List.m_ServiceList.end(); ++it) {
-		m_ServiceList.insert(*it);
+	for (const auto &e : List.m_ServiceList) {
+		m_ServiceList.insert(e);
 	}
 }
 
@@ -105,8 +105,8 @@ bool CEventSearchServiceList::ToString(String *pString) const
 
 	ServiceKey PrevKey = 0;
 
-	for (auto it = m_ServiceList.begin(); it != m_ServiceList.end(); ++it) {
-		ServiceKey Key = *it;
+	for (ServiceKey e : m_ServiceList) {
+		ServiceKey Key = e;
 		TCHAR szKey[16];
 		if (PrevKey != 0 && PrevKey >> 16 == Key >> 16)
 			Key &= 0xFFFFULL;
@@ -116,7 +116,7 @@ bool CEventSearchServiceList::ToString(String *pString) const
 		szKey[Length] = _T(':');
 		szKey[Length + 1] = _T('\0');
 		*pString += szKey;
-		PrevKey = *it;
+		PrevKey = e;
 	}
 
 	return true;
@@ -448,8 +448,8 @@ CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearch
 		if (!Src.m_List.empty()) {
 			m_List.reserve(Src.m_List.size());
 
-			for (auto it = Src.m_List.begin(); it != Src.m_List.end(); ++it) {
-				m_List.emplace_back(new CEventSearchSettings(**it));
+			for (const auto &e : Src.m_List) {
+				m_List.emplace_back(new CEventSearchSettings(*e));
 			}
 		}
 	}
@@ -473,8 +473,8 @@ size_t CEventSearchSettingsList::GetCount() const
 size_t CEventSearchSettingsList::GetEnabledCount() const
 {
 	size_t Count = 0;
-	for (auto it = m_List.begin(); it != m_List.end(); ++it) {
-		if (!(*it)->fDisabled)
+	for (const auto &e : m_List) {
+		if (!e->fDisabled)
 			Count++;
 	}
 	return Count;
@@ -1028,8 +1028,8 @@ CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Opti
 	, m_Options(Options)
 	, m_SearchTarget(0)
 {
-	for (int i = 0; i < lengthof(m_fGenreExpanded); i++)
-		m_fGenreExpanded[i] = false;
+	for (bool &e : m_fGenreExpanded)
+		e = false;
 }
 
 
@@ -1336,8 +1336,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("番組情報"),
 			};
 
-			for (int i = 0; i < lengthof(KeywordTargetList); i++)
-				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_KEYWORDTARGET, KeywordTargetList[i]);
+			for (LPCTSTR pszText : KeywordTargetList)
+				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_KEYWORDTARGET, pszText);
 		}
 
 		// ジャンル
@@ -1389,8 +1389,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("有料"),
 			};
 
-			for (int i = 0; i < lengthof(pszCAList); i++)
-				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_CA_LIST, pszCAList[i]);
+			for (LPCTSTR pszText : pszCAList)
+				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_CA_LIST, pszText);
 		}
 
 		// 映像
@@ -1400,8 +1400,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("SD"),
 			};
 
-			for (int i = 0; i < lengthof(pszVideoList); i++)
-				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_VIDEO_LIST, pszVideoList[i]);
+			for (LPCTSTR pszText : pszVideoList)
+				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_VIDEO_LIST, pszText);
 		}
 
 		// 設定保存
@@ -1421,8 +1421,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		// 検索対象
 		if (!m_SearchTargetList.empty()) {
-			for (auto it = m_SearchTargetList.begin(); it != m_SearchTargetList.end(); ++it)
-				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_SEARCHTARGET, it->c_str());
+			for (const String &e : m_SearchTargetList)
+				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_SEARCHTARGET, e.c_str());
 			DlgComboBox_SetCurSel(hDlg, IDC_EVENTSEARCH_SEARCHTARGET, m_SearchTarget);
 		} else {
 			ShowDlgItem(hDlg, IDC_EVENTSEARCH_SEARCHTARGET, false);

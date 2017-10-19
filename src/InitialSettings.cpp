@@ -269,14 +269,14 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 						TEXT("現在の設定を変更しますか?")
 					},
 				};
-				for (int i = 0; i < lengthof(ConflictList); i++) {
-					int Length = ::lstrlen(ConflictList[i].pszDecoder);
-					if (VideoRenderer == ConflictList[i].Renderer
-							&& (::StrCmpNI(Mpeg2DecoderName.c_str(), ConflictList[i].pszDecoder, Length) == 0
-								|| ::StrCmpNI(H264DecoderName.c_str(), ConflictList[i].pszDecoder, Length) == 0)
-							|| ::StrCmpNI(H265DecoderName.c_str(), ConflictList[i].pszDecoder, Length) == 0) {
+				for (const auto &e : ConflictList) {
+					int Length = ::lstrlen(e.pszDecoder);
+					if (VideoRenderer == e.Renderer
+							&& (::StrCmpNI(Mpeg2DecoderName.c_str(), e.pszDecoder, Length) == 0
+								|| ::StrCmpNI(H264DecoderName.c_str(), e.pszDecoder, Length) == 0)
+							|| ::StrCmpNI(H265DecoderName.c_str(), e.pszDecoder, Length) == 0) {
 						if (::MessageBox(
-									hDlg, ConflictList[i].pszMessage, TEXT("注意"),
+									hDlg, e.pszMessage, TEXT("注意"),
 									MB_YESNO | MB_ICONINFORMATION) == IDYES)
 							return TRUE;
 						break;
@@ -401,8 +401,8 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 						Filter2.data(), (int)Filter2.length()) == CSTR_LESS_THAN;
 				});
 		}
-		for (size_t i = 0; i < FilterList.size(); i++) {
-			DlgComboBox_AddString(m_hDlg, ID, FilterList[i].c_str());
+		for (const String &e :FilterList) {
+			DlgComboBox_AddString(m_hDlg, ID, e.c_str());
 		}
 	}
 

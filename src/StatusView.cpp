@@ -302,8 +302,8 @@ void CStatusView::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
-		(*itr)->SetStyle(pStyleManager);
+	for (auto &e : m_ItemList)
+		e->SetStyle(pStyleManager);
 }
 
 
@@ -313,8 +313,8 @@ void CStatusView::NormalizeStyle(
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
-		(*itr)->NormalizeStyle(pStyleManager, pStyleScaling);
+	for (auto &e : m_ItemList)
+		e->NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
@@ -785,9 +785,9 @@ int CStatusView::GetIntegralWidth() const
 	int Width;
 
 	Width = 0;
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		if (m_ItemList[i]->GetVisible())
-			Width += m_ItemList[i]->GetWidth() + m_Style.ItemPadding.Horz();
+	for (const auto &e : m_ItemList) {
+		if (e->GetVisible())
+			Width += e->GetWidth() + m_Style.ItemPadding.Horz();
 	}
 	RECT rc;
 	GetBorderWidthsInPixels(m_Theme.Border, &rc);
@@ -800,8 +800,8 @@ void CStatusView::SetVisible(bool fVisible)
 	if (m_HotItem >= 0)
 		SetHotItem(-1);
 	CBasicWindow::SetVisible(fVisible);
-	for (size_t i = 0; i < m_ItemList.size(); i++)
-		m_ItemList[i]->OnPresentStatusChange(fVisible && m_ItemList[i]->GetVisible());
+	for (const auto &e : m_ItemList)
+		e->OnPresentStatusChange(fVisible && e->GetVisible());
 }
 
 
@@ -899,8 +899,8 @@ bool CStatusView::GetStatusViewTheme(StatusViewTheme *pTheme) const
 
 void CStatusView::SetItemTheme(const Theme::CThemeManager *pThemeManager)
 {
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
-		(*itr)->SetTheme(pThemeManager);
+	for (auto &e : m_ItemList)
+		e->SetTheme(pThemeManager);
 }
 
 
@@ -914,8 +914,8 @@ bool CStatusView::SetFont(const Style::Font &Font)
 		m_TextHeight = CalcTextHeight(&m_FontHeight);
 		m_ItemHeight = CalcItemHeight();
 		AdjustSize();
-		for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
-			(*itr)->OnFontChanged();
+		for (auto &e : m_ItemList)
+			e->OnFontChanged();
 		Invalidate();
 	}
 
@@ -974,11 +974,9 @@ int CStatusView::CalcHeight(int Width) const
 {
 	std::vector<const CStatusItem*> ItemList;
 	ItemList.reserve(m_ItemList.size());
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		const CStatusItem *pItem = itr->get();
-
-		if (pItem->GetVisible())
-			ItemList.push_back(pItem);
+	for (auto &e : m_ItemList) {
+		if (e->GetVisible())
+			ItemList.push_back(e.get());
 	}
 
 	RECT rcBorder;
@@ -1137,10 +1135,9 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 
 	if (!m_fSingleMode) {
 		int MaxWidth = 0;
-		for (size_t i = 0; i < m_ItemList.size(); i++) {
-			const CStatusItem *pItem = m_ItemList[i].get();
-			if (pItem->GetVisible() && pItem->GetActualWidth() > MaxWidth)
-				MaxWidth = pItem->GetActualWidth();
+		for (auto &e : m_ItemList) {
+			if (e->GetVisible() && e->GetActualWidth() > MaxWidth)
+				MaxWidth = e->GetActualWidth();
 		}
 		if (MaxWidth + HorzMargin > m_Offscreen.GetWidth()
 				|| ItemHeight > m_Offscreen.GetHeight())
@@ -1244,14 +1241,12 @@ void CStatusView::CalcLayout()
 {
 	std::vector<CStatusItem*> ItemList;
 	ItemList.reserve(m_ItemList.size());
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		CStatusItem *pItem = itr->get();
+	for (auto &e : m_ItemList) {
+		e->m_fBreak = false;
+		e->SetActualWidth(e->GetWidth());
 
-		pItem->m_fBreak = false;
-		pItem->SetActualWidth(pItem->GetWidth());
-
-		if (pItem->GetVisible())
-			ItemList.push_back(pItem);
+		if (e->GetVisible())
+			ItemList.push_back(e.get());
 	}
 
 	RECT rc;
@@ -1411,14 +1406,12 @@ void CStatusView::ApplyStyle()
 	m_TextHeight = CalcTextHeight(&m_FontHeight);
 	m_ItemHeight = CalcItemHeight();
 
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		CStatusItem *pItem = itr->get();
+	for (auto &Item : m_ItemList) {
+		if (Item->GetWidth() < 0)
+			Item->SetWidth(CalcItemPixelSize(Item->GetDefaultWidth()));
+		Item->SetActualWidth(Item->GetWidth());
 
-		if (pItem->GetWidth() < 0)
-			pItem->SetWidth(CalcItemPixelSize(pItem->GetDefaultWidth()));
-		pItem->SetActualWidth(pItem->GetWidth());
-
-		pItem->OnFontChanged();
+		Item->OnFontChanged();
 	}
 }
 

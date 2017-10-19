@@ -260,8 +260,8 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				TEXT("リストの並び順"),
 				TEXT("チャンネル番号順"),
 			};
-			for (int i = 0; i < lengthof(ChannelUpDownOrderList); i++) {
-				DlgComboBox_AddString(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER, ChannelUpDownOrderList[i]);
+			for (LPCTSTR pszText : ChannelUpDownOrderList) {
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER, pszText);
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER, (int)m_ChannelUpDownOrder);
 

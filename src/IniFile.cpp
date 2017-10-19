@@ -143,19 +143,19 @@ bool CIniFile::Close()
 	if ((m_OpenFlags & OPEN_WRITE) != 0 && m_hFile != INVALID_HANDLE_VALUE) {
 		String Buffer;
 
-		for (auto itrSection = m_SectionList.begin(); itrSection != m_SectionList.end(); ++itrSection) {
-			if (!itrSection->SectionName.empty()) {
+		for (const auto &Section : m_SectionList) {
+			if (!Section.SectionName.empty()) {
 				Buffer += L"[";
-				Buffer += itrSection->SectionName;
+				Buffer += Section.SectionName;
 				Buffer += L"]\r\n";
 			}
 
-			for (auto itrValue = itrSection->Entries.begin(); itrValue != itrSection->Entries.end(); ++itrValue) {
-				if (!itrValue->Name.empty()) {
-					Buffer += itrValue->Name;
+			for (const auto &Value : Section.Entries) {
+				if (!Value.Name.empty()) {
+					Buffer += Value.Name;
 					Buffer += L"=";
 				}
-				Buffer += itrValue->Value;
+				Buffer += Value.Value;
 				Buffer += L"\r\n";
 			}
 		}
@@ -383,9 +383,9 @@ bool CIniFile::GetSectionEntries(LPCWSTR pszSection, EntryArray *pEntries)
 	if (itrSection == m_SectionList.end())
 		return false;
 
-	for (auto i = itrSection->Entries.begin(); i != itrSection->Entries.end(); i++) {
-		if (!i->Name.empty()) {
-			pEntries->push_back(*i);
+	for (const auto &e : itrSection->Entries) {
+		if (!e.Name.empty()) {
+			pEntries->push_back(e);
 		}
 	}
 

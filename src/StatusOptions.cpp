@@ -92,11 +92,11 @@ CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 
 	m_AvailItemList.reserve(lengthof(DefaultItemList));
 
-	for (int i = 0; i < lengthof(DefaultItemList); i++) {
+	for (const auto &e : DefaultItemList) {
 		StatusItemInfo Info;
 
-		Info.ID = DefaultItemList[i].ID;
-		Info.fVisible = DefaultItemList[i].fVisible;
+		Info.ID = e.ID;
+		Info.fVisible = e.fVisible;
 		Info.Width = -1;
 
 		m_AvailItemList.push_back(Info);
@@ -143,9 +143,9 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 					}
 					if (j < ItemList.size())
 						continue;
-					for (size_t j = 0; j < m_AvailItemList.size(); j++) {
-						if (m_AvailItemList[j].ID == Item.ID) {
-							Item.fVisible = m_AvailItemList[j].fVisible;
+					for (const auto &e : m_AvailItemList) {
+						if (e.ID == Item.ID) {
+							Item.fVisible = e.fVisible;
 							break;
 						}
 					}
@@ -172,17 +172,12 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 			}
 		}
 
-		for (size_t i = 0; i < m_AvailItemList.size(); i++) {
-			const int ID = m_AvailItemList[i].ID;
-			bool fFound = false;
-			for (size_t j = 0; j < ItemList.size(); j++) {
-				if (ItemList[j].ID == ID) {
-					fFound = true;
-					break;
-				}
-			}
-			if (!fFound) {
-				StatusItemInfo Item(m_AvailItemList[i]);
+		for (const auto &e : m_AvailItemList) {
+			const int ID = e.ID;
+			if (std::find_if(
+						ItemList.begin(), ItemList.end(),
+						[ID](const StatusItemInfo &Item) -> bool { return Item.ID == ID; }) == ItemList.end()) {
+				StatusItemInfo Item(e);
 				Item.fVisible = false;
 				ItemList.push_back(Item);
 			}
@@ -303,11 +298,11 @@ void CStatusOptions::ApplyItemWidth()
 {
 	const int StatusBarDPI = m_pStatusView->GetStyleScaling()->GetDPI();
 
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		if (m_ItemList[i].Width >= 0) {
-			CStatusItem *pItem = m_pStatusView->GetItemByID(m_ItemList[i].ID);
+	for (auto &Item : m_ItemList) {
+		if (Item.Width >= 0) {
+			CStatusItem *pItem = m_pStatusView->GetItemByID(Item.ID);
 			if (pItem != nullptr) {
-				pItem->SetWidth(::MulDiv(m_ItemList[i].Width, StatusBarDPI, m_DPI));
+				pItem->SetWidth(::MulDiv(Item.Width, StatusBarDPI, m_DPI));
 				pItem->SetActualWidth(pItem->GetWidth());
 			}
 		}
@@ -329,10 +324,10 @@ int CStatusOptions::RegisterItem(LPCTSTR pszID)
 
 	m_AvailItemList.push_back(Item);
 
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		if (m_ItemList[i].ID < 0
-				&& StringUtility::CompareNoCase(m_ItemList[i].IDText, Item.IDText) == 0) {
-			m_ItemList[i].ID = Item.ID;
+	for (auto &e : m_ItemList) {
+		if (e.ID < 0
+				&& StringUtility::CompareNoCase(e.IDText, Item.IDText) == 0) {
+			e.ID = Item.ID;
 			break;
 		}
 	}
@@ -343,9 +338,9 @@ int CStatusOptions::RegisterItem(LPCTSTR pszID)
 
 bool CStatusOptions::SetItemVisibility(int ID, bool fVisible)
 {
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		if (itr->ID == ID) {
-			itr->fVisible = fVisible;
+	for (auto &e : m_ItemList) {
+		if (e.ID == ID) {
+			e.fVisible = fVisible;
 			return true;
 		}
 	}
@@ -356,8 +351,8 @@ bool CStatusOptions::SetItemVisibility(int ID, bool fVisible)
 
 void CStatusOptions::InitListBox()
 {
-	for (size_t i = 0; i < m_ItemListCur.size(); i++)
-		DlgListBox_AddItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST, reinterpret_cast<LPARAM>(&m_ItemListCur[i]));
+	for (auto &e : m_ItemListCur)
+		DlgListBox_AddItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST, reinterpret_cast<LPARAM>(&e));
 }
 
 
@@ -371,11 +366,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			MakeItemList(&m_ItemListCur);
 			m_StatusBarDPI = m_pStatusView->GetStyleScaling()->GetDPI();
-			for (auto itr = m_ItemListCur.begin(); itr != m_ItemListCur.end(); ++itr) {
-				const CStatusItem *pItem = m_pStatusView->GetItemByID(itr->ID);
-				itr->fVisible = pItem->GetVisible();
-				if (itr->Width > 0)
-					itr->Width = ::MulDiv(itr->Width, m_StatusBarDPI, m_DPI);
+			for (auto &e : m_ItemListCur) {
+				const CStatusItem *pItem = m_pStatusView->GetItemByID(e.ID);
+				e.fVisible = pItem->GetVisible();
+				if (e.Width > 0)
+					e.Width = ::MulDiv(e.Width, m_StatusBarDPI, m_DPI);
 			}
 
 			DlgListBox_SetItemHeight(hDlg, IDC_STATUSOPTIONS_ITEMLIST, 0, m_ItemHeight);
@@ -581,8 +576,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				if (m_ItemFont != m_CurSettingFont) {
 					m_ItemFont = m_CurSettingFont;
 					m_pStatusView->SetFont(m_ItemFont);
-					for (size_t i = 0; i < m_ItemList.size(); i++) {
-						StatusItemInfo &Item = m_ItemList[i];
+					for (StatusItemInfo &Item : m_ItemList) {
 						if (Item.Width < 0)
 							Item.Width = m_pStatusView->GetItemByID(Item.ID)->GetWidth();
 					}
@@ -682,8 +676,7 @@ void CStatusOptions::SetListHExtent()
 	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
 	int MaxWidth = 0;
 
-	for (size_t i = 0; i < m_ItemListCur.size(); i++) {
-		const StatusItemInfo &Item = m_ItemListCur[i];
+	for (const StatusItemInfo &Item : m_ItemListCur) {
 		int Width = Item.Width >= 0 ? Item.Width : m_pStatusView->GetItemByID(Item.ID)->GetWidth();
 		if (Width > MaxWidth)
 			MaxWidth = Width;
@@ -794,14 +787,14 @@ void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 	pList->clear();
 	pList->reserve(m_AvailItemList.size());
 
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr) {
-		if (itr->ID >= 0)
-			pList->push_back(*itr);
+	for (const auto &e : m_ItemList) {
+		if (e.ID >= 0)
+			pList->push_back(e);
 	}
 
 	if (pList->size() < m_AvailItemList.size()) {
-		for (size_t i = 0; i < m_AvailItemList.size(); i++) {
-			const int ID = m_AvailItemList[i].ID;
+		for (const auto &e : m_AvailItemList) {
+			const int ID = e.ID;
 			bool fFound = false;
 			for (size_t j = 0; j < pList->size(); j++) {
 				if ((*pList)[j].ID == ID) {
@@ -810,7 +803,7 @@ void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 				}
 			}
 			if (!fFound) {
-				pList->push_back(m_AvailItemList[i]);
+				pList->push_back(e);
 				const CStatusItem *pItem = m_pStatusView->GetItemByID(ID);
 				if (pItem != nullptr)
 					pList->back().fVisible = pItem->GetVisible();

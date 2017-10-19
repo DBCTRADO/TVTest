@@ -734,8 +734,8 @@ bool CColorScheme::Load(CSettings &Settings)
 		{GRADIENT_PROGRAMGUIDECURCHANNELBACK,            GRADIENT_PROGRAMGUIDECHANNELBACK},
 	};
 
-	for (int i = 0; i < lengthof(GradientMap); i++) {
-		const int To = GradientMap[i].To, From = GradientMap[i].From;
+	for (const auto &Map : GradientMap) {
+		const int To = Map.To, From = Map.From;
 		if (!IsLoaded(m_GradientInfoList[To].Color1)
 				&& IsLoaded(m_GradientInfoList[From].Color1)) {
 			m_ColorList[m_GradientInfoList[To].Color1] = m_ColorList[m_GradientInfoList[From].Color1];
@@ -781,9 +781,9 @@ bool CColorScheme::Load(CSettings &Settings)
 		{BORDER_SIDEBARHIGHLIGHT,                  BORDER_STATUSHIGHLIGHT},
 	};
 
-	for (int i = 0; i < lengthof(BorderMap); i++) {
-		const int To = BorderMap[i].To;
-		const int From = BorderMap[i].From;
+	for (const auto &Map : BorderMap) {
+		const int To = Map.To;
+		const int From = Map.From;
 		if (!BorderLoaded[To] && BorderLoaded[From]) {
 			m_BorderList[To] = m_BorderList[From];
 		}

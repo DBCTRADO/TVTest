@@ -66,8 +66,8 @@ void CUIBase::SetStyleScaling(Style::CStyleScaling *pStyleScaling)
 {
 	m_pStyleScaling = pStyleScaling;
 
-	for (auto it = m_UIChildList.begin(); it != m_UIChildList.end(); ++it)
-		(*it)->SetStyleScaling(pStyleScaling);
+	for (CUIBase *e : m_UIChildList)
+		e->SetStyleScaling(pStyleScaling);
 }
 
 
@@ -108,8 +108,8 @@ void CUIBase::ResetStyle()
 
 void CUIBase::UpdateChildrenStyle()
 {
-	for (auto it = m_UIChildList.begin(); it != m_UIChildList.end(); ++it)
-		(*it)->UpdateStyle();
+	for (CUIBase *e : m_UIChildList)
+		e->UpdateStyle();
 }
 
 

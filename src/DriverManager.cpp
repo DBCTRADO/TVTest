@@ -270,8 +270,8 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 
 	pList->Clear();
 
-	for (auto it = m_DriverList.begin(); it != m_DriverList.end(); ++it) {
-		LPCTSTR pszFileName = (*it)->GetFileName();
+	for (const auto &e : m_DriverList) {
+		LPCTSTR pszFileName = e->GetFileName();
 		LPCTSTR pszExtension = ::PathFindExtension(pszFileName);
 		if (pszExtension > pszFileName
 				&& *(pszExtension - 1) >= _T('1') && *(pszExtension - 1) <= _T('9')) {
@@ -282,8 +282,8 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 				continue;
 		}
 
-		if ((*it)->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::NoLoadDriver)) {
-			const CTuningSpaceList *pTuningSpaceList = (*it)->GetTuningSpaceList();
+		if (e->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::NoLoadDriver)) {
+			const CTuningSpaceList *pTuningSpaceList = e->GetTuningSpaceList();
 			const CChannelList *pChannelList = pTuningSpaceList->GetAllChannelList();
 			const int NumChannels = pChannelList->NumChannels();
 
@@ -298,7 +298,7 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 							pChannelInfo->GetNetworkID(),
 							pChannelInfo->GetTransportStreamID(),
 							pChannelInfo->GetServiceID()) < 0) {
-					pList->AddChannel(new CTunerChannelInfo(*pChannelInfo, (*it)->GetFileName()));
+					pList->AddChannel(new CTunerChannelInfo(*pChannelInfo, e->GetFileName()));
 				}
 			}
 		}
@@ -320,14 +320,14 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 	if (!Settings.GetEntries(&Entries))
 		return false;
 
-	for (auto it = Entries.begin(); it != Entries.end(); ++it) {
+	for (const auto &e : Entries) {
 		TunerSpecInfo Info;
 
-		Info.TunerMask = it->Name;
+		Info.TunerMask = e.Name;
 		Info.Spec.Flags = TunerSpec::Flag::None;
 
 		std::vector<String> Attributes;
-		if (StringUtility::Split(it->Value, TEXT("|"), &Attributes)) {
+		if (StringUtility::Split(e.Value, TEXT("|"), &Attributes)) {
 			static const struct {
 				LPCTSTR pszName;
 				TunerSpec::Flag Flag;
@@ -365,9 +365,9 @@ bool CDriverManager::GetTunerSpec(LPCTSTR pszTunerName, TunerSpec *pSpec) const
 	if (pszName[0] == _T('\0'))
 		return false;
 
-	for (auto it = m_TunerSpecList.begin(); it != m_TunerSpecList.end(); ++it) {
-		if (::PathMatchSpec(pszName, it->TunerMask.c_str())) {
-			*pSpec = it->Spec;
+	for (const auto &e : m_TunerSpecList) {
+		if (::PathMatchSpec(pszName, e.TunerMask.c_str())) {
+			*pSpec = e.Spec;
 			return true;
 		}
 	}

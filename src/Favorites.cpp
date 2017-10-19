@@ -85,8 +85,8 @@ CFavoriteFolder &CFavoriteFolder::operator=(const CFavoriteFolder &Src)
 		m_Name = Src.m_Name;
 		if (!Src.m_Children.empty()) {
 			m_Children.reserve(Src.m_Children.size());
-			for (auto i = Src.m_Children.begin(); i != Src.m_Children.end(); i++)
-				m_Children.emplace_back((*i)->Duplicate());
+			for (const auto  &e : Src.m_Children)
+				m_Children.emplace_back(e->Duplicate());
 		}
 	}
 
@@ -113,9 +113,9 @@ size_t CFavoriteFolder::GetSubItemCount() const
 {
 	size_t Count = m_Children.size();
 
-	for (auto i = m_Children.begin(); i != m_Children.end(); i++) {
-		if ((*i)->GetType() == ItemType::Folder) {
-			const CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(i->get());
+	for (const auto &e : m_Children) {
+		if (e->GetType() == ItemType::Folder) {
+			const CFavoriteFolder *pFolder = dynamic_cast<const CFavoriteFolder*>(e.get());
 			if (pFolder != nullptr)
 				Count += pFolder->GetSubItemCount();
 		}
@@ -210,9 +210,9 @@ CFavoriteFolder *CFavoriteFolder::FindSubFolder(LPCTSTR pszName)
 	if (pszName == nullptr)
 		return false;
 
-	for (auto i = m_Children.begin(); i != m_Children.end(); i++) {
-		if ((*i)->GetType() == ItemType::Folder) {
-			CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(i->get());
+	for (const auto &e : m_Children) {
+		if (e->GetType() == ItemType::Folder) {
+			CFavoriteFolder *pFolder = dynamic_cast<CFavoriteFolder*>(e.get());
 			if (pFolder != nullptr && pFolder->m_Name.compare(pszName) == 0)
 				return pFolder;
 		}
@@ -495,10 +495,10 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 				std::vector<String> PathItems;
 				String Temp;
 				StringUtility::Split(Items[0], TEXT("\\"), &PathItems);
-				for (size_t i = 0; i < PathItems.size(); i++) {
-					if (!PathItems[i].empty()) {
-						StringUtility::Decode(PathItems[i].c_str(), &Temp);
-						PathItems[i] = Temp;
+				for (String &e : PathItems) {
+					if (!e.empty()) {
+						StringUtility::Decode(e.c_str(), &Temp);
+						e = Temp;
 					}
 				}
 				CFavoriteFolder *pFolder = &m_RootFolder;
@@ -842,12 +842,12 @@ bool CFavoritesMenu::Create(
 		mii.fType = MFT_OWNERDRAW;
 		mii.fState = MFS_ENABLED;
 
-		for (int i = 0; i < lengthof(MenuItemList); i++) {
-			mii.wID = MenuItemList[i].Command;
+		for (const auto &e : MenuItemList) {
+			mii.wID = e.Command;
 			::InsertMenuItem(m_hmenu, MenuPos, TRUE, &mii);
 			MenuPos++;
 
-			int Length = ::LoadString(hinstRes, MenuItemList[i].TextID, szText, lengthof(szText));
+			int Length = ::LoadString(hinstRes, e.TextID, szText, lengthof(szText));
 			RECT rc;
 			m_MenuPainter.GetItemTextExtent(hdc, 0, szText, &rc);
 			if (rc.right > m_TextWidth)

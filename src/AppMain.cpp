@@ -436,9 +436,7 @@ bool CAppMain::LoadSettings()
 	}
 
 	if (!CmdLineOptions.m_IniValueList.empty()) {
-		for (size_t i = 0; i < CmdLineOptions.m_IniValueList.size(); i++) {
-			const CCommandLineOptions::IniEntry &Entry = CmdLineOptions.m_IniValueList[i];
-
+		for (const auto &Entry : CmdLineOptions.m_IniValueList) {
 			TRACE(
 				TEXT("Override INI entry : [%s] %s=%s\n"),
 				Entry.Section.c_str(), Entry.Name.c_str(), Entry.Value.c_str());
@@ -992,8 +990,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		}
 		AddLog(TEXT("プラグインを \"%s\" から読み込みます..."), szPluginDir);
 		if (CmdLineOptions.m_NoLoadPlugins.size() > 0) {
-			for (size_t i = 0; i < CmdLineOptions.m_NoLoadPlugins.size(); i++)
-				ExcludePlugins.push_back(CmdLineOptions.m_NoLoadPlugins[i].c_str());
+			for (const String &Plugin : CmdLineOptions.m_NoLoadPlugins)
+				ExcludePlugins.push_back(Plugin.c_str());
 		}
 		PluginManager.LoadPlugins(szPluginDir, &ExcludePlugins);
 	}

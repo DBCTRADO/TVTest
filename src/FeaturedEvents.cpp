@@ -153,12 +153,12 @@ bool CFeaturedEventsSearcher::Update()
 				if (EndTime <= StartTime)
 					return true;
 
-				for (auto itSearcher = SearcherList.begin(); itSearcher != SearcherList.end(); ++itSearcher) {
-					if (!itSearcher->GetSearchSettings().fServiceList) {
+				for (auto &Searcher : SearcherList) {
+					if (!Searcher.GetSearchSettings().fServiceList) {
 						if (!DefaultServiceList.IsExists(*itService))
 							continue;
 					}
-					if (itSearcher->Match(&Event)) {
+					if (Searcher.Match(&Event)) {
 						m_EventList.emplace_back(new LibISDB::EventInfo(Event));
 						break;
 					}
@@ -217,15 +217,15 @@ void CFeaturedEventsMatcher::EndMatching()
 
 bool CFeaturedEventsMatcher::IsMatch(const LibISDB::EventInfo &EventInfo)
 {
-	for (auto itSearcher = m_SearcherList.begin(); itSearcher != m_SearcherList.end(); ++itSearcher) {
-		if (!itSearcher->GetSearchSettings().fServiceList) {
+	for (auto &Searcher : m_SearcherList) {
+		if (!Searcher.GetSearchSettings().fServiceList) {
 			if (!m_DefaultServiceList.IsExists(
 						EventInfo.NetworkID,
 						EventInfo.TransportStreamID,
 						EventInfo.ServiceID))
 				continue;
 		}
-		if (itSearcher->Match(&EventInfo)) {
+		if (Searcher.Match(&EventInfo)) {
 			return true;
 		}
 	}
@@ -385,8 +385,8 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 	};
 
 	HMENU hmenu = ::CreatePopupMenu();
-	for (int i = 0; i < lengthof(CommandList); i++) {
-		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CommandList[i].ID, CommandList[i].pszText);
+	for (const auto &e : CommandList) {
+		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, e.ID, e.pszText);
 	}
 
 	POINT pt;
@@ -1120,8 +1120,8 @@ bool CFeaturedEvents::ShowDialog(HWND hwndOwner)
 	if (!m_Dialog.Show(hwndOwner))
 		return false;
 
-	for (auto itr = m_EventHandlerList.begin(); itr != m_EventHandlerList.end(); ++itr)
-		(*itr)->OnFeaturedEventsSettingsChanged(*this);
+	for (CEventHandler *pHandler : m_EventHandlerList)
+		pHandler->OnFeaturedEventsSettingsChanged(*this);
 
 	return true;
 }

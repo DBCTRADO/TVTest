@@ -282,19 +282,19 @@ void CEpgDataConverter::GetEventInfoSize(const LibISDB::EventInfo &EventInfo,
 	if (!EventInfo.ExtendedText.empty())
 		StringSize += EventInfo.GetConcatenatedExtendedTextLength() + 1;
 	InfoSize += (sizeof(EpgEventVideoInfo) + sizeof(EpgEventVideoInfo*)) * EventInfo.VideoList.size();
-	for (size_t i = 0; i < EventInfo.VideoList.size(); i++) {
-		if (!EventInfo.VideoList[i].Text.empty())
-			StringSize += EventInfo.VideoList[i].Text.length() + 1;
+	for (const auto &e : EventInfo.VideoList) {
+		if (!e.Text.empty())
+			StringSize += e.Text.length() + 1;
 	}
 	InfoSize += (sizeof(EpgEventAudioInfo) + sizeof(EpgEventAudioInfo*)) * EventInfo.AudioList.size();
-	for (size_t i = 0; i < EventInfo.AudioList.size(); i++) {
-		if (!EventInfo.AudioList[i].Text.empty())
-			StringSize += EventInfo.AudioList[i].Text.length() + 1;
+	for (const auto &e : EventInfo.AudioList) {
+		if (!e.Text.empty())
+			StringSize += e.Text.length() + 1;
 	}
 	InfoSize += sizeof(EpgEventContentInfo) * EventInfo.ContentNibble.NibbleCount;
 	InfoSize += (sizeof(EpgEventGroupInfo) + sizeof(EpgEventGroupInfo*)) * EventInfo.EventGroupList.size();
-	for (size_t i = 0; i < EventInfo.EventGroupList.size(); i++)
-		InfoSize += sizeof(EpgGroupEventInfo) * EventInfo.EventGroupList[i].EventList.size();
+	for (const auto &e : EventInfo.EventGroupList)
+		InfoSize += sizeof(EpgGroupEventInfo) * e.EventList.size();
 
 	*pInfoSize = InfoSize;
 	*pStringSize = StringSize * sizeof(WCHAR);
@@ -803,9 +803,9 @@ void CPlugin::Free()
 	if (!m_StreamGrabberList.empty()) {
 		LibISDB::GrabberFilter *pGrabberFilter =
 			App.CoreEngine.GetFilter<LibISDB::GrabberFilter>();
-		for (auto it = m_StreamGrabberList.begin(); it != m_StreamGrabberList.end(); ++it) {
+		for (auto &e : m_StreamGrabberList) {
 			if (pGrabberFilter != nullptr)
-				pGrabberFilter->RemoveGrabber(it->get());
+				pGrabberFilter->RemoveGrabber(e.get());
 		}
 		m_StreamGrabberList.clear();
 	}
@@ -833,8 +833,8 @@ void CPlugin::Free()
 	m_CommandList.clear();
 	m_ProgramGuideCommandList.clear();
 
-	for (size_t i = 0; i < m_ControllerList.size(); i++)
-		App.ControllerManager.DeleteController(m_ControllerList[i].c_str());
+	for (const auto &e : m_ControllerList)
+		App.ControllerManager.DeleteController(e.c_str());
 	m_ControllerList.clear();
 
 	if (m_hLib != nullptr) {
@@ -857,17 +857,15 @@ void CPlugin::Free()
 		App.AddLog(TEXT("%s を解放しました。"), pszFileName);
 	}
 
-	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		StatusItem *pItem = itr->get();
-		if (pItem->pItem != nullptr)
-			pItem->pItem->DetachItem();
+	for (auto &Item : m_StatusItemList) {
+		if (Item->pItem != nullptr)
+			Item->pItem->DetachItem();
 	}
 	m_StatusItemList.clear();
 
-	for (auto itr = m_PanelItemList.begin(); itr != m_PanelItemList.end(); ++itr) {
-		PanelItem *pItem = itr->get();
-		if (pItem->pItem != nullptr)
-			pItem->pItem->DetachItem();
+	for (auto &Item : m_PanelItemList) {
+		if (Item->pItem != nullptr)
+			Item->pItem->DetachItem();
 	}
 	m_PanelItemList.clear();
 
@@ -904,8 +902,8 @@ bool CPlugin::Enable(bool fEnable)
 		}
 
 		if (fEnable) {
-			for (size_t i = 0; i < m_ControllerList.size(); i++)
-				GetAppClass().ControllerManager.LoadControllerSettings(m_ControllerList[i].c_str());
+			for (const auto &e : m_ControllerList)
+				GetAppClass().ControllerManager.LoadControllerSettings(e.c_str());
 		}
 	}
 	return true;
@@ -1028,11 +1026,11 @@ bool CPlugin::NotifyProgramGuideCommand(
 	LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent,
 	const POINT *pCursorPos, const RECT *pItemRect)
 {
-	for (size_t i = 0; i < m_ProgramGuideCommandList.size(); i++) {
-		if (::lstrcmpi(m_ProgramGuideCommandList[i].GetText(), pszCommand) == 0) {
+	for (const auto &e : m_ProgramGuideCommandList) {
+		if (::lstrcmpi(e.GetText(), pszCommand) == 0) {
 			ProgramGuideCommandParam Param;
 
-			Param.ID = m_ProgramGuideCommandList[i].GetID();
+			Param.ID = e.GetID();
 			Param.Action = Action;
 			if (pEvent != nullptr)
 				EventInfoToProgramGuideProgramInfo(*pEvent, &Param.Program);
@@ -1065,18 +1063,17 @@ void CPlugin::RegisterStatusItems()
 {
 	CAppMain &App = GetAppClass();
 
-	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		StatusItem *pItem = itr->get();
+	for (auto &Item : m_StatusItemList) {
 		String IDText;
 
 		IDText = ::PathFindFileName(GetFileName());
 		IDText += _T(':');
-		IDText += pItem->IDText;
+		IDText += Item->IDText;
 
 		int ItemID = App.StatusOptions.RegisterItem(IDText.c_str());
 		if (ItemID >= 0) {
-			pItem->ItemID = ItemID;
-			App.StatusView.AddItem(new CPluginStatusItem(this, pItem));
+			Item->ItemID = ItemID;
+			App.StatusView.AddItem(new CPluginStatusItem(this, Item.get()));
 		}
 	}
 }
@@ -1084,13 +1081,11 @@ void CPlugin::RegisterStatusItems()
 
 void CPlugin::SendStatusItemCreatedEvent()
 {
-	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		const StatusItem *pItem = itr->get();
-
-		if (pItem->pItem != nullptr) {
+	for (const auto &Item : m_StatusItemList) {
+		if (Item->pItem != nullptr) {
 			StatusItemEventInfo Info;
 
-			Info.ID = pItem->ID;
+			Info.ID = Item->ID;
 			Info.Event = STATUS_ITEM_EVENT_CREATED;
 			Info.Param = 0;
 
@@ -1102,21 +1097,19 @@ void CPlugin::SendStatusItemCreatedEvent()
 
 void CPlugin::SendStatusItemUpdateTimerEvent()
 {
-	for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-		const StatusItem *pItem = itr->get();
-
-		if ((pItem->Flags & STATUS_ITEM_FLAG_TIMERUPDATE) != 0
-				&& pItem->pItem != nullptr) {
+	for (const auto &Item : m_StatusItemList) {
+		if ((Item->Flags & STATUS_ITEM_FLAG_TIMERUPDATE) != 0
+				&& Item->pItem != nullptr) {
 			StatusItemEventInfo Info;
 
-			Info.ID = pItem->ID;
+			Info.ID = Item->ID;
 			Info.Event = STATUS_ITEM_EVENT_UPDATETIMER;
 			Info.Param = 0;
 
 			if (SendEvent(
 						EVENT_STATUSITEM_NOTIFY,
 						reinterpret_cast<LPARAM>(&Info), 0) != FALSE) {
-				pItem->pItem->Redraw();
+				Item->pItem->Redraw();
 			}
 		}
 	}
@@ -1127,34 +1120,33 @@ void CPlugin::RegisterPanelItems()
 {
 	CAppMain &App = GetAppClass();
 
-	for (auto itr = m_PanelItemList.begin(); itr != m_PanelItemList.end(); ++itr) {
-		PanelItem *pItem = itr->get();
+	for (auto &Item : m_PanelItemList) {
 		String IDText;
 
 		IDText = ::PathFindFileName(GetFileName());
 		IDText += _T(':');
-		IDText += pItem->IDText;
+		IDText += Item->IDText;
 
-		int ItemID = App.PanelOptions.RegisterPanelItem(IDText.c_str(), pItem->Title.c_str());
+		int ItemID = App.PanelOptions.RegisterPanelItem(IDText.c_str(), Item->Title.c_str());
 		if (ItemID >= 0) {
-			pItem->ItemID = ItemID;
-			if ((pItem->StateMask & PANEL_ITEM_STATE_ENABLED) != 0) {
+			Item->ItemID = ItemID;
+			if ((Item->StateMask & PANEL_ITEM_STATE_ENABLED) != 0) {
 				App.PanelOptions.SetPanelItemVisibility(
-					ItemID, (pItem->State & PANEL_ITEM_STATE_ENABLED) != 0);
+					ItemID, (Item->State & PANEL_ITEM_STATE_ENABLED) != 0);
 			} else {
 				if (App.PanelOptions.GetPanelItemVisibility(ItemID))
-					pItem->State |= PANEL_ITEM_STATE_ENABLED;
+					Item->State |= PANEL_ITEM_STATE_ENABLED;
 				else
-					pItem->State &= ~PANEL_ITEM_STATE_ENABLED;
+					Item->State &= ~PANEL_ITEM_STATE_ENABLED;
 			}
-			CPluginPanelItem *pPanelItem = new CPluginPanelItem(this, pItem);
+			CPluginPanelItem *pPanelItem = new CPluginPanelItem(this, Item.get());
 			pPanelItem->Create(App.Panel.Form.GetHandle(), WS_CHILD | WS_CLIPCHILDREN);
 			CPanelForm::PageInfo PageInfo;
 			PageInfo.pPage = pPanelItem;
-			PageInfo.pszTitle = pItem->Title.c_str();
+			PageInfo.pszTitle = Item->Title.c_str();
 			PageInfo.ID = ItemID;
 			PageInfo.Icon = -1;
-			PageInfo.fVisible = (pItem->State & PANEL_ITEM_STATE_ENABLED) != 0;
+			PageInfo.fVisible = (Item->State & PANEL_ITEM_STATE_ENABLED) != 0;
 			App.Panel.Form.AddPage(PageInfo);
 		}
 	}
@@ -1578,10 +1570,9 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if ((pInfo->Flags & STREAM_CALLBACK_REMOVE) == 0) {
 				// コールバック登録
 				if (!m_StreamGrabberList.empty()) {
-					for (auto it = m_StreamGrabberList.begin(); it != m_StreamGrabberList.end(); ++it) {
-						CStreamGrabber *pGrabber = it->get();
-						if (pGrabber->GetCallbackFunc() == pInfo->Callback) {
-							pGrabber->SetClientData(pInfo->pClientData);
+					for (auto &Grabber : m_StreamGrabberList) {
+						if (Grabber->GetCallbackFunc() == pInfo->Callback) {
+							Grabber->SetClientData(pInfo->pClientData);
 							return TRUE;
 						}
 					}
@@ -2367,11 +2358,11 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		{
 			const int ID = (int)lParam1;
 
-			for (auto itr = m_CommandList.begin(); itr != m_CommandList.end(); ++itr) {
-				if (itr->GetID() == ID) {
+			for (auto &e : m_CommandList) {
+				if (e.GetID() == ID) {
 					const DWORD State = (DWORD)lParam2;
 
-					itr->SetState(State);
+					e.SetState(State);
 
 					CCommandList::CommandState CommandState = CCommandList::CommandState::None;
 					if ((State & PLUGIN_COMMAND_STATE_DISABLED) != 0)
@@ -2379,7 +2370,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					if ((State & PLUGIN_COMMAND_STATE_CHECKED) != 0)
 						CommandState |= CCommandList::CommandState::Checked;
 					GetAppClass().CommandList.SetCommandStateByID(
-						itr->GetCommand(),
+						e.GetCommand(),
 						CCommandList::CommandState::Disabled |
 						CCommandList::CommandState::Checked,
 						CommandState);
@@ -2394,12 +2385,12 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		{
 			const int ID = (int)lParam1;
 
-			for (auto itr = m_CommandList.begin(); itr != m_CommandList.end(); ++itr) {
-				if (itr->GetID() == ID) {
+			for (const auto &e : m_CommandList) {
+				if (e.GetID() == ID) {
 					const unsigned int Type = (unsigned int)lParam2;
 
 					if ((Type & PLUGIN_COMMAND_NOTIFY_CHANGEICON))
-						GetAppClass().SideBar.RedrawItem(itr->GetCommand());
+						GetAppClass().SideBar.RedrawItem(e.GetCommand());
 
 					return TRUE;
 				}
@@ -2461,29 +2452,28 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (pInfo == nullptr || pInfo->Size != sizeof(StatusItemSetInfo))
 				return FALSE;
 
-			for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-				StatusItem *pItem = itr->get();
-				if (pItem->ID == pInfo->ID) {
+			for (auto &Item : m_StatusItemList) {
+				if (Item->ID == pInfo->ID) {
 					if ((pInfo->Mask & STATUS_ITEM_SET_INFO_MASK_STATE) != 0) {
-						DWORD OldState = pItem->State;
-						DWORD NewState = (pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
-						pItem->State = NewState;
+						DWORD OldState = Item->State;
+						DWORD NewState = (Item->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						Item->State = NewState;
 						if (((NewState ^ OldState) & STATUS_ITEM_STATE_VISIBLE) != 0) {
 							const bool fVisible = (NewState & STATUS_ITEM_STATE_VISIBLE) != 0;
-							GetAppClass().StatusOptions.SetItemVisibility(pItem->ItemID, fVisible);
-							if (pItem->pItem != nullptr) {
-								GetAppClass().MainWindow.ShowStatusBarItem(pItem->ItemID, fVisible);
+							GetAppClass().StatusOptions.SetItemVisibility(Item->ItemID, fVisible);
+							if (Item->pItem != nullptr) {
+								GetAppClass().MainWindow.ShowStatusBarItem(Item->ItemID, fVisible);
 							}
 						}
 					}
 
 					if ((pInfo->Mask & STATUS_ITEM_SET_INFO_MASK_STYLE) != 0) {
-						DWORD OldStyle = pItem->Style;
+						DWORD OldStyle = Item->Style;
 						DWORD NewStyle = (OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
 						if (NewStyle != OldStyle) {
-							pItem->Style = NewStyle;
-							if (pItem->pItem != nullptr) {
-								pItem->pItem->ApplyItemStyle();
+							Item->Style = NewStyle;
+							if (Item->pItem != nullptr) {
+								Item->pItem->ApplyItemStyle();
 								GetAppClass().StatusView.AdjustSize();
 							}
 						}
@@ -2503,32 +2493,30 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (pInfo == nullptr || pInfo->Size != sizeof(StatusItemGetInfo))
 				return FALSE;
 
-			for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-				StatusItem *pItem = itr->get();
-
-				if (pItem->ID == pInfo->ID) {
+			for (const auto &Item : m_StatusItemList) {
+				if (Item->ID == pInfo->ID) {
 					if ((pInfo->Mask & STATUS_ITEM_GET_INFO_MASK_STATE) != 0)
-						pInfo->State = pItem->State;
+						pInfo->State = Item->State;
 
 					if ((pInfo->Mask & STATUS_ITEM_GET_INFO_MASK_HWND) != 0) {
-						if (pItem->pItem != nullptr)
-							pInfo->hwnd = pItem->pItem->GetWindowHandle();
+						if (Item->pItem != nullptr)
+							pInfo->hwnd = Item->pItem->GetWindowHandle();
 						else
 							pInfo->hwnd = nullptr;
 					}
 
 					if ((pInfo->Mask & STATUS_ITEM_GET_INFO_MASK_ITEMRECT) != 0) {
-						if (pItem->pItem == nullptr || !pItem->pItem->GetRect(&pInfo->ItemRect))
+						if (Item->pItem == nullptr || !Item->pItem->GetRect(&pInfo->ItemRect))
 							::SetRectEmpty(&pInfo->ItemRect);
 					}
 
 					if ((pInfo->Mask & STATUS_ITEM_GET_INFO_MASK_CONTENTRECT) != 0) {
-						if (pItem->pItem == nullptr || !pItem->pItem->GetClientRect(&pInfo->ContentRect))
+						if (Item->pItem == nullptr || !Item->pItem->GetClientRect(&pInfo->ContentRect))
 							::SetRectEmpty(&pInfo->ContentRect);
 					}
 
 					if ((pInfo->Mask & STATUS_ITEM_GET_INFO_MASK_STYLE) != 0)
-						pInfo->Style = pItem->Style;
+						pInfo->Style = Item->Style;
 
 					return TRUE;
 				}
@@ -2537,14 +2525,12 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		return FALSE;
 
 	case MESSAGE_STATUSITEMNOTIFY:
-		for (auto itr = m_StatusItemList.begin(); itr != m_StatusItemList.end(); ++itr) {
-			StatusItem *pItem = itr->get();
-
-			if (pItem->ID == lParam1) {
+		for (const auto &Item : m_StatusItemList) {
+			if (Item->ID == lParam1) {
 				switch (lParam2) {
 				case STATUS_ITEM_NOTIFY_REDRAW:
-					if (pItem->pItem != nullptr)
-						pItem->pItem->Redraw();
+					if (Item->pItem != nullptr)
+						Item->pItem->Redraw();
 					return TRUE;
 				}
 			}
@@ -2612,30 +2598,29 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (pInfo == nullptr || pInfo->Size != sizeof(PanelItemSetInfo))
 				return FALSE;
 
-			for (auto itr = m_PanelItemList.begin(); itr != m_PanelItemList.end(); ++itr) {
-				PanelItem *pItem = itr->get();
-				if (pItem->ID == pInfo->ID) {
+			for (auto &Item : m_PanelItemList) {
+				if (Item->ID == pInfo->ID) {
 					if ((pInfo->Mask & PANEL_ITEM_SET_INFO_MASK_STATE) != 0) {
-						if (pItem->pItem == nullptr || pItem->pItem->GetItemHandle() == nullptr) {
-							pItem->StateMask |= pInfo->StateMask;
-							pItem->State = (pItem->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						if (Item->pItem == nullptr || Item->pItem->GetItemHandle() == nullptr) {
+							Item->StateMask |= pInfo->StateMask;
+							Item->State = (Item->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
 						} else {
 							if ((pInfo->StateMask & PANEL_ITEM_STATE_ENABLED) != 0) {
 								GetAppClass().PanelOptions.SetPanelItemVisibility(
-									pItem->ItemID,
+									Item->ItemID,
 									(pInfo->State & PANEL_ITEM_STATE_ENABLED) != 0);
 							}
 
 							if ((pInfo->StateMask & PANEL_ITEM_STATE_ACTIVE) != 0) {
 								if ((pInfo->State & PANEL_ITEM_STATE_ACTIVE) != 0) {
-									GetAppClass().Panel.Form.SetCurPageByID(pItem->ItemID);
+									GetAppClass().Panel.Form.SetCurPageByID(Item->ItemID);
 								}
 							}
 						}
 					}
 
 					if ((pInfo->Mask & PANEL_ITEM_SET_INFO_MASK_STYLE) != 0) {
-						pItem->Style = (pItem->Style & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
+						Item->Style = (Item->Style & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
 					}
 
 					return TRUE;
@@ -4398,8 +4383,8 @@ void CPlugin::CVideoStreamCallback::OnStream(DWORD Format, const void *pData, si
 {
 	BlockLock Lock(CPlugin::m_VideoStreamLock);
 
-	for (auto it = CPlugin::m_VideoStreamCallbackList.begin(); it != CPlugin::m_VideoStreamCallbackList.end(); ++it) {
-		it->m_pCallback(Format, pData, Size, it->m_pClientData);
+	for (auto &e : CPlugin::m_VideoStreamCallbackList) {
+		e.m_pCallback(Format, pData, Size, e.m_pClientData);
 	}
 }
 
@@ -4410,10 +4395,8 @@ void CPlugin::CAudioSampleCallback::OnSamples(short *pData, size_t Length, int C
 {
 	BlockLock Lock(CPlugin::m_AudioStreamLock);
 
-	for (size_t i = 0; i < CPlugin::m_AudioStreamCallbackList.size(); i++) {
-		CAudioStreamCallbackInfo &Info = m_AudioStreamCallbackList[i];
-
-		(Info.m_pCallback)(pData, (DWORD)Length, Channels, Info.m_pClientData);
+	for (auto &e : CPlugin::m_AudioStreamCallbackList) {
+		(e.m_pCallback)(pData, (DWORD)Length, Channels, e.m_pClientData);
 	}
 }
 
@@ -4499,8 +4482,8 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 		do {
 			if (pExcludePlugins != nullptr) {
 				bool fExclude = false;
-				for (size_t i = 0; i < pExcludePlugins->size(); i++) {
-					if (IsEqualFileName((*pExcludePlugins)[i], wfd.cFileName)) {
+				for (LPCTSTR pszName : *pExcludePlugins) {
+					if (IsEqualFileName(pszName, wfd.cFileName)) {
 						fExclude = true;
 						break;
 					}
@@ -4570,8 +4553,8 @@ const CPlugin *CPluginManager::GetPlugin(int Index) const
 
 bool CPluginManager::EnablePlugins(bool fEnable)
 {
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		m_PluginList[i]->Enable(fEnable);
+	for (auto &e : m_PluginList) {
+		e->Enable(fEnable);
 	}
 	return true;
 }
@@ -4656,14 +4639,12 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 {
 	ClearMenu(hmenu);
 	if (NumPlugins() > 0) {
-		for (size_t i = 0; i < m_PluginList.size(); i++) {
-			const CPlugin *pPlugin = m_PluginList[i].get();
-
-			if (!pPlugin->IsNoEnabledDisabled()) {
+		for (const auto &Plugin : m_PluginList) {
+			if (!Plugin->IsNoEnabledDisabled()) {
 				::AppendMenu(
 					hmenu, MFT_STRING | MFS_ENABLED |
-					(pPlugin->IsEnabled() ? MFS_CHECKED : MFS_UNCHECKED),
-					pPlugin->GetCommand(), pPlugin->GetPluginName());
+					(Plugin->IsEnabled() ? MFS_CHECKED : MFS_UNCHECKED),
+					Plugin->GetCommand(), Plugin->GetPluginName());
 			}
 		}
 	} else {
@@ -4711,8 +4692,8 @@ bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, cons
 
 bool CPluginManager::SendEvent(UINT Event, LPARAM lParam1, LPARAM lParam2)
 {
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		m_PluginList[i]->SendEvent(Event, lParam1, lParam2);
+	for (const auto &e : m_PluginList) {
+		e->SendEvent(Event, lParam1, lParam2);
 	}
 	return true;
 }
@@ -4722,11 +4703,9 @@ bool CPluginManager::SendProgramGuideEvent(UINT Event, LPARAM Param1, LPARAM Par
 {
 	bool fSent = false;
 
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i].get();
-
-		if (pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL)
-				&& pPlugin->SendEvent(Event, Param1, Param2))
+	for (const auto &Plugin : m_PluginList) {
+		if (Plugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL)
+				&& Plugin->SendEvent(Event, Param1, Param2))
 			fSent = true;
 	}
 	return fSent;
@@ -4740,11 +4719,9 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event, const LibISDB::Eve
 
 	bool fSent = false;
 
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i].get();
-
-		if (pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_PROGRAM)
-				&& pPlugin->SendEvent(Event, reinterpret_cast<LPARAM>(&ProgramInfo), Param))
+	for (const auto &Plugin : m_PluginList) {
+		if (Plugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_PROGRAM)
+				&& Plugin->SendEvent(Event, reinterpret_cast<LPARAM>(&ProgramInfo), Param))
 			fSent = true;
 	}
 	return fSent;
@@ -5053,18 +5030,16 @@ bool CPluginManager::SendProgramGuideInitializeMenuEvent(HMENU hmenu, UINT *pCom
 	bool fSent = false;
 	m_ProgramGuideMenuList.clear();
 
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i].get();
-
-		if (pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL)) {
+	for (auto &Plugin : m_PluginList) {
+		if (Plugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL)) {
 			MenuCommandInfo CommandInfo;
 
 			int NumCommands =
-				(int)pPlugin->SendEvent(
+				(int)Plugin->SendEvent(
 					EVENT_PROGRAMGUIDE_INITIALIZEMENU,
 					reinterpret_cast<LPARAM>(&Info));
 			if (NumCommands > 0) {
-				CommandInfo.pPlugin = pPlugin;
+				CommandInfo.pPlugin = Plugin.get();
 				CommandInfo.CommandFirst = Info.Command;
 				CommandInfo.CommandEnd = Info.Command + NumCommands;
 				m_ProgramGuideMenuList.push_back(CommandInfo);
@@ -5083,9 +5058,7 @@ bool CPluginManager::SendProgramGuideMenuSelectedEvent(UINT Command)
 {
 	bool fResult = false;
 
-	for (size_t i = 0; i < m_ProgramGuideMenuList.size(); i++) {
-		const MenuCommandInfo &CommandInfo = m_ProgramGuideMenuList[i];
-
+	for (const MenuCommandInfo &CommandInfo : m_ProgramGuideMenuList) {
 		if (CommandInfo.CommandFirst <= Command && CommandInfo.CommandEnd > Command) {
 			if (FindPlugin(CommandInfo.pPlugin) >= 0) {
 				fResult = CommandInfo.pPlugin->SendEvent(
@@ -5134,19 +5107,17 @@ bool CPluginManager::SendProgramGuideProgramInitializeMenuEvent(
 	bool fSent = false;
 	m_ProgramGuideMenuList.clear();
 
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		CPlugin *pPlugin = m_PluginList[i].get();
-
-		if (pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_PROGRAM)) {
+	for (auto &Plugin : m_PluginList) {
+		if (Plugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_PROGRAM)) {
 			MenuCommandInfo CommandInfo;
 
 			int NumCommands =
-				(int)pPlugin->SendEvent(
+				(int)Plugin->SendEvent(
 					EVENT_PROGRAMGUIDE_PROGRAM_INITIALIZEMENU,
 					reinterpret_cast<LPARAM>(&ProgramInfo),
 					reinterpret_cast<LPARAM>(&Info));
 			if (NumCommands > 0) {
-				CommandInfo.pPlugin = pPlugin;
+				CommandInfo.pPlugin = Plugin.get();
 				CommandInfo.CommandFirst = Info.Command;
 				CommandInfo.CommandEnd = Info.Command + NumCommands;
 				m_ProgramGuideMenuList.push_back(CommandInfo);
@@ -5165,9 +5136,7 @@ bool CPluginManager::SendProgramGuideProgramMenuSelectedEvent(const LibISDB::Eve
 {
 	bool fResult = false;
 
-	for (size_t i = 0; i < m_ProgramGuideMenuList.size(); i++) {
-		const MenuCommandInfo &CommandInfo = m_ProgramGuideMenuList[i];
-
+	for (const MenuCommandInfo &CommandInfo : m_ProgramGuideMenuList) {
 		if (CommandInfo.CommandFirst <= Command && CommandInfo.CommandEnd > Command) {
 			if (FindPlugin(CommandInfo.pPlugin) >= 0) {
 				ProgramGuideProgramInfo ProgramInfo;
@@ -5190,8 +5159,8 @@ bool CPluginManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 {
 	bool fNoDefault = false;
 
-	for (size_t i = 0; i < m_PluginList.size(); i++) {
-		if (m_PluginList[i]->OnMessage(hwnd, uMsg, wParam, lParam, pResult))
+	for (const auto &e : m_PluginList) {
+		if (e->OnMessage(hwnd, uMsg, wParam, lParam, pResult))
 			fNoDefault = true;
 	}
 	return fNoDefault;
@@ -5228,29 +5197,29 @@ void CPluginManager::SendFilterGraphFinalizedEvent(
 
 void CPluginManager::RegisterStatusItems()
 {
-	for (auto itr = m_PluginList.begin(); itr != m_PluginList.end(); ++itr)
-		(*itr)->RegisterStatusItems();
+	for (const auto &e : m_PluginList)
+		e->RegisterStatusItems();
 }
 
 
 void CPluginManager::SendStatusItemCreatedEvent()
 {
-	for (auto itr = m_PluginList.begin(); itr != m_PluginList.end(); ++itr)
-		(*itr)->SendStatusItemCreatedEvent();
+	for (const auto &e : m_PluginList)
+		e->SendStatusItemCreatedEvent();
 }
 
 
 void CPluginManager::SendStatusItemUpdateTimerEvent()
 {
-	for (auto itr = m_PluginList.begin(); itr != m_PluginList.end(); ++itr)
-		(*itr)->SendStatusItemUpdateTimerEvent();
+	for (const auto &e : m_PluginList)
+		e->SendStatusItemUpdateTimerEvent();
 }
 
 
 void CPluginManager::RegisterPanelItems()
 {
-	for (auto itr = m_PluginList.begin(); itr != m_PluginList.end(); ++itr)
-		(*itr)->RegisterPanelItems();
+	for (const auto &e : m_PluginList)
+		e->RegisterPanelItems();
 }
 
 
@@ -5326,12 +5295,12 @@ bool CPluginOptions::Create(HWND hwndOwner)
 
 bool CPluginOptions::RestorePluginOptions()
 {
-	for (size_t i = 0; i < m_EnablePluginList.size(); i++) {
+	for (const String &Name : m_EnablePluginList) {
 		for (int j = 0; j < m_pPluginManager->NumPlugins(); j++) {
 			CPlugin *pPlugin = m_pPluginManager->GetPlugin(j);
 
 			if (!pPlugin->IsDisableOnStart()
-					&& IsEqualFileName(m_EnablePluginList[i].c_str(), ::PathFindFileName(pPlugin->GetFileName())))
+					&& IsEqualFileName(Name.c_str(), ::PathFindFileName(pPlugin->GetFileName())))
 				pPlugin->Enable(true);
 		}
 	}

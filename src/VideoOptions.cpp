@@ -394,8 +394,8 @@ void CVideoOptions::SetVideoDecoderList(
 						Filter2.data(), (int)Filter2.length()) == CSTR_LESS_THAN;
 				});
 		}
-		for (size_t i = 0; i < FilterList.size(); i++) {
-			DlgComboBox_AddString(m_hDlg, ID, FilterList[i].c_str());
+		for (const String &e : FilterList) {
+			DlgComboBox_AddString(m_hDlg, ID, e.c_str());
 		}
 
 		String Text;

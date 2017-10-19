@@ -455,8 +455,8 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				TEXT("表示されている大きさ"),
 			};
 			TCHAR szText[32];
-			for (int i = 0; i < lengthof(SizeTypeText); i++)
-				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, SizeTypeText[i]);
+			for (LPCTSTR pszText : SizeTypeText)
+				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, pszText);
 			for (int i = 0; i <= PERCENTAGE_LAST; i++) {
 				const PercentageType &Ratio = m_PercentageList[i];
 				int Length = StringPrintf(

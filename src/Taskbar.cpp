@@ -364,8 +364,7 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 
 		::GetModuleFileNameW(nullptr, szIconPath, lengthof(szIconPath));
 
-		for (auto it = TaskList.begin(); it != TaskList.end(); ++it) {
-			const int Command = *it;
+		for (const int Command : TaskList) {
 			IShellLink *pShellLink;
 
 			if (Command == 0) {
@@ -510,12 +509,12 @@ HRESULT CTaskbarManager::AddJumpListCategory(
 	if (SUCCEEDED(hr)) {
 		CAppMain &App = GetAppClass();
 
-		for (auto it = ItemList.begin(); it != ItemList.end(); ++it) {
+		for (const auto &e : ItemList) {
 			IShellLink *pShellLink;
 
 			hr = CreateAppShellLink(
-				it->Args.c_str(), it->Title.c_str(), it->Description.c_str(),
-				it->IconPath.c_str(), it->IconIndex,
+				e.Args.c_str(), e.Title.c_str(), e.Description.c_str(),
+				e.IconPath.c_str(), e.IconIndex,
 				&pShellLink);
 			if (SUCCEEDED(hr)) {
 				pCollection->AddObject(pShellLink);
@@ -689,9 +688,9 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 
 int CTaskbarManager::GetCommandIcon(int Command) const
 {
-	for (int i = 0; i < lengthof(m_CommandIconList); i++) {
-		if (m_CommandIconList[i].Command == Command)
-			return m_CommandIconList[i].Icon;
+	for (const auto &e : m_CommandIconList) {
+		if (e.Command == Command)
+			return e.Icon;
 	}
 
 	return 0;

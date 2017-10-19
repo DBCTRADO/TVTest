@@ -599,11 +599,11 @@ bool CTextDrawEngine_DirectWrite::SetFont(HFONT hfont)
 	if (::GetObject(hfont, sizeof(LOGFONT), &lf) != sizeof(LOGFONT))
 		return false;
 
-	for (auto it = m_FontCache.begin(); it != m_FontCache.end(); ++it) {
+	for (const auto &e : m_FontCache) {
 		LOGFONT lfCache;
 
-		if ((*it)->GetLogFont(&lfCache) && CompareLogFont(&lf, &lfCache)) {
-			m_pFont = it->get();
+		if (e->GetLogFont(&lfCache) && CompareLogFont(&lf, &lfCache)) {
+			m_pFont = e.get();
 			return true;
 		}
 	}

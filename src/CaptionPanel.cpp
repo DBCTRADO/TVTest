@@ -180,11 +180,11 @@ bool CCaptionPanel::LoadDRCSMap(LPCTSTR pszFileName)
 
 void CCaptionPanel::ClearCaptionList()
 {
-	for (auto it = m_LanguageList.begin(); it != m_LanguageList.end(); ++it) {
-		it->CaptionList.clear();
-		it->NextCaption.clear();
-		it->fClearLast = true;
-		it->fContinue = false;
+	for (auto &e : m_LanguageList) {
+		e.CaptionList.clear();
+		e.NextCaption.clear();
+		e.fClearLast = true;
+		e.fContinue = false;
 	}
 }
 
@@ -224,8 +224,8 @@ void CCaptionPanel::AppendQueuedText(BYTE Language)
 	if (!Lang.CaptionList.empty() || !Lang.NextCaption.empty()) {
 		String Text;
 
-		for (auto it = Lang.CaptionList.begin(); it != Lang.CaptionList.end(); ++it)
-			Text += *it;
+		for (const auto &e : Lang.CaptionList)
+			Text += e;
 		Text += Lang.NextCaption;
 		AppendText(Text.c_str());
 		Lang.CaptionList.clear();
@@ -409,9 +409,9 @@ void CCaptionPanel::OnCommand(int Command)
 	case CM_CAPTIONPANEL_ENABLE:
 		m_Lock.Lock();
 		m_fEnable = !m_fEnable;
-		for (auto it = m_LanguageList.begin(); it != m_LanguageList.end(); ++it) {
-			it->fClearLast = false;
-			it->fContinue = false;
+		for (auto &e : m_LanguageList) {
+			e.fClearLast = false;
+			e.fContinue = false;
 		}
 		m_Lock.Unlock();
 		break;
@@ -466,9 +466,9 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 			m_EditSubclass.SetSubclass(m_hwndEdit);
 
-			for (auto it = m_LanguageList.begin(); it != m_LanguageList.end(); ++it) {
-				it->fClearLast = true;
-				it->fContinue = false;
+			for (auto &e : m_LanguageList) {
+				e.fClearLast = true;
+				e.fContinue = false;
 			}
 
 			LibISDB::CaptionFilter *pCaptionFilter = GetAppClass().CoreEngine.GetFilter<LibISDB::CaptionFilter>();

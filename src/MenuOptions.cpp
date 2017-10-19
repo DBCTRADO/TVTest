@@ -203,11 +203,11 @@ bool CMenuOptions::GetMenuItemList(std::vector<int> *pItemList)
 		pItemList->clear();
 		pItemList->reserve(m_MenuItemList.size());
 
-		for (auto itr = m_MenuItemList.begin(); itr != m_MenuItemList.end(); ++itr) {
-			if (itr->fVisible) {
-				int &ID = itr->ID;
+		for (MenuItemInfo &Item : m_MenuItemList) {
+			if (Item.fVisible) {
+				int &ID = Item.ID;
 				if (ID == MENU_ID_INVALID)
-					ID = GetIDFromString(itr->Name);
+					ID = GetIDFromString(Item.Name);
 				if (ID != MENU_ID_INVALID)
 					pItemList->push_back(ID);
 			}
@@ -220,10 +220,10 @@ bool CMenuOptions::GetMenuItemList(std::vector<int> *pItemList)
 
 int CMenuOptions::GetSubMenuPosByCommand(int Command) const
 {
-	for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-		if (m_DefaultMenuItemList[i].Command == Command) {
-			if (m_DefaultMenuItemList[i].ID < CM_COMMAND_FIRST)
-				return m_DefaultMenuItemList[i].ID;
+	for (const MenuInfo &Item : m_DefaultMenuItemList) {
+		if (Item.Command == Command) {
+			if (Item.ID < CM_COMMAND_FIRST)
+				return Item.ID;
 			break;
 		}
 	}
@@ -233,9 +233,9 @@ int CMenuOptions::GetSubMenuPosByCommand(int Command) const
 
 int CMenuOptions::IDToCommand(int ID) const
 {
-	for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-		if (m_DefaultMenuItemList[i].ID == ID)
-			return m_DefaultMenuItemList[i].Command;
+	for (const MenuInfo &Item : m_DefaultMenuItemList) {
+		if (Item.ID == ID)
+			return Item.Command;
 	}
 	return ID;
 }
@@ -243,9 +243,9 @@ int CMenuOptions::IDToCommand(int ID) const
 
 int CMenuOptions::CommandToID(int Command) const
 {
-	for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-		if (m_DefaultMenuItemList[i].Command == Command)
-			return m_DefaultMenuItemList[i].ID;
+	for (const MenuInfo &Item : m_DefaultMenuItemList) {
+		if (Item.Command == Command)
+			return Item.ID;
 	}
 	return Command;
 }
@@ -295,13 +295,13 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					m_MenuItemList[i].fVisible = true;
 				}
 			} else {
-				for (auto itr = m_MenuItemList.begin(); itr != m_MenuItemList.end(); ++itr) {
-					if (itr->ID == MENU_ID_INVALID)
-						itr->ID = GetIDFromString(itr->Name);
+				for (MenuItemInfo &Item : m_MenuItemList) {
+					if (Item.ID == MENU_ID_INVALID)
+						Item.ID = GetIDFromString(Item.Name);
 				}
 
-				for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-					const int ID = m_DefaultMenuItemList[i].ID;
+				for (const MenuInfo &e : m_DefaultMenuItemList) {
+					const int ID = e.ID;
 					auto it = std::find_if(
 						m_MenuItemList.begin(), m_MenuItemList.end(),
 						[=](const MenuItemInfo & Item) -> bool { return Item.ID == ID; });
@@ -315,8 +315,8 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 			const CCommandList &CommandList = GetAppClass().CommandList;
-			for (int i = 0; i < lengthof(m_AdditionalItemList); i++) {
-				for (int ID = m_AdditionalItemList[i].First; ID <= m_AdditionalItemList[i].Last; ID++) {
+			for (const AdditionalItemInfo &e : m_AdditionalItemList) {
+				for (int ID = e.First; ID <= e.Last; ID++) {
 					if (CommandList.IDToIndex(ID) <= 0)
 						break;
 					auto it = std::find_if(
@@ -332,15 +332,15 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 
 			int i = 0;
-			for (auto itr = m_MenuItemList.begin(); itr != m_MenuItemList.end(); ++itr) {
+			for (MenuItemInfo &Item : m_MenuItemList) {
 				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
 
-				if (itr->ID == MENU_ID_INVALID)
-					itr->ID = GetIDFromString(itr->Name);
-				if (itr->ID != MENU_ID_INVALID) {
-					GetItemText(itr->ID, szText, lengthof(szText));
-					m_ItemListView.InsertItem(i, szText, itr->ID);
-					m_ItemListView.CheckItem(i, itr->fVisible);
+				if (Item.ID == MENU_ID_INVALID)
+					Item.ID = GetIDFromString(Item.Name);
+				if (Item.ID != MENU_ID_INVALID) {
+					GetItemText(Item.ID, szText, lengthof(szText));
+					m_ItemListView.InsertItem(i, szText, Item.ID);
+					m_ItemListView.CheckItem(i, Item.fVisible);
 					i++;
 				}
 			}
@@ -425,8 +425,8 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 
 				const CCommandList &CommandList = GetAppClass().CommandList;
-				for (int i = 0; i < lengthof(m_AdditionalItemList); i++) {
-					for (int ID = m_AdditionalItemList[i].First; ID <= m_AdditionalItemList[i].Last; ID++) {
+				for (const AdditionalItemInfo &Item : m_AdditionalItemList) {
+					for (int ID = Item.First; ID <= Item.Last; ID++) {
 						if (CommandList.IDToIndex(ID) <= 0)
 							break;
 
@@ -509,11 +509,11 @@ void CMenuOptions::GetItemText(int ID, LPTSTR pszText, int MaxLength) const
 	if (ID == MENU_ID_SEPARATOR) {
 		::lstrcpyn(pszText, TEXT("　<区切り>"), MaxLength);
 	} else {
-		for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-			if (m_DefaultMenuItemList[i].ID == ID) {
+		for (const MenuInfo &Item : m_DefaultMenuItemList) {
+			if (Item.ID == ID) {
 				::LoadString(
 					GetAppClass().GetResourceInstance(),
-					m_DefaultMenuItemList[i].TextID,
+					Item.TextID,
 					pszText, MaxLength);
 				return;
 			}

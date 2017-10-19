@@ -324,8 +324,8 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				TEXT("常にパススルー出力を行う"),
 				TEXT("音声の形式に応じてパススルー出力を行う"),
 			};
-			for (int i = 0; i < lengthof(SpdifModeList); i++)
-				DlgComboBox_AddString(hDlg, IDC_OPTIONS_SPDIFMODE, SpdifModeList[i]);
+			for (LPCTSTR pszMode : SpdifModeList)
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_SPDIFMODE, pszMode);
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE, (int)m_SPDIFOptions.Mode);
 			DlgCheckBox_Check(
 				hDlg, IDC_OPTIONS_SPDIF_CHANNELS_MONO,
@@ -360,8 +360,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 			}
 
-			for (int i = 0; i < lengthof(m_AudioLanguageList); i++) {
-				const DWORD Language = m_AudioLanguageList[i];
+			for (DWORD Language : m_AudioLanguageList) {
 				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 				GetLanguageText(Language, false, szText, lengthof(szText));
 				int Index = (int)DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, szText);

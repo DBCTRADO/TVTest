@@ -172,8 +172,8 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::Update()
 		CTuningSpaceInfo *pTuningSpace = m_TuningSpaceList.GetTuningSpaceInfo(i);
 		pTuningSpace->SetName(pGroup->Name.c_str());
 		CChannelList *pChannelList = pTuningSpace->GetChannelList();
-		for (auto itr = pGroup->ChannelList.begin(); itr != pGroup->ChannelList.end(); ++itr) {
-			pChannelList->AddChannel(itr->GetChannelInfo());
+		for (const auto &e : pGroup->ChannelList) {
+			pChannelList->AddChannel(e.GetChannelInfo());
 		}
 	}
 
@@ -234,11 +234,9 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
 	if (IsStringEmpty(pszBonDriver))
 		return false;
 
-	for (size_t i = 0; i < m_GroupList.size(); i++) {
-		const GroupInfo *pGroup = m_GroupList[i].get();
-		for (auto itr = pGroup->ChannelList.begin();
-				itr != pGroup->ChannelList.end(); ++itr) {
-			if (!IsEqualFileName(itr->GetBonDriverFileName(), pszBonDriver))
+	for (const auto &Group : m_GroupList) {
+		for (const auto &Channel : Group->ChannelList) {
+			if (!IsEqualFileName(Channel.GetBonDriverFileName(), pszBonDriver))
 				return false;
 		}
 	}

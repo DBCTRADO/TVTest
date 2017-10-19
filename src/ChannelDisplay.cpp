@@ -203,8 +203,7 @@ bool CChannelDisplay::SetDriverManager(CDriverManager *pDriverManager)
 		const TunerInfo *pTunerInfo = nullptr;
 
 		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
-		for (size_t j = 0; j < m_TunerInfoList.size(); j++) {
-			const TunerInfo &Info = m_TunerInfoList[j];
+		for (const TunerInfo &Info : m_TunerInfoList) {
 			LPCTSTR p = Info.DriverMasks;
 			while (*p != '\0') {
 				if (::PathMatchSpec(pszFileName, p)) {
@@ -263,13 +262,12 @@ void CChannelDisplay::SetEventHandler(CChannelDisplayEventHandler *pEventHandler
 bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo)
 {
 	int TunerIndex = 0;
-	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		const CTuner *pTuner = m_TunerList[i].get();
-		if (IsEqualFileName(pTuner->GetDriverFileName(), pszDriverFileName)) {
+	for (const auto &Tuner : m_TunerList) {
+		if (IsEqualFileName(Tuner->GetDriverFileName(), pszDriverFileName)) {
 			int Space = 0, Channel = -1;
 			if (pChannelInfo != nullptr) {
-				for (int j = 0; j < pTuner->NumSpaces(); j++) {
-					const CChannelList *pChannelList = pTuner->GetTuningSpaceInfo(j)->GetChannelList();
+				for (int j = 0; j < Tuner->NumSpaces(); j++) {
+					const CChannelList *pChannelList = Tuner->GetTuningSpaceInfo(j)->GetChannelList();
 					if (pChannelList != nullptr) {
 						Channel = pChannelList->FindByIndex(
 							pChannelInfo->GetSpace(),
@@ -287,7 +285,7 @@ bool CChannelDisplay::SetSelect(LPCTSTR pszDriverFileName, const CChannelInfo *p
 				SetCurChannel(Channel);
 			return true;
 		}
-		TunerIndex += pTuner->NumSpaces();
+		TunerIndex += Tuner->NumSpaces();
 	}
 	return false;
 }
@@ -379,16 +377,15 @@ void CChannelDisplay::Layout()
 
 	int TunerNameWidth = 0;
 	bool fTunerIcon = false;
-	for (auto it = m_TunerList.begin(); it != m_TunerList.end(); ++it) {
-		const CTuner *pTuner = it->get();
-		for (int j = 0; j < pTuner->NumSpaces(); j++) {
+	for (const auto &Tuner : m_TunerList) {
+		for (int j = 0; j < Tuner->NumSpaces(); j++) {
 			TCHAR szText[256];
-			pTuner->GetDisplayName(j, szText, lengthof(szText));
+			Tuner->GetDisplayName(j, szText, lengthof(szText));
 			RECT rc = {};
 			::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
 			if (TunerNameWidth < rc.right)
 				TunerNameWidth = rc.right;
-			if (pTuner->GetIcon() != nullptr)
+			if (Tuner->GetIcon() != nullptr)
 				fTunerIcon = true;
 		}
 	}
@@ -502,12 +499,10 @@ void CChannelDisplay::Layout()
 const CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index) const
 {
 	int TunerIndex = 0;
-	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		const CTuner *pTuner = m_TunerList[i].get();
-
-		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces())
-			return pTuner->GetTuningSpaceInfo(Index - TunerIndex);
-		TunerIndex += pTuner->NumSpaces();
+	for (const auto &Tuner : m_TunerList) {
+		if (Index >= TunerIndex && Index < TunerIndex + Tuner->NumSpaces())
+			return Tuner->GetTuningSpaceInfo(Index - TunerIndex);
+		TunerIndex += Tuner->NumSpaces();
 	}
 	return nullptr;
 }
@@ -516,12 +511,10 @@ const CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index) const
 CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index)
 {
 	int TunerIndex = 0;
-	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		CTuner *pTuner = m_TunerList[i].get();
-
-		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces())
-			return pTuner->GetTuningSpaceInfo(Index - TunerIndex);
-		TunerIndex += pTuner->NumSpaces();
+	for (const auto &Tuner : m_TunerList) {
+		if (Index >= TunerIndex && Index < TunerIndex + Tuner->NumSpaces())
+			return Tuner->GetTuningSpaceInfo(Index - TunerIndex);
+		TunerIndex += Tuner->NumSpaces();
 	}
 	return nullptr;
 }
@@ -530,15 +523,13 @@ CTuningSpaceInfo *CChannelDisplay::GetTuningSpaceInfo(int Index)
 const CChannelDisplay::CTuner *CChannelDisplay::GetTuner(int Index, int *pSpace) const
 {
 	int TunerIndex = 0;
-	for (size_t i = 0; i < m_TunerList.size(); i++) {
-		const CTuner *pTuner = m_TunerList[i].get();
-
-		if (Index >= TunerIndex && Index < TunerIndex + pTuner->NumSpaces()) {
+	for (const auto &Tuner : m_TunerList) {
+		if (Index >= TunerIndex && Index < TunerIndex + Tuner->NumSpaces()) {
 			if (pSpace != nullptr)
 				*pSpace = Index - TunerIndex;
-			return pTuner;
+			return Tuner.get();
 		}
-		TunerIndex += pTuner->NumSpaces();
+		TunerIndex += Tuner->NumSpaces();
 	}
 	return nullptr;
 }
@@ -815,10 +806,8 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 		}
 
 		int TunerIndex = 0;
-		for (size_t i = 0; i < m_TunerList.size(); i++) {
-			const CTuner *pTuner = m_TunerList[i].get();
-
-			for (int j = 0; j < pTuner->NumSpaces(); j++) {
+		for (const auto &Tuner : m_TunerList) {
+			for (int j = 0; j < Tuner->NumSpaces(); j++) {
 				if (TunerIndex >= m_TunerScrollPos
 						&& TunerIndex < m_TunerScrollPos + m_VisibleTunerItems) {
 					const Theme::Style *pStyle;
@@ -830,19 +819,19 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 					GetTunerItemRect(TunerIndex, &rc);
 					Theme::Draw(hdc, rc, pStyle->Back);
 					Style::Subtract(&rc, m_ChannelDisplayStyle.TunerItemPadding);
-					if (pTuner->GetIcon() != nullptr) {
+					if (Tuner->GetIcon() != nullptr) {
 						::DrawIconEx(
 							hdc,
 							rc.left,
 							rc.top + ((rc.bottom - rc.top) - m_ChannelDisplayStyle.TunerIconSize.Height) / 2,
-							pTuner->GetIcon(),
+							Tuner->GetIcon(),
 							m_ChannelDisplayStyle.TunerIconSize.Width,
 							m_ChannelDisplayStyle.TunerIconSize.Height,
 							0, nullptr, DI_NORMAL);
 					}
 					if (fTunerIcon)
 						rc.left += m_ChannelDisplayStyle.TunerIconSize.Width + m_ChannelDisplayStyle.TunerIconTextMargin;
-					pTuner->GetDisplayName(j, szText, lengthof(szText));
+					Tuner->GetDisplayName(j, szText, lengthof(szText));
 					Theme::Draw(
 						hdc, rc, pStyle->Fore, szText,
 						DT_CENTER | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);

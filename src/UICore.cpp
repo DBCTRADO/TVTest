@@ -1463,8 +1463,8 @@ bool CUICore::UnregisterModelessDialog(CBasicDialog *pDialog)
 
 bool CUICore::ProcessDialogMessage(MSG *pMessage)
 {
-	for (auto itr = m_ModelessDialogList.begin(); itr != m_ModelessDialogList.end(); ++itr) {
-		if ((*itr)->ProcessMessage(pMessage))
+	for (CBasicDialog *e : m_ModelessDialogList) {
+		if (e->ProcessMessage(pMessage))
 			return true;
 	}
 	return false;

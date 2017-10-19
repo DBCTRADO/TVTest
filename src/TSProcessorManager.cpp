@@ -213,9 +213,9 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 
 CTSProcessorManager::CTSProcessorSettings *CTSProcessorManager::GetTSProcessorSettings(const GUID &guid)
 {
-	for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it) {
-		if ((*it)->m_guid == guid)
-			return it->get();
+	for (auto &e : m_SettingsList) {
+		if (e->m_guid == guid)
+			return e.get();
 	}
 	return nullptr;
 }
@@ -223,9 +223,9 @@ CTSProcessorManager::CTSProcessorSettings *CTSProcessorManager::GetTSProcessorSe
 
 const CTSProcessorManager::CTSProcessorSettings *CTSProcessorManager::GetTSProcessorSettings(const GUID &guid) const
 {
-	for (auto it = m_SettingsList.begin(); it != m_SettingsList.end(); ++it) {
-		if ((*it)->m_guid == guid)
-			return it->get();
+	for (auto &e : m_SettingsList) {
+		if (e->m_guid == guid)
+			return e.get();
 	}
 	return nullptr;
 }
@@ -285,9 +285,9 @@ bool CTSProcessorManager::ApplyTSProcessorSettings(
 			&& !pSettings->m_PropertyList.empty()
 			&& pTSProcessor->IsPropertyBagSupported()) {
 		CPropertyBag *pPropBag = new CPropertyBag;
-		for (auto it = pSettings->m_PropertyList.begin(); it != pSettings->m_PropertyList.end(); ++it) {
-			CVariant var(it->second);
-			pPropBag->Write(it->first.c_str(), &var);
+		for (const auto &e : pSettings->m_PropertyList) {
+			CVariant var(e.second);
+			pPropBag->Write(e.first.c_str(), &var);
 		}
 		pTSProcessor->LoadProperties(pPropBag);
 		pPropBag->Release();
@@ -314,8 +314,8 @@ bool CTSProcessorManager::SaveTSProcessorProperties(CTSProcessor *pTSProcessor)
 
 			if (SUCCEEDED(pTSProcessor->SaveProperties(pPropBag))) {
 				pSettings->m_PropertyList.clear();
-				for (auto it = pPropBag->begin(); it != pPropBag->end(); ++it) {
-					pSettings->m_PropertyList.insert(*it);
+				for (const auto &e : *pPropBag) {
+					pSettings->m_PropertyList.insert(e);
 				}
 				fSaved = true;
 			}
@@ -704,17 +704,17 @@ CTSProcessorManager::CTSProcessorSettings::GetTunerFilterInfo(
 
 	LPCTSTR pszName = ::PathFindFileName(pszTuner);
 
-	for (auto it = m_TunerFilterMap.begin(); it != m_TunerFilterMap.end(); ++it) {
-		if ((it->Tuner.empty()
-				|| (::PathMatchSpec(pszName, it->Tuner.c_str())
-					|| (pszTuner != pszName && ::PathMatchSpec(pszTuner, it->Tuner.c_str()))))
-				&& (!it->IsNetworkIDEnabled()
-					|| it->NetworkID == NetworkID)
-				&& (!it->IsTransportStreamIDEnabled()
-					|| it->TransportStreamID == TransportStreamID)
-				&& (!it->IsServiceIDEnabled()
-					|| it->ServiceID == ServiceID)) {
-			return &*it;
+	for (const auto &e : m_TunerFilterMap) {
+		if ((e.Tuner.empty()
+				|| (::PathMatchSpec(pszName, e.Tuner.c_str())
+					|| (pszTuner != pszName && ::PathMatchSpec(pszTuner, e.Tuner.c_str()))))
+				&& (!e.IsNetworkIDEnabled()
+					|| e.NetworkID == NetworkID)
+				&& (!e.IsTransportStreamIDEnabled()
+					|| e.TransportStreamID == TransportStreamID)
+				&& (!e.IsServiceIDEnabled()
+					|| e.ServiceID == ServiceID)) {
+			return &e;
 		}
 	}
 
@@ -727,12 +727,12 @@ bool CTSProcessorManager::CTSProcessorSettings::IsTunerFilterMapEnabled() const
 	if (m_TunerFilterMap.empty())
 		return false;
 
-	for (auto it = m_TunerFilterMap.begin(); it != m_TunerFilterMap.end(); ++it) {
-		if (it->fEnable
-				&& (!it->Tuner.empty()
-					|| it->IsNetworkIDEnabled()
-					|| it->IsTransportStreamIDEnabled()
-					|| it->IsServiceIDEnabled()))
+	for (const auto &e : m_TunerFilterMap) {
+		if (e.fEnable
+				&& (!e.Tuner.empty()
+					|| e.IsNetworkIDEnabled()
+					|| e.IsTransportStreamIDEnabled()
+					|| e.IsServiceIDEnabled()))
 			return true;
 	}
 

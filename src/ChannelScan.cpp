@@ -364,12 +364,8 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 	String Message;
 
 	// 現在のチャンネルリストに存在しないサービスを探す
-	for (size_t TsIndex = 0; TsIndex < TsList.size(); TsIndex++) {
-		const LibISDB::AnalyzerFilter::SDTStreamInfo &TsInfo = TsList[TsIndex];
-
-		for (size_t ServiceIndex = 0; ServiceIndex < TsInfo.ServiceList.size(); ServiceIndex++) {
-			const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo = TsInfo.ServiceList[ServiceIndex];
-
+	for (const auto &TsInfo : TsList) {
+		for (const auto &ServiceInfo : TsInfo.ServiceList) {
 			if (!IsScanService(ServiceInfo, false))
 				continue;
 
@@ -457,15 +453,11 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 				const CChannelInfo *pChannelInfo = pChannelList->GetChannelInfo(Channel);
 				bool fNetworkFound = false, fServiceFound = false, fServiceMoved = false;
 
-				for (size_t TsIndex = 0; TsIndex < TsList.size(); TsIndex++) {
-					const LibISDB::AnalyzerFilter::SDTStreamInfo &TsInfo = TsList[TsIndex];
-
+				for (const auto &TsInfo : TsList) {
 					if (TsInfo.OriginalNetworkID == pChannelInfo->GetNetworkID()) {
 						fNetworkFound = true;
 
-						for (size_t ServiceIndex = 0; ServiceIndex < TsInfo.ServiceList.size(); ServiceIndex++) {
-							const LibISDB::AnalyzerFilter::SDTServiceInfo &ServiceInfo = TsInfo.ServiceList[ServiceIndex];
-
+						for (const auto &ServiceInfo : TsInfo.ServiceList) {
 							if (ServiceInfo.ServiceID == pChannelInfo->GetServiceID()) {
 								fServiceFound = true;
 
@@ -964,8 +956,8 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 										}
 									}
 
-									for (size_t i = 0; i < MissingChannels.size(); i++) {
-										CChannelInfo *pInfo = new CChannelInfo(*MissingChannels[i]);
+									for (const CChannelInfo *e : MissingChannels) {
+										CChannelInfo *pInfo = new CChannelInfo(*e);
 										m_ScanningChannelList.AddChannel(pInfo);
 										InsertChannelInfo(ListView_GetItemCount(hwndList), pInfo, fServiceType);
 									}

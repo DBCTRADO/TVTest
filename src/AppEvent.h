@@ -133,8 +133,8 @@ namespace TVTest
 		std::vector<CAppEventHandler*> m_HandlerList;
 
 		template<typename T> void EnumHandlers(T Pred) {
-			for (auto i = m_HandlerList.begin(); i != m_HandlerList.end(); ++i)
-				Pred(*i);
+			for (auto Handler : m_HandlerList)
+				Pred(Handler);
 		}
 	};
 

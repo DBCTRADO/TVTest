@@ -56,8 +56,8 @@ CNetworkDefinition::CNetworkDefinition()
 	m_NetworkInfoList.emplace_back(10, TEXT("CS.SP-Premium"), NetworkType::CS);
 
 	m_KeyIDAssignList.reserve(lengthof(m_DefaultKeyIDAssignList));
-	for (int i = 0; i < lengthof(m_DefaultKeyIDAssignList); i++)
-		m_KeyIDAssignList.push_back(m_DefaultKeyIDAssignList[i]);
+	for (const auto &e : m_DefaultKeyIDAssignList)
+		m_KeyIDAssignList.push_back(e);
 }
 
 
@@ -67,12 +67,12 @@ bool CNetworkDefinition::LoadSettings(CSettings &Settings)
 		CSettings::EntryList Entries;
 
 		if (Settings.GetEntries(&Entries)) {
-			for (auto itr = Entries.begin(); itr != Entries.end(); ++itr) {
+			for (const auto &e : Entries) {
 				NetworkInfo Info;
 
-				Info.NetworkID = StrToWord(itr->Name);
+				Info.NetworkID = StrToWord(e.Name);
 				if (Info.NetworkID != 0) {
-					Info.Name = itr->Value;
+					Info.Name = e.Value;
 					Info.Type = GetNetworkTypeFromName(Info.Name.c_str());
 
 					auto itr = FindNetworkInfoByID(Info.NetworkID);
@@ -119,14 +119,14 @@ bool CNetworkDefinition::LoadSettings(CSettings &Settings)
 			}
 		}
 
-		for (int i = 0; i < lengthof(m_DefaultKeyIDAssignList); i++) {
-			const RemoteControlKeyIDAssignInfo &DefInfo = m_DefaultKeyIDAssignList[i];
-			auto itr = std::find_if(List.begin(), List.end(),
-			[&](const RemoteControlKeyIDAssignInfo & Info) -> bool {
-				return Info.NetworkID == DefInfo.NetworkID
-				&& Info.FirstServiceID <= DefInfo.LastServiceID
-				&& Info.LastServiceID >= DefInfo.FirstServiceID;
-			});
+		for (const RemoteControlKeyIDAssignInfo &DefInfo : m_DefaultKeyIDAssignList) {
+			auto itr = std::find_if(
+				List.begin(), List.end(),
+				[&](const RemoteControlKeyIDAssignInfo &Info) -> bool {
+					return Info.NetworkID == DefInfo.NetworkID
+						&& Info.FirstServiceID <= DefInfo.LastServiceID
+						&& Info.LastServiceID >= DefInfo.FirstServiceID;
+				});
 			if (itr == List.end())
 				List.push_back(DefInfo);
 		}
@@ -202,13 +202,13 @@ int CNetworkDefinition::GetNetworkTypeOrder(WORD NetworkID1, WORD NetworkID2) co
 
 int CNetworkDefinition::GetRemoteControlKeyID(WORD NetworkID, WORD ServiceID) const
 {
-	for (auto itr = m_KeyIDAssignList.begin(); itr != m_KeyIDAssignList.end(); ++itr) {
-		if (NetworkID == itr->NetworkID
-				&& ServiceID >= itr->FirstServiceID
-				&& ServiceID <= itr->LastServiceID) {
-			int KeyID = ServiceID - itr->Subtrahend;
-			if (itr->Divisor != 0)
-				KeyID /= itr->Divisor;
+	for (const auto &e : m_KeyIDAssignList) {
+		if (NetworkID == e.NetworkID
+				&& ServiceID >= e.FirstServiceID
+				&& ServiceID <= e.LastServiceID) {
+			int KeyID = ServiceID - e.Subtrahend;
+			if (e.Divisor != 0)
+				KeyID /= e.Divisor;
 			return KeyID;
 		}
 	}
@@ -248,11 +248,11 @@ CNetworkDefinition::NetworkType CNetworkDefinition::GetNetworkTypeFromName(LPCTS
 		{NetworkType::CS,          TEXT("CS"), 2},
 	};
 
-	for (int i = 0; i < lengthof(NetworkTypeList); i++) {
-		const int Length = NetworkTypeList[i].Length;
-		if (::StrCmpNI(pszName, NetworkTypeList[i].pszName, Length) == 0
+	for (const auto &e : NetworkTypeList) {
+		const int Length = e.Length;
+		if (::StrCmpNI(pszName, e.pszName, Length) == 0
 				&& (pszName[Length] == _T('\0') || pszName[Length] == _T('.'))) {
-			return NetworkTypeList[i].Type;
+			return e.Type;
 		}
 	}
 

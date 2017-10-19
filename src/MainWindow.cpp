@@ -316,11 +316,8 @@ bool CMainWindow::InitializeViewer(BYTE VideoStreamType)
 		const LibISDB::ViewerFilter *pViewer =
 			m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-		for (int i = 0; i < lengthof(m_DirectShowFilterPropertyList); i++) {
-			m_pCore->SetCommandEnabledState(
-				m_DirectShowFilterPropertyList[i].Command,
-				pViewer->FilterHasProperty(
-					m_DirectShowFilterPropertyList[i].Filter));
+		for (const auto &e : m_DirectShowFilterPropertyList) {
+			m_pCore->SetCommandEnabledState(e.Command, pViewer->FilterHasProperty(e.Filter));
 		}
 
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEODECODER);
@@ -1863,9 +1860,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_pCore->SetCommandCheckedState(CM_STATUSBAR, m_fShowStatusBar);
 	m_pCore->SetCommandCheckedState(CM_SIDEBAR, m_fShowSideBar);
 
-	for (int i = 0; i < lengthof(m_DirectShowFilterPropertyList); i++) {
-		m_pCore->SetCommandEnabledState(
-			m_DirectShowFilterPropertyList[i].Command, false);
+	for (const auto &e : m_DirectShowFilterPropertyList) {
+		m_pCore->SetCommandEnabledState(e.Command, false);
 	}
 
 	HMENU hSysMenu = ::GetSystemMenu(m_hwnd, FALSE);
@@ -2890,12 +2886,12 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			HWND hwndOwner = GetVideoHostWindow();
 
 			if (hwndOwner == nullptr || ::IsWindowEnabled(hwndOwner)) {
-				for (int i = 0; i < lengthof(m_DirectShowFilterPropertyList); i++) {
-					if (m_DirectShowFilterPropertyList[i].Command == id) {
+				for (const auto &e : m_DirectShowFilterPropertyList) {
+					if (e.Command == id) {
 						LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 						bool fOK = false;
 
-						if (m_DirectShowFilterPropertyList[i].Filter == LibISDB::ViewerFilter::PropertyFilterType::VideoDecoder) {
+						if (e.Filter == LibISDB::ViewerFilter::PropertyFilterType::VideoDecoder) {
 							LibISDB::COMPointer<IBaseFilter> Decoder(pViewer->GetVideoDecoderFilter());
 							if (Decoder) {
 								HRESULT hr = ShowPropertyPageFrame(Decoder.Get(), hwndOwner, m_App.GetResourceInstance());
@@ -2910,7 +2906,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 						}
 
 						if (!fOK) {
-							pViewer->DisplayFilterProperty(hwndOwner, m_DirectShowFilterPropertyList[i].Filter);
+							pViewer->DisplayFilterProperty(hwndOwner, e.Filter);
 						}
 						break;
 					}
@@ -3013,8 +3009,8 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			TRACE(TEXT("チャンネルリスト自動更新開始\n"));
 			if (m_App.ChannelScan.AutoUpdateChannelList(&TuningSpaceList, &MessageList)) {
 				m_App.AddLog(TEXT("チャンネルリストの自動更新を行いました。"));
-				for (size_t i = 0; i < MessageList.size(); i++)
-					m_App.AddLog(TEXT("%s"), MessageList[i].c_str());
+				for (const String &e : MessageList)
+					m_App.AddLog(TEXT("%s"), e.c_str());
 
 				TuningSpaceList.MakeAllChannelList();
 				m_App.Core.UpdateCurrentChannelList(&TuningSpaceList);
@@ -4242,10 +4238,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					CM_DUALMONO_SUB,
 					CM_DUALMONO_BOTH
 				};
-				for (int i = 0; i < lengthof(DualMonoMenuList); i++) {
+				for (int Command : DualMonoMenuList) {
 					TCHAR szText[64];
-					::LoadString(hinstRes, DualMonoMenuList[i], szText, lengthof(szText));
-					Menu.Append(DualMonoMenuList[i], szText);
+					::LoadString(hinstRes, Command, szText, lengthof(szText));
+					Menu.Append(Command, szText);
 				}
 				Menu.CheckRadioItem(
 					CM_DUALMONO_MAIN, CM_DUALMONO_BOTH,
@@ -4262,10 +4258,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					CM_STEREOMODE_LEFT,
 					CM_STEREOMODE_RIGHT
 				};
-				for (int i = 0; i < lengthof(StereoModeMenuList); i++) {
+				for (int Command : StereoModeMenuList) {
 					TCHAR szText[64];
-					::LoadString(hinstRes, StereoModeMenuList[i], szText, lengthof(szText));
-					Menu.Append(StereoModeMenuList[i], szText);
+					::LoadString(hinstRes, Command, szText, lengthof(szText));
+					Menu.Append(Command, szText);
 				}
 				const LibISDB::DirectShow::AudioDecoderFilter::StereoMode CurStereoMode = m_pCore->GetStereoMode();
 				Menu.CheckRadioItem(
@@ -4293,11 +4289,11 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			CM_AUDIODELAY_PLUS,
 			CM_AUDIODELAY_RESET,
 		};
-		for (int i = 0; i < lengthof(AdditionalMenuList); i++) {
-			if (AdditionalMenuList[i] != 0) {
+		for (int Command : AdditionalMenuList) {
+			if (Command != 0) {
 				TCHAR szText[64];
-				::LoadString(hinstRes, AdditionalMenuList[i], szText, lengthof(szText));
-				Menu.Append(AdditionalMenuList[i], szText);
+				::LoadString(hinstRes, Command, szText, lengthof(szText));
+				Menu.Append(Command, szText);
 			} else {
 				Menu.AppendSeparator();
 			}
@@ -4441,10 +4437,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		}
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_FILTERPROPERTY)) {
 		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-		for (int i = 0; i < lengthof(m_DirectShowFilterPropertyList); i++) {
+		for (const auto &e : m_DirectShowFilterPropertyList) {
 			m_App.MainMenu.EnableItem(
-				m_DirectShowFilterPropertyList[i].Command,
-				pViewer != nullptr && pViewer->FilterHasProperty(m_DirectShowFilterPropertyList[i].Filter));
+				e.Command,
+				pViewer != nullptr && pViewer->FilterHasProperty(e.Filter));
 		}
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_BAR)) {
 		m_App.MainMenu.CheckRadioItem(

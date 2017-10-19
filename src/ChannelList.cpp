@@ -175,8 +175,8 @@ CChannelList &CChannelList::operator=(const CChannelList &Src)
 
 		if (!Src.m_ChannelList.empty()) {
 			m_ChannelList.reserve(Src.m_ChannelList.size());
-			for (auto i = Src.m_ChannelList.begin(); i != Src.m_ChannelList.end(); i++) {
-				m_ChannelList.emplace_back(new CChannelInfo(**i));
+			for (const auto &e : Src.m_ChannelList) {
+				m_ChannelList.emplace_back(new CChannelInfo(*e));
 			}
 		}
 	}
@@ -188,8 +188,8 @@ int CChannelList::NumEnableChannels() const
 {
 	int Count = 0;
 
-	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); i++) {
-		if ((*i)->IsEnabled())
+	for (const auto &e : m_ChannelList) {
+		if (e->IsEnabled())
 			Count++;
 	}
 	return Count;

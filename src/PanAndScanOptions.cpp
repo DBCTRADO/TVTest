@@ -146,8 +146,8 @@ CPanAndScanOptions::CPanAndScanOptions()
 	, m_fStateChanging(false)
 	, m_PresetID(lengthof(DefaultPresetList) + 1)
 {
-	for (size_t i = 0; i < lengthof(DefaultPresetList); i++)
-		m_PresetList.push_back(DefaultPresetList[i]);
+	for (const PanAndScanInfo &e : DefaultPresetList)
+		m_PresetList.push_back(e);
 }
 
 

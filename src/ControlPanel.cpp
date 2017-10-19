@@ -82,8 +82,8 @@ void CControlPanel::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
-		(*itr)->SetStyle(pStyleManager);
+	for (auto &e : m_ItemList)
+		e->SetStyle(pStyleManager);
 }
 
 
@@ -93,8 +93,8 @@ void CControlPanel::NormalizeStyle(
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 
-	for (auto itr = m_ItemList.begin(); itr != m_ItemList.end(); ++itr)
-		(*itr)->NormalizeStyle(pStyleManager, pStyleScaling);
+	for (auto &e : m_ItemList)
+		e->NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
@@ -239,11 +239,9 @@ void CControlPanel::SendCommand(int Command)
 
 bool CControlPanel::CheckRadioItem(int FirstID, int LastID, int CheckID)
 {
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		CControlPanelItem *pItem = m_ItemList[i].get();
-
-		if (pItem->m_Command >= FirstID && pItem->m_Command <= LastID)
-			pItem->m_fCheck = pItem->m_Command == CheckID;
+	for (auto &Item : m_ItemList) {
+		if (Item->m_Command >= FirstID && Item->m_Command <= LastID)
+			Item->m_fCheck = Item->m_Command == CheckID;
 	}
 	if (m_hwnd != nullptr)
 		Invalidate();
@@ -306,11 +304,9 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 
 	int MaxHeight;
 	MaxHeight = 0;
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
-		CControlPanelItem *pItem = m_ItemList[i].get();
-
-		if (pItem->GetVisible()) {
-			int Height = pItem->m_Position.bottom - pItem->m_Position.top;
+	for (const auto &Item : m_ItemList) {
+		if (Item->GetVisible()) {
+			int Height = Item->m_Position.bottom - Item->m_Position.top;
 			if (Height > MaxHeight)
 				MaxHeight = Height;
 		}

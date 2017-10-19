@@ -36,8 +36,8 @@ CChannelInputOptions::CChannelInputOptions()
 	: KeyTimeout(2000)
 	, fKeyTimeoutCancel(false)
 {
-	for (int i = 0; i < lengthof(KeyInputMode); i++)
-		KeyInputMode[i] = KeyInputModeType::SingleKey;
+	for (auto &e : KeyInputMode)
+		e = KeyInputModeType::SingleKey;
 }
 
 
@@ -180,8 +180,8 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 			for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 				int ID = IDC_CHANNELINPUT_DIGITKEYMODE + i;
-				for (int j = 0; j < lengthof(KeyModeList); j++)
-					DlgComboBox_AddString(hDlg, ID, KeyModeList[j]);
+				for (LPCTSTR pszMode : KeyModeList)
+					DlgComboBox_AddString(hDlg, ID, pszMode);
 				DlgComboBox_SetCurSel(hDlg, ID, static_cast<int>(m_Options.KeyInputMode[i]));
 			}
 

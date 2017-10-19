@@ -185,8 +185,8 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 					int Command=m_pSideBar->GetCommandList()->ParseText(szCommand);
 
 					if (Command != 0) {
-						for (int j = 0; j < lengthof(ItemList); j++) {
-							if (ItemList[j].Command == Command) {
+						for (const auto &Item : ItemList) {
+							if (Item.Command == Command) {
 								m_ItemList.push_back(Command);
 								break;
 							}
@@ -391,11 +391,11 @@ void CSideBarOptions::ApplyItemList()
 	if (!m_ItemNameList.empty()) {
 		m_ItemList.clear();
 
-		for (size_t i = 0; i < m_ItemNameList.size(); i++) {
-			if (m_ItemNameList[i].empty()) {
+		for (const String &Name : m_ItemNameList) {
+			if (Name.empty()) {
 				m_ItemList.push_back(ITEM_SEPARATOR);
 			} else {
-				int ID = pCommandList->ParseText(m_ItemNameList[i].c_str());
+				int ID = pCommandList->ParseText(Name.c_str());
 				if (ID != 0)
 					m_ItemList.push_back(ID);
 			}
@@ -404,18 +404,16 @@ void CSideBarOptions::ApplyItemList()
 
 	m_pSideBar->DeleteAllItems();
 
-	for (size_t i = 0; i < m_ItemList.size(); i++) {
-		const int Command = m_ItemList[i];
-
+	for (const int Command : m_ItemList) {
 		if (Command == ITEM_SEPARATOR) {
 			m_pSideBar->AddSeparator();
 		} else {
-			for (size_t j = 0; j < m_AvailItemList.size(); j++) {
-				if (m_AvailItemList[j].Command == Command) {
+			for (const auto &e : m_AvailItemList) {
+				if (e.Command == Command) {
 					CSideBar::SideBarItem Item;
 
 					Item.Command = Command;
-					Item.Icon = m_AvailItemList[j].Icon;
+					Item.Icon = e.Icon;
 					Item.State = CSideBar::ItemState::None;
 					CCommandList::CommandState State = pCommandList->GetCommandStateByID(Command);
 					if (!!(State & CCommandList::CommandState::Disabled))
@@ -515,8 +513,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			Bitmap.Destroy();
 
 			m_IconIDMap.clear();
-			for (int i = 0; i < lengthof(ItemList); i++)
-				m_IconIDMap.insert(std::pair<int, int>(ItemList[i].Command, ItemList[i].Icon));
+			for (const auto &e : ItemList)
+				m_IconIDMap.insert(std::pair<int, int>(e.Command, e.Icon));
 			const CCommandList *pCommandList = m_pSideBar->GetCommandList();
 			for (size_t i = lengthof(ItemList); i < m_AvailItemList.size(); i++) {
 				const int ID = m_AvailItemList[i].Command;
@@ -828,8 +826,8 @@ void CSideBarOptions::SetItemList(HWND hwndList, const int *pList, int NumItems)
 
 bool CSideBarOptions::IsAvailableItem(int ID) const
 {
-	for (size_t i = 0; i < m_AvailItemList.size(); i++) {
-		if (m_AvailItemList[i].Command == ID)
+	for (const auto &e : m_AvailItemList) {
+		if (e.Command == ID)
 			return true;
 	}
 

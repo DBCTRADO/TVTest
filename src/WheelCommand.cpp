@@ -77,10 +77,10 @@ int CWheelCommandManager::GetCommandParsableName(int ID, LPTSTR pszName, int Max
 	if (ID <= 0)
 		return 0;
 
-	for (auto it = m_CommandList.begin(); it != m_CommandList.end(); ++it) {
-		if (it->ID == ID) {
-			::lstrcpyn(pszName, it->IDText.c_str(), MaxName);
-			return static_cast<int>(it->IDText.length());
+	for (const auto &e : m_CommandList) {
+		if (e.ID == ID) {
+			::lstrcpyn(pszName, e.IDText.c_str(), MaxName);
+			return static_cast<int>(e.IDText.length());
 		}
 	}
 
@@ -102,9 +102,9 @@ int CWheelCommandManager::ParseCommand(LPCTSTR pszCommand) const
 	if (IsStringEmpty(pszCommand))
 		return 0;
 
-	for (auto it = m_CommandList.begin(); it != m_CommandList.end(); ++it) {
-		if (StringUtility::CompareNoCase(it->IDText, pszCommand) == 0) {
-			return it->ID;
+	for (const auto &e : m_CommandList) {
+		if (StringUtility::CompareNoCase(e.IDText, pszCommand) == 0) {
+			return e.ID;
 		}
 	}
 

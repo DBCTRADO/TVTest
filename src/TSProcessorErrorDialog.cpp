@@ -215,8 +215,8 @@ bool CTSProcessorErrorDialog::SearchFilters()
 		std::vector<String> List;
 
 		if (m_pTSProcessor->GetDeviceFilterList(Device, &List)) {
-			for (size_t j = 0; j < List.size(); j++) {
-				DlgListBox_AddString(m_hDlg, IDC_TSPROCESSORERROR_FILTERLIST, List[j].c_str());
+			for (const String &e : List) {
+				DlgListBox_AddString(m_hDlg, IDC_TSPROCESSORERROR_FILTERLIST, e.c_str());
 				fFound = true;
 			}
 		}

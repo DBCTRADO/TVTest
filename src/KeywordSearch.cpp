@@ -52,8 +52,7 @@ bool CKeywordSearch::Load(LPCTSTR pszFileName)
 	if (Settings.GetEntries(&Entries)) {
 		m_SearchEngineList.reserve(Entries.size() / 2);
 
-		for (size_t i = 0; i < Entries.size(); i++) {
-			const CSettings::CEntry &Entry = Entries[i];
+		for (const auto &Entry : Entries) {
 			String::size_type Pos = Entry.Name.find(_T('.'));
 
 			if (Pos != String::npos && Pos > 0
@@ -123,9 +122,9 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 			{TEXT("keyword:iso-2022-jp"), 50220},
 		};
 		bool fFound = false;
-		for (int i = 0; i < lengthof(ParameterList); i++) {
-			if (StringUtility::CompareNoCase(Param, ParameterList[i].pszParam) == 0) {
-				EncodeURL(ParameterList[i].CodePage, pszKeyword, &Buffer);
+		for (const auto &e : ParameterList) {
+			if (StringUtility::CompareNoCase(Param, e.pszParam) == 0) {
+				EncodeURL(e.CodePage, pszKeyword, &Buffer);
 				fFound = true;
 				break;
 			}

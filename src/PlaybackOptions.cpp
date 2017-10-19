@@ -195,8 +195,8 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				TEXT("高め"),
 				TEXT("最高 (録画優先)"),
 			};
-			for (int i = 0; i < lengthof(ThreadPriorityList); i++)
-				DlgComboBox_AddString(hDlg, IDC_OPTIONS_STREAMTHREADPRIORITY, ThreadPriorityList[i]);
+			for (LPCTSTR pszText : ThreadPriorityList)
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_STREAMTHREADPRIORITY, pszText);
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_STREAMTHREADPRIORITY, m_StreamThreadPriority);
 
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_ADJUSTFRAMERATE, m_fAdjust1SegFrameRate);

@@ -339,12 +339,12 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText, int *pLength)
 	const int TextLength = *pLength;
 
 	for (int i = 0; i < TextLength - 4; i++) {
-		for (int j = 0; j < lengthof(URLPrefixList); j++) {
-			int URLLength = URLPrefixList[j].Length;
+		for (const auto &Prefix : URLPrefixList) {
+			int URLLength = Prefix.Length;
 			if (i + URLLength < TextLength
 					&& ::CompareString(
 							LOCALE_USER_DEFAULT, NORM_IGNOREWIDTH,
-							&p[i], URLLength, URLPrefixList[j].pszPrefix, URLLength) == CSTR_EQUAL) {
+							&p[i], URLLength, Prefix.pszPrefix, URLLength) == CSTR_EQUAL) {
 				if (p[i] < 0x0080) {
 					while (i + URLLength < TextLength && ::StrChr(m_pszURLChars, p[i + URLLength]) != nullptr)
 						URLLength++;

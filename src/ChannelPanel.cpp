@@ -331,10 +331,8 @@ bool CChannelPanel::UpdateAllChannels()
 		bool fChanged = false;
 
 		LibISDB::GetCurrentEPGTime(&m_UpdatedTime);
-		for (size_t i = 0; i < m_ChannelList.size(); i++) {
-			CChannelEventInfo *pInfo = m_ChannelList[i].get();
-
-			if (UpdateEvents(pInfo, &m_UpdatedTime))
+		for (auto &e : m_ChannelList) {
+			if (UpdateEvents(e.get(), &m_UpdatedTime))
 				fChanged = true;
 		}
 		if (m_hwnd != nullptr && fChanged) {
@@ -378,12 +376,10 @@ bool CChannelPanel::UpdateChannels(WORD NetworkID, WORD TransportStreamID)
 	bool fChanged = false;
 
 	LibISDB::GetCurrentEPGTime(&Time);
-	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		CChannelEventInfo *pInfo = m_ChannelList[i].get();
-
-		if ((NetworkID == 0 || pInfo->GetNetworkID() == NetworkID)
-				&& (TransportStreamID == 0 || pInfo->GetTransportStreamID() == TransportStreamID)) {
-			if (UpdateEvents(pInfo, &Time))
+	for (auto &e : m_ChannelList) {
+		if ((NetworkID == 0 || e->GetNetworkID() == NetworkID)
+				&& (TransportStreamID == 0 || e->GetTransportStreamID() == TransportStreamID)) {
+			if (UpdateEvents(e.get(), &Time))
 				fChanged = true;
 		}
 	}
@@ -514,10 +510,8 @@ bool CChannelPanel::SetEventsPerChannel(int Events, int Expand)
 		if (Expand > 0)
 			m_ExpandAdditionalEvents = Expand;
 		m_ExpandEvents = m_EventsPerChannel + m_ExpandAdditionalEvents;
-		for (size_t i = 0; i < m_ChannelList.size(); i++) {
-			CChannelEventInfo *pInfo = m_ChannelList[i].get();
-
-			pInfo->SetMaxEvents(pInfo->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel);
+		for (auto &e : m_ChannelList) {
+			e->SetMaxEvents(e->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel);
 		}
 		if (m_hwnd != nullptr)
 			CalcItemHeight();
@@ -1207,8 +1201,8 @@ int CChannelPanel::CalcHeight() const
 	int Height;
 
 	Height = 0;
-	for (size_t i = 0; i < m_ChannelList.size(); i++) {
-		if (m_ChannelList[i]->IsExpanded())
+	for (const auto &e : m_ChannelList) {
+		if (e->IsExpanded())
 			Height += m_ExpandedItemHeight;
 		else
 			Height += m_ItemHeight;

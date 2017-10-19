@@ -165,9 +165,9 @@ bool CControllerManager::DeleteController(LPCTSTR pszName)
 
 void CControllerManager::DeleteAllControllers()
 {
-	for (size_t i = 0; i < m_ControllerList.size(); i++) {
-		if (m_ControllerList[i].fSettingsChanged)
-			SaveControllerSettings(m_ControllerList[i].Controller->GetName());
+	for (auto &e : m_ControllerList) {
+		if (e.fSettingsChanged)
+			SaveControllerSettings(e.Controller->GetName());
 	}
 	m_ControllerList.clear();
 }
@@ -258,9 +258,9 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 
 bool CControllerManager::TranslateMessage(HWND hwnd, MSG *pMessage)
 {
-	for (size_t i = 0; i < m_ControllerList.size(); i++) {
-		if (m_ControllerList[i].Controller->IsEnabled()) {
-			if (m_ControllerList[i].Controller->TranslateMessage(hwnd, pMessage))
+	for (auto &e : m_ControllerList) {
+		if (e.Controller->IsEnabled()) {
+			if (e.Controller->TranslateMessage(hwnd, pMessage))
 				return true;
 		}
 	}
@@ -281,8 +281,8 @@ bool CControllerManager::OnFocusChange(HWND hwnd, bool fFocus)
 {
 	m_fFocus = fFocus;
 	if (fFocus) {
-		for (size_t i = 0; i < m_ControllerList.size(); i++)
-			m_ControllerList[i].Controller->SetTargetWindow(hwnd);
+		for (auto &e : m_ControllerList)
+			e.Controller->SetTargetWindow(hwnd);
 	}
 	return true;
 }
@@ -313,13 +313,11 @@ bool CControllerManager::OnButtonDown(CController *pController, int Index)
 	if (Index < 0)
 		return false;
 
-	for (size_t i = 0; i < m_ControllerList.size(); i++) {
-		const ControllerInfo &Info = m_ControllerList[Index];
-
-		if (Info.Controller.get() == pController) {
-			if (Index >= (int)Info.Settings.AssignList.size())
+	for (auto &e : m_ControllerList) {
+		if (e.Controller.get() == pController) {
+			if (Index >= (int)e.Settings.AssignList.size())
 				return false;
-			const WORD Command = Info.Settings.AssignList[Index];
+			const WORD Command = e.Settings.AssignList[Index];
 			if (Command != 0)
 				::PostMessage(GetAppClass().UICore.GetMainWindow(), WM_COMMAND, Command, 0);
 			return true;

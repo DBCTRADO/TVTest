@@ -689,8 +689,8 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 		static const LPCTSTR pszNGList[] = {
 			TEXT("CON"), TEXT("PRN"), TEXT("AUX"), TEXT("NUL")
 		};
-		for (int i = 0; i < _countof(pszNGList); i++) {
-			if (lstrcmpi(pszNGList[i], pszFileName) == 0) {
+		for (LPCTSTR e : pszNGList) {
+			if (lstrcmpi(e, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
 				return false;

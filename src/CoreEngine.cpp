@@ -80,9 +80,9 @@ void CCoreEngine::Close()
 	CloseEngine();
 
 	if (!m_TSProcessorList.empty()) {
-		for (auto it = m_TSProcessorList.begin(); it != m_TSProcessorList.end(); ++it) {
-			m_FilterGraph.UnregisterFilter(it->pTSProcessor, false);
-			it->pTSProcessor->Release();
+		for (auto &e : m_TSProcessorList) {
+			m_FilterGraph.UnregisterFilter(e.pTSProcessor, false);
+			e.pTSProcessor->Release();
 		}
 		m_TSProcessorList.clear();
 	}
@@ -190,10 +190,10 @@ void CCoreEngine::ConnectTSProcessor(
 	LibISDB::FilterGraph::IDType FilterID = *pFilterID;
 	int OutputIndex = pOutputIndex != nullptr ? *pOutputIndex : 0;
 
-	for (auto it = m_TSProcessorList.begin(); it != m_TSProcessorList.end(); ++it) {
-		if (it->ConnectPosition == ConnectPosition) {
-			pList->Add(FilterID, it->FilterID, OutputIndex);
-			FilterID = it->FilterID;
+	for (const auto &e : m_TSProcessorList) {
+		if (e.ConnectPosition == ConnectPosition) {
+			pList->Add(FilterID, e.FilterID, OutputIndex);
+			FilterID = e.FilterID;
 			OutputIndex = 0;
 		}
 	}
