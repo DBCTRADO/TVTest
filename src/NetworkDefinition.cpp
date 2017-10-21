@@ -238,7 +238,7 @@ CNetworkDefinition::NetworkInfoList::const_iterator CNetworkDefinition::FindNetw
 
 CNetworkDefinition::NetworkType CNetworkDefinition::GetNetworkTypeFromName(LPCTSTR pszName)
 {
-	struct {
+	static const struct {
 		NetworkType Type;
 		LPCTSTR pszName;
 		int Length;
