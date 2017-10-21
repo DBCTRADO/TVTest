@@ -86,7 +86,6 @@ namespace TVTest
 		, public COSDManager::CEventHandler
 	{
 	public:
-		static constexpr WORD COMMAND_FROM_MOUSE = 8;
 		static const DWORD HIDE_CURSOR_DELAY = 1000UL;
 
 		struct ResumeInfo
@@ -163,6 +162,8 @@ namespace TVTest
 		bool IsNoAcceleratorMessage(const MSG *pMsg);
 		bool BeginChannelNoInput(int Digits);
 		void EndChannelNoInput(bool fDetermine = false);
+
+		bool HandleCommand(CCommandManager::InvokeParameters &Params);
 
 		Layout::CLayoutBase &GetLayoutBase() { return m_LayoutBase; }
 		CDisplayBase &GetDisplayBase() { return m_Display.GetDisplayBase(); }
@@ -457,16 +458,16 @@ namespace TVTest
 			void OnChannelEnd(bool fComplete) override;
 		};
 
-		class CCommandEventHandler
-			: public CCommandList::CEventHandler
+		class CCommandEventListener
+			: public CCommandManager::CEventListener
 		{
 		public:
-			CCommandEventHandler(CMainWindow *pMainWindow);
+			CCommandEventListener(CMainWindow *pMainWindow);
 
 		private:
 			CMainWindow *m_pMainWindow;
 
-			void OnCommandStateChanged(int ID, CCommandList::CommandState OldState, CCommandList::CommandState NewState) override;
+			void OnCommandStateChanged(int ID, CCommandManager::CommandState OldState, CCommandManager::CommandState NewState) override;
 			void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) override;
 		};
 
@@ -484,7 +485,7 @@ namespace TVTest
 		CViewWindowEventHandler m_ViewWindowEventHandler;
 		CFullscreen m_Fullscreen;
 		CNotificationBar m_NotificationBar;
-		CCommandEventHandler m_CommandEventHandler;
+		CCommandEventListener m_CommandEventListener;
 		CWindowTimerManager m_Timer;
 
 		MainWindowStyle m_Style;
@@ -578,7 +579,6 @@ namespace TVTest
 		DWORD m_AspectRatioResetTime;
 		bool m_fForceResetPanAndScan;
 		int m_DefaultAspectRatioMenuItemCount;
-		bool m_fFrameCut;
 		int m_VideoSizeChangedTimerCount;
 		unsigned int m_ProgramListUpdateTimerCount;
 		bool m_fAlertedLowFreeSpace;
@@ -615,7 +615,6 @@ namespace TVTest
 			int Command;
 		};
 
-		static const BYTE m_AudioGainList[];
 		static const DirectShowFilterPropertyInfo m_DirectShowFilterPropertyList[];
 		static ATOM m_atomChildOldWndProcProp;
 		static CMainWindow *m_pThis;
@@ -661,6 +660,7 @@ namespace TVTest
 		void OnRecordingResumed() override;
 		void On1SegModeChanged(bool f1SegMode) override;
 		void OnPanAndScanChanged() override;
+		void OnAspectRatioTypeChanged(int Type) override;
 		void OnVolumeChanged(int Volume) override;
 		void OnMuteChanged(bool fMute) override;
 		void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) override;
@@ -684,7 +684,6 @@ namespace TVTest
 		void OnMouseMove(int x, int y);
 		bool OnSetCursor(HWND hwndCursor, int HitTestCode, int MouseMessage);
 		bool OnKeyDown(WPARAM KeyCode);
-		void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
 		bool OnSysCommand(UINT Command);
 		void OnTimer(HWND hwnd, UINT id);
 		bool OnInitMenuPopup(HMENU hmenu);
@@ -704,7 +703,6 @@ namespace TVTest
 		void ShowPopupSideBar(bool fShow);
 		void ShowCursor(bool fShow);
 		void ShowChannelOSD();
-		void ShowAudioOSD();
 		void SetWindowVisible();
 		void ShowFloatingWindows(bool fShow, bool fNoProgramGuide = false);
 		void DrawCustomFrame(bool fActive);
@@ -715,7 +713,6 @@ namespace TVTest
 		void SuspendViewer(ResumeInfo::ViewerSuspendFlag Flags);
 		void ResumeViewer(ResumeInfo::ViewerSuspendFlag Flags);
 		void OnChannelNoInput();
-		int GetNextChannel(bool fUp);
 		void HookWindows(HWND hwnd);
 		void HookChildWindow(HWND hwnd);
 		void SetMaximizedRegion(bool fSet);

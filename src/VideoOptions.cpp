@@ -59,6 +59,7 @@ CVideoOptions::CVideoOptions()
 	: m_VideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType::Default)
 	, m_fResetPanScanEventChange(true)
 	, m_fNoMaskSideCut(true)
+	, m_StretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
 	, m_FullscreenStretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
 	, m_MaximizeStretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
 	, m_fIgnoreDisplayExtension(false)
@@ -118,18 +119,28 @@ bool CVideoOptions::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("ResetPanScanEventChange"), &m_fResetPanScanEventChange);
 	Settings.Read(TEXT("NoMaskSideCut"), &m_fNoMaskSideCut);
+
+	if (bool fFrameCut; Settings.Read(TEXT("FrameCut"), &fFrameCut)) {
+		m_StretchMode =
+			fFrameCut ?
+				LibISDB::ViewerFilter::ViewStretchMode::Crop :
+				LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+	}
+
 	if (Settings.Read(TEXT("FullscreenStretchMode"), &Value)) {
 		m_FullscreenStretchMode =
 			Value == 1 ?
 				LibISDB::ViewerFilter::ViewStretchMode::Crop :
 				LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
 	}
+
 	if (Settings.Read(TEXT("MaximizeStretchMode"), &Value)) {
 		m_MaximizeStretchMode =
 			Value == 1 ?
 				LibISDB::ViewerFilter::ViewStretchMode::Crop :
 				LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
 	}
+
 	Settings.Read(TEXT("IgnoreDisplayExtension"), &m_fIgnoreDisplayExtension);
 	Settings.Read(TEXT("ClipToDevice"), &m_fClipToDevice);
 
@@ -145,6 +156,7 @@ bool CVideoOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("Renderer"), LibISDB::DirectShow::VideoRenderer::EnumRendererName(m_VideoRendererType));
 	Settings.Write(TEXT("ResetPanScanEventChange"), m_fResetPanScanEventChange);
 	Settings.Write(TEXT("NoMaskSideCut"), m_fNoMaskSideCut);
+	Settings.Write(TEXT("FrameCut"), m_StretchMode == LibISDB::ViewerFilter::ViewStretchMode::Crop);
 	Settings.Write(TEXT("FullscreenStretchMode"), (int)m_FullscreenStretchMode);
 	Settings.Write(TEXT("MaximizeStretchMode"), (int)m_MaximizeStretchMode);
 	Settings.Write(TEXT("IgnoreDisplayExtension"), m_fIgnoreDisplayExtension);
@@ -210,6 +222,13 @@ bool CVideoOptions::SetVideoRendererType(LibISDB::DirectShow::VideoRenderer::Ren
 	if (LibISDB::DirectShow::VideoRenderer::EnumRendererName(Renderer) == nullptr)
 		return false;
 	m_VideoRendererType = Renderer;
+	return true;
+}
+
+
+bool CVideoOptions::SetStretchMode(LibISDB::ViewerFilter::ViewStretchMode Mode)
+{
+	m_StretchMode = Mode;
 	return true;
 }
 

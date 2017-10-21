@@ -113,14 +113,16 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 		m_MenuItemList.clear();
 		m_MenuItemList.reserve(ItemCount);
 
+		String Text;
+
 		for (int i = 0; i < ItemCount; i++) {
-			TCHAR szName[32], szText[CCommandList::MAX_COMMAND_TEXT];
+			TCHAR szName[32];
 
 			::wsprintf(szName, TEXT("Item%d_ID"), i);
-			if (Settings.Read(szName, szText, lengthof(szText))) {
+			if (Settings.Read(szName, &Text)) {
 				MenuItemInfo Item;
 
-				Item.Name = szText;
+				Item.Name = Text;
 				Item.ID = MENU_ID_INVALID;
 				Item.fVisible = true;
 				::wsprintf(szName, TEXT("Item%d_State"), i);
@@ -167,7 +169,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 		}
 		if (!fDefault) {
 			Settings.Write(TEXT("ItemCount"), (int)m_MenuItemList.size());
-			const CCommandList &CommandList = GetAppClass().CommandList;
+			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 			for (size_t i = 0; i < m_MenuItemList.size(); i++) {
 				const MenuItemInfo &Item = m_MenuItemList[i];
 				TCHAR szName[32];
@@ -178,7 +180,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 				} else if (Item.ID == MENU_ID_SEPARATOR) {
 					Settings.Write(szName, TEXT(""));
 				} else {
-					Settings.Write(szName, CommandList.GetCommandTextByID(IDToCommand(Item.ID)));
+					Settings.Write(szName, CommandManager.GetCommandIDText(IDToCommand(Item.ID)));
 				}
 				::wsprintf(szName, TEXT("Item%d_State"), i);
 				Settings.Write(szName, Item.fVisible ? ITEM_STATE_VISIBLE : 0);
@@ -256,7 +258,7 @@ int CMenuOptions::GetIDFromString(const String &Str) const
 	if (Str.empty())
 		return MENU_ID_SEPARATOR;
 
-	int Command = GetAppClass().CommandList.ParseText(Str.c_str());
+	int Command = GetAppClass().CommandManager.ParseIDText(Str);
 	if (Command > 0)
 		return CommandToID(Command);
 
@@ -314,10 +316,10 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 
-			const CCommandList &CommandList = GetAppClass().CommandList;
+			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 			for (const AdditionalItemInfo &e : m_AdditionalItemList) {
 				for (int ID = e.First; ID <= e.Last; ID++) {
-					if (CommandList.IDToIndex(ID) <= 0)
+					if (!CommandManager.IsCommandValid(ID))
 						break;
 					auto it = std::find_if(
 						m_MenuItemList.begin(), m_MenuItemList.end(),
@@ -333,7 +335,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			int i = 0;
 			for (MenuItemInfo &Item : m_MenuItemList) {
-				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+				TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 				if (Item.ID == MENU_ID_INVALID)
 					Item.ID = GetIDFromString(Item.Name);
@@ -380,7 +382,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int Sel = m_ItemListView.GetSelectedItem();
 
 				if (Sel >= 0) {
-					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 					m_fChanging = true;
 					GetItemText(MENU_ID_SEPARATOR, szText, lengthof(szText));
@@ -417,20 +419,20 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
 					int ID = m_DefaultMenuItemList[i].ID;
-					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 					GetItemText(ID, szText, lengthof(szText));
 					m_ItemListView.InsertItem(i, szText, ID);
 					m_ItemListView.CheckItem(i, true);
 				}
 
-				const CCommandList &CommandList = GetAppClass().CommandList;
+				const CCommandManager &CommandManager = GetAppClass().CommandManager;
 				for (const AdditionalItemInfo &Item : m_AdditionalItemList) {
 					for (int ID = Item.First; ID <= Item.Last; ID++) {
-						if (CommandList.IDToIndex(ID) <= 0)
+						if (!CommandManager.IsCommandValid(ID))
 							break;
 
-						TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+						TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 						GetItemText(ID, szText, lengthof(szText));
 						int Index = m_ItemListView.InsertItem(-1, szText, ID);
@@ -519,7 +521,7 @@ void CMenuOptions::GetItemText(int ID, LPTSTR pszText, int MaxLength) const
 			}
 		}
 
-		GetAppClass().CommandList.GetCommandNameByID(ID, pszText, MaxLength);
+		GetAppClass().CommandManager.GetCommandText(ID, pszText, MaxLength);
 	}
 }
 

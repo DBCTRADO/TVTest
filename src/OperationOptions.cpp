@@ -32,7 +32,7 @@ namespace TVTest
 
 
 COperationOptions::COperationOptions()
-	: m_pCommandList(nullptr)
+	: m_pCommandManager(nullptr)
 	, m_fDisplayDragMove(true)
 	, m_VolumeStep(5)
 	, m_AudioDelayStep(50)
@@ -116,30 +116,23 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	}
 	Settings.Read(TEXT("WheelZoomStep"), &m_WheelZoomStep);
 
-	if (m_pCommandList != nullptr) {
-		TCHAR szText[CCommandList::MAX_COMMAND_TEXT];
+	if (m_pCommandManager != nullptr) {
+		String Command;
 
-		if (Settings.Read(TEXT("LeftDoubleClickCommand"), szText, lengthof(szText))) {
-			m_LeftDoubleClickCommand = m_pCommandList->ParseText(szText);
+		if (Settings.Read(TEXT("LeftDoubleClickCommand"), &Command)) {
+			m_LeftDoubleClickCommand = m_pCommandManager->ParseIDText(Command);
 		}
-		if (Settings.Read(TEXT("RightClickCommand"), szText, lengthof(szText))) {
-			m_RightClickCommand = m_pCommandList->ParseText(szText);
+		if (Settings.Read(TEXT("RightClickCommand"), &Command)) {
+			m_RightClickCommand = m_pCommandManager->ParseIDText(Command);
 		}
-		if (Settings.Read(TEXT("MiddleClickCommand"), szText, lengthof(szText))) {
-			m_MiddleClickCommand = m_pCommandList->ParseText(szText);
+		if (Settings.Read(TEXT("MiddleClickCommand"), &Command)) {
+			m_MiddleClickCommand = m_pCommandManager->ParseIDText(Command);
 		}
 	}
 
 	return true;
 }
 
-
-static LPCTSTR GetCommandText(const CCommandList *pCommandList, int Command)
-{
-	if (Command == 0)
-		return TEXT("");
-	return pCommandList->GetCommandTextByID(Command);
-}
 
 bool COperationOptions::WriteSettings(CSettings &Settings)
 {
@@ -164,16 +157,16 @@ bool COperationOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ReverseWheelVolume"), m_fWheelVolumeReverse);
 	Settings.Write(TEXT("WheelChannelDelay"), m_WheelChannelDelay);
 	Settings.Write(TEXT("WheelZoomStep"), m_WheelZoomStep);
-	if (m_pCommandList != nullptr) {
+	if (m_pCommandManager != nullptr) {
 		Settings.Write(
 			TEXT("LeftDoubleClickCommand"),
-			GetCommandText(m_pCommandList, m_LeftDoubleClickCommand));
+			m_pCommandManager->GetCommandIDText(m_LeftDoubleClickCommand));
 		Settings.Write(
 			TEXT("RightClickCommand"),
-			GetCommandText(m_pCommandList, m_RightClickCommand));
+			m_pCommandManager->GetCommandIDText(m_RightClickCommand));
 		Settings.Write(
 			TEXT("MiddleClickCommand"),
-			GetCommandText(m_pCommandList, m_MiddleClickCommand));
+			m_pCommandManager->GetCommandIDText(m_MiddleClickCommand));
 	}
 	return true;
 }
@@ -187,9 +180,9 @@ bool COperationOptions::Create(HWND hwndOwner)
 }
 
 
-bool COperationOptions::Initialize(CSettings &Settings, const CCommandList *pCommandList)
+bool COperationOptions::Initialize(CSettings &Settings, const CCommandManager *pCommandManager)
 {
-	m_pCommandList = pCommandList;
+	m_pCommandManager = pCommandManager;
 	LoadSettings(Settings);
 	return true;
 }
@@ -229,12 +222,12 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				DlgComboBox_AddString(hDlg, i, TEXT("なし"));
 				DlgComboBox_SetItemData(hDlg, i, 0, 0);
 			}
-			int NumCommands = m_pCommandList->NumCommands();
-			for (int i = 0; i < NumCommands; i++) {
-				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
-				int Command = m_pCommandList->GetCommandID(i);
+			CCommandManager::CCommandLister CommandLister(*m_pCommandManager);
+			int Command;
+			for (int i = 0; (Command = CommandLister.Next()) != 0; i++) {
+				TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
-				m_pCommandList->GetCommandName(i, szText, lengthof(szText));
+				m_pCommandManager->GetCommandText(Command, szText, lengthof(szText));
 				for (int j = IDC_OPTIONS_MOUSECOMMAND_FIRST; j <= IDC_OPTIONS_MOUSECOMMAND_LAST; j++) {
 					int Index = (int)DlgComboBox_AddString(hDlg, j, szText);
 					DlgComboBox_SetItemData(hDlg, j, Index, Command);

@@ -38,6 +38,8 @@ CUICore::CUICore(CAppMain &App)
 	, m_fFullscreen(false)
 	, m_fAlwaysOnTop(false)
 
+	, m_AspectRatioType(ASPECTRATIO_DEFAULT)
+
 	, m_fViewerInitializeError(false)
 
 	, m_fScreenSaverActiveOriginal(FALSE)
@@ -88,6 +90,131 @@ HWND CUICore::GetDialogOwner() const
 	if (m_pSkin == nullptr)
 		return nullptr;
 	return m_pSkin->GetVideoHostWindow();
+}
+
+
+int CUICore::GetNextChannel(bool fUp)
+{
+	int Channel = m_App.ChannelManager.GetNextChannel(
+		m_App.OperationOptions.GetChannelUpDownOrder(), fUp);
+	if (Channel < 0)
+		return -1;
+
+	if (m_App.OperationOptions.GetChannelUpDownSkipSubChannel()) {
+		// 異なる番組を放送している場合以外はサブチャンネルをスキップする
+		const CChannelList *pCurChannelList = m_App.ChannelManager.GetCurrentChannelList();
+		const int CurChannel =
+			m_App.ChannelManager.GetChangingChannel() >= 0 ?
+			m_App.ChannelManager.GetChangingChannel() :
+			m_App.ChannelManager.GetCurrentChannel();
+		const CChannelInfo *pCurChannelInfo = pCurChannelList->GetChannelInfo(CurChannel);
+		LibISDB::DateTime Time;
+		LibISDB::EventInfo EventInfo;
+		LibISDB::EventInfo::CommonEventInfo CurEvent;
+
+		LibISDB::GetCurrentEPGTime(&Time);
+		if (m_App.EPGDatabase.GetEventInfo(
+					pCurChannelInfo->GetNetworkID(),
+					pCurChannelInfo->GetTransportStreamID(),
+					pCurChannelInfo->GetServiceID(),
+					Time, &EventInfo)) {
+			if (EventInfo.IsCommonEvent) {
+				CurEvent = EventInfo.CommonEvent;
+			} else {
+				CurEvent.ServiceID = EventInfo.ServiceID;
+				CurEvent.EventID = EventInfo.EventID;
+			}
+		}
+
+		bool fDiffEvent = false;
+		int i;
+
+		for (i = pCurChannelList->NumEnableChannels() - 1; i > 0; i--) {
+			const CChannelInfo *pNextChannelInfo = pCurChannelList->GetChannelInfo(Channel);
+
+			if (pCurChannelInfo->GetNetworkID() != pNextChannelInfo->GetNetworkID()
+					|| pCurChannelInfo->GetTransportStreamID() != pNextChannelInfo->GetTransportStreamID())
+				break;
+
+			if (CurEvent.ServiceID != LibISDB::SERVICE_ID_INVALID
+					&& m_App.EPGDatabase.GetEventInfo(
+						pNextChannelInfo->GetNetworkID(),
+						pNextChannelInfo->GetTransportStreamID(),
+						pNextChannelInfo->GetServiceID(),
+						Time, &EventInfo)) {
+				LibISDB::EventInfo::CommonEventInfo Event;
+				if (EventInfo.IsCommonEvent) {
+					Event = EventInfo.CommonEvent;
+				} else {
+					Event.ServiceID = EventInfo.ServiceID;
+					Event.EventID = EventInfo.EventID;
+				}
+				if (CurEvent != Event) {
+					fDiffEvent = true;
+					break;
+				}
+			}
+
+			Channel = m_App.ChannelManager.GetNextChannel(
+				Channel, m_App.OperationOptions.GetChannelUpDownOrder(), fUp);
+			if (Channel == CurChannel)
+				return -1;
+		}
+
+		if (i == 0)
+			return -1;
+
+		if (!fUp && !fDiffEvent) {
+			// 同じ番組の最初のサービスを探す
+			const CChannelInfo *pNextChannelInfo = pCurChannelList->GetChannelInfo(Channel);
+			LibISDB::EventInfo::CommonEventInfo NextEvent;
+
+			if (m_App.EPGDatabase.GetEventInfo(
+						pNextChannelInfo->GetNetworkID(),
+						pNextChannelInfo->GetTransportStreamID(),
+						pNextChannelInfo->GetServiceID(),
+						Time, &EventInfo)) {
+				if (EventInfo.IsCommonEvent) {
+					NextEvent = EventInfo.CommonEvent;
+				} else {
+					NextEvent.ServiceID = EventInfo.ServiceID;
+					NextEvent.EventID = EventInfo.EventID;
+				}
+			}
+
+			for (int i = Channel - 1; i >= 0; i--) {
+				const CChannelInfo *pChannelInfo = pCurChannelList->GetChannelInfo(i);
+
+				if (!pChannelInfo->IsEnabled())
+					continue;
+
+				if (pNextChannelInfo->GetNetworkID() != pChannelInfo->GetNetworkID()
+						|| pNextChannelInfo->GetTransportStreamID() != pChannelInfo->GetTransportStreamID())
+					break;
+
+				if (NextEvent.ServiceID != LibISDB::SERVICE_ID_INVALID
+						&& m_App.EPGDatabase.GetEventInfo(
+							pChannelInfo->GetNetworkID(),
+							pChannelInfo->GetTransportStreamID(),
+							pChannelInfo->GetServiceID(),
+							Time, &EventInfo)) {
+					LibISDB::EventInfo::CommonEventInfo Event;
+					if (EventInfo.IsCommonEvent) {
+						Event = EventInfo.CommonEvent;
+					} else {
+						Event.ServiceID = EventInfo.ServiceID;
+						Event.EventID = EventInfo.EventID;
+					}
+					if (Event != NextEvent)
+						break;
+				}
+
+				Channel = i;
+			}
+		}
+	}
+
+	return Channel;
 }
 
 
@@ -174,6 +301,43 @@ bool CUICore::SetPanAndScan(const CCoreEngine::PanAndScanInfo &Info)
 bool CUICore::GetPanAndScan(CCoreEngine::PanAndScanInfo *pInfo) const
 {
 	return m_App.CoreEngine.GetPanAndScan(pInfo);
+}
+
+
+bool CUICore::SetAspectRatioType(int Type)
+{
+	CCoreEngine::PanAndScanInfo Info;
+
+	if ((Type >= ASPECTRATIO_DEFAULT) && (Type < ASPECTRATIO_CUSTOM_FIRST)) {
+		static const CCoreEngine::PanAndScanInfo PanAndScanList[] = {
+			{0, 0,  0,  0,  0,  0,  0,  0},	// デフォルト
+			{0, 0,  1,  1,  1,  1, 16,  9},	// 16:9
+			{0, 3,  1, 18,  1, 24, 16,  9},	// 16:9 レターボックス
+			{2, 3, 12, 18, 16, 24, 16,  9},	// 16:9 超額縁
+			{2, 0, 12,  1, 16,  1,  4,  3},	// 4:3 ピラーボックス
+			{0, 0,  1,  1,  1,  1,  4,  3},	// 4:3
+			{0, 0,  1,  1,  1,  1, 32,  9},	// 32:9
+			{0, 0,  1,  1,  2,  1, 16,  9},	// 16:9 左
+			{1, 0,  1,  1,  2,  1, 16,  9},	// 16:9 右
+		};
+
+		Info = PanAndScanList[Type];
+	} else if (Type >= ASPECTRATIO_CUSTOM_FIRST) {
+		CPanAndScanOptions::PanAndScanInfo PanScan;
+		if (!m_App.PanAndScanOptions.GetPreset(Type - ASPECTRATIO_CUSTOM_FIRST, &PanScan))
+			return false;
+		Info = PanScan.Info;
+	} else {
+		return false;
+	}
+
+	SetPanAndScan(Info);
+
+	m_AspectRatioType = Type;
+
+	m_App.AppEventManager.OnAspectRatioTypeChanged(Type);
+
+	return true;
 }
 
 
@@ -734,6 +898,17 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 }
 
 
+void CUICore::ShowAudioOSD()
+{
+	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Audio)) {
+		TCHAR szText[128];
+
+		if (GetSelectedAudioText(szText, lengthof(szText)))
+			m_App.OSDManager.ShowOSD(szText);
+	}
+}
+
+
 bool CUICore::SetStandby(bool fStandby, bool fTransient)
 {
 	if (m_fStandby != fStandby) {
@@ -1143,7 +1318,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 
 	Menu.Append(CM_DRIVER_BROWSE, TEXT("参照..."));
 	Menu.AppendSeparator();
-	m_App.CommandList.GetCommandNameByID(CM_CLOSETUNER, szText, lengthof(szText));
+	m_App.CommandManager.GetCommandText(CM_CLOSETUNER, szText, lengthof(szText));
 	Menu.Append(CM_CLOSETUNER, szText);
 	Menu.EnableItem(CM_CLOSETUNER, m_App.CoreEngine.IsTunerOpen());
 
@@ -1220,7 +1395,7 @@ bool CUICore::DoCommand(LPCTSTR pszCommand)
 {
 	if (pszCommand == nullptr)
 		return false;
-	int Command = m_App.CommandList.ParseText(pszCommand);
+	int Command = m_App.CommandManager.ParseIDText(pszCommand);
 	if (Command == 0)
 		return false;
 	return DoCommand(Command);
@@ -1240,7 +1415,7 @@ bool CUICore::DoCommandAsync(LPCTSTR pszCommand)
 {
 	if (pszCommand == nullptr)
 		return false;
-	int Command = m_App.CommandList.ParseText(pszCommand);
+	int Command = m_App.CommandManager.ParseIDText(pszCommand);
 	if (Command == 0)
 		return false;
 	return DoCommandAsync(Command);
@@ -1249,37 +1424,37 @@ bool CUICore::DoCommandAsync(LPCTSTR pszCommand)
 
 bool CUICore::SetCommandEnabledState(int Command, bool fEnabled)
 {
-	return m_App.CommandList.SetCommandStateByID(
+	return m_App.CommandManager.SetCommandState(
 		Command,
-		CCommandList::CommandState::Disabled,
-		fEnabled ? CCommandList::CommandState::None : CCommandList::CommandState::Disabled);
+		CCommandManager::CommandState::Disabled,
+		fEnabled ? CCommandManager::CommandState::None : CCommandManager::CommandState::Disabled);
 }
 
 
 bool CUICore::GetCommandEnabledState(int Command) const
 {
-	return !(m_App.CommandList.GetCommandStateByID(Command) & CCommandList::CommandState::Disabled);
+	return !(m_App.CommandManager.GetCommandState(Command) & CCommandManager::CommandState::Disabled);
 }
 
 
 bool CUICore::SetCommandCheckedState(int Command, bool fChecked)
 {
-	return m_App.CommandList.SetCommandStateByID(
+	return m_App.CommandManager.SetCommandState(
 		Command,
-		CCommandList::CommandState::Checked,
-		fChecked ? CCommandList::CommandState::Checked : CCommandList::CommandState::None);
+		CCommandManager::CommandState::Checked,
+		fChecked ? CCommandManager::CommandState::Checked : CCommandManager::CommandState::None);
 }
 
 
 bool CUICore::GetCommandCheckedState(int Command) const
 {
-	return !!(m_App.CommandList.GetCommandStateByID(Command) & CCommandList::CommandState::Checked);
+	return !!(m_App.CommandManager.GetCommandState(Command) & CCommandManager::CommandState::Checked);
 }
 
 
 bool CUICore::SetCommandRadioCheckedState(int FirstCommand, int LastCommand, int CheckedCommand)
 {
-	return m_App.CommandList.SetCommandRadioCheckedState(FirstCommand, LastCommand, CheckedCommand);
+	return m_App.CommandManager.SetCommandRadioCheckedState(FirstCommand, LastCommand, CheckedCommand);
 }
 
 

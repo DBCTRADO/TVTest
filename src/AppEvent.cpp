@@ -168,6 +168,12 @@ void CAppEventManager::OnPanAndScanChanged()
 }
 
 
+void CAppEventManager::OnAspectRatioTypeChanged(int Type)
+{
+	CALL_HANDLERS(OnAspectRatioTypeChanged(Type));
+}
+
+
 void CAppEventManager::OnVolumeChanged(int Volume)
 {
 	CALL_HANDLERS(OnVolumeChanged(Volume));

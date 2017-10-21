@@ -24,6 +24,7 @@
 
 #include "AppCore.h"
 #include "AppEvent.h"
+#include "AppCommand.h"
 #include "UICore.h"
 #include "Graphics.h"
 #include "Style.h"
@@ -146,7 +147,8 @@ namespace TVTest
 		Style::CStyleManager StyleManager;
 		CDirectWriteSystem DirectWriteSystem;
 		CMainMenu MainMenu;
-		CCommandList CommandList;
+		CCommandManager CommandManager;
+		CAppCommand AppCommand;
 		CCommandLineOptions CmdLineOptions;
 		CPluginManager PluginManager;
 		LibISDB::EPGDatabase EPGDatabase;
@@ -354,7 +356,6 @@ namespace TVTest
 		static HICON m_hicoApp;
 		static HICON m_hicoAppSmall;
 
-		void RegisterCommands();
 		bool IsNoAcceleratorMessage(const MSG *pmsg);
 		void ApplyEventInfoFont();
 		bool GetAbsolutePath(LPCTSTR pszPath, LPTSTR pszAbsolutePath) const;

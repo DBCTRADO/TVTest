@@ -100,7 +100,7 @@ namespace TVTest
 
 		static bool Initialize(HINSTANCE hinst);
 
-		CSideBar(const CCommandList *pCommandList);
+		CSideBar(const CCommandManager *pCommandManager);
 		~CSideBar();
 
 	// CBasicWindow
@@ -137,7 +137,7 @@ namespace TVTest
 		void SetVertical(bool fVertical);
 		bool GetVertical() const { return m_fVertical; }
 		void SetEventHandler(CEventHandler *pHandler);
-		const CCommandList *GetCommandList() const { return m_pCommandList; }
+		const CCommandManager *GetCommandManager() const { return m_pCommandManager; }
 		Style::Size GetIconDrawSize() const;
 
 	protected:
@@ -166,7 +166,7 @@ namespace TVTest
 		int m_ClickItem;
 		CMouseLeaveTrack m_MouseLeaveTrack;
 		CEventHandler *m_pEventHandler;
-		const CCommandList *m_pCommandList;
+		const CCommandManager *m_pCommandManager;
 
 		static const int ICON_WIDTH;
 		static const int ICON_HEIGHT;

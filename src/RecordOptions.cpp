@@ -142,10 +142,10 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 		m_Settings.m_MaxPendingSize = std::clamp(Value, MAX_PENDING_SIZE_MIN, MAX_PENDING_SIZE_MAX);
 	Settings.Read(TEXT("ShowRecordRemainTime"), &m_fShowRemainTime);
 
-	TCHAR szCommand[CCommandList::MAX_COMMAND_TEXT];
-	if (Settings.Read(TEXT("StatusBarRecordCommand"), szCommand, lengthof(szCommand))) {
-		if (szCommand[0] != _T('\0')) {
-			int Command = GetAppClass().CommandList.ParseText(szCommand);
+	String CommandText;
+	if (Settings.Read(TEXT("StatusBarRecordCommand"), &CommandText)) {
+		if (!CommandText.empty()) {
+			int Command = GetAppClass().CommandManager.ParseIDText(CommandText);
 			if (Command != 0)
 				m_StatusBarRecordCommand = Command;
 		} else {
@@ -177,9 +177,7 @@ bool CRecordOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("RecMaxPendingSize"), static_cast<unsigned int>(m_Settings.m_MaxPendingSize));
 	Settings.Write(TEXT("ShowRecordRemainTime"), m_fShowRemainTime);
 	if (m_StatusBarRecordCommand != 0) {
-		LPCTSTR pszCommand = GetAppClass().CommandList.GetCommandTextByID(m_StatusBarRecordCommand);
-		if (pszCommand != nullptr)
-			Settings.Write(TEXT("StatusBarRecordCommand"), pszCommand);
+		Settings.Write(TEXT("StatusBarRecordCommand"), GetAppClass().CommandManager.GetCommandIDText(m_StatusBarRecordCommand));
 	} else {
 		Settings.Write(TEXT("StatusBarRecordCommand"), TEXT(""));
 	}
@@ -393,13 +391,13 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD_UNIT,
 				m_fAlertLowFreeSpace);
 
-			const CCommandList &CommandList = GetAppClass().CommandList;
+			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 			for (int i = 0; i < lengthof(StatusBarCommandList); i++) {
 				const int Command = StatusBarCommandList[i];
-				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+				TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 				if (Command != 0)
-					CommandList.GetCommandNameByID(Command, szText, lengthof(szText));
+					CommandManager.GetCommandText(Command, szText, lengthof(szText));
 				else
 					::lstrcpy(szText, TEXT("何もしない"));
 				DlgComboBox_AddString(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND, szText);

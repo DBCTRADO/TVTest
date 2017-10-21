@@ -526,6 +526,8 @@
 #define CM_WHEEL_ASPECTRATIO                    15404
 #define CM_WHEEL_AUDIODELAY                     15405
 
+#define CM_COMMAND_LAST                         15405
+
 #define IDS_MENU_ZOOM              20000
 #define IDS_MENU_ASPECTRATIO       20001
 #define IDS_MENU_CHANNEL           20002

@@ -40,6 +40,8 @@ namespace TVTest
 		void DeleteAllItems();
 		bool SetItemText(int Index, LPCTSTR pszText);
 		bool SetItemText(int Index, int SubItem, LPCTSTR pszText);
+		bool GetItemText(int Index, LPTSTR pszText, int MaxText) const;
+		bool GetItemText(int Index, int SubItem, LPTSTR pszText, int MaxText) const;
 		bool SetItemState(int Index, UINT State, UINT Mask);
 		bool CheckItem(int Index, bool fCheck);
 		bool IsItemChecked(int Index) const;

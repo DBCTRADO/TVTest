@@ -145,7 +145,7 @@ bool CTaskbarManager::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			tb[i].dwMask = (THUMBBUTTONMASK)(THB_ICON | THB_TOOLTIP | THB_FLAGS);
 			tb[i].iId = Command;
 			tb[i].hIcon = ::LoadIcon(hinst, MAKEINTRESOURCE(GetCommandIcon(Command)));
-			App.CommandList.GetCommandNameByID(Command, tb[i].szTip, lengthof(tb[0].szTip));
+			App.CommandManager.GetCommandText(Command, tb[i].szTip, lengthof(tb[0].szTip));
 			tb[i].dwFlags = (THUMBBUTTONFLAGS)(THBF_ENABLED | THBF_DISMISSONCLICK);
 		}
 
@@ -370,17 +370,17 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 			if (Command == 0) {
 				hr = CreateSeparatorShellLink(&pShellLink);
 			} else {
-				WCHAR szArgs[CCommandList::MAX_COMMAND_TEXT + 32];
-				WCHAR szTitle[CCommandList::MAX_COMMAND_NAME];
+				WCHAR szArgs[CCommandManager::MAX_COMMAND_ID_TEXT + 32];
+				WCHAR szTitle[CCommandManager::MAX_COMMAND_TEXT];
 
 				if (Command == CM_PROGRAMGUIDE) {
 					StringCopy(szArgs, L"/jumplist /s /epgonly");
 				} else {
 					StringPrintf(
 						szArgs, L"/jumplist /s /command %s",
-						App.CommandList.GetCommandTextByID(Command));
+						App.CommandManager.GetCommandIDText(Command).c_str());
 				}
-				App.CommandList.GetCommandNameByID(Command, szTitle, lengthof(szTitle));
+				App.CommandManager.GetCommandText(Command, szTitle, lengthof(szTitle));
 				int Icon = GetCommandIcon(Command);
 				hr = CreateAppShellLink(szArgs, szTitle, nullptr, Icon != 0 ? szIconPath : nullptr, -Icon, &pShellLink);
 			}

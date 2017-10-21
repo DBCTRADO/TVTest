@@ -186,8 +186,9 @@ CAppMain::CAppMain()
 	: m_hInst(nullptr)
 	, Core(*this)
 	, UICore(*this)
+	, AppCommand(*this)
 	, MainWindow(*this)
-	, SideBar(&CommandList)
+	, SideBar(&CommandManager)
 	, ChannelDisplay(&EPGDatabase)
 
 	, Epg(EPGDatabase, EventSearchOptions)
@@ -918,6 +919,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	if (pEPGDatabaseFilter != nullptr)
 		pEPGDatabaseFilter->SetEPGDatabase(&EPGDatabase);
 
+	AppCommand.RegisterDefaultCommands();
+
 	// ウィンドウの作成
 	if (!MainWindow.Create(nullptr, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
 		AddLog(CLogItem::LogType::Error, TEXT("ウィンドウが作成できません。"));
@@ -996,9 +999,9 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		PluginManager.LoadPlugins(szPluginDir, &ExcludePlugins);
 	}
 
-	RegisterCommands();
-	CommandList.AddCommandCustomizer(&ZoomOptions);
-	CommandList.AddCommandCustomizer(&PanAndScanOptions);
+	AppCommand.RegisterDynamicCommands();
+	CommandManager.AddCommandCustomizer(&ZoomOptions);
+	CommandManager.AddCommandCustomizer(&PanAndScanOptions);
 
 	if (!CmdLineOptions.m_fNoPlugin)
 		PluginOptions.RestorePluginOptions();
@@ -1195,8 +1198,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	if (Panel.fShowPanelWindow && Panel.Form.GetCurPageID() == PANEL_ID_CHANNEL)
 		Panel.ChannelPanel.SetChannelList(ChannelManager.GetCurrentChannelList(), false);
 
-	Accelerator.Initialize(UICore.GetMainWindow(), &MainMenu, m_Settings, &CommandList);
-	OperationOptions.Initialize(m_Settings, &CommandList);
+	Accelerator.Initialize(UICore.GetMainWindow(), &MainMenu, m_Settings, &CommandManager);
+	OperationOptions.Initialize(m_Settings, &CommandManager);
 
 	m_Settings.Close();
 
@@ -1415,80 +1418,6 @@ BOOL CALLBACK CAppMain::ControllerFocusCallback(HWND hwnd, LPARAM Param)
 }
 
 
-void CAppMain::RegisterCommands()
-{
-	// BonDriver
-	for (int i = 0; i < DriverManager.NumDrivers(); i++) {
-		const CDriverInfo *pDriverInfo = DriverManager.GetDriverInfo(i);
-		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
-		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-
-		StringPrintf(szName, TEXT("BonDriver切替 : %s"), pszFileName);
-		CommandList.RegisterCommand(CM_DRIVER_FIRST + i, pszFileName, szName);
-	}
-
-	// プラグイン
-	for (int i = 0; i < PluginManager.NumPlugins(); i++) {
-		const CPlugin *pPlugin = PluginManager.GetPlugin(i);
-		TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-		//TCHAR szShortName[CCommandList::MAX_COMMAND_NAME];
-
-		StringPrintf(
-			szName,
-			TEXT("プラグイン有効/無効 : %s"), pPlugin->GetPluginName());
-		/*
-		StringPrintf(
-			szShortName,
-			TEXT("%s 有効/無効"), pPlugin->GetPluginName());
-		*/
-		CommandList.RegisterCommand(
-			CM_PLUGIN_FIRST + i,
-			::PathFindFileName(pPlugin->GetFileName()), szName,
-			/*szShortName*/pPlugin->GetPluginName());
-	}
-
-	// プラグインの各コマンド
-	int ID = CM_PLUGINCOMMAND_FIRST;
-	for (int i = 0; i < PluginManager.NumPlugins(); i++) {
-		CPlugin *pPlugin = PluginManager.GetPlugin(i);
-
-		if (pPlugin->GetIcon().IsCreated())
-			SideBarOptions.RegisterCommand(pPlugin->GetCommand());
-
-		LPCTSTR pszFileName = ::PathFindFileName(pPlugin->GetFileName());
-
-		for (int j = 0; j < pPlugin->NumPluginCommands(); j++) {
-			CPlugin::CPluginCommandInfo *pInfo = pPlugin->GetPluginCommandInfo(j);
-
-			pInfo->SetCommand(ID);
-
-			String Text;
-			Text = pszFileName;
-			Text += _T(':');
-			Text += pInfo->GetText();
-
-			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-			StringPrintf(
-				szName, TEXT("%s : %s"),
-				pPlugin->GetPluginName(), pInfo->GetName());
-
-			CCommandList::CommandState State = CCommandList::CommandState::None;
-			if ((pInfo->GetState() & PLUGIN_COMMAND_STATE_DISABLED) != 0)
-				State |= CCommandList::CommandState::Disabled;
-			if ((pInfo->GetState() & PLUGIN_COMMAND_STATE_CHECKED) != 0)
-				State |= CCommandList::CommandState::Checked;
-
-			CommandList.RegisterCommand(ID, Text.c_str(), szName, pInfo->GetName(), State);
-
-			if ((pInfo->GetFlags() & PLUGIN_COMMAND_FLAG_ICONIZE) != 0)
-				SideBarOptions.RegisterCommand(ID);
-
-			ID++;
-		}
-	}
-}
-
-
 void CAppMain::ApplyEventInfoFont()
 {
 	Panel.ProgramListPanel.SetEventInfoFont(EpgOptions.GetEventInfoFont());
@@ -1592,7 +1521,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
 
 	if (!CmdLine.m_Command.empty()) {
-		int Command = CommandList.ParseText(CmdLine.m_Command.c_str());
+		int Command = CommandManager.ParseIDText(CmdLine.m_Command);
 		if (Command != 0) {
 			UICore.DoCommand(Command);
 		} else {

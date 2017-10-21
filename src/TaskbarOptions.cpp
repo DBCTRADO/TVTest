@@ -75,10 +75,12 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 	int TaskCount;
 	if (Settings.Read(TEXT("TaskCount"), &TaskCount)) {
 		m_TaskList.clear();
-		const CCommandList &CommandList = GetAppClass().CommandList;
+
+		const CCommandManager &CommandManager = GetAppClass().CommandManager;
+		String Command;
+
 		for (int i = 0; TaskCount; i++) {
 			TCHAR szKey[32];
-			String Command;
 			StringPrintf(szKey, TEXT("Task%d"), i);
 			if (!Settings.Read(szKey, &Command))
 				break;
@@ -86,7 +88,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 			if (Command.empty()) {
 				m_TaskList.push_back(0);	// Separator
 			} else {
-				int ID = CommandList.ParseText(Command.c_str());
+				int ID = CommandManager.ParseIDText(Command);
 				if (ID != 0)
 					m_TaskList.push_back(ID);
 			}
@@ -109,11 +111,11 @@ bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("IconDirectory"), m_IconDirectory);
 
 	Settings.Write(TEXT("TaskCount"), (int)m_TaskList.size());
-	const CCommandList &CommandList = GetAppClass().CommandList;
+	const CCommandManager &CommandManager = GetAppClass().CommandManager;
 	for (int i = 0; i < (int)m_TaskList.size(); i++) {
 		TCHAR szKey[32];
 		StringPrintf(szKey, TEXT("Task%d"), i);
-		Settings.Write(szKey, CommandList.GetCommandText(m_TaskList[i]));
+		Settings.Write(szKey, CommandManager.GetCommandIDText(m_TaskList[i]));
 	}
 #endif
 

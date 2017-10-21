@@ -34,7 +34,7 @@ namespace TVTest
 	class CZoomOptions
 		: public CBasicDialog
 		, public CSettingsBase
-		, public CCommandList::CCommandCustomizer
+		, public CCommandManager::CCommandCustomizer
 	{
 	public:
 		enum class ZoomType {
@@ -98,7 +98,7 @@ namespace TVTest
 		CListView m_ItemListView;
 
 		int GetIndexByCommand(int Command) const;
-		void FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, int MaxLength) const;
+		void FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, size_t MaxLength) const;
 
 		void SetItemState(HWND hDlg);
 		int GetItemIndex(int Item);
@@ -108,7 +108,7 @@ namespace TVTest
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	//CCommandCustomizer
-		bool GetCommandName(int Command, LPTSTR pszName, int MaxLength) override;
+		bool GetCommandText(int Command, LPTSTR pszText, size_t MaxLength) override;
 	};
 
 }	// namespace TVTest

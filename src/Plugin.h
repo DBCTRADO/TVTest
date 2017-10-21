@@ -260,6 +260,13 @@ namespace TVTest
 			CPlugin *m_pPlugin;
 		};
 
+		struct AppCommand
+		{
+			int ID;
+			String IDText;
+			String Text;
+		};
+
 		HMODULE m_hLib;
 		String m_FileName;
 		PluginParam m_PluginParam;
@@ -286,6 +293,7 @@ namespace TVTest
 		std::vector<std::unique_ptr<StatusItem>> m_StatusItemList;
 		std::vector<std::unique_ptr<PanelItem>> m_PanelItemList;
 		CGetVariable m_GetVariable;
+		std::vector<AppCommand> m_AppCommandList;
 
 		static HWND m_hwndMessage;
 		static UINT m_MessageCode;
@@ -346,6 +354,7 @@ namespace TVTest
 			LRESULT FailedResult = 0);
 		LRESULT OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2);
 		bool OnGetSetting(SettingInfo *pSetting) const;
+		void CreateAppCommandList();
 	};
 
 	class CPluginManager

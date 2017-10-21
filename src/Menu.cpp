@@ -105,7 +105,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 		if (pItemList != nullptr && !pItemList->empty()) {
 			hmenuCustom = ::CreatePopupMenu();
 			int OrigItemCount = ::GetMenuItemCount(m_hmenuPopup);
-			const CCommandList &CommandList = GetAppClass().CommandList;
+			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 
 			MENUITEMINFO mii;
 			TCHAR szText[256];
@@ -128,12 +128,12 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 						mii.cch = lengthof(szText);
 						if (::GetMenuItemInfo(m_hmenuPopup, i, TRUE, &mii))
 							::InsertMenuItem(hmenuCustom, ::GetMenuItemCount(hmenuCustom), TRUE, &mii);
-					} else if (CommandList.GetCommandShortNameByID(ID, szText, lengthof(szText)) > 0) {
-						CCommandList::CommandState State = CommandList.GetCommandStateByID(ID);
+					} else if (CommandManager.GetCommandShortText(ID, szText, lengthof(szText)) > 0) {
+						CCommandManager::CommandState State = CommandManager.GetCommandState(ID);
 						UINT Flags = MF_STRING;
-						if (!!(State & CCommandList::CommandState::Disabled))
+						if (!!(State & CCommandManager::CommandState::Disabled))
 							Flags |= MF_GRAYED;
-						if (!!(State & CCommandList::CommandState::Checked))
+						if (!!(State & CCommandManager::CommandState::Checked))
 							Flags |= MF_CHECKED;
 						::AppendMenu(hmenuCustom, Flags, ID, FormatMenuString(szText).c_str());
 					}

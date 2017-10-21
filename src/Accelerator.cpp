@@ -275,7 +275,7 @@ CAccelerator::CAccelerator()
 		m_AppCommandList[i] = m_DefaultAppCommandList[i];
 	m_hwndHotKey = nullptr;
 	m_pMainMenu = nullptr;
-	m_pCommandList = nullptr;
+	m_pCommandManager = nullptr;
 	m_fRegisterHotKey = false;
 }
 
@@ -448,24 +448,25 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 		Settings.Read(TEXT("ChInputKeyTimeoutCancel"), &m_ChannelInputOptions.fKeyTimeoutCancel);
 	}
 
-	if (m_pCommandList == nullptr)
+	if (m_pCommandManager == nullptr)
 		return true;
 
 	if (Settings.SetSection(TEXT("Accelerator"))) {
 		int NumAccel;
 
 		if (Settings.Read(TEXT("AccelCount"), &NumAccel) && NumAccel >= 0) {
-			if (NumAccel > m_pCommandList->NumCommands())
-				NumAccel = m_pCommandList->NumCommands();
 			m_KeyList.clear();
+
+			String CommandText;
+
 			for (int i = 0; i < NumAccel; i++) {
-				TCHAR szName[64], szCommand[CCommandList::MAX_COMMAND_TEXT];
+				TCHAR szName[64];
 				int Command;
 
 				::wsprintf(szName, TEXT("Accel%d_Command"), i);
-				if (Settings.Read(szName, szCommand, lengthof(szCommand))
-						&& szCommand[0] != '\0'
-						&& (Command = m_pCommandList->ParseText(szCommand)) != 0) {
+				if (Settings.Read(szName, &CommandText)
+						&& !CommandText.empty()
+						&& (Command = m_pCommandManager->ParseIDText(CommandText)) != 0) {
 					unsigned int Key, Modifiers;
 
 					::wsprintf(szName, TEXT("Accel%d_Key"), i);
@@ -493,12 +494,14 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			if (NumCommands > lengthof(AppCommandList))
 				NumCommands = lengthof(AppCommandList);
 			m_AppCommandList.clear();
+
+			String CommandText;
+
 			for (int i = 0; i < NumCommands; i++) {
-				TCHAR szName[64], szCommand[CCommandList::MAX_COMMAND_TEXT];
+				TCHAR szName[64];
 
 				::wsprintf(szName, TEXT("Button%d_Command"), i);
-				if (Settings.Read(szName, szCommand, lengthof(szCommand))
-						&& szCommand[0] != '\0') {
+				if (Settings.Read(szName, &CommandText) && !CommandText.empty()) {
 					int Type;
 					unsigned int AppCommand;
 
@@ -509,7 +512,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 					if (Settings.Read(szName, &AppCommand) && AppCommand != 0) {
 						AppCommandInfo Info;
 
-						Info.Command = m_pCommandList->ParseText(szCommand);
+						Info.Command = m_pCommandManager->ParseIDText(CommandText);
 						if (Info.Command != 0) {
 							Info.Type = (MediaKeyType)Type;
 							Info.AppCommand = AppCommand;
@@ -537,7 +540,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ChInputKeyTimeoutCancel"), m_ChannelInputOptions.fKeyTimeoutCancel);
 	}
 
-	if (m_pCommandList == nullptr)
+	if (m_pCommandManager == nullptr)
 		return true;
 
 	if (Settings.SetSection(TEXT("Accelerator"))) {
@@ -570,7 +573,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 
 				::wsprintf(szName, TEXT("Accel%d_Command"), i);
 				Settings.Write(
-					szName, m_pCommandList->GetCommandText(m_pCommandList->IDToIndex(m_KeyList[i].Command)));
+					szName, m_pCommandManager->GetCommandIDText(m_KeyList[i].Command));
 				::wsprintf(szName, TEXT("Accel%d_Key"), i);
 				Settings.Write(szName, (int)m_KeyList[i].KeyCode);
 				::wsprintf(szName, TEXT("Accel%d_Mod"), i);
@@ -609,7 +612,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 
 				::wsprintf(szName, TEXT("Button%d_Command"), i);
 				Settings.Write(
-					szName, m_pCommandList->GetCommandText(m_pCommandList->IDToIndex(m_AppCommandList[i].Command)));
+					szName, m_pCommandManager->GetCommandIDText(m_AppCommandList[i].Command));
 				::wsprintf(szName, TEXT("Button%d_Type"), i);
 				Settings.Write(szName, (int)m_AppCommandList[i].Type);
 				::wsprintf(szName, TEXT("Button%d_AppCommand"), i);
@@ -632,9 +635,9 @@ bool CAccelerator::Create(HWND hwndOwner)
 
 bool CAccelerator::Initialize(
 	HWND hwndHotKey, CMainMenu *pMainMenu,
-	CSettings &Settings, const CCommandList *pCommandList)
+	CSettings &Settings, const CCommandManager *pCommandManager)
 {
-	m_pCommandList = pCommandList;
+	m_pCommandManager = pCommandManager;
 	LoadSettings(Settings);
 	if (m_hAccel == nullptr)
 		m_hAccel = CreateAccel();
@@ -798,11 +801,13 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			m_ListView.InsertColumn(COLUMN_KEY, TEXT("キー"));
 			m_ListView.InsertColumn(COLUMN_APPCOMMAND, TEXT("マルチメディアキー"));
 
-			for (int i = 0; i < m_pCommandList->NumCommands(); i++) {
-				int Command = m_pCommandList->GetCommandID(i);
+			CCommandManager::CCommandLister CommandLister(*m_pCommandManager);
+			int Command;
+
+			for (int i = 0; (Command = CommandLister.Next()) != 0; i++) {
 				const KeyInfo *pKey = nullptr;
 				int AppCommand = 0;
-				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+				TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 				for (size_t j = 0; j < m_KeyList.size(); j++) {
 					if (m_KeyList[j].Command == Command) {
@@ -822,7 +827,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						break;
 					}
 				}
-				m_pCommandList->GetCommandName(i, szText, lengthof(szText));
+				m_pCommandManager->GetCommandText(Command, szText, lengthof(szText));
 				LPARAM Param;
 				if (pKey != nullptr)
 					Param = MAKE_ACCEL_PARAM(pKey->KeyCode, pKey->Modifiers, pKey->fGlobal, AppCommand);
@@ -881,9 +886,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						Mod |= MOD_ALT;
 					i = CheckAccelKey(Mod, AccelKeyList[Key - 1].KeyCode);
 					if (i >= 0 && i != Sel) {
-						TCHAR szCommand[CCommandList::MAX_COMMAND_NAME], szText[CCommandList::MAX_COMMAND_NAME + 128];
+						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
-						m_pCommandList->GetCommandName(i, szCommand, lengthof(szCommand));
+						m_ListView.GetItemText(i, 0, szCommand, lengthof(szCommand));
 						StringPrintf(
 							szText,
 							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
@@ -926,9 +931,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 					i = CheckAppCommand(AppCommand);
 					if (i >= 0 && i != Sel) {
-						TCHAR szCommand[CCommandList::MAX_COMMAND_NAME], szText[CCommandList::MAX_COMMAND_NAME + 128];
+						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
-						m_pCommandList->GetCommandName(i, szCommand, lengthof(szCommand));
+						m_ListView.GetItemText(i, 0, szCommand, lengthof(szCommand));
 						StringPrintf(
 							szText,
 							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
@@ -955,11 +960,10 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ACCELERATOR_DEFAULT:
 			{
-				int NumCommands;
+				CCommandManager::CCommandLister CommandLister(*m_pCommandManager);
+				int Command;
 
-				NumCommands = m_pCommandList->NumCommands();
-				for (int i = 0; i < NumCommands; i++) {
-					int Command = m_pCommandList->GetCommandID(i);
+				for (int i = 0; (Command = CommandLister.Next()) != 0; i++) {
 					WORD Key = 0;
 					BYTE Mod = 0;
 					int AppCommand = 0;
@@ -1100,28 +1104,32 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				UnregisterHotKey();
 				m_KeyList.clear();
 				m_AppCommandList.clear();
-				const int Count = m_pCommandList->NumCommands();
-				for (int i = 0; i < Count; i++) {
+
+				CCommandManager::CCommandLister CommandLister(*m_pCommandManager);
+				int Command;
+				for (int i = 0; (Command = CommandLister.Next()) != 0; i++) {
 					LPARAM Param = m_ListView.GetItemParam(i);
 					if (GET_ACCEL_KEY(Param) != 0) {
 						KeyInfo Info;
 
-						Info.Command = m_pCommandList->GetCommandID(i);
+						Info.Command = Command;
 						Info.KeyCode = GET_ACCEL_KEY(Param);
 						Info.Modifiers = GET_ACCEL_MOD(Param);
 						Info.fGlobal = GET_ACCEL_GLOBAL(Param);
 						m_KeyList.push_back(Info);
 					}
+
 					int AppCommand = GET_ACCEL_APPCOMMAND(Param);
 					if (AppCommand != 0) {
 						AppCommandInfo Info;
 
-						Info.Command = m_pCommandList->GetCommandID(i);
+						Info.Command = Command;
 						Info.Type = m_MediaKeyList[AppCommand - 1].Type;
 						Info.AppCommand = m_MediaKeyList[AppCommand - 1].Command;
 						m_AppCommandList.push_back(Info);
 					}
 				}
+
 				HACCEL hAccel = CreateAccel();
 				if (m_hAccel != nullptr)
 					::DestroyAcceleratorTable(m_hAccel);

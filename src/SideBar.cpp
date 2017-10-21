@@ -58,13 +58,13 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 }
 
 
-CSideBar::CSideBar(const CCommandList *pCommandList)
+CSideBar::CSideBar(const CCommandManager *pCommandManager)
 	: m_fShowTooltips(true)
 	, m_fVertical(true)
 	, m_HotItem(-1)
 	, m_ClickItem(-1)
 	, m_pEventHandler(nullptr)
-	, m_pCommandList(pCommandList)
+	, m_pCommandManager(pCommandManager)
 {
 }
 
@@ -529,7 +529,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						|| !m_pEventHandler->GetTooltipText(
 							m_ItemList[pnmttdi->hdr.idFrom].Command,
 							pnmttdi->szText, lengthof(pnmttdi->szText))) {
-					m_pCommandList->GetCommandShortNameByID(
+					m_pCommandManager->GetCommandShortText(
 						m_ItemList[pnmttdi->hdr.idFrom].Command,
 						pnmttdi->szText, lengthof(pnmttdi->szText));
 				}

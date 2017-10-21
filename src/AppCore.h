@@ -34,7 +34,7 @@ namespace TVTest
 {
 
 	class CAppMain;
-	class CCommandList;
+	class CCommandManager;
 	class CDriverManager;
 	class CLogoManager;
 	class CControllerManager;

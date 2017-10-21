@@ -48,7 +48,7 @@ namespace TVTest
 		bool Create(HWND hwndOwner) override;
 
 	// COperationOptions
-		bool Initialize(CSettings &Settings, const CCommandList *pCommandList);
+		bool Initialize(CSettings &Settings, const CCommandManager *pCommandManager);
 		bool GetDisplayDragMove() const { return m_fDisplayDragMove; }
 		int GetVolumeStep() const { return m_VolumeStep; }
 		int GetAudioDelayStep() const { return m_AudioDelayStep; }
@@ -67,7 +67,7 @@ namespace TVTest
 		int GetMiddleClickCommand() const { return m_MiddleClickCommand; }
 
 	private:
-		const CCommandList *m_pCommandList;
+		const CCommandManager *m_pCommandManager;
 		CWheelCommandManager m_WheelCommandManager;
 
 		bool m_fDisplayDragMove;

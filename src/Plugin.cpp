@@ -132,7 +132,7 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin, const ControllerInfo *pIn
 	, m_pTranslateMessage(pInfo->pTranslateMessage)
 	, m_pClientData(pInfo->pClientData)
 {
-	const CCommandList &CommandList = GetAppClass().CommandList;
+	const CCommandManager &CommandManager = GetAppClass().CommandManager;
 
 	int Length = m_NumButtons + 1;
 	for (int i = 0; i < m_NumButtons; i++)
@@ -148,7 +148,7 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin, const ControllerInfo *pIn
 		m_ButtonList[i].pszName = pszName;
 		m_ButtonList[i].DefaultCommand =
 			ButtonInfo.pszDefaultCommand != nullptr ?
-				CommandList.ParseText(ButtonInfo.pszDefaultCommand) : 0;
+				CommandManager.ParseIDText(ButtonInfo.pszDefaultCommand) : 0;
 		m_ButtonList[i].ImageButtonRect.Left = ButtonInfo.ButtonRect.Left;
 		m_ButtonList[i].ImageButtonRect.Top = ButtonInfo.ButtonRect.Top;
 		m_ButtonList[i].ImageButtonRect.Width = ButtonInfo.ButtonRect.Width;
@@ -895,10 +895,10 @@ bool CPlugin::Enable(bool fEnable)
 		m_fEnabled = fEnable;
 
 		if (m_Command > 0) {
-			GetAppClass().CommandList.SetCommandStateByID(
+			GetAppClass().CommandManager.SetCommandState(
 				m_Command,
-				CCommandList::CommandState::Checked,
-				fEnable ? CCommandList::CommandState::Checked : CCommandList::CommandState::None);
+				CCommandManager::CommandState::Checked,
+				fEnable ? CCommandManager::CommandState::Checked : CCommandManager::CommandState::None);
 		}
 
 		if (fEnable) {
@@ -2279,28 +2279,33 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (pInfo == nullptr || pInfo->Size != sizeof(AppCommandInfo))
 				return FALSE;
 
-			const CCommandList &CommandList = GetAppClass().CommandList;
+			CreateAppCommandList();
 
-			LPCTSTR pszText = CommandList.GetCommandText(pInfo->Index);
-			if (pszText == nullptr)
+			if (pInfo->Index < 0 || (size_t)pInfo->Index >= m_AppCommandList.size())
 				return FALSE;
+
+			const AppCommand &Command = m_AppCommandList[pInfo->Index];
+
 			if (pInfo->pszText != nullptr) {
-				::lstrcpynW(pInfo->pszText, pszText, pInfo->MaxText);
+				if (pInfo->MaxText < 1)
+					return FALSE;
+				StringCopy(pInfo->pszText, Command.IDText.c_str(), pInfo->MaxText);
 			} else {
-				pInfo->MaxText = ::lstrlenW(pszText) + 1;
+				pInfo->MaxText = (int)Command.IDText.length() + 1;
 			}
-			TCHAR szName[CCommandList::MAX_COMMAND_NAME];
-			CommandList.GetCommandName(pInfo->Index, szName, lengthof(szName));
 			if (pInfo->pszName != nullptr) {
-				::lstrcpynW(pInfo->pszName, szName, pInfo->MaxName);
+				if (pInfo->MaxName < 1)
+					return FALSE;
+				StringCopy(pInfo->pszName, Command.Text.c_str(), pInfo->MaxName);
 			} else {
-				pInfo->MaxName = ::lstrlenW(szName) + 1;
+				pInfo->MaxName = (int)Command.Text.length() + 1;
 			}
 		}
 		return TRUE;
 
 	case MESSAGE_GETAPPCOMMANDCOUNT:
-		return GetAppClass().CommandList.NumCommands();
+		CreateAppCommandList();
+		return m_AppCommandList.size();
 
 	case MESSAGE_GETVIDEOSTREAMCOUNT:
 		return GetAppClass().CoreEngine.GetVideoStreamCount();
@@ -2364,15 +2369,15 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 					e.SetState(State);
 
-					CCommandList::CommandState CommandState = CCommandList::CommandState::None;
+					CCommandManager::CommandState CommandState = CCommandManager::CommandState::None;
 					if ((State & PLUGIN_COMMAND_STATE_DISABLED) != 0)
-						CommandState |= CCommandList::CommandState::Disabled;
+						CommandState |= CCommandManager::CommandState::Disabled;
 					if ((State & PLUGIN_COMMAND_STATE_CHECKED) != 0)
-						CommandState |= CCommandList::CommandState::Checked;
-					GetAppClass().CommandList.SetCommandStateByID(
+						CommandState |= CCommandManager::CommandState::Checked;
+					GetAppClass().CommandManager.SetCommandState(
 						e.GetCommand(),
-						CCommandList::CommandState::Disabled |
-						CCommandList::CommandState::Checked,
+						CCommandManager::CommandState::Disabled |
+						CCommandManager::CommandState::Checked,
 						CommandState);
 
 					return TRUE;
@@ -3821,6 +3826,26 @@ bool CPlugin::OnGetSetting(SettingInfo *pSetting) const
 #endif
 
 	return false;
+}
+
+
+void CPlugin::CreateAppCommandList()
+{
+	if (m_AppCommandList.empty()) {
+		const CCommandManager &CommandManager = GetAppClass().CommandManager;
+		CCommandManager::CCommandLister CommandLister(CommandManager);
+		int ID;
+
+		while ((ID = CommandLister.Next()) != 0) {
+			m_AppCommandList.emplace_back();
+			AppCommand &Command = m_AppCommandList.back();
+			Command.ID = ID;
+			Command.IDText = CommandManager.GetCommandIDText(ID);
+			TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
+			CommandManager.GetCommandText(ID, szText, lengthof(szText));
+			Command.Text = szText;
+		}
+	}
 }
 
 

@@ -121,7 +121,7 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 
 	int ListCount;
 	if (Settings.Read(TEXT("ZoomListCount"), &ListCount) && ListCount > 0) {
-		const CCommandList *pCommandList = &GetAppClass().CommandList;
+		const CCommandManager *pCommandManager = &GetAppClass().CommandManager;
 
 		if (ListCount > NUM_ZOOM_COMMANDS)
 			ListCount = NUM_ZOOM_COMMANDS;
@@ -136,7 +136,7 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 					p++;
 				if (*p == _T(','))
 					*p++ = _T('\0');
-				int Command = pCommandList->ParseText(szText);
+				int Command = pCommandManager->ParseIDText(szText);
 				if (Command != 0) {
 					j = GetIndexByCommand(Command);
 					if (j >= 0) {
@@ -187,7 +187,7 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 	}
 
 	Settings.Write(TEXT("ZoomListCount"), NUM_ZOOM_COMMANDS);
-	const CCommandList *pCommandList = &GetAppClass().CommandList;
+	const CCommandManager *pCommandManager = &GetAppClass().CommandManager;
 	for (int i = 0; i < NUM_ZOOM_COMMANDS; i++) {
 		const int Index = m_Order[i];
 		const ZoomInfo &Info = m_ZoomList[Index];
@@ -196,7 +196,7 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 		::wsprintf(szName, TEXT("ZoomList%d"), i);
 		StringPrintf(
 			szText, TEXT("%s,%d"),
-			pCommandList->GetCommandTextByID(m_DefaultZoomList[Index].Command),
+			pCommandManager->GetCommandIDText(m_DefaultZoomList[Index].Command),
 			Info.fVisible ? 1 : 0);
 		Settings.Write(szName, szText);
 	}
@@ -275,9 +275,9 @@ int CZoomOptions::GetIndexByCommand(int Command) const
 }
 
 
-void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, int MaxLength) const
+void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, size_t MaxLength) const
 {
-	int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, MaxLength);
+	int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, (int)MaxLength);
 	if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
 		if (Info.Type == ZoomType::Rate)
 			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d%%"), Info.Rate.GetPercentage());
@@ -520,12 +520,12 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 }
 
 
-bool CZoomOptions::GetCommandName(int Command, LPTSTR pszName, int MaxLength)
+bool CZoomOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxLength)
 {
 	ZoomInfo Info;
 	if (!GetZoomInfoByCommand(Command, &Info))
 		return false;
-	FormatCommandText(Command, Info, pszName, MaxLength);
+	FormatCommandText(Command, Info, pszText, MaxLength);
 	return true;
 }
 

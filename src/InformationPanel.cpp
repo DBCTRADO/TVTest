@@ -420,7 +420,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				const int ButtonCount = pItem->GetButtonCount();
 				for (int j = 0; j < ButtonCount; j++) {
 					RECT rc;
-					TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 					pItem->GetButtonRect(j, &rc);
 					pItem->GetButtonTipText(j, szText, lengthof(szText));
 					m_Tooltip.AddTool(GetTooltipID(i, j), rc, szText);
@@ -1037,7 +1037,7 @@ bool CInformationPanel::CItem::OnButtonPushed(int Button)
 bool CInformationPanel::CItem::GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const
 {
 	if (Button == 0 && HasProperty()) {
-		return GetAppClass().CommandList.GetCommandNameByID(m_PropertyID, pszText, MaxText) > 0;
+		return GetAppClass().CommandManager.GetCommandText(m_PropertyID, pszText, MaxText) > 0;
 	}
 	return false;
 }

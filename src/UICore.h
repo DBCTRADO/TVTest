@@ -59,6 +59,23 @@ namespace TVTest
 			ProgramInfo,
 		};
 
+		enum {
+			ASPECTRATIO_DEFAULT,
+			ASPECTRATIO_16X9,
+			ASPECTRATIO_LETTERBOX,
+			ASPECTRATIO_WINDOWBOX,
+			ASPECTRATIO_PILLARBOX,
+			ASPECTRATIO_4X3,
+			ASPECTRATIO_32X9,
+			ASPECTRATIO_16X9_LEFT,
+			ASPECTRATIO_16X9_RIGHT,
+			ASPECTRATIO_CUSTOM_FIRST,
+			ASPECTRATIO_FIRST    = ASPECTRATIO_DEFAULT,
+			ASPECTRATIO_2D_LAST  = ASPECTRATIO_4X3,
+			ASPECTRATIO_3D_FIRST = ASPECTRATIO_32X9,
+			ASPECTRATIO_3D_LAST  = ASPECTRATIO_16X9_RIGHT,
+		};
+
 		class CTitleStringMap
 			: public CEventVariableStringMap
 		{
@@ -81,6 +98,8 @@ namespace TVTest
 		HWND GetMainWindow() const;
 		HWND GetDialogOwner() const;
 
+		int GetNextChannel(bool fUp);
+
 		bool InitializeViewer(BYTE VideoStreamType = 0);
 		bool IsViewerInitializeError() const { return m_fViewerInitializeError; }
 		bool FinalizeViewer();
@@ -93,6 +112,8 @@ namespace TVTest
 		int GetZoomPercentage() const;
 		bool GetPanAndScan(CCoreEngine::PanAndScanInfo *pInfo) const;
 		bool SetPanAndScan(const CCoreEngine::PanAndScanInfo &Info);
+		bool SetAspectRatioType(int Type);
+		int GetAspectRatioType() const { return m_AspectRatioType; }
 
 		int GetVolume() const;
 		bool SetVolume(int Volume, bool fOSD = true);
@@ -113,6 +134,7 @@ namespace TVTest
 		bool SwitchDualMonoMode();
 		int FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const;
 		bool GetSelectedAudioText(LPTSTR pszText, int MaxLength) const;
+		void ShowAudioOSD();
 
 		bool GetStandby() const { return m_fStandby; }
 		bool SetStandby(bool fStandby, bool fTransient = false);
@@ -212,6 +234,8 @@ namespace TVTest
 		bool m_fResident;
 		bool m_fFullscreen;
 		bool m_fAlwaysOnTop;
+
+		int m_AspectRatioType;
 
 		CIcon m_LogoIconBig;
 		CIcon m_LogoIconSmall;

@@ -64,6 +64,8 @@ namespace TVTest
 		bool SetVideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType Renderer);
 		bool GetResetPanScanEventChange() const { return m_fResetPanScanEventChange; }
 		bool GetNoMaskSideCut() const { return m_fNoMaskSideCut; }
+		bool SetStretchMode(LibISDB::ViewerFilter::ViewStretchMode Mode);
+		LibISDB::ViewerFilter::ViewStretchMode GetStretchMode() const { return m_StretchMode; }
 		LibISDB::ViewerFilter::ViewStretchMode GetFullscreenStretchMode() const { return m_FullscreenStretchMode; }
 		LibISDB::ViewerFilter::ViewStretchMode GetMaximizeStretchMode() const { return m_MaximizeStretchMode; }
 		bool GetIgnoreDisplayExtension() const { return m_fIgnoreDisplayExtension; }
@@ -97,6 +99,7 @@ namespace TVTest
 		LibISDB::DirectShow::VideoRenderer::RendererType m_VideoRendererType;
 		bool m_fResetPanScanEventChange;
 		bool m_fNoMaskSideCut;
+		LibISDB::ViewerFilter::ViewStretchMode m_StretchMode;
 		LibISDB::ViewerFilter::ViewStretchMode m_FullscreenStretchMode;
 		LibISDB::ViewerFilter::ViewStretchMode m_MaximizeStretchMode;
 		bool m_fIgnoreDisplayExtension;

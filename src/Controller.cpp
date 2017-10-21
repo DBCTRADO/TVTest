@@ -201,15 +201,15 @@ bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 	if (Settings.Open(szFileName, CSettings::OpenFlag::Read)
 			&& Settings.SetSection(Info.Controller->GetIniFileSection())) {
 		const int NumButtons = Info.Controller->NumButtons();
-		const CCommandList &CommandList = GetAppClass().CommandList;
+		const CCommandManager &CommandManager = GetAppClass().CommandManager;
+		String Command;
 
 		for (int i = 0; i < NumButtons; i++) {
-			TCHAR szName[64], szCommand[CCommandList::MAX_COMMAND_TEXT];
+			TCHAR szName[64];
 
 			::wsprintf(szName, TEXT("Button%d_Command"), i);
-			if (Settings.Read(szName, szCommand, lengthof(szCommand))
-					&& szCommand[0] != '\0') {
-				Info.Settings.AssignList[i] = CommandList.ParseText(szCommand);
+			if (Settings.Read(szName, &Command) && !Command.empty()) {
+				Info.Settings.AssignList[i] = CommandManager.ParseIDText(Command);
 			}
 		}
 		if (!Info.Controller->IsActiveOnly())
@@ -238,16 +238,18 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 	if (Settings.Open(szFileName, CSettings::OpenFlag::Write)
 			&& Settings.SetSection(Info.Controller->GetIniFileSection())) {
 		const int NumButtons = Info.Controller->NumButtons();
-		const CCommandList &CommandList = GetAppClass().CommandList;
+		const CCommandManager &CommandManager = GetAppClass().CommandManager;
+		String Text;
 
 		for (int i = 0; i < NumButtons; i++) {
 			TCHAR szName[64];
-			LPCTSTR pszText = nullptr;
 
 			::wsprintf(szName, TEXT("Button%d_Command"), i);
 			if (Info.Settings.AssignList[i] != 0)
-				pszText = CommandList.GetCommandTextByID(Info.Settings.AssignList[i]);
-			Settings.Write(szName, pszText != nullptr ? pszText : TEXT(""));
+				Text = CommandManager.GetCommandIDText(Info.Settings.AssignList[i]);
+			else
+				Text.clear();
+			Settings.Write(szName, Text);
 		}
 		if (!Info.Controller->IsActiveOnly())
 			Settings.Write(TEXT("ActiveOnly"), Info.Settings.fActiveOnly);
@@ -366,7 +368,7 @@ void CControllerManager::InitDlgItems()
 
 	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
 	if (Sel >= 0) {
-		const CCommandList &CommandList = GetAppClass().CommandList;
+		const CCommandManager &CommandManager = GetAppClass().CommandManager;
 		const ControllerInfo &Info = m_ControllerList[Sel];
 		const CController *pController = Info.Controller.get();
 		const int NumButtons = pController->NumButtons();
@@ -395,11 +397,11 @@ void CControllerManager::InitDlgItems()
 			lvi.lParam = Command;
 			lvi.iItem = ListView_InsertItem(hwndList, &lvi);
 			if (Command > 0) {
-				TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+				TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 				lvi.mask = LVIF_TEXT;
 				lvi.iSubItem = 1;
-				CommandList.GetCommandNameByID(Command, szText, lengthof(szText));
+				CommandManager.GetCommandText(Command, szText, lengthof(szText));
 				lvi.pszText = szText;
 				ListView_SetItem(hwndList, &lvi);
 			}
@@ -450,7 +452,7 @@ void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 		return;
 
 	LV_ITEM lvi;
-	TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+	TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 	lvi.mask = LVIF_PARAM;
 	lvi.iItem = Index;
@@ -460,7 +462,7 @@ void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 	lvi.mask = LVIF_TEXT;
 	lvi.iSubItem = 1;
 	if (Command > 0) {
-		GetAppClass().CommandList.GetCommandNameByID(Command, szText, lengthof(szText));
+		GetAppClass().CommandManager.GetCommandText(Command, szText, lengthof(szText));
 		lvi.pszText = szText;
 	} else {
 		lvi.pszText = TEXT("");
@@ -486,9 +488,13 @@ void CControllerManager::SetDlgItemStatus()
 		if (lvi.lParam == 0) {
 			DlgComboBox_SetCurSel(m_hDlg, IDC_CONTROLLER_COMMAND, 0);
 		} else {
-			DlgComboBox_SetCurSel(
-				m_hDlg, IDC_CONTROLLER_COMMAND,
-				GetAppClass().CommandList.IDToIndex((int)lvi.lParam) + 1);
+			const LRESULT Count = DlgComboBox_GetCount(m_hDlg, IDC_CONTROLLER_COMMAND);
+			for (LRESULT i = 1; i < Count; i++) {
+				if (DlgComboBox_GetItemData(m_hDlg, IDC_CONTROLLER_COMMAND, i) == lvi.lParam) {
+					DlgComboBox_SetCurSel(m_hDlg, IDC_CONTROLLER_COMMAND, i);
+					break;
+				}
+			}
 		}
 	} else {
 		DlgComboBox_SetCurSel(m_hDlg, IDC_CONTROLLER_COMMAND, 0);
@@ -541,12 +547,15 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			lvc.pszText = TEXT("コマンド");
 			ListView_InsertColumn(hwndList, 1, &lvc);
 
-			const CCommandList &CommandList = GetAppClass().CommandList;
-			TCHAR szText[CCommandList::MAX_COMMAND_NAME];
+			const CCommandManager &CommandManager = GetAppClass().CommandManager;
+			CCommandManager::CCommandLister CommandLister(CommandManager);
+			TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
+			int Command;
 			DlgComboBox_AddString(hDlg, IDC_CONTROLLER_COMMAND, TEXT("なし"));
-			for (int i = 0; i < CommandList.NumCommands(); i++) {
-				CommandList.GetCommandName(i, szText, lengthof(szText));
-				DlgComboBox_AddString(hDlg, IDC_CONTROLLER_COMMAND, szText);
+			while ((Command = CommandLister.Next()) != 0) {
+				CommandManager.GetCommandText(Command, szText, lengthof(szText));
+				LRESULT Index = DlgComboBox_AddString(hDlg, IDC_CONTROLLER_COMMAND, szText);
+				DlgComboBox_SetItemData(hDlg, IDC_CONTROLLER_COMMAND, Index, Command);
 			}
 
 			m_Tooltip.Create(hDlg);
@@ -714,7 +723,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 					SetButtonCommand(
 						hwndList, Sel,
-						Command <= 0 ? 0 : GetAppClass().CommandList.GetCommandID(Command - 1));
+						Command <= 0 ? 0 : (int)DlgComboBox_GetItemData(hDlg, IDC_CONTROLLER_COMMAND, Command));
 				}
 			}
 			return TRUE;

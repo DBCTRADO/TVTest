@@ -178,16 +178,16 @@ bool CSideBarOptions::ReadSettings(CSettings &Settings)
 			if (Settings.Read(szName, &Command)) {
 				m_ItemNameList.push_back(Command);
 				/*
-				if (szCommand[0] == '\0') {
+				if (Command.empty)) {
 					m_ItemNameList.emplace_back();
 				} else {
-					m_ItemNameList.emplace_back(szCommand);
-					int Command=m_pSideBar->GetCommandList()->ParseText(szCommand);
+					m_ItemNameList.emplace_back(Command);
+					const int ID = m_pSideBar->GetCommandManager()->ParseIDText(Command);
 
-					if (Command != 0) {
+					if (ID != 0) {
 						for (const auto &Item : ItemList) {
-							if (Item.Command == Command) {
-								m_ItemList.push_back(Command);
+							if (Item.Command == ID) {
+								m_ItemList.push_back(ID);
 								break;
 							}
 						}
@@ -219,7 +219,7 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 		Settings.Write(szName, m_ItemNameList[i]);
 	}
 	/*
-	const CCommandList *pCommandList = m_pSideBar->GetCommandList();
+	const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		TCHAR szName[32];
 
@@ -227,7 +227,7 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 		if (m_ItemList[i] == ITEM_SEPARATOR)
 			Settings.Write(szName, TEXT(""));
 		else
-			Settings.Write(szName, pCommandList->GetCommandTextByID(m_ItemList[i]));
+			Settings.Write(szName, pCommandManager->GetCommandIDText(m_ItemList[i]));
 	}
 	*/
 
@@ -386,7 +386,7 @@ bool CSideBarOptions::ApplySideBarOptions()
 
 void CSideBarOptions::ApplyItemList()
 {
-	const CCommandList *pCommandList = m_pSideBar->GetCommandList();
+	const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
 
 	if (!m_ItemNameList.empty()) {
 		m_ItemList.clear();
@@ -395,7 +395,7 @@ void CSideBarOptions::ApplyItemList()
 			if (Name.empty()) {
 				m_ItemList.push_back(ITEM_SEPARATOR);
 			} else {
-				int ID = pCommandList->ParseText(Name.c_str());
+				int ID = pCommandManager->ParseIDText(Name);
 				if (ID != 0)
 					m_ItemList.push_back(ID);
 			}
@@ -415,10 +415,10 @@ void CSideBarOptions::ApplyItemList()
 					Item.Command = Command;
 					Item.Icon = e.Icon;
 					Item.State = CSideBar::ItemState::None;
-					CCommandList::CommandState State = pCommandList->GetCommandStateByID(Command);
-					if (!!(State & CCommandList::CommandState::Disabled))
+					CCommandManager::CommandState State = pCommandManager->GetCommandState(Command);
+					if (!!(State & CCommandManager::CommandState::Disabled))
 						Item.State |= CSideBar::ItemState::Disabled;
-					if (!!(State & CCommandList::CommandState::Checked))
+					if (!!(State & CCommandManager::CommandState::Checked))
 						Item.State |= CSideBar::ItemState::Checked;
 
 					m_pSideBar->AddItem(&Item);
@@ -515,7 +515,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			m_IconIDMap.clear();
 			for (const auto &e : ItemList)
 				m_IconIDMap.insert(std::pair<int, int>(e.Command, e.Icon));
-			const CCommandList *pCommandList = m_pSideBar->GetCommandList();
+			const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
 			for (size_t i = lengthof(ItemList); i < m_AvailItemList.size(); i++) {
 				const int ID = m_AvailItemList[i].Command;
 				if (ID >= CM_PLUGIN_FIRST && ID <= CM_PLUGIN_LAST) {
@@ -531,7 +531,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				} else if (ID >= CM_PLUGINCOMMAND_FIRST && ID <= CM_PLUGINCOMMAND_LAST) {
 					LPCTSTR pszCommand;
 					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByPluginCommand(
-						pCommandList->GetCommandTextByID(ID), &pszCommand);
+						pCommandManager->GetCommandIDText(ID).c_str(), &pszCommand);
 					if (pPlugin != nullptr) {
 						CPlugin::CPluginCommandInfo *pCommandInfo =
 							pPlugin->GetPluginCommandInfo(pszCommand);
@@ -610,7 +610,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				if ((fUp && Sel > 0) || (!fUp && Sel < ListView_GetItemCount(hwndList) - 1)) {
 					LVITEM lvi;
-					TCHAR szText[CCommandList::MAX_COMMAND_TEXT];
+					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 					lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -652,7 +652,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				if (Sel >= 0) {
 					LVITEM lvi;
-					TCHAR szText[CCommandList::MAX_COMMAND_TEXT];
+					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 					lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -761,14 +761,14 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				if (ItemList != m_ItemList) {
 					m_ItemList = ItemList;
 
-					const CCommandList *pCommandList = m_pSideBar->GetCommandList();
+					const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
 					m_ItemNameList.clear();
 					for (int i = 0; i < Count; i++) {
 						const int ID = m_ItemList[i];
 						if (ID == ITEM_SEPARATOR) {
 							m_ItemNameList.emplace_back();
 						} else {
-							m_ItemNameList.emplace_back(pCommandList->GetCommandTextByID(ID));
+							m_ItemNameList.emplace_back(pCommandManager->GetCommandIDText(ID));
 						}
 					}
 
@@ -796,9 +796,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void CSideBarOptions::SetItemList(HWND hwndList, const int *pList, int NumItems)
 {
-	const CCommandList *pCommandList = m_pSideBar->GetCommandList();
+	const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
 	LVITEM lvi;
-	TCHAR szText[CCommandList::MAX_COMMAND_TEXT];
+	TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 	ListView_DeleteAllItems(hwndList);
 	lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
@@ -812,7 +812,7 @@ void CSideBarOptions::SetItemList(HWND hwndList, const int *pList, int NumItems)
 		if (ID == ITEM_SEPARATOR) {
 			::lstrcpy(szText, TEXT("(区切り)"));
 		} else {
-			pCommandList->GetCommandName(pCommandList->IDToIndex(ID), szText, lengthof(szText));
+			pCommandManager->GetCommandText(ID, szText, lengthof(szText));
 			auto itr = m_IconIDMap.find(ID);
 			if (itr != m_IconIDMap.end())
 				lvi.iImage = itr->second;

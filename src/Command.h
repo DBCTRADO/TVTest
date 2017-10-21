@@ -22,29 +22,64 @@
 #define TVTEST_COMMAND_H
 
 
+#include <functional>
 #include <vector>
+#include <map>
 #include <unordered_map>
+#include <array>
 
 
 namespace TVTest
 {
 
-	class CCommandList
+	class CCommandManager
 	{
 	public:
-		static constexpr size_t MAX_COMMAND_TEXT = MAX_PATH;
-		static constexpr size_t MAX_COMMAND_NAME = MAX_PATH + 16;
+		static constexpr size_t MAX_COMMAND_ID_TEXT = MAX_PATH;
+		static constexpr size_t MAX_COMMAND_TEXT    = MAX_PATH + 16;
 
-		enum class CommandState : unsigned int {
-			None     = 0x0000U,
-			Disabled = 0x0001U,
-			Checked  = 0x0002U,
+		enum class CommandState : std::uint8_t {
+			None     = 0x00_u8,
+			Disabled = 0x01_u8,
+			Checked  = 0x02_u8,
 		};
 
-		class ABSTRACT_CLASS(CEventHandler)
+		enum class InvokeFlag : unsigned int {
+			None  = 0x0000U,
+			Mouse = 0x0001U,
+		};
+
+		struct InvokeParameters
+		{
+			int ID;
+			InvokeFlag Flags;
+		};
+
+		typedef std::function<bool(InvokeParameters &Params)> CommandHandler;
+		template<typename T> static CommandHandler BindHandler(
+			bool (T::*pFunc)(InvokeParameters &Params), T *pObject)
+		{
+			return std::bind(pFunc, pObject, std::placeholders::_1);
+		}
+
+		class CCommandLister
 		{
 		public:
-			virtual ~CEventHandler() = default;
+			CCommandLister(const CCommandManager &Manager);
+
+			int Next();
+			void Reset();
+
+		private:
+			const CCommandManager &m_Manager;
+			size_t m_Index;
+			int m_ID;
+		};
+
+		class ABSTRACT_CLASS(CEventListener)
+		{
+		public:
+			virtual ~CEventListener() = default;
 			virtual void OnCommandStateChanged(int ID, CommandState OldState, CommandState NewState) {}
 			virtual void OnCommandRadioCheckedStateChanged(int FirstID, int LastID, int CheckedID) {}
 		};
@@ -60,55 +95,70 @@ namespace TVTest
 				: m_FirstID(FirstID), m_LastID(LastID) {}
 			virtual ~CCommandCustomizer() = default;
 			virtual bool IsCommandValid(int Command) { return Command >= m_FirstID && Command <= m_LastID; }
-			virtual bool GetCommandName(int Command, LPTSTR pszName, int MaxLength) { return false; }
+			virtual bool GetCommandText(int Command, LPTSTR pszText, size_t MaxLength) { return false; }
 		};
 
-		CCommandList();
-		~CCommandList();
+		CCommandManager();
 
-		int NumCommands() const;
-		int GetCommandID(int Index) const;
-		LPCTSTR GetCommandText(int Index) const;
-		LPCTSTR GetCommandTextByID(int ID) const;
-		int GetCommandName(int Index, LPTSTR pszName, int MaxLength) const;
-		int GetCommandNameByID(int ID, LPTSTR pszName, int MaxLength) const;
-		int GetCommandShortName(int Index, LPTSTR pszName, int MaxLength) const;
-		int GetCommandShortNameByID(int ID, LPTSTR pszName, int MaxLength) const;
-		int IDToIndex(int ID) const;
-		int ParseText(LPCTSTR pszText) const;
 		bool RegisterCommand(
-			int ID, LPCTSTR pszText,
-			LPCTSTR pszName = nullptr, LPCTSTR pszShortName = nullptr,
+			int FirstID, int LastID, int LastListingID,
+			LPCTSTR pszIDText,
+			const CommandHandler &Handler,
+			LPCTSTR pszText = nullptr, LPCTSTR pszShortText = nullptr,
 			CommandState State = CommandState::None);
-		bool AddCommandCustomizer(CCommandCustomizer *pCustomizer);
-		void SetEventHandler(CEventHandler *pEventHandler);
-		bool SetCommandStateByID(int ID, CommandState State);
-		bool SetCommandStateByID(int ID, CommandState Mask, CommandState State);
-		CommandState GetCommandStateByID(int ID) const;
+		bool RegisterCommand(
+			int ID, LPCTSTR pszIDText,
+			const CommandHandler &Handler,
+			LPCTSTR pszText = nullptr, LPCTSTR pszShortText = nullptr,
+			CommandState State = CommandState::None)
+		{
+			return RegisterCommand(ID, ID, ID, pszIDText, Handler, pszText, pszShortText, State);
+		}
+		bool InvokeCommand(int ID, InvokeFlag Flags = InvokeFlag::None) const;
+
+		bool IsCommandValid(int ID) const;
+		String GetCommandIDText(int ID) const;
+		size_t GetCommandText(int ID, LPTSTR pszText, size_t MaxLength) const;
+		size_t GetCommandShortText(int ID, LPTSTR pszText, size_t MaxLength) const;
+		int ParseIDText(const String &Text) const;
+		int ParseIDText(LPCTSTR pszText) const;
+
+		bool SetCommandState(int ID, CommandState State);
+		bool SetCommandState(int ID, CommandState Mask, CommandState State);
+		CommandState GetCommandState(int ID) const;
 		bool SetCommandRadioCheckedState(int FirstID, int LastID, int CheckedID);
 
+		bool AddCommandCustomizer(CCommandCustomizer *pCustomizer);
+		bool AddEventListener(CEventListener *pEventListener);
+		bool RemoveEventListener(CEventListener *pEventListener);
+
 	private:
-		void RegisterDefaultCommands();
+		int IDToIndex(int ID) const;
+		String GetNumberedText(const String &Text, int Number) const;
 
 		struct CommandInfo
 		{
-			int ID;
-			CommandState State;
+			int FirstID;
+			int LastID;
+			int LastListingID;
+			String IDText;
 			String Text;
-			String Name;
-			String ShortName;
+			String ShortText;
+			CommandHandler Handler;
 		};
 
 		std::vector<CommandInfo> m_CommandList;
+		std::map<int, size_t> m_CommandIDMap;
 		std::unordered_map<String, int,
 			StringFunctional::HashNoCase,
 			StringFunctional::EqualNoCase> m_CommandTextMap;
-		std::unordered_map<int, size_t> m_CommandIDMap;
+		std::vector<CommandState> m_CommandStateList;
 		std::vector<CCommandCustomizer*> m_CustomizerList;
-		CEventHandler *m_pEventHandler;
+		std::vector<CEventListener*> m_EventListenerList;
 	};
 
-	TVTEST_ENUM_FLAGS(CCommandList::CommandState)
+	TVTEST_ENUM_FLAGS(CCommandManager::CommandState)
+	TVTEST_ENUM_FLAGS(CCommandManager::InvokeFlag)
 
 }	// namespace TVTest
 

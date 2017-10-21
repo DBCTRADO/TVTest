@@ -35,7 +35,7 @@ namespace TVTest
 	class CPanAndScanOptions
 		: public CBasicDialog
 		, public CSettingsBase
-		, public CCommandList::CCommandCustomizer
+		, public CCommandManager::CCommandCustomizer
 	{
 	public:
 		static constexpr size_t MAX_NAME = 64;
@@ -76,7 +76,7 @@ namespace TVTest
 		bool Export(LPCTSTR pszFileName) const;
 
 	//CCommandCustomizer
-		bool GetCommandName(int Command, LPTSTR pszName, int MaxLength) override;
+		bool GetCommandText(int Command, LPTSTR pszText, size_t MaxLength) override;
 
 		std::vector<PanAndScanInfo> m_PresetList;
 		UINT m_PresetID;

@@ -53,7 +53,7 @@ namespace TVTest
 	// CAccelerator
 		bool Initialize(
 			HWND hwndHotKey, CMainMenu *pMainMenu,
-			CSettings &Settings, const CCommandList *pCommandList);
+			CSettings &Settings, const CCommandManager *pCommandManager);
 		void Finalize();
 		bool TranslateMessage(HWND hwnd, LPMSG pmsg);
 		int TranslateHotKey(WPARAM wParam, LPARAM lParam) const;
@@ -104,7 +104,7 @@ namespace TVTest
 		std::vector<AppCommandInfo> m_AppCommandList;
 		HWND m_hwndHotKey;
 		CMainMenu *m_pMainMenu;
-		const CCommandList *m_pCommandList;
+		const CCommandManager *m_pCommandManager;
 		CRawInput m_RawInput;
 		bool m_fRegisterHotKey;
 		CChannelInputOptions m_ChannelInputOptions;

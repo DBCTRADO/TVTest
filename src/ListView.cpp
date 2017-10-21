@@ -147,6 +147,35 @@ bool CListView::SetItemText(int Index, int SubItem, LPCTSTR pszText)
 }
 
 
+bool CListView::GetItemText(int Index, LPTSTR pszText, int MaxText) const
+{
+	return GetItemText(Index, 0, pszText, MaxText);
+}
+
+
+bool CListView::GetItemText(int Index, int SubItem, LPTSTR pszText, int MaxText) const
+{
+	if (m_hwnd == nullptr)
+		return false;
+	if (pszText == nullptr || MaxText < 1)
+		return false;
+
+	LVITEM lvi;
+	//lvi.mask = LVIF_TEXT;
+	//lvi.iItem = Index;
+	lvi.iSubItem = SubItem;
+	lvi.pszText = pszText;
+	lvi.cchTextMax = MaxText;
+
+	if (::SendMessage(m_hwnd, LVM_GETITEMTEXT, Index, reinterpret_cast<LPARAM>(&lvi)) < 1) {
+		pszText[0] = _T('\0');
+		return false;
+	}
+
+	return true;
+}
+
+
 bool CListView::SetItemState(int Index, UINT State, UINT Mask)
 {
 	if (m_hwnd == nullptr)

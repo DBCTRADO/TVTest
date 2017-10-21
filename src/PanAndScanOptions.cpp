@@ -820,15 +820,15 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 }
 
 
-bool CPanAndScanOptions::GetCommandName(int Command, LPTSTR pszName, int MaxLength)
+bool CPanAndScanOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxLength)
 {
 	if (Command < m_FirstID || Command > m_LastID)
 		return false;
 	const int Index = Command - m_FirstID;
-	int Length = StringPrintf(pszName, MaxLength, TEXT("パン&スキャン%d"), Index + 1);
+	int Length = StringPrintf(pszText, MaxLength, TEXT("パン&スキャン%d"), Index + 1);
 	if ((size_t)Index < m_PresetList.size()) {
 		StringPrintf(
-			pszName + Length, MaxLength - Length,
+			pszText + Length, MaxLength - Length,
 			TEXT(" : %s"), m_PresetList[Index].szName);
 	}
 	return true;

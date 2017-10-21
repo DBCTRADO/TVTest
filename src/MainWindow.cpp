@@ -62,8 +62,6 @@ const LPCTSTR FULLSCREEN_WINDOW_CLASS = APP_NAME TEXT(" Fullscreen");
 
 
 
-const BYTE CMainWindow::m_AudioGainList[] = {100, 125, 150, 200};
-
 const CMainWindow::DirectShowFilterPropertyInfo CMainWindow::m_DirectShowFilterPropertyList[] = {
 	{LibISDB::ViewerFilter::PropertyFilterType::VideoDecoder,       CM_VIDEODECODERPROPERTY},
 	{LibISDB::ViewerFilter::PropertyFilterType::VideoRenderer,      CM_VIDEORENDERERPROPERTY},
@@ -105,7 +103,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_VideoContainerEventHandler(this)
 	, m_ViewWindowEventHandler(this)
 	, m_Fullscreen(*this)
-	, m_CommandEventHandler(this)
+	, m_CommandEventListener(this)
 
 	, m_fShowStatusBar(true)
 	, m_fShowTitleBar(true)
@@ -149,7 +147,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_AspectRatioResetTime(0)
 	, m_fForceResetPanAndScan(false)
 	, m_DefaultAspectRatioMenuItemCount(0)
-	, m_fFrameCut(false)
 	, m_ProgramListUpdateTimerCount(0)
 	, m_fAlertedLowFreeSpace(false)
 	, m_ChannelInput(App.Accelerator.GetChannelInputOptions())
@@ -366,10 +363,7 @@ bool CMainWindow::SetFullscreen(bool fFullscreen)
 		m_Fullscreen.Destroy();
 		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		if (pViewer != nullptr) {
-			pViewer->SetViewStretchMode(
-				m_fFrameCut ?
-					LibISDB::ViewerFilter::ViewStretchMode::Crop :
-					LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+			pViewer->SetViewStretchMode(m_App.VideoOptions.GetStretchMode());
 		}
 	}
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
@@ -527,7 +521,6 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("SplitTitleBar"), &m_fSplitTitleBar);
 	if (Settings.Read(TEXT("ShowSideBar"), &f))
 		SetSideBarVisible(f);
-	Settings.Read(TEXT("FrameCut"), &m_fFrameCut);
 	Settings.Read(TEXT("AccurateClock"), &m_fAccurateClock);
 
 	return true;
@@ -564,7 +557,6 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CustomTitleBar"), m_fCustomTitleBar);
 	Settings.Write(TEXT("SplitTitleBar"), m_fSplitTitleBar);
 	Settings.Write(TEXT("ShowSideBar"), m_fShowSideBar);
-	Settings.Write(TEXT("FrameCut"), m_fFrameCut);
 
 	return true;
 }
@@ -985,7 +977,6 @@ void CMainWindow::OnPanelDocking(CPanelFrame::DockingPlace Place)
 LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
-		HANDLE_MSG(hwnd, WM_COMMAND, OnCommand);
 		HANDLE_MSG(hwnd, WM_TIMER, OnTimer);
 		HANDLE_MSG(hwnd, WM_GETMINMAXINFO, OnGetMinMaxInfo);
 
@@ -1057,9 +1048,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (m_pCore->GetFullscreen()) {
 			m_Fullscreen.OnRButtonUp();
 		} else {
-			::SendMessage(
-				hwnd, WM_COMMAND,
-				MAKEWPARAM(m_App.OperationOptions.GetRightClickCommand(), COMMAND_FROM_MOUSE), 0);
+			m_App.CommandManager.InvokeCommand(
+				m_App.OperationOptions.GetRightClickCommand(),
+				CCommandManager::InvokeFlag::Mouse);
 		}
 		return 0;
 
@@ -1067,9 +1058,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (m_pCore->GetFullscreen()) {
 			m_Fullscreen.OnMButtonUp();
 		} else {
-			::SendMessage(
-				hwnd, WM_COMMAND,
-				MAKEWPARAM(m_App.OperationOptions.GetMiddleClickCommand(), COMMAND_FROM_MOUSE), 0);
+			m_App.CommandManager.InvokeCommand(
+				m_App.OperationOptions.GetMiddleClickCommand(),
+				CCommandManager::InvokeFlag::Mouse);
 		}
 		return 0;
 
@@ -1115,9 +1106,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return 0;
 
 	case WM_LBUTTONDBLCLK:
-		::SendMessage(
-			hwnd, WM_COMMAND,
-			MAKEWPARAM(m_App.OperationOptions.GetLeftDoubleClickCommand(), COMMAND_FROM_MOUSE), 0);
+		m_App.CommandManager.InvokeCommand(
+			m_App.OperationOptions.GetLeftDoubleClickCommand(),
+			CCommandManager::InvokeFlag::Mouse);
 		return 0;
 
 	case WM_SETCURSOR:
@@ -1270,6 +1261,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_EXITMENULOOP:
 		m_fNoHideCursor = false;
 		m_CursorTracker.Reset();
+		return 0;
+
+	case WM_COMMAND:
+		m_App.CommandManager.InvokeCommand(LOWORD(wParam), CCommandManager::InvokeFlag::None);
 		return 0;
 
 	case WM_SYSCOMMAND:
@@ -1828,33 +1823,11 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_App.MainMenu.Create(m_App.GetResourceInstance());
 
-	m_App.CommandList.SetEventHandler(&m_CommandEventHandler);
+	m_App.CommandManager.AddEventListener(&m_CommandEventListener);
 
-	m_pCore->SetCommandCheckedState(CM_ALWAYSONTOP, m_pCore->GetAlwaysOnTop());
-	int Gain, SurroundGain;
-	m_App.CoreEngine.GetAudioGainControl(&Gain, &SurroundGain);
-	for (int i = 0; i < lengthof(m_AudioGainList); i++) {
-		if (Gain == m_AudioGainList[i]) {
-			m_pCore->SetCommandRadioCheckedState(
-				CM_AUDIOGAIN_FIRST, CM_AUDIOGAIN_LAST, CM_AUDIOGAIN_FIRST + i);
-		}
-		if (SurroundGain == m_AudioGainList[i]) {
-			m_pCore->SetCommandRadioCheckedState(
-				CM_SURROUNDAUDIOGAIN_FIRST, CM_SURROUNDAUDIOGAIN_LAST,
-				CM_SURROUNDAUDIOGAIN_FIRST + i);
-		}
-	}
-	m_pCore->SetCommandRadioCheckedState(
-		CM_CAPTURESIZE_FIRST, CM_CAPTURESIZE_LAST,
-		CM_CAPTURESIZE_FIRST + m_App.CaptureOptions.GetPresetCaptureSize());
-	//m_pCore->SetCommandCheckedState(CM_CAPTUREPREVIEW, m_App.CaptureWindow.GetVisible());
+	m_App.AppCommand.InitializeCommandState();
+
 	m_pCore->SetCommandCheckedState(CM_DISABLEVIEWER, !m_fEnablePlayback);
-	m_pCore->SetCommandCheckedState(CM_PANEL, m_App.Panel.fShowPanelWindow);
-	m_pCore->SetCommandCheckedState(CM_1SEGMODE, m_App.Core.Is1SegMode());
-
-	m_pCore->SetCommandCheckedState(
-		CM_SPDIF_TOGGLE,
-		m_App.CoreEngine.IsSPDIFPassthroughEnabled());
 
 	m_pCore->SetCommandCheckedState(CM_TITLEBAR, m_fShowTitleBar);
 	m_pCore->SetCommandCheckedState(CM_STATUSBAR, m_fShowStatusBar);
@@ -1887,10 +1860,10 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.AspectRatioIconMenu.Initialize(
 		hmenuAspectRatio, m_App.GetInstance(),
 		AspectRatioMenuItems, lengthof(AspectRatioMenuItems));
-	if (m_AspectRatioType < ASPECTRATIO_CUSTOM) {
+	if (m_pCore->GetAspectRatioType() < CUICore::ASPECTRATIO_CUSTOM_FIRST) {
 		m_pCore->SetCommandRadioCheckedState(
 			CM_ASPECTRATIO_FIRST, CM_ASPECTRATIO_3D_LAST,
-			CM_ASPECTRATIO_FIRST + m_AspectRatioType);
+			CM_ASPECTRATIO_FIRST + m_pCore->GetAspectRatioType());
 	}
 	m_DefaultAspectRatioMenuItemCount = ::GetMenuItemCount(hmenuAspectRatio);
 
@@ -1904,9 +1877,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	if (pViewer != nullptr) {
 		pViewer->SetViewStretchMode(
 			(pcs->style & WS_MAXIMIZE) != 0 ?
-			m_App.VideoOptions.GetMaximizeStretchMode() :
-			m_fFrameCut ? LibISDB::ViewerFilter::ViewStretchMode::Crop :
-			LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+				m_App.VideoOptions.GetMaximizeStretchMode() :
+				m_App.VideoOptions.GetStretchMode());
 	}
 
 	m_App.EpgCaptureManager.SetEventHandler(&m_EpgCaptureEventHandler);
@@ -2009,13 +1981,9 @@ void CMainWindow::OnSizeChanged(UINT State, int Width, int Height)
 		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		if (pViewer != nullptr) {
 			if (State == SIZE_MAXIMIZED) {
-				pViewer->SetViewStretchMode(
-					m_App.VideoOptions.GetMaximizeStretchMode());
+				pViewer->SetViewStretchMode(m_App.VideoOptions.GetMaximizeStretchMode());
 			} else if (State == SIZE_RESTORED) {
-				pViewer->SetViewStretchMode(
-					m_fFrameCut ?
-						LibISDB::ViewerFilter::ViewStretchMode::Crop :
-						LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
+				pViewer->SetViewStretchMode(m_App.VideoOptions.GetStretchMode());
 			}
 		}
 	}
@@ -2340,498 +2308,16 @@ bool CMainWindow::OnKeyDown(WPARAM KeyCode)
 }
 
 
-void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
+bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 {
-	switch (id) {
-	case CM_ZOOMOPTIONS:
-		if (m_App.ZoomOptions.Show(GetVideoHostWindow())) {
-			m_App.SideBarOptions.SetSideBarImage();
-			m_App.ZoomOptions.SaveSettings(m_App.GetIniFileName());
-		}
-		return;
-
-	case CM_ASPECTRATIO:
-		{
-			int Command;
-
-			if (m_AspectRatioType >= ASPECTRATIO_CUSTOM)
-				Command = CM_ASPECTRATIO_DEFAULT;
-			else if (m_AspectRatioType < ASPECTRATIO_32x9)
-				Command = CM_ASPECTRATIO_FIRST +
-					(m_AspectRatioType + 1) % (CM_ASPECTRATIO_LAST - CM_ASPECTRATIO_FIRST + 1);
-			else
-				Command = CM_ASPECTRATIO_3D_FIRST +
-					(m_AspectRatioType - ASPECTRATIO_32x9 + 1) % (CM_ASPECTRATIO_3D_LAST - CM_ASPECTRATIO_3D_FIRST + 1);
-			SetPanAndScan(Command);
-		}
-		return;
-
-	case CM_ASPECTRATIO_DEFAULT:
-	case CM_ASPECTRATIO_16x9:
-	case CM_ASPECTRATIO_LETTERBOX:
-	case CM_ASPECTRATIO_SUPERFRAME:
-	case CM_ASPECTRATIO_SIDECUT:
-	case CM_ASPECTRATIO_4x3:
-	case CM_ASPECTRATIO_32x9:
-	case CM_ASPECTRATIO_16x9_LEFT:
-	case CM_ASPECTRATIO_16x9_RIGHT:
-		SetPanAndScan(id);
-		return;
-
-	case CM_PANANDSCANOPTIONS:
-		{
-			bool fSet = false;
-			CPanAndScanOptions::PanAndScanInfo CurPanScan;
-
-			if (m_AspectRatioType >= ASPECTRATIO_CUSTOM)
-				fSet = m_App.PanAndScanOptions.GetPreset(m_AspectRatioType - ASPECTRATIO_CUSTOM, &CurPanScan);
-
-			if (m_App.PanAndScanOptions.Show(GetVideoHostWindow())) {
-				if (fSet) {
-					CPanAndScanOptions::PanAndScanInfo NewPanScan;
-					int Index = m_App.PanAndScanOptions.FindPresetByID(CurPanScan.ID);
-					if (Index >= 0 && m_App.PanAndScanOptions.GetPreset(Index, &NewPanScan)) {
-						if (NewPanScan.Info != CurPanScan.Info)
-							SetPanAndScan(CM_PANANDSCAN_PRESET_FIRST + Index);
-					} else {
-						SetPanAndScan(CM_ASPECTRATIO_DEFAULT);
-					}
-				}
-				m_App.PanAndScanOptions.SaveSettings(m_App.GetIniFileName());
-			}
-		}
-		return;
-
-	case CM_FRAMECUT:
-		{
-			m_fFrameCut = !m_fFrameCut;
-			LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-			if (pViewer != nullptr) {
-				pViewer->SetViewStretchMode(
-					m_fFrameCut ?
-						LibISDB::ViewerFilter::ViewStretchMode::Crop :
-						LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio);
-			}
-		}
-		return;
-
-	case CM_FULLSCREEN:
-		m_pCore->ToggleFullscreen();
-		return;
-
-	case CM_ALWAYSONTOP:
-		m_pCore->SetAlwaysOnTop(!m_pCore->GetAlwaysOnTop());
-		return;
-
-	case CM_VOLUME_UP:
-	case CM_VOLUME_DOWN:
-		{
-			const int CurVolume = m_pCore->GetVolume();
-			int Volume = CurVolume;
-
-			if (id == CM_VOLUME_UP) {
-				Volume += m_App.OperationOptions.GetVolumeStep();
-				if (Volume > CCoreEngine::MAX_VOLUME)
-					Volume = CCoreEngine::MAX_VOLUME;
-			} else {
-				Volume -= m_App.OperationOptions.GetVolumeStep();
-				if (Volume < 0)
-					Volume = 0;
-			}
-			if (Volume != CurVolume || m_pCore->GetMute())
-				m_pCore->SetVolume(Volume);
-		}
-		return;
-
-	case CM_VOLUME_MUTE:
-		m_pCore->SetMute(!m_pCore->GetMute());
-		return;
-
-	case CM_AUDIOGAIN_NONE:
-	case CM_AUDIOGAIN_125:
-	case CM_AUDIOGAIN_150:
-	case CM_AUDIOGAIN_200:
-		{
-			int SurroundGain;
-
-			m_App.CoreEngine.GetAudioGainControl(nullptr, &SurroundGain);
-			m_App.CoreEngine.SetAudioGainControl(
-				m_AudioGainList[id - CM_AUDIOGAIN_FIRST], SurroundGain);
-			m_pCore->SetCommandRadioCheckedState(CM_AUDIOGAIN_NONE, CM_AUDIOGAIN_LAST, id);
-		}
-		return;
-
-	case CM_SURROUNDAUDIOGAIN_NONE:
-	case CM_SURROUNDAUDIOGAIN_125:
-	case CM_SURROUNDAUDIOGAIN_150:
-	case CM_SURROUNDAUDIOGAIN_200:
-		{
-			int Gain;
-
-			m_App.CoreEngine.GetAudioGainControl(&Gain, nullptr);
-			m_App.CoreEngine.SetAudioGainControl(
-				Gain, m_AudioGainList[id - CM_SURROUNDAUDIOGAIN_FIRST]);
-			m_pCore->SetCommandRadioCheckedState(CM_SURROUNDAUDIOGAIN_NONE, CM_SURROUNDAUDIOGAIN_LAST, id);
-		}
-		return;
-
-	case CM_AUDIODELAY_MINUS:
-	case CM_AUDIODELAY_PLUS:
-	case CM_AUDIODELAY_RESET:
-		{
-			LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-			if (pViewer == nullptr)
-				return;
-			static const LONGLONG MaxDelay = 10000000LL;
-			const LONGLONG Step = m_App.OperationOptions.GetAudioDelayStep() * 10000LL;
-			LONGLONG Delay;
-
-			switch (id) {
-			case CM_AUDIODELAY_MINUS:
-				Delay = pViewer->GetAudioDelay() - Step;
-				break;
-			case CM_AUDIODELAY_PLUS:
-				Delay = pViewer->GetAudioDelay() + Step;
-				break;
-			case CM_AUDIODELAY_RESET:
-				Delay = 0;
-				break;
-			}
-
-			pViewer->SetAudioDelay(std::clamp(Delay, -MaxDelay, MaxDelay));
-		}
-		return;
-
-	case CM_DUALMONO_MAIN:
-	case CM_DUALMONO_SUB:
-	case CM_DUALMONO_BOTH:
-		m_pCore->SetDualMonoMode(
-			id == CM_DUALMONO_MAIN ?
-				LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main :
-			id == CM_DUALMONO_SUB ?
-				LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub :
-				LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both);
-		ShowAudioOSD();
-		return;
-
-	case CM_STEREOMODE_STEREO:
-	case CM_STEREOMODE_LEFT:
-	case CM_STEREOMODE_RIGHT:
-		m_pCore->SetStereoMode(
-			id == CM_STEREOMODE_STEREO ?
-				LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo :
-			id == CM_STEREOMODE_LEFT  ?
-				LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left :
-				LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right);
-		ShowAudioOSD();
-		return;
-
-	case CM_SWITCHAUDIO:
-		m_pCore->SwitchAudio();
-		ShowAudioOSD();
-		return;
-
-	case CM_SPDIF_DISABLED:
-	case CM_SPDIF_PASSTHROUGH:
-	case CM_SPDIF_AUTO:
-		{
-			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions Options(m_App.AudioOptions.GetSpdifOptions());
-
-			Options.Mode = (LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)(id - CM_SPDIF_DISABLED);
-			m_App.CoreEngine.SetSPDIFOptions(Options);
-			m_pCore->SetCommandCheckedState(
-				CM_SPDIF_TOGGLE, m_App.CoreEngine.IsSPDIFPassthroughEnabled());
-		}
-		return;
-
-	case CM_SPDIF_TOGGLE:
-		{
-			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions Options;
-
-			m_App.CoreEngine.GetSPDIFOptions(&Options);
-			if (m_App.CoreEngine.IsSPDIFPassthroughEnabled())
-				Options.Mode = LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled;
-			else
-				Options.Mode = LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Passthrough;
-			m_App.CoreEngine.SetSPDIFOptions(Options);
-			m_pCore->SetCommandCheckedState(
-				CM_SPDIF_TOGGLE, m_App.CoreEngine.IsSPDIFPassthroughEnabled());
-		}
-		return;
-
-	case CM_CAPTURE:
-		SendCommand(m_App.CaptureOptions.TranslateCommand(CM_CAPTURE));
-		return;
-
-	case CM_COPY:
-	case CM_SAVEIMAGE:
-		if (IsViewerEnabled()) {
-			HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
-			LibISDB::COMMemoryPointer<> Image(m_App.CoreEngine.GetCurrentImage());
-
-			if (!Image) {
-				::SetCursor(hcurOld);
-				ShowMessage(
-					TEXT("現在の画像を取得できません。\n")
-					TEXT("レンダラやデコーダを変えてみてください。"), TEXT("ごめん"),
-					MB_OK | MB_ICONEXCLAMATION);
-				return;
-			}
-
-			LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
-			const uint8_t *pDib = Image.get();
-			BITMAPINFOHEADER *pbmih = (BITMAPINFOHEADER*)pDib;
-			RECT rc;
-			int Width, Height, OrigWidth, OrigHeight;
-			HGLOBAL hGlobal = nullptr;
-
-			OrigWidth = pbmih->biWidth;
-			OrigHeight = abs(pbmih->biHeight);
-			if (pViewer->GetSourceRect(&rc)) {
-				int VideoWidth, VideoHeight;
-
-				if (pViewer->GetOriginalVideoSize(&VideoWidth, &VideoHeight)
-						&& (VideoWidth != OrigWidth
-							|| VideoHeight != OrigHeight)) {
-					rc.left = rc.left * OrigWidth / VideoWidth;
-					rc.top = rc.top * OrigHeight / VideoHeight;
-					rc.right = rc.right * OrigWidth / VideoWidth;
-					rc.bottom = rc.bottom * OrigHeight / VideoHeight;
-				}
-				if (rc.right > OrigWidth)
-					rc.right = OrigWidth;
-				if (rc.bottom > OrigHeight)
-					rc.bottom = OrigHeight;
-			} else {
-				rc.left = 0;
-				rc.top = 0;
-				rc.right = OrigWidth;
-				rc.bottom = OrigHeight;
-			}
-			if (OrigHeight == 1088) {
-				rc.top = rc.top * 1080 / 1088;
-				rc.bottom = rc.bottom * 1080 / 1088;
-			}
-			switch (m_App.CaptureOptions.GetCaptureSizeType()) {
-			case CCaptureOptions::SIZE_TYPE_ORIGINAL:
-				m_App.CoreEngine.GetVideoViewSize(&Width, &Height);
-				break;
-			case CCaptureOptions::SIZE_TYPE_VIEW:
-				pViewer->GetDestSize(&Width, &Height);
-				break;
-			/*
-			case CCaptureOptions::SIZE_RAW:
-				rc.left = rc.top = 0;
-				rc.right = OrigWidth;
-				rc.bottom = OrigHeight;
-				Width = OrigWidth;
-				Height = OrigHeight;
-				break;
-			*/
-			case CCaptureOptions::SIZE_TYPE_PERCENTAGE:
-				{
-					int Num, Denom;
-
-					m_App.CoreEngine.GetVideoViewSize(&Width, &Height);
-					m_App.CaptureOptions.GetSizePercentage(&Num, &Denom);
-					Width = Width * Num / Denom;
-					Height = Height * Num / Denom;
-				}
-				break;
-			case CCaptureOptions::SIZE_TYPE_CUSTOM:
-				m_App.CaptureOptions.GetCustomSize(&Width, &Height);
-				break;
-			}
-			hGlobal = ResizeImage(
-				(BITMAPINFO*)pbmih,
-				pDib + CalcDIBInfoSize(pbmih), &rc, Width, Height);
-			Image.reset();
-			::SetCursor(hcurOld);
-			if (hGlobal == nullptr) {
-				return;
-			}
-			CCaptureImage *pImage = new CCaptureImage(hGlobal);
-			if (m_App.CaptureOptions.GetWriteComment()) {
-				String Comment;
-				if (m_App.CaptureOptions.GetCommentText(&Comment, pImage))
-					pImage->SetComment(Comment.c_str());
-			}
-			m_App.CaptureWindow.SetImage(pImage);
-			if (id == CM_COPY) {
-				if (!pImage->SetClipboard(hwnd)) {
-					ShowErrorMessage(TEXT("クリップボードにデータを設定できません。"));
-				}
-			} else {
-				if (!m_App.CaptureOptions.SaveImage(pImage)) {
-					ShowErrorMessage(TEXT("画像の保存でエラーが発生しました。"));
-				}
-			}
-			if (!m_App.CaptureWindow.HasImage())
-				delete pImage;
-		}
-		return;
-
-	case CM_CAPTUREPREVIEW:
-		{
-			if (!m_App.CaptureWindow.GetVisible()) {
-				if (!m_App.CaptureWindow.IsCreated()) {
-					m_App.CaptureWindow.Create(
-						hwnd,
-						WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_VISIBLE | WS_CLIPCHILDREN,
-						WS_EX_TOOLWINDOW);
-				} else {
-					m_App.CaptureWindow.SetVisible(true);
-				}
-			} else {
-				m_App.CaptureWindow.Destroy();
-				m_App.CaptureWindow.ClearImage();
-			}
-
-			m_pCore->SetCommandCheckedState(
-				CM_CAPTUREPREVIEW, m_App.CaptureWindow.GetVisible());
-		}
-		return;
-
-	case CM_CAPTUREOPTIONS:
-		if (IsWindowEnabled(hwnd))
-			m_App.ShowOptionDialog(hwnd, COptionDialog::PAGE_CAPTURE);
-		return;
-
-	case CM_OPENCAPTUREFOLDER:
-		m_App.CaptureOptions.OpenSaveFolder();
-		return;
-
-	case CM_RESET:
-		m_App.Core.ResetEngine();
-		return;
-
-	case CM_RESETVIEWER:
-		m_App.CoreEngine.ResetViewer();
-		return;
-
+	switch (Params.ID) {
 	case CM_REBUILDVIEWER:
 		InitializeViewer();
-		return;
-
-	case CM_RECORD:
-	case CM_RECORD_START:
-	case CM_RECORD_STOP:
-		if (id == CM_RECORD) {
-			if (m_App.RecordManager.IsPaused()) {
-				SendCommand(CM_RECORD_PAUSE);
-				return;
-			}
-		} else if (id == CM_RECORD_START) {
-			if (m_App.RecordManager.IsRecording()) {
-				if (m_App.RecordManager.IsPaused())
-					SendCommand(CM_RECORD_PAUSE);
-				return;
-			}
-		} else if (id == CM_RECORD_STOP) {
-			if (!m_App.RecordManager.IsRecording())
-				return;
-		}
-		if (m_App.RecordManager.IsRecording()) {
-			if (!m_App.RecordManager.IsPaused()
-					&& !m_App.RecordOptions.ConfirmStop(GetVideoHostWindow()))
-				return;
-			m_App.Core.StopRecord();
-		} else {
-			if (m_App.RecordManager.IsReserved()) {
-				if (ShowMessage(
-							TEXT("既に設定されている録画があります。\n")
-							TEXT("録画を開始すると既存の設定が破棄されます。\n")
-							TEXT("録画を開始してもいいですか?"),
-							TEXT("録画開始の確認"),
-							MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2) != IDOK) {
-					return;
-				}
-			}
-			m_App.Core.StartRecord();
-		}
-		return;
-
-	case CM_RECORD_PAUSE:
-		m_App.Core.PauseResumeRecording();
-		return;
-
-	case CM_RECORDOPTION:
-		if (IsWindowEnabled(GetVideoHostWindow())) {
-			if (m_App.RecordManager.IsRecording()) {
-				if (m_App.RecordManager.RecordDialog(GetVideoHostWindow()))
-					m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
-			} else {
-				if (m_App.RecordManager.GetFileName() == nullptr) {
-					TCHAR szFileName[MAX_PATH];
-
-					if (m_App.RecordOptions.GetFilePath(szFileName, MAX_PATH))
-						m_App.RecordManager.SetFileName(szFileName);
-				}
-				if (m_App.RecordManager.RecordDialog(GetVideoHostWindow())) {
-					m_App.RecordManager.SetClient(CRecordManager::RecordClient::User);
-					if (m_App.RecordManager.IsReserved()) {
-						m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
-					} else {
-						m_App.Core.StartReservedRecord();
-					}
-				} else {
-					// 予約がキャンセルされた場合も表示を更新する
-					m_App.StatusView.UpdateItem(STATUS_ITEM_RECORD);
-				}
-			}
-		}
-		return;
-
-	case CM_RECORDEVENT:
-		if (m_App.RecordManager.IsRecording()) {
-			m_App.RecordManager.SetStopOnEventEnd(!m_App.RecordManager.GetStopOnEventEnd());
-		} else {
-			SendCommand(CM_RECORD_START);
-			if (m_App.RecordManager.IsRecording())
-				m_App.RecordManager.SetStopOnEventEnd(true);
-		}
-		return;
-
-	case CM_EXITONRECORDINGSTOP:
-		m_App.Core.SetExitOnRecordingStop(!m_App.Core.GetExitOnRecordingStop());
-		return;
-
-	case CM_OPTIONS_RECORD:
-		if (IsWindowEnabled(hwnd))
-			m_App.ShowOptionDialog(hwnd, COptionDialog::PAGE_RECORD);
-		return;
-
-	case CM_TIMESHIFTRECORDING:
-		if (!m_App.RecordManager.IsRecording()) {
-			if (m_App.RecordManager.IsReserved()) {
-				if (ShowMessage(
-							TEXT("既に設定されている録画があります。\n")
-							TEXT("録画を開始すると既存の設定が破棄されます。\n")
-							TEXT("録画を開始してもいいですか?"),
-							TEXT("録画開始の確認"),
-							MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2) != IDOK) {
-					return;
-				}
-			}
-			m_App.Core.StartRecord(nullptr, nullptr, nullptr, CRecordManager::RecordClient::User, true);
-		}
-		return;
-
-	case CM_ENABLETIMESHIFTRECORDING:
-		m_App.RecordOptions.EnableTimeShiftRecording(!m_App.RecordOptions.IsTimeShiftRecordingEnabled());
-		return;
-
-	case CM_STATUSBARRECORD:
-		{
-			int Command = m_App.RecordOptions.GetStatusBarRecordCommand();
-			if (Command != 0)
-				OnCommand(hwnd, Command, nullptr, 0);
-		}
-		return;
+		return true;
 
 	case CM_DISABLEVIEWER:
 		m_pCore->EnableViewer(!m_fEnablePlayback);
-		return;
+		return true;
 
 	case CM_PANEL:
 		if (m_pCore->GetFullscreen()) {
@@ -2839,43 +2325,43 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		} else {
 			ShowPanel(!m_App.Panel.fShowPanelWindow);
 		}
-		return;
+		return true;
 
 	case CM_PROGRAMGUIDE:
 		ShowProgramGuide(!m_App.Epg.fShowProgramGuide);
-		return;
+		return true;
 
 	case CM_STATUSBAR:
 		SetStatusBarVisible(!m_fShowStatusBar);
-		return;
+		return true;
 
 	case CM_TITLEBAR:
 		SetTitleBarVisible(!m_fShowTitleBar);
-		return;
+		return true;
 
 	case CM_SIDEBAR:
 		SetSideBarVisible(!m_fShowSideBar);
-		return;
+		return true;
 
 	case CM_WINDOWFRAME_NORMAL:
 		SetCustomFrame(false);
-		return;
+		return true;
 
 	case CM_WINDOWFRAME_CUSTOM:
 		SetCustomFrame(true, m_ThinFrameWidth);
-		return;
+		return true;
 
 	case CM_WINDOWFRAME_NONE:
 		SetCustomFrame(true, 0);
-		return;
+		return true;
 
 	case CM_CUSTOMTITLEBAR:
 		SetCustomTitleBar(!m_fCustomTitleBar);
-		return;
+		return true;
 
 	case CM_SPLITTITLEBAR:
 		SetSplitTitleBar(!m_fSplitTitleBar);
-		return;
+		return true;
 
 	case CM_VIDEODECODERPROPERTY:
 	case CM_VIDEORENDERERPROPERTY:
@@ -2887,7 +2373,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 			if (hwndOwner == nullptr || ::IsWindowEnabled(hwndOwner)) {
 				for (const auto &e : m_DirectShowFilterPropertyList) {
-					if (e.Command == id) {
+					if (e.Command == Params.ID) {
 						LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 						bool fOK = false;
 
@@ -2913,47 +2399,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 				}
 			}
 		}
-		return;
-
-	case CM_OPTIONS:
-		{
-			HWND hwndOwner = GetVideoHostWindow();
-
-			if (hwndOwner == nullptr || IsWindowEnabled(hwndOwner))
-				m_App.ShowOptionDialog(hwndOwner);
-		}
-		return;
-
-	case CM_STREAMINFO:
-		{
-			if (!m_App.StreamInfo.GetVisible()) {
-				if (!m_App.StreamInfo.IsCreated())
-					m_App.StreamInfo.Create(hwnd);
-				m_App.StreamInfo.SetVisible(true);
-			} else {
-				m_App.StreamInfo.Destroy();
-			}
-
-			m_pCore->SetCommandCheckedState(CM_STREAMINFO, m_App.StreamInfo.GetVisible());
-		}
-		return;
-
-	case CM_CLOSE:
-		if (m_pCore->GetStandby()) {
-			m_pCore->SetStandby(false);
-		} else if (m_App.TaskTrayManager.GetResident()) {
-			m_pCore->SetStandby(true, false);
-		} else if (m_App.GeneralOptions.GetStandaloneProgramGuide()
-				&& m_App.Epg.ProgramGuideFrame.GetVisible()) {
-			m_pCore->SetStandby(true, true);
-		} else {
-			PostMessage(WM_CLOSE, 0, 0);
-		}
-		return;
-
-	case CM_EXIT:
-		PostMessage(WM_CLOSE, 0, 0);
-		return;
+		return true;
 
 	case CM_SHOW:
 		if (m_pCore->GetStandby()) {
@@ -2961,82 +2407,14 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		} else {
 			SetWindowVisible();
 		}
-		return;
-
-	case CM_CHANNEL_UP:
-	case CM_CHANNEL_DOWN:
-		{
-			int Channel = GetNextChannel(id == CM_CHANNEL_UP);
-
-			if (Channel >= 0)
-				m_App.Core.SwitchChannel(Channel);
-		}
-		return;
-
-	case CM_CHANNEL_BACKWARD:
-	case CM_CHANNEL_FORWARD:
-		{
-			const CTunerChannelInfo *pChannel;
-
-			if (id == CM_CHANNEL_BACKWARD)
-				pChannel = m_App.ChannelHistory.Backward();
-			else
-				pChannel = m_App.ChannelHistory.Forward();
-			if (pChannel != nullptr) {
-				m_App.Core.SelectChannel(pChannel->GetTunerName(), *pChannel);
-			}
-		}
-		return;
-
-	case CM_CHANNEL_PREVIOUS:
-		if (m_App.RecentChannelList.NumChannels() > 1) {
-			const CTunerChannelInfo *pChannel =
-				m_App.RecentChannelList.GetChannelInfo(1);
-			if (pChannel != nullptr) {
-				m_App.Core.SelectChannel(pChannel->GetTunerName(), *pChannel);
-			}
-		}
-		return;
-
-#ifdef _DEBUG
-	case CM_UPDATECHANNELLIST:
-		// チャンネルリストの自動更新(現状役には立たない)
-		//if (m_App.DriverOptions.IsChannelAutoUpdate(m_App.CoreEngine.GetDriverFileName()))
-		{
-			CTuningSpaceList TuningSpaceList(*m_App.ChannelManager.GetTuningSpaceList());
-			std::vector<String> MessageList;
-
-			TRACE(TEXT("チャンネルリスト自動更新開始\n"));
-			if (m_App.ChannelScan.AutoUpdateChannelList(&TuningSpaceList, &MessageList)) {
-				m_App.AddLog(TEXT("チャンネルリストの自動更新を行いました。"));
-				for (const String &e : MessageList)
-					m_App.AddLog(TEXT("%s"), e.c_str());
-
-				TuningSpaceList.MakeAllChannelList();
-				m_App.Core.UpdateCurrentChannelList(&TuningSpaceList);
-
-				TCHAR szFileName[MAX_PATH];
-				if (!m_App.ChannelManager.GetChannelFileName(szFileName, lengthof(szFileName))
-						|| ::lstrcmpi(::PathFindExtension(szFileName), CHANNEL_FILE_EXTENSION) != 0
-						|| !::PathFileExists(szFileName)) {
-					m_App.CoreEngine.GetDriverPath(szFileName, lengthof(szFileName));
-					::PathRenameExtension(szFileName, CHANNEL_FILE_EXTENSION);
-				}
-				if (TuningSpaceList.SaveToFile(szFileName))
-					m_App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
-				else
-					m_App.AddLog(CLogItem::LogType::Error, TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
-			}
-		}
-		return;
-#endif
+		return true;
 
 	case CM_MENU:
 		{
 			POINT pt;
 			bool fDefault = false;
 
-			if (codeNotify == COMMAND_FROM_MOUSE) {
+			if (!!(Params.Flags & CCommandManager::InvokeFlag::Mouse)) {
 				::GetCursorPos(&pt);
 				if (::GetKeyState(VK_SHIFT) < 0)
 					fDefault = true;
@@ -3047,7 +2425,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			}
 			m_pCore->PopupMenu(&pt, fDefault ? CUICore::PopupMenuFlag::Default : CUICore::PopupMenuFlag::None);
 		}
-		return;
+		return true;
 
 	case CM_ACTIVATE:
 		{
@@ -3056,23 +2434,15 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			if (hwndHost != nullptr)
 				ForegroundWindow(hwndHost);
 		}
-		return;
+		return true;
 
 	case CM_MINIMIZE:
-		::ShowWindow(hwnd, ::IsIconic(hwnd) ? SW_RESTORE : SW_MINIMIZE);
-		return;
+		::ShowWindow(m_hwnd, ::IsIconic(m_hwnd) ? SW_RESTORE : SW_MINIMIZE);
+		return true;
 
 	case CM_MAXIMIZE:
-		::ShowWindow(hwnd, ::IsZoomed(hwnd) ? SW_RESTORE : SW_MAXIMIZE);
-		return;
-
-	case CM_1SEGMODE:
-		m_App.Core.Set1SegMode(!m_App.Core.Is1SegMode(), true);
-		return;
-
-	case CM_CLOSETUNER:
-		m_App.Core.ShutDownTuner();
-		return;
+		::ShowWindow(m_hwnd, ::IsZoomed(m_hwnd) ? SW_RESTORE : SW_MAXIMIZE);
+		return true;
 
 	case CM_HOMEDISPLAY:
 		if (!m_App.HomeDisplay.GetVisible()) {
@@ -3096,7 +2466,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		} else {
 			m_Display.GetDisplayBase().SetVisible(false);
 		}
-		return;
+		return true;
 
 	case CM_CHANNELDISPLAY:
 		if (!m_App.ChannelDisplay.GetVisible()) {
@@ -3128,89 +2498,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		} else {
 			m_Display.GetDisplayBase().SetVisible(false);
 		}
-		return;
-
-	case CM_ENABLEBUFFERING:
-		m_App.CoreEngine.SetPacketBufferPool(
-			!m_App.CoreEngine.GetPacketBuffering(),
-			m_App.PlaybackOptions.GetPacketBufferPoolPercentage());
-		m_App.PlaybackOptions.SetPacketBuffering(m_App.CoreEngine.GetPacketBuffering());
-		return;
-
-	case CM_RESETBUFFER:
-		m_App.CoreEngine.ResetPacketBuffer();
-		return;
-
-	case CM_RESETERRORCOUNT:
-		m_App.CoreEngine.ResetErrorCount();
-		m_App.StatusView.UpdateItem(STATUS_ITEM_ERROR);
-		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_ERROR);
-		m_App.AppEventManager.OnStatisticsReset();
-		return;
-
-	case CM_SHOWRECORDREMAINTIME:
-		{
-			CRecordStatusItem *pItem =
-				dynamic_cast<CRecordStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_RECORD));
-
-			if (pItem != nullptr) {
-				bool fRemain = !m_App.RecordOptions.GetShowRemainTime();
-				m_App.RecordOptions.SetShowRemainTime(fRemain);
-				pItem->ShowRemainTime(fRemain);
-			}
-		}
-		return;
-
-	case CM_SHOWTOTTIME:
-		{
-			const bool fTOT = !m_App.StatusOptions.GetShowTOTTime();
-			m_App.StatusOptions.SetShowTOTTime(fTOT);
-
-			CClockStatusItem *pItem =
-				dynamic_cast<CClockStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
-			if (pItem != nullptr)
-				pItem->SetTOT(fTOT);
-		}
-		return;
-
-	case CM_INTERPOLATETOTTIME:
-		{
-			const bool fInterpolateTOT = !m_App.StatusOptions.GetInterpolateTOTTime();
-			m_App.StatusOptions.SetInterpolateTOTTime(fInterpolateTOT);
-
-			CClockStatusItem *pItem =
-				dynamic_cast<CClockStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_CLOCK));
-			if (pItem != nullptr)
-				pItem->SetInterpolateTOT(fInterpolateTOT);
-		}
-		return;
-
-	case CM_PROGRAMINFOSTATUS_POPUPINFO:
-		{
-			const bool fEnable = !m_App.StatusOptions.IsPopupProgramInfoEnabled();
-			m_App.StatusOptions.EnablePopupProgramInfo(fEnable);
-
-			CProgramInfoStatusItem *pItem =
-				dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
-			if (pItem != nullptr)
-				pItem->EnablePopupInfo(fEnable);
-		}
-		return;
-
-	case CM_PROGRAMINFOSTATUS_SHOWPROGRESS:
-		{
-			CProgramInfoStatusItem *pItem =
-				dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
-			if (pItem != nullptr) {
-				pItem->SetShowProgress(!pItem->GetShowProgress());
-				m_App.StatusOptions.SetShowEventProgress(pItem->GetShowProgress());
-			}
-		}
-		return;
-
-	case CM_ADJUSTTOTTIME:
-		m_App.TotTimeAdjuster.BeginAdjust();
-		return;
+		return true;
 
 	case CM_POPUPTITLEBAR:
 		if (!m_fShowTitleBar) {
@@ -3219,7 +2507,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			else
 				ShowPopupTitleBar(!m_TitleBar.GetVisible());
 		}
-		return;
+		return true;
 
 	case CM_POPUPSTATUSBAR:
 		if (!m_fShowStatusBar) {
@@ -3228,7 +2516,7 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 			else
 				ShowPopupStatusBar(!m_App.StatusView.GetVisible());
 		}
-		return;
+		return true;
 
 	case CM_ZOOMMENU:
 	case CM_ASPECTRATIOMENU:
@@ -3245,26 +2533,26 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case CM_PLUGINMENU:
 	case CM_FILTERPROPERTYMENU:
 		{
-			int SubMenu = m_App.MenuOptions.GetSubMenuPosByCommand(id);
+			int SubMenu = m_App.MenuOptions.GetSubMenuPosByCommand(Params.ID);
 			POINT pt;
 
-			if (codeNotify == COMMAND_FROM_MOUSE) {
+			if (!!(Params.Flags & CCommandManager::InvokeFlag::Mouse)) {
 				::GetCursorPos(&pt);
 			} else {
 				pt.x = 0;
 				pt.y = 0;
 				::ClientToScreen(GetCurrentViewWindow().GetHandle(), &pt);
 			}
-			m_App.MainMenu.PopupSubMenu(SubMenu, TPM_RIGHTBUTTON, hwnd, &pt);
+			m_App.MainMenu.PopupSubMenu(SubMenu, TPM_RIGHTBUTTON, m_hwnd, &pt);
 		}
-		return;
+		return true;
 
 	case CM_SIDEBAR_PLACE_LEFT:
 	case CM_SIDEBAR_PLACE_RIGHT:
 	case CM_SIDEBAR_PLACE_TOP:
 	case CM_SIDEBAR_PLACE_BOTTOM:
 		{
-			CSideBarOptions::PlaceType Place = (CSideBarOptions::PlaceType)(id - CM_SIDEBAR_PLACE_FIRST);
+			CSideBarOptions::PlaceType Place = (CSideBarOptions::PlaceType)(Params.ID - CM_SIDEBAR_PLACE_FIRST);
 
 			if (Place != m_App.SideBarOptions.GetPlace()) {
 				bool fVertical =
@@ -3285,300 +2573,43 @@ void CMainWindow::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 					pSplitter->SwapPane();
 			}
 		}
-		return;
-
-	case CM_SIDEBAROPTIONS:
-		if (::IsWindowEnabled(hwnd))
-			m_App.ShowOptionDialog(hwnd, COptionDialog::PAGE_SIDEBAR);
-		return;
-
-	case CM_DRIVER_BROWSE:
-		{
-			OPENFILENAME ofn;
-			TCHAR szFileName[MAX_PATH];
-			String Path, Name, InitDir;
-
-			m_App.CoreEngine.GetDriverPath(&Path);
-			if (PathUtil::Split(Path, &InitDir, &Name)) {
-				::lstrcpyn(szFileName, Name.c_str(), MAX_PATH);
-			} else {
-				m_App.GetAppDirectory(&InitDir);
-				szFileName[0] = '\0';
-			}
-			InitOpenFileName(&ofn);
-			ofn.hwndOwner = GetVideoHostWindow();
-			ofn.lpstrFilter =
-				TEXT("BonDriver(BonDriver*.dll)\0BonDriver*.dll\0")
-				TEXT("すべてのファイル\0*.*\0");
-			ofn.lpstrFile = szFileName;
-			ofn.nMaxFile = lengthof(szFileName);
-			ofn.lpstrInitialDir = InitDir.c_str();
-			ofn.lpstrTitle = TEXT("BonDriverの選択");
-			ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-			if (FileOpenDialog(&ofn)) {
-				m_App.Core.OpenTuner(szFileName);
-			}
-		}
-		return;
-
-	case CM_CHANNELHISTORY_CLEAR:
-		m_App.RecentChannelList.Clear();
-		m_App.TaskbarManager.ClearRecentChannelList();
-		m_App.TaskbarManager.UpdateJumpList();
-		return;
+		return true;
 
 	case CM_CHANNELNO_2DIGIT:
 	case CM_CHANNELNO_3DIGIT:
 		{
-			int Digits = id == CM_CHANNELNO_2DIGIT ? 2 : 3;
+			int Digits = Params.ID == CM_CHANNELNO_2DIGIT ? 2 : 3;
 
 			if (m_ChannelInput.IsInputting()) {
 				bool fCancel = Digits == m_ChannelInput.GetMaxDigits();
 				EndChannelNoInput(false);
 				if (fCancel)
-					return;
+					return true;
 			}
 			BeginChannelNoInput(Digits);
 		}
-		return;
-
-	case CM_ADDTOFAVORITES:
-		{
-			const CChannelInfo *pChannel = m_App.ChannelManager.GetCurrentChannelInfo();
-			if (pChannel != nullptr) {
-				if (m_App.FavoritesManager.AddChannel(pChannel, m_App.CoreEngine.GetDriverFileName()))
-					m_App.AppEventManager.OnFavoritesChanged();
-			}
-		}
-		return;
-
-	case CM_ORGANIZEFAVORITES:
-		if (m_App.FavoritesManager.ShowOrganizeDialog(GetVideoHostWindow()))
-			m_App.AppEventManager.OnFavoritesChanged();
-		return;
-
-	case CM_SWITCHVIDEO:
-		{
-			const LibISDB::AnalyzerFilter *pAnalyzer =
-				m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
-
-			if (pAnalyzer != nullptr && pAnalyzer->GetEventComponentGroupCount(m_App.CoreEngine.GetServiceIndex()) > 0)
-				SendCommand(CM_MULTIVIEW_SWITCH);
-			else
-				SendCommand(CM_VIDEOSTREAM_SWITCH);
-		}
-		return;
-
-	case CM_VIDEOSTREAM_SWITCH:
-		{
-			const int StreamCount = m_App.CoreEngine.GetVideoStreamCount();
-
-			if (StreamCount > 1) {
-				m_App.CoreEngine.SetVideoStream((m_App.CoreEngine.GetVideoStream() + 1) % StreamCount);
-			}
-		}
-		return;
-
-	case CM_MULTIVIEW_SWITCH:
-		{
-			const LibISDB::AnalyzerFilter *pAnalyzer =
-				m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
-
-			if (pAnalyzer != nullptr) {
-				const int ServiceIndex = m_App.CoreEngine.GetServiceIndex();
-				const int GroupCount = pAnalyzer->GetEventComponentGroupCount(ServiceIndex);
-
-				if (GroupCount > 1) {
-					SendCommand(
-						CM_MULTIVIEW_FIRST +
-							(pAnalyzer->GetEventComponentGroupIndexByComponentTag(
-								ServiceIndex, m_App.CoreEngine.GetVideoComponentTag()) + 1) % GroupCount);
-				}
-			}
-		}
-		return;
+		return true;
 
 	default:
-		if ((id >= CM_ZOOM_FIRST && id <= CM_ZOOM_LAST)
-				|| (id >= CM_CUSTOMZOOM_FIRST && id <= CM_CUSTOMZOOM_LAST)) {
+		if ((Params.ID >= CM_ZOOM_FIRST && Params.ID <= CM_ZOOM_LAST)
+				|| (Params.ID >= CM_CUSTOMZOOM_FIRST && Params.ID <= CM_CUSTOMZOOM_LAST)) {
 			CZoomOptions::ZoomInfo Info;
 
 			if (m_pCore->GetFullscreen())
 				m_pCore->SetFullscreen(false);
-			if (::IsZoomed(hwnd))
-				::ShowWindow(hwnd, SW_RESTORE);
-			if (m_App.ZoomOptions.GetZoomInfoByCommand(id, &Info)) {
+			if (::IsZoomed(m_hwnd))
+				::ShowWindow(m_hwnd, SW_RESTORE);
+			if (m_App.ZoomOptions.GetZoomInfoByCommand(Params.ID, &Info)) {
 				if (Info.Type == CZoomOptions::ZoomType::Rate)
 					SetZoomRate(Info.Rate.Rate, Info.Rate.Factor);
 				else if (Info.Type == CZoomOptions::ZoomType::Size)
 					AdjustWindowSize(Info.Size.Width, Info.Size.Height);
 			}
-			return;
-		}
-
-		if (id >= CM_CAPTURESIZE_FIRST && id <= CM_CAPTURESIZE_LAST) {
-			int CaptureSize = id - CM_CAPTURESIZE_FIRST;
-
-			m_App.CaptureOptions.SetPresetCaptureSize(CaptureSize);
-			m_pCore->SetCommandRadioCheckedState(CM_CAPTURESIZE_FIRST, CM_CAPTURESIZE_LAST, id);
-			return;
-		}
-
-		if (id >= CM_CHANNELNO_FIRST && id <= CM_CHANNELNO_LAST) {
-			m_App.Core.SwitchChannelByNo((id - CM_CHANNELNO_FIRST) + 1, true);
-			return;
-		}
-
-		if (id >= CM_CHANNEL_FIRST && id <= CM_CHANNEL_LAST) {
-			m_App.Core.SwitchChannel(id - CM_CHANNEL_FIRST);
-			return;
-		}
-
-		if (id >= CM_SERVICE_FIRST && id <= CM_SERVICE_LAST) {
-			if (m_App.RecordManager.IsRecording()) {
-				if (!m_App.RecordOptions.ConfirmServiceChange(
-							GetVideoHostWindow(), &m_App.RecordManager))
-					return;
-			}
-			m_App.Core.SetServiceByIndex(id - CM_SERVICE_FIRST, CAppCore::SetServiceFlag::StrictID);
-			return;
-		}
-
-		if (id >= CM_SPACE_ALL && id <= CM_SPACE_LAST) {
-			int Space = id - CM_SPACE_FIRST;
-
-			if (Space != m_App.ChannelManager.GetCurrentSpace()) {
-				const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(Space);
-				if (pChannelList != nullptr) {
-					for (int i = 0; i < pChannelList->NumChannels(); i++) {
-						if (pChannelList->IsEnabled(i)) {
-							m_App.Core.SetChannel(Space, i);
-							return;
-						}
-					}
-				}
-			}
-			return;
-		}
-
-		if (id >= CM_DRIVER_FIRST && id <= CM_DRIVER_LAST) {
-			const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(id - CM_DRIVER_FIRST);
-
-			if (pDriverInfo != nullptr) {
-				if (!m_App.CoreEngine.IsTunerOpen()
-						|| !IsEqualFileName(pDriverInfo->GetFileName(), m_App.CoreEngine.GetDriverFileName())) {
-					if (m_App.Core.OpenTuner(pDriverInfo->GetFileName())) {
-						m_App.Core.RestoreChannel();
-					}
-				}
-			}
-			return;
-		}
-
-		if (id >= CM_PLUGIN_FIRST && id <= CM_PLUGIN_LAST) {
-			CPlugin *pPlugin = m_App.PluginManager.GetPlugin(m_App.PluginManager.FindPluginByCommand(id));
-
-			if (pPlugin != nullptr)
-				pPlugin->Enable(!pPlugin->IsEnabled());
-			return;
-		}
-
-		if (id >= CM_SPACE_CHANNEL_FIRST && id <= CM_SPACE_CHANNEL_LAST) {
-			if (!m_pCore->ConfirmChannelChange())
-				return;
-			m_pCore->ProcessTunerMenu(id);
-			return;
-		}
-
-		if (id >= CM_CHANNELHISTORY_FIRST && id <= CM_CHANNELHISTORY_LAST) {
-			const CTunerChannelInfo *pChannel =
-				m_App.RecentChannelList.GetChannelInfo(id - CM_CHANNELHISTORY_FIRST);
-
-			if (pChannel != nullptr)
-				m_App.Core.SelectChannel(pChannel->GetTunerName(), *pChannel);
-			return;
-		}
-
-		if (id >= CM_FAVORITECHANNEL_FIRST && id <= CM_FAVORITECHANNEL_LAST) {
-			CFavoritesManager::ChannelInfo ChannelInfo;
-
-			if (m_App.FavoritesManager.GetChannelByCommand(id, &ChannelInfo)) {
-				m_App.Core.SelectChannel(
-					ChannelInfo.BonDriverFileName.c_str(),
-					ChannelInfo.Channel,
-					ChannelInfo.fForceBonDriverChange ?
-						CAppCore::SelectChannelFlag::None :
-						CAppCore::SelectChannelFlag::UseCurrentTuner);
-			}
-			return;
-		}
-
-		if (id >= CM_PLUGINCOMMAND_FIRST && id <= CM_PLUGINCOMMAND_LAST) {
-			m_App.PluginManager.OnPluginCommand(m_App.CommandList.GetCommandTextByID(id));
-			return;
-		}
-
-		if (id >= CM_PANANDSCAN_PRESET_FIRST && id <= CM_PANANDSCAN_PRESET_LAST) {
-			SetPanAndScan(id);
-			return;
-		}
-
-		if (id >= CM_VIDEOSTREAM_FIRST && id <= CM_VIDEOSTREAM_LAST) {
-			m_App.CoreEngine.SetVideoStream(id - CM_VIDEOSTREAM_FIRST);
-			return;
-		}
-
-		if (id >= CM_AUDIOSTREAM_FIRST && id <= CM_AUDIOSTREAM_LAST) {
-			m_pCore->SetAudioStream(id - CM_AUDIOSTREAM_FIRST);
-			ShowAudioOSD();
-			return;
-		}
-
-		if (id >= CM_AUDIO_FIRST && id <= CM_AUDIO_LAST) {
-			m_pCore->SelectAudio(id - CM_AUDIO_FIRST);
-			ShowAudioOSD();
-			return;
-		}
-
-		if (id >= CM_MULTIVIEW_FIRST && id <= CM_MULTIVIEW_LAST) {
-			const int ServiceIndex = m_App.CoreEngine.GetServiceIndex();
-			LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
-			LibISDB::AnalyzerFilter::EventComponentGroupInfo GroupInfo;
-
-			if (ServiceIndex >= 0
-					&& pAnalyzer != nullptr
-					&& pAnalyzer->GetEventComponentGroupInfo(ServiceIndex, id - CM_MULTIVIEW_FIRST, &GroupInfo)) {
-				int VideoIndex = -1, AudioIndex = -1;
-
-				for (int i = 0; i < GroupInfo.NumOfCAUnit; i++) {
-					for (int j = 0; j < GroupInfo.CAUnitList[i].NumOfComponent; j++) {
-						const BYTE ComponentTag = GroupInfo.CAUnitList[i].ComponentTag[j];
-						if (VideoIndex < 0) {
-							int Index = pAnalyzer->GetVideoIndexByComponentTag(ServiceIndex, ComponentTag);
-							if (Index >= 0)
-								VideoIndex = Index;
-						}
-						if (AudioIndex < 0) {
-							int Index = pAnalyzer->GetAudioIndexByComponentTag(ServiceIndex, ComponentTag);
-							if (Index >= 0)
-								AudioIndex = Index;
-						}
-						if (VideoIndex >= 0 && AudioIndex >= 0) {
-							m_App.CoreEngine.SetVideoStream(VideoIndex);
-							m_pCore->SetAudioStream(AudioIndex);
-							return;
-						}
-					}
-				}
-			}
-			return;
-		}
-
-		if (id >= CM_PANEL_FIRST && id <= CM_PANEL_LAST) {
-			m_App.Panel.Form.SetCurPageByID(id - CM_PANEL_FIRST);
-			return;
+			return true;
 		}
 	}
+
+	return false;
 }
 
 
@@ -5181,7 +4212,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 				fUp = Delta > 0;
 			else
 				fUp = Delta < 0;
-			int Channel = GetNextChannel(fUp);
+			int Channel = m_pCore->GetNextChannel(fUp);
 			if (Channel >= 0) {
 				if (m_fWheelChannelChanging
 						&& m_WheelCount < 5
@@ -5356,17 +4387,6 @@ void CMainWindow::OnVariableChanged()
 }
 
 
-void CMainWindow::ShowAudioOSD()
-{
-	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Audio)) {
-		TCHAR szText[128];
-
-		if (m_pCore->GetSelectedAudioText(szText, lengthof(szText)))
-			m_App.OSDManager.ShowOSD(szText);
-	}
-}
-
-
 bool CMainWindow::SetZoomRate(int Rate, int Factor)
 {
 	if (Rate < 1 || Factor < 1)
@@ -5486,6 +4506,12 @@ void CMainWindow::OnPanAndScanChanged()
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
+}
+
+
+void CMainWindow::OnAspectRatioTypeChanged(int Type)
+{
+	m_AspectRatioResetTime = 0;
 }
 
 
@@ -6291,131 +5317,6 @@ void CMainWindow::OnChannelNoInput()
 }
 
 
-int CMainWindow::GetNextChannel(bool fUp)
-{
-	int Channel = m_App.ChannelManager.GetNextChannel(
-		m_App.OperationOptions.GetChannelUpDownOrder(), fUp);
-	if (Channel < 0)
-		return -1;
-
-	if (m_App.OperationOptions.GetChannelUpDownSkipSubChannel()) {
-		// 異なる番組を放送している場合以外はサブチャンネルをスキップする
-		const CChannelList *pCurChannelList = m_App.ChannelManager.GetCurrentChannelList();
-		const int CurChannel =
-			m_App.ChannelManager.GetChangingChannel() >= 0 ?
-			m_App.ChannelManager.GetChangingChannel() :
-			m_App.ChannelManager.GetCurrentChannel();
-		const CChannelInfo *pCurChannelInfo = pCurChannelList->GetChannelInfo(CurChannel);
-		LibISDB::DateTime Time;
-		LibISDB::EventInfo EventInfo;
-		LibISDB::EventInfo::CommonEventInfo CurEvent;
-
-		LibISDB::GetCurrentEPGTime(&Time);
-		if (m_App.EPGDatabase.GetEventInfo(
-					pCurChannelInfo->GetNetworkID(),
-					pCurChannelInfo->GetTransportStreamID(),
-					pCurChannelInfo->GetServiceID(),
-					Time, &EventInfo)) {
-			if (EventInfo.IsCommonEvent) {
-				CurEvent = EventInfo.CommonEvent;
-			} else {
-				CurEvent.ServiceID = EventInfo.ServiceID;
-				CurEvent.EventID = EventInfo.EventID;
-			}
-		}
-
-		bool fDiffEvent = false;
-		int i;
-
-		for (i = pCurChannelList->NumEnableChannels() - 1; i > 0; i--) {
-			const CChannelInfo *pNextChannelInfo = pCurChannelList->GetChannelInfo(Channel);
-
-			if (pCurChannelInfo->GetNetworkID() != pNextChannelInfo->GetNetworkID()
-					|| pCurChannelInfo->GetTransportStreamID() != pNextChannelInfo->GetTransportStreamID())
-				break;
-
-			if (CurEvent.ServiceID != LibISDB::SERVICE_ID_INVALID
-					&& m_App.EPGDatabase.GetEventInfo(
-						pNextChannelInfo->GetNetworkID(),
-						pNextChannelInfo->GetTransportStreamID(),
-						pNextChannelInfo->GetServiceID(),
-						Time, &EventInfo)) {
-				LibISDB::EventInfo::CommonEventInfo Event;
-				if (EventInfo.IsCommonEvent) {
-					Event = EventInfo.CommonEvent;
-				} else {
-					Event.ServiceID = EventInfo.ServiceID;
-					Event.EventID = EventInfo.EventID;
-				}
-				if (CurEvent != Event) {
-					fDiffEvent = true;
-					break;
-				}
-			}
-
-			Channel = m_App.ChannelManager.GetNextChannel(
-				Channel, m_App.OperationOptions.GetChannelUpDownOrder(), fUp);
-			if (Channel == CurChannel)
-				return -1;
-		}
-
-		if (i == 0)
-			return -1;
-
-		if (!fUp && !fDiffEvent) {
-			// 同じ番組の最初のサービスを探す
-			const CChannelInfo *pNextChannelInfo = pCurChannelList->GetChannelInfo(Channel);
-			LibISDB::EventInfo::CommonEventInfo NextEvent;
-
-			if (m_App.EPGDatabase.GetEventInfo(
-						pNextChannelInfo->GetNetworkID(),
-						pNextChannelInfo->GetTransportStreamID(),
-						pNextChannelInfo->GetServiceID(),
-						Time, &EventInfo)) {
-				if (EventInfo.IsCommonEvent) {
-					NextEvent = EventInfo.CommonEvent;
-				} else {
-					NextEvent.ServiceID = EventInfo.ServiceID;
-					NextEvent.EventID = EventInfo.EventID;
-				}
-			}
-
-			for (int i = Channel - 1; i >= 0; i--) {
-				const CChannelInfo *pChannelInfo = pCurChannelList->GetChannelInfo(i);
-
-				if (!pChannelInfo->IsEnabled())
-					continue;
-
-				if (pNextChannelInfo->GetNetworkID() != pChannelInfo->GetNetworkID()
-						|| pNextChannelInfo->GetTransportStreamID() != pChannelInfo->GetTransportStreamID())
-					break;
-
-				if (NextEvent.ServiceID != LibISDB::SERVICE_ID_INVALID
-						&& m_App.EPGDatabase.GetEventInfo(
-							pChannelInfo->GetNetworkID(),
-							pChannelInfo->GetTransportStreamID(),
-							pChannelInfo->GetServiceID(),
-							Time, &EventInfo)) {
-					LibISDB::EventInfo::CommonEventInfo Event;
-					if (EventInfo.IsCommonEvent) {
-						Event = EventInfo.CommonEvent;
-					} else {
-						Event.ServiceID = EventInfo.ServiceID;
-						Event.EventID = EventInfo.EventID;
-					}
-					if (Event != NextEvent)
-						break;
-				}
-
-				Channel = i;
-			}
-		}
-	}
-
-	return Channel;
-}
-
-
 void CMainWindow::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
@@ -7008,7 +5909,7 @@ void CMainWindow::CFullscreen::OnMouseCommand(int Command)
 	::KillTimer(m_hwnd, TIMER_ID_HIDECURSOR);
 	ShowCursor(true);
 	m_fMenu = true;
-	m_MainWindow.SendMessage(WM_COMMAND, MAKEWPARAM(Command, CMainWindow::COMMAND_FROM_MOUSE), 0);
+	m_App.CommandManager.InvokeCommand(Command, CCommandManager::InvokeFlag::Mouse);
 	m_fMenu = false;
 	if (m_hwnd != nullptr) {
 		m_CursorTracker.Reset();
@@ -7647,7 +6548,7 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 			&& pInfo->Command <= CM_PLUGINCOMMAND_LAST) {
 		LPCTSTR pszCommand;
 		CPlugin *pPlugin = m_pMainWindow->m_App.PluginManager.GetPluginByPluginCommand(
-			m_pMainWindow->m_App.CommandList.GetCommandTextByID(pInfo->Command), &pszCommand);
+			m_pMainWindow->m_App.CommandManager.GetCommandIDText(pInfo->Command).c_str(), &pszCommand);
 
 		if (pPlugin != nullptr) {
 			CPlugin::CPluginCommandInfo *pCommandInfo =
@@ -7911,28 +6812,28 @@ void CMainWindow::CEpgCaptureEventHandler::OnChannelEnd(bool fComplete)
 }
 
 
-CMainWindow::CCommandEventHandler::CCommandEventHandler(CMainWindow *pMainWindow)
+CMainWindow::CCommandEventListener::CCommandEventListener(CMainWindow *pMainWindow)
 	: m_pMainWindow(pMainWindow)
 {
 }
 
-void CMainWindow::CCommandEventHandler::OnCommandStateChanged(
-	int ID, CCommandList::CommandState OldState, CCommandList::CommandState NewState)
+void CMainWindow::CCommandEventListener::OnCommandStateChanged(
+	int ID, CCommandManager::CommandState OldState, CCommandManager::CommandState NewState)
 {
-	if (!!((OldState ^ NewState) & CCommandList::CommandState::Checked)) {
-		const bool fChecked = !!(NewState & CCommandList::CommandState::Checked);
+	if (!!((OldState ^ NewState) & CCommandManager::CommandState::Checked)) {
+		const bool fChecked = !!(NewState & CCommandManager::CommandState::Checked);
 		m_pMainWindow->m_App.MainMenu.CheckItem(ID, fChecked);
 		m_pMainWindow->m_App.SideBar.CheckItem(ID, fChecked);
 	}
 
-	if (!!((OldState ^ NewState) & CCommandList::CommandState::Disabled)) {
-		const bool fEnabled = !(NewState & CCommandList::CommandState::Disabled);
+	if (!!((OldState ^ NewState) & CCommandManager::CommandState::Disabled)) {
+		const bool fEnabled = !(NewState & CCommandManager::CommandState::Disabled);
 		m_pMainWindow->m_App.MainMenu.EnableItem(ID, fEnabled);
 		m_pMainWindow->m_App.SideBar.EnableItem(ID, fEnabled);
 	}
 }
 
-void CMainWindow::CCommandEventHandler::OnCommandRadioCheckedStateChanged(
+void CMainWindow::CCommandEventListener::OnCommandRadioCheckedStateChanged(
 	int FirstID, int LastID, int CheckedID)
 {
 	if (FirstID >= CM_ASPECTRATIO_FIRST && FirstID <= CM_ASPECTRATIO_LAST)
