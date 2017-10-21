@@ -174,7 +174,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 				const MenuItemInfo &Item = m_MenuItemList[i];
 				TCHAR szName[32];
 
-				StringPrintf(szName, TEXT("Item%d_ID"), i);
+				StringPrintf(szName, TEXT("Item%zu_ID"), i);
 				if (Item.ID == MENU_ID_INVALID) {
 					Settings.Write(szName, Item.Name);
 				} else if (Item.ID == MENU_ID_SEPARATOR) {
@@ -182,7 +182,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 				} else {
 					Settings.Write(szName, CommandManager.GetCommandIDText(IDToCommand(Item.ID)));
 				}
-				StringPrintf(szName, TEXT("Item%d_State"), i);
+				StringPrintf(szName, TEXT("Item%zu_State"), i);
 				Settings.Write(szName, Item.fVisible ? ITEM_STATE_VISIBLE : 0);
 			}
 		}
