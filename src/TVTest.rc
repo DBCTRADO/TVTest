@@ -47,7 +47,7 @@ IDI_PANSCAN_AUTO            ICON DISCARDABLE "PanScan_Auto.ico"
 IDI_PANSCAN_16x9            ICON DISCARDABLE "PanScan_16x9.ico"
 IDI_PANSCAN_LETTERBOX       ICON DISCARDABLE "PanScan_Letterbox.ico"
 IDI_PANSCAN_WINDOWBOX       ICON DISCARDABLE "PanScan_Windowbox.ico"
-IDI_PANSCAN_4x3_SIDECUT     ICON DISCARDABLE "PanScan_4x3SideCut.ico"
+IDI_PANSCAN_PILLARBOX       ICON DISCARDABLE "PanScan_Pillarbox.ico"
 IDI_PANSCAN_4x3             ICON DISCARDABLE "PanScan_4x3.ico"
 IDI_PANSCAN_32x9            ICON DISCARDABLE "PanScan_32x9.ico"
 IDI_PANSCAN_16x9_LEFT       ICON DISCARDABLE "PanScan_16x9Left.ico"
@@ -112,8 +112,8 @@ BEGIN
 			MENUITEM "自動", CM_ASPECTRATIO_DEFAULT
 			MENUITEM "16:9", CM_ASPECTRATIO_16x9
 			MENUITEM "16:9 レターボックス", CM_ASPECTRATIO_LETTERBOX
-			MENUITEM "16:9 超額縁", CM_ASPECTRATIO_SUPERFRAME
-			MENUITEM "4:3 サイドカット", CM_ASPECTRATIO_SIDECUT
+			MENUITEM "16:9 超額縁", CM_ASPECTRATIO_WINDOWBOX
+			MENUITEM "4:3 ピラーボックス", CM_ASPECTRATIO_PILLARBOX
 			MENUITEM "4:3", CM_ASPECTRATIO_4x3
 #ifndef TVTEST_FOR_1SEG
 			MENUITEM SEPARATOR
@@ -180,7 +180,7 @@ BEGIN
 		MENUITEM "録画開始/停止(&R)", CM_RECORD
 		MENUITEM "録画(詳細指定)(&D)...", CM_RECORDOPTION
 		MENUITEM SEPARATOR
-		MENUITEM "画像のコピー(&P)\tC", CM_COPY
+		MENUITEM "画像のコピー(&P)\tC", CM_COPYIMAGE
 		MENUITEM "画像の保存(&J)\tV", CM_SAVEIMAGE
 		MENUITEM "キャプチャウィンドウ(&X)", CM_CAPTUREPREVIEW
 		MENUITEM SEPARATOR
@@ -250,7 +250,7 @@ IDM_CAPTURE MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "画像のコピー(&P)", CM_COPY
+		MENUITEM "画像のコピー(&P)", CM_COPYIMAGE
 		MENUITEM "画像の保存(&G)", CM_SAVEIMAGE
 		MENUITEM SEPARATOR
 		POPUP "画像の大きさ(&S)"
@@ -436,7 +436,7 @@ BEGIN
 	POPUP ""
 	BEGIN
 		MENUITEM "保存(&S)", CM_SAVEIMAGE
-		MENUITEM "コピー(&C)", CM_COPY
+		MENUITEM "コピー(&C)", CM_COPYIMAGE
 		MENUITEM SEPARATOR
 		MENUITEM "ステータスバー(&B)", CM_CAPTURESTATUSBAR
 	END
@@ -641,12 +641,12 @@ BEGIN
     CM_CUSTOMZOOM_FIRST + 8,        "任意倍率9"
     CM_CUSTOMZOOM_FIRST + 9,        "任意倍率10"
     CM_ZOOMOPTIONS,                 "倍率の設定"
-    CM_ASPECTRATIO,                 "比率切替"
+    CM_ASPECTRATIO_TOGGLE,          "比率切替"
     CM_ASPECTRATIO_DEFAULT,         "比率 : 自動"
     CM_ASPECTRATIO_16x9,            "比率 : 16:9"
     CM_ASPECTRATIO_LETTERBOX,       "比率 : 16:9 レターボックス"
-    CM_ASPECTRATIO_SUPERFRAME,      "比率 : 16:9 超額縁"
-    CM_ASPECTRATIO_SIDECUT,         "比率 : 4:3 サイドカット"
+    CM_ASPECTRATIO_WINDOWBOX,       "比率 : 16:9 超額縁"
+    CM_ASPECTRATIO_PILLARBOX,       "比率 : 4:3 ピラーボックス"
     CM_ASPECTRATIO_4x3,             "比率 : 4:3"
     CM_ASPECTRATIO_32x9,            "比率 : 32:9"
     CM_ASPECTRATIO_16x9_LEFT,       "比率 : 16:9 左"
@@ -692,7 +692,7 @@ BEGIN
     CM_ENABLETIMESHIFTRECORDING,    "さかのぼり録画を有効にする"
     CM_DISABLEVIEWER,               "再生オフ"
     CM_CAPTURE,                     "キャプチャ"
-    CM_COPY,                        "画像のコピー"
+    CM_COPYIMAGE,                   "画像のコピー"
     CM_SAVEIMAGE,                   "画像の保存"
     CM_CAPTUREPREVIEW,              "キャプチャウィンドウ"
     CM_RESET,                       "リセット"

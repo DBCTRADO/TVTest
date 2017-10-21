@@ -420,7 +420,7 @@ bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 int CCaptureOptions::TranslateCommand(int Command)
 {
 	if (Command == CM_CAPTURE)
-		return m_fCaptureSaveToFile ? CM_SAVEIMAGE : CM_COPY;
+		return m_fCaptureSaveToFile ? CM_SAVEIMAGE : CM_COPYIMAGE;
 	return -1;
 }
 

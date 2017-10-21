@@ -37,7 +37,7 @@
 #define IDI_PANSCAN_16x9            31021
 #define IDI_PANSCAN_LETTERBOX       31022
 #define IDI_PANSCAN_WINDOWBOX       31023
-#define IDI_PANSCAN_4x3_SIDECUT     31024
+#define IDI_PANSCAN_PILLARBOX       31024
 #define IDI_PANSCAN_4x3             31025
 #define IDI_PANSCAN_32x9            31026
 #define IDI_PANSCAN_16x9_LEFT       31027
@@ -164,13 +164,13 @@
 #define CM_ZOOM_300                             (CM_ZOOM_FIRST + 10)
 #define CM_ZOOM_LAST                            (CM_ZOOM_FIRST + 10)
 #define CM_ZOOMOPTIONS                          119
-#define CM_ASPECTRATIO                          120
+#define CM_ASPECTRATIO_TOGGLE                   120
 #define CM_ASPECTRATIO_FIRST                    121
 #define CM_ASPECTRATIO_DEFAULT                  (CM_ASPECTRATIO_FIRST + 0)
 #define CM_ASPECTRATIO_16x9                     (CM_ASPECTRATIO_FIRST + 1)
 #define CM_ASPECTRATIO_LETTERBOX                (CM_ASPECTRATIO_FIRST + 2)
-#define CM_ASPECTRATIO_SUPERFRAME               (CM_ASPECTRATIO_FIRST + 3)
-#define CM_ASPECTRATIO_SIDECUT                  (CM_ASPECTRATIO_FIRST + 4)
+#define CM_ASPECTRATIO_WINDOWBOX                (CM_ASPECTRATIO_FIRST + 3)
+#define CM_ASPECTRATIO_PILLARBOX                (CM_ASPECTRATIO_FIRST + 4)
 #define CM_ASPECTRATIO_4x3                      (CM_ASPECTRATIO_FIRST + 5)
 #define CM_ASPECTRATIO_LAST                     (CM_ASPECTRATIO_FIRST + 5)
 #define CM_ASPECTRATIO_3D_FIRST                 (CM_ASPECTRATIO_LAST + 1)
@@ -205,7 +205,7 @@
 #define CM_ENABLETIMESHIFTRECORDING             159
 #define CM_STATUSBARRECORD                      160
 #define CM_DISABLEVIEWER                        161
-#define CM_COPY                                 162
+#define CM_COPYIMAGE                            162
 #define CM_SAVEIMAGE                            163
 #define CM_CAPTURE                              164
 #define CM_CAPTUREPREVIEW                       165

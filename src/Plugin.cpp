@@ -1345,9 +1345,9 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pInfo->Type = PANSCAN_NONE;
 			if (PanScan.Width < PanScan.XFactor) {
 				if (PanScan.Height < PanScan.YFactor)
-					pInfo->Type = PANSCAN_SUPERFRAME;
+					pInfo->Type = PANSCAN_WINDOWBOX;
 				else
-					pInfo->Type = PANSCAN_SIDECUT;
+					pInfo->Type = PANSCAN_PILLARBOX;
 			} else if (PanScan.Height < PanScan.YFactor) {
 				pInfo->Type = PANSCAN_LETTERBOX;
 			}
@@ -1378,15 +1378,15 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				else
 					return FALSE;
 				break;
-			case PANSCAN_SIDECUT:
+			case PANSCAN_PILLARBOX:
 				if (pInfo->XAspect == 4 && pInfo->YAspect == 3)
-					Command = CM_ASPECTRATIO_SIDECUT;
+					Command = CM_ASPECTRATIO_PILLARBOX;
 				else
 					return FALSE;
 				break;
-			case PANSCAN_SUPERFRAME:
+			case PANSCAN_WINDOWBOX:
 				if (pInfo->XAspect == 16 && pInfo->YAspect == 9)
-					Command = CM_ASPECTRATIO_SUPERFRAME;
+					Command = CM_ASPECTRATIO_WINDOWBOX;
 				else
 					return FALSE;
 				break;

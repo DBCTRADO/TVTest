@@ -857,8 +857,8 @@ inline bool MsgSetZoom(PluginParam *pParam, int Num, int Denom = 100)
 enum {
 	PANSCAN_NONE,      // なし
 	PANSCAN_LETTERBOX, // レターボックス
-	PANSCAN_SIDECUT,   // サイドカット
-	PANSCAN_SUPERFRAME // 超額縁
+	PANSCAN_PILLARBOX, // ピラーボックス
+	PANSCAN_WINDOWBOX  // 超額縁
 };
 
 // パンスキャンの情報

@@ -62,7 +62,7 @@ const CMenuOptions::MenuInfo CMenuOptions::m_DefaultMenuItemList[] =
 	{CM_RECORD,                         CM_RECORD,               CM_RECORD},
 	{CM_RECORDOPTION,                   CM_RECORDOPTION,         CM_RECORDOPTION},
 	{MENU_ID_SEPARATOR,                 0,                       0},
-	{CM_COPY,                           CM_COPY,                 CM_COPY},
+	{CM_COPYIMAGE,                      CM_COPYIMAGE,            CM_COPYIMAGE},
 	{CM_SAVEIMAGE,                      CM_SAVEIMAGE,            CM_SAVEIMAGE},
 	{CM_CAPTUREPREVIEW,                 CM_CAPTUREPREVIEW,       CM_CAPTUREPREVIEW},
 	{MENU_ID_SEPARATOR,                 0,                       0},

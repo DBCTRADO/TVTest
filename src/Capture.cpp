@@ -587,7 +587,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			return 0;
 
-		case CM_COPY:
+		case CM_COPYIMAGE:
 			if (m_Image) {
 				if (!m_Image->SetClipboard(hwnd)) {
 					::MessageBox(
@@ -632,7 +632,7 @@ void CCaptureWindow::CPreviewEventHandler::OnRButtonUp(int x, int y)
 {
 	CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_CAPTUREPREVIEW);
 
-	Menu.EnableItem(CM_COPY, m_pCaptureWindow->HasImage());
+	Menu.EnableItem(CM_COPYIMAGE, m_pCaptureWindow->HasImage());
 	Menu.EnableItem(CM_SAVEIMAGE, m_pCaptureWindow->HasImage());
 	Menu.CheckItem(CM_CAPTURESTATUSBAR, m_pCaptureWindow->IsStatusBarVisible());
 	POINT pt = {x, y};
@@ -714,7 +714,7 @@ void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc, const RECT &ItemRect, const 
 
 void CCaptureWindow::CCopyStatusItem::OnLButtonDown(int x, int y)
 {
-	m_pCaptureWindow->SendMessage(WM_COMMAND, CM_COPY, 0);
+	m_pCaptureWindow->SendMessage(WM_COMMAND, CM_COPYIMAGE, 0);
 }
 
 

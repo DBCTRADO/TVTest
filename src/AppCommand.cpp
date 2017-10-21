@@ -64,16 +64,16 @@ void CAppCommand::RegisterDefaultCommands()
 	RegisterCommands(
 		{
 			{CM_ZOOMOPTIONS, TEXT("ZoomOptions"), CCommandManager::BindHandler(&CAppCommand::ZoomOptions, this)},
-			{CM_ASPECTRATIO, TEXT("AspectRatio"), CCommandManager::BindHandler(&CAppCommand::ToggleAspectRatio, this)},
+			{CM_ASPECTRATIO_TOGGLE, TEXT("AspectRatio"), CCommandManager::BindHandler(&CAppCommand::ToggleAspectRatio, this)},
 		});
 
 	RegisterCommands(
 		{
 			{CM_ASPECTRATIO_DEFAULT,    TEXT("AspectDefault")},
 			{CM_ASPECTRATIO_16x9,       TEXT("Aspect16x9")},
-			{CM_ASPECTRATIO_LETTERBOX,  TEXT("LetterBox")},
-			{CM_ASPECTRATIO_SUPERFRAME, TEXT("SuperFrame")},
-			{CM_ASPECTRATIO_SIDECUT,    TEXT("SideCut")},
+			{CM_ASPECTRATIO_LETTERBOX,  TEXT("Letterbox")},
+			{CM_ASPECTRATIO_WINDOWBOX,  TEXT("Windowbox")},
+			{CM_ASPECTRATIO_PILLARBOX,  TEXT("Pillarbox")},
 			{CM_ASPECTRATIO_4x3,        TEXT("Aspect4x3")},
 			{CM_ASPECTRATIO_32x9,       TEXT("Aspect32x9")},
 			{CM_ASPECTRATIO_16x9_LEFT,  TEXT("Aspect16x9Left")},
@@ -170,7 +170,7 @@ void CAppCommand::RegisterDefaultCommands()
 
 			{CM_DISABLEVIEWER, TEXT("DisableViewer"), MainWindowHandler},
 
-			{CM_COPY, TEXT("CopyImage"), CCommandManager::BindHandler(&CAppCommand::CaptureCopySave, this)},
+			{CM_COPYIMAGE, TEXT("CopyImage"), CCommandManager::BindHandler(&CAppCommand::CaptureCopySave, this)},
 			{CM_SAVEIMAGE, TEXT("SaveImage"), CCommandManager::BindHandler(&CAppCommand::CaptureCopySave, this)},
 			{CM_CAPTURE, TEXT("CaptureImage"), CCommandManager::BindHandler(&CAppCommand::DefaultCapture, this)},
 			{CM_CAPTUREPREVIEW, TEXT("CapturePreview"), CCommandManager::BindHandler(&CAppCommand::CapturePreview, this)},
@@ -893,7 +893,7 @@ bool CAppCommand::CaptureCopySave(CCommandManager::InvokeParameters &Params)
 
 	m_App.CaptureWindow.SetImage(pImage);
 
-	if (Params.ID == CM_COPY) {
+	if (Params.ID == CM_COPYIMAGE) {
 		if (!pImage->SetClipboard(m_App.UICore.GetMainWindow())) {
 			m_App.UICore.GetSkin()->ShowErrorMessage(TEXT("クリップボードにデータを設定できません。"));
 		}

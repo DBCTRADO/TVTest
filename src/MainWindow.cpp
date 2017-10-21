@@ -1846,8 +1846,8 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		{CM_ASPECTRATIO_DEFAULT,    MAKEINTRESOURCE(IDI_PANSCAN_AUTO)},
 		{CM_ASPECTRATIO_16x9,       MAKEINTRESOURCE(IDI_PANSCAN_16x9)},
 		{CM_ASPECTRATIO_LETTERBOX,  MAKEINTRESOURCE(IDI_PANSCAN_LETTERBOX)},
-		{CM_ASPECTRATIO_SUPERFRAME, MAKEINTRESOURCE(IDI_PANSCAN_WINDOWBOX)},
-		{CM_ASPECTRATIO_SIDECUT,    MAKEINTRESOURCE(IDI_PANSCAN_4x3_SIDECUT)},
+		{CM_ASPECTRATIO_WINDOWBOX,  MAKEINTRESOURCE(IDI_PANSCAN_WINDOWBOX)},
+		{CM_ASPECTRATIO_PILLARBOX,  MAKEINTRESOURCE(IDI_PANSCAN_PILLARBOX)},
 		{CM_ASPECTRATIO_4x3,        MAKEINTRESOURCE(IDI_PANSCAN_4x3)},
 		{CM_ASPECTRATIO_32x9,       MAKEINTRESOURCE(IDI_PANSCAN_32x9)},
 		{CM_ASPECTRATIO_16x9_LEFT,  MAKEINTRESOURCE(IDI_PANSCAN_16x9_LEFT)},
@@ -2975,7 +2975,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 	if (m_App.MainMenu.IsMainMenu(hmenu)) {
 		bool fView = IsViewerEnabled();
 
-		m_App.MainMenu.EnableItem(CM_COPY, fView);
+		m_App.MainMenu.EnableItem(CM_COPYIMAGE, fView);
 		m_App.MainMenu.EnableItem(CM_SAVEIMAGE, fView);
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ZOOM)) {
 		CZoomOptions::ZoomInfo Zoom;
@@ -4260,7 +4260,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 
 	case CM_WHEEL_ASPECTRATIO:
 		if (Command != m_PrevWheelCommand || TickTimeSpan(m_PrevWheelTime, CurTime) >= 300) {
-			SendCommand(CM_ASPECTRATIO);
+			SendCommand(CM_ASPECTRATIO_TOGGLE);
 			fProcessed = true;
 		}
 		break;
