@@ -900,6 +900,19 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int Space = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCAN_SPACE);
 
 				if (Space >= 0) {
+					LibISDB::BonDriverSourceFilter *pSourceFilter =
+						GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
+					if (pSourceFilter->GetChannelName(Space, 0) == nullptr) {
+						::MessageBox(
+							hDlg,
+							TEXT("このチューニング空間にはチャンネルがありません。\n")
+							TEXT("正しいチューニング空間が選択されているか、\n")
+							TEXT("チューナーが正しく設定されているか確認してください。"),
+							TEXT("チャンネルスキャン"),
+							MB_OK | MB_ICONEXCLAMATION);
+						return TRUE;
+					}
+
 					HWND hwndList = ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST);
 
 					if (GetAppClass().UICore.IsViewerEnabled()) {
