@@ -318,7 +318,7 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 					String Name;
 					if (PathUtil::Split(szFileName, &Directory, &Name)) {
 						ofn.lpstrInitialDir = Directory.c_str();
-						::lstrcpy(szFileName, Name.c_str());
+						StringCopy(szFileName, Name.c_str());
 					}
 				}
 				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;

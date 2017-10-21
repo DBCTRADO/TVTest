@@ -1448,7 +1448,7 @@ bool CAppMain::GetAbsolutePath(LPCTSTR pszPath, LPTSTR pszAbsolutePath) const
 	} else {
 		if (::lstrlen(pszPath) >= MAX_PATH)
 			return false;
-		::lstrcpy(pszAbsolutePath, pszPath);
+		StringCopy(pszAbsolutePath, pszPath);
 	}
 
 	return true;

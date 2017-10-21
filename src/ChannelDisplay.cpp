@@ -1334,12 +1334,12 @@ LPCTSTR CChannelDisplay::CTuner::GetDisplayName() const
 void CChannelDisplay::CTuner::GetDisplayName(int Space, LPTSTR pszName, int MaxName) const
 {
 	if (!IsStringEmpty(GetDisplayName())) {
-		::lstrcpyn(pszName, GetDisplayName(), MaxName);
+		StringCopy(pszName, GetDisplayName(), MaxName);
 	} else {
 		LPCTSTR pszDriver = GetDriverFileName();
 		if (::StrCmpNI(pszDriver, TEXT("BonDriver_"), 10) == 0)
 			pszDriver += 10;
-		::lstrcpyn(pszName, pszDriver, MaxName);
+		StringCopy(pszName, pszDriver, MaxName);
 		::PathRemoveExtension(pszName);
 	}
 

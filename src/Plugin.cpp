@@ -144,7 +144,7 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin, const ControllerInfo *pIn
 	for (int i = 0; i < m_NumButtons; i++) {
 		const ControllerButtonInfo &ButtonInfo = pInfo->pButtonList[i];
 
-		::lstrcpy(pszName, ButtonInfo.pszName);
+		StringCopy(pszName, ButtonInfo.pszName);
 		m_ButtonList[i].pszName = pszName;
 		m_ButtonList[i].DefaultCommand =
 			ButtonInfo.pszDefaultCommand != nullptr ?
@@ -183,7 +183,7 @@ bool CControllerPlugin::GetIniFileName(LPTSTR pszFileName, int MaxLength) const
 		return CController::GetIniFileName(pszFileName, MaxLength);
 	if (m_IniFileName.length() >= (String::size_type)MaxLength)
 		return false;
-	::lstrcpy(pszFileName, m_IniFileName.c_str());
+	StringCopy(pszFileName, m_IniFileName.c_str());
 	return true;
 }
 
@@ -226,7 +226,7 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo, ChannelInfo *pChanne
 	pChannelInfo->TransportStreamID = pChInfo->GetTransportStreamID();
 	pChannelInfo->szNetworkName[0] = '\0';
 	pChannelInfo->szTransportStreamName[0] = '\0';
-	::lstrcpyn(pChannelInfo->szChannelName, pChInfo->GetName(), lengthof(pChannelInfo->szChannelName));
+	StringCopy(pChannelInfo->szChannelName, pChInfo->GetName());
 	if (pChannelInfo->Size >= CHANNELINFO_SIZE_V2) {
 		pChannelInfo->PhysicalChannel = pChInfo->GetPhysicalChannel();
 		pChannelInfo->ServiceIndex = 0;	// 使用不可
@@ -1302,7 +1302,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pServiceInfo->NumAudioPIDs = (int)Info.AudioESList.size();
 			for (size_t i = 0; i < Info.AudioESList.size(); i++)
 				pServiceInfo->AudioPID[i] = Info.AudioESList[i].PID;
-			::lstrcpyn(pServiceInfo->szServiceName, Info.ServiceName.c_str(), 32);
+			StringCopy(pServiceInfo->szServiceName, Info.ServiceName.c_str());
 			if (pServiceInfo->Size == sizeof(ServiceInfo)) {
 				int ServiceIndex = pAnalyzer->GetServiceIndexByID(ServiceID);
 				for (size_t i = 0; i < Info.AudioESList.size(); i++) {
@@ -1642,15 +1642,15 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pProgramInfo->ServiceID = EventInfo.ServiceID;
 			pProgramInfo->EventID = EventInfo.EventID;
 			if (pProgramInfo->pszEventName != nullptr && pProgramInfo->MaxEventName > 0) {
-				::lstrcpyn(pProgramInfo->pszEventName, EventInfo.EventName.c_str(), pProgramInfo->MaxEventName);
+				StringCopy(pProgramInfo->pszEventName, EventInfo.EventName.c_str(), pProgramInfo->MaxEventName);
 			}
 			if (pProgramInfo->pszEventText != nullptr && pProgramInfo->MaxEventText > 0) {
-				::lstrcpyn(pProgramInfo->pszEventText, EventInfo.EventText.c_str(), pProgramInfo->MaxEventText);
+				StringCopy(pProgramInfo->pszEventText, EventInfo.EventText.c_str(), pProgramInfo->MaxEventText);
 			}
 			if (pProgramInfo->pszEventExtText != nullptr && pProgramInfo->MaxEventExtText > 0) {
 				LibISDB::String ExtendedText;
 				EventInfo.GetConcatenatedExtendedText(&ExtendedText);
-				::lstrcpyn(pProgramInfo->pszEventExtText, ExtendedText.c_str(), pProgramInfo->MaxEventExtText);
+				StringCopy(pProgramInfo->pszEventExtText, ExtendedText.c_str(), pProgramInfo->MaxEventExtText);
 			}
 			pProgramInfo->StartTime = EventInfo.StartTime.ToSYSTEMTIME();
 			pProgramInfo->Duration = EventInfo.Duration;
@@ -1964,7 +1964,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			const CDriverInfo *pDriverInfo = pDriverManager->GetDriverInfo(Index);
 			if (pDriverInfo != nullptr) {
 				if (pszFileName != nullptr)
-					::lstrcpyn(pszFileName, pDriverInfo->GetFileName(), MaxLength);
+					StringCopy(pszFileName, pDriverInfo->GetFileName(), MaxLength);
 				return ::lstrlen(pDriverInfo->GetFileName());
 			}
 		}
@@ -2023,9 +2023,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				pDriverSpaceInfo->pInfo->Size = sizeof(TuningSpaceInfo);
 				pDriverSpaceInfo->pInfo->Space = (int)pSpaceInfo->GetType();
 				if (pSpaceInfo->GetName() != nullptr) {
-					::lstrcpyn(
-						pDriverSpaceInfo->pInfo->szName, pSpaceInfo->GetName(),
-						lengthof(pDriverSpaceInfo->pInfo->szName));
+					StringCopy(pDriverSpaceInfo->pInfo->szName, pSpaceInfo->GetName());
 				} else {
 					pDriverSpaceInfo->pInfo->szName[0] = '\0';
 				}
@@ -2336,7 +2334,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			}
 			LPCTSTR pszText = Log.GetText();
 			if (pInfo->pszText != nullptr) {
-				::lstrcpyn(pInfo->pszText, pszText, pInfo->MaxText);
+				StringCopy(pInfo->pszText, pszText, pInfo->MaxText);
 			} else {
 				pInfo->MaxText = ::lstrlen(pszText) + 1;
 			}
@@ -3014,16 +3012,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 				GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			LibISDB::String Name;
 			if (pAnalyzer->GetNetworkName(&Name)) {
-				::lstrcpyn(
-					pChannelInfo->szNetworkName, Name.c_str(),
-					lengthof(pChannelInfo->szNetworkName));
+				StringCopy(pChannelInfo->szNetworkName, Name.c_str());
 			} else {
 				pChannelInfo->szNetworkName[0] = '\0';
 			}
 			if (!pAnalyzer->GetTSName(&Name)) {
-				::lstrcpyn(
-					pChannelInfo->szTransportStreamName, Name.c_str(),
-					lengthof(pChannelInfo->szTransportStreamName));
+				StringCopy(pChannelInfo->szTransportStreamName, Name.c_str());
 			} else {
 				pChannelInfo->szTransportStreamName[0] = '\0';
 			}
@@ -3065,7 +3059,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if (pszTuningSpaceName == nullptr)
 				return 0;
 			if (pszName != nullptr)
-				::lstrcpyn(pszName, pszTuningSpaceName, MaxLength);
+				StringCopy(pszName, pszTuningSpaceName, MaxLength);
 			return ::lstrlen(pszTuningSpaceName);
 		}
 
@@ -3100,7 +3094,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			LPCTSTR pszDriverName = GetAppClass().CoreEngine.GetDriverFileName();
 
 			if (pszName != nullptr && MaxLength > 0)
-				::lstrcpyn(pszName, pszDriverName, MaxLength);
+				StringCopy(pszName, pszDriverName, MaxLength);
 			return ::lstrlen(pszDriverName);
 		}
 
@@ -3209,7 +3203,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if ((pRecInfo->Mask & RECORD_MASK_FILENAME) != 0
 					&& pRecInfo->pszFileName != nullptr && pRecInfo->MaxFileName > 0) {
 				if (pRecordManager->GetFileName() != nullptr) {
-					::lstrcpyn(
+					StringCopy(
 						pRecInfo->pszFileName, pRecordManager->GetFileName(),
 						pRecInfo->MaxFileName);
 				} else {
@@ -3488,7 +3482,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 			if (pszTuningSpaceName == nullptr)
 				return FALSE;
-			::lstrcpyn(pInfo->szName, pszTuningSpaceName, lengthof(pInfo->szName));
+			StringCopy(pInfo->szName, pszTuningSpaceName);
 			pInfo->Space = (int)pTuningSpaceList->GetTuningSpaceType(Index);
 		}
 		return TRUE;
@@ -3513,7 +3507,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if (!GetAppClass().CoreEngine.GetDriverPath(szFileName, lengthof(szFileName)))
 				return 0;
 			if (pszPath != nullptr && MaxLength > 0)
-				::lstrcpyn(pszPath, szFileName, MaxLength);
+				StringCopy(pszPath, szFileName, MaxLength);
 			return ::lstrlen(szFileName);
 		}
 
@@ -3750,7 +3744,7 @@ static bool GetSettingString(SettingInfo *pSetting, LPCWSTR pszString)
 	if (pSetting->Value.pszString != nullptr) {
 		if (pSetting->ValueSize == 0)
 			return false;
-		::lstrcpynW(pSetting->Value.pszString, pszString, pSetting->ValueSize);
+		StringCopy(pSetting->Value.pszString, pszString, pSetting->ValueSize / sizeof(WCHAR));
 		pSetting->ValueSize = (::lstrlenW(pSetting->Value.pszString) + 1) * sizeof(WCHAR);
 	} else {
 		pSetting->ValueSize = (::lstrlenW(pszString) + 1) * sizeof(WCHAR);
@@ -4636,7 +4630,7 @@ CPlugin *CPluginManager::GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *p
 		return nullptr;
 
 	TCHAR szFileName[MAX_PATH];
-	::lstrcpyn(szFileName, pszCommand, (int)((pDelimiter - pszCommand) + 1));
+	StringCopy(szFileName, pszCommand, (pDelimiter - pszCommand) + 1);
 
 	int PluginIndex = FindPluginByFileName(szFileName);
 	if (PluginIndex < 0)
@@ -4702,7 +4696,7 @@ bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, cons
 		return false;
 
 	TCHAR szFileName[MAX_PATH];
-	::lstrcpyn(szFileName, pszCommand, (int)((pDelimiter - pszCommand) + 1));
+	StringCopy(szFileName, pszCommand, (pDelimiter - pszCommand) + 1);
 
 	int PluginIndex = FindPluginByFileName(szFileName);
 	if (PluginIndex < 0)

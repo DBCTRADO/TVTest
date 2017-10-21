@@ -112,7 +112,7 @@ bool CTaskTrayManager::AddTrayIcon()
 	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 	nid.uCallbackMessage = m_TrayIconMessage;
 	nid.hIcon = LoadTrayIcon();
-	::lstrcpyn(nid.szTip, !m_TipText.empty() ? m_TipText.c_str() : APP_NAME, lengthof(nid.szTip));
+	StringCopy(nid.szTip, !m_TipText.empty() ? m_TipText.c_str() : APP_NAME);
 	bool fResult = ::Shell_NotifyIcon(NIM_ADD, &nid) != FALSE;
 	::DestroyIcon(nid.hIcon);
 	if (!fResult)
@@ -174,7 +174,7 @@ bool CTaskTrayManager::UpdateTipText()
 	nid.hWnd = m_hwnd;
 	nid.uID = 1;
 	nid.uFlags = NIF_TIP;
-	::lstrcpyn(nid.szTip, !m_TipText.empty() ? m_TipText.c_str() : APP_NAME, lengthof(nid.szTip));
+	StringCopy(nid.szTip, !m_TipText.empty() ? m_TipText.c_str() : APP_NAME);
 	return ::Shell_NotifyIcon(NIM_MODIFY, &nid) != FALSE;
 }
 
@@ -243,9 +243,9 @@ bool CTaskTrayManager::ShowMessage(LPCTSTR pszText, LPCTSTR pszTitle, int Icon, 
 	nid.hWnd = m_hwnd;
 	nid.uID = 1;
 	nid.uFlags = NIF_INFO;
-	::lstrcpyn(nid.szInfo, pszText, lengthof(nid.szInfo));
+	StringCopy(nid.szInfo, pszText);
 	if (pszTitle)
-		::lstrcpyn(nid.szInfoTitle, pszTitle, lengthof(nid.szInfoTitle));
+		StringCopy(nid.szInfoTitle, pszTitle);
 	nid.dwInfoFlags =
 		Icon == MESSAGE_ICON_INFO ? NIIF_INFO :
 		Icon == MESSAGE_ICON_WARNING ? NIIF_WARNING :

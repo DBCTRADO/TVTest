@@ -718,7 +718,7 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 				|| ::lstrcmpi(MessageFont.lfFaceName, TEXT("Meiryo")) == 0) {
 			pFont->lfHeight = -abs(MessageFont.lfHeight);
 			pFont->lfWeight = FW_NORMAL;
-			::lstrcpy(pFont->lfFaceName, TEXT("Meiryo UI"));
+			StringCopy(pFont->lfFaceName, TEXT("Meiryo UI"));
 			if (IsFontAvailable(*pFont))
 				return true;
 		} else {

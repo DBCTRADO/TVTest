@@ -642,7 +642,7 @@ void CInformationPanel::ApplyStyle()
 		LOGFONT lf = {};
 		lf.lfHeight = m_Style.ButtonSize.Height;
 		lf.lfCharSet = SYMBOL_CHARSET;
-		::lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+		StringCopy(lf.lfFaceName, TEXT("Marlett"));
 		m_IconFont.Create(&lf);
 
 		CalcFontHeight();
@@ -1722,11 +1722,11 @@ bool CInformationPanel::CProgramInfoItem::GetButtonTipText(int Button, LPTSTR ps
 {
 	switch (Button) {
 	case BUTTON_PREV:
-		::lstrcpyn(pszText, TEXT("現在の番組"), MaxText);
+		StringCopy(pszText, TEXT("現在の番組"), MaxText);
 		return true;
 
 	case BUTTON_NEXT:
-		::lstrcpyn(pszText, TEXT("次の番組"), MaxText);
+		StringCopy(pszText, TEXT("次の番組"), MaxText);
 		return true;
 	}
 

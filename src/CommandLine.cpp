@@ -184,7 +184,7 @@ bool CArgsParser::GetText(LPWSTR pszText, int MaxLength) const
 		return false;
 	if (::lstrlen(m_ppszArgList[m_CurPos]) >= MaxLength)
 		return false;
-	::lstrcpy(pszText, m_ppszArgList[m_CurPos]);
+	StringCopy(pszText, m_ppszArgList[m_CurPos]);
 	return true;
 }
 

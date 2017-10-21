@@ -495,7 +495,7 @@ void CCaptureWindow::SetTitle()
 	if (m_hwnd != nullptr) {
 		TCHAR szTitle[64];
 
-		::lstrcpy(szTitle, CAPTURE_TITLE_TEXT);
+		StringCopy(szTitle, CAPTURE_TITLE_TEXT);
 		if (m_Image) {
 			BITMAPINFOHEADER bmih;
 

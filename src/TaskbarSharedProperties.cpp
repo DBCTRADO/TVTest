@@ -221,8 +221,8 @@ void CTaskbarSharedProperties::TunerChannelInfoToRecentChannelInfo(
 	pChannelInfo->TransportStreamID = pTunerChInfo->GetTransportStreamID();
 	pChannelInfo->ServiceID = pTunerChInfo->GetServiceID();
 	pChannelInfo->ServiceType = pTunerChInfo->GetServiceType();
-	::lstrcpynW(pChannelInfo->szChannelName, pTunerChInfo->GetName(), MAX_CHANNEL_NAME);
-	::lstrcpynW(pChannelInfo->szTunerName, pTunerChInfo->GetTunerName(), MAX_PATH);
+	StringCopy(pChannelInfo->szChannelName, pTunerChInfo->GetName());
+	StringCopy(pChannelInfo->szTunerName, pTunerChInfo->GetTunerName());
 }
 
 

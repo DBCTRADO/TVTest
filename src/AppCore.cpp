@@ -878,7 +878,7 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseCha
 			if (ServiceID == LibISDB::SERVICE_ID_INVALID
 					|| pChannelInfo->GetServiceID() <= 0
 					|| pChannelInfo->GetServiceID() == ServiceID) {
-				::lstrcpyn(pszName, pChannelInfo->GetName(), MaxLength);
+				StringCopy(pszName, pChannelInfo->GetName(), MaxLength);
 				return true;
 			}
 		}
@@ -907,7 +907,7 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseCha
 	LibISDB::String Name;
 	if (!pAnalyzer->GetServiceName(Index, &Name))
 		return false;
-	::lstrcpyn(pszName, Name.c_str(), MaxLength);
+	StringCopy(pszName, Name.c_str(), MaxLength);
 
 	return true;
 }
@@ -1171,7 +1171,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName)
 	}
 
 	TCHAR szDir[MAX_PATH];
-	::lstrcpy(szDir, pszFileName);
+	StringCopy(szDir, pszFileName);
 	::PathRemoveFileSpec(szDir);
 	if (!::PathIsDirectory(szDir)) {
 		int Result = ::SHCreateDirectoryEx(nullptr, szDir, nullptr);

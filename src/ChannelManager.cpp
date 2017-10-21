@@ -401,7 +401,7 @@ bool CChannelManager::GetChannelFileName(LPTSTR pszFileName, int MaxLength) cons
 			|| MaxLength <= (int)m_ChannelFileName.length())
 		return false;
 
-	::lstrcpy(pszFileName, m_ChannelFileName.c_str());
+	StringCopy(pszFileName, m_ChannelFileName.c_str());
 
 	return true;
 }

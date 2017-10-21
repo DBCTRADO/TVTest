@@ -562,11 +562,11 @@ void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, boo
 	lvi.pszText = szText;
 	if (fServiceType) {
 		switch (pChInfo->GetServiceType()) {
-		case LibISDB::SERVICE_TYPE_DIGITAL_TV:      ::lstrcpy(szText, TEXT("TV"));                 break;
-		case LibISDB::SERVICE_TYPE_DIGITAL_AUDIO:   ::lstrcpy(szText, TEXT("音声"));               break;
-		case LibISDB::SERVICE_TYPE_PROMOTION_VIDEO: ::lstrcpy(szText, TEXT("プロモーション映像")); break;
-		case LibISDB::SERVICE_TYPE_DATA:            ::lstrcpy(szText, TEXT("データ/ワンセグ"));    break;
-		case LibISDB::SERVICE_TYPE_4K_TV:           ::lstrcpy(szText, TEXT("4K TV"));              break;
+		case LibISDB::SERVICE_TYPE_DIGITAL_TV:      StringCopy(szText, TEXT("TV"));                 break;
+		case LibISDB::SERVICE_TYPE_DIGITAL_AUDIO:   StringCopy(szText, TEXT("音声"));               break;
+		case LibISDB::SERVICE_TYPE_PROMOTION_VIDEO: StringCopy(szText, TEXT("プロモーション映像")); break;
+		case LibISDB::SERVICE_TYPE_DATA:            StringCopy(szText, TEXT("データ/ワンセグ"));    break;
+		case LibISDB::SERVICE_TYPE_4K_TV:           StringCopy(szText, TEXT("4K TV"));              break;
 		default:
 			StringPrintf(szText, TEXT("他(%02x)"), pChInfo->GetServiceType());
 			break;
@@ -580,7 +580,7 @@ void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, boo
 	LPCTSTR pszChannelName =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>()->GetChannelName(
 			pChInfo->GetSpace(), pChInfo->GetChannelIndex());
-	::lstrcpyn(szText, !IsStringEmpty(pszChannelName) ? pszChannelName : TEXT("\?\?\?"), lengthof(szText));
+	StringCopy(szText, !IsStringEmpty(pszChannelName) ? pszChannelName : TEXT("\?\?\?"));
 	ListView_SetItem(hwndList, &lvi);
 
 	lvi.iSubItem = COLUMN_SERVICEID;
@@ -673,7 +673,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, i
 				&& (pszDelimiter = ::StrChr(pszChannelName + 1, _T(' '))) != nullptr) {
 			int TSNameLength = (int)(pszDelimiter - pszChannelName) - 1;
 			TCHAR szName[MAX_CHANNEL_NAME];
-			::lstrcpyn(szName, pszChannelName + 1, TSNameLength + 1);
+			StringCopy(szName, pszChannelName + 1, TSNameLength + 1);
 			bool fFound = false;
 			for (size_t j = 0; j < BonDriverChannelList.size(); j++) {
 				pszName = BonDriverChannelList[j].c_str();
@@ -689,7 +689,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, i
 					continue;
 				fCorrupted = true;
 			}
-			::lstrcpy(szName, pszDelimiter + 1);
+			StringCopy(szName, pszDelimiter + 1);
 			ChannelInfo.SetName(szName);
 		} else {
 			if (ChannelInfo.GetChannelIndex() >= (int)BonDriverChannelList.size()) {
@@ -999,7 +999,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							// チャンネルが検出できなかった
 							TCHAR szText[1024];
 
-							::lstrcpy(szText, TEXT("チャンネルが検出できませんでした。"));
+							StringCopy(szText, TEXT("チャンネルが検出できませんでした。"));
 							if ((m_fIgnoreSignalLevel
 										&& m_MaxSignalLevel < 1.0f)
 									|| (!m_fIgnoreSignalLevel
@@ -1191,7 +1191,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					if (fOK) {
 						LPTSTR pSequence = ::PathFindExtension(szFileName);
 						if (pSequence > szFileName && *(--pSequence) == _T('0')) {
-							::lstrcpy(pSequence + 1, TEXT(".dll"));
+							StringCopy(pSequence + 1, TEXT(".dll"));
 							unsigned int Exists = 0;
 							for (int i = 1; i <= 9; i++) {
 								*pSequence = _T('0') + i;

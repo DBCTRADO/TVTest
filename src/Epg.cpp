@@ -187,7 +187,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetName(
 	if (pszName == nullptr || MaxName < 1)
 		return false;
 
-	::lstrcpyn(pszName, TEXT("お気に入りチャンネル"), MaxName);
+	StringCopy(pszName, TEXT("お気に入りチャンネル"), MaxName);
 
 	return true;
 }
@@ -241,7 +241,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
 		}
 	}
 
-	::lstrcpyn(pszFileName, pszBonDriver, MaxLength);
+	StringCopy(pszFileName, pszBonDriver, MaxLength);
 
 	return false;
 }
@@ -286,7 +286,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileN
 		}
 	}
 
-	::lstrcpyn(pszFileName, FavoriteChannel.GetBonDriverFileName(), MaxLength);
+	StringCopy(pszFileName, FavoriteChannel.GetBonDriverFileName(), MaxLength);
 
 	return true;
 }

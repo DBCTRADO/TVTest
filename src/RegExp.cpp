@@ -580,7 +580,7 @@ bool CRegExpEngine_Bregonig::IsAvailable()
 void CRegExpEngine_Bregonig::GetLibraryPath(LPTSTR pszPath)
 {
 	::GetModuleFileName(nullptr, pszPath, MAX_PATH);
-	::lstrcpy(::PathFindFileName(pszPath), TEXT("bregonig.dll"));
+	StringCopy(::PathFindFileName(pszPath), TEXT("bregonig.dll"));
 }
 
 #endif	// TVTEST_BREGONIG_SUPPORT

@@ -92,7 +92,7 @@ bool CRichEditUtil::LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT 
 	pcf->crTextColor = ::GetSysColor(COLOR_WINDOWTEXT);
 	pcf->bPitchAndFamily = plf->lfPitchAndFamily;
 	pcf->bCharSet = plf->lfCharSet;
-	::lstrcpy(pcf->szFaceName, plf->lfFaceName);
+	StringCopy(pcf->szFaceName, plf->lfFaceName);
 
 	return true;
 }
@@ -117,7 +117,7 @@ bool CRichEditUtil::LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT
 	pcf->crTextColor = ::GetSysColor(COLOR_WINDOWTEXT);
 	pcf->bPitchAndFamily = plf->lfPitchAndFamily;
 	pcf->bCharSet = plf->lfCharSet;
-	::lstrcpy(pcf->szFaceName, plf->lfFaceName);
+	StringCopy(pcf->szFaceName, plf->lfFaceName);
 	pcf->wWeight = (WORD)plf->lfWeight;
 
 	return true;
@@ -424,7 +424,7 @@ bool CRichEditUtil::OpenLink(HWND hwndEdit, const CHARRANGE &Range)
 		szText, Length, szURL, lengthof(szURL));
 	szURL[Length] = _T('\0');
 	if (::StrCmpN(szURL, TEXT("www."), 4) == 0) {
-		::lstrcpy(szText, szURL);
+		StringCopy(szText, szURL);
 		StringPrintf(szURL, TEXT("http://%s"), szText);
 	}
 	::ShellExecute(nullptr, TEXT("open"), szURL, nullptr, nullptr, SW_SHOWNORMAL);

@@ -308,7 +308,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				::GetDlgItemText(hDlg, IDC_OPTIONS_LOGOFILENAME, szFileName, lengthof(szFileName));
 				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
-					::lstrcpyn(szFileName, FileName.c_str(), MAX_PATH);
+					StringCopy(szFileName, FileName.c_str());
 				} else {
 					GetAppClass().GetAppDirectory(&InitDir);
 				}

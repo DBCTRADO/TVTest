@@ -376,7 +376,7 @@ bool CCoreEngine::GetDriverPath(LPTSTR pszPath, int MaxLength) const
 		return false;
 	}
 
-	::lstrcpy(pszPath, Path.c_str());
+	StringCopy(pszPath, Path.c_str());
 
 	return true;
 }

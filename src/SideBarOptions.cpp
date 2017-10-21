@@ -810,7 +810,7 @@ void CSideBarOptions::SetItemList(HWND hwndList, const int *pList, int NumItems)
 
 		lvi.iImage = -1;
 		if (ID == ITEM_SEPARATOR) {
-			::lstrcpy(szText, TEXT("(区切り)"));
+			StringCopy(szText, TEXT("(区切り)"));
 		} else {
 			pCommandManager->GetCommandText(ID, szText, lengthof(szText));
 			auto itr = m_IconIDMap.find(ID);

@@ -907,7 +907,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group, LPTSTR pszName
 
 	if (HasAllChannelGroup()) {
 		if (Group == 0) {
-			::lstrcpyn(pszName, TEXT("すべてのチャンネル"), MaxName);
+			StringCopy(pszName, TEXT("すべてのチャンネル"), MaxName);
 			return true;
 		}
 		Group--;
@@ -915,7 +915,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group, LPTSTR pszName
 
 	LPCTSTR pszTuningSpaceName = m_TuningSpaceList.GetTuningSpaceName((int)Group);
 	if (!IsStringEmpty(pszTuningSpaceName))
-		::lstrcpyn(pszName, pszTuningSpaceName, MaxName);
+		StringCopy(pszName, pszTuningSpaceName, MaxName);
 	else
 		StringPrintf(pszName, MaxName, TEXT("チューニング空間 %d"), (int)Group + 1);
 
@@ -6284,7 +6284,7 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 
 	TCHAR szText[32];
 	if ((pnmtb->nmcd.lItemlParam & ITEM_FLAG_NOW) != 0) {
-		::lstrcpy(szText, TEXT("今日"));
+		StringCopy(szText, TEXT("今日"));
 	} else {
 		StringPrintf(
 			szText, TEXT("%d/%d(%s)"),
@@ -6494,7 +6494,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 
 		tbb.idCommand = TimeInfo.Command;
 		if (TimeInfo.Command == CM_PROGRAMGUIDE_TIME_CURRENT) {
-			::lstrcpy(szText, TEXT("現在"));
+			StringCopy(szText, TEXT("現在"));
 		} else {
 			StringPrintf(szText, TEXT("%d時～"), TimeInfo.Hour);
 		}
@@ -6574,7 +6574,7 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 
 	TCHAR szText[32];
 	if (fCurrent) {
-		::lstrcpy(szText, TEXT("現在"));
+		StringCopy(szText, TEXT("現在"));
 	} else {
 		StringPrintf(szText, TEXT("%d時～"), Hour);
 	}

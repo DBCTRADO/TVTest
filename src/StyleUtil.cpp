@@ -117,7 +117,7 @@ bool ReadFontSettings(
 		Key += TEXT("Name");
 		if (Settings.Read(Key.c_str(), szFont, LF_FACESIZE)
 				&& szFont[0] != _T('\0')) {
-			::lstrcpyn(pFont->LogFont.lfFaceName, szFont, LF_FACESIZE);
+			StringCopy(pFont->LogFont.lfFaceName, szFont);
 			pFont->LogFont.lfEscapement = 0;
 			pFont->LogFont.lfOrientation = 0;
 			pFont->LogFont.lfUnderline = 0;

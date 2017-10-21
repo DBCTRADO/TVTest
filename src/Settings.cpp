@@ -184,7 +184,7 @@ bool CSettings::Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max)
 	if (!m_IniFile.GetValue(pszValueName, &Value))
 		return false;
 
-	::lstrcpyn(pszData, Value.c_str(), Max);
+	StringCopy(pszData, Value.c_str(), Max);
 
 	return true;
 }
@@ -352,7 +352,7 @@ bool CSettings::Read(LPCTSTR pszValueName, LOGFONT *pFont)
 		if (*q != _T('\0')) {
 			switch (i) {
 			case 0:
-				::lstrcpyn(pFont->lfFaceName, q, LF_FACESIZE);
+				StringCopy(pFont->lfFaceName, q);
 				pFont->lfWidth = 0;
 				pFont->lfEscapement = 0;
 				pFont->lfOrientation = 0;

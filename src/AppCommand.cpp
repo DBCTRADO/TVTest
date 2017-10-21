@@ -1407,7 +1407,7 @@ bool CAppCommand::DriverBrowse(CCommandManager::InvokeParameters &Params)
 
 	m_App.CoreEngine.GetDriverPath(&Path);
 	if (PathUtil::Split(Path, &InitDir, &Name)) {
-		::lstrcpyn(szFileName, Name.c_str(), MAX_PATH);
+		StringCopy(szFileName, Name.c_str());
 	} else {
 		m_App.GetAppDirectory(&InitDir);
 		szFileName[0] = '\0';

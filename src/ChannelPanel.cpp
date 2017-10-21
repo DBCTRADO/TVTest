@@ -1551,7 +1551,7 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 			szText, TEXT("%d: %s"),
 			m_ChannelInfo.GetChannelNo(), m_ChannelInfo.GetName());
 	else
-		::lstrcpyn(szText, m_ChannelInfo.GetName(), lengthof(szText));
+		StringCopy(szText, m_ChannelInfo.GetName());
 	::DrawText(
 		hdc, szText, -1, &rc,
 		DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);

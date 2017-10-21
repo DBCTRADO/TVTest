@@ -88,7 +88,7 @@ int CLogItem::Format(WCHAR *pszText, int MaxLength) const
 
 	Length = FormatTime(pszText, MaxLength);
 	pszText[Length++] = L'>';
-	::lstrcpynW(pszText + Length, m_Text.c_str(), MaxLength - Length);
+	StringCopy(pszText + Length, m_Text.c_str(), MaxLength - Length);
 	Length += ::lstrlenW(pszText + Length);
 	return Length;
 }

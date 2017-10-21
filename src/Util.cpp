@@ -551,7 +551,7 @@ int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lpData, LPARAM lP
 		if (((LPTSTR)lParam)[0] != _T('\0')) {
 			TCHAR szDirectory[MAX_PATH];
 
-			lstrcpy(szDirectory, (LPTSTR)lParam);
+			StringCopy(szDirectory, (LPTSTR)lParam);
 			PathRemoveBackslash(szDirectory);
 			SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)szDirectory);
 		}
@@ -834,12 +834,12 @@ bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength)
 		p = ::PathFindFileName(szTemp);
 		if ((p - szTemp) + ::lstrlen(pszFilePath) >= MaxLength)
 			return false;
-		::lstrcpy(p, pszFilePath);
+		StringCopy(p, pszFilePath);
 		::PathCanonicalize(pszAbsolutePath, szTemp);
 	} else {
 		if (::lstrlen(pszFilePath) >= MaxLength)
 			return false;
-		::lstrcpy(pszAbsolutePath, pszFilePath);
+		StringCopy(pszAbsolutePath, pszFilePath);
 	}
 	return true;
 }

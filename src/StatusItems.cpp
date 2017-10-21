@@ -65,7 +65,7 @@ void CChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRec
 			pInfo->GetChannelNo(),
 			App.Core.GetCurrentServiceName(szService, lengthof(szService)) ? szService : pInfo->GetName());
 	} else {
-		::lstrcpy(szText, TEXT("<チャンネル>"));
+		StringCopy(szText, TEXT("<チャンネル>"));
 	}
 	DrawText(hdc, DrawRect, szText);
 }
@@ -311,7 +311,7 @@ void CAudioChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dr
 
 	TCHAR szText[64];
 	if (App.UICore.FormatCurrentAudioText(szText, lengthof(szText)) <= 0)
-		::lstrcpy(szText, TEXT("<音声>"));
+		StringCopy(szText, TEXT("<音声>"));
 	DrawText(hdc, rc, szText);
 }
 

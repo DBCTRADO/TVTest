@@ -197,7 +197,7 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag
 			::CopyMemory(pszBuffer, p, Fit * sizeof(WCHAR));
 			LPWSTR pszCur = pszBuffer + Fit;
 			for (;;) {
-				::lstrcpyW(pszCur, szEllipses);
+				StringCopy(pszCur, szEllipses);
 				Length = (int)(pszCur - pszBuffer) + (lengthof(szEllipses) - 1);
 				Fit = GetFitCharCount(pszBuffer, Length, Width);
 				if (Fit >= Length || pszCur == pszBuffer)

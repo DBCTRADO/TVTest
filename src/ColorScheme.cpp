@@ -882,7 +882,7 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 
 	if (m_Name.empty()) {
 		TCHAR szName[MAX_COLORSCHEME_NAME];
-		::lstrcpyn(szName, ::PathFindFileName(pszFileName), lengthof(szName));
+		StringCopy(szName, ::PathFindFileName(pszFileName));
 		::PathRemoveExtension(szName);
 		SetName(szName);
 	}

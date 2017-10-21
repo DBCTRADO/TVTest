@@ -689,7 +689,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 			if (::StrToIntEx(&fd.cFileName[9], STIF_SUPPORT_HEX, &Version)) {
 				if (Version > NewerVersion) {
 					NewerVersion = Version;
-					::lstrcpy(szFileName, fd.cFileName);
+					StringCopy(szFileName, fd.cFileName);
 				}
 			}
 		}

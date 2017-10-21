@@ -750,7 +750,7 @@ void CAccelerator::SetAccelItem(int Index, BYTE Mod, WORD Key, bool fGlobal, BYT
 	}
 	m_ListView.SetItemText(Index, COLUMN_KEY, szText);
 	if (AppCommand != 0) {
-		::lstrcpy(szText, m_MediaKeyList[AppCommand - 1].pszText);
+		StringCopy(szText, m_MediaKeyList[AppCommand - 1].pszText);
 	} else {
 		szText[0] = _T('\0');
 	}
@@ -838,7 +838,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					m_ListView.SetItemText(Index, COLUMN_KEY, szText);
 				}
 				if (AppCommand != 0) {
-					::lstrcpy(szText, m_MediaKeyList[AppCommand - 1].pszText);
+					StringCopy(szText, m_MediaKeyList[AppCommand - 1].pszText);
 					m_ListView.SetItemText(Index, COLUMN_APPCOMMAND, szText);
 				}
 			}
@@ -949,7 +949,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_ListView.SetItemParam(Sel, Param);
 				TCHAR szText[64];
 				if (AppCommand > 0) {
-					::lstrcpy(szText, m_MediaKeyList[AppCommand - 1].pszText);
+					StringCopy(szText, m_MediaKeyList[AppCommand - 1].pszText);
 				} else {
 					szText[0] = _T('\0');
 				}

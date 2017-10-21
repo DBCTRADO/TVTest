@@ -56,7 +56,7 @@ bool CController::GetIniFileName(LPTSTR pszFileName, int MaxLength) const
 
 	if (::lstrlen(pszIniFileName) >= MaxLength)
 		return false;
-	::lstrcpy(pszFileName, pszIniFileName);
+	StringCopy(pszFileName, pszIniFileName);
 	return true;
 }
 

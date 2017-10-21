@@ -276,7 +276,7 @@ bool CDriverManager::GetAllServiceList(CChannelList *pList) const
 		if (pszExtension > pszFileName
 				&& *(pszExtension - 1) >= _T('1') && *(pszExtension - 1) <= _T('9')) {
 			TCHAR szFirstFile[MAX_PATH];
-			::lstrcpy(szFirstFile, pszFileName);
+			StringCopy(szFirstFile, pszFileName);
 			szFirstFile[pszExtension - 1 - pszFileName] = _T('0');
 			if (FindByFileName(szFirstFile) >= 0)
 				continue;

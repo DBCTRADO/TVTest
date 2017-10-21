@@ -228,7 +228,7 @@ bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR
 			*ppszErrorMessage = TEXT("ファイルパスが長すぎます。");
 		return false;
 	}
-	::lstrcpy(pszFileName, m_SaveFolder.c_str());
+	StringCopy(pszFileName, m_SaveFolder.c_str());
 	::PathAddBackslash(pszFileName);
 	::lstrcat(pszFileName, m_FileName.c_str());
 	return true;
@@ -399,7 +399,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				if (Command != 0)
 					CommandManager.GetCommandText(Command, szText, lengthof(szText));
 				else
-					::lstrcpy(szText, TEXT("何もしない"));
+					StringCopy(szText, TEXT("何もしない"));
 				DlgComboBox_AddString(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND, szText);
 				if (Command == m_StatusBarRecordCommand)
 					DlgComboBox_SetCurSel(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND, i);

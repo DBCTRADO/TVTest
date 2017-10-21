@@ -522,7 +522,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				pColorScheme = m_PresetList.GetColorScheme(
 					(int)DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel));
 				if (pColorScheme != nullptr && pColorScheme->IsLoadedFromFile())
-					::lstrcpyn(szName, pColorScheme->GetName(), lengthof(szName));
+					StringCopy(szName, pColorScheme->GetName());
 				CColorSchemeSaveDialog SaveDlg(szName);
 				if (!SaveDlg.Show(hDlg))
 					return TRUE;
@@ -535,7 +535,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				bool fNewColorScheme;
 				TCHAR szFileName[MAX_PATH];
 				if (pColorScheme != nullptr && pColorScheme->IsLoadedFromFile()) {
-					::lstrcpy(szFileName, pColorScheme->GetFileName());
+					StringCopy(szFileName, pColorScheme->GetFileName());
 					fNewColorScheme = false;
 				} else {
 					GetThemesDirectory(szFileName, lengthof(szFileName), true);

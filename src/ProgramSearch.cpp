@@ -1358,7 +1358,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			for (int i = 0; i < CEpgGenre::NUM_GENRE; i++) {
 				LPCTSTR pszText = EpgGenre.GetText(i, -1);
 				if (pszText != nullptr) {
-					::lstrcpyn(szText, pszText, lengthof(szText));
+					StringCopy(szText, pszText);
 					tvis.hParent = TVI_ROOT;
 					tvis.item.state = INDEXTOSTATEIMAGEMASK(1);
 					if (m_fGenreExpanded[i])
@@ -1369,7 +1369,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					for (int j = 0; j < CEpgGenre::NUM_SUB_GENRE; j++) {
 						pszText = EpgGenre.GetText(i, j);
 						if (pszText != nullptr) {
-							::lstrcpyn(szText, pszText, lengthof(szText));
+							StringCopy(szText, pszText);
 							tvis.item.state = INDEXTOSTATEIMAGEMASK(1);
 							tvis.item.lParam = GENRE_LPARAM_PACK(i, j);
 							TreeView_InsertItem(hwndGenre, &tvis);
@@ -1762,7 +1762,7 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 	if (CheckCount > 0)
 		StringPrintf(szText, TEXT("%d 個選択"), CheckCount);
 	else
-		::lstrcpy(szText, TEXT("指定なし"));
+		StringCopy(szText, TEXT("指定なし"));
 	::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_GENRE_STATUS, szText);
 }
 
@@ -2178,7 +2178,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				NMLVEMPTYMARKUP *pnmMarkup = reinterpret_cast<NMLVEMPTYMARKUP*>(lParam);
 
 				pnmMarkup->dwFlags = EMF_CENTERED;
-				::lstrcpyW(pnmMarkup->szMarkup, L"検索された番組はありません");
+				StringCopy(pnmMarkup->szMarkup, L"検索された番組はありません");
 				::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
 			}
 			return TRUE;
@@ -2284,7 +2284,7 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	lvi.mask = LVIF_TEXT | LVIF_PARAM;
 	lvi.iItem = ListView_GetItemCount(hwndList);
 	lvi.iSubItem = COLUMN_CHANNEL;
-	::lstrcpyn(szText, pEventInfo->GetChannelInfo().GetName(), lengthof(szText));
+	StringCopy(szText, pEventInfo->GetChannelInfo().GetName());
 	lvi.pszText = szText;
 	lvi.lParam = reinterpret_cast<LPARAM>(pEventInfo);
 	ListView_InsertItem(hwndList, &lvi);
@@ -2305,7 +2305,7 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	ListView_SetItem(hwndList, &lvi);
 	//lvi.mask = LVIF_TEXT;
 	lvi.iSubItem = COLUMN_EVENTNAME;
-	::lstrcpyn(szText, pEventInfo->EventName.c_str(), lengthof(szText));
+	StringCopy(szText, pEventInfo->EventName.c_str());
 	//lvi.pszText = szText;
 	ListView_SetItem(hwndList, &lvi);
 

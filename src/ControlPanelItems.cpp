@@ -102,7 +102,7 @@ void CChannelControlItem::Draw(HDC hdc, const RECT &Rect)
 	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != nullptr) {
 		StringPrintf(szText, TEXT("%d: %s"), pInfo->GetChannelNo(), pInfo->GetName());
 	} else {
-		::lstrcpy(szText, TEXT("<チャンネル>"));
+		StringCopy(szText, TEXT("<チャンネル>"));
 	}
 	RECT rc = Rect;
 	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
@@ -301,7 +301,7 @@ void CAudioControlItem::Draw(HDC hdc, const RECT &Rect)
 
 	TCHAR szText[64];
 	if (App.UICore.FormatCurrentAudioText(szText, lengthof(szText)) <= 0)
-		::lstrcpy(szText, TEXT("<音声>"));
+		StringCopy(szText, TEXT("<音声>"));
 	::DrawText(
 		hdc, szText, -1, &rc,
 		DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);

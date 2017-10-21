@@ -1166,7 +1166,7 @@ void CProgramListPanel::ApplyStyle()
 		LOGFONT lf = {};
 		lf.lfHeight = -m_Style.ChannelButtonIconSize.Height;
 		lf.lfCharSet = SYMBOL_CHARSET;
-		::lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+		StringCopy(lf.lfFaceName, TEXT("Marlett"));
 		m_IconFont.Create(&lf);
 
 		CalcFontHeight();

@@ -629,7 +629,7 @@ void CCaptionPanel::OnCaption(
 		}
 
 		LPTSTR pszBuff = new TCHAR[Length + 2];
-		::lstrcpy(pszBuff, pText);
+		StringCopy(pszBuff, pText);
 		DWORD DstLength = Length;
 
 		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
@@ -641,7 +641,7 @@ void CCaptionPanel::OnCaption(
 							DWORD NextPos = min(DstLength, (DWORD)(*pFormatList)[i + 1].Pos);
 #ifdef _DEBUG
 							TCHAR szTrace[1024];
-							::lstrcpyn(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
+							StringCopy(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
 							TRACE(TEXT("Caption exclude : %s\n"), szTrace);
 #endif
 							memmove(
@@ -879,7 +879,7 @@ static void MakeSaveFileName(const uint8_t *pMD5, LPTSTR pszFileName, LPCTSTR ps
 		pszFileName[i * 2 + 0] = Hex[pMD5[i] >> 4];
 		pszFileName[i * 2 + 1] = Hex[pMD5[i] & 0x0F];
 	}
-	::lstrcpy(pszFileName + 32, pszExtension);
+	StringCopy(pszFileName + 32, pszExtension);
 }
 
 bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)

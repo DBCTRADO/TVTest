@@ -258,7 +258,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				::GetDlgItemText(hDlg, IDC_OPTIONS_DEFAULTDRIVER, szFileName, lengthof(szFileName));
 				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
-					::lstrcpy(szFileName, FileName.c_str());
+					StringCopy(szFileName, FileName.c_str());
 				} else {
 					GetAppClass().GetAppDirectory(&InitDir);
 				}

@@ -79,7 +79,7 @@ int CWheelCommandManager::GetCommandParsableName(int ID, LPTSTR pszName, int Max
 
 	for (const auto &e : m_CommandList) {
 		if (e.ID == ID) {
-			::lstrcpyn(pszName, e.IDText.c_str(), MaxName);
+			StringCopy(pszName, e.IDText.c_str(), MaxName);
 			return static_cast<int>(e.IDText.length());
 		}
 	}

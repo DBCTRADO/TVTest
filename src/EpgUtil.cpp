@@ -133,7 +133,7 @@ int FormatEventTime(
 			}
 		} else {
 			if (!!(Flags & FormatEventTimeFlag::UndecidedText))
-				::lstrcpy(szEndTime, TEXT("(終了未定)"));
+				StringCopy(szEndTime, TEXT("(終了未定)"));
 		}
 	}
 

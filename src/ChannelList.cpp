@@ -1136,7 +1136,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 							if (p[Length] == _T(')') && p[Length + 1] == _T(')'))
 								Length++;
 							if (Length > 0) {
-								::lstrcpyn(szName, p, min(Length + 1, (int)lengthof(szName)));
+								StringCopy(szName, p, min(Length + 1, (int)lengthof(szName)));
 								if ((int)m_TuningSpaceList.size() <= Space) {
 									Reserve(Space + 1);
 									m_TuningSpaceList[Space]->SetName(szName);

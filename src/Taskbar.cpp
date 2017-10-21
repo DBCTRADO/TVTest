@@ -605,7 +605,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			pChannel->GetSpace(),
 			pChannel->GetChannelIndex(),
 			NetworkID, ServiceID);
-		::lstrcpynW(szTuner, pszTunerName, lengthof(szTuner));
+		StringCopy(szTuner, pszTunerName);
 		::PathRemoveExtensionW(szTuner);
 		StringUtility::Format(
 			Item.Description, L"%s (%s)",

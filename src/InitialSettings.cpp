@@ -175,7 +175,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				::GetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, szFileName, lengthof(szFileName));
 				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
-					::lstrcpy(szFileName, FileName.c_str());
+					StringCopy(szFileName, FileName.c_str());
 				} else {
 					GetAppClass().GetAppDirectory(&InitDir);
 				}

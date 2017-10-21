@@ -509,7 +509,7 @@ void CMenuOptions::SetDlgItemState(HWND hDlg)
 void CMenuOptions::GetItemText(int ID, LPTSTR pszText, int MaxLength) const
 {
 	if (ID == MENU_ID_SEPARATOR) {
-		::lstrcpyn(pszText, TEXT("　<区切り>"), MaxLength);
+		StringCopy(pszText, TEXT("　<区切り>"), MaxLength);
 	} else {
 		for (const MenuInfo &Item : m_DefaultMenuItemList) {
 			if (Item.ID == ID) {

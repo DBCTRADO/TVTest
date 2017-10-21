@@ -519,7 +519,7 @@ void CPanel::ApplyStyle()
 		LOGFONT lf = {};
 		lf.lfHeight = -m_Style.TitleButtonIconSize.Height;
 		lf.lfCharSet = SYMBOL_CHARSET;
-		::lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+		StringCopy(lf.lfFaceName, TEXT("Marlett"));
 		m_IconFont.Create(&lf);
 
 		CalcDimensions();

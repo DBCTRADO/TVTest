@@ -735,11 +735,11 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 
 		switch (NumChannels) {
 		case 1:
-			::lstrcpy(szFormat, TEXT("[M]"));
+			StringCopy(szFormat, TEXT("[M]"));
 			break;
 
 		case 2:
-			::lstrcpy(
+			StringCopy(
 				szFormat,
 				StereoMode == LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left ?
 					TEXT("[S(L)]") :
@@ -749,7 +749,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 			break;
 
 		case 6:
-			::lstrcpy(szFormat, TEXT("[5.1]"));
+			StringCopy(szFormat, TEXT("[5.1]"));
 			break;
 
 		default:
@@ -862,16 +862,16 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 					LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode2, szAudio2, lengthof(szAudio2));
 			} else {
 				if (szAudio1[0] == _T('\0'))
-					::lstrcpy(szAudio1, TEXT("主音声"));
+					StringCopy(szAudio1, TEXT("主音声"));
 				if (szAudio2[0] == _T('\0'))
-					::lstrcpy(szAudio2, TEXT("副音声"));
+					StringCopy(szAudio2, TEXT("副音声"));
 			}
 			switch (GetActualDualMonoMode()) {
 			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
-				::lstrcpyn(pszText, szAudio1, MaxLength);
+				StringCopy(pszText, szAudio1, MaxLength);
 				break;
 			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
-				::lstrcpyn(pszText, szAudio2, MaxLength);
+				StringCopy(pszText, szAudio2, MaxLength);
 				break;
 			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 				StringPrintf(pszText, MaxLength, TEXT("%s+%s"), szAudio1, szAudio2);
@@ -1304,7 +1304,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 	int i;
 	for (i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
 		const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(i);
-		::lstrcpyn(szText, pDriverInfo->GetFileName(), lengthof(szText));
+		StringCopy(szText, pDriverInfo->GetFileName());
 		::PathRemoveExtension(szText);
 		Menu.AppendUnformatted(CM_DRIVER_FIRST + i, szText);
 		if (m_App.CoreEngine.IsTunerOpen()
@@ -1602,7 +1602,7 @@ bool CUICore::SetLogo(LPCTSTR pszFileName)
 		::PathAppend(szTemp, pszFileName);
 		::PathCanonicalize(szFileName, szTemp);
 	} else {
-		::lstrcpy(szFileName, pszFileName);
+		StringCopy(szFileName, pszFileName);
 	}
 
 	HBITMAP hbm = static_cast<HBITMAP>(
@@ -1945,7 +1945,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 			continue;
 		}
 		TCHAR szFileName[MAX_PATH];
-		::lstrcpyn(szFileName, pDriverInfo->GetFileName(), lengthof(szFileName));
+		StringCopy(szFileName, pDriverInfo->GetFileName());
 		::PathRemoveExtension(szFileName);
 
 		const CTuningSpaceList *pTuningSpaceList;
