@@ -730,7 +730,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 				if (*p <= 31) {
 					StringUtility::Format(
 						*pMessage,
-						TEXT("ファイル名に使用できない文字 %#02x が含まれています。"), *p);
+						TEXT("ファイル名に使用できない文字 0x%02x が含まれています。"), *p);
 				} else {
 					StringUtility::Format(
 						*pMessage,

@@ -1642,7 +1642,7 @@ void CAppMain::CEngineEventListener::OnVideoSizeChanged(LibISDB::ViewerFilter *p
 
 void CAppMain::CEngineEventListener::OnEventChanged(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t EventID)
 {
-	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id %#04x\n"), EventID);
+	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id 0x%04x\n"), EventID);
 	if (EventID != LibISDB::EVENT_ID_INVALID) {
 		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::StatusFlag::EventID);
 		if (m_App.AudioManager.OnEventUpdated())

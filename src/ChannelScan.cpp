@@ -107,15 +107,15 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			if (m_pChannelInfo->GetChannelNo() > 0)
 				::SetDlgItemInt(hDlg, IDC_CHANNELPROP_CONTROLKEY, m_pChannelInfo->GetChannelNo(), TRUE);
 			StringPrintf(
-				szText, TEXT("%d (%#04x)"),
+				szText, TEXT("%d (0x%04x)"),
 				m_pChannelInfo->GetNetworkID(), m_pChannelInfo->GetNetworkID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_NETWORKID, szText);
 			StringPrintf(
-				szText, TEXT("%d (%#04x)"),
+				szText, TEXT("%d (0x%04x)"),
 				m_pChannelInfo->GetTransportStreamID(), m_pChannelInfo->GetTransportStreamID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_TSID, szText);
 			StringPrintf(
-				szText, TEXT("%d (%#04x)"),
+				szText, TEXT("%d (0x%04x)"),
 				m_pChannelInfo->GetServiceID(), m_pChannelInfo->GetServiceID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_SERVICEID, szText);
 			::SetDlgItemInt(hDlg, IDC_CHANNELPROP_TUNINGSPACE, m_pChannelInfo->GetSpace(), TRUE);
