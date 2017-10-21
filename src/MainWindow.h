@@ -147,7 +147,6 @@ namespace TVTest
 		bool IsFullscreenPanelVisible() const { return m_Fullscreen.IsPanelVisible(); }
 		void OnPanelFloating(bool fFloating);
 		void OnPanelDocking(CPanelFrame::DockingPlace Place);
-		int GetAspectRatioType() const { return m_AspectRatioType; }
 
 		bool EnablePlayback(bool fEnable);
 		bool IsPlaybackEnabled() const { return m_fEnablePlayback; }
@@ -563,19 +562,6 @@ namespace TVTest
 		int m_PrevWheelCommand;
 		DWORD m_PrevWheelTime;
 
-		enum {
-			ASPECTRATIO_DEFAULT,
-			ASPECTRATIO_16x9,
-			ASPECTRATIO_LETTERBOX,
-			ASPECTRATIO_SUPERFRAME,
-			ASPECTRATIO_SIDECUT,
-			ASPECTRATIO_4x3,
-			ASPECTRATIO_32x9,
-			ASPECTRATIO_16x9_LEFT,
-			ASPECTRATIO_16x9_RIGHT,
-			ASPECTRATIO_CUSTOM
-		};
-		int m_AspectRatioType;
 		DWORD m_AspectRatioResetTime;
 		bool m_fForceResetPanAndScan;
 		int m_DefaultAspectRatioMenuItemCount;

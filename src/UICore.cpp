@@ -341,6 +341,12 @@ bool CUICore::SetAspectRatioType(int Type)
 }
 
 
+void CUICore::ResetAspectRatioType()
+{
+	m_AspectRatioType = ASPECTRATIO_DEFAULT;
+}
+
+
 int CUICore::GetVolume() const
 {
 	return m_App.CoreEngine.GetVolume();

@@ -143,7 +143,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_PrevWheelCommand(0)
 	, m_PrevWheelTime(0)
 
-	, m_AspectRatioType(ASPECTRATIO_DEFAULT)
 	, m_AspectRatioResetTime(0)
 	, m_fForceResetPanAndScan(false)
 	, m_DefaultAspectRatioMenuItemCount(0)
@@ -3025,6 +3024,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		size_t PresetCount = m_App.PanAndScanOptions.GetPresetCount();
 		if (PresetCount > 0) {
 			::InsertMenu(hmenu, ItemCount - 2, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
+			const int AspectRatioType = m_pCore->GetAspectRatioType();
 			for (size_t i = 0; i < PresetCount; i++) {
 				CPanAndScanOptions::PanAndScanInfo Info;
 				TCHAR szText[CPanAndScanOptions::MAX_NAME * 2];
@@ -3034,7 +3034,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				::InsertMenu(
 					hmenu, ItemCount - 2 + (UINT)i,
 					MF_BYPOSITION | MF_STRING | MF_ENABLED
-						| (m_AspectRatioType == ASPECTRATIO_CUSTOM + (int)i ? MF_CHECKED : MF_UNCHECKED),
+						| (AspectRatioType == CUICore::ASPECTRATIO_CUSTOM_FIRST + (int)i ? MF_CHECKED : MF_UNCHECKED),
 					CM_PANANDSCAN_PRESET_FIRST + i, szText);
 			}
 		}
@@ -4027,10 +4027,11 @@ void CMainWindow::OnEventChanged()
 	m_App.Panel.ProgramListPanel.SetCurrentEventID(EventID);
 	m_App.Epg.ProgramGuide.SetCurrentEvent(EventID);
 
-	if (m_AspectRatioType != ASPECTRATIO_DEFAULT
+	const int AspectRatioType = m_pCore->GetAspectRatioType();
+	if (AspectRatioType != CUICore::ASPECTRATIO_DEFAULT
 			&& (m_fForceResetPanAndScan
 				|| (m_App.VideoOptions.GetResetPanScanEventChange()
-					&& m_AspectRatioType < ASPECTRATIO_CUSTOM))) {
+					&& AspectRatioType < CUICore::ASPECTRATIO_CUSTOM_FIRST))) {
 		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		if (pViewer != nullptr)
 			pViewer->SetPanAndScan(0, 0);
@@ -4041,7 +4042,7 @@ void CMainWindow::OnEventChanged()
 			// WM_APP_VIDEOSIZECHANGED が来た時に調整するようにする
 			m_AspectRatioResetTime = ::GetTickCount();
 		}
-		m_AspectRatioType = ASPECTRATIO_DEFAULT;
+		m_pCore->ResetAspectRatioType();
 		m_fForceResetPanAndScan = false;
 		m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 		m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
@@ -4512,49 +4513,6 @@ void CMainWindow::OnPanAndScanChanged()
 void CMainWindow::OnAspectRatioTypeChanged(int Type)
 {
 	m_AspectRatioResetTime = 0;
-}
-
-
-bool CMainWindow::SetPanAndScan(int Command)
-{
-	CCoreEngine::PanAndScanInfo Info;
-	int Type;
-
-	if (Command >= CM_ASPECTRATIO_FIRST && Command <= CM_ASPECTRATIO_3D_LAST) {
-		static const CCoreEngine::PanAndScanInfo PanAndScanList[] = {
-			{0, 0,  0,  0,  0,  0,  0,  0},	// デフォルト
-			{0, 0,  1,  1,  1,  1, 16,  9},	// 16:9
-			{0, 3,  1, 18,  1, 24, 16,  9},	// 16:9 レターボックス
-			{2, 3, 12, 18, 16, 24, 16,  9},	// 16:9 超額縁
-			{2, 0, 12,  1, 16,  1,  4,  3},	// 4:3 サイドカット
-			{0, 0,  1,  1,  1,  1,  4,  3},	// 4:3
-			{0, 0,  1,  1,  1,  1, 32,  9},	// 32:9
-			{0, 0,  1,  1,  2,  1, 16,  9},	// 16:9 左
-			{1, 0,  1,  1,  2,  1, 16,  9},	// 16:9 右
-		};
-
-		Type = Command - CM_ASPECTRATIO_FIRST;
-		Info = PanAndScanList[Type];
-	} else if (Command >= CM_PANANDSCAN_PRESET_FIRST && Command <= CM_PANANDSCAN_PRESET_LAST) {
-		CPanAndScanOptions::PanAndScanInfo PanScan;
-		if (!m_App.PanAndScanOptions.GetPreset(Command - CM_PANANDSCAN_PRESET_FIRST, &PanScan))
-			return false;
-		Info = PanScan.Info;
-		Type = ASPECTRATIO_CUSTOM + (Command - CM_PANANDSCAN_PRESET_FIRST);
-	} else {
-		return false;
-	}
-
-	m_pCore->SetPanAndScan(Info);
-
-	m_AspectRatioType = Type;
-	m_AspectRatioResetTime = 0;
-
-	m_pCore->SetCommandRadioCheckedState(
-		CM_ASPECTRATIO_FIRST, CM_ASPECTRATIO_3D_LAST,
-		m_AspectRatioType < ASPECTRATIO_CUSTOM ? CM_ASPECTRATIO_FIRST + m_AspectRatioType : 0);
-
-	return true;
 }
 
 

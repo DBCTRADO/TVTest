@@ -114,6 +114,7 @@ namespace TVTest
 		bool SetPanAndScan(const CCoreEngine::PanAndScanInfo &Info);
 		bool SetAspectRatioType(int Type);
 		int GetAspectRatioType() const { return m_AspectRatioType; }
+		void ResetAspectRatioType();
 
 		int GetVolume() const;
 		bool SetVolume(int Volume, bool fOSD = true);
