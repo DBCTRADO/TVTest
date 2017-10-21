@@ -405,7 +405,7 @@ void CVideoOptions::SetVideoDecoderList(
 		if (FilterList.size() > 1) {
 			std::sort(
 				FilterList.begin(), FilterList.end(),
-				[](const String Filter1, const String & Filter2) {
+				[](const String &Filter1, const String &Filter2) {
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,
 						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
