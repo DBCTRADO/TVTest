@@ -210,7 +210,6 @@ static const struct {
 
 const CAccelerator::KeyInfo CAccelerator::m_DefaultAccelList[] = {
 //	{CM_ZOOM_100,       VK_HOME,   0,       false},
-	{CM_ASPECTRATIO_TOGGLE, 'A',       0,       false},
 	{CM_FULLSCREEN,     VK_RETURN, MOD_ALT, false},
 	{CM_ALWAYSONTOP,    'T',       0,       false},
 	{CM_VOLUME_MUTE,    'M',       0,       false},
