@@ -5271,13 +5271,13 @@ bool CPluginOptions::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < Count; i++) {
 				TCHAR szName[32], szFileName[MAX_PATH];
 
-				::wsprintf(szName, TEXT("Plugin%d_Name"), i);
+				StringPrintf(szName, TEXT("Plugin%d_Name"), i);
 				if (!Settings.Read(szName, szFileName, lengthof(szFileName)))
 					break;
 				if (szFileName[0] != '\0') {
 					bool fEnable;
 
-					::wsprintf(szName, TEXT("Plugin%d_Enable"), i);
+					StringPrintf(szName, TEXT("Plugin%d_Enable"), i);
 					if (Settings.Read(szName, &fEnable) && fEnable) {
 						m_EnablePluginList.emplace_back(szFileName);
 					}
@@ -5300,9 +5300,9 @@ bool CPluginOptions::SaveSettings(CSettings &Settings)
 	for (size_t i = 0; i < m_EnablePluginList.size(); i++) {
 		TCHAR szName[32];
 
-		::wsprintf(szName, TEXT("Plugin%d_Name"), i);
+		StringPrintf(szName, TEXT("Plugin%d_Name"), i);
 		Settings.Write(szName, m_EnablePluginList[i]);
-		::wsprintf(szName, TEXT("Plugin%d_Enable"), i);
+		StringPrintf(szName, TEXT("Plugin%d_Enable"), i);
 		Settings.Write(szName, true);
 	}
 

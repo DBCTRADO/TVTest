@@ -175,10 +175,10 @@ bool CPanAndScanOptions::ReadSettings(CSettings &Settings)
 			PanAndScanInfo Info;
 			TCHAR szKey[32], szSettings[256];
 
-			::wsprintf(szKey, TEXT("Preset%d.Name"), i);
+			StringPrintf(szKey, TEXT("Preset%d.Name"), i);
 			if (!Settings.Read(szKey, Info.szName, MAX_NAME) || Info.szName[0] == _T('\0'))
 				break;
-			::wsprintf(szKey, TEXT("Preset%d"), i);
+			StringPrintf(szKey, TEXT("Preset%d"), i);
 			if (!Settings.Read(szKey, szSettings, lengthof(szSettings)) || szSettings[0] == _T('\0'))
 				break;
 
@@ -201,9 +201,9 @@ bool CPanAndScanOptions::WriteSettings(CSettings &Settings)
 		const PanAndScanInfo &Info = m_PresetList[i];
 		TCHAR szKey[32], szSettings[256];
 
-		::wsprintf(szKey, TEXT("Preset%u.Name"), (unsigned int)i);
+		StringPrintf(szKey, TEXT("Preset%u.Name"), (unsigned int)i);
 		Settings.Write(szKey, Info.szName);
-		::wsprintf(szKey, TEXT("Preset%u"), (unsigned int)i);
+		StringPrintf(szKey, TEXT("Preset%u"), (unsigned int)i);
 		FormatPanAndScanInfo(Info.Info, szSettings, lengthof(szSettings));
 		Settings.Write(szKey, szSettings);
 	}
@@ -756,10 +756,10 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 		PanAndScanInfo Info;
 		TCHAR szKey[32], szSettings[256];
 
-		::wsprintf(szKey, TEXT("Preset%d.Name"), i);
+		StringPrintf(szKey, TEXT("Preset%d.Name"), i);
 		if (!Settings.Read(szKey, Info.szName, MAX_NAME) || Info.szName[0] == _T('\0'))
 			break;
-		::wsprintf(szKey, TEXT("Preset%d"), i);
+		StringPrintf(szKey, TEXT("Preset%d"), i);
 		if (!Settings.Read(szKey, szSettings, lengthof(szSettings)) || szSettings[0] == _T('\0'))
 			break;
 

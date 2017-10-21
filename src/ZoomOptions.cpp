@@ -105,16 +105,16 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 	for (int i = 0; i <= CM_CUSTOMZOOM_LAST - CM_CUSTOMZOOM_FIRST; i++, j++) {
 		int Type, Rate, Width, Height;
 
-		::wsprintf(szText, TEXT("CustomZoom%d"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d"), i + 1);
 		if (Settings.Read(szText, &Rate) && Rate > 0 && Rate <= MAX_RATE)
 			m_ZoomList[j].Rate.Rate = Rate;
-		::wsprintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
 		if (Settings.Read(szText, &Type) && CheckEnumRange(static_cast<ZoomType>(Type)))
 			m_ZoomList[j].Type = static_cast<ZoomType>(Type);
-		::wsprintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
 		if (Settings.Read(szText, &Width) && Width > 0)
 			m_ZoomList[j].Size.Width = Width;
-		::wsprintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
 		if (Settings.Read(szText, &Height) && Height > 0)
 			m_ZoomList[j].Size.Height = Height;
 	}
@@ -129,7 +129,7 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < ListCount; i++) {
 			TCHAR szName[32];
 
-			::wsprintf(szName, TEXT("ZoomList%d"), i);
+			StringPrintf(szName, TEXT("ZoomList%d"), i);
 			if (Settings.Read(szName, szText, lengthof(szText))) {
 				LPTSTR p = szText;
 				while (*p != _T('\0') && *p != _T(','))
@@ -176,13 +176,13 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 
 	int j = CM_ZOOM_LAST - CM_ZOOM_FIRST + 1;
 	for (int i = 0; i <= CM_CUSTOMZOOM_LAST - CM_CUSTOMZOOM_FIRST; i++, j++) {
-		::wsprintf(szText, TEXT("CustomZoom%d"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Rate.Rate);
-		::wsprintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
 		Settings.Write(szText, (int)m_ZoomList[j].Type);
-		::wsprintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Width);
-		::wsprintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
+		StringPrintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Height);
 	}
 
@@ -193,7 +193,7 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 		const ZoomInfo &Info = m_ZoomList[Index];
 		TCHAR szName[32];
 
-		::wsprintf(szName, TEXT("ZoomList%d"), i);
+		StringPrintf(szName, TEXT("ZoomList%d"), i);
 		StringPrintf(
 			szText, TEXT("%s,%d"),
 			pCommandManager->GetCommandIDText(m_DefaultZoomList[Index].Command),

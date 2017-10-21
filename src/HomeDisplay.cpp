@@ -1527,7 +1527,7 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 				TCHAR szKey[32];
 				int ID;
 
-				::wsprintf(szKey, TEXT("Category%d_ID"), i);
+				StringPrintf(szKey, TEXT("Category%d_ID"), i);
 				if (Settings.Read(szKey, &ID)) {
 					size_t j;
 					for (j = 0; j < i; j++) {
@@ -1588,7 +1588,7 @@ bool CHomeDisplay::SaveSettings(CSettings &Settings)
 				const CCategory *pCategory = m_CategoryList[i].get();
 				TCHAR szKey[32];
 
-				::wsprintf(szKey, TEXT("Category%d_ID"), i);
+				StringPrintf(szKey, TEXT("Category%d_ID"), i);
 				Settings.Write(szKey, pCategory->GetID());
 			}
 		}

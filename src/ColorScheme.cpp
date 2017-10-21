@@ -687,7 +687,7 @@ bool CColorScheme::Load(CSettings &Settings)
 		}
 
 		TCHAR szName[128];
-		::wsprintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
+		StringPrintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
 		m_GradientList[i].Direction = m_GradientInfoList[i].Direction;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(GradientDirectionList); j++) {
@@ -850,7 +850,7 @@ bool CColorScheme::Save(CSettings &Settings, SaveFlag Flags) const
 			TCHAR szName[128];
 
 			Settings.Write(m_GradientInfoList[i].pszText, pszTypeName[(int)m_GradientList[i].Type]);
-			::wsprintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
+			StringPrintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
 			Settings.Write(szName, GradientDirectionList[(int)m_GradientList[i].Direction]);
 		}
 	}

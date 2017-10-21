@@ -317,7 +317,7 @@ void CChannelDisplay::LoadSettings()
 			TCHAR szName[64], *p;
 			TunerInfo Info;
 
-			::wsprintf(szName, TEXT("Tuner%d_Driver"), i);
+			StringPrintf(szName, TEXT("Tuner%d_Driver"), i);
 			if (!Settings.Read(szName, Info.DriverMasks, lengthof(Info.DriverMasks) - 1))
 				break;
 			p = Info.DriverMasks;
@@ -327,10 +327,10 @@ void CChannelDisplay::LoadSettings()
 				p++;
 			}
 			*(p + 1) = '\0';
-			::wsprintf(szName, TEXT("Tuner%d_Name"), i);
+			StringPrintf(szName, TEXT("Tuner%d_Name"), i);
 			if (!Settings.Read(szName, Info.szDisplayName, lengthof(Info.szDisplayName)))
 				Info.szDisplayName[0] = '\0';
-			::wsprintf(szName, TEXT("Tuner%d_Icon"), i);
+			StringPrintf(szName, TEXT("Tuner%d_Icon"), i);
 			if (!Settings.Read(szName, Info.szIconFile, lengthof(Info.szIconFile)))
 				Info.szIconFile[0] = '\0';
 			if (::PathIsRelative(Info.szIconFile)) {
@@ -350,7 +350,7 @@ void CChannelDisplay::LoadSettings()
 				}
 				p++;
 			}
-			::wsprintf(szName, TEXT("Tuner%d_UseDriverChannel"), i);
+			StringPrintf(szName, TEXT("Tuner%d_UseDriverChannel"), i);
 			if (!Settings.Read(szName, &Info.fUseDriverChannel))
 				Info.fUseDriverChannel = false;
 			m_TunerInfoList.push_back(Info);
@@ -940,7 +940,7 @@ void CChannelDisplay::DrawClock(HDC hdc) const
 	Theme::Draw(hdc, rc, m_ClockStyle.Back);
 	Style::Subtract(&rc, m_ChannelDisplayStyle.ClockPadding);
 	OldBkMode = SetBkMode(hdc, TRANSPARENT);
-	::wsprintf(szText, TEXT("%d:%02d"), m_ClockTime.Hour, m_ClockTime.Minute);
+	StringPrintf(szText, TEXT("%d:%02d"), m_ClockTime.Hour, m_ClockTime.Minute);
 	Theme::Draw(
 		hdc, rc, m_ClockStyle.Fore, szText,
 		DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);

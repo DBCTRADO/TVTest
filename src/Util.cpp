@@ -700,7 +700,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 		TCHAR szName[5];
 
 		for (int i = 1; i <= 9; i++) {
-			wsprintf(szName, TEXT("COM%d"), i);
+			StringPrintf(szName, TEXT("COM%d"), i);
 			if (lstrcmpi(szName, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -708,7 +708,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 			}
 		}
 		for (int i = 1; i <= 9; i++) {
-			wsprintf(szName, TEXT("LPT%d"), i);
+			StringPrintf(szName, TEXT("LPT%d"), i);
 			if (lstrcmpi(szName, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -800,7 +800,7 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 
 			TCHAR szNumber[16];
 
-			::wsprintf(szNumber, pszNumberFormat, i);
+			StringPrintf(szNumber, pszNumberFormat, i);
 			Name = BaseName;
 			Name += szNumber;
 			Name += pszExtension;

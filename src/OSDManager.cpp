@@ -267,7 +267,8 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		::lstrcat(szText, TEXT("■"));
 	for (; i < VolumeSteps; i++)
 		::lstrcat(szText, TEXT("□"));
-	::wsprintf(szText + ::lstrlen(szText), TEXT(" %d"), Volume);
+	const int Length = ::lstrlen(szText);
+	StringPrintf(szText + Length, lengthof(szText) - Length, TEXT(" %d"), Volume);
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& pViewer->IsDrawTextSupported()) {

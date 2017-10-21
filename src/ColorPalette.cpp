@@ -362,7 +362,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					r = m_Palette[Index].rgbRed;
 					g = m_Palette[Index].rgbGreen;
 					b = m_Palette[Index].rgbBlue;
-					::wsprintf(pttdi->szText, TEXT("%d,%d,%d #%02X%02X%02X"), r, g, b, r, g, b);
+					StringPrintf(pttdi->szText, TEXT("%d,%d,%d #%02X%02X%02X"), r, g, b, r, g, b);
 				} else {
 					pttdi->szText[0] = '\0';
 				}

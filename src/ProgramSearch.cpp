@@ -291,7 +291,7 @@ bool CEventSearchSettings::ToString(String *pString) const
 	TCHAR szGenre2[16 * 4 + 1];
 	if (fGenre2) {
 		for (int i = 0; i < 16; i++) {
-			::wsprintf(&szGenre2[i * 4], TEXT("%04x"), Genre2[i]);
+			StringPrintf(&szGenre2[i * 4], 5, TEXT("%04x"), Genre2[i]);
 		}
 	} else {
 		szGenre2[0] = _T('\0');

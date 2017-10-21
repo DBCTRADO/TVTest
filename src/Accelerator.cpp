@@ -463,20 +463,20 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 				TCHAR szName[64];
 				int Command;
 
-				::wsprintf(szName, TEXT("Accel%d_Command"), i);
+				StringPrintf(szName, TEXT("Accel%d_Command"), i);
 				if (Settings.Read(szName, &CommandText)
 						&& !CommandText.empty()
 						&& (Command = m_pCommandManager->ParseIDText(CommandText)) != 0) {
 					unsigned int Key, Modifiers;
 
-					::wsprintf(szName, TEXT("Accel%d_Key"), i);
+					StringPrintf(szName, TEXT("Accel%d_Key"), i);
 					if (Settings.Read(szName, &Key) && Key != 0) {
 						KeyInfo Info;
 
 						Info.Command = Command;
 						Info.KeyCode = Key;
 						Modifiers = 0;
-						::wsprintf(szName, TEXT("Accel%d_Mod"), i);
+						StringPrintf(szName, TEXT("Accel%d_Mod"), i);
 						Settings.Read(szName, &Modifiers);
 						Info.Modifiers = Modifiers & 0x7F;
 						Info.fGlobal = (Modifiers & 0x80) != 0;
@@ -500,15 +500,15 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < NumCommands; i++) {
 				TCHAR szName[64];
 
-				::wsprintf(szName, TEXT("Button%d_Command"), i);
+				StringPrintf(szName, TEXT("Button%d_Command"), i);
 				if (Settings.Read(szName, &CommandText) && !CommandText.empty()) {
 					int Type;
 					unsigned int AppCommand;
 
-					::wsprintf(szName, TEXT("Button%d_Type"), i);
+					StringPrintf(szName, TEXT("Button%d_Type"), i);
 					if (!Settings.Read(szName, &Type) || (Type != 0 && Type != 1))
 						continue;
-					::wsprintf(szName, TEXT("Button%d_AppCommand"), i);
+					StringPrintf(szName, TEXT("Button%d_AppCommand"), i);
 					if (Settings.Read(szName, &AppCommand) && AppCommand != 0) {
 						AppCommandInfo Info;
 
@@ -571,12 +571,12 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 			for (size_t i = 0; i < m_KeyList.size(); i++) {
 				TCHAR szName[64];
 
-				::wsprintf(szName, TEXT("Accel%d_Command"), i);
+				StringPrintf(szName, TEXT("Accel%d_Command"), i);
 				Settings.Write(
 					szName, m_pCommandManager->GetCommandIDText(m_KeyList[i].Command));
-				::wsprintf(szName, TEXT("Accel%d_Key"), i);
+				StringPrintf(szName, TEXT("Accel%d_Key"), i);
 				Settings.Write(szName, (int)m_KeyList[i].KeyCode);
-				::wsprintf(szName, TEXT("Accel%d_Mod"), i);
+				StringPrintf(szName, TEXT("Accel%d_Mod"), i);
 				Settings.Write(szName, (int)(m_KeyList[i].Modifiers | (m_KeyList[i].fGlobal ? 0x80 : 0x00)));
 			}
 		}
@@ -610,12 +610,12 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 			for (size_t i = 0; i < m_AppCommandList.size(); i++) {
 				TCHAR szName[64];
 
-				::wsprintf(szName, TEXT("Button%d_Command"), i);
+				StringPrintf(szName, TEXT("Button%d_Command"), i);
 				Settings.Write(
 					szName, m_pCommandManager->GetCommandIDText(m_AppCommandList[i].Command));
-				::wsprintf(szName, TEXT("Button%d_Type"), i);
+				StringPrintf(szName, TEXT("Button%d_Type"), i);
 				Settings.Write(szName, (int)m_AppCommandList[i].Type);
-				::wsprintf(szName, TEXT("Button%d_AppCommand"), i);
+				StringPrintf(szName, TEXT("Button%d_AppCommand"), i);
 				Settings.Write(szName, m_AppCommandList[i].AppCommand);
 			}
 		}

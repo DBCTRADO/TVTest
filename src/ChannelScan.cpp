@@ -101,20 +101,20 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			::SendDlgItemMessage(hDlg, IDC_CHANNELPROP_NAME, EM_LIMITTEXT, MAX_CHANNEL_NAME - 1, 0);
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_NAME, m_pChannelInfo->GetName());
 			for (int i = 1; i <= 12; i++) {
-				::wsprintf(szText, TEXT("%d"), i);
+				StringPrintf(szText, TEXT("%d"), i);
 				DlgComboBox_AddString(hDlg, IDC_CHANNELPROP_CONTROLKEY, szText);
 			}
 			if (m_pChannelInfo->GetChannelNo() > 0)
 				::SetDlgItemInt(hDlg, IDC_CHANNELPROP_CONTROLKEY, m_pChannelInfo->GetChannelNo(), TRUE);
-			::wsprintf(
+			StringPrintf(
 				szText, TEXT("%d (%#04x)"),
 				m_pChannelInfo->GetNetworkID(), m_pChannelInfo->GetNetworkID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_NETWORKID, szText);
-			::wsprintf(
+			StringPrintf(
 				szText, TEXT("%d (%#04x)"),
 				m_pChannelInfo->GetTransportStreamID(), m_pChannelInfo->GetTransportStreamID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_TSID, szText);
-			::wsprintf(
+			StringPrintf(
 				szText, TEXT("%d (%#04x)"),
 				m_pChannelInfo->GetServiceID(), m_pChannelInfo->GetServiceID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_SERVICEID, szText);
@@ -584,18 +584,18 @@ void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, boo
 	ListView_SetItem(hwndList, &lvi);
 
 	lvi.iSubItem = COLUMN_SERVICEID;
-	::wsprintf(szText, TEXT("%d"), pChInfo->GetServiceID());
+	StringPrintf(szText, TEXT("%d"), pChInfo->GetServiceID());
 	ListView_SetItem(hwndList, &lvi);
 
 	if (pChInfo->GetChannelNo() > 0) {
 		lvi.iSubItem = COLUMN_REMOTECONTROLKEYID;
-		::wsprintf(szText, TEXT("%d"), pChInfo->GetChannelNo());
+		StringPrintf(szText, TEXT("%d"), pChInfo->GetChannelNo());
 		lvi.pszText = szText;
 		ListView_SetItem(hwndList, &lvi);
 	}
 
 	lvi.iSubItem = COLUMN_CHANNELINDEX;
-	::wsprintf(szText, TEXT("%d"), pChInfo->GetChannelIndex());
+	StringPrintf(szText, TEXT("%d"), pChInfo->GetChannelIndex());
 	ListView_SetItem(hwndList, &lvi);
 
 	ListView_SetCheckState(hwndList, lvi.iItem, pChInfo->IsEnabled());
@@ -1027,7 +1027,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						lvi.iSubItem = 4;
 						TCHAR szText[16];
 						if (pChInfo->GetChannelNo() > 0)
-							::wsprintf(szText, TEXT("%d"), pChInfo->GetChannelNo());
+							StringPrintf(szText, TEXT("%d"), pChInfo->GetChannelNo());
 						else
 							szText[0] = '\0';
 						lvi.pszText = szText;

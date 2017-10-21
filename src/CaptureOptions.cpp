@@ -366,11 +366,11 @@ bool CCaptureOptions::GetOptionText(LPTSTR pszOption, int MaxLength) const
 	if (::lstrcmpi(pszFormatName, TEXT("JPEG")) == 0) {
 		if (MaxLength < 4)
 			return false;
-		::wsprintf(pszOption, TEXT("%d"), m_JPEGQuality);
+		StringPrintf(pszOption, MaxLength, TEXT("%d"), m_JPEGQuality);
 	} else if (::lstrcmpi(pszFormatName, TEXT("PNG")) == 0) {
 		if (MaxLength < 2)
 			return false;
-		::wsprintf(pszOption, TEXT("%d"), m_PNGCompressionLevel);
+		StringPrintf(pszOption, MaxLength, TEXT("%d"), m_PNGCompressionLevel);
 	} else {
 		if (MaxLength < 1)
 			return false;

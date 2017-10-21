@@ -147,7 +147,7 @@ bool CSettings::Write(LPCTSTR pszValueName, int Data)
 {
 	TCHAR szValue[16];
 
-	wsprintf(szValue, TEXT("%d"), Data);
+	StringPrintf(szValue, TEXT("%d"), Data);
 	return Write(pszValueName, szValue);
 }
 
@@ -167,7 +167,7 @@ bool CSettings::Write(LPCTSTR pszValueName, unsigned int Data)
 {
 	TCHAR szValue[16];
 
-	wsprintf(szValue, TEXT("%u"), Data);
+	StringPrintf(szValue, TEXT("%u"), Data);
 	return Write(pszValueName, szValue);
 }
 
@@ -319,7 +319,7 @@ bool CSettings::WriteColor(LPCTSTR pszValueName, COLORREF crData)
 {
 	TCHAR szText[8];
 
-	wsprintf(
+	StringPrintf(
 		szText, TEXT("#%02x%02x%02x"),
 		GetRValue(crData), GetGValue(crData), GetBValue(crData));
 	return Write(pszValueName, szText);
@@ -400,7 +400,7 @@ bool CSettings::Write(LPCTSTR pszValueName, const LOGFONT *pFont)
 		Flags |= FONT_FLAG_UNDERLINE;
 	if (pFont->lfStrikeOut)
 		Flags |= FONT_FLAG_STRIKEOUT;
-	::wsprintf(
+	StringPrintf(
 		szData, TEXT("%s,%d,%d,%u"),
 		pFont->lfFaceName, pFont->lfHeight, pFont->lfWeight, Flags);
 	return Write(pszValueName, szData);
