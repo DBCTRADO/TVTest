@@ -330,9 +330,9 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText, int *pLength)
 		LPCTSTR pszPrefix;
 		int Length;
 	} URLPrefixList[] = {
-		{TEXT("http://"),	7},
-		{TEXT("https://"),	8},
-		{TEXT("www."),		4},
+		{TEXT("http://"),  7},
+		{TEXT("https://"), 8},
+		{TEXT("www."),     4},
 	};
 
 	LPCTSTR p = *ppszText;

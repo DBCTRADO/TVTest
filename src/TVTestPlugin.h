@@ -1,4 +1,4 @@
-﻿/*
+/*
 	TVTest プラグインヘッダ ver.0.0.14
 
 	このファイルは再配布・改変など自由に行って構いません。
@@ -855,10 +855,10 @@ inline bool MsgSetZoom(PluginParam *pParam, int Num, int Denom = 100)
 
 // パンスキャンの種類
 enum {
-	PANSCAN_NONE,		// なし
-	PANSCAN_LETTERBOX,	// レターボックス
-	PANSCAN_SIDECUT,	// サイドカット
-	PANSCAN_SUPERFRAME	// 超額縁
+	PANSCAN_NONE,      // なし
+	PANSCAN_LETTERBOX, // レターボックス
+	PANSCAN_SIDECUT,   // サイドカット
+	PANSCAN_SUPERFRAME // 超額縁
 };
 
 // パンスキャンの情報
@@ -1689,7 +1689,7 @@ struct ControllerInfo
 
 // コントローラのフラグ
 enum {
-	CONTROLLER_FLAG_ACTIVEONLY	= 0x00000001UL	// アクティブ時のみ使用できる
+	CONTROLLER_FLAG_ACTIVEONLY = 0x00000001UL	// アクティブ時のみ使用できる
 };
 
 // コントローラを登録する

@@ -51,7 +51,7 @@ namespace TVTest
 
 	public:
 		enum {
-			UPDATE_RECORDINGSETTINGS	= 0x00000001UL,
+			UPDATE_RECORDINGSETTINGS = 0x00000001UL,
 		};
 
 		CRecordOptions();

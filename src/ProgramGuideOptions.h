@@ -36,7 +36,7 @@ namespace TVTest
 	{
 	public:
 		enum {
-			UPDATE_EVENTICONS	= 0x00000001UL
+			UPDATE_EVENTICONS = 0x00000001UL
 		};
 
 		CProgramGuideOptions(CProgramGuide *pProgramGuide, CPluginManager *pPluginManager);

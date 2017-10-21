@@ -56,8 +56,8 @@ namespace TVTest
 
 	private:
 		enum {
-			UPDATE_CHANNELLIST	= 0x0000001UL,
-			UPDATE_PREVIEW		= 0x0000002UL
+			UPDATE_CHANNELLIST = 0x0000001UL,
+			UPDATE_PREVIEW     = 0x0000002UL
 		};
 
 		enum {

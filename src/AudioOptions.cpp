@@ -292,7 +292,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOFILTER, TEXT("なし"));
 			LibISDB::DirectShow::FilterFinder FilterFinder;
 			static const GUID InputTypes[] = {
-				MEDIATYPE_Audio,	MEDIASUBTYPE_PCM
+				MEDIATYPE_Audio, MEDIASUBTYPE_PCM
 			};
 			static const GUID OutputTypes[] = {
 				MEDIATYPE_Audio, MEDIASUBTYPE_PCM,

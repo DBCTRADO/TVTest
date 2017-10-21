@@ -262,7 +262,8 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					LibISDB::DirectShow::VideoRenderer::RendererType Renderer;
 					LPCTSTR pszMessage;
 				} ConflictList[] = {
-					{	TEXT("CyberLink"),	LibISDB::DirectShow::VideoRenderer::RendererType::Default,
+					{
+						TEXT("CyberLink"), LibISDB::DirectShow::VideoRenderer::RendererType::Default,
 						TEXT("CyberLink のデコーダとデフォルトレンダラの組み合わせで、\n")
 						TEXT("一部の番組で比率がおかしくなる現象が出る事があるため、\n")
 						TEXT("レンダラをデフォルト以外にすることをお奨めします。\n")

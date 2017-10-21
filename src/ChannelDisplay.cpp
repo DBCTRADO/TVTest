@@ -1186,10 +1186,10 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					WORD KeyCode;
 					WORD Scroll;
 				} KeyMap[] = {
-					{VK_PRIOR,	SB_PAGEUP},
-					{VK_NEXT,	SB_PAGEDOWN},
-					{VK_HOME,	SB_TOP},
-					{VK_END,	SB_BOTTOM},
+					{VK_PRIOR, SB_PAGEUP},
+					{VK_NEXT,  SB_PAGEDOWN},
+					{VK_HOME,  SB_TOP},
+					{VK_END,   SB_BOTTOM},
 				};
 				int i;
 				for (i = 0; KeyMap[i].KeyCode != wParam; i++);

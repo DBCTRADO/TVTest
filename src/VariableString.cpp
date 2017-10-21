@@ -456,15 +456,15 @@ bool CEventVariableStringMap::NormalizeString(String *pString) const
 			WCHAR From;
 			WCHAR To;
 		} CharMap[] = {
-			{L'\\',	L'￥'},
-			{L'/',	L'／'},
-			{L':',	L'：'},
-			{L'*',	L'＊'},
-			{L'?',	L'？'},
-			{L'"',	L'”'},
-			{L'<',	L'＜'},
-			{L'>',	L'＞'},
-			{L'|',	L'｜'},
+			{L'\\', L'￥'},
+			{L'/',  L'／'},
+			{L':',  L'：'},
+			{L'*',  L'＊'},
+			{L'?',  L'？'},
+			{L'"',  L'”'},
+			{L'<',  L'＜'},
+			{L'>',  L'＞'},
+			{L'|',  L'｜'},
 		};
 
 		for (const auto &Map : CharMap) {

@@ -80,10 +80,10 @@ namespace TVTest
 			LOGOTYPE_72x36,
 			LOGOTYPE_54x36,
 			LOGOTYPE_64x36,
-			LOGOTYPE_FIRST	= LOGOTYPE_48x24,
-			LOGOTYPE_LAST	= LOGOTYPE_64x36,
-			LOGOTYPE_SMALL	= 0xFF,	// 取得できる中から小さいもの優先
-			LOGOTYPE_BIG	= 0xFE	// 取得できる中から大きいもの優先
+			LOGOTYPE_FIRST  = LOGOTYPE_48x24,
+			LOGOTYPE_LAST   = LOGOTYPE_64x36,
+			LOGOTYPE_SMALL  = 0xFF,	// 取得できる中から小さいもの優先
+			LOGOTYPE_BIG    = 0xFE	// 取得できる中から大きいもの優先
 		};
 
 	private:
