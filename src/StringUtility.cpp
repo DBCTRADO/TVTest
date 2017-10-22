@@ -99,26 +99,6 @@ bool StringIsDigit(LPCTSTR pszString)
 }
 
 
-bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString)
-{
-	if (ppszString == nullptr)
-		return false;
-	delete [] *ppszString;
-	*ppszString = DuplicateString(pszNewString);
-	return true;
-}
-
-
-bool ReplaceString(LPWSTR *ppszString, LPCWSTR pszNewString)
-{
-	if (ppszString == nullptr)
-		return false;
-	delete [] *ppszString;
-	*ppszString = DuplicateString(pszNewString);
-	return true;
-}
-
-
 static inline bool IsWhitespace(TCHAR c)
 {
 	return c == _T(' ') || c == _T('\r') || c == _T('\n') || c == _T('\t');

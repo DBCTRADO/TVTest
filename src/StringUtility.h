@@ -39,8 +39,6 @@ namespace TVTest
 
 	[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString);
 	[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString);
-	bool ReplaceString(LPSTR *ppszString, LPCSTR pszNewString);
-	bool ReplaceString(LPWSTR *ppszString, LPCWSTR pszNewString);
 	int RemoveTrailingWhitespace(LPTSTR pszString);
 	LPTSTR SkipLeadingWhitespace(LPTSTR pszString);
 	LPCTSTR SkipLeadingWhitespace(LPCTSTR pszString);
