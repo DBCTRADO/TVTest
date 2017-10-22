@@ -442,21 +442,13 @@ void CEventLayoutList::EventLayoutDeleter::operator()(CEventLayout *p) const
 
 
 CServiceInfo::CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver)
-	: m_ChannelInfo(ChannelInfo)
+	: m_ChannelInfo(ChannelInfo, pszBonDriver)
 	, m_ServiceInfo(
 		ChannelInfo.GetNetworkID(),
 		ChannelInfo.GetTransportStreamID(),
 		ChannelInfo.GetServiceID())
-	, m_pszBonDriverFileName(DuplicateString(pszBonDriver))
 	, m_hbmLogo(nullptr)
 {
-}
-
-
-CServiceInfo::~CServiceInfo()
-{
-	delete [] m_pszBonDriverFileName;
-	ClearEvents();
 }
 
 
@@ -3997,7 +3989,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 								ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(Service);
 
 								if (pServiceInfo != nullptr) {
-									String BonDriver(pServiceInfo->GetBonDriverFileName());
+									String BonDriver(pServiceInfo->GetChannelInfo().GetTunerName());
 									LibISDB::EPGDatabase::ServiceInfo ServiceInfo(pServiceInfo->GetServiceInfo());
 
 									m_pEventHandler->OnServiceTitleLButtonDown(
@@ -4906,9 +4898,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 				AddSearchResult(
 					new CSearchEventInfo(
 						*pEventInfo,
-						CTunerChannelInfo(
-							pServiceInfo->GetChannelInfo(),
-							pServiceInfo->GetBonDriverFileName())));
+						pServiceInfo->GetChannelInfo()));
 			}
 		}
 	}

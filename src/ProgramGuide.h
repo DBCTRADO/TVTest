@@ -67,9 +67,8 @@ namespace TVTest
 
 		class CServiceInfo
 		{
-			CChannelInfo m_ChannelInfo;
+			CTunerChannelInfo m_ChannelInfo;
 			LibISDB::EPGDatabase::ServiceInfo m_ServiceInfo;
-			LPTSTR m_pszBonDriverFileName;
 			HBITMAP m_hbmLogo;
 			DrawUtil::CBitmap m_StretchedLogo;
 			std::vector<std::unique_ptr<LibISDB::EventInfo>> m_EventList;
@@ -78,15 +77,13 @@ namespace TVTest
 
 		public:
 			CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver);
-			~CServiceInfo();
 
-			const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
+			const CTunerChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 			const LibISDB::EPGDatabase::ServiceInfo &GetServiceInfo() const { return m_ServiceInfo; }
 			WORD GetNetworkID() const { return m_ServiceInfo.NetworkID; }
 			WORD GetTSID() const { return m_ServiceInfo.TransportStreamID; }
 			WORD GetServiceID() const { return m_ServiceInfo.ServiceID; }
 			LPCTSTR GetServiceName() const { return m_ChannelInfo.GetName(); }
-			LPCTSTR GetBonDriverFileName() const { return m_pszBonDriverFileName; }
 			void SetLogo(HBITMAP hbm) { m_hbmLogo = hbm; }
 			HBITMAP GetLogo() const { return m_hbmLogo; }
 			HBITMAP GetStretchedLogo(int Width, int Height);
