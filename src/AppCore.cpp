@@ -1208,17 +1208,17 @@ bool CAppCore::StartRecord(
 
 	OpenTuner();
 
-	TCHAR szFileName[MAX_PATH * 2];
 	if (IsStringEmpty(pszFileName)) {
+		CFilePath Path;
 		LPCTSTR pszErrorMessage;
 
-		if (!m_App.RecordOptions.GenerateFilePath(szFileName, lengthof(szFileName),
-				&pszErrorMessage)) {
+		if (!m_App.RecordOptions.GenerateFilePath(&Path, &pszErrorMessage)) {
 			m_App.UICore.GetSkin()->ShowErrorMessage(pszErrorMessage);
 			return false;
 		}
-		m_App.RecordManager.SetFileName(szFileName);
+		m_App.RecordManager.SetFileName(Path.c_str());
 	}
+	TCHAR szFileName[MAX_PATH * 2];
 	if (!GenerateRecordFileName(szFileName, lengthof(szFileName)))
 		return false;
 	AppEvent::RecordingStartInfo RecStartInfo;
@@ -1271,14 +1271,14 @@ bool CAppCore::StartReservedRecord()
 			return false;
 		*/
 	} else {
+		CFilePath Path;
 		LPCTSTR pszErrorMessage;
 
-		if (!m_App.RecordOptions.GenerateFilePath(szFileName, lengthof(szFileName),
-				&pszErrorMessage)) {
+		if (!m_App.RecordOptions.GenerateFilePath(&Path, &pszErrorMessage)) {
 			m_App.UICore.GetSkin()->ShowErrorMessage(pszErrorMessage);
 			return false;
 		}
-		m_App.RecordManager.SetFileName(szFileName);
+		m_App.RecordManager.SetFileName(Path.c_str());
 		if (!GenerateRecordFileName(szFileName, MAX_PATH))
 			return false;
 	}

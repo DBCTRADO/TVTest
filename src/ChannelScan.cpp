@@ -997,21 +997,21 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							ListView_EnsureVisible(hwndList, 0, FALSE);
 						} else {
 							// チャンネルが検出できなかった
-							TCHAR szText[1024];
+							String Message;
 
-							StringCopy(szText, TEXT("チャンネルが検出できませんでした。"));
+							Message = TEXT("チャンネルが検出できませんでした。");
 							if ((m_fIgnoreSignalLevel
 										&& m_MaxSignalLevel < 1.0f)
 									|| (!m_fIgnoreSignalLevel
 										&& m_MaxSignalLevel < m_SignalLevelThreshold)) {
-								::lstrcat(szText, TEXT("\n信号レベルが低すぎるか、取得できません。"));
+								Message += TEXT("\n信号レベルが低すぎるか、取得できません。");
 								if (!m_fIgnoreSignalLevel
 										&& m_MaxBitRate > 8000000)
-									::lstrcat(szText, TEXT("\n[信号レベルを無視する] をチェックしてスキャンしてみてください。"));
+									Message += TEXT("\n[信号レベルを無視する] をチェックしてスキャンしてみてください。");
 							} else if (m_MaxBitRate < 8000000) {
-								::lstrcat(szText, TEXT("\nストリームを受信できません。"));
+								Message += TEXT("\nストリームを受信できません。");
 							}
-							::MessageBox(hDlg, szText, TEXT("スキャン結果"), MB_OK | MB_ICONEXCLAMATION);
+							::MessageBox(hDlg, Message.c_str(), TEXT("スキャン結果"), MB_OK | MB_ICONEXCLAMATION);
 						}
 						m_fUpdated = true;
 					} else {

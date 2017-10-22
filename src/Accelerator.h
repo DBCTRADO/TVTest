@@ -119,7 +119,7 @@ namespace TVTest
 	// CAccelerator
 		static const KeyInfo m_DefaultAccelList[];
 		static const AppCommandInfo m_DefaultAppCommandList[];
-		static void FormatAccelText(LPTSTR pszText, int Key, int Modifiers, bool fGlobal = false);
+		static void FormatAccelText(LPTSTR pszText, size_t MaxText, int Key, int Modifiers, bool fGlobal = false);
 		void SetMenuAccelText(HMENU hmenu, int Command);
 		HACCEL CreateAccel();
 		bool RegisterHotKey();

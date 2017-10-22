@@ -213,10 +213,7 @@ int APIENTRY _tWinMain(
 
 	App.AddLog(TEXT("******** 終了 ********"));
 	if (App.CmdLineOptions.m_fSaveLog && !App.Logger.GetOutputToFile()) {
-		TCHAR szFileName[MAX_PATH];
-
-		if (App.Logger.GetDefaultLogFileName(szFileName, lengthof(szFileName)))
-			App.Logger.SaveToFile(szFileName, true);
+		App.Logger.SaveToFile(nullptr, true);
 	}
 
 	return Result;

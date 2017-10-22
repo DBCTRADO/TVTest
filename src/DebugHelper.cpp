@@ -316,38 +316,41 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 		}
 
 		// ログ保存
-		::GetModuleFileName(nullptr, s.File.szFileName, lengthof(s.File.szFileName));
-		::lstrcat(s.File.szFileName, TEXT(".exception.log"));
-		s.File.hFile = ::CreateFile(
-			s.File.szFileName, GENERIC_WRITE, 0, nullptr,
-			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-		if (s.File.hFile != INVALID_HANDLE_VALUE) {
-			static const char szHeader[] = APP_NAME_A " ver." VERSION_TEXT_A
+		static const TCHAR Suffix[] = TEXT(".exception.log");
+		DWORD Length = ::GetModuleFileName(nullptr, s.File.szFileName, lengthof(s.File.szFileName));
+		if ((Length > 0) && (Length + lengthof(Suffix) <= lengthof(s.File.szFileName))) {
+			StringCopy(s.File.szFileName + Length, Suffix);
+			s.File.hFile = ::CreateFile(
+				s.File.szFileName, GENERIC_WRITE, 0, nullptr,
+				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			if (s.File.hFile != INVALID_HANDLE_VALUE) {
+				static const char szHeader[] = APP_NAME_A " ver." VERSION_TEXT_A
 #ifdef VERSION_HASH_A
-				" " VERSION_HASH_A
+					" " VERSION_HASH_A
 #endif
 #if defined(_M_IX86)
-				" (x86)"
+					" (x86)"
 #elif defined(_M_AMD64)
-				" (x64)"
+					" (x64)"
 #elif defined(_M_IA64)
-				" (IA64)"
+					" (IA64)"
 #endif
-				"\r\n\r\n";
-			::WriteFile(s.File.hFile, szHeader, (DWORD)(sizeof(szHeader) - 1), &s.File.WroteSize, nullptr);
-			::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, nullptr);
-			if (s.NumModuleEntries > 0) {
-				s.Length = ::wsprintfA(s.szText, "\r\nModules (%d Modules)\r\n", s.NumModuleEntries);
-				for (s.i = 0; s.i < s.NumModuleEntries; s.i++) {
-					s.Length += ::wsprintfA(
-						s.szText + s.Length, "%s %p + %08x\r\n",
-						s.ModuleEntries[s.i].szModule,
-						s.ModuleEntries[s.i].modBaseAddr,
-						s.ModuleEntries[s.i].modBaseSize);
-				}
+					"\r\n\r\n";
+				::WriteFile(s.File.hFile, szHeader, (DWORD)(sizeof(szHeader) - 1), &s.File.WroteSize, nullptr);
 				::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, nullptr);
+				if (s.NumModuleEntries > 0) {
+					s.Length = ::wsprintfA(s.szText, "\r\nModules (%d Modules)\r\n", s.NumModuleEntries);
+					for (s.i = 0; s.i < s.NumModuleEntries; s.i++) {
+						s.Length += ::wsprintfA(
+							s.szText + s.Length, "%s %p + %08x\r\n",
+							s.ModuleEntries[s.i].szModule,
+							s.ModuleEntries[s.i].modBaseAddr,
+							s.ModuleEntries[s.i].modBaseSize);
+					}
+					::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, nullptr);
+				}
+				::CloseHandle(s.File.hFile);
 			}
-			::CloseHandle(s.File.hFile);
 		}
 
 		if (s.fContinueExecution)

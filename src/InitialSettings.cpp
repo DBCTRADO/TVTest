@@ -220,26 +220,25 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				bool fH265Decoder =
 					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_H265DECODER) > 1;
 				if (!fMpeg2Decoder || !fH264Decoder || !fH265Decoder) {
-					TCHAR szCodecs[64], szMessage[256];
-					szCodecs[0] = _T('\0');
+					String Codecs, Message;
 					if (!fMpeg2Decoder)
-						::lstrcat(szCodecs, TEXT("MPEG-2"));
+						Codecs = TEXT("MPEG-2");
 					if (!fH264Decoder) {
-						if (szCodecs[0] != _T('\0'))
-							::lstrcat(szCodecs, TEXT("/"));
-						::lstrcat(szCodecs, TEXT("H.264(AVC)"));
+						if (!Codecs.empty())
+							Codecs += TEXT("/");
+						Codecs += TEXT("H.264(AVC)");
 					}
 					if (!fH265Decoder) {
-						if (szCodecs[0] != _T('\0'))
-							::lstrcat(szCodecs, TEXT("/"));
-						::lstrcat(szCodecs, TEXT("H.265(HEVC)"));
+						if (!Codecs.empty())
+							Codecs += TEXT("/");
+						Codecs += TEXT("H.265(HEVC)");
 					}
-					StringPrintf(
-						szMessage,
+					StringUtility::Format(
+						Message,
 						TEXT("%s のデコーダが見付からないため、%s の映像は再生できません。\n")
 						TEXT("映像を再生するにはデコーダをインストールしてください。"),
-						szCodecs, szCodecs);
-					::MessageBox(hDlg, szMessage, TEXT("お知らせ"), MB_OK | MB_ICONINFORMATION);
+						Codecs.c_str(), Codecs.c_str());
+					::MessageBox(hDlg, Message.c_str(), TEXT("お知らせ"), MB_OK | MB_ICONINFORMATION);
 				}
 
 				String Mpeg2DecoderName, H264DecoderName, H265DecoderName;

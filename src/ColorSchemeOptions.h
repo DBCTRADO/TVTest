@@ -57,7 +57,7 @@ namespace TVTest
 		const CColorScheme *GetColorScheme() const { return m_ColorScheme.get(); }
 		COLORREF GetColor(int Type) const;
 		COLORREF GetColor(LPCTSTR pszText) const;
-		static bool GetThemesDirectory(LPTSTR pszDirectory, int MaxLength, bool fCreate = false);
+		static bool GetThemesDirectory(CFilePath *pDirectory, bool fCreate = false);
 
 	private:
 		std::unique_ptr<CColorScheme> m_ColorScheme;

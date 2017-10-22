@@ -286,23 +286,24 @@ CAccelerator::~CAccelerator()
 }
 
 
-void CAccelerator::FormatAccelText(LPTSTR pszText, int Key, int Modifiers, bool fGlobal)
+void CAccelerator::FormatAccelText(LPTSTR pszText, size_t MaxText, int Key, int Modifiers, bool fGlobal)
 {
-	pszText[0] = '\0';
-	if ((Modifiers & MOD_SHIFT) != 0)
-		::lstrcat(pszText, TEXT("Shift+"));
-	if ((Modifiers & MOD_CONTROL) != 0)
-		::lstrcat(pszText, TEXT("Ctrl+"));
-	if ((Modifiers & MOD_ALT) != 0)
-		::lstrcat(pszText, TEXT("Alt+"));
+	LPCTSTR pszKey = TEXT("");
 	for (int i = 0; i < lengthof(AccelKeyList); i++) {
 		if (Key == AccelKeyList[i].KeyCode) {
-			::lstrcat(pszText, AccelKeyList[i].pszText);
+			pszKey = AccelKeyList[i].pszText;
 			break;
 		}
 	}
-	if (fGlobal)
-		::lstrcat(pszText, TEXT(" (G)"));
+
+	StringPrintf(
+		pszText, MaxText,
+		TEXT("%s%s%s%s%s"),
+		((Modifiers & MOD_SHIFT  ) != 0) ? TEXT("Shift+") : TEXT(""),
+		((Modifiers & MOD_CONTROL) != 0) ? TEXT("Ctrl+")  : TEXT(""),
+		((Modifiers & MOD_ALT    ) != 0) ? TEXT("Alt+")   : TEXT(""),
+		pszKey,
+		fGlobal ? TEXT(" (G)") : TEXT(""));
 }
 
 
@@ -329,8 +330,8 @@ void CAccelerator::SetMenuAccelText(HMENU hmenu, int Command)
 		p++;
 	}
 	if (pKey != nullptr) {
-		p[0] = '\t';
-		FormatAccelText(p + 1, pKey->KeyCode, pKey->Modifiers);
+		*p++ = '\t';
+		FormatAccelText(p, lengthof(szText) - (p - szText), pKey->KeyCode, pKey->Modifiers);
 	} else
 		*p = '\0';
 	ModifyMenu(
@@ -744,7 +745,7 @@ void CAccelerator::SetAccelItem(int Index, BYTE Mod, WORD Key, bool fGlobal, BYT
 
 	m_ListView.SetItemParam(Index, MAKE_ACCEL_PARAM(Key, Mod, fGlobal, AppCommand));
 	if (Key != 0) {
-		FormatAccelText(szText, Key, Mod, fGlobal);
+		FormatAccelText(szText, lengthof(szText), Key, Mod, fGlobal);
 	} else {
 		szText[0] = _T('\0');
 	}
@@ -834,7 +835,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					Param = MAKE_ACCEL_PARAM(0, 0, false, AppCommand);
 				int Index = m_ListView.InsertItem(i, szText, Param);
 				if (pKey != nullptr) {
-					FormatAccelText(szText, pKey->KeyCode, pKey->Modifiers, pKey->fGlobal);
+					FormatAccelText(szText, lengthof(szText), pKey->KeyCode, pKey->Modifiers, pKey->fGlobal);
 					m_ListView.SetItemText(Index, COLUMN_KEY, szText);
 				}
 				if (AppCommand != 0) {
@@ -909,7 +910,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				TCHAR szText[64];
 				if (Key > 0) {
 					FormatAccelText(
-						szText,
+						szText, lengthof(szText),
 						GET_ACCEL_KEY(Param), GET_ACCEL_MOD(Param), GET_ACCEL_GLOBAL(Param));
 				} else {
 					szText[0] = _T('\0');

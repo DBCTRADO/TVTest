@@ -203,12 +203,12 @@ void CColorSchemeOptions::GetCurrentSettings(CColorScheme *pColorScheme)
 }
 
 
-bool CColorSchemeOptions::GetThemesDirectory(LPTSTR pszDirectory, int MaxLength, bool fCreate)
+bool CColorSchemeOptions::GetThemesDirectory(CFilePath *pDirectory, bool fCreate)
 {
-	GetAppClass().GetAppDirectory(pszDirectory);
-	::PathAppend(pszDirectory, TEXT("Themes"));
-	if (fCreate && !::PathIsDirectory(pszDirectory))
-		::CreateDirectory(pszDirectory, nullptr);
+	GetAppClass().GetAppDirectory(pDirectory);
+	pDirectory->Append(TEXT("Themes"));
+	if (fCreate && !::PathIsDirectory(pDirectory->c_str()))
+		::CreateDirectory(pDirectory->c_str(), nullptr);
 	return true;
 }
 
@@ -218,10 +218,10 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			TCHAR szDirectory[MAX_PATH];
+			CFilePath Directory;
 
-			GetThemesDirectory(szDirectory, lengthof(szDirectory));
-			m_PresetList.Load(szDirectory);
+			GetThemesDirectory(&Directory);
+			m_PresetList.Load(Directory.c_str());
 			//m_PresetList.SortByName();
 			CColorScheme *pDefaultColorScheme = new CColorScheme;
 			pDefaultColorScheme->SetName(TEXT("デフォルトのテーマ"));
@@ -533,27 +533,22 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					pColorScheme = m_PresetList.GetColorScheme(Index);
 				}
 				bool fNewColorScheme;
-				TCHAR szFileName[MAX_PATH];
 				if (pColorScheme != nullptr && pColorScheme->IsLoadedFromFile()) {
-					StringCopy(szFileName, pColorScheme->GetFileName());
 					fNewColorScheme = false;
 				} else {
-					GetThemesDirectory(szFileName, lengthof(szFileName), true);
-					if (::lstrlen(szFileName) + 1 + ::lstrlen(szName) + ::lstrlen(m_pszExtension) >= MAX_PATH) {
-						MessageBox(hDlg, TEXT("名前が長すぎます。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
-						break;
-					}
-					::PathAppend(szFileName, szName);
-					::lstrcat(szFileName, m_pszExtension);
+					CFilePath FilePath;
+					GetThemesDirectory(&FilePath, true);
+					FilePath.Append(szName);
+					FilePath +=  m_pszExtension;
 					pColorScheme = new CColorScheme;
-					pColorScheme->SetFileName(szFileName);
+					pColorScheme->SetFileName(FilePath.c_str());
 					fNewColorScheme = true;
 				}
 				pColorScheme->SetName(szName);
 				pColorScheme->SetLoaded();
 
 				GetCurrentSettings(pColorScheme);
-				if (!pColorScheme->Save(szFileName)) {
+				if (!pColorScheme->Save(pColorScheme->GetFileName())) {
 					if (fNewColorScheme)
 						delete pColorScheme;
 					::MessageBox(hDlg, TEXT("保存ができません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);

@@ -72,7 +72,7 @@ namespace TVTest
 		LPCTSTR GetSaveFolder() const { return m_SaveFolder.c_str(); }
 		LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 		bool GetFilePath(LPTSTR pszFileName, int MaxLength) const;
-		bool GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage = nullptr) const;
+		bool GenerateFilePath(CFilePath *pFilePath, LPCTSTR *ppszErrorMessage = nullptr) const;
 		bool ConfirmChannelChange(HWND hwndOwner) const;
 		bool ConfirmServiceChange(HWND hwndOwner, const CRecordManager *pRecordManager) const;
 		bool ConfirmStop(HWND hwndOwner) const;

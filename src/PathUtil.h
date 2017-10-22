@@ -57,6 +57,7 @@ namespace TVTest
 	public:
 		using String::String;
 		using String::operator=;
+		using String::operator+=;
 
 		bool RemoveExtension() { return PathUtil::RemoveExtension(this); }
 		bool RenameExtension(LPCWSTR pszExtension) { return PathUtil::RenameExtension(this, pszExtension); }

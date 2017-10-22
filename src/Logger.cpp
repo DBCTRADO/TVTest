@@ -134,6 +134,12 @@ CLogger::CLogger()
 	: m_SerialNumber(0)
 	, m_fOutputToFile(false)
 {
+	TCHAR szFileName[MAX_PATH];
+	DWORD Result = ::GetModuleFileName(nullptr, szFileName, lengthof(szFileName));
+	if ((Result > 0) && (Result < MAX_PATH)) {
+		m_DefaultLogFileName = szFileName;
+		m_DefaultLogFileName += TEXT(".log");
+	}
 }
 
 
@@ -149,10 +155,7 @@ bool CLogger::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("OutputLogToFile"), &m_fOutputToFile);
 	if (m_fOutputToFile && m_LogList.size() > 0) {
-		TCHAR szFileName[MAX_PATH];
-
-		if (GetDefaultLogFileName(szFileName, lengthof(szFileName)))
-			SaveToFile(szFileName, true);
+		SaveToFile(nullptr, true);
 	}
 	return true;
 }
@@ -210,36 +213,32 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 	m_LogList.emplace_back(pLogItem);
 	TRACE(TEXT("Log : %s\n"), pszText);
 
-	if (m_fOutputToFile) {
-		TCHAR szFileName[MAX_PATH];
+	if (m_fOutputToFile && !m_DefaultLogFileName.empty()) {
+		HANDLE hFile;
 
-		if (GetDefaultLogFileName(szFileName, lengthof(szFileName))) {
-			HANDLE hFile;
+		hFile = ::CreateFile(
+			m_DefaultLogFileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+		if (hFile != INVALID_HANDLE_VALUE) {
+			static const LARGE_INTEGER Zero = {};
+			LARGE_INTEGER Pos;
+			DWORD Size;
 
-			hFile = ::CreateFile(
-				szFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-				OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-			if (hFile != INVALID_HANDLE_VALUE) {
-				static const LARGE_INTEGER Zero = {};
-				LARGE_INTEGER Pos;
-				DWORD Size;
+			if (::SetFilePointerEx(hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0) {
+				static const WORD BOM = 0xFEFF;
 
-				if (::SetFilePointerEx(hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0) {
-					static const WORD BOM = 0xFEFF;
-
-					::WriteFile(hFile, &BOM, 2, &Size, nullptr);
-				}
-
-				WCHAR szText[MAX_LOG_TEXT_LENGTH];
-				DWORD Length;
-
-				Length = pLogItem->Format(szText, lengthof(szText) - 1);
-				szText[Length++] = L'\r';
-				szText[Length++] = L'\n';
-				::WriteFile(hFile, szText, Length * sizeof(WCHAR), &Size, nullptr);
-
-				::CloseHandle(hFile);
+				::WriteFile(hFile, &BOM, 2, &Size, nullptr);
 			}
+
+			WCHAR szText[MAX_LOG_TEXT_LENGTH];
+			DWORD Length;
+
+			Length = pLogItem->Format(szText, lengthof(szText) - 1);
+			szText[Length++] = L'\r';
+			szText[Length++] = L'\n';
+			::WriteFile(hFile, szText, Length * sizeof(WCHAR), &Size, nullptr);
+
+			::CloseHandle(hFile);
 		}
 	}
 
@@ -313,7 +312,8 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 	HANDLE hFile;
 
 	hFile = ::CreateFile(
-		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+		pszFileName != nullptr ? pszFileName : m_DefaultLogFileName.c_str(),
+		GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		fAppend ? OPEN_ALWAYS : CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -343,16 +343,6 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 
 	::CloseHandle(hFile);
 
-	return true;
-}
-
-
-bool CLogger::GetDefaultLogFileName(LPTSTR pszFileName, DWORD MaxLength) const
-{
-	DWORD Result = ::GetModuleFileName(nullptr, pszFileName, MaxLength);
-	if (Result == 0 || Result + 4 >= MaxLength)
-		return false;
-	::lstrcat(pszFileName, TEXT(".log"));
 	return true;
 }
 
@@ -484,17 +474,14 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDC_LOG_SAVE:
 			{
-				TCHAR szFileName[MAX_PATH];
-
-				if (!GetDefaultLogFileName(szFileName, lengthof(szFileName))
-						|| !SaveToFile(szFileName, false)) {
+				if (!SaveToFile(nullptr, false)) {
 					::MessageBox(hDlg, TEXT("保存ができません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 				} else {
 					TCHAR szMessage[MAX_PATH + 64];
 
 					StringPrintf(
 						szMessage,
-						TEXT("ログを \"%s\" に保存しました。"), szFileName);
+						TEXT("ログを \"%s\" に保存しました。"), m_DefaultLogFileName.c_str());
 					::MessageBox(hDlg, szMessage, TEXT("ログ保存"), MB_OK | MB_ICONINFORMATION);
 				}
 			}
@@ -541,10 +528,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					BlockLock Lock(m_Lock);
 
 					if (fOutput && m_LogList.size() > 0) {
-						TCHAR szFileName[MAX_PATH];
-
-						if (GetDefaultLogFileName(szFileName, lengthof(szFileName)))
-							SaveToFile(szFileName, true);
+						SaveToFile(nullptr, true);
 					}
 					m_fOutputToFile = fOutput;
 

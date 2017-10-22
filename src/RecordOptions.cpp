@@ -211,7 +211,7 @@ bool CRecordOptions::GetFilePath(LPTSTR pszFileName, int MaxLength) const
 }
 
 
-bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR *ppszErrorMessage) const
+bool CRecordOptions::GenerateFilePath(CFilePath *pFilePath, LPCTSTR *ppszErrorMessage) const
 {
 	if (m_SaveFolder.empty()) {
 		if (ppszErrorMessage)
@@ -223,14 +223,10 @@ bool CRecordOptions::GenerateFilePath(LPTSTR pszFileName, int MaxLength, LPCTSTR
 			*ppszErrorMessage = TEXT("設定でファイル名を指定してください。");
 		return false;
 	}
-	if (m_SaveFolder.length() + 1 + m_FileName.length() >= static_cast<size_t>(MaxLength)) {
-		if (ppszErrorMessage)
-			*ppszErrorMessage = TEXT("ファイルパスが長すぎます。");
-		return false;
-	}
-	StringCopy(pszFileName, m_SaveFolder.c_str());
-	::PathAddBackslash(pszFileName);
-	::lstrcat(pszFileName, m_FileName.c_str());
+
+	*pFilePath = m_SaveFolder;
+	pFilePath->Append(m_FileName);
+
 	return true;
 }
 

@@ -259,16 +259,14 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		return false;
 
 	static const int VolumeSteps = 20;
-	TCHAR szText[64];
+	WCHAR szText[64];
 	int i;
 
-	szText[0] = '\0';
-	for (i = 0; i < Volume / (100 / VolumeSteps); i++)
-		::lstrcat(szText, TEXT("■"));
+	for (i = 0; i < std::min(Volume, 100) / (100 / VolumeSteps); i++)
+		szText[i] = L'■';
 	for (; i < VolumeSteps; i++)
-		::lstrcat(szText, TEXT("□"));
-	const int Length = ::lstrlen(szText);
-	StringPrintf(szText + Length, lengthof(szText) - Length, TEXT(" %d"), Volume);
+		szText[i] = L'□';
+	StringPrintf(szText + i, lengthof(szText) - i, TEXT(" %d"), Volume);
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& pViewer->IsDrawTextSupported()) {

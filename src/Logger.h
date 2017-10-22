@@ -84,7 +84,6 @@ namespace TVTest
 		bool SetOutputToFile(bool fOutput);
 		bool GetOutputToFile() const { return m_fOutputToFile; }
 		bool SaveToFile(LPCTSTR pszFileName, bool fAppend);
-		bool GetDefaultLogFileName(LPTSTR pszFileName, DWORD MaxLength) const;
 		void GetLogText(String *pText) const;
 		void GetLogText(AnsiString *pText) const;
 		bool CopyToClipboard(HWND hwnd);
@@ -107,6 +106,7 @@ namespace TVTest
 		DWORD m_SerialNumber;
 		bool m_fOutputToFile;
 		mutable MutexLock m_Lock;
+		String m_DefaultLogFileName;
 	};
 
 }	// namespace TVTest

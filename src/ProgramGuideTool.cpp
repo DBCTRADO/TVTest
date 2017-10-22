@@ -324,7 +324,6 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
 					::PathQuoteSpaces(szFileName);
-					//::lstrcat(szFileName, TEXT(" \"%tvpid%\""));
 					::SetDlgItemText(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, szFileName);
 					if (GetDlgItemTextLength(hDlg, IDC_PROGRAMGUIDETOOL_NAME) == 0) {
 						::PathRemoveExtension(szFileName);
