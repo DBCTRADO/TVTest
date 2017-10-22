@@ -208,6 +208,7 @@ namespace TVTest
 		CEventSearchOptions();
 
 		bool SetKeywordHistory(const LPTSTR *pKeywordList, int NumKeywords);
+		bool SetKeywordHistory(const String *pKeywordList, size_t NumKeywords);
 		int GetKeywordHistoryCount() const;
 		LPCTSTR GetKeywordHistory(int Index) const;
 		bool AddKeywordHistory(LPCTSTR pszKeyword);

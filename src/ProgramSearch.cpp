@@ -861,6 +861,17 @@ bool CEventSearchOptions::SetKeywordHistory(const LPTSTR *pKeywordList, int NumK
 }
 
 
+bool CEventSearchOptions::SetKeywordHistory(const String *pKeywordList, size_t NumKeywords)
+{
+	if (pKeywordList == nullptr)
+		return false;
+	m_KeywordHistory.clear();
+	for (size_t i = 0; i < NumKeywords; i++)
+		m_KeywordHistory.emplace_back(pKeywordList[i]);
+	return true;
+}
+
+
 int CEventSearchOptions::GetKeywordHistoryCount() const
 {
 	return (int)m_KeywordHistory.size();

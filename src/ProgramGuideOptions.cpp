@@ -177,22 +177,18 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				&& NumSearchKeywords > 0) {
 			if (NumSearchKeywords > CProgramSearchDialog::MAX_KEYWORD_HISTORY)
 				NumSearchKeywords = CProgramSearchDialog::MAX_KEYWORD_HISTORY;
-			LPTSTR *ppszKeywords = new LPTSTR[NumSearchKeywords];
-			int j = 0;
+			std::vector<String> Keywords(NumSearchKeywords);
+			size_t j = 0;
 			for (int i = 0; i < NumSearchKeywords; i++) {
-				TCHAR szName[32], szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+				TCHAR szName[32];
 
 				StringPrintf(szName, TEXT("SearchKeyword%d"), i);
-				if (Settings.Read(szName, szKeyword, lengthof(szKeyword))
-						&& szKeyword[0] != '\0')
-					ppszKeywords[j++] = DuplicateString(szKeyword);
+				if (Settings.Read(szName, &Keywords[j]) && !Keywords[j].empty())
+					j++;
 			}
 			if (j > 0) {
-				pProgramSearch->GetOptions().SetKeywordHistory(ppszKeywords, j);
-				for (j--; j >= 0; j--)
-					delete [] ppszKeywords[j];
+				pProgramSearch->GetOptions().SetKeywordHistory(Keywords.data(), j);
 			}
-			delete [] ppszKeywords;
 		}
 
 		if (Settings.Read(TEXT("HighlightSearchResult"), &f))
