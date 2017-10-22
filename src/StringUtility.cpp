@@ -212,21 +212,13 @@ int FormatV(String &Str, LPCWSTR pszFormat, va_list Args)
 
 	va_list CopyArgs;
 	va_copy(CopyArgs, Args);
-	int Length = ::_vscwprintf(pszFormat, Args);
+	const int Length = ::_vscwprintf(pszFormat, Args);
 	if (Length <= 0) {
 		Str.clear();
 	} else {
-		static const int BUFFER_LENGTH = 256;
-		if (Length < BUFFER_LENGTH) {
-			WCHAR szBuffer[BUFFER_LENGTH];
-			::_vsnwprintf_s(szBuffer, BUFFER_LENGTH, _TRUNCATE, pszFormat, CopyArgs);
-			Str = szBuffer;
-		} else {
-			LPWSTR pszBuffer = new WCHAR[Length + 1];
-			::_vsnwprintf_s(pszBuffer, Length + 1, _TRUNCATE, pszFormat, CopyArgs);
-			Str = pszBuffer;
-			delete [] pszBuffer;
-		}
+		Str.resize(Length + 1);
+		::_vsnwprintf_s(Str.data(), Str.length(), _TRUNCATE, pszFormat, CopyArgs);
+		Str.pop_back();
 	}
 	va_end(CopyArgs);
 
@@ -406,11 +398,8 @@ bool ToAnsi(const String &Src, AnsiString *pDst)
 		int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), nullptr, 0, nullptr, nullptr);
 		if (Length < 1)
 			return false;
-		char *pszBuffer = new char[Length + 1];
-		::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), pszBuffer, Length, nullptr, nullptr);
-		pszBuffer[Length] = '\0';
-		pDst->assign(pszBuffer);
-		delete [] pszBuffer;
+		pDst->resize(Length);
+		::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), pDst->data(), Length, nullptr, nullptr);
 	}
 
 	return true;
