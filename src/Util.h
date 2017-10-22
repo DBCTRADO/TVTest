@@ -148,30 +148,6 @@ namespace TVTest
 		size_t m_Length;
 	};
 
-	class CLocalTime
-	{
-	protected:
-		FILETIME m_Time;
-
-	public:
-		CLocalTime();
-		CLocalTime(const FILETIME &Time);
-		CLocalTime(const SYSTEMTIME &Time);
-		virtual ~CLocalTime();
-		bool operator==(const CLocalTime &Time) const;
-		bool operator!=(const CLocalTime &Time) const { return !(*this == Time); }
-		bool operator<(const CLocalTime &Time) const;
-		bool operator>(const CLocalTime &Time) const;
-		bool operator<=(const CLocalTime &Time) const;
-		bool operator>=(const CLocalTime &Time) const;
-		CLocalTime &operator+=(LONGLONG Offset);
-		CLocalTime &operator-=(LONGLONG Offset) { return *this += -Offset; }
-		LONGLONG operator-(const CLocalTime &Time) const;
-		void SetCurrentTime();
-		bool GetTime(FILETIME *pTime) const;
-		bool GetTime(SYSTEMTIME *pTime) const;
-	};
-
 	class CGlobalLock
 	{
 		HANDLE m_hMutex;
@@ -251,66 +227,6 @@ namespace TVTest
 			bool IsWindows10AnniversaryUpdateOrLater();
 
 		}	// namespace OS
-
-		class CRect
-			: public ::RECT
-		{
-		public:
-			CRect() { Empty(); }
-
-			CRect(int Left, int Top, int Right, int Bottom)
-			{
-				Set(Left, Top, Right, Bottom);
-			}
-
-			CRect &operator=(const RECT &Op)
-			{
-				left = Op.left;
-				top = Op.top;
-				right = Op.right;
-				bottom = Op.bottom;
-				return *this;
-			}
-
-			bool operator==(const CRect &Op)
-			{
-				return left == Op.left
-					&& top == Op.top
-					&& right == Op.right
-					&& bottom == Op.bottom;
-			}
-
-			bool operator!=(const CRect &Op) { return !(*this == Op); }
-
-			void Set(int Left, int Top, int Right, int Bottom)
-			{
-				left = Left; top = Top; right = Right; bottom = Bottom;
-			}
-
-			void Empty() { left = 0; top = 0; right = 0; bottom = 0; }
-
-			bool IsEmpty() const { return left == right && top == bottom; }
-
-			int GetWidth() const { return right - left; }
-
-			int GetHeight() const { return bottom - top; }
-
-			bool Intersect(const RECT &Rect)
-			{
-				RECT rc;
-				bool fResult =::IntersectRect(&rc, this, &Rect) != FALSE;
-				*this = rc;
-				return fResult;
-			}
-
-			bool Union(const RECT &Rect)
-			{
-				RECT rc;
-				bool fResult =::UnionRect(&rc, this, &Rect) != FALSE;
-				*this = rc;
-				return fResult;
-			}
-		};
 
 		class CClock
 		{
