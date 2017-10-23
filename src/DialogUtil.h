@@ -90,7 +90,7 @@ namespace TVTest
 		if (Length > 0) {
 			pString->resize(Length + 1);
 			Length = DlgListBox_GetString(hDlg, ID, Index, pString->data());
-			pString->resize(max(Length, (LRESULT)0));
+			pString->resize(std::max(Length, (LRESULT)0));
 		} else {
 			pString->clear();
 		}
@@ -192,7 +192,7 @@ namespace TVTest
 		if (Length > 0) {
 			pString->resize(Length + 1);
 			Length = DlgComboBox_GetLBString(hDlg, ID, Index, pString->data());
-			pString->resize(max(Length, (LRESULT)0));
+			pString->resize(std::max(Length, (LRESULT)0));
 		} else {
 			pString->clear();
 		}

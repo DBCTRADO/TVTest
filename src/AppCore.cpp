@@ -127,7 +127,7 @@ bool CAppCore::InitializeChannel()
 
 	m_App.ChannelManager.SetUseDriverChannelList(fNetworkDriver);
 	m_App.ChannelManager.SetCurrentChannel(
-		m_App.RestoreChannelInfo.fAllChannels ? CChannelManager::SPACE_ALL : max(m_App.RestoreChannelInfo.Space, 0),
+		m_App.RestoreChannelInfo.fAllChannels ? CChannelManager::SPACE_ALL : std::max(m_App.RestoreChannelInfo.Space, 0),
 		-1);
 	m_App.ChannelManager.SetCurrentServiceID(0);
 	m_App.AppEventManager.OnChannelListChanged();
@@ -1104,7 +1104,7 @@ int CAppCore::GetCorresponding1SegService(
 
 	// フルセグのマルチ放送のサービスIDが101/103のように飛んでいる場合があるが、
 	// ワンセグのサービスは連続しているため、サブチャンネルは1に固定する
-	return min(ServiceIndex, 1);
+	return std::min(ServiceIndex, 1);
 }
 
 

@@ -228,7 +228,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 	CalcTitleHeight();
 	RECT rc;
 	GetClientRect(&rc);
-	::MoveWindow(m_hwndEdit, 0, m_TitleHeight, rc.right, max(rc.bottom - m_TitleHeight, 0L), TRUE);
+	::MoveWindow(m_hwndEdit, 0, m_TitleHeight, rc.right, std::max(rc.bottom - m_TitleHeight, 0L), TRUE);
 	Invalidate();
 }
 
@@ -308,8 +308,8 @@ void CEventInfoPopup::CalcTitleHeight()
 	int ButtonHeight = m_ButtonSize + m_ButtonMargin * 2;
 	int Margin = m_pStyleScaling->LogicalPixelsToPhysicalPixels(2);
 
-	m_TitleHeight = max(IconHeight, ButtonHeight);
-	m_TitleHeight = max(m_TitleHeight, FontHeight + Margin);
+	m_TitleHeight = std::max(IconHeight, ButtonHeight);
+	m_TitleHeight = std::max(m_TitleHeight, FontHeight + Margin);
 }
 
 
@@ -494,7 +494,7 @@ bool CEventInfoPopup::GetPopupPosition(int x, int y, RECT *pPos) const
 			if (y + Height > mi.rcMonitor.bottom) {
 				y = mi.rcMonitor.bottom - Height;
 				if (x + Width < mi.rcMonitor.right)
-					x += min(16L, mi.rcMonitor.right - (x + Width));
+					x += std::min(16L, mi.rcMonitor.right - (x + Width));
 			}
 		}
 	}
@@ -578,7 +578,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		CalcTitleHeight();
 		::MoveWindow(
 			m_hwndEdit, 0, m_TitleHeight,
-			LOWORD(lParam), max(HIWORD(lParam) - m_TitleHeight, 0), TRUE);
+			LOWORD(lParam), std::max(HIWORD(lParam) - m_TitleHeight, 0), TRUE);
 		return 0;
 
 	case WM_PAINT:

@@ -1868,7 +1868,7 @@ bool CProgramSearchDialog::SetColumnWidth(int Index, int Width)
 {
 	if (Index < 0 || Index >= NUM_COLUMNS)
 		return false;
-	m_ColumnWidth[Index] = max(Width, 0);
+	m_ColumnWidth[Index] = std::max(Width, 0);
 	return true;
 }
 
@@ -2531,7 +2531,7 @@ void CProgramSearchDialog::AdjustResultListHeight(int Height)
 	rcInfo.top = rcPane.top + Height + SplitterHeight;
 	::MoveWindow(
 		::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO),
-		rcPane.left, rcInfo.top, rcPane.right - rcPane.left, max(rcPane.bottom - rcInfo.top, 0L), TRUE);
+		rcPane.left, rcInfo.top, rcPane.right - rcPane.left, std::max(rcPane.bottom - rcInfo.top, 0L), TRUE);
 }
 
 

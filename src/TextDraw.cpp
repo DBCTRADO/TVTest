@@ -192,7 +192,7 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag
 			static const WCHAR szEllipses[] = L"...";
 			const size_t BufferLength = Fit + lengthof(szEllipses);
 			m_StringBuffer.clear();
-			m_StringBuffer.resize(max(BufferLength, 256_z));
+			m_StringBuffer.resize(std::max(BufferLength, 256_z));
 			LPWSTR pszBuffer = &m_StringBuffer[0];
 			::CopyMemory(pszBuffer, p, Fit * sizeof(WCHAR));
 			LPWSTR pszCur = pszBuffer + Fit;

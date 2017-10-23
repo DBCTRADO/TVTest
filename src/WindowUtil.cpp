@@ -49,7 +49,7 @@ static bool IsWindowEdgeVisible(HWND hwnd, HWND hwndTop, const RECT *pRect, HWND
 				return false;
 			if (rc.left <= pRect->left && rc.right > pRect->left) {
 				rcEdge = *pRect;
-				rcEdge.right = min(rc.right, pRect->right);
+				rcEdge.right = std::min(rc.right, pRect->right);
 				return IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget);
 			} else if (rc.left > pRect->left && rc.right >= pRect->right) {
 				rcEdge = *pRect;
@@ -71,7 +71,7 @@ static bool IsWindowEdgeVisible(HWND hwnd, HWND hwndTop, const RECT *pRect, HWND
 				return false;
 			if (rc.top <= pRect->top && rc.bottom > pRect->top) {
 				rcEdge = *pRect;
-				rcEdge.bottom = min(rc.bottom, pRect->bottom);
+				rcEdge.bottom = std::min(rc.bottom, pRect->bottom);
 				return IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget);
 			} else if (rc.top > pRect->top && rc.bottom >= pRect->bottom) {
 				rcEdge = *pRect;
@@ -112,32 +112,32 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 				if (abs(rc.left - pInfo->rcOriginal.right) < abs(pInfo->rcNearest.right)) {
 					rcEdge.left = rc.left;
 					rcEdge.right = rc.left;
-					rcEdge.top = max(rc.top, pInfo->rcOriginal.top);
-					rcEdge.bottom = min(rc.bottom, pInfo->rcOriginal.bottom);
+					rcEdge.top = std::max(rc.top, pInfo->rcOriginal.top);
+					rcEdge.bottom = std::min(rc.bottom, pInfo->rcOriginal.bottom);
 					if (IsWindowEdgeVisible(hwnd, GetTopWindow(GetDesktopWindow()), &rcEdge, pInfo->hwnd))
 						pInfo->rcNearest.right = rc.left - pInfo->rcOriginal.right;
 				}
 				if (abs(rc.right - pInfo->rcOriginal.left) < abs(pInfo->rcNearest.left)) {
 					rcEdge.left = rc.right;
 					rcEdge.right = rc.right;
-					rcEdge.top = max(rc.top, pInfo->rcOriginal.top);
-					rcEdge.bottom = min(rc.bottom, pInfo->rcOriginal.bottom);
+					rcEdge.top = std::max(rc.top, pInfo->rcOriginal.top);
+					rcEdge.bottom = std::min(rc.bottom, pInfo->rcOriginal.bottom);
 					if (IsWindowEdgeVisible(hwnd, GetTopWindow(GetDesktopWindow()), &rcEdge, pInfo->hwnd))
 						pInfo->rcNearest.left = rc.right - pInfo->rcOriginal.left;
 				}
 			}
 			if (rc.left < pInfo->rcOriginal.right && rc.right > pInfo->rcOriginal.left) {
 				if (abs(rc.top - pInfo->rcOriginal.bottom) < abs(pInfo->rcNearest.bottom)) {
-					rcEdge.left = max(rc.left, pInfo->rcOriginal.left);
-					rcEdge.right = min(rc.right, pInfo->rcOriginal.right);
+					rcEdge.left = std::max(rc.left, pInfo->rcOriginal.left);
+					rcEdge.right = std::min(rc.right, pInfo->rcOriginal.right);
 					rcEdge.top = rc.top;
 					rcEdge.bottom = rc.top;
 					if (IsWindowEdgeVisible(hwnd, GetTopWindow(GetDesktopWindow()), &rcEdge, pInfo->hwnd))
 						pInfo->rcNearest.bottom = rc.top - pInfo->rcOriginal.bottom;
 				}
 				if (abs(rc.bottom - pInfo->rcOriginal.top) < abs(pInfo->rcNearest.top)) {
-					rcEdge.left = max(rc.left, pInfo->rcOriginal.left);
-					rcEdge.right = min(rc.right, pInfo->rcOriginal.right);
+					rcEdge.left = std::max(rc.left, pInfo->rcOriginal.left);
+					rcEdge.right = std::min(rc.right, pInfo->rcOriginal.right);
 					rcEdge.top = rc.bottom;
 					rcEdge.bottom = rc.bottom;
 					if (IsWindowEdgeVisible(hwnd, GetTopWindow(GetDesktopWindow()), &rcEdge, pInfo->hwnd))

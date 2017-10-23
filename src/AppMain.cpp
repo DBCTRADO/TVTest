@@ -1045,7 +1045,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		pViewerFilter->SetUseAudioRendererClock(PlaybackOptions.GetUseAudioRendererClock());
 	CoreEngine.SetSPDIFOptions(AudioOptions.GetSpdifOptions());
 	if (CmdLineOptions.m_Volume >= 0)
-		CoreEngine.SetVolume(min(CmdLineOptions.m_Volume, CCoreEngine::MAX_VOLUME));
+		CoreEngine.SetVolume(std::min(CmdLineOptions.m_Volume, CCoreEngine::MAX_VOLUME));
 	if (PlaybackOptions.IsMuteOnStartUp() || CmdLineOptions.m_fMute)
 		UICore.SetMute(true);
 
@@ -1509,7 +1509,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 	}
 
 	if (CmdLine.m_Volume >= 0)
-		UICore.SetVolume(min(CmdLine.m_Volume, CCoreEngine::MAX_VOLUME), false);
+		UICore.SetVolume(std::min(CmdLine.m_Volume, CCoreEngine::MAX_VOLUME), false);
 	if (CmdLine.m_fMute)
 		UICore.SetMute(true);
 

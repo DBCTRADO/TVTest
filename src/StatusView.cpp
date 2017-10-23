@@ -1211,7 +1211,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 			}
 			if (m_Rows > 1 && pItem->m_fBreak) {
 				if (rc.right < pPaintRect->right) {
-					rc.left = max(rc.right, pPaintRect->left);
+					rc.left = std::max(rc.right, pPaintRect->left);
 					rc.right = pPaintRect->right;
 					ThemeDraw.Draw(Row == 0 ? m_Theme.ItemStyle.Back.Fill : m_Theme.BottomItemStyle.Back.Fill, rc);
 				}
@@ -1222,7 +1222,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 			}
 		}
 		if (rc.right < pPaintRect->right) {
-			rc.left = max(rc.right, pPaintRect->left);
+			rc.left = std::max(rc.right, pPaintRect->left);
 			rc.right = pPaintRect->right;
 			ThemeDraw.Draw(Row == 0 ? m_Theme.ItemStyle.Back.Fill : m_Theme.BottomItemStyle.Back.Fill, rc);
 		}
@@ -1372,7 +1372,7 @@ int CStatusView::CalcTextHeight(int *pFontHeight) const
 
 int CStatusView::CalcItemHeight(int TextHeight) const
 {
-	return max(TextHeight, (int)m_Style.IconSize.Height) + m_Style.ItemPadding.Vert();
+	return std::max(TextHeight, (int)m_Style.IconSize.Height) + m_Style.ItemPadding.Vert();
 }
 
 

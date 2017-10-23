@@ -134,7 +134,7 @@ void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC 
 	m_Height = (int)m_ItemList.size() * m_ItemHeight;
 	m_Rect = ContentRect;
 
-	m_LogoHeight = min(Style.FontHeight, 36);
+	m_LogoHeight = std::min(Style.FontHeight, 36);
 	m_LogoWidth = (m_LogoHeight * 16 + 4) / 9;
 
 	m_ChannelNameWidth = Style.FontHeight * 8;
@@ -796,7 +796,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 	m_Height = (int)m_ItemList.size() * m_ItemHeight;
 	m_Rect = ContentRect;
 
-	m_LogoHeight = min(Style.FontHeight, 36);
+	m_LogoHeight = std::min(Style.FontHeight, 36);
 	m_LogoWidth = (m_LogoHeight * 16 + 4) / 9;
 	CLogoManager &LogoManager = GetAppClass().LogoManager;
 
@@ -1897,14 +1897,14 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			int PageSize = rcContent.bottom - rcContent.top;
 
 			switch (LOWORD(wParam)) {
-			case SB_LINEUP:        Pos--;                                    break;
-			case SB_LINEDOWN:      Pos++;                                    break;
-			case SB_PAGEUP:        Pos -= PageSize;                          break;
-			case SB_PAGEDOWN:      Pos += PageSize;                          break;
-			case SB_TOP:           Pos = 0;                                  break;
-			case SB_BOTTOM:        Pos = max(m_ContentHeight - PageSize, 0); break;
+			case SB_LINEUP:        Pos--;                                         break;
+			case SB_LINEDOWN:      Pos++;                                         break;
+			case SB_PAGEUP:        Pos -= PageSize;                               break;
+			case SB_PAGEDOWN:      Pos += PageSize;                               break;
+			case SB_TOP:           Pos = 0;                                       break;
+			case SB_BOTTOM:        Pos = std::max(m_ContentHeight - PageSize, 0); break;
 			case SB_THUMBPOSITION:
-			case SB_THUMBTRACK:    Pos = HIWORD(wParam);                     break;
+			case SB_THUMBTRACK:    Pos = HIWORD(wParam);                          break;
 			default:               return 0;
 			}
 			SetScrollPos(Pos, true);
@@ -2141,7 +2141,7 @@ void CHomeDisplay::LayOut()
 		CategoryTextWidth + CATEGORY_ICON_WIDTH + m_HomeDisplayStyle.CategoryIconMargin +
 		m_HomeDisplayStyle.CategoryItemMargins.Horz();
 	m_CategoryItemHeight =
-		max(m_HomeDisplayStyle.FontHeight, CATEGORY_ICON_HEIGHT) +
+		std::max(m_HomeDisplayStyle.FontHeight, CATEGORY_ICON_HEIGHT) +
 		m_HomeDisplayStyle.CategoryItemMargins.Vert();
 	m_CategoriesAreaWidth = m_CategoryItemWidth + m_Style.CategoriesMargin.Horz();
 

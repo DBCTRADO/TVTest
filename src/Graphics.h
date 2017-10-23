@@ -25,8 +25,8 @@
 #ifdef NOMINMAX
 namespace Gdiplus
 {
-	using TVTest::min;
-	using TVTest::max;
+	using std::min;
+	using std::max;
 }
 #endif
 #include <gdiplus.h>

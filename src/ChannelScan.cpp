@@ -1375,7 +1375,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			if (!m_BonDriverChannelList.empty()) {
 				const int ChannelCount = (int)m_BonDriverChannelList.size();
 				const int CellWidth = (pdis->rcItem.right - pdis->rcItem.left - 5) / ChannelCount;
-				const float SignalScale = max(m_MaxSignalLevel, 30.0f);
+				const float SignalScale = std::max(m_MaxSignalLevel, 30.0f);
 				RECT rcGraph;
 				rcGraph.left = ((pdis->rcItem.right - pdis->rcItem.left) - ChannelCount * CellWidth) / 2;
 				rcGraph.right = rcGraph.left + ChannelCount * CellWidth;
@@ -1572,7 +1572,7 @@ void CChannelScan::Scan()
 			continue;
 		}
 
-		if (::WaitForSingleObject(m_hCancelEvent, min(m_ScanWait, 2000U)) != WAIT_TIMEOUT)
+		if (::WaitForSingleObject(m_hCancelEvent, std::min(m_ScanWait, 2000U)) != WAIT_TIMEOUT)
 			break;
 		if (m_ScanWait > 2000U) {
 			DWORD Wait = m_ScanWait - 2000;
@@ -1580,7 +1580,7 @@ void CChannelScan::Scan()
 				// SDTが来たら待ち時間終了
 				if (pAnalyzer->IsSDTUpdated())
 					break;
-				if (::WaitForSingleObject(m_hCancelEvent, min(Wait, (DWORD)1000)) != WAIT_TIMEOUT)
+				if (::WaitForSingleObject(m_hCancelEvent, std::min(Wait, (DWORD)1000)) != WAIT_TIMEOUT)
 					goto End;
 				if (Wait <= 1000)
 					break;

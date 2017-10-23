@@ -1190,7 +1190,7 @@ void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 
 		::lstrcpy(szText, TEXT("データ : "));
 		i = ::lstrlen(szText);
-		for (int j = 0; j < min(Size, 16); j++) {
+		for (int j = 0; j < std::min(Size, 16); j++) {
 			szText[i++] = pszHex[pData[j] >> 4];
 			szText[i++] = pszHex[pData[j] & 0x0F];
 		}

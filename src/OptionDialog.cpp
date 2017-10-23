@@ -396,7 +396,7 @@ void COptionDialog::ApplyStyle()
 		const int FontHeight = m_Font.GetHeight(hdc, false);
 		::ReleaseDC(m_hDlg, hdc);
 
-		m_ListItemHeight = max(FontHeight, m_IconHeight) + m_ListMargin * 2;
+		m_ListItemHeight = std::max(FontHeight, m_IconHeight) + m_ListMargin * 2;
 
 		if (m_himlIcons != nullptr)
 			::ImageList_Destroy(m_himlIcons);

@@ -582,7 +582,7 @@ void CPanelForm::CalcTabSize()
 	IconHeight = m_Style.TabIconSize.Height + m_Style.TabIconMargin.Vert();
 	LabelHeight = m_Font.GetHeight(hdc) + m_Style.TabLabelMargin.Vert();
 	m_TabLineWidth = GetHairlineWidth();
-	m_TabHeight = max(IconHeight, LabelHeight) + m_Style.TabPadding.Vert();
+	m_TabHeight = std::max(IconHeight, LabelHeight) + m_Style.TabPadding.Vert();
 	hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	m_TabWidth = m_Style.TabPadding.Horz();
@@ -629,7 +629,7 @@ int CPanelForm::GetRealTabWidth() const
 				MinWidth += m_Style.TabIconSize.Width;
 			else
 				MinWidth += 16;
-			return max(Width, MinWidth);
+			return std::max(Width, MinWidth);
 		}
 	}
 	return m_TabWidth;
@@ -767,7 +767,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 		RECT rc;
 
 		rc.left = PaintRect.left;
-		rc.top = max(PaintRect.top, (long)m_TabHeight);
+		rc.top = std::max(PaintRect.top, (long)m_TabHeight);
 		rc.right = PaintRect.right;
 		rc.bottom = PaintRect.bottom;
 		DrawUtil::Fill(hdc, &rc, m_Theme.BackColor);

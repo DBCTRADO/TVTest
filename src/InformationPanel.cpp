@@ -730,7 +730,7 @@ void CInformationPanel::Draw(HDC hdc, const RECT &PaintRect)
 	GetItemRect(ITEM_PROGRAMINFO, &rc);
 	if (PaintRect.bottom > rc.bottom) {
 		rc.left = PaintRect.left;
-		rc.top = max(PaintRect.top, rc.bottom);
+		rc.top = std::max(PaintRect.top, rc.bottom);
 		rc.right = PaintRect.right;
 		rc.bottom = PaintRect.bottom;
 		::FillRect(hdc, &rc, m_BackBrush.GetHandle());

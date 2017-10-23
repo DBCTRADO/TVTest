@@ -846,7 +846,7 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 			if (!AudioInfo.Text.empty()) {
 				LibISDB::String::size_type Pos = AudioInfo.Text.find(TEXT('\r'));
 				if (Pos != LibISDB::String::npos) {
-					StringCopy(szAudio1, AudioInfo.Text.c_str(), min(lengthof(szAudio1), Pos));
+					StringCopy(szAudio1, AudioInfo.Text.c_str(), std::min(lengthof(szAudio1), Pos));
 					Pos++;
 					if (Pos < AudioInfo.Text.length() && AudioInfo.Text[Pos] == TEXT('\n'))
 						Pos++;

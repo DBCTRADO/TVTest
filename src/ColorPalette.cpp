@@ -257,8 +257,8 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		{
 			int sx = LOWORD(lParam), sy = HIWORD(lParam);
 
-			m_ItemWidth = max(sx / 16, 6);
-			m_ItemHeight = max(sy / 16, 6);
+			m_ItemWidth = std::max(sx / 16, 6);
+			m_ItemHeight = std::max(sy / 16, 6);
 			m_Left = (sx - m_ItemWidth * 16) / 2;
 			m_Top = (sy - m_ItemHeight * 16) / 2;
 			if (m_Palette)

@@ -103,7 +103,7 @@ bool CPlaybackOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("PacketBuffering"), &m_fPacketBuffering);
 	unsigned int BufferLength;
 	if (Settings.Read(TEXT("PacketBufferLength"), &BufferLength))
-		m_PacketBufferLength = min(BufferLength, (unsigned int)MAX_PACKET_BUFFER_LENGTH);
+		m_PacketBufferLength = std::min(BufferLength, (unsigned int)MAX_PACKET_BUFFER_LENGTH);
 	if (Settings.Read(TEXT("PacketBufferPoolPercentage"), &m_PacketBufferPoolPercentage))
 		m_PacketBufferPoolPercentage = std::clamp(m_PacketBufferPoolPercentage, 0, 100);
 	if (Settings.Read(TEXT("StreamThreadPriority"), &m_StreamThreadPriority))

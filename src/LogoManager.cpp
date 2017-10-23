@@ -484,8 +484,8 @@ HICON CLogoManager::CreateLogoIcon(WORD NetworkID, WORD ServiceID, int Width, in
 	int ImageHeight = Width * 10 / 16;
 	return CreateIconFromBitmap(
 		hbm, Width, Height,
-		min(Width, ImageWidth),
-		min(Height, ImageHeight));
+		std::min(Width, ImageWidth),
+		std::min(Height, ImageHeight));
 }
 
 
@@ -504,8 +504,8 @@ bool CLogoManager::SaveLogoIcon(
 	int ImageHeight = Width * 10 / 16;
 	return SaveIconFromBitmap(
 		pszFileName, hbm, Width, Height,
-		min(Width, ImageWidth),
-		min(Height, ImageHeight));
+		std::min(Width, ImageWidth),
+		std::min(Height, ImageHeight));
 }
 
 

@@ -548,7 +548,7 @@ bool CChannelPanel::ExpandChannel(int Channel, bool fExpand)
 				int Height = CalcHeight();
 
 				if (m_ScrollPos > Height - rcClient.bottom) {
-					m_ScrollPos = max(Height - rcClient.bottom, 0L);
+					m_ScrollPos = std::max(Height - rcClient.bottom, 0L);
 					Invalidate();
 				} else {
 					rc.bottom = rcClient.bottom;
@@ -709,7 +709,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			int Height = HIWORD(lParam), Max;
 			int TotalHeight = CalcHeight();
 
-			Max = max(TotalHeight - Height, 0);
+			Max = std::max(TotalHeight - Height, 0);
 			if (m_ScrollPos > Max) {
 				m_ScrollPos = Max;
 				Invalidate();
@@ -738,14 +738,14 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			GetClientRect(&rc);
 			Page = rc.bottom;
 			switch (LOWORD(wParam)) {
-			case SB_LINEUP:        Pos -= m_FontHeight;         break;
-			case SB_LINEDOWN:      Pos += m_FontHeight;         break;
-			case SB_PAGEUP:        Pos -= Page;                 break;
-			case SB_PAGEDOWN:      Pos += Page;                 break;
+			case SB_LINEUP:        Pos -= m_FontHeight;              break;
+			case SB_LINEDOWN:      Pos += m_FontHeight;              break;
+			case SB_PAGEUP:        Pos -= Page;                      break;
+			case SB_PAGEDOWN:      Pos += Page;                      break;
 			case SB_THUMBPOSITION:
-			case SB_THUMBTRACK:    Pos = HIWORD(wParam);        break;
-			case SB_TOP:           Pos = 0;                     break;
-			case SB_BOTTOM:        Pos = max(Height - Page, 0); break;
+			case SB_THUMBTRACK:    Pos = HIWORD(wParam);             break;
+			case SB_TOP:           Pos = 0;                          break;
+			case SB_BOTTOM:        Pos = std::max(Height - Page, 0); break;
 			default:               return 0;
 			}
 			SetScrollPos(Pos);
@@ -1139,7 +1139,7 @@ void CChannelPanel::SetScrollPos(int Pos)
 		Pos = 0;
 	} else {
 		int Height = CalcHeight();
-		int Max = max(Height - rc.bottom, 0L);
+		int Max = std::max(Height - rc.bottom, 0L);
 		if (Pos > Max)
 			Pos = Max;
 	}
@@ -1185,7 +1185,7 @@ void CChannelPanel::CalcItemHeight()
 		return;
 	m_FontHeight = m_Font.GetHeight(hdc);
 	m_ChannelNameHeight =
-		max(m_FontHeight, (int)m_Style.ChannelChevronSize.Height) +
+		std::max(m_FontHeight, (int)m_Style.ChannelChevronSize.Height) +
 			m_Style.ChannelNameMargin.Top + m_Style.ChannelNameMargin.Bottom;
 	m_EventNameHeight =
 		m_FontHeight * m_EventNameLines +

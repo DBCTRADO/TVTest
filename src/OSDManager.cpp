@@ -109,7 +109,7 @@ bool COSDManager::ShowOSD(LPCTSTR pszText, ShowFlag Flags)
 			&& pViewer->IsDrawTextSupported()) {
 		CompositeText(pszText, ClientInfo.ClientRect, 0, FadeTime);
 	} else {
-		int FontSize = max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
+		int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
 		LOGFONT lf;
 		SIZE sz;
 
@@ -203,7 +203,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 			CompositeText(pszText, ClientInfo.ClientRect, hbmLogo != nullptr ? m_Style.LogoSize.Width : 0, m_pOptions->GetFadeTime());
 		}
 	} else {
-		int FontSize = max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
+		int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
 		LOGFONT lf;
 		SIZE sz;
 		COLORREF cr;
@@ -219,7 +219,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 			ClientInfo.ClientRect.left + m_Style.Margin.Left,
 			ClientInfo.ClientRect.top + m_Style.Margin.Top,
 			sz.cx + FontSize / 4 + m_Style.LogoSize.Width,
-			max(sz.cy, (LONG)m_Style.LogoSize.Height));
+			std::max(sz.cy, (LONG)m_Style.LogoSize.Height));
 		m_OSD.SetTextStyle(
 			CPseudoOSD::TextStyle::HorzCenter | CPseudoOSD::TextStyle::VertCenter |
 			CPseudoOSD::TextStyle::Outline | CPseudoOSD::TextStyle::FillBackground);
@@ -348,7 +348,7 @@ bool COSDManager::CompositeText(
 		return false;
 
 	LOGFONT lf = *m_pOptions->GetOSDFont();
-	int FontSize = max((rcSrc.right - rcSrc.left) / m_Style.CompositeTextSizeRatio, 12L);
+	int FontSize = std::max((rcSrc.right - rcSrc.left) / m_Style.CompositeTextSizeRatio, 12L);
 	lf.lfHeight = -FontSize;
 	lf.lfWidth = 0;
 	lf.lfQuality = NONANTIALIASED_QUALITY;

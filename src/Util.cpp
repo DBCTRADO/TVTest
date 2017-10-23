@@ -136,11 +136,11 @@ void RGBToHSV(
 	double Max, Min;
 
 	if (r > g) {
-		Max = max(r, b);
-		Min = min(g, b);
+		Max = std::max(r, b);
+		Min = std::min(g, b);
 	} else {
-		Max = max(g, b);
-		Min = min(r, b);
+		Max = std::max(g, b);
+		Min = std::min(r, b);
 	}
 	v = Max;
 	if (Max > Min) {
@@ -956,10 +956,10 @@ HICON CreateIconFromBitmap(HBITMAP hbm, int IconWidth, int IconHeight, int Image
 			ImageWidth = bm.bmWidth;
 			ImageHeight = bm.bmHeight;
 		} else {
-			ImageWidth = min(bm.bmWidth * IconHeight / bm.bmHeight, (long)IconWidth);
+			ImageWidth = std::min(bm.bmWidth * IconHeight / bm.bmHeight, (long)IconWidth);
 			if (ImageWidth < 1)
 				ImageWidth = 1;
-			ImageHeight = min(bm.bmHeight * IconWidth / bm.bmWidth, (long)IconHeight);
+			ImageHeight = std::min(bm.bmHeight * IconWidth / bm.bmWidth, (long)IconHeight);
 			if (ImageHeight < 1)
 				ImageHeight = 1;
 		}
@@ -1031,10 +1031,10 @@ bool SaveIconFromBitmap(
 			ImageWidth = bm.bmWidth;
 			ImageHeight = bm.bmHeight;
 		} else {
-			ImageWidth = min(bm.bmWidth * IconHeight / bm.bmHeight, (long)IconWidth);
+			ImageWidth = std::min(bm.bmWidth * IconHeight / bm.bmHeight, (long)IconWidth);
 			if (ImageWidth < 1)
 				ImageWidth = 1;
-			ImageHeight = min(bm.bmHeight * IconWidth / bm.bmWidth, (long)IconHeight);
+			ImageHeight = std::min(bm.bmHeight * IconWidth / bm.bmWidth, (long)IconHeight);
 			if (ImageHeight < 1)
 				ImageHeight = 1;
 		}

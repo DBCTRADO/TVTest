@@ -638,7 +638,7 @@ void CCaptionPanel::OnCaption(
 					DWORD Pos = (DWORD)(*pFormatList)[i].Pos;
 					if (Pos < DstLength) {
 						if (i + 1 < (int)pFormatList->size()) {
-							DWORD NextPos = min(DstLength, (DWORD)(*pFormatList)[i + 1].Pos);
+							DWORD NextPos = std::min(DstLength, (DWORD)(*pFormatList)[i + 1].Pos);
 #ifdef _DEBUG
 							TCHAR szTrace[1024];
 							StringCopy(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
@@ -1015,7 +1015,7 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 				else
 					Pixel >>= Shift - 8;
 				Pixel = (Pixel & Mask) * 255 / Max;
-				q[x] = (BYTE)min(Pixel, 255U);
+				q[x] = (BYTE)std::min(Pixel, 255U);
 				Shift -= pBitmap->BitsPerPixel;
 				if (Shift < 0) {
 					Shift += 16;

@@ -91,14 +91,14 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::SetFilePointerEx(hFile, Offset, nullptr, FILE_BEGIN);
 	}
 	try {
-		pBuffer = new BYTE[min(BUFFER_SIZE, ReadSize)];
+		pBuffer = new BYTE[std::min(BUFFER_SIZE, ReadSize)];
 	} catch (...) {
 		::CloseHandle(hFile);
 		return false;
 	}
 	m_EPGDatabaseFilter.Reset();
 	for (RemainSize = ReadSize; RemainSize >= 188; RemainSize -= Size) {
-		Size = min(RemainSize, BUFFER_SIZE);
+		Size = std::min(RemainSize, BUFFER_SIZE);
 		if (!::ReadFile(hFile, pBuffer, Size, &Read, nullptr))
 			break;
 		BYTE *p = pBuffer, *pEnd = pBuffer + Read / 188 * 188;

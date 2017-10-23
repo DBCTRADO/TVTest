@@ -390,8 +390,8 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 				ItemWidth = pdis->rcItem.right - pdis->rcItem.left;
 				ItemHeight = pdis->rcItem.bottom - pdis->rcItem.top;
-				ScreenWidth = min(ItemHeight * 16 / 9, ItemWidth);
-				ScreenHeight = min(ItemWidth * 9 / 16, ItemHeight);
+				ScreenWidth = std::min(ItemHeight * 16 / 9, ItemWidth);
+				ScreenHeight = std::min(ItemWidth * 9 / 16, ItemHeight);
 				rcScreen.left = pdis->rcItem.left + (ItemWidth - ScreenWidth) / 2;
 				rcScreen.top = pdis->rcItem.top + (ItemHeight - ScreenHeight) / 2;
 				rcScreen.right = rcScreen.left + ScreenWidth;

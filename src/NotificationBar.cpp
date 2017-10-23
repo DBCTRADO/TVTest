@@ -212,7 +212,7 @@ void CNotificationBar::CalcBarHeight()
 	int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
 	int TextHeight = FontHeight + m_Style.TextMargin.Vert();
 
-	m_BarHeight = max(IconHeight, TextHeight) + m_Style.Padding.Vert();
+	m_BarHeight = std::max(IconHeight, TextHeight) + m_Style.Padding.Vert();
 }
 
 

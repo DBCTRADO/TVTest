@@ -390,7 +390,7 @@ void CMainWindow::ShowNotificationBar(
 	m_NotificationBar.SetFont(m_App.OSDOptions.GetNotificationBarFont());
 	m_NotificationBar.Show(
 		pszText, Type,
-		max((DWORD)m_App.OSDOptions.GetNotificationBarDuration(), Duration),
+		std::max((DWORD)m_App.OSDOptions.GetNotificationBarDuration(), Duration),
 		fSkippable);
 }
 
@@ -457,9 +457,9 @@ void CMainWindow::AdjustWindowSize(int Width, int Height, bool fScreenSize)
 	if (rcOld.left >= mi.rcWork.left && rcOld.top >= mi.rcWork.top
 			&& rcOld.right <= mi.rcWork.right && rcOld.bottom <= mi.rcWork.bottom) {
 		if (rc.right > mi.rcWork.right && rc.left > mi.rcWork.left)
-			::OffsetRect(&rc, max(mi.rcWork.right - rc.right, mi.rcWork.left - rc.left), 0);
+			::OffsetRect(&rc, std::max(mi.rcWork.right - rc.right, mi.rcWork.left - rc.left), 0);
 		if (rc.bottom > mi.rcWork.bottom && rc.top > mi.rcWork.top)
-			::OffsetRect(&rc, 0, max(mi.rcWork.bottom - rc.bottom, mi.rcWork.top - rc.top));
+			::OffsetRect(&rc, 0, std::max(mi.rcWork.bottom - rc.bottom, mi.rcWork.top - rc.top));
 	}
 
 	SetPosition(&rc);
@@ -508,7 +508,7 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("FullscreenPanelPlace"), &Value))
 		m_Fullscreen.SetPanelPlace((CPanelFrame::DockingPlace)Value);
 	if (Settings.Read(TEXT("ThinFrameWidth"), &Value))
-		m_ThinFrameWidth = max(Value, 1);
+		m_ThinFrameWidth = std::max(Value, 1);
 	Value = FRAME_NORMAL;
 	if (!Settings.Read(TEXT("FrameType"), &Value)) {
 		if (Settings.Read(TEXT("ThinFrame"), &f) && f)	// 以前のバージョンとの互換用

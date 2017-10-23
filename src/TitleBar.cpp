@@ -150,7 +150,7 @@ int CTitleBar::CalcHeight() const
 	int LabelHeight = m_FontHeight + m_Style.LabelMargin.Vert();
 	int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
 	int ButtonHeight = GetButtonHeight();
-	int Height = max(LabelHeight, IconHeight);
+	int Height = std::max(LabelHeight, IconHeight);
 	if (Height < ButtonHeight)
 		Height = ButtonHeight;
 	RECT Border;

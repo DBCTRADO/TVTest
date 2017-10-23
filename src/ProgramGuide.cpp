@@ -643,7 +643,7 @@ void CServiceInfo::CalcLayout(
 					} while (LineCount < Lines);
 				}
 				int Pos = ItemPos + Offset;
-				for (int j = 0; j < min(ProgramsPerHour, Lines); j++) {
+				for (int j = 0; j < std::min(ProgramsPerHour, Lines); j++) {
 					pItem = pEventList->GetItem(i + j);
 					if (pItem->GetItemPos() < 0)
 						pItem->SetItemPos(Pos);
@@ -1539,7 +1539,7 @@ void CProgramGuide::DrawEventBackground(
 	TextDraw.SetFont(m_TitleFont.GetHandle());
 	pItem->CalcTitleLines(TextDraw, Rect.right - Rect.left);
 	rcTitle = Rect;
-	rcTitle.bottom = min(Rect.bottom, Rect.top + pItem->GetTitleLines() * LineHeight);
+	rcTitle.bottom = std::min(Rect.bottom, Rect.top + pItem->GetTitleLines() * LineHeight);
 	rcText.left = Rect.left + m_TextLeftMargin;
 	rcText.top = rcTitle.bottom;
 	rcText.right = Rect.right - m_Style.EventPadding.Right;
@@ -1637,7 +1637,7 @@ void CProgramGuide::DrawEventText(
 
 	RECT rcTitle, rcText;
 	rcTitle = Rect;
-	rcTitle.bottom = min(Rect.bottom, Rect.top + pItem->GetTitleLines() * LineHeight);
+	rcTitle.bottom = std::min(Rect.bottom, Rect.top + pItem->GetTitleLines() * LineHeight);
 	rcText.left = Rect.left + m_TextLeftMargin;
 	rcText.top = rcTitle.bottom;
 	rcText.right = Rect.right - m_Style.EventPadding.Right;
@@ -1762,7 +1762,7 @@ void CProgramGuide::DrawServiceHeader(
 	if (hbmLogo != nullptr) {
 		int Height, LogoWidth, LogoHeight;
 		Height = (rc.bottom - rc.top) - m_Style.HeaderIconMargin.Vert();
-		LogoHeight = min(Height, 24);
+		LogoHeight = std::min(Height, 24);
 		LogoWidth = LogoHeight * 16 / 9;
 		HBITMAP hbmStretched = pServiceInfo->GetStretchedLogo(LogoWidth, LogoHeight);
 		rc.left += m_Style.HeaderIconMargin.Left;
@@ -2119,8 +2119,8 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 		}
 	} else {
 		if (PaintRect.top < m_HeaderHeight) {
-			rc.left = max(PaintRect.left, (long)m_TimeBarWidth);
-			rc.right = min(PaintRect.right, rcClient.right - m_TimeBarWidth);
+			rc.left = std::max(PaintRect.left, (long)m_TimeBarWidth);
+			rc.right = std::min(PaintRect.right, rcClient.right - m_TimeBarWidth);
 			if (rc.left < rc.right) {
 				rc.top = 0;
 				rc.bottom = m_HeaderHeight;
@@ -2195,7 +2195,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			rc.left = rcGuide.left;
 			rc.top = rcGuide.top;
 			rc.right = rcGuide.right;
-			//rc.bottom = min(rc.top + m_Style.HeaderShadowHeight, rcGuide.bottom);
+			//rc.bottom = std::min(rc.top + m_Style.HeaderShadowHeight, rcGuide.bottom);
 			rc.bottom = rc.top + m_Style.HeaderShadowHeight;
 			DrawUtil::FillGradient(
 				hdc, &rc, DrawUtil::RGBA(0, 0, 0, 80), DrawUtil::RGBA(0, 0, 0, 0),
@@ -2206,12 +2206,12 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			rc.top = rcGuide.top;
 			rc.bottom = rcGuide.bottom;
 			rc.left = rcGuide.left;
-			rc.right = min(rc.left + m_Style.TimeBarShadowWidth, rcGuide.right);
+			rc.right = std::min(rc.left + m_Style.TimeBarShadowWidth, rcGuide.right);
 			DrawUtil::FillGradient(
 				hdc, &rc, DrawUtil::RGBA(0, 0, 0, 64), DrawUtil::RGBA(0, 0, 0, 0),
 				DrawUtil::FillDirection::Horz);
 			rc.right = rcGuide.right;
-			rc.left = max(rc.right - m_Style.TimeBarShadowWidth, rcGuide.left);
+			rc.left = std::max(rc.right - m_Style.TimeBarShadowWidth, rcGuide.left);
 			DrawUtil::FillGradient(
 				hdc, &rc, DrawUtil::RGBA(0, 0, 0, 0), DrawUtil::RGBA(0, 0, 0, 48),
 				DrawUtil::FillDirection::Horz);
@@ -2282,7 +2282,7 @@ int CProgramGuide::CalcHeaderHeight() const
 	int NameHeight = m_GDIFontHeight + m_Style.HeaderChannelNameMargin.Vert();
 	int ChevronHeight = m_Style.HeaderChevronSize.Height + m_Style.HeaderChevronMargin.Vert();
 
-	return max(NameHeight, ChevronHeight) + m_Style.HeaderPadding.Vert();
+	return std::max(NameHeight, ChevronHeight) + m_Style.HeaderPadding.Vert();
 }
 
 
@@ -2322,8 +2322,8 @@ void CProgramGuide::GetPageSize(SIZE *pSize) const
 	RECT rc;
 
 	GetProgramGuideRect(&rc);
-	pSize->cx = max(rc.right - rc.left, 0L);
-	pSize->cy = max(rc.bottom - rc.top, 0L) / GetLineHeight();
+	pSize->cx = std::max(rc.right - rc.left, 0L);
+	pSize->cy = std::max(rc.bottom - rc.top, 0L) / GetLineHeight();
 }
 
 
@@ -2344,8 +2344,8 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 		Pos.x = m_ScrollPos.x + XScroll;
 		if (Pos.x < 0)
 			Pos.x = 0;
-		else if (Pos.x > max(GuideSize.cx - PageSize.cx, 0L))
-			Pos.x = max(GuideSize.cx - PageSize.cx, 0L);
+		else if (Pos.x > std::max(GuideSize.cx - PageSize.cx, 0L))
+			Pos.x = std::max(GuideSize.cx - PageSize.cx, 0L);
 		si.nPos = Pos.x;
 		::SetScrollInfo(m_hwnd, SB_HORZ, &si, TRUE);
 		XScrollSize = m_ScrollPos.x - Pos.x;
@@ -2354,8 +2354,8 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 		Pos.y = m_ScrollPos.y + YScroll;
 		if (Pos.y < 0)
 			Pos.y = 0;
-		else if (Pos.y > max(GuideSize.cy - PageSize.cy, 0L))
-			Pos.y = max(GuideSize.cy - PageSize.cy, 0L);
+		else if (Pos.y > std::max(GuideSize.cy - PageSize.cy, 0L))
+			Pos.y = std::max(GuideSize.cy - PageSize.cy, 0L);
 		si.nPos = Pos.y;
 		::SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
 		YScrollSize = (m_ScrollPos.y - Pos.y) * GetLineHeight();
@@ -3271,16 +3271,16 @@ bool CProgramGuide::JumpEvent(WORD NetworkID, WORD TSID, WORD ServiceID, WORD Ev
 	Pos.x = ItemWidth * ServiceIndex - (Page.cx - ItemWidth) / 2;
 	if (Pos.x < 0)
 		Pos.x = 0;
-	else if (Pos.x > max(Size.cx - Page.cx, 0L))
-		Pos.x = max(Size.cx - Page.cx, 0L);
+	else if (Pos.x > std::max(Size.cx - Page.cx, 0L))
+		Pos.x = std::max(Size.cx - Page.cx, 0L);
 	Pos.y = (long)pEventInfo->StartTime.DiffSeconds(First) / 60 * m_LinesPerHour / 60;
 	const int YOffset = (Page.cy - (int)(pEventInfo->Duration * m_LinesPerHour / (60 * 60))) / 2;
 	if (YOffset > 0)
 		Pos.y -= YOffset;
 	if (Pos.y < 0)
 		Pos.y = 0;
-	else if (Pos.y > max(Size.cy - Page.cy, 0L))
-		Pos.y = max(Size.cy - Page.cy, 0L);
+	else if (Pos.y > std::max(Size.cy - Page.cy, 0L))
+		Pos.y = std::max(Size.cy - Page.cy, 0L);
 	SetScrollPos(Pos);
 
 	SelectEventByIDs(NetworkID, TSID, ServiceID, EventID);
@@ -3315,8 +3315,8 @@ bool CProgramGuide::ScrollToCurrentService()
 	Pos.x = ItemWidth * ServiceIndex - (Page.cx - ItemWidth) / 2;
 	if (Pos.x < 0)
 		Pos.x = 0;
-	else if (Pos.x > max(Size.cx - Page.cx, 0L))
-		Pos.x = max(Size.cx - Page.cx, 0L);
+	else if (Pos.x > std::max(Size.cx - Page.cx, 0L))
+		Pos.x = std::max(Size.cx - Page.cx, 0L);
 	Pos.y = m_ScrollPos.y;
 	SetScrollPos(Pos);
 
@@ -3888,10 +3888,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			GetProgramGuideSize(&Size);
 			GetPageSize(&Page);
 			Pos = m_ScrollPos;
-			if (Pos.x > max(Size.cx - Page.cx, 0L))
-				Pos.x = max(Size.cx - Page.cx, 0L);
-			if (Pos.y > max(Size.cy - Page.cy, 0L))
-				Pos.y = max(Size.cy - Page.cy, 0L);
+			if (Pos.x > std::max(Size.cx - Page.cx, 0L))
+				Pos.x = std::max(Size.cx - Page.cx, 0L);
+			if (Pos.y > std::max(Size.cy - Page.cy, 0L))
+				Pos.y = std::max(Size.cy - Page.cy, 0L);
 			SetScrollBar();
 			SetScrollPos(Pos);
 		}
@@ -3908,14 +3908,14 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			Pos = m_ScrollPos.y;
 			if (uMsg == WM_VSCROLL) {
 				switch (LOWORD(wParam)) {
-				case SB_LINEUP:        Pos--;                            break;
-				case SB_LINEDOWN:      Pos++;                            break;
-				case SB_PAGEUP:        Pos -= Page.cy;                   break;
-				case SB_PAGEDOWN:      Pos += Page.cy;                   break;
+				case SB_LINEUP:        Pos--;                                 break;
+				case SB_LINEDOWN:      Pos++;                                 break;
+				case SB_PAGEUP:        Pos -= Page.cy;                        break;
+				case SB_PAGEDOWN:      Pos += Page.cy;                        break;
 				case SB_THUMBPOSITION:
-				case SB_THUMBTRACK:    Pos = HIWORD(wParam);             break;
-				case SB_TOP:           Pos = 0;                          break;
-				case SB_BOTTOM:        Pos = max(Size.cy - Page.cy, 0L); break;
+				case SB_THUMBTRACK:    Pos = HIWORD(wParam);                  break;
+				case SB_TOP:           Pos = 0;                               break;
+				case SB_BOTTOM:        Pos = std::max(Size.cy - Page.cy, 0L); break;
 				default:               return 0;
 				}
 			} else {
@@ -3923,8 +3923,8 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			}
 			if (Pos < 0)
 				Pos = 0;
-			else if (Pos > max(Size.cy - Page.cy, 0L))
-				Pos = max(Size.cy - Page.cy, 0L);
+			else if (Pos > std::max(Size.cy - Page.cy, 0L))
+				Pos = std::max(Size.cy - Page.cy, 0L);
 			if (Pos != m_ScrollPos.y)
 				Scroll(0, Pos - m_ScrollPos.y);
 		}
@@ -3941,14 +3941,14 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			Pos = m_ScrollPos.x;
 			if (uMsg == WM_HSCROLL) {
 				switch (LOWORD(wParam)) {
-				case SB_LINELEFT:      Pos -= m_FontHeight;              break;
-				case SB_LINERIGHT:     Pos += m_FontHeight;              break;
-				case SB_PAGELEFT:      Pos -= Page.cx;                   break;
-				case SB_PAGERIGHT:     Pos += Page.cx;                   break;
+				case SB_LINELEFT:      Pos -= m_FontHeight;                   break;
+				case SB_LINERIGHT:     Pos += m_FontHeight;                   break;
+				case SB_PAGELEFT:      Pos -= Page.cx;                        break;
+				case SB_PAGERIGHT:     Pos += Page.cx;                        break;
 				case SB_THUMBPOSITION:
-				case SB_THUMBTRACK:    Pos = HIWORD(wParam);             break;
-				case SB_LEFT:          Pos = 0;                          break;
-				case SB_RIGHT:         Pos = max(Size.cx - Page.cx, 0L); break;
+				case SB_THUMBTRACK:    Pos = HIWORD(wParam);                  break;
+				case SB_LEFT:          Pos = 0;                               break;
+				case SB_RIGHT:         Pos = std::max(Size.cx - Page.cx, 0L); break;
 				default:               return 0;
 				}
 			} else {
@@ -3956,8 +3956,8 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			}
 			if (Pos < 0)
 				Pos = 0;
-			else if (Pos > max(Size.cx - Page.cx, 0L))
-				Pos = max(Size.cx - Page.cx, 0L);
+			else if (Pos > std::max(Size.cx - Page.cx, 0L))
+				Pos = std::max(Size.cx - Page.cx, 0L);
 			if (Pos != m_ScrollPos.x)
 				Scroll(Pos - m_ScrollPos.x, 0);
 		}
@@ -6871,7 +6871,7 @@ void CProgramGuideFrameBase::OnSizeChanged(int Width, int Height)
 					y += BarHeight + m_FrameStyle.ToolbarVertGap;
 				}
 				if (x + sz.cx > ToolbarAreaWidth)
-					sz.cx = max(ToolbarAreaWidth - x, 0);
+					sz.cx = std::max(ToolbarAreaWidth - x, 0);
 				BarHeight = sz.cy;
 			} else {
 				if (sz.cy > BarHeight)
@@ -6886,7 +6886,7 @@ void CProgramGuideFrameBase::OnSizeChanged(int Width, int Height)
 		y += BarHeight + m_FrameStyle.ToolbarMargin.Bottom;
 	else
 		y = 0;
-	m_pProgramGuide->SetPosition(0, y, Width, max(Height - y, 0));
+	m_pProgramGuide->SetPosition(0, y, Width, std::max(Height - y, 0));
 }
 
 

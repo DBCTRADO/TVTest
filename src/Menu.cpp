@@ -844,7 +844,7 @@ bool CChannelMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		if (m_EventNameWidth > 0)
 			pmis->itemWidth += m_TextHeight + m_EventNameWidth;
 		pmis->itemHeight =
-			max(m_TextHeight, m_Logo.GetLogoHeight()) +
+			std::max(m_TextHeight, m_Logo.GetLogoHeight()) +
 			m_Margins.cyTopHeight + m_Margins.cyBottomHeight;
 		return true;
 	}
@@ -957,7 +957,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 				::GetCursorPos(&pt);
 				pt.x += 16;
 				pt.y +=
-					max(m_TextHeight, m_Logo.GetLogoHeight()) +
+					std::max(m_TextHeight, m_Logo.GetLogoHeight()) +
 					m_Margins.cyTopHeight + m_Margins.cyBottomHeight;
 				m_Tooltip.TrackPosition(pt.x, pt.y);
 				m_Tooltip.TrackActivate(1, true);
@@ -1627,9 +1627,9 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 		int Width = Columns * m_ItemWidth + HorzMargin;
 		int Height = m_MaxRows * m_ItemHeight + VertMargin;
 		if (x + Width > mi.rcMonitor.right)
-			x = max(mi.rcMonitor.right - Width, 0L);
+			x = std::max(mi.rcMonitor.right - Width, 0L);
 		if (y + Height > mi.rcMonitor.bottom)
-			y = max(mi.rcMonitor.bottom - Height, 0L);
+			y = std::max(mi.rcMonitor.bottom - Height, 0L);
 	}
 
 	::MoveWindow(

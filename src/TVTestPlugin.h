@@ -691,7 +691,7 @@ inline bool MsgSetService(PluginParam *pParam, int Service, bool fByID = false)
 // MaxLength には pszName の先に格納できる最大の要素数(終端の空文字を含む)を指定します。
 inline int MsgGetTuningSpaceName(PluginParam *pParam, int Index, LPWSTR pszName, int MaxLength)
 {
-	return (int)(*pParam->Callback)(pParam, MESSAGE_GETTUNINGSPACENAME, (LPARAM)pszName, MAKELPARAM(Index, min(MaxLength, 0xFFFF)));
+	return (int)(*pParam->Callback)(pParam, MESSAGE_GETTUNINGSPACENAME, (LPARAM)pszName, MAKELPARAM(Index, MaxLength > 0xFFFF ? 0xFFFF : MaxLength));
 }
 
 // チャンネルの情報を取得する
@@ -1926,7 +1926,7 @@ inline void MsgFreeEpgEventList(PluginParam *pParam, EpgEventList *pList)
 // 戻り値としてファイル名の長さが返ります。Index が範囲外の場合は0が返ります。
 inline int MsgEnumDriver(PluginParam *pParam, int Index, LPWSTR pszFileName, int MaxLength)
 {
-	return (int)(*pParam->Callback)(pParam, MESSAGE_ENUMDRIVER, (LPARAM)pszFileName, MAKELPARAM(Index, min(MaxLength, 0xFFFF)));
+	return (int)(*pParam->Callback)(pParam, MESSAGE_ENUMDRIVER, (LPARAM)pszFileName, MAKELPARAM(Index, MaxLength > 0xFFFF ? 0xFFFF : MaxLength));
 }
 
 // チューニング空間の情報

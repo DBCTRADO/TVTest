@@ -797,7 +797,7 @@ bool CFavoritesMenu::Create(
 	m_ItemHeight = m_TextHeight;
 	if (!!(Flags & CreateFlag::ShowLogo)) {
 		m_Logo.Initialize(m_IconHeight);
-		int Height = max(m_Logo.GetLogoHeight(), m_IconHeight);
+		int Height = std::max(m_Logo.GetLogoHeight(), m_IconHeight);
 		if (Height > m_ItemHeight)
 			m_ItemHeight = Height;
 	}
@@ -1178,7 +1178,7 @@ bool CFavoritesMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 				m_Tooltip.SetText(1, szText);
 				::GetCursorPos(&pt);
 				pt.x += 16;
-				pt.y += max(m_TextHeight, m_Logo.GetLogoHeight()) +
+				pt.y += std::max(m_TextHeight, m_Logo.GetLogoHeight()) +
 					m_Margins.cyTopHeight + m_Margins.cyBottomHeight;
 				m_Tooltip.TrackPosition(pt.x, pt.y);
 				m_Tooltip.TrackActivate(1, true);

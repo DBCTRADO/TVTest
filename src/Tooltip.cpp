@@ -125,7 +125,7 @@ bool CTooltip::SetPopDelay(int Delay)
 		return false;
 	::SendMessage(
 		m_hwndTooltip, TTM_SETDELAYTIME, TTDT_AUTOPOP,
-		MAKELONG(min(Delay, 32767), 0));
+		MAKELONG(std::min(Delay, 32767), 0));
 	return true;
 }
 

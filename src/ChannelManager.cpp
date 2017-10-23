@@ -390,7 +390,7 @@ int CChannelManager::NumSpaces() const
 {
 	if (m_fUseDriverChannelList)
 		return m_DriverTuningSpaceList.NumSpaces();
-	return max(m_TuningSpaceList.NumSpaces(), m_DriverTuningSpaceList.NumSpaces());
+	return std::max(m_TuningSpaceList.NumSpaces(), m_DriverTuningSpaceList.NumSpaces());
 }
 
 

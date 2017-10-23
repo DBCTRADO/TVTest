@@ -409,26 +409,26 @@ bool FillBorder(HDC hdc, const RECT *pBorderRect, const RECT *pEmptyRect, const 
 	RECT rc;
 
 	if (pPaintRect->left < pBorderRect->right && pPaintRect->right > pBorderRect->left) {
-		rc.left = max(pPaintRect->left, pBorderRect->left);
-		rc.right = min(pPaintRect->right, pBorderRect->right);
-		rc.top = max(pPaintRect->top, pBorderRect->top);
-		rc.bottom = min(pPaintRect->bottom, pEmptyRect->top);
+		rc.left = std::max(pPaintRect->left, pBorderRect->left);
+		rc.right = std::min(pPaintRect->right, pBorderRect->right);
+		rc.top = std::max(pPaintRect->top, pBorderRect->top);
+		rc.bottom = std::min(pPaintRect->bottom, pEmptyRect->top);
 		if (rc.top < rc.bottom)
 			::FillRect(hdc, &rc, hbr);
-		rc.top = max(pEmptyRect->bottom, pPaintRect->top);
-		rc.bottom = min(pPaintRect->bottom, pBorderRect->bottom);
+		rc.top = std::max(pEmptyRect->bottom, pPaintRect->top);
+		rc.bottom = std::min(pPaintRect->bottom, pBorderRect->bottom);
 		if (rc.top < rc.bottom)
 			::FillRect(hdc, &rc, hbr);
 	}
 	if (pPaintRect->top < pEmptyRect->bottom && pPaintRect->bottom > pEmptyRect->top) {
-		rc.top = max(pEmptyRect->top, pPaintRect->top);
-		rc.bottom = min(pEmptyRect->bottom, pPaintRect->bottom);
-		rc.left = max(pPaintRect->left, pBorderRect->left);
-		rc.right = min(pEmptyRect->left, pPaintRect->right);
+		rc.top = std::max(pEmptyRect->top, pPaintRect->top);
+		rc.bottom = std::min(pEmptyRect->bottom, pPaintRect->bottom);
+		rc.left = std::max(pPaintRect->left, pBorderRect->left);
+		rc.right = std::min(pEmptyRect->left, pPaintRect->right);
 		if (rc.left < rc.right)
 			::FillRect(hdc, &rc, hbr);
-		rc.left = max(pPaintRect->left, pEmptyRect->right);
-		rc.right = min(pPaintRect->right, pBorderRect->right);
+		rc.left = std::max(pPaintRect->left, pEmptyRect->right);
+		rc.right = std::min(pPaintRect->right, pBorderRect->right);
 		if (rc.left < rc.right)
 			::FillRect(hdc, &rc, hbr);
 	}

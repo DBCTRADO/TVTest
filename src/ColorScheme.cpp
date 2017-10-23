@@ -1109,7 +1109,7 @@ int CColorSchemeList::FindByName(LPCTSTR pszName, int FirstIndex) const
 	if (pszName == nullptr)
 		return -1;
 
-	for (int i = max(FirstIndex, 0); i < (int)m_List.size(); i++) {
+	for (int i = std::max(FirstIndex, 0); i < (int)m_List.size(); i++) {
 		if (!IsStringEmpty(m_List[i]->GetName())
 				&& ::lstrcmpi(m_List[i]->GetName(), pszName) == 0)
 			return i;

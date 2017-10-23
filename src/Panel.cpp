@@ -254,7 +254,7 @@ void CPanel::CalcDimensions()
 	RECT rcBorder;
 	Theme::GetBorderWidths(Border, &rcBorder);
 	m_TitleHeight =
-		max(LabelHeight, ButtonHeight) + m_Style.TitlePadding.Vert() +
+		std::max(LabelHeight, ButtonHeight) + m_Style.TitlePadding.Vert() +
 		rcBorder.top + rcBorder.bottom;
 }
 
@@ -300,7 +300,7 @@ void CPanel::OnSize(int Width, int Height)
 			y = m_TitleHeight;
 		else
 			y = 0;
-		m_pContent->SetPosition(0, y, Width, max(Height - y, 0));
+		m_pContent->SetPosition(0, y, Width, std::max(Height - y, 0));
 	}
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnSizeChanged(Width, Height);

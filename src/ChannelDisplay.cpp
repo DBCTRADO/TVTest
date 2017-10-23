@@ -394,7 +394,7 @@ void CChannelDisplay::Layout()
 	if (fTunerIcon)
 		m_TunerItemWidth += m_ChannelDisplayStyle.TunerIconSize.Width + m_ChannelDisplayStyle.TunerIconTextMargin;
 	m_TunerItemHeight =
-		max((int)m_ChannelDisplayStyle.TunerIconSize.Height, m_FontHeight) +
+		std::max((int)m_ChannelDisplayStyle.TunerIconSize.Height, m_FontHeight) +
 		m_ChannelDisplayStyle.TunerItemPadding.Vert();
 	int CategoriesHeight = rc.bottom - m_Style.CategoriesMargin.Vert();
 	m_VisibleTunerItems = CategoriesHeight / m_TunerItemHeight;
@@ -405,7 +405,7 @@ void CChannelDisplay::Layout()
 	m_TunerItemLeft = m_Style.CategoriesMargin.Left;
 	m_TunerItemTop =
 		m_Style.CategoriesMargin.Top +
-		max((CategoriesHeight - m_VisibleTunerItems * m_TunerItemHeight) / 2, 0);
+		std::max((CategoriesHeight - m_VisibleTunerItems * m_TunerItemHeight) / 2, 0);
 	m_TunerAreaWidth = m_TunerItemLeft + m_TunerItemWidth + m_Style.CategoriesMargin.Right;
 	int ScrollWidth = m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
 	if (m_TotalTuningSpaces > m_VisibleTunerItems) {
@@ -452,7 +452,7 @@ void CChannelDisplay::Layout()
 		}
 	}
 	m_ChannelItemLeft = m_TunerAreaWidth + m_Style.ContentMargin.Left;
-	m_ChannelItemWidth = max(
+	m_ChannelItemWidth = std::max(
 		(int)rc.right - m_ChannelItemLeft - m_Style.ContentMargin.Right,
 		m_ChannelNameWidth + m_ChannelDisplayStyle.ChannelItemPadding.Horz() +
 			m_ChannelDisplayStyle.ChannelEventMargin + m_FontHeight * 8);
@@ -464,10 +464,10 @@ void CChannelDisplay::Layout()
 	if (ContentTop < m_Style.ContentMargin.Top)
 		ContentTop = m_Style.ContentMargin.Top;
 	int ContentHeight = rc.bottom - m_Style.ContentMargin.Bottom - ContentTop;
-	m_VisibleChannelItems = max(ContentHeight / m_ChannelItemHeight, 1);
+	m_VisibleChannelItems = std::max(ContentHeight / m_ChannelItemHeight, 1);
 	if (m_VisibleChannelItems > NumChannels)
 		m_VisibleChannelItems = NumChannels;
-	m_ChannelItemTop = ContentTop + max((ContentHeight - m_VisibleChannelItems * m_ChannelItemHeight) / 2, 0);
+	m_ChannelItemTop = ContentTop + std::max((ContentHeight - m_VisibleChannelItems * m_ChannelItemHeight) / 2, 0);
 	if (NumChannels > m_VisibleChannelItems) {
 		SCROLLINFO si;
 
@@ -871,7 +871,7 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 					rc.right = rc.left + m_ChannelNameWidth;
 					if (pChannel->HasLogo()) {
 						int LogoWidth, LogoHeight;
-						LogoHeight = min(m_FontHeight - 4, 36);
+						LogoHeight = std::min(m_FontHeight - 4, 36);
 						LogoWidth = LogoHeight * 16 / 9;
 						HBITMAP hbmLogo =
 							LogoHeight <= 14 || pChannel->GetBigLogo() == nullptr ?

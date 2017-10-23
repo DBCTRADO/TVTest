@@ -143,8 +143,8 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			if (rcInfo.bottom < rcText.bottom || rcInfo.right < rcText.right
 					|| rcLink.bottom - rcLink.top < rcLinkText.bottom) {
-				int Width = max(rcInfo.right, rcText.right);
-				int Height = max(rcInfo.bottom, rcText.bottom);
+				int Width = std::max(rcInfo.right, rcText.right);
+				int Height = std::max(rcInfo.bottom, rcText.bottom);
 				int XDiff = Width - rcInfo.right;
 				int YDiff = Height - rcInfo.bottom;
 

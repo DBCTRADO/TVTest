@@ -274,7 +274,7 @@ int CUIBase::GetHairlineWidth() const
 		Width = StyleScaling.ToPixels(1, Style::UnitType::LogicalPixel);
 	}
 
-	return max(Width, 1);
+	return std::max(Width, 1);
 }
 
 

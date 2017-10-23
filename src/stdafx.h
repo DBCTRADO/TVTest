@@ -49,6 +49,7 @@
 #pragma warning(push)
 #pragma warning(disable: 4091)
 
+#include <algorithm>
 #include <stdio.h>
 #include <process.h>
 #include <windows.h>
@@ -110,12 +111,4 @@ namespace TVTest
 
 #ifndef _DEBUG
 #define _SECURE_SCL 0
-#endif
-
-#ifdef NOMINMAX
-namespace TVTest
-{
-	template<typename T> constexpr const T & min(const T &a, const T &b) { return a < b ? a : b; }
-	template<typename T> constexpr const T & max(const T &a, const T &b) { return a > b ? a : b; }
-}
 #endif

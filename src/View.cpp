@@ -675,7 +675,7 @@ bool CDisplayView::GetBackgroundStyle(BackgroundType Type, Theme::BackgroundStyl
 
 int CDisplayView::GetDefaultFontSize(int Width, int Height) const
 {
-	int Size = min(Width / m_Style.TextSizeRatioHorz, Height / m_Style.TextSizeRatioVert);
+	int Size = std::min(Width / m_Style.TextSizeRatioHorz, Height / m_Style.TextSizeRatioVert);
 	double DPI = (double)m_pStyleScaling->GetDPI();
 	double Points = (double)Size * 72.0 / DPI;
 	const double BasePoints = 9.0;

@@ -140,8 +140,8 @@ void CWindowContainer::SetWindow(CBasicWindow *pWindow, CUIBase *pUIBase)
 
 bool CWindowContainer::SetMinSize(int Width, int Height)
 {
-	m_MinWidth = max(Width, 0);
-	m_MinHeight = max(Height, 0);
+	m_MinWidth = std::max(Width, 0);
+	m_MinHeight = std::max(Height, 0);
 	return true;
 }
 
@@ -417,7 +417,7 @@ int CSplitter::GetPaneSize(int ID)
 	else
 		Size = m_Position.bottom - m_Position.top;
 	Size -= m_BarPos + m_BarWidth;
-	return max(Size, 0);
+	return std::max(Size, 0);
 }
 
 

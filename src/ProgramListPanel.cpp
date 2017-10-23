@@ -515,7 +515,7 @@ void CProgramListPanel::CalcChannelHeight()
 {
 	int LabelHeight = m_FontHeight + m_Style.ChannelNameMargin.Vert();
 	int ButtonHeight = m_Style.ChannelButtonIconSize.Height + m_Style.ChannelButtonPadding.Vert();
-	m_ChannelHeight = max(LabelHeight, ButtonHeight) + m_Style.ChannelPadding.Vert();
+	m_ChannelHeight = std::max(LabelHeight, ButtonHeight) + m_Style.ChannelPadding.Vert();
 }
 
 
@@ -1372,7 +1372,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 
 		if (rc.top < prcPaint->bottom) {
 			rcMargin.left = prcPaint->left;
-			rcMargin.top = max(rc.top, prcPaint->top);
+			rcMargin.top = std::max(rc.top, prcPaint->top);
 			rcMargin.right = prcPaint->right;
 			rcMargin.bottom = prcPaint->bottom;
 			::FillRect(hdc, &rcMargin, hbr);
