@@ -66,27 +66,13 @@ namespace TVTest
 			bool IsServiceIDEnabled() const { return ServiceID != SID_INVALID; }
 		};
 
-		template<typename T> struct Optional
-		{
-			Optional() : m_fValid(false), m_Value(T()) {}
-			Optional(const T &Value) : m_fValid(true), m_Value(Value) {}
-			Optional<T> &operator=(const T &Value) { m_Value = Value; m_fValid = true; return *this; }
-			operator bool() const { return m_fValid; }
-			T &value() { return m_Value; }
-			const T &value() const { return m_Value; }
-
-		private:
-			bool m_fValid;
-			T m_Value;
-		};
-
 		class CTSProcessorSettings
 		{
 		public:
 			typedef CPropertyBag::PropertyListType PropertyList;
 
 			GUID m_guid;
-			Optional<bool> m_EnableProcessing;
+			std::optional<bool> m_EnableProcessing;
 			FilterInfo m_DefaultFilter;
 			std::vector<TunerFilterInfo> m_TunerFilterMap;
 			PropertyList m_PropertyList;
