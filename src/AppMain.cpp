@@ -744,6 +744,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		}
 	}
 
+	AppCommand.RegisterDefaultCommands();
+
 	Initialize();
 
 	CAppMutex AppMutex(true);
@@ -918,8 +920,6 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	LibISDB::EPGDatabaseFilter *pEPGDatabaseFilter = CoreEngine.GetFilter<LibISDB::EPGDatabaseFilter>();
 	if (pEPGDatabaseFilter != nullptr)
 		pEPGDatabaseFilter->SetEPGDatabase(&EPGDatabase);
-
-	AppCommand.RegisterDefaultCommands();
 
 	// ウィンドウの作成
 	if (!MainWindow.Create(nullptr, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
