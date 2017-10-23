@@ -74,14 +74,8 @@ namespace TVTest
 
 		struct AudioSelectInfo
 		{
-			IDType ID;
-			DualMonoMode DualMono;
-
-			AudioSelectInfo()
-				: ID(ID_INVALID)
-				, DualMono(DualMonoMode::Invalid)
-			{
-			}
+			IDType ID = ID_INVALID;
+			DualMonoMode DualMono = DualMonoMode::Invalid;
 
 			void Reset() { *this = AudioSelectInfo(); }
 		};

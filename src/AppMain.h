@@ -87,16 +87,12 @@ namespace TVTest
 
 	class CTotTimeAdjuster
 	{
-		bool m_fEnable;
+		bool m_fEnable = false;
 		DWORD m_TimeOut;
 		DWORD m_StartTime;
 		SYSTEMTIME m_PrevTime;
 
 	public:
-		CTotTimeAdjuster()
-			: m_fEnable(false)
-		{
-		}
 		bool BeginAdjust(DWORD TimeOut = 10000UL);
 		bool AdjustTime();
 	};

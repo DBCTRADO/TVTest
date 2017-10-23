@@ -50,25 +50,16 @@ namespace TVTest
 		struct TunerFilterInfo
 			: public FilterInfo
 		{
-			bool fEnable;
-			bool fEnableProcessing;
-			String Tuner;
-			WORD NetworkID;
-			WORD TransportStreamID;
-			WORD ServiceID;
-
-			static const WORD NID_INVALID = 0xFFFF;
+			static const WORD NID_INVALID  = 0xFFFF;
 			static const WORD TSID_INVALID = 0xFFFF;
-			static const WORD SID_INVALID = 0xFFFF;
+			static const WORD SID_INVALID  = 0xFFFF;
 
-			TunerFilterInfo()
-				: fEnable(true)
-				, fEnableProcessing(true)
-				, NetworkID(NID_INVALID)
-				, TransportStreamID(TSID_INVALID)
-				, ServiceID(SID_INVALID)
-			{
-			}
+			bool fEnable = true;
+			bool fEnableProcessing = true;
+			String Tuner;
+			WORD NetworkID = NID_INVALID;
+			WORD TransportStreamID = TSID_INVALID;
+			WORD ServiceID = SID_INVALID;
 
 			bool IsNetworkIDEnabled() const { return NetworkID != NID_INVALID; }
 			bool IsTransportStreamIDEnabled() const { return TransportStreamID != TSID_INVALID; }

@@ -203,41 +203,9 @@ bool CEventSearchServiceList::DecodeServiceKey(LPCTSTR pText, size_t Length, Ser
 
 
 
-CEventSearchSettings::CEventSearchSettings()
-{
-	Clear();
-}
-
-
 void CEventSearchSettings::Clear()
 {
-	fDisabled = false;
-	Name.clear();
-	Keyword.clear();
-	fRegExp = false;
-	fIgnoreCase = true;
-	fIgnoreWidth = true;
-	fEventName = true;
-	fEventText = true;
-	fGenre = false;
-	Genre1 = 0x0000;
-	::ZeroMemory(Genre2, sizeof(Genre2));
-	fDayOfWeek = false;
-	DayOfWeekFlags = 0x00;
-	fTime = false;
-	StartTime.Hour = 0;
-	StartTime.Minute = 0;
-	EndTime.Hour = 23;
-	EndTime.Minute = 59;
-	fDuration = false;
-	DurationShortest = 10 * 60;
-	DurationLongest = 0;
-	fCA = false;
-	CA = CAType::Free;
-	fVideo = false;
-	Video = VideoType::HD;
-	fServiceList = false;
-	ServiceList.Clear();
+	*this = CEventSearchSettings();
 }
 
 

@@ -33,18 +33,6 @@ namespace TVTest
 {
 
 
-CRecordingSettings::CRecordingSettings()
-	: m_fCurServiceOnly(false)
-	, m_SaveStream(LibISDB::StreamSelector::StreamFlag::All)
-	, m_WriteCacheSize(WRITE_CACHE_SIZE_DEFAULT)
-	, m_MaxPendingSize(MAX_PENDING_SIZE_DEFAULT)
-	, m_PreAllocationUnit(0)
-	, m_TimeShiftBufferSize(TIMESHIFT_BUFFER_SIZE_DEFAULT)
-	, m_fEnableTimeShift(false)
-{
-}
-
-
 bool CRecordingSettings::IsSaveCaption() const
 {
 	return TestSaveStreamFlag(LibISDB::StreamSelector::StreamFlag::Caption);

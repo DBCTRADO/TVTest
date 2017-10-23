@@ -38,16 +38,14 @@ namespace TVTest
 		static const DWORD MAX_PENDING_SIZE_DEFAULT = 0x10000000;
 		static const DWORD TIMESHIFT_BUFFER_SIZE_DEFAULT = 32 * 0x100000;
 
-		bool m_fCurServiceOnly;
-		LibISDB::StreamSelector::StreamFlag m_SaveStream;
+		bool m_fCurServiceOnly = false;
+		LibISDB::StreamSelector::StreamFlag m_SaveStream = LibISDB::StreamSelector::StreamFlag::All;
 		String m_WritePlugin;
-		DWORD m_WriteCacheSize;
-		DWORD m_MaxPendingSize;
-		ULONGLONG m_PreAllocationUnit;
-		DWORD m_TimeShiftBufferSize;
-		bool m_fEnableTimeShift;
-
-		CRecordingSettings();
+		DWORD m_WriteCacheSize = WRITE_CACHE_SIZE_DEFAULT;
+		DWORD m_MaxPendingSize = MAX_PENDING_SIZE_DEFAULT;
+		ULONGLONG m_PreAllocationUnit = 0;
+		DWORD m_TimeShiftBufferSize = TIMESHIFT_BUFFER_SIZE_DEFAULT;
+		bool m_fEnableTimeShift = false;
 
 		bool IsSaveCaption() const;
 		void SetSaveCaption(bool fSave);

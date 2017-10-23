@@ -108,14 +108,12 @@ namespace TVTest
 				RenderingMode    = 0x0010U,
 			};
 
-			ParamFlag Mask;
+			ParamFlag Mask = ParamFlag::None;
 			float Gamma;
 			float EnhancedContrast;
 			float ClearTypeLevel;
 			DWRITE_PIXEL_GEOMETRY PixelGeometry;
 			DWRITE_RENDERING_MODE RenderingMode;
-
-			RenderingParams() : Mask(ParamFlag::None) {}
 		};
 
 		struct FontMetrics

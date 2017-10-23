@@ -244,18 +244,14 @@ namespace TVTest
 
 		struct ServiceInfo
 		{
-			WORD NetworkID;
-			WORD TransportStreamID;
-			WORD ServiceID;
+			WORD NetworkID = 0;
+			WORD TransportStreamID = 0;
+			WORD ServiceID = 0;
 
-			ServiceInfo() { Clear(); }
+			ServiceInfo() = default;
 			ServiceInfo(WORD NID, WORD TSID, WORD SID)
 				: NetworkID(NID), TransportStreamID(TSID), ServiceID(SID) {}
-			void Clear() {
-				NetworkID = 0;
-				TransportStreamID = 0;
-				ServiceID = 0;
-			}
+			void Clear() { *this = ServiceInfo(); }
 		};
 
 		typedef std::vector<ServiceInfo> ServiceInfoList;

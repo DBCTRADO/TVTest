@@ -99,20 +99,11 @@ namespace TVTest
 			};
 
 			CChannelSpec Channel;
-			bool fOpenTuner;
-			bool fSetChannel;
-			bool fEnableViewer;
-			ViewerSuspendFlag ViewerSuspendFlags;
-			bool fFullscreen;
-
-			ResumeInfo()
-				: fOpenTuner(false)
-				, fSetChannel(false)
-				, fEnableViewer(false)
-				, ViewerSuspendFlags(ViewerSuspendFlag::None)
-				, fFullscreen(false)
-			{
-			}
+			bool fOpenTuner = false;
+			bool fSetChannel = false;
+			bool fEnableViewer = false;
+			ViewerSuspendFlag ViewerSuspendFlags = ViewerSuspendFlag::None;
+			bool fFullscreen = false;
 		};
 
 		CMainWindow(CAppMain &App);
@@ -527,9 +518,9 @@ namespace TVTest
 		};
 		struct WindowSize
 		{
-			int Width;
-			int Height;
-			WindowSize() : Width(0), Height(0) {}
+			int Width = 0;
+			int Height = 0;
+
 			WindowSize &operator=(const RECT &rc) {
 				Width = rc.right - rc.left;
 				Height = rc.bottom - rc.top;

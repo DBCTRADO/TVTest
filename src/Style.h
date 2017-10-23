@@ -49,7 +49,7 @@ namespace TVTest
 		struct StyleInfo
 		{
 			String Name;
-			ValueType Type;
+			ValueType Type = ValueType::Void;
 			struct {
 				union {
 					int Int;
@@ -57,17 +57,15 @@ namespace TVTest
 				};
 				String String;
 			} Value;
-			UnitType Unit;
-
-			StyleInfo() : Type(ValueType::Void), Unit(UnitType::Undefined) {}
+			UnitType Unit = UnitType::Undefined;
 		};
 
 		template<typename T> struct ValueTemplate
 		{
-			T Value;
-			UnitType Unit;
+			T Value {};
+			UnitType Unit = UnitType::Undefined;
 
-			ValueTemplate() : Value(0), Unit(UnitType::Undefined) {}
+			ValueTemplate() = default;
 			ValueTemplate(T v, UnitType u = UnitType::LogicalPixel) : Value(v), Unit(u) {}
 
 			operator T() const { return Value; }
@@ -86,7 +84,7 @@ namespace TVTest
 			IntValue Width;
 			IntValue Height;
 
-			Size() {}
+			Size() = default;
 			Size(int w, int h, UnitType u = UnitType::LogicalPixel) : Width(w, u), Height(h, u) {}
 			Size(int w, UnitType wu, int h, UnitType hu) : Width(w, wu), Height(h, hu) {}
 
@@ -101,7 +99,7 @@ namespace TVTest
 			IntValue Right;
 			IntValue Bottom;
 
-			Margins() {}
+			Margins() = default;
 			Margins(int l, int t, int r, int b, UnitType u = UnitType::LogicalPixel)
 				: Left(l, u), Top(t, u), Right(r, u), Bottom(b, u) {}
 			Margins(int l, UnitType lu, int t, UnitType tu, int r, UnitType ru, int b, UnitType bu)
@@ -121,10 +119,10 @@ namespace TVTest
 		struct Font
 		{
 		public:
-			LOGFONT LogFont;
+			LOGFONT LogFont {};
 			IntValue Size;
 
-			Font() : LogFont() {}
+			Font() = default;
 			Font(const LOGFONT &lf, int s, UnitType u = UnitType::Point)
 				: LogFont(lf), Size(s, u) {}
 

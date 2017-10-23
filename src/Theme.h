@@ -40,7 +40,7 @@ namespace TVTest
 		{
 			ThemeColor Color;
 
-			SolidStyle() {}
+			SolidStyle() = default;
 			SolidStyle(const ThemeColor &color) : Color(color) {}
 
 			bool operator==(const SolidStyle &Op) const { return Color == Op.Color; }
@@ -68,16 +68,12 @@ namespace TVTest
 				OneEighty,
 			};
 
-			GradientType Type;
-			GradientDirection Direction;
+			GradientType Type = GradientType::Normal;
+			GradientDirection Direction = GradientDirection::Horz;
 			ThemeColor Color1;
 			ThemeColor Color2;
 
-			GradientStyle()
-				: Type(GradientType::Normal)
-				, Direction(GradientDirection::Horz)
-			{
-			}
+			GradientStyle() = default;
 			GradientStyle(
 				GradientType type, GradientDirection dir,
 				const ThemeColor &color1, const ThemeColor &color2)
@@ -107,11 +103,11 @@ namespace TVTest
 
 		struct FillStyle
 		{
-			FillType Type;
+			FillType Type = FillType::None;
 			SolidStyle Solid;
 			GradientStyle Gradient;
 
-			FillStyle() : Type(FillType::None) {}
+			FillStyle() = default;
 			FillStyle(const SolidStyle &solid) : Type(FillType::Solid), Solid(solid) {}
 			FillStyle(const GradientStyle &gradient) : Type(FillType::Gradient), Gradient(gradient) {}
 
@@ -132,12 +128,12 @@ namespace TVTest
 
 		struct BorderWidth
 		{
-			Style::IntValue Left;
-			Style::IntValue Top;
-			Style::IntValue Right;
-			Style::IntValue Bottom;
+			Style::IntValue Left   {1};
+			Style::IntValue Top    {1};
+			Style::IntValue Right  {1};
+			Style::IntValue Bottom {1};
 
-			BorderWidth() : Left(1), Top(1), Right(1), Bottom(1) {}
+			BorderWidth() = default;
 			BorderWidth(int Width) : Left(Width), Top(Width), Right(Width), Bottom(Width) {}
 
 			bool operator==(const BorderWidth &Op) const {
@@ -148,11 +144,11 @@ namespace TVTest
 
 		struct BorderStyle
 		{
-			BorderType Type;
+			BorderType Type = BorderType::None;
 			ThemeColor Color;
 			BorderWidth Width;
 
-			BorderStyle() : Type(BorderType::None) {}
+			BorderStyle() = default;
 			BorderStyle(BorderType type, const ThemeColor &color) : Type(type), Color(color) {}
 
 			bool operator==(const BorderStyle &Op) const {
@@ -166,7 +162,7 @@ namespace TVTest
 			FillStyle Fill;
 			BorderStyle Border;
 
-			BackgroundStyle() {}
+			BackgroundStyle() = default;
 			BackgroundStyle(const FillStyle &fill, const BorderStyle &border) : Fill(fill), Border(border) {}
 			BackgroundStyle(const FillStyle &fill) : Fill(fill) {}
 
@@ -178,7 +174,7 @@ namespace TVTest
 		{
 			FillStyle Fill;
 
-			ForegroundStyle() {}
+			ForegroundStyle() = default;
 			ForegroundStyle(const FillStyle &fill) : Fill(fill) {}
 
 			bool operator==(const ForegroundStyle &Op) const { return Fill == Op.Fill; }
@@ -190,7 +186,7 @@ namespace TVTest
 			BackgroundStyle Back;
 			ForegroundStyle Fore;
 
-			Style() {}
+			Style() = default;
 			Style(const BackgroundStyle &back, const ForegroundStyle &fore) : Back(back), Fore(fore) {}
 
 			bool operator==(const Style &Op) const { return Back == Op.Back && Fore == Op.Fore; }

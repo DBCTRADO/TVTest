@@ -71,12 +71,12 @@ namespace TVTest
 		class CColor
 		{
 		public:
-			BYTE Red;
-			BYTE Green;
-			BYTE Blue;
-			BYTE Alpha;
+			BYTE Red   = 0;
+			BYTE Green = 0;
+			BYTE Blue  = 0;
+			BYTE Alpha = 0;
 
-			CColor() : Red(0), Green(0), Blue(0), Alpha(0) {}
+			CColor() = default;
 			CColor(BYTE r, BYTE g, BYTE b, BYTE a = 255) : Red(r), Green(g), Blue(b), Alpha(a) {}
 			CColor(COLORREF cr) : Red(GetRValue(cr)), Green(GetGValue(cr)), Blue(GetBValue(cr)), Alpha(255) {}
 		};

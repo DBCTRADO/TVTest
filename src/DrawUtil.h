@@ -30,12 +30,12 @@ namespace TVTest
 
 		struct RGBA
 		{
-			BYTE Red;
-			BYTE Green;
-			BYTE Blue;
-			BYTE Alpha;
+			BYTE Red   = 0;
+			BYTE Green = 0;
+			BYTE Blue  = 0;
+			BYTE Alpha = 0;
 
-			RGBA() : Red(0), Green(0), Blue(0), Alpha(0) {}
+			RGBA() = default;
 			RGBA(BYTE r, BYTE g, BYTE b, BYTE a = 255) : Red(r), Green(g), Blue(b), Alpha(a) {}
 			RGBA(COLORREF c) : Red(GetRValue(c)), Green(GetGValue(c)), Blue(GetBValue(c)), Alpha(255) {}
 
