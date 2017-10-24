@@ -24,7 +24,6 @@
 #include "CaptionPanel.h"
 #include "EpgUtil.h"
 #include "Settings.h"
-#include "LibISDB/LibISDB/Utilities/MD5.hpp"
 #include "resource.h"
 #include <utility>
 #include "Common/DebugDef.h"
@@ -753,16 +752,9 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 
 
 CCaptionDRCSMap::CCaptionDRCSMap()
-	: m_pBuffer(nullptr)
-	, m_fSaveBMP(false)
+	: m_fSaveBMP(false)
 	, m_fSaveRaw(false)
 {
-}
-
-
-CCaptionDRCSMap::~CCaptionDRCSMap()
-{
-	delete [] m_pBuffer;
 }
 
 
@@ -772,10 +764,6 @@ void CCaptionDRCSMap::Clear()
 
 	m_HashMap.clear();
 	m_CodeMap.clear();
-	if (m_pBuffer != nullptr) {
-		delete [] m_pBuffer;
-		m_pBuffer = nullptr;
-	}
 }
 
 
@@ -794,67 +782,68 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 	Clear();
 
 	CSettings Settings;
-	if (Settings.Open(pszFileName, CSettings::OpenFlag::Read)) {
-		if (Settings.SetSection(TEXT("Settings"))) {
-			Settings.Read(TEXT("SaveBMP"), &m_fSaveBMP);
-			Settings.Read(TEXT("SaveRaw"), &m_fSaveRaw);
-			String Dir;
-			if (Settings.Read(TEXT("SaveDirectory"), &Dir) && !Dir.empty()) {
-				GetAbsolutePath(Dir, &m_SaveDirectory);
-			}
+
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read))
+		return false;
+
+	if (Settings.SetSection(TEXT("Settings"))) {
+		Settings.Read(TEXT("SaveBMP"), &m_fSaveBMP);
+		Settings.Read(TEXT("SaveRaw"), &m_fSaveRaw);
+		String Dir;
+		if (Settings.Read(TEXT("SaveDirectory"), &Dir) && !Dir.empty()) {
+			GetAbsolutePath(Dir, &m_SaveDirectory);
 		}
-		Settings.Close();
 	}
 
-	const DWORD BuffLength = 32767;
-	LPTSTR pBuffer = new TCHAR[BuffLength];
-	if (pBuffer == nullptr)
-		return false;
-	DWORD Length = ::GetPrivateProfileSection(TEXT("DRCSMap"), pBuffer, BuffLength, pszFileName);
-	if (Length == 0) {
-		delete [] pBuffer;
-		return false;
-	}
-	for (LPTSTR p = pBuffer; *p != '\0'; p += ::lstrlen(p) + 1) {
-		BYTE Hash[16], v;
-		int i;
-		for (i = 0; i < 32; i++) {
-			if (p[i] >= '0' && p[i] <= '9')
-				v = p[i] - '0';
-			else if (p[i] >= 'A' && p[i] <= 'F')
-				v = p[i] - 'A' + 10;
-			else if (p[i] >= 'a' && p[i] <= 'f')
-				v = p[i] - 'a' + 10;
-			else
-				break;
-			v <<= 4;
-			i++;
-			if (p[i] >= '0' && p[i] <= '9')
-				v |= p[i] - '0';
-			else if (p[i] >= 'A' && p[i] <= 'F')
-				v |= p[i] - 'A' + 10;
-			else if (p[i] >= 'a' && p[i] <= 'f')
-				v |= p[i] - 'a' + 10;
-			else
-				break;
-			Hash[i / 2] = v;
+	if (Settings.SetSection(TEXT("DRCSMap"))) {
+		CSettings::EntryList Entries;
+
+		Settings.GetEntries(&Entries);
+
+		for (const auto &Entry : Entries) {
+			if (Entry.Name.length() < 32)
+				continue;
+
+			LibISDB::MD5Value MD5;
+			int i;
+
+			for (i = 0; i < 32; i++) {
+				BYTE v;
+
+				if (Entry.Name[i] >= '0' && Entry.Name[i] <= '9')
+					v = Entry.Name[i] - '0';
+				else if (Entry.Name[i] >= 'A' && Entry.Name[i] <= 'F')
+					v = Entry.Name[i] - 'A' + 10;
+				else if (Entry.Name[i] >= 'a' && Entry.Name[i] <= 'f')
+					v = Entry.Name[i] - 'a' + 10;
+				else
+					break;
+				v <<= 4;
+				i++;
+				if (Entry.Name[i] >= '0' && Entry.Name[i] <= '9')
+					v |= Entry.Name[i] - '0';
+				else if (Entry.Name[i] >= 'A' && Entry.Name[i] <= 'F')
+					v |= Entry.Name[i] - 'A' + 10;
+				else if (Entry.Name[i] >= 'a' && Entry.Name[i] <= 'f')
+					v |= Entry.Name[i] - 'a' + 10;
+				else
+					break;
+				MD5.Value[i / 2] = v;
+			}
+	
+			if (i == 32) {
+				m_HashMap.emplace(MD5, Entry.Value);
+				/*
+				TRACE(
+					TEXT("DRCS map : %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X = %s\n"),
+					MD5.Value[0], MD5.Value[1], MD5.Value[2], MD5.Value[3], MD5.Value[4], MD5.Value[5], MD5.Value[6], MD5.Value[7],
+					MD5.Value[8], MD5.Value[9], MD5.Value[10], MD5.Value[11], MD5.Value[12], MD5.Value[13], MD5.Value[14], MD5.Value[15],
+					Entry.Value.c_str());
+				*/
+			}
 		}
-		if (i == 32 && p[i] == '=') {
-			::CopyMemory(p, Hash, sizeof(Hash));
-			m_HashMap.insert(std::pair<PBYTE, LPCTSTR>((PBYTE)p, &p[i + 1]));
-			/*
-			TRACE(
-				TEXT("DRCS map : %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X = %s\n"),
-				Hash[0], Hash[1], Hash[2], Hash[3], Hash[4], Hash[5], Hash[6], Hash[7],
-				Hash[8], Hash[9], Hash[10], Hash[11], Hash[12], Hash[13], Hash[14], Hash[15],
-				&p[i+1]);
-			*/
-		}
 	}
-	if (m_HashMap.size() == 0)
-		delete [] pBuffer;
-	else
-		m_pBuffer = pBuffer;
+
 	return true;
 }
 
@@ -865,19 +854,19 @@ LPCTSTR CCaptionDRCSMap::GetString(WORD Code)
 	CodeMap::iterator itr = m_CodeMap.find(Code);
 
 	if (itr != m_CodeMap.end()) {
-		TRACE(TEXT("DRCS : Code %d %s\n"), Code, itr->second);
-		return itr->second;
+		TRACE(TEXT("DRCS : Code %d %s\n"), Code, itr->second.c_str());
+		return itr->second.c_str();
 	}
 	return nullptr;
 }
 
 
-static void MakeSaveFileName(const uint8_t *pMD5, LPTSTR pszFileName, LPCTSTR pszExtension)
+static void MakeSaveFileName(const LibISDB::MD5Value &MD5, LPTSTR pszFileName, LPCTSTR pszExtension)
 {
 	static const TCHAR Hex[] = TEXT("0123456789ABCDEF");
 	for (int i = 0; i < 16; i++) {
-		pszFileName[i * 2 + 0] = Hex[pMD5[i] >> 4];
-		pszFileName[i * 2 + 1] = Hex[pMD5[i] & 0x0F];
+		pszFileName[i * 2 + 0] = Hex[MD5.Value[i] >> 4];
+		pszFileName[i * 2 + 1] = Hex[MD5.Value[i] & 0x0F];
 	}
 	StringCopy(pszFileName + 32, pszExtension);
 }
@@ -892,11 +881,10 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 		Code, pBitmap->Width, pBitmap->Height, pBitmap->Depth,
 		MD5.Value[0], MD5.Value[1], MD5.Value[2], MD5.Value[3], MD5.Value[4], MD5.Value[5], MD5.Value[6], MD5.Value[7],
 		MD5.Value[8], MD5.Value[9], MD5.Value[10], MD5.Value[11], MD5.Value[12], MD5.Value[13], MD5.Value[14], MD5.Value[15]);
-	HashMap::iterator itr = m_HashMap.find((PBYTE)MD5.Value);
+	HashMap::iterator itr = m_HashMap.find(MD5);
 	if (itr != m_HashMap.end()) {
-		TRACE(TEXT("DRCS assign %d = %s\n"), Code, itr->second);
-		if (!m_CodeMap.insert(std::pair<WORD, LPCTSTR>(Code, itr->second)).second)
-			m_CodeMap[Code] = itr->second;
+		TRACE(TEXT("DRCS assign %d = %s\n"), Code, itr->second.c_str());
+		m_CodeMap[Code] = itr->second;
 	}
 
 	if (m_fSaveBMP || m_fSaveRaw) {
@@ -908,7 +896,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 
 	if (m_fSaveBMP) {
 		TCHAR szFileName[40];
-		MakeSaveFileName(MD5.Value, szFileName, TEXT(".bmp"));
+		MakeSaveFileName(MD5, szFileName, TEXT(".bmp"));
 		CFilePath FilePath(m_SaveDirectory);
 		FilePath.Append(szFileName);
 		if (!FilePath.IsExists())
@@ -916,7 +904,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 	}
 	if (m_fSaveRaw) {
 		TCHAR szFileName[40];
-		MakeSaveFileName(MD5.Value, szFileName, TEXT(".drcs"));
+		MakeSaveFileName(MD5, szFileName, TEXT(".drcs"));
 		CFilePath FilePath(m_SaveDirectory);
 		FilePath.Append(szFileName);
 		if (!FilePath.IsExists())

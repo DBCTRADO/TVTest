@@ -25,6 +25,7 @@
 #include <deque>
 #include <map>
 #include "LibISDB/LibISDB/Filters/CaptionFilter.hpp"
+#include "LibISDB/LibISDB/Utilities/MD5.hpp"
 #include "PanelForm.h"
 #include "UIBase.h"
 #include "Settings.h"
@@ -38,21 +39,20 @@ namespace TVTest
 	class CCaptionDRCSMap
 		: public LibISDB::CaptionFilter::DRCSMap
 	{
-		class CHashCmp
+		struct MD5Less
 		{
-		public:
-			bool operator()(const PBYTE &Key1, const PBYTE &Key2) const {
-				return memcmp(Key1, Key2, 16) < 0;
+			bool operator()(const LibISDB::MD5Value &Key1, const LibISDB::MD5Value &Key2) const
+			{
+				return std::memcmp(Key1.Value, Key2.Value, 16) < 0;
 			}
 		};
-		typedef std::map<PBYTE, LPCTSTR, CHashCmp> HashMap;
-		typedef std::map<WORD, LPCTSTR> CodeMap;
+		typedef std::map<LibISDB::MD5Value, String, MD5Less> HashMap;
+		typedef std::map<WORD, String> CodeMap;
 
 		typedef LibISDB::CaptionParser::DRCSBitmap DRCSBitmap;
 
 		HashMap m_HashMap;
 		CodeMap m_CodeMap;
-		LPTSTR m_pBuffer;
 		bool m_fSaveBMP;
 		bool m_fSaveRaw;
 		CFilePath m_SaveDirectory;
@@ -67,7 +67,7 @@ namespace TVTest
 
 	public:
 		CCaptionDRCSMap();
-		~CCaptionDRCSMap();
+
 		void Clear();
 		void Reset();
 		bool Load(LPCTSTR pszFileName);
