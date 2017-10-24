@@ -73,10 +73,9 @@ bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit)
 
 	default:
 		if (Command >= COMMAND_SEARCH) {
-			LPTSTR pszKeyword = CRichEditUtil::GetSelectedText(hwndEdit);
-			if (pszKeyword != nullptr) {
-				GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, pszKeyword);
-				delete [] pszKeyword;
+			String Keyword(CRichEditUtil::GetSelectedText(hwndEdit));
+			if (!Keyword.empty()) {
+				GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, Keyword.c_str());
 			}
 			break;
 		}

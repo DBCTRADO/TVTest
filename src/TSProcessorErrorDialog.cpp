@@ -177,10 +177,9 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 
 					LRESULT Length = DlgListBox_GetStringLength(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel);
 					if (Length > 0) {
-						LPTSTR pszName = new TCHAR[Length + 1];
-						DlgListBox_GetString(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel, pszName);
-						m_Filter = pszName;
-						delete [] pszName;
+						m_Filter.resize(Length + 1);
+						DlgListBox_GetString(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel, m_Filter.data());
+						m_Filter.pop_back();
 					} else {
 						m_Filter.clear();
 					}

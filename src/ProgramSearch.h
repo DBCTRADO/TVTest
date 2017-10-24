@@ -352,7 +352,7 @@ namespace TVTest
 		bool SetEventHandler(CEventHandler *pHandler);
 		int GetColumnWidth(int Index) const;
 		bool SetColumnWidth(int Index, int Width);
-		bool Search(LPTSTR pszKeyword);
+		bool Search(LPCTSTR pszKeyword);
 		bool SetHighlightResult(bool fHighlight);
 		bool GetHighlightResult() const { return m_fHighlightResult; }
 		bool IsHitEvent(const LibISDB::EventInfo *pEventInfo) const;

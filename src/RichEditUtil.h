@@ -50,7 +50,7 @@ namespace TVTest
 		static bool CopyAllText(HWND hwndEdit);
 		static void SelectAll(HWND hwndEdit);
 		static bool IsSelected(HWND hwndEdit);
-		static LPTSTR GetSelectedText(HWND hwndEdit);
+		static String GetSelectedText(HWND hwndEdit);
 		static int GetMaxLineWidth(HWND hwndEdit);
 		enum class DetectURLFlag : unsigned int {
 			None        = 0x0000U,

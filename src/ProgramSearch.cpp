@@ -1873,7 +1873,7 @@ bool CProgramSearchDialog::SetColumnWidth(int Index, int Width)
 }
 
 
-bool CProgramSearchDialog::Search(LPTSTR pszKeyword)
+bool CProgramSearchDialog::Search(LPCTSTR pszKeyword)
 {
 	if (m_hDlg == nullptr || pszKeyword == nullptr)
 		return false;

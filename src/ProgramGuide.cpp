@@ -4854,12 +4854,11 @@ bool CProgramGuide::CEventInfoPopupHandler::OnMenuPopup(HMENU hmenu)
 
 void CProgramGuide::CEventInfoPopupHandler::OnMenuSelected(int Command)
 {
-	LPTSTR pszText = CEventInfoPopup::CEventHandler::m_pPopup->GetSelectedText();
-	if (pszText != nullptr) {
+	String Text(CEventInfoPopup::CEventHandler::m_pPopup->GetSelectedText());
+	if (!Text.empty()) {
 		if (!m_pProgramGuide->m_ProgramSearch.IsCreated())
 			m_pProgramGuide->SendMessage(WM_COMMAND, CM_PROGRAMGUIDE_SEARCH, 0);
-		m_pProgramGuide->m_ProgramSearch.Search(pszText);
-		delete [] pszText;
+		m_pProgramGuide->m_ProgramSearch.Search(Text.c_str());
 	}
 }
 

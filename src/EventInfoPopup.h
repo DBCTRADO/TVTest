@@ -71,7 +71,7 @@ namespace TVTest
 		bool SetFont(const Style::Font &Font);
 		void SetEventHandler(CEventHandler *pEventHandler);
 		bool IsSelected() const;
-		LPTSTR GetSelectedText() const;
+		String GetSelectedText() const;
 		void GetPreferredIconSize(int *pWidth, int *pHeight) const;
 		bool GetPopupPosition(int x, int y, RECT *pPos) const;
 		bool AdjustPopupPosition(POINT *pPos) const;

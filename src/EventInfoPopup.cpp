@@ -455,7 +455,7 @@ bool CEventInfoPopup::IsSelected() const
 }
 
 
-LPTSTR CEventInfoPopup::GetSelectedText() const
+String CEventInfoPopup::GetSelectedText() const
 {
 	return CRichEditUtil::GetSelectedText(m_hwndEdit);
 }
@@ -816,10 +816,9 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					if (Command >= CEventHandler::COMMAND_FIRST) {
 						m_pEventHandler->OnMenuSelected(Command);
 					} else if (Command >= COMMAND_SEARCH) {
-						LPTSTR pszKeyword = CRichEditUtil::GetSelectedText(m_hwndEdit);
-						if (pszKeyword != nullptr) {
-							GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, pszKeyword);
-							delete [] pszKeyword;
+						String Keyword(CRichEditUtil::GetSelectedText(m_hwndEdit));
+						if (!Keyword.empty()) {
+							GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, Keyword.c_str());
 						}
 					}
 					break;

@@ -200,21 +200,25 @@ bool CRichEditUtil::IsSelected(HWND hwndEdit)
 }
 
 
-LPTSTR CRichEditUtil::GetSelectedText(HWND hwndEdit)
+String CRichEditUtil::GetSelectedText(HWND hwndEdit)
 {
+	String Text;
+
 	if (hwndEdit != nullptr) {
 		CHARRANGE cr = {0, 0};
 
 		::SendMessage(hwndEdit, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 		if (cr.cpMax > cr.cpMin) {
-			LPTSTR pszText = new TCHAR[cr.cpMax - cr.cpMin + 1];
-
-			if (::SendMessage(hwndEdit, EM_GETSELTEXT, 0, reinterpret_cast<LPARAM>(pszText)) > 0)
-				return pszText;
-			delete [] pszText;
+			Text.resize(cr.cpMax - cr.cpMin + 1);
+			const LRESULT Length = ::SendMessage(hwndEdit, EM_GETSELTEXT, 0, reinterpret_cast<LPARAM>(Text.data()));
+			if (Length > 0)
+				Text.resize(Length);
+			else
+				Text.clear();
 		}
 	}
-	return nullptr;
+
+	return Text;
 }
 
 
