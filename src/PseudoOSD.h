@@ -44,6 +44,7 @@ namespace TVTest
 			VertAlignMask  = 0x000CU,
 			Outline        = 0x0010U,
 			FillBackground = 0x0020U,
+			MultiLine      = 0x0040U,
 		};
 
 		enum class ImageEffect : unsigned int {

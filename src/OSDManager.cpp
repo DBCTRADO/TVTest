@@ -111,22 +111,31 @@ bool COSDManager::ShowOSD(LPCTSTR pszText, ShowFlag Flags)
 	} else {
 		int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
 		LOGFONT lf;
-		SIZE sz;
 
 		lf = *m_pOptions->GetOSDFont();
 		lf.lfHeight = -FontSize;
 		m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
+		m_OSD.SetTextStyle(
+			CPseudoOSD::TextStyle::Left |
+			CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::Outline |
+			CPseudoOSD::TextStyle::FillBackground |
+			CPseudoOSD::TextStyle::MultiLine);
 		//m_OSD.SetTextHeight(FontSize);
 		m_OSD.SetFont(lf);
 		m_OSD.SetText(pszText);
+		SIZE sz = {
+			(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) -
+				(m_Style.Margin.Left + m_Style.Margin.Right) -
+				(FontSize / 4),
+			(ClientInfo.ClientRect.bottom - ClientInfo.ClientRect.top) -
+				(m_Style.Margin.Top + m_Style.Margin.Bottom)
+		};
 		m_OSD.CalcTextSize(&sz);
 		m_OSD.SetPosition(
 			ClientInfo.ClientRect.left + m_Style.Margin.Left,
 			ClientInfo.ClientRect.top + m_Style.Margin.Top,
-			sz.cx + FontSize / 4, sz.cy);
-		m_OSD.SetTextStyle(
-			CPseudoOSD::TextStyle::HorzCenter | CPseudoOSD::TextStyle::VertCenter |
-			CPseudoOSD::TextStyle::Outline | CPseudoOSD::TextStyle::FillBackground);
+			sz.cx + (FontSize / 4), sz.cy);
 		m_OSD.SetTextColor(m_pOptions->GetTextColor());
 		m_OSD.Show(FadeTime, false);
 	}
@@ -205,24 +214,33 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 	} else {
 		int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
 		LOGFONT lf;
-		SIZE sz;
 		COLORREF cr;
 
 		lf = *m_pOptions->GetOSDFont();
 		lf.lfHeight = -FontSize;
 		m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
+		m_OSD.SetTextStyle(
+			CPseudoOSD::TextStyle::Left |
+			CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::Outline |
+			CPseudoOSD::TextStyle::FillBackground |
+			CPseudoOSD::TextStyle::MultiLine);
 		//m_OSD.SetTextHeight(FontSize);
 		m_OSD.SetFont(lf);
 		m_OSD.SetText(pszText, hbmLogo, m_Style.LogoSize.Width, m_Style.LogoSize.Height, ImageEffect);
+		SIZE sz = {
+			(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) -
+				(m_Style.Margin.Left + m_Style.Margin.Right) -
+				m_Style.LogoSize.Width - (FontSize / 4),
+			(ClientInfo.ClientRect.bottom - ClientInfo.ClientRect.top) -
+				(m_Style.Margin.Top + m_Style.Margin.Bottom)
+		};
 		m_OSD.CalcTextSize(&sz);
 		m_OSD.SetPosition(
 			ClientInfo.ClientRect.left + m_Style.Margin.Left,
 			ClientInfo.ClientRect.top + m_Style.Margin.Top,
-			sz.cx + FontSize / 4 + m_Style.LogoSize.Width,
+			sz.cx + (FontSize / 4) + m_Style.LogoSize.Width,
 			std::max(sz.cy, (LONG)m_Style.LogoSize.Height));
-		m_OSD.SetTextStyle(
-			CPseudoOSD::TextStyle::HorzCenter | CPseudoOSD::TextStyle::VertCenter |
-			CPseudoOSD::TextStyle::Outline | CPseudoOSD::TextStyle::FillBackground);
 		if (fChanging)
 			cr = MixColor(m_pOptions->GetTextColor(), RGB(0, 0, 0), 160);
 		else
@@ -304,22 +322,25 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		if (FontSize < m_Style.VolumeTextSizeMin)
 			FontSize = m_Style.VolumeTextSizeMin;
 		LOGFONT lf;
-		SIZE sz;
 
 		lf = *m_pOptions->GetOSDFont();
 		lf.lfHeight = -FontSize;
 		m_VolumeOSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
+		m_VolumeOSD.SetTextStyle(
+			CPseudoOSD::TextStyle::Left | CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::FillBackground);
 		//m_VolumeOSD.SetTextHeight(FontSize);
 		m_VolumeOSD.SetFont(lf);
 		m_VolumeOSD.SetText(szText);
+		SIZE sz = {
+			ClientInfo.ClientRect.right - ClientInfo.ClientRect.left - m_Style.VolumeMargin.Left,
+			ClientInfo.ClientRect.bottom - ClientInfo.ClientRect.top - m_Style.VolumeMargin.Bottom
+		};
 		m_VolumeOSD.CalcTextSize(&sz);
 		m_VolumeOSD.SetPosition(
 			ClientInfo.ClientRect.left + m_Style.VolumeMargin.Left,
 			ClientInfo.ClientRect.bottom - sz.cy - m_Style.VolumeMargin.Bottom,
 			sz.cx + FontSize / 4, sz.cy);
-		m_VolumeOSD.SetTextStyle(
-			CPseudoOSD::TextStyle::Left | CPseudoOSD::TextStyle::VertCenter |
-			CPseudoOSD::TextStyle::FillBackground);
 		m_VolumeOSD.SetTextColor(m_pOptions->GetTextColor());
 		m_VolumeOSD.Show(m_pOptions->GetFadeTime());
 	}

@@ -521,6 +521,8 @@ bool CCanvas::GetTextSize(
 	if (pSize == nullptr)
 		return false;
 
+	const SIZE Size = *pSize;
+
 	pSize->cx = 0;
 	pSize->cy = 0;
 
@@ -532,10 +534,8 @@ bool CCanvas::GetTextSize(
 
 	CFont Font(lf);
 
-	Gdiplus::StringFormat Format(
-		Gdiplus::StringFormatFlagsNoWrap |
-		Gdiplus::StringFormatFlagsNoClip);
-	Format.SetTrimming(Gdiplus::StringTrimmingNone);
+	Gdiplus::StringFormat Format;
+	SetStringFormat(&Format, Flags);
 
 	SetTextRenderingHint(Flags);
 
@@ -557,11 +557,19 @@ bool CCanvas::GetTextSize(
 #else
 	Gdiplus::RectF Bounds;
 
-	if (m_Graphics->MeasureString(
-				pszText, -1, Font.m_Font.get(),
-				Gdiplus::PointF(0.0f, 0.0f),
-				&Format, &Bounds) != Gdiplus::Ok)
-		return false;
+	if (!!(Flags & TextFlag::Format_NoWrap)) {
+		if (m_Graphics->MeasureString(
+					pszText, -1, Font.m_Font.get(),
+					Gdiplus::PointF(0.0f, 0.0f),
+					&Format, &Bounds) != Gdiplus::Ok)
+			return false;
+	} else {
+		if (m_Graphics->MeasureString(
+					pszText, -1, Font.m_Font.get(),
+					Gdiplus::RectF(0.0f, 0.0f, (float)Size.cx, (float)Size.cy),
+					&Format, &Bounds) != Gdiplus::Ok)
+			return false;
+	}
 
 	pSize->cx = (int)(Bounds.GetRight() + 1.0f);
 	pSize->cy = (int)(Bounds.GetBottom() + 1.0f);
@@ -620,6 +628,8 @@ bool CCanvas::GetOutlineTextSize(
 	if (pSize == nullptr)
 		return false;
 
+	const SIZE Size = *pSize;
+
 	pSize->cx = 0;
 	pSize->cy = 0;
 
@@ -631,10 +641,8 @@ bool CCanvas::GetOutlineTextSize(
 
 	CFont Font(lf);
 
-	Gdiplus::StringFormat Format(
-		Gdiplus::StringFormatFlagsNoWrap |
-		Gdiplus::StringFormatFlagsNoClip);
-	Format.SetTrimming(Gdiplus::StringTrimmingNone);
+	Gdiplus::StringFormat Format;
+	SetStringFormat(&Format, Flags);
 
 	SetTextRenderingHint(Flags);
 
@@ -645,7 +653,10 @@ bool CCanvas::GetOutlineTextSize(
 	if (Path.AddString(
 				pszText, -1,
 				&FontFamily, Font.m_Font->GetStyle(), Font.m_Font->GetSize(),
-				Gdiplus::Rect(0, 0, 10000, 10000), &Format) != Gdiplus::Ok)
+				!!(Flags & TextFlag::Format_NoWrap) ?
+					Gdiplus::Rect(0, 0, 10000, 10000) :
+					Gdiplus::Rect(0, 0, Size.cx, Size.cy),
+				&Format) != Gdiplus::Ok)
 		return false;
 
 	Gdiplus::Pen Pen(Gdiplus::Color(), OutlineWidth);
@@ -657,8 +668,8 @@ bool CCanvas::GetOutlineTextSize(
 
 #if 0
 	TRACE(
-		TEXT("Outline text bounds : %f %f %f %f \"%s\"\n"),
-		Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, pszText);
+		TEXT("Outline text bounds : [%d x %d] [%f %f %f %f] \"%s\"\n"),
+		Size.cx, Size.cy, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, pszText);
 #endif
 
 	pSize->cx = (long)(Bounds.GetRight() + 1.0f);
@@ -673,8 +684,12 @@ void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat, TextFlag Flags)
 	INT FormatFlags = pFormat->GetFormatFlags();
 	if (!!(Flags & TextFlag::Format_NoWrap))
 		FormatFlags |= Gdiplus::StringFormatFlagsNoWrap;
+	else
+		FormatFlags &= ~Gdiplus::StringFormatFlagsNoWrap;
 	if (!!(Flags & TextFlag::Format_NoClip))
 		FormatFlags |= Gdiplus::StringFormatFlagsNoClip;
+	else
+		FormatFlags &= ~Gdiplus::StringFormatFlagsNoClip;
 	pFormat->SetFormatFlags(FormatFlags);
 
 	switch (Flags & TextFlag::Format_HorzAlignMask) {

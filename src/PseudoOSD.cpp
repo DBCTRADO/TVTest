@@ -359,11 +359,11 @@ bool CPseudoOSD::SetFont(const LOGFONT &Font)
 
 bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 {
-	pSize->cx = 0;
-	pSize->cy = 0;
-
-	if (m_Text.empty())
+	if (m_Text.empty()) {
+		pSize->cx = 0;
+		pSize->cy = 0;
 		return true;
+	}
 
 	HDC hdc;
 	bool fResult;
@@ -375,27 +375,37 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 
 	if (!m_fLayeredWindow) {
 		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-		RECT rc = {0, 0, 0, 0};
-		fResult = ::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, DT_CALCRECT | DT_NOPREFIX) != 0;
+		RECT rc = {0, 0, pSize->cx, 0};
+		UINT Format = DT_CALCRECT | DT_NOPREFIX;
+		if (!!(m_TextStyle & TextStyle::MultiLine))
+			Format |= DT_WORDBREAK;
+		else
+			Format |= DT_SINGLELINE;
+		fResult = ::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, Format) != 0;
 		if (fResult) {
-			pSize->cx = rc.right - rc.left;
-			pSize->cy = rc.bottom - rc.top;
+			pSize->cx = rc.right;
+			pSize->cy = rc.bottom;
+		} else {
+			pSize->cx = 0;
+			pSize->cy = 0;
 		}
 		::SelectObject(hdc, hfontOld);
 	} else {
 		Graphics::CCanvas Canvas(hdc);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);
+
+		Graphics::TextFlag TextFlags =
+			Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
+		if (!(m_TextStyle & TextStyle::MultiLine))
+			TextFlags |= Graphics::TextFlag::Format_NoWrap;
+
 		if (!!(m_TextStyle & TextStyle::Outline)) {
 			fResult = Canvas.GetOutlineTextSize(
-				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)),
-				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting,
-				pSize);
+				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)), TextFlags, pSize);
 		} else {
 			fResult = Canvas.GetTextSize(
-				m_Text.c_str(), lf,
-				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting,
-				pSize);
+				m_Text.c_str(), lf, TextFlags, pSize);
 		}
 	}
 
@@ -460,12 +470,10 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 	RECT rc;
 
 	::GetClientRect(m_hwnd, &rc);
-	if (!m_Text.empty()) {
-		HFONT hfontOld;
-		COLORREF crOldTextColor;
-		int OldBkMode;
 
+	if (!m_Text.empty()) {
 		DrawUtil::Fill(hdc, &PaintRect, m_crBackColor);
+
 		if (m_hbmIcon != nullptr) {
 			int IconWidth;
 			if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
@@ -485,12 +493,37 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 			DrawImageEffect(hdc, &rcIcon);
 			rc.left += IconWidth;
 		}
-		hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-		crOldTextColor = ::SetTextColor(hdc, m_crTextColor);
-		OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-		::DrawText(
-			hdc, m_Text.data(), (int)m_Text.length(), &rc,
-			DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+
+		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+		COLORREF crOldTextColor = ::SetTextColor(hdc, m_crTextColor);
+		int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+
+		UINT Format = DT_NOPREFIX;
+		if (!!(m_TextStyle & TextStyle::MultiLine)) {
+			Format |= DT_WORDBREAK;
+			if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
+				rc.right = rc.left + m_Position.Width - m_IconWidth;
+		} else {
+			Format |= DT_SINGLELINE;
+		}
+		switch (m_TextStyle & TextStyle::HorzAlignMask) {
+		case TextStyle::Right:      Format |= DT_RIGHT;  break;
+		case TextStyle::HorzCenter: Format |= DT_CENTER; break;
+		}
+		const TextStyle VertAlign = m_TextStyle & TextStyle::VertAlignMask;
+		if ((VertAlign == TextStyle::Bottom) || (VertAlign == TextStyle::VertCenter)) {
+			RECT rcText = {0, 0, rc.right - rc.left, 0};
+			::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rcText, Format | DT_CALCRECT);
+			if (rcText.bottom < rc.bottom - rc.top) {
+				if (VertAlign == TextStyle::Bottom)
+					rc.top = rc.bottom - rcText.bottom;
+				else
+					rc.top += ((rc.bottom - rc.top) - rcText.bottom) / 2;
+			}
+		}
+
+		::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, Format);
+
 		::SetBkMode(hdc, OldBkMode);
 		::SetTextColor(hdc, crOldTextColor);
 		::SelectObject(hdc, hfontOld);
@@ -582,7 +615,6 @@ void CPseudoOSD::UpdateLayeredWindow()
 			m_Font.GetLogFont(&lf);
 
 			Graphics::TextFlag DrawTextFlags =
-				Graphics::TextFlag::Format_NoWrap |
 				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
 			if (!!(m_TextStyle & TextStyle::Right))
 				DrawTextFlags |= Graphics::TextFlag::Format_Right;
@@ -592,6 +624,12 @@ void CPseudoOSD::UpdateLayeredWindow()
 				DrawTextFlags |= Graphics::TextFlag::Format_Bottom;
 			if (!!(m_TextStyle & TextStyle::VertCenter))
 				DrawTextFlags |= Graphics::TextFlag::Format_VertCenter;
+			if (!(m_TextStyle & TextStyle::MultiLine))
+				DrawTextFlags |= Graphics::TextFlag::Format_NoWrap;
+
+			if (!!(m_TextStyle & TextStyle::MultiLine)
+					&& m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
+				rc.right = rc.left + m_Position.Width - m_IconWidth;
 
 			if (!!(m_TextStyle & TextStyle::Outline)) {
 				Canvas.DrawOutlineText(
