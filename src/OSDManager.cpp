@@ -109,33 +109,8 @@ bool COSDManager::ShowOSD(LPCTSTR pszText, ShowFlag Flags)
 			&& pViewer->IsDrawTextSupported()) {
 		CompositeText(pszText, ClientInfo.ClientRect, 0, FadeTime);
 	} else {
-		int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
-		LOGFONT lf;
-
-		lf = *m_pOptions->GetOSDFont();
-		lf.lfHeight = -FontSize;
-		m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
-		m_OSD.SetTextStyle(
-			CPseudoOSD::TextStyle::Left |
-			CPseudoOSD::TextStyle::VertCenter |
-			CPseudoOSD::TextStyle::Outline |
-			CPseudoOSD::TextStyle::FillBackground |
-			CPseudoOSD::TextStyle::MultiLine);
-		//m_OSD.SetTextHeight(FontSize);
-		m_OSD.SetFont(lf);
 		m_OSD.SetText(pszText);
-		SIZE sz = {
-			(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) -
-				(m_Style.Margin.Left + m_Style.Margin.Right) -
-				(FontSize / 4),
-			(ClientInfo.ClientRect.bottom - ClientInfo.ClientRect.top) -
-				(m_Style.Margin.Top + m_Style.Margin.Bottom)
-		};
-		m_OSD.CalcTextSize(&sz);
-		m_OSD.SetPosition(
-			ClientInfo.ClientRect.left + m_Style.Margin.Left,
-			ClientInfo.ClientRect.top + m_Style.Margin.Top,
-			sz.cx + (FontSize / 4), sz.cy);
+		CreateTextOSD(pszText, ClientInfo);
 		m_OSD.SetTextColor(m_pOptions->GetTextColor());
 		m_OSD.Show(FadeTime, false);
 	}
@@ -212,35 +187,9 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 			CompositeText(pszText, ClientInfo.ClientRect, hbmLogo != nullptr ? m_Style.LogoSize.Width : 0, m_pOptions->GetFadeTime());
 		}
 	} else {
-		int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
-		LOGFONT lf;
-		COLORREF cr;
-
-		lf = *m_pOptions->GetOSDFont();
-		lf.lfHeight = -FontSize;
-		m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
-		m_OSD.SetTextStyle(
-			CPseudoOSD::TextStyle::Left |
-			CPseudoOSD::TextStyle::VertCenter |
-			CPseudoOSD::TextStyle::Outline |
-			CPseudoOSD::TextStyle::FillBackground |
-			CPseudoOSD::TextStyle::MultiLine);
-		//m_OSD.SetTextHeight(FontSize);
-		m_OSD.SetFont(lf);
 		m_OSD.SetText(pszText, hbmLogo, m_Style.LogoSize.Width, m_Style.LogoSize.Height, ImageEffect);
-		SIZE sz = {
-			(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) -
-				(m_Style.Margin.Left + m_Style.Margin.Right) -
-				m_Style.LogoSize.Width - (FontSize / 4),
-			(ClientInfo.ClientRect.bottom - ClientInfo.ClientRect.top) -
-				(m_Style.Margin.Top + m_Style.Margin.Bottom)
-		};
-		m_OSD.CalcTextSize(&sz);
-		m_OSD.SetPosition(
-			ClientInfo.ClientRect.left + m_Style.Margin.Left,
-			ClientInfo.ClientRect.top + m_Style.Margin.Top,
-			sz.cx + (FontSize / 4) + m_Style.LogoSize.Width,
-			std::max(sz.cy, (LONG)m_Style.LogoSize.Height));
+		CreateTextOSD(pszText, ClientInfo, m_Style.LogoSize.Width, m_Style.LogoSize.Height);
+		COLORREF cr;
 		if (fChanging)
 			cr = MixColor(m_pOptions->GetTextColor(), RGB(0, 0, 0), 160);
 		else
@@ -405,6 +354,53 @@ bool COSDManager::CompositeText(
 	::DeleteObject(hfont);
 
 	return fOK;
+}
+
+
+bool COSDManager::CreateTextOSD(LPCTSTR pszText, const OSDClientInfo &ClientInfo, int ImageWidth, int ImageHeight)
+{
+	if (!m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow()))
+		return false;
+
+	const int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
+	const int TextMargin = FontSize / 2;
+	LOGFONT lf = *m_pOptions->GetOSDFont();
+	lf.lfHeight = -FontSize;
+
+	m_OSD.SetTextStyle(
+		CPseudoOSD::TextStyle::Left |
+		CPseudoOSD::TextStyle::VertCenter |
+		CPseudoOSD::TextStyle::Outline |
+		CPseudoOSD::TextStyle::FillBackground |
+		CPseudoOSD::TextStyle::MultiLine);
+	//m_OSD.SetTextHeight(FontSize);
+	m_OSD.SetFont(lf);
+	SIZE sz = {
+		(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) -
+			(m_Style.Margin.Left + m_Style.Margin.Right) -
+			ImageWidth - TextMargin,
+		(ClientInfo.ClientRect.bottom - ClientInfo.ClientRect.top) -
+			(m_Style.Margin.Top + m_Style.Margin.Bottom)
+	};
+	m_OSD.CalcTextSize(&sz);
+
+	bool fSingleLine = (sz.cy < FontSize * 3 / 2);
+	if (fSingleLine) {
+		// 単一行(のはず)
+		m_OSD.SetTextStyle(
+			CPseudoOSD::TextStyle::HorzCenter |
+			CPseudoOSD::TextStyle::VertCenter |
+			CPseudoOSD::TextStyle::Outline |
+			CPseudoOSD::TextStyle::FillBackground);
+	}
+
+	m_OSD.SetPosition(
+		ClientInfo.ClientRect.left + m_Style.Margin.Left,
+		ClientInfo.ClientRect.top + m_Style.Margin.Top,
+		sz.cx + TextMargin + ImageWidth,
+		std::max(sz.cy, (LONG)ImageHeight));
+
+	return true;
 }
 
 

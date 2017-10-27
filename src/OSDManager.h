@@ -99,6 +99,9 @@ namespace TVTest
 		CPseudoOSD m_VolumeOSD;
 
 		bool CompositeText(LPCTSTR pszText, const RECT &rcClient, int LeftOffset, DWORD FadeTime);
+		bool CreateTextOSD(
+			LPCTSTR pszText, const OSDClientInfo &ClientInfo,
+			int ImageWidth = 0, int ImageHeight = 0);
 
 	// CUIBase
 		void SetStyle(const Style::CStyleManager *pStyleManager) override;
