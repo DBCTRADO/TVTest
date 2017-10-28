@@ -1,5 +1,25 @@
-#ifndef MENU_OPTIONS_H
-#define MENU_OPTIONS_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
+#ifndef TVTEST_MENU_OPTIONS_H
+#define TVTEST_MENU_OPTIONS_H
 
 
 #include <vector>
@@ -7,67 +27,74 @@
 #include "ListView.h"
 
 
-class CMenuOptions : public COptions
+namespace TVTest
 {
-public:
-	CMenuOptions();
-	~CMenuOptions();
 
-// CSettingsBase
-	bool ReadSettings(CSettings &Settings) override;
-	bool WriteSettings(CSettings &Settings) override;
+	class CMenuOptions
+		: public COptions
+	{
+	public:
+		CMenuOptions();
+		~CMenuOptions();
 
-// CBasicDialog
-	bool Create(HWND hwndOwner) override;
+	// CSettingsBase
+		bool ReadSettings(CSettings &Settings) override;
+		bool WriteSettings(CSettings &Settings) override;
 
-// CMenuOptions
-	int GetMaxChannelMenuRows() const { return m_MaxChannelMenuRows; }
-	int GetMaxChannelMenuEventInfo() const { return m_MaxChannelMenuEventInfo; }
-	bool GetMenuItemList(std::vector<int> *pItemList);
-	int GetSubMenuPosByCommand(int Command) const;
+	// CBasicDialog
+		bool Create(HWND hwndOwner) override;
 
-private:
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+	// CMenuOptions
+		int GetMaxChannelMenuRows() const { return m_MaxChannelMenuRows; }
+		int GetMaxChannelMenuEventInfo() const { return m_MaxChannelMenuEventInfo; }
+		bool GetMenuItemList(std::vector<int> *pItemList);
+		int GetSubMenuPosByCommand(int Command) const;
 
-	int IDToCommand(int ID) const;
-	int CommandToID(int Command) const;
-	int GetIDFromString(const TVTest::String &Str) const;
-	void SetDlgItemState(HWND hDlg);
-	void GetItemText(int ID,LPTSTR pszText,int MaxLength) const;
+	private:
+	// CBasicDialog
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-	struct MenuInfo {
-		int ID;
-		int TextID;
-		int Command;
+		int IDToCommand(int ID) const;
+		int CommandToID(int Command) const;
+		int GetIDFromString(const String &Str) const;
+		void SetDlgItemState(HWND hDlg);
+		void GetItemText(int ID, LPTSTR pszText, int MaxLength) const;
+
+		struct MenuInfo
+		{
+			int ID;
+			int TextID;
+			int Command;
+		};
+
+		struct MenuItemInfo
+		{
+			String Name;
+			int ID;
+			bool fVisible;
+		};
+
+		struct AdditionalItemInfo
+		{
+			int First;
+			int Last;
+		};
+
+		static constexpr int MENU_ID_SEPARATOR = -1;
+		static constexpr int MENU_ID_INVALID   = -2;
+
+		static const MenuInfo m_DefaultMenuItemList[];
+		static const AdditionalItemInfo m_AdditionalItemList[];
+
+		int m_MaxChannelMenuRows;
+		int m_MaxChannelMenuEventInfo;
+		std::vector<MenuItemInfo> m_MenuItemList;
+
+		bool m_fChanging;
+		CListView m_ItemListView;
 	};
 
-	struct MenuItemInfo {
-		TVTest::String Name;
-		int ID;
-		bool fVisible;
-	};
-
-	struct AdditionalItemInfo {
-		int First;
-		int Last;
-	};
-
-	enum {
-		MENU_ID_SEPARATOR = -1,
-		MENU_ID_INVALID   = -2
-	};
-
-	static const MenuInfo m_DefaultMenuItemList[];
-	static const AdditionalItemInfo m_AdditionalItemList[];
-
-	int m_MaxChannelMenuRows;
-	int m_MaxChannelMenuEventInfo;
-	std::vector<MenuItemInfo> m_MenuItemList;
-
-	bool m_fChanging;
-	TVTest::CListView m_ItemListView;
-};
+}	// namespace TVTest
 
 
 #endif

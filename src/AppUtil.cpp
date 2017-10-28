@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppUtil.h"
@@ -5,20 +25,17 @@
 #include "MainWindow.h"
 #include "Common/DebugDef.h"
 
-#ifdef WIN_XP_SUPPORT
-#include <psapi.h>	// for GetModuleFileNameEx
-#pragma comment(lib,"psapi.lib")
-#endif
 
-
+namespace TVTest
+{
 
 
 bool IsTVTestWindow(HWND hwnd)
 {
 	TCHAR szClass[64];
 
-	return ::GetClassName(hwnd,szClass,lengthof(szClass))==lengthof(MAIN_WINDOW_CLASS)-1
-			&& ::lstrcmpi(szClass,MAIN_WINDOW_CLASS)==0;
+	return ::GetClassName(hwnd, szClass, lengthof(szClass)) > 0
+		&& ::lstrcmpi(szClass, MAIN_WINDOW_CLASS) == 0;
 }
 
 
@@ -27,24 +44,24 @@ struct TVTestWindowEnumInfo {
 	LPARAM Param;
 };
 
-static BOOL CALLBACK TVTestWindowEnumProc(HWND hwnd,LPARAM Param)
+static BOOL CALLBACK TVTestWindowEnumProc(HWND hwnd, LPARAM Param)
 {
 	if (IsTVTestWindow(hwnd)) {
-		TVTestWindowEnumInfo *pInfo=reinterpret_cast<TVTestWindowEnumInfo*>(Param);
+		TVTestWindowEnumInfo *pInfo = reinterpret_cast<TVTestWindowEnumInfo*>(Param);
 
-		if (!(*pInfo->pEnumFunc)(hwnd,pInfo->Param))
+		if (!(*pInfo->pEnumFunc)(hwnd, pInfo->Param))
 			return FALSE;
 	}
 	return TRUE;
 }
 
-bool EnumTVTestWindows(WNDENUMPROC pEnumFunc,LPARAM Param)
+bool EnumTVTestWindows(WNDENUMPROC pEnumFunc, LPARAM Param)
 {
 	TVTestWindowEnumInfo Info;
 
-	Info.pEnumFunc=pEnumFunc;
-	Info.Param=Param;
-	return EnumWindows(TVTestWindowEnumProc,reinterpret_cast<LPARAM>(&Info))!=FALSE;
+	Info.pEnumFunc = pEnumFunc;
+	Info.Param = Param;
+	return EnumWindows(TVTestWindowEnumProc, reinterpret_cast<LPARAM>(&Info)) != FALSE;
 }
 
 
@@ -55,28 +72,28 @@ CAppMutex::CAppMutex(bool fEnable)
 	if (fEnable) {
 		TCHAR szName[MAX_PATH];
 
-		::GetModuleFileName(NULL,szName,lengthof(szName));
-		::CharUpperBuff(szName,::lstrlen(szName));
-		for (int i=0;szName[i]!='\0';i++) {
-			if (szName[i]=='\\')
-				szName[i]=':';
+		::GetModuleFileName(nullptr, szName, lengthof(szName));
+		::CharUpperBuff(szName, ::lstrlen(szName));
+		for (int i = 0; szName[i] != '\0'; i++) {
+			if (szName[i] == '\\')
+				szName[i] = ':';
 		}
 
 		CBasicSecurityAttributes SecAttributes;
 		SecAttributes.Initialize();
 
-		m_hMutex=::CreateMutex(&SecAttributes,FALSE,szName);
-		m_fAlreadyExists=m_hMutex!=NULL && ::GetLastError()==ERROR_ALREADY_EXISTS;
+		m_hMutex = ::CreateMutex(&SecAttributes, FALSE, szName);
+		m_fAlreadyExists = m_hMutex != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS;
 	} else {
-		m_hMutex=NULL;
-		m_fAlreadyExists=false;
+		m_hMutex = nullptr;
+		m_fAlreadyExists = false;
 	}
 }
 
 
 CAppMutex::~CAppMutex()
 {
-	if (m_hMutex!=NULL) {
+	if (m_hMutex != nullptr) {
 		/*
 		if (!m_fAlreadyExists)
 			::ReleaseMutex(m_hMutex);
@@ -90,37 +107,33 @@ CAppMutex::~CAppMutex()
 
 HWND CTVTestWindowFinder::FindCommandLineTarget()
 {
-	::GetModuleFileName(NULL,m_szModuleFileName,lengthof(m_szModuleFileName));
-	m_hwndFirst=NULL;
-	m_hwndFound=NULL;
-	::EnumWindows(FindWindowCallback,reinterpret_cast<LPARAM>(this));
-	return m_hwndFound!=NULL?m_hwndFound:m_hwndFirst;
+	::GetModuleFileName(nullptr, m_szModuleFileName, lengthof(m_szModuleFileName));
+	m_hwndFirst = nullptr;
+	m_hwndFound = nullptr;
+	::EnumWindows(FindWindowCallback, reinterpret_cast<LPARAM>(this));
+	return m_hwndFound != nullptr ? m_hwndFound : m_hwndFirst;
 }
 
 
-BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd,LPARAM lParam)
+BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd, LPARAM lParam)
 {
-	CTVTestWindowFinder *pThis=reinterpret_cast<CTVTestWindowFinder*>(lParam);
-	TCHAR szClassName[64],szFileName[MAX_PATH];
+	CTVTestWindowFinder *pThis = reinterpret_cast<CTVTestWindowFinder*>(lParam);
+	TCHAR szClassName[64], szFileName[MAX_PATH];
 
-	if (::GetClassName(hwnd,szClassName,lengthof(szClassName))>0
-			&& ::lstrcmpi(szClassName,MAIN_WINDOW_CLASS)==0) {
-		if (pThis->m_hwndFirst==NULL)
-			pThis->m_hwndFirst=hwnd;
+	if (::GetClassName(hwnd, szClassName, lengthof(szClassName)) > 0
+			&& ::lstrcmpi(szClassName, MAIN_WINDOW_CLASS) == 0) {
+		if (pThis->m_hwndFirst == nullptr)
+			pThis->m_hwndFirst = hwnd;
 
 		DWORD ProcessId;
 		HANDLE hProcess;
-		::GetWindowThreadProcessId(hwnd,&ProcessId);
-		hProcess=::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,FALSE,ProcessId);
-		if (hProcess!=NULL) {
-#ifdef WIN_XP_SUPPORT
-			if (::GetModuleFileNameEx(hProcess,NULL,szFileName,lengthof(szFileName))>0
-#else
-			DWORD FileNameSize=lengthof(szFileName);
-			if (::QueryFullProcessImageName(hProcess,0,szFileName,&FileNameSize)
-#endif
-					&& IsEqualFileName(szFileName,pThis->m_szModuleFileName)) {
-				pThis->m_hwndFound=hwnd;
+		::GetWindowThreadProcessId(hwnd, &ProcessId);
+		hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessId);
+		if (hProcess != nullptr) {
+			DWORD FileNameSize = lengthof(szFileName);
+			if (::QueryFullProcessImageName(hProcess, 0, szFileName, &FileNameSize)
+					&& IsEqualFileName(szFileName, pThis->m_szModuleFileName)) {
+				pThis->m_hwndFound = hwnd;
 				::CloseHandle(hProcess);
 				return FALSE;
 			}
@@ -133,48 +146,52 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd,LPARAM lParam)
 
 
 
-bool CPortQuery::Query(HWND hwnd,WORD *pUDPPort,WORD MaxPort)
+bool CPortQuery::Query(HWND hwnd, WORD *pUDPPort, WORD MaxPort)
 {
 	size_t i;
 
-	m_hwndSelf=hwnd;
+	m_hwndSelf = hwnd;
 	m_UDPPortList.clear();
-	::EnumWindows(EnumProc,reinterpret_cast<LPARAM>(this));
-	if (m_UDPPortList.size()>0) {
+	::EnumWindows(EnumProc, reinterpret_cast<LPARAM>(this));
+	if (m_UDPPortList.size() > 0) {
 		WORD UDPPort;
 
-		for (UDPPort=*pUDPPort;UDPPort<=MaxPort;UDPPort++) {
-			for (i=0;i<m_UDPPortList.size();i++) {
-				if (m_UDPPortList[i]==UDPPort)
+		for (UDPPort = *pUDPPort; UDPPort <= MaxPort; UDPPort++) {
+			for (i = 0; i < m_UDPPortList.size(); i++) {
+				if (m_UDPPortList[i] == UDPPort)
 					break;
 			}
-			if (i==m_UDPPortList.size())
+			if (i == m_UDPPortList.size())
 				break;
 		}
-		if (UDPPort>MaxPort)
-			UDPPort=0;
-		*pUDPPort=UDPPort;
+		if (UDPPort > MaxPort)
+			UDPPort = 0;
+		*pUDPPort = UDPPort;
 	}
 	return true;
 }
 
 
-BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd,LPARAM lParam)
+BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd, LPARAM lParam)
 {
-	CPortQuery *pThis=reinterpret_cast<CPortQuery*>(lParam);
+	CPortQuery *pThis = reinterpret_cast<CPortQuery*>(lParam);
 
-	if (hwnd==pThis->m_hwndSelf)
+	if (hwnd == pThis->m_hwndSelf)
 		return TRUE;
 	if (IsTVTestWindow(hwnd)) {
 		DWORD_PTR Result;
 
-		if (::SendMessageTimeout(hwnd,WM_APP_QUERYPORT,0,0,
-								 SMTO_NORMAL | SMTO_ABORTIFHUNG,1000,&Result)) {
-			WORD UDPPort=LOWORD(Result);
+		if (::SendMessageTimeout(
+					hwnd, WM_APP_QUERYPORT, 0, 0,
+					SMTO_NORMAL | SMTO_ABORTIFHUNG, 1000, &Result)) {
+			WORD UDPPort = LOWORD(Result);
 
 			pThis->m_UDPPortList.push_back(UDPPort);
-			GetAppClass().AddLog(TEXT("ä˘Ç…ãNìÆÇµÇƒÇ¢ÇÈ") APP_NAME TEXT("Ç™å©ïtÇ©ÇËÇ‹ÇµÇΩÅB(UDPÉ|Å[Ég %d)"),UDPPort);
+			GetAppClass().AddLog(TEXT("Êó¢„Å´Ëµ∑Âãï„Åó„Å¶„ÅÑ„Çã") APP_NAME TEXT("„ÅåË¶ã‰ªò„Åã„Çä„Åæ„Åó„Åü„ÄÇ(UDP„Éù„Éº„Éà %d)"), UDPPort);
 		}
 	}
 	return TRUE;
 }
+
+
+}	// namespace TVTest

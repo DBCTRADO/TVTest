@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "VariableManager.h"
@@ -11,7 +31,7 @@ namespace TVTest
 
 bool CVariableManager::RegisterVariable(
 	LPCWSTR pszKeyword, LPCWSTR pszValue, IGetVariable *pGetVariable,
-	LPCWSTR pszDescription, unsigned int Flags)
+	LPCWSTR pszDescription, VariableFlag Flags)
 {
 	if (IsStringEmpty(pszKeyword))
 		return false;
@@ -73,7 +93,7 @@ bool CVariableManager::GetPreferredVariable(LPCWSTR pszKeyword, String *pValue) 
 	StringUtility::ToLower(Entry.Keyword);
 
 	auto it = m_VariableList.find(Entry);
-	if (it == m_VariableList.end() || (it->Flags & FLAG_OVERRIDE) == 0)
+	if (it == m_VariableList.end() || !(it->Flags & VariableFlag::Override))
 		return false;
 
 	if (it->pGetVariable != nullptr) {
@@ -95,12 +115,12 @@ bool CVariableManager::GetVariableList(std::vector<VariableInfo> *pList) const
 	pList->clear();
 	pList->reserve(m_VariableList.size());
 
-	for (auto it = m_VariableList.begin(); it != m_VariableList.end(); ++it) {
+	for (const auto &e : m_VariableList) {
 		VariableInfo Info;
 
-		Info.pszKeyword = it->Keyword.c_str();
-		Info.pszDescription = it->Description.c_str();
-		Info.Flags = it->Flags;
+		Info.pszKeyword = e.Keyword.c_str();
+		Info.pszDescription = e.Description.c_str();
+		Info.Flags = e.Flags;
 
 		pList->push_back(Info);
 	}

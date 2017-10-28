@@ -1,43 +1,55 @@
-// stdafx.h : •W€‚ÌƒVƒXƒeƒ€ ƒCƒ“ƒNƒ‹[ƒh ƒtƒ@ƒCƒ‹‚ÌƒCƒ“ƒNƒ‹[ƒh ƒtƒ@ƒCƒ‹A‚Ü‚½‚Í
-// QÆ‰ñ”‚ª‘½‚­A‚©‚Â‚ ‚Ü‚è•ÏX‚³‚ê‚È‚¢AƒvƒƒWƒFƒNƒgê—p‚ÌƒCƒ“ƒNƒ‹[ƒh ƒtƒ@ƒCƒ‹
-// ‚ğ‹Lq‚µ‚Ü‚·B
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
+// stdafx.h : æ¨™æº–ã®ã‚·ã‚¹ãƒ†ãƒ  ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰ ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰ ãƒ•ã‚¡ã‚¤ãƒ«ã€ã¾ãŸã¯
+// å‚ç…§å›æ•°ãŒå¤šãã€ã‹ã¤ã‚ã¾ã‚Šå¤‰æ›´ã•ã‚Œãªã„ã€ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆå°‚ç”¨ã®ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰ ãƒ•ã‚¡ã‚¤ãƒ«
+// ã‚’è¨˜è¿°ã—ã¾ã™ã€‚
 
 #pragma once
 
 #ifndef WINVER
-#define WINVER 0x0601		// Windows 7
+#define WINVER _WIN32_WINNT_WIN10
 #endif
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0601	// Windows 7
+#define _WIN32_WINNT _WIN32_WINNT_WIN10
 #endif
 
 #ifndef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WIN7
+#define NTDDI_VERSION NTDDI_WIN10
 #endif
 
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0600	// Internet Explorer 6.0
+#define _WIN32_IE _WIN32_IE_WIN10
 #endif
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 
 #define _WIN32_DCOM	// for CoInitializeEx()
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-#ifndef _ALLOW_KEYWORD_MACROS
-#define _ALLOW_KEYWORD_MACROS
-#endif
-#endif
-
-#ifdef WIN_XP_SUPPORT
-#define PSAPI_VERSION 1
-#endif
-
-// Windows ‚Ìƒwƒbƒ_‚Åo‚éŒx‚ğ—}~
+// Windows ã®ãƒ˜ãƒƒãƒ€ã§å‡ºã‚‹è­¦å‘Šã‚’æŠ‘æ­¢
 #pragma warning(push)
 #pragma warning(disable: 4091)
 
+#include <algorithm>
 #include <stdio.h>
 #include <process.h>
 #include <windows.h>
@@ -48,7 +60,6 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <streams.h>	// DirectShow BaseClasses
 
 #pragma warning(pop)
 
@@ -63,19 +74,17 @@
 #ifdef _DEBUG
 #undef strdup
 #define strdup strdup
-#define DEBUG_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #endif // _DEBUG
 
-#include "Common/Common.h"
 
-
-// Œx‚Ì–³Œøİ’è
-#pragma warning(disable: 4355) // warning C4355: "'this' : ƒx[ƒX ƒƒ“ƒo‰Šú‰»ƒŠƒXƒg‚Åg—p‚³‚ê‚Ü‚µ‚½B"
-#pragma warning(disable: 4995) // warning C4995: –¼‘O‚ª”ğ‚¯‚ç‚ê‚½ #pragma ‚Æ‚µ‚Ä‹Lq‚³‚ê‚Ä‚¢‚Ü‚·B
+// è­¦å‘Šã®ç„¡åŠ¹è¨­å®š
+#pragma warning(disable: 4355) // warning C4355: "'this' : ãƒ™ãƒ¼ã‚¹ ãƒ¡ãƒ³ãƒåˆæœŸåŒ–ãƒªã‚¹ãƒˆã§ä½¿ç”¨ã•ã‚Œã¾ã—ãŸã€‚"
+#pragma warning(disable: 4995) // warning C4995: åå‰ãŒé¿ã‘ã‚‰ã‚ŒãŸ #pragma ã¨ã—ã¦è¨˜è¿°ã•ã‚Œã¦ã„ã¾ã™ã€‚
 #pragma warning(disable: 4996) // warning C4996: "This function or variable may be unsafe."
 
 
-// ƒ‰ƒCƒuƒ‰ƒŠ‚ÌƒŠƒ“ƒN
+// ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®ãƒªãƒ³ã‚¯
 #pragma comment(lib, "Kernel32.lib")
 #pragma comment(lib, "User32.lib")
 #pragma comment(lib, "Gdi32.lib")
@@ -88,41 +97,18 @@
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "ShLwApi.lib")
 
-#ifdef _DEBUG
-#pragma comment(lib, "StrmBasd.lib")
-#else
-#pragma comment(lib, "StrmBase.lib")
-#endif
-
-// ƒgƒŒ[ƒXo—Í
-#ifdef _DEBUG
-	#undef TRACE
-	#define TRACE ::DebugTrace
+// ãƒˆãƒ¬ãƒ¼ã‚¹å‡ºåŠ›
+namespace TVTest
+{
 	void DebugTrace(LPCTSTR szFormat, ...);
+}
+#ifdef _DEBUG
+#undef TRACE
+#define TRACE TVTest::DebugTrace
 #else
-	#define TRACE __noop
+#define TRACE __noop
 #endif
 
 #ifndef _DEBUG
-	#define _SECURE_SCL 0
+#define _SECURE_SCL 0
 #endif
-
-#ifndef NO_NULLPTR
-#undef NULL
-#define NULL nullptr
-#endif
-
-// ƒAƒ‰ƒCƒ“ƒƒ“ƒgw’è
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-#define alignas(n) __declspec(align(n))
-#define alignof(t) __alignof(t)
-#endif
-
-
-// BonTsEngine ‚Ìİ’è
-#define BONTSENGINE_SSE2				// SSE2 ‚ğ—˜—p
-#define BONTSENGINE_MPEG2_SUPPORT		// MPEG-2 ‘Î‰
-#define BONTSENGINE_H264_SUPPORT		// H.264 ‘Î‰
-#define BONTSENGINE_H265_SUPPORT		// H.265 ‘Î‰
-#define BONTSENGINE_MPEG_AUDIO_SUPPORT	// MPEG-1/2 Audio ‘Î‰
-#define BONTSENGINE_AC3_SUPPORT			// AC-3 ‘Î‰

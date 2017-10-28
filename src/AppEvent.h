@@ -1,8 +1,28 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_APP_EVENT_H
 #define TVTEST_APP_EVENT_H
 
 
-#include "DirectShowFilter/AudioDecFilter.h"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/AudioDecoders/AudioDecoderFilter.hpp"
 #include <vector>
 
 
@@ -12,10 +32,12 @@ namespace TVTest
 	namespace AppEvent
 	{
 
-		enum {
-			CHANNEL_CHANGED_STATUS_SPACE_CHANGED = 0x0001U,
-			CHANNEL_CHANGED_STATUS_DETECTED      = 0x0002U
+		enum class ChannelChangeStatus : unsigned int {
+			None         = 0x0000U,
+			SpaceChanged = 0x0001U,
+			Detected     = 0x0002U,
 		};
+		TVTEST_ENUM_FLAGS(ChannelChangeStatus)
 
 		struct RecordingStartInfo
 		{
@@ -34,12 +56,12 @@ namespace TVTest
 		virtual void OnTunerOpened() {}
 		virtual void OnTunerClosed() {}
 		virtual void OnTunerShutDown() {}
-		virtual void OnChannelChanged(unsigned int Status) {}
+		virtual void OnChannelChanged(AppEvent::ChannelChangeStatus Status) {}
 		virtual void OnServiceChanged() {}
 		virtual void OnServiceInfoUpdated() {}
 		virtual void OnServiceListUpdated() {}
 		virtual void OnChannelListChanged() {}
-		virtual void OnRecordingStart(AppEvent::RecordingStartInfo *pInfo) {}
+		virtual void OnRecordingStart(AppEvent::RecordingStartInfo * pInfo) {}
 		virtual void OnRecordingStarted() {}
 		virtual void OnRecordingStopped() {}
 		virtual void OnRecordingPaused() {}
@@ -49,10 +71,11 @@ namespace TVTest
 		virtual void OnFullscreenChanged(bool fFullscreen) {}
 		virtual void OnPlaybackStateChanged(bool fPlayback) {}
 		virtual void OnPanAndScanChanged() {}
+		virtual void OnAspectRatioTypeChanged(int Type) {}
 		virtual void OnVolumeChanged(int Volume) {}
 		virtual void OnMuteChanged(bool fMute) {}
-		virtual void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode) {}
-		virtual void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode) {}
+		virtual void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) {}
+		virtual void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode) {}
 		virtual void OnAudioStreamChanged(int Stream) {}
 		virtual void OnColorSchemeChanged() {}
 		virtual void OnStandbyChanged(bool fStandby) {}
@@ -76,7 +99,7 @@ namespace TVTest
 		void OnTunerOpened();
 		void OnTunerClosed();
 		void OnTunerShutDown();
-		void OnChannelChanged(unsigned int Status);
+		void OnChannelChanged(AppEvent::ChannelChangeStatus Status);
 		void OnServiceChanged();
 		void OnServiceInfoUpdated();
 		void OnServiceListUpdated();
@@ -91,10 +114,11 @@ namespace TVTest
 		void OnFullscreenChanged(bool fFullscreen);
 		void OnPlaybackStateChanged(bool fPlayback);
 		void OnPanAndScanChanged();
+		void OnAspectRatioTypeChanged(int Type);
 		void OnVolumeChanged(int Volume);
 		void OnMuteChanged(bool fMute);
-		void OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode);
-		void OnStereoModeChanged(CAudioDecFilter::StereoMode Mode);
+		void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
+		void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
 		void OnAudioStreamChanged(int Stream);
 		void OnColorSchemeChanged();
 		void OnStandbyChanged(bool fStandby);
@@ -111,8 +135,8 @@ namespace TVTest
 		std::vector<CAppEventHandler*> m_HandlerList;
 
 		template<typename T> void EnumHandlers(T Pred) {
-			for (auto i=m_HandlerList.begin();i!=m_HandlerList.end();++i)
-				Pred(*i);
+			for (auto Handler : m_HandlerList)
+				Pred(Handler);
 		}
 	};
 

@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -7,6 +27,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CMessageDialog::CMessageDialog()
@@ -19,115 +41,121 @@ CMessageDialog::~CMessageDialog()
 }
 
 
-void CMessageDialog::LogFontToCharFormat(const LOGFONT *plf,CHARFORMAT *pcf)
+void CMessageDialog::LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf)
 {
-	HDC hdc=::GetDC(m_hDlg);
-	CRichEditUtil::LogFontToCharFormat(hdc,plf,pcf);
-	::ReleaseDC(m_hDlg,hdc);
+	HDC hdc = ::GetDC(m_hDlg);
+	CRichEditUtil::LogFontToCharFormat(hdc, plf, pcf);
+	::ReleaseDC(m_hDlg, hdc);
 }
 
 
 CMessageDialog *CMessageDialog::GetThis(HWND hDlg)
 {
-	return static_cast<CMessageDialog*>(::GetProp(hDlg,TEXT("This")));
+	return static_cast<CMessageDialog*>(::GetProp(hDlg, TEXT("This")));
 }
 
 
-INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CMessageDialog *pThis=reinterpret_cast<CMessageDialog*>(lParam);
+			CMessageDialog *pThis = reinterpret_cast<CMessageDialog*>(lParam);
 
-			::SetProp(hDlg,TEXT("This"),pThis);
-			pThis->m_hDlg=hDlg;
+			::SetProp(hDlg, TEXT("This"), pThis);
+			pThis->m_hDlg = hDlg;
 
 			if (!pThis->m_Caption.empty())
-				::SetWindowText(hDlg,pThis->m_Caption.c_str());
+				::SetWindowText(hDlg, pThis->m_Caption.c_str());
 
-			::SendDlgItemMessage(hDlg,IDC_ERROR_ICON,STM_SETICON,
-				reinterpret_cast<WPARAM>(::LoadIcon(NULL,
-					pThis->m_MessageType==TYPE_INFO?IDI_INFORMATION:
-					pThis->m_MessageType==TYPE_WARNING?IDI_WARNING:IDI_ERROR)),0);
-			::SendDlgItemMessage(hDlg,IDC_ERROR_MESSAGE,EM_SETBKGNDCOLOR,0,::GetSysColor(COLOR_WINDOW));
+			::SendDlgItemMessage(
+				hDlg, IDC_ERROR_ICON, STM_SETICON,
+				reinterpret_cast<WPARAM>(
+					::LoadIcon(
+						nullptr,
+						pThis->m_MessageType == MessageType::Info ? IDI_INFORMATION :
+						pThis->m_MessageType == MessageType::Warning ? IDI_WARNING : IDI_ERROR)),
+				0);
+			::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_SETBKGNDCOLOR, 0, ::GetSysColor(COLOR_WINDOW));
 
-			const HWND hwndEdit=::GetDlgItem(hDlg,IDC_ERROR_MESSAGE);
-			CHARFORMAT cf,cfBold;
+			const HWND hwndEdit = ::GetDlgItem(hDlg, IDC_ERROR_MESSAGE);
+			CHARFORMAT cf, cfBold;
 
 			NONCLIENTMETRICS ncm;
 #if WINVER<0x0600
-			ncm.cbSize=sizeof(ncm);
+			ncm.cbSize = sizeof(ncm);
 #else
-			ncm.cbSize=offsetof(NONCLIENTMETRICS,iPaddedBorderWidth);
+			ncm.cbSize = offsetof(NONCLIENTMETRICS, iPaddedBorderWidth);
 #endif
-			::SystemParametersInfo(SPI_GETNONCLIENTMETRICS,ncm.cbSize,&ncm,0);
-			pThis->LogFontToCharFormat(&ncm.lfMessageFont,&cf);
+			::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
+			pThis->LogFontToCharFormat(&ncm.lfMessageFont, &cf);
 
-			cfBold=cf;
-			cfBold.dwMask|=CFM_BOLD;
-			cfBold.dwEffects|=CFE_BOLD;
+			cfBold = cf;
+			cfBold.dwMask |= CFM_BOLD;
+			cfBold.dwEffects |= CFE_BOLD;
 			if (!pThis->m_Title.empty()) {
-				CRichEditUtil::AppendText(hwndEdit,pThis->m_Title.c_str(),&cfBold);
-				CRichEditUtil::AppendText(hwndEdit,TEXT("\n"),&cf);
+				CRichEditUtil::AppendText(hwndEdit, pThis->m_Title.c_str(), &cfBold);
+				CRichEditUtil::AppendText(hwndEdit, TEXT("\n"), &cf);
 			}
 			if (!pThis->m_Text.empty()) {
-				CRichEditUtil::AppendText(hwndEdit,pThis->m_Text.c_str(),&cf);
+				CRichEditUtil::AppendText(hwndEdit, pThis->m_Text.c_str(), &cf);
 			}
 			if (!pThis->m_SystemMessage.empty()) {
-				CRichEditUtil::AppendText(hwndEdit,TEXT("\n\nWindowsのエラーメッセージ :\n"),&cfBold);
-				CRichEditUtil::AppendText(hwndEdit,pThis->m_SystemMessage.c_str(),&cf);
+				CRichEditUtil::AppendText(hwndEdit, TEXT("\n\nWindows縺ｮ繧ｨ繝ｩ繝ｼ繝｡繝�繧ｻ繝ｼ繧ｸ :\n"), &cfBold);
+				CRichEditUtil::AppendText(hwndEdit, pThis->m_SystemMessage.c_str(), &cf);
 			}
-			const int MaxWidth=CRichEditUtil::GetMaxLineWidth(hwndEdit)+8;
-			RECT rcEdit,rcIcon,rcDlg,rcClient,rcOK;
-			::GetWindowRect(hwndEdit,&rcEdit);
-			::OffsetRect(&rcEdit,-rcEdit.left,-rcEdit.top);
-			::GetWindowRect(::GetDlgItem(hDlg,IDC_ERROR_ICON),&rcIcon);
-			rcIcon.bottom-=rcIcon.top;
-			if (rcEdit.bottom<rcIcon.bottom)
-				rcEdit.bottom=rcIcon.bottom;
-			::SetWindowPos(hwndEdit,NULL,0,0,MaxWidth,rcEdit.bottom,
-						   SWP_NOMOVE | SWP_NOZORDER);
-			::GetWindowRect(hDlg,&rcDlg);
-			::GetClientRect(hDlg,&rcClient);
-			GetDlgItemRect(hDlg,IDOK,&rcOK);
-			const int Offset=MaxWidth-rcEdit.right;
-			::SetWindowPos(::GetDlgItem(hDlg,IDOK),NULL,
-						   rcOK.left+Offset,rcOK.top,0,0,
-						   SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-			::SetWindowPos(hDlg,NULL,0,0,(rcDlg.right-rcDlg.left)+Offset,rcDlg.bottom-rcDlg.top,
-						   SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-			::SendMessage(hwndEdit,EM_SETEVENTMASK,0,ENM_REQUESTRESIZE | ENM_MOUSEEVENTS);
-			::SendDlgItemMessage(hDlg,IDC_ERROR_MESSAGE,EM_REQUESTRESIZE,0,0);
+			const int MaxWidth = CRichEditUtil::GetMaxLineWidth(hwndEdit) + 8;
+			RECT rcEdit, rcIcon, rcDlg, rcClient, rcOK;
+			::GetWindowRect(hwndEdit, &rcEdit);
+			::OffsetRect(&rcEdit, -rcEdit.left, -rcEdit.top);
+			::GetWindowRect(::GetDlgItem(hDlg, IDC_ERROR_ICON), &rcIcon);
+			rcIcon.bottom -= rcIcon.top;
+			if (rcEdit.bottom < rcIcon.bottom)
+				rcEdit.bottom = rcIcon.bottom;
+			::SetWindowPos(
+				hwndEdit, nullptr, 0, 0, MaxWidth, rcEdit.bottom, SWP_NOMOVE | SWP_NOZORDER);
+			::GetWindowRect(hDlg, &rcDlg);
+			::GetClientRect(hDlg, &rcClient);
+			GetDlgItemRect(hDlg, IDOK, &rcOK);
+			const int Offset = MaxWidth - rcEdit.right;
+			::SetWindowPos(
+				::GetDlgItem(hDlg, IDOK), nullptr,
+				rcOK.left + Offset, rcOK.top, 0, 0,
+				SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+			::SetWindowPos(
+				hDlg, nullptr, 0, 0, (rcDlg.right - rcDlg.left) + Offset, rcDlg.bottom - rcDlg.top,
+				SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+			::SendMessage(hwndEdit, EM_SETEVENTMASK, 0, ENM_REQUESTRESIZE | ENM_MOUSEEVENTS);
+			::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_REQUESTRESIZE, 0, 0);
 
-			AdjustDialogPos(::GetParent(hDlg),hDlg);
+			AdjustDialogPos(::GetParent(hDlg), hDlg);
 		}
 		return TRUE;
 
 	/*
 	case WM_SIZE:
-		::SendDlgItemMessage(hDlg,IDC_ERROR_MESSAGE,EM_REQUESTRESIZE,0,0);
+		::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_REQUESTRESIZE, 0, 0);
 		return TRUE;
 	*/
 
 	case WM_PAINT:
 		{
-			CMessageDialog *pThis=GetThis(hDlg);
+			CMessageDialog *pThis = GetThis(hDlg);
 			PAINTSTRUCT ps;
-			RECT rcEdit,rc;
+			RECT rcEdit, rc;
 
-			::BeginPaint(hDlg,&ps);
-			::GetWindowRect(::GetDlgItem(hDlg,IDC_ERROR_MESSAGE),&rcEdit);
-			MapWindowRect(NULL,hDlg,&rcEdit);
-			::GetClientRect(hDlg,&rc);
-			rc.bottom=rcEdit.bottom;
-			::FillRect(ps.hdc,&rc,::GetSysColorBrush(COLOR_WINDOW));
-			::EndPaint(hDlg,&ps);
+			::BeginPaint(hDlg, &ps);
+			::GetWindowRect(::GetDlgItem(hDlg, IDC_ERROR_MESSAGE), &rcEdit);
+			MapWindowRect(nullptr, hDlg, &rcEdit);
+			::GetClientRect(hDlg, &rc);
+			rc.bottom = rcEdit.bottom;
+			::FillRect(ps.hdc, &rc, ::GetSysColorBrush(COLOR_WINDOW));
+			::EndPaint(hDlg, &ps);
 		}
 		return TRUE;
 
 	case WM_CTLCOLORSTATIC:
-		if (reinterpret_cast<HWND>(lParam)==::GetDlgItem(hDlg,IDC_ERROR_ICON))
+		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_ERROR_ICON))
 			return reinterpret_cast<INT_PTR>(::GetSysColorBrush(COLOR_WINDOW));
 		break;
 
@@ -135,52 +163,55 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case EN_REQUESTRESIZE:
 			{
-				REQRESIZE *prr=reinterpret_cast<REQRESIZE*>(lParam);
-				RECT rcEdit,rcDialog,rcClient,rcOK,rcIcon;
-				int Width,Height,MinWidth;
-				int XOffset,YOffset;
+				REQRESIZE *prr = reinterpret_cast<REQRESIZE*>(lParam);
+				RECT rcEdit, rcDialog, rcClient, rcOK, rcIcon;
+				int Width, Height, MinWidth;
+				int XOffset, YOffset;
 
-				::GetWindowRect(hDlg,&rcDialog);
-				::GetClientRect(hDlg,&rcClient);
-				::GetWindowRect(prr->nmhdr.hwndFrom,&rcEdit);
-				GetDlgItemRect(hDlg,IDOK,&rcOK);
-				MinWidth=(rcOK.right-rcOK.left)+(rcClient.right-rcOK.right)*2;
-				Width=prr->rc.right-prr->rc.left;
-				if (Width<MinWidth)
-					Width=MinWidth;
-				Height=prr->rc.bottom-prr->rc.top;
-				::GetWindowRect(::GetDlgItem(hDlg,IDC_ERROR_ICON),&rcIcon);
-				rcIcon.bottom-=rcIcon.top;
-				if (Height<rcIcon.bottom)
-					Height=rcIcon.bottom;
-				if (Width==rcEdit.right-rcEdit.left
-						&& Height==rcEdit.bottom-rcEdit.top)
+				::GetWindowRect(hDlg, &rcDialog);
+				::GetClientRect(hDlg, &rcClient);
+				::GetWindowRect(prr->nmhdr.hwndFrom, &rcEdit);
+				GetDlgItemRect(hDlg, IDOK, &rcOK);
+				MinWidth = (rcOK.right - rcOK.left) + (rcClient.right - rcOK.right) * 2;
+				Width = prr->rc.right - prr->rc.left;
+				if (Width < MinWidth)
+					Width = MinWidth;
+				Height = prr->rc.bottom - prr->rc.top;
+				::GetWindowRect(::GetDlgItem(hDlg, IDC_ERROR_ICON), &rcIcon);
+				rcIcon.bottom -= rcIcon.top;
+				if (Height < rcIcon.bottom)
+					Height = rcIcon.bottom;
+				if (Width == rcEdit.right - rcEdit.left
+						&& Height == rcEdit.bottom - rcEdit.top)
 					break;
-				XOffset=Width-(rcEdit.right-rcEdit.left);
-				YOffset=Height-(rcEdit.bottom-rcEdit.top);
-				::SetWindowPos(prr->nmhdr.hwndFrom,NULL,0,0,Width,Height,
-							   SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-				::SetRect(&rcEdit,0,0,Width,Height);
-				::SendDlgItemMessage(hDlg,IDC_ERROR_MESSAGE,EM_SETRECT,0,reinterpret_cast<LPARAM>(&rcEdit));
-				rcDialog.right+=XOffset;
-				rcDialog.bottom+=YOffset;
-				::MoveWindow(hDlg,rcDialog.left,rcDialog.top,
-							 rcDialog.right-rcDialog.left,
-							 rcDialog.bottom-rcDialog.top,TRUE);
-				::MoveWindow(::GetDlgItem(hDlg,IDOK),rcOK.left+XOffset,rcOK.top+YOffset,
-							 rcOK.right-rcOK.left,rcOK.bottom-rcOK.top,TRUE);
+				XOffset = Width - (rcEdit.right - rcEdit.left);
+				YOffset = Height - (rcEdit.bottom - rcEdit.top);
+				::SetWindowPos(
+					prr->nmhdr.hwndFrom, nullptr, 0, 0, Width, Height,
+					SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+				::SetRect(&rcEdit, 0, 0, Width, Height);
+				::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_SETRECT, 0, reinterpret_cast<LPARAM>(&rcEdit));
+				rcDialog.right += XOffset;
+				rcDialog.bottom += YOffset;
+				::MoveWindow(
+					hDlg, rcDialog.left, rcDialog.top,
+					rcDialog.right - rcDialog.left,
+					rcDialog.bottom - rcDialog.top, TRUE);
+				::MoveWindow(
+					::GetDlgItem(hDlg, IDOK), rcOK.left + XOffset, rcOK.top + YOffset,
+					rcOK.right - rcOK.left, rcOK.bottom - rcOK.top, TRUE);
 			}
 			return TRUE;
 
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg==WM_RBUTTONUP) {
+			if (reinterpret_cast<MSGFILTER*>(lParam)->msg == WM_RBUTTONUP) {
 				HMENU hmenu;
 				POINT pt;
 
-				hmenu=::CreatePopupMenu();
-				::AppendMenu(hmenu,MFT_STRING | MFS_ENABLED,IDC_ERROR_COPY,TEXT("コピー(&C)"));
+				hmenu = ::CreatePopupMenu();
+				::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, IDC_ERROR_COPY, TEXT("繧ｳ繝斐�ｼ(&C)"));
 				::GetCursorPos(&pt);
-				::TrackPopupMenu(hmenu,TPM_RIGHTBUTTON,pt.x,pt.y,0,hDlg,NULL);
+				::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
 				::DestroyMenu(hmenu);
 			}
 			return TRUE;
@@ -191,75 +222,81 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARA
 		switch (LOWORD(wParam)) {
 		case IDC_ERROR_COPY:
 			{
-				HWND hwndEdit=::GetDlgItem(hDlg,IDC_ERROR_MESSAGE);
+				HWND hwndEdit = ::GetDlgItem(hDlg, IDC_ERROR_MESSAGE);
 
-				if (::SendMessage(hwndEdit,EM_SELECTIONTYPE,0,0)==SEL_EMPTY) {
+				if (::SendMessage(hwndEdit, EM_SELECTIONTYPE, 0, 0) == SEL_EMPTY) {
 					CRichEditUtil::CopyAllText(hwndEdit);
 				} else {
-					::SendMessage(hwndEdit,WM_COPY,0,0);
+					::SendMessage(hwndEdit, WM_COPY, 0, 0);
 				}
 			}
 			return TRUE;
 
 		case IDOK:
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		break;
 
 	case WM_DESTROY:
 		{
-			CMessageDialog *pThis=GetThis(hDlg);
+			CMessageDialog *pThis = GetThis(hDlg);
 
 			pThis->m_Text.clear();
 			pThis->m_Title.clear();
 			pThis->m_SystemMessage.clear();
 			pThis->m_Caption.clear();
-			pThis->m_hDlg=NULL;
-			::RemoveProp(hDlg,TEXT("This"));
+			pThis->m_hDlg = nullptr;
+			::RemoveProp(hDlg, TEXT("This"));
 		}
 		return TRUE;
 	}
+
 	return FALSE;
 }
 
 
-bool CMessageDialog::Show(HWND hwndOwner,MessageType Type,LPCTSTR pszText,LPCTSTR pszTitle,LPCTSTR pszSystemMessage,LPCTSTR pszCaption)
+bool CMessageDialog::Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPCTSTR pszTitle, LPCTSTR pszSystemMessage, LPCTSTR pszCaption)
 {
-	if (pszText==NULL && pszTitle==NULL && pszSystemMessage==NULL)
+	if (pszText == nullptr && pszTitle == nullptr && pszSystemMessage == nullptr)
 		return false;
 
 	if (!m_RichEditUtil.LoadRichEditLib()) {
 		TCHAR szMessage[1024];
-		CStaticStringFormatter Formatter(szMessage,lengthof(szMessage));
+		CStaticStringFormatter Formatter(szMessage, lengthof(szMessage));
 
-		if (pszTitle!=NULL)
+		if (pszTitle != nullptr)
 			Formatter.Append(pszTitle);
-		if (pszText!=NULL) {
+		if (pszText != nullptr) {
 			if (!Formatter.IsEmpty())
 				Formatter.Append(TEXT("\n"));
 			Formatter.Append(pszText);
 		}
-		if (pszSystemMessage!=NULL) {
+		if (pszSystemMessage != nullptr) {
 			if (!Formatter.IsEmpty())
 				Formatter.Append(TEXT("\n\n"));
-			Formatter.Append(TEXT("Windowsのエラーメッセージ:\n"));
+			Formatter.Append(TEXT("Windows縺ｮ繧ｨ繝ｩ繝ｼ繝｡繝�繧ｻ繝ｼ繧ｸ:\n"));
 			Formatter.Append(pszSystemMessage);
 		}
-		return ::MessageBox(hwndOwner,Formatter.GetString(),pszCaption,
-							MB_OK |
-							(Type==TYPE_INFO?MB_ICONINFORMATION:
-							 Type==TYPE_WARNING?MB_ICONEXCLAMATION:
-							 Type==TYPE_ERROR?MB_ICONSTOP:0))==IDOK;
+		return ::MessageBox(
+			hwndOwner, Formatter.GetString(), pszCaption,
+			MB_OK |
+				(Type == MessageType::Info ? MB_ICONINFORMATION :
+				 Type == MessageType::Warning ? MB_ICONEXCLAMATION :
+				 Type == MessageType::Error ? MB_ICONSTOP : 0)) == IDOK;
 	}
 
-	TVTest::StringUtility::Assign(m_Text,pszText);
-	TVTest::StringUtility::Assign(m_Title,pszTitle);
-	TVTest::StringUtility::Assign(m_SystemMessage,pszSystemMessage);
-	TVTest::StringUtility::Assign(m_Caption,pszCaption);
-	m_MessageType=Type;
-	return ::DialogBoxParam(GetAppClass().GetResourceInstance(),
-							MAKEINTRESOURCE(IDD_ERROR),hwndOwner,DlgProc,
-							reinterpret_cast<LPARAM>(this))==IDOK;
+	StringUtility::Assign(m_Text, pszText);
+	StringUtility::Assign(m_Title, pszTitle);
+	StringUtility::Assign(m_SystemMessage, pszSystemMessage);
+	StringUtility::Assign(m_Caption, pszCaption);
+	m_MessageType = Type;
+	return ::DialogBoxParam(
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_ERROR), hwndOwner, DlgProc,
+		reinterpret_cast<LPARAM>(this)) == IDOK;
 }
+
+
+}	// namespace TVTest

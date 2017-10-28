@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -9,46 +29,32 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CEpgOptions::CEpgOptions()
 	: m_fSaveEpgFile(true)
+	, m_EpgFileName(TEXT("EpgData"))
 	, m_fUpdateWhenStandby(false)
 	, m_fUpdateBSExtended(false)
 	, m_fUpdateCSExtended(false)
 	, m_fUseEDCBData(false)
-	, m_EpgTimeMode(EPGTIME_JST)
+	, m_EpgTimeMode(EpgTimeMode::JST)
 	, m_fSaveLogoFile(true)
-
-	, m_hLoadThread(NULL)
-	, m_pEpgDataLoader(NULL)
+	, m_LogoFileName(TEXT("LogoData"))
 {
-	::lstrcpy(m_szEpgFileName,TEXT("EpgData"));
-
-	m_szEDCBDataFolder[0]='\0';
 #if 0
-	static const TCHAR szEpgDataFolder[]=TEXT("EpgTimerBon\\EpgData");
-#ifdef WIN_XP_SUPPORT
-	TCHAR szPath[MAX_PATH];
-	if (::SHGetSpecialFolderPath(NULL,szPath,CSIDL_PERSONAL,FALSE)
-			&& ::lstrlen(szPath)+lengthof(szEpgDataFolder)<lengthof(m_szEDCBDataFolder)) {
-		::PathAppend(m_szEDCBDataFolder,szEpgDataFolder);
-	}
-#else
+	static const TCHAR szEpgDataFolder[] = TEXT("EpgTimerBon\\EpgData");
 	PWSTR pszPath;
-	if (::SHGetKnownFolderPath(FOLDERID_Documents,0,NULL,&pszPath)==S_OK) {
-		if (::lstrlen(pszPath)+lengthof(szEpgDataFolder)<lengthof(m_szEDCBDataFolder)) {
-			::lstrcpy(m_szEDCBDataFolder,pszPath);
-			::PathAppend(m_szEDCBDataFolder,szEpgDataFolder);
-		}
+	if (::SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pszPath) == S_OK) {
+		m_EDCBDataFolder = pszPath;
+		m_EDCBDataFolder.Append(szEpgDataFolder);
 		::CoTaskMemFree(pszPath);
 	}
 #endif
-#endif
 
-	::lstrcpy(m_szLogoFileName,TEXT("LogoData"));
-
-	TVTest::StyleUtil::GetSystemFont(DrawUtil::FONT_MESSAGE,&m_EventInfoFont);
+	StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_EventInfoFont);
 }
 
 
@@ -61,61 +67,51 @@ CEpgOptions::~CEpgOptions()
 
 void CEpgOptions::Finalize()
 {
-	if (m_hLoadThread!=NULL) {
-		if (::WaitForSingleObject(m_hLoadThread,0)==WAIT_TIMEOUT) {
-			GetAppClass().AddLog(TEXT("EPGÉfÅ[É^ì«Ç›çûÇ›ÉXÉåÉbÉhÇÃèIóπÇë“Ç¡ÇƒÇ¢Ç‹Ç∑..."));
-			if (::WaitForSingleObject(m_hLoadThread,30000)==WAIT_TIMEOUT) {
-				GetAppClass().AddLog(CLogItem::TYPE_WARNING,TEXT("EPGÉfÅ[É^ì«Ç›çûÇ›ÉXÉåÉbÉhÇã≠êßèIóπÇµÇ‹Ç∑ÅB"));
-				::TerminateThread(m_hLoadThread,-1);
-			}
-		}
-		::CloseHandle(m_hLoadThread);
-		m_hLoadThread=NULL;
-	}
+	m_EpgDataStore.Close();
 
-	SAFE_DELETE(m_pEpgDataLoader);
+	m_EpgDataLoader.reset();
 }
 
 
 bool CEpgOptions::ReadSettings(CSettings &Settings)
 {
-	Settings.Read(TEXT("SaveEpgData"),&m_fSaveEpgFile);
-	Settings.Read(TEXT("EpgDataFileName"),m_szEpgFileName,lengthof(m_szEpgFileName));
-	Settings.Read(TEXT("EpgUpdateWhenStandby"),&m_fUpdateWhenStandby);
-	Settings.Read(TEXT("EpgUpdateBSExtended"),&m_fUpdateBSExtended);
-	Settings.Read(TEXT("EpgUpdateCSExtended"),&m_fUpdateCSExtended);
-	Settings.Read(TEXT("UseEpgData"),&m_fUseEDCBData);
-	Settings.Read(TEXT("EpgDataFolder"),m_szEDCBDataFolder,lengthof(m_szEDCBDataFolder));
+	Settings.Read(TEXT("SaveEpgData"), &m_fSaveEpgFile);
+	Settings.Read(TEXT("EpgDataFileName"), &m_EpgFileName);
+	Settings.Read(TEXT("EpgUpdateWhenStandby"), &m_fUpdateWhenStandby);
+	Settings.Read(TEXT("EpgUpdateBSExtended"), &m_fUpdateBSExtended);
+	Settings.Read(TEXT("EpgUpdateCSExtended"), &m_fUpdateCSExtended);
+	Settings.Read(TEXT("UseEpgData"), &m_fUseEDCBData);
+	Settings.Read(TEXT("EpgDataFolder"), &m_EDCBDataFolder);
 
 	int Value;
-	if (Settings.Read(TEXT("EpgTimeMode"),&Value)
-			&& Value>=EPGTIME_FIRST && Value<=EPGTIME_LAST)
-		m_EpgTimeMode=(EpgTimeMode)Value;
+	if (Settings.Read(TEXT("EpgTimeMode"), &Value)
+			&& CheckEnumRange(static_cast<EpgTimeMode>(Value)))
+		m_EpgTimeMode = static_cast<EpgTimeMode>(Value);
 
-	Settings.Read(TEXT("SaveLogoData"),&m_fSaveLogoFile);
-	Settings.Read(TEXT("LogoDataFileName"),m_szLogoFileName,lengthof(m_szLogoFileName));
+	Settings.Read(TEXT("SaveLogoData"), &m_fSaveLogoFile);
+	Settings.Read(TEXT("LogoDataFileName"), &m_LogoFileName);
 
-	CLogoManager &LogoManager=GetAppClass().LogoManager;
+	CLogoManager &LogoManager = GetAppClass().LogoManager;
 	bool fSaveLogo;
-	if (Settings.Read(TEXT("SaveRawLogo"),&fSaveLogo))
+	if (Settings.Read(TEXT("SaveRawLogo"), &fSaveLogo))
 		LogoManager.SetSaveLogo(fSaveLogo);
-	if (Settings.Read(TEXT("SaveBmpLogo"),&fSaveLogo))
+	if (Settings.Read(TEXT("SaveBmpLogo"), &fSaveLogo))
 		LogoManager.SetSaveLogoBmp(fSaveLogo);
 	TCHAR szLogoDir[MAX_PATH];
-	if (Settings.Read(TEXT("LogoDirectory"),szLogoDir,MAX_PATH)) {
+	if (Settings.Read(TEXT("LogoDirectory"), szLogoDir, MAX_PATH)) {
 		LogoManager.SetLogoDirectory(szLogoDir);
 	} else {
-		// TVLogoMark ÇÃÉçÉSÇ™Ç†ÇÍÇŒóòópÇ∑ÇÈ
+		// TVLogoMark „ÅÆ„É≠„Ç¥„Åå„ÅÇ„Çå„Å∞Âà©Áî®„Åô„Çã
 		GetAppClass().GetAppDirectory(szLogoDir);
-		::PathAppend(szLogoDir,TEXT("Plugins\\Logo"));
+		::PathAppend(szLogoDir, TEXT("Plugins\\Logo"));
 		if (::PathIsDirectory(szLogoDir))
 			LogoManager.SetLogoDirectory(TEXT(".\\Plugins\\Logo"));
 	}
 
 	bool f;
-	if (TVTest::StyleUtil::ReadFontSettings(Settings,TEXT("EventInfoFont"),&m_EventInfoFont,false,&f)) {
+	if (StyleUtil::ReadFontSettings(Settings, TEXT("EventInfoFont"), &m_EventInfoFont, false, &f)) {
 		if (!f)
-			m_fChanged=true;
+			m_fChanged = true;
 	}
 
 	return true;
@@ -124,24 +120,24 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 
 bool CEpgOptions::WriteSettings(CSettings &Settings)
 {
-	CLogoManager &LogoManager=GetAppClass().LogoManager;
+	CLogoManager &LogoManager = GetAppClass().LogoManager;
 
-	Settings.Write(TEXT("SaveEpgData"),m_fSaveEpgFile);
-	Settings.Write(TEXT("EpgDataFileName"),m_szEpgFileName);
-	Settings.Write(TEXT("EpgUpdateWhenStandby"),m_fUpdateWhenStandby);
-	Settings.Write(TEXT("EpgUpdateBSExtended"),m_fUpdateBSExtended);
-	Settings.Write(TEXT("EpgUpdateCSExtended"),m_fUpdateCSExtended);
-	Settings.Write(TEXT("UseEpgData"),m_fUseEDCBData);
-	Settings.Write(TEXT("EpgDataFolder"),m_szEDCBDataFolder);
-	Settings.Write(TEXT("EpgTimeMode"),(int)m_EpgTimeMode);
+	Settings.Write(TEXT("SaveEpgData"), m_fSaveEpgFile);
+	Settings.Write(TEXT("EpgDataFileName"), m_EpgFileName);
+	Settings.Write(TEXT("EpgUpdateWhenStandby"), m_fUpdateWhenStandby);
+	Settings.Write(TEXT("EpgUpdateBSExtended"), m_fUpdateBSExtended);
+	Settings.Write(TEXT("EpgUpdateCSExtended"), m_fUpdateCSExtended);
+	Settings.Write(TEXT("UseEpgData"), m_fUseEDCBData);
+	Settings.Write(TEXT("EpgDataFolder"), m_EDCBDataFolder);
+	Settings.Write(TEXT("EpgTimeMode"), (int)m_EpgTimeMode);
 
-	Settings.Write(TEXT("SaveLogoData"),m_fSaveLogoFile);
-	Settings.Write(TEXT("LogoDataFileName"),m_szLogoFileName);
-	Settings.Write(TEXT("SaveRawLogo"),LogoManager.GetSaveLogo());
-	Settings.Write(TEXT("SaveBmpLogo"),LogoManager.GetSaveLogoBmp());
-	Settings.Write(TEXT("LogoDirectory"),LogoManager.GetLogoDirectory());
+	Settings.Write(TEXT("SaveLogoData"), m_fSaveLogoFile);
+	Settings.Write(TEXT("LogoDataFileName"), m_LogoFileName);
+	Settings.Write(TEXT("SaveRawLogo"), LogoManager.GetSaveLogo());
+	Settings.Write(TEXT("SaveBmpLogo"), LogoManager.GetSaveLogoBmp());
+	Settings.Write(TEXT("LogoDirectory"), LogoManager.GetLogoDirectory());
 
-	TVTest::StyleUtil::WriteFontSettings(Settings,TEXT("EventInfoFont"),m_EventInfoFont);
+	StyleUtil::WriteFontSettings(Settings, TEXT("EventInfoFont"), m_EventInfoFont);
 
 	return true;
 }
@@ -149,116 +145,90 @@ bool CEpgOptions::WriteSettings(CSettings &Settings)
 
 bool CEpgOptions::Create(HWND hwndOwner)
 {
-	return CreateDialogWindow(hwndOwner,
-							  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_OPTIONS_EPG));
+	return CreateDialogWindow(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_OPTIONS_EPG));
 }
 
 
-bool CEpgOptions::LoadEpgFile(CEpgProgramList *pEpgList)
-{
-	bool fOK=true;
-
-	if (m_fSaveEpgFile) {
-		TCHAR szFileName[MAX_PATH];
-
-		if (!GetAbsolutePath(m_szEpgFileName,szFileName,lengthof(szFileName)))
-			return false;
-		if (::PathFileExists(szFileName)) {
-			GetAppClass().AddLog(TEXT("EPG ÉfÅ[É^Ç \"%s\" Ç©ÇÁì«Ç›çûÇ›Ç‹Ç∑..."),szFileName);
-			fOK=pEpgList->LoadFromFile(szFileName);
-		}
-	}
-	return fOK;
-}
-
-
-struct EpgLoadInfo {
-	CEpgProgramList *pList;
-	CEpgOptions::CEpgFileLoadEventHandler *pEventHandler;
-	TCHAR szFileName[MAX_PATH];
-};
-
-bool CEpgOptions::AsyncLoadEpgFile(CEpgProgramList *pEpgList,CEpgFileLoadEventHandler *pEventHandler)
+bool CEpgOptions::LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 {
 	if (m_fSaveEpgFile) {
-		TCHAR szFileName[MAX_PATH];
+		CFilePath FilePath;
 
-		if (!GetAbsolutePath(m_szEpgFileName,szFileName,lengthof(szFileName)))
+		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
 			return false;
-		if (::PathFileExists(szFileName)) {
-			GetAppClass().AddLog(TEXT("EPG ÉfÅ[É^Ç \"%s\" Ç©ÇÁì«Ç›çûÇ›Ç‹Ç∑..."),szFileName);
-
-			EpgLoadInfo *pInfo=new EpgLoadInfo;
-
-			pInfo->pList=pEpgList;
-			pInfo->pEventHandler=pEventHandler;
-			::lstrcpy(pInfo->szFileName,szFileName);
-
-			m_hLoadThread=(HANDLE)::_beginthreadex(NULL,0,EpgFileLoadThread,pInfo,0,NULL);
-			if (m_hLoadThread==NULL) {
-				delete pInfo;
-				//return pEpgList->LoadFromFile(szFileName);
+		if (FilePath.IsFileExists()) {
+			GetAppClass().AddLog(TEXT("EPG „Éá„Éº„Çø„Çí \"%s\" „Åã„ÇâË™≠„ÅøËæº„Åø„Åæ„Åô..."), FilePath.c_str());
+			if (!m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str()))
 				return false;
-			}
+			if (!m_EpgDataStore.Load())
+				return false;
 		}
 	}
-
 	return true;
 }
 
 
-unsigned int __stdcall CEpgOptions::EpgFileLoadThread(void *pParameter)
+bool CEpgOptions::AsyncLoadEpgFile(
+	LibISDB::EPGDatabase *pEPGDatabase, CEpgDataStore::CEventHandler *pEventHandler)
 {
-	EpgLoadInfo *pInfo=static_cast<EpgLoadInfo*>(pParameter);
+	if (m_fSaveEpgFile) {
+		CFilePath FilePath;
 
-	::SetThreadPriority(::GetCurrentThread(),THREAD_PRIORITY_LOWEST);
-	if (pInfo->pEventHandler!=NULL)
-		pInfo->pEventHandler->OnBeginLoad();
-	bool fOK=pInfo->pList->LoadFromFile(pInfo->szFileName);
-	if (pInfo->pEventHandler!=NULL)
-		pInfo->pEventHandler->OnEndLoad(fOK);
-	delete pInfo;
-	return fOK;
+		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
+			return false;
+		if (FilePath.IsFileExists()) {
+			GetAppClass().AddLog(TEXT("EPG „Éá„Éº„Çø„Çí \"%s\" „Åã„ÇâË™≠„ÅøËæº„Åø„Åæ„Åô..."), FilePath.c_str());
+			m_EpgDataStore.SetEventHandler(pEventHandler);
+			if (!m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str(), CEpgDataStore::OpenFlag::LoadBackground))
+				return false;
+			if (!m_EpgDataStore.LoadAsync())
+				return false;
+		}
+	}
+
+	return true;
 }
 
 
 bool CEpgOptions::IsEpgFileLoading() const
 {
-	return m_hLoadThread!=NULL
-		&& ::WaitForSingleObject(m_hLoadThread,0)==WAIT_TIMEOUT;
+	return m_EpgDataStore.IsLoading();
 }
 
 
 bool CEpgOptions::WaitEpgFileLoad(DWORD Timeout)
 {
-	if (m_hLoadThread!=NULL) {
-		if (::WaitForSingleObject(m_hLoadThread,Timeout)==WAIT_TIMEOUT)
-			return false;
-	}
-	return true;
+	return m_EpgDataStore.Wait(Timeout);
 }
 
 
-bool CEpgOptions::SaveEpgFile(CEpgProgramList *pEpgList)
+bool CEpgOptions::SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 {
-	bool fOK=true;
+	bool fOK = true;
 
 	if (m_fSaveEpgFile) {
-		TCHAR szFileName[MAX_PATH];
+		String FilePath;
 
-		if (!pEpgList->IsUpdated())
+		if (!pEPGDatabase->IsUpdated())
 			return true;
-		if (!GetAbsolutePath(m_szEpgFileName,szFileName,lengthof(szFileName)))
+		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
 			return false;
-		if (pEpgList->NumServices()>0) {
-			GetAppClass().AddLog(TEXT("EPG ÉfÅ[É^Ç \"%s\" Ç…ï€ë∂ÇµÇ‹Ç∑..."),szFileName);
-			fOK=pEpgList->SaveToFile(szFileName);
-			if (!fOK)
-				::DeleteFile(szFileName);
+		if (pEPGDatabase->GetServiceCount() > 0) {
+			GetAppClass().AddLog(TEXT("EPG „Éá„Éº„Çø„Çí \"%s\" „Å´‰øùÂ≠ò„Åó„Åæ„Åô..."), FilePath.c_str());
+			if (m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str())) {
+				if (!m_EpgDataStore.Save()) {
+					::DeleteFile(FilePath.c_str());
+					fOK = false;
+				}
+			} else {
+				fOK = false;
+			}
 		} else {
 			/*
-			fOK=::DeleteFile(szFileName)
-				|| ::GetLastError()==ERROR_FILE_NOT_FOUND;
+			fOK = ::DeleteFile(FilePath.c_str())
+				|| ::GetLastError() == ERROR_FILE_NOT_FOUND;
 			*/
 		}
 	}
@@ -269,17 +239,17 @@ bool CEpgOptions::SaveEpgFile(CEpgProgramList *pEpgList)
 
 bool CEpgOptions::LoadEDCBData()
 {
-	bool fOK=true;
+	bool fOK = true;
 
-	if (m_fUseEDCBData && m_szEDCBDataFolder[0]!='\0') {
-		TCHAR szPath[MAX_PATH];
+	if (m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
+		String Path;
 
-		if (!GetAbsolutePath(m_szEDCBDataFolder,szPath,lengthof(szPath)))
+		if (!GetAbsolutePath(m_EDCBDataFolder, &Path))
 			return false;
 
 		CEpgDataLoader Loader;
 
-		fOK=Loader.Load(szPath);
+		fOK = Loader.Load(Path.c_str());
 	}
 	return fOK;
 }
@@ -287,18 +257,17 @@ bool CEpgOptions::LoadEDCBData()
 
 bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 {
-	bool fOK=true;
+	bool fOK = true;
 
-	if (m_fUseEDCBData && m_szEDCBDataFolder[0]!='\0') {
-		TCHAR szPath[MAX_PATH];
+	if (m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
+		String Path;
 
-		if (!GetAbsolutePath(m_szEDCBDataFolder,szPath,lengthof(szPath)))
+		if (!GetAbsolutePath(m_EDCBDataFolder, &Path))
 			return false;
 
-		delete m_pEpgDataLoader;
-		m_pEpgDataLoader=new CEpgDataLoader;
+		m_EpgDataLoader = std::make_unique<CEpgDataLoader>();
 
-		fOK=m_pEpgDataLoader->LoadAsync(szPath,pEventHandler);
+		fOK = m_EpgDataLoader->LoadAsync(Path.c_str(), pEventHandler);
 	}
 	return fOK;
 }
@@ -306,215 +275,207 @@ bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
 
 bool CEpgOptions::IsEDCBDataLoading() const
 {
-	return m_pEpgDataLoader!=NULL
-		&& m_pEpgDataLoader->IsLoading();
+	return m_EpgDataLoader
+		&& m_EpgDataLoader->IsLoading();
 }
 
 
 bool CEpgOptions::WaitEDCBDataLoad(DWORD Timeout)
 {
-	return m_pEpgDataLoader==NULL
-		|| m_pEpgDataLoader->Wait(Timeout);
+	return !m_EpgDataLoader
+		|| m_EpgDataLoader->Wait(Timeout);
 }
 
 
 bool CEpgOptions::LoadLogoFile()
 {
-	if (m_fSaveLogoFile && m_szLogoFileName[0]!='\0') {
-		CAppMain &App=GetAppClass();
-		CLogoManager &LogoManager=App.LogoManager;
-		TCHAR szFileName[MAX_PATH];
+	if (m_fSaveLogoFile && !m_LogoFileName.empty()) {
+		CAppMain &App = GetAppClass();
+		CLogoManager &LogoManager = App.LogoManager;
+		CFilePath FilePath;
 
-		if (!GetAbsolutePath(m_szLogoFileName,szFileName,lengthof(szFileName)))
+		if (!GetAbsolutePath(m_LogoFileName, &FilePath))
 			return false;
-		if (::PathFileExists(szFileName)) {
-			App.AddLog(TEXT("ÉçÉSÉfÅ[É^Ç \"%s\" Ç©ÇÁì«Ç›çûÇ›Ç‹Ç∑..."),szFileName);
-			if (!LogoManager.LoadLogoFile(szFileName)) {
-				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ÉçÉSÉtÉ@ÉCÉãÇÃì«Ç›çûÇ›Ç≈ÉGÉâÅ[Ç™î≠ê∂ÇµÇ‹ÇµÇΩÅB"));
+		if (FilePath.IsFileExists()) {
+			App.AddLog(TEXT("„É≠„Ç¥„Éá„Éº„Çø„Çí \"%s\" „Åã„ÇâË™≠„ÅøËæº„Åø„Åæ„Åô..."), FilePath.c_str());
+			if (!LogoManager.LoadLogoFile(FilePath.c_str())) {
+				App.AddLog(CLogItem::LogType::Error, TEXT("„É≠„Ç¥„Éï„Ç°„Ç§„É´„ÅÆË™≠„ÅøËæº„Åø„Åß„Ç®„É©„Éº„ÅåÁô∫Áîü„Åó„Åæ„Åó„Åü„ÄÇ"));
 				return false;
 			}
 		}
-		if (::lstrlen(szFileName)+4<MAX_PATH) {
-			::lstrcat(szFileName,TEXT(".ini"));
-			if (!::PathFileExists(szFileName)) {
-				// à»ëOÇÃÉoÅ[ÉWÉáÉìÇ∆ÇÃå›ä∑óp
-				::GetModuleFileName(NULL,szFileName,lengthof(szFileName));
-				::PathRenameExtension(szFileName,TEXT(".logo.ini"));
-				if (!::PathFileExists(szFileName))
-					return false;
-			}
-			App.AddLog(TEXT("ÉçÉSê›íËÇ \"%s\" Ç©ÇÁì«Ç›çûÇ›Ç‹Ç∑..."),szFileName);
-			LogoManager.LoadLogoIDMap(szFileName);
+
+		FilePath += TEXT(".ini");
+		if (!FilePath.IsFileExists()) {
+			// ‰ª•Ââç„ÅÆ„Éê„Éº„Ç∏„Éß„É≥„Å®„ÅÆ‰∫íÊèõÁî®
+			App.GetAppFilePath(&FilePath);
+			FilePath.RenameExtension(TEXT(".logo.ini"));
+			if (!FilePath.IsFileExists())
+				return false;
 		}
+		App.AddLog(TEXT("„É≠„Ç¥Ë®≠ÂÆö„Çí \"%s\" „Åã„ÇâË™≠„ÅøËæº„Åø„Åæ„Åô..."), FilePath.c_str());
+		LogoManager.LoadLogoIDMap(FilePath.c_str());
 	}
+
 	return true;
 }
 
 
 bool CEpgOptions::SaveLogoFile()
 {
-	if (m_fSaveLogoFile && m_szLogoFileName[0]!='\0') {
-		CAppMain &App=GetAppClass();
-		CLogoManager &LogoManager=App.LogoManager;
-		TCHAR szFileName[MAX_PATH];
+	if (m_fSaveLogoFile && !m_LogoFileName.empty()) {
+		CAppMain &App = GetAppClass();
+		CLogoManager &LogoManager = App.LogoManager;
+		CFilePath FilePath;
 
-		if (!GetAbsolutePath(m_szLogoFileName,szFileName,lengthof(szFileName)))
+		if (!GetAbsolutePath(m_LogoFileName, &FilePath))
 			return false;
-		if (!::PathFileExists(szFileName) || LogoManager.IsLogoDataUpdated()) {
-			App.AddLog(TEXT("ÉçÉSÉfÅ[É^Ç \"%s\" Ç…ï€ë∂ÇµÇ‹Ç∑..."),szFileName);
-			if (!LogoManager.SaveLogoFile(szFileName)) {
-				App.AddLog(CLogItem::TYPE_ERROR,TEXT("ÉçÉSÉtÉ@ÉCÉãÇÃï€ë∂Ç≈ÉGÉâÅ[Ç™î≠ê∂ÇµÇ‹ÇµÇΩÅB"));
+		if (!FilePath.IsFileExists() || LogoManager.IsLogoDataUpdated()) {
+			App.AddLog(TEXT("„É≠„Ç¥„Éá„Éº„Çø„Çí \"%s\" „Å´‰øùÂ≠ò„Åó„Åæ„Åô..."), FilePath.c_str());
+			if (!LogoManager.SaveLogoFile(FilePath.c_str())) {
+				App.AddLog(CLogItem::LogType::Error, TEXT("„É≠„Ç¥„Éï„Ç°„Ç§„É´„ÅÆ‰øùÂ≠ò„Åß„Ç®„É©„Éº„ÅåÁô∫Áîü„Åó„Åæ„Åó„Åü„ÄÇ"));
 				return false;
 			}
 		}
-		if (::lstrlen(szFileName)+4<MAX_PATH) {
-			::lstrcat(szFileName,TEXT(".ini"));
-			if (!::PathFileExists(szFileName) || LogoManager.IsLogoIDMapUpdated()) {
-				App.AddLog(TEXT("ÉçÉSê›íËÇ \"%s\" Ç…ï€ë∂ÇµÇ‹Ç∑..."),szFileName);
-				LogoManager.SaveLogoIDMap(szFileName);
-			}
+
+		FilePath += TEXT(".ini");
+		if (!FilePath.IsFileExists() || LogoManager.IsLogoIDMapUpdated()) {
+			App.AddLog(TEXT("„É≠„Ç¥Ë®≠ÂÆö„Çí \"%s\" „Å´‰øùÂ≠ò„Åó„Åæ„Åô..."), FilePath.c_str());
+			LogoManager.SaveLogoIDMap(FilePath.c_str());
 		}
 	}
+
 	return true;
 }
 
 
-INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CLogoManager &LogoManager=GetAppClass().LogoManager;
+			CLogoManager &LogoManager = GetAppClass().LogoManager;
 
-			DlgCheckBox_Check(hDlg,IDC_EPGOPTIONS_SAVEEPGFILE,m_fSaveEpgFile);
-			::EnableDlgItems(hDlg,IDC_EPGOPTIONS_EPGFILENAME_LABEL,
-					IDC_EPGOPTIONS_EPGFILENAME_BROWSE,m_fSaveEpgFile);
-			::SendDlgItemMessage(hDlg,IDC_EPGOPTIONS_EPGFILENAME,
-								 EM_LIMITTEXT,MAX_PATH-1,0);
-			::SetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGFILENAME,m_szEpgFileName);
-			DlgCheckBox_Check(hDlg,IDC_EPGOPTIONS_UPDATEWHENSTANDBY,m_fUpdateWhenStandby);
-			DlgCheckBox_Check(hDlg,IDC_EPGOPTIONS_UPDATEBSEXTENDED,m_fUpdateBSExtended);
-			DlgCheckBox_Check(hDlg,IDC_EPGOPTIONS_UPDATECSEXTENDED,m_fUpdateCSExtended);
-			DlgCheckBox_Check(hDlg,IDC_EPGOPTIONS_USEEPGDATA,m_fUseEDCBData);
-			::SendDlgItemMessage(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
-			::SetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,m_szEDCBDataFolder);
-			EnableDlgItems(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER_LABEL,
-								IDC_EPGOPTIONS_EPGDATAFOLDER_BROWSE,
-						   m_fUseEDCBData);
+			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_SAVEEPGFILE, m_fSaveEpgFile);
+			EnableDlgItems(
+				hDlg, IDC_EPGOPTIONS_EPGFILENAME_LABEL,
+				IDC_EPGOPTIONS_EPGFILENAME_BROWSE, m_fSaveEpgFile);
+			::SendDlgItemMessage(
+				hDlg, IDC_EPGOPTIONS_EPGFILENAME,
+				EM_LIMITTEXT, MAX_PATH - 1, 0);
+			::SetDlgItemText(hDlg, IDC_EPGOPTIONS_EPGFILENAME, m_EpgFileName.c_str());
+			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_UPDATEWHENSTANDBY, m_fUpdateWhenStandby);
+			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_UPDATEBSEXTENDED, m_fUpdateBSExtended);
+			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_UPDATECSEXTENDED, m_fUpdateCSExtended);
+			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_USEEPGDATA, m_fUseEDCBData);
+			::SendDlgItemMessage(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
+			::SetDlgItemText(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, m_EDCBDataFolder.c_str());
+			EnableDlgItems(
+				hDlg,
+				IDC_EPGOPTIONS_EPGDATAFOLDER_LABEL,
+				IDC_EPGOPTIONS_EPGDATAFOLDER_BROWSE,
+				m_fUseEDCBData);
 
-			DlgCheckBox_Check(hDlg,IDC_LOGOOPTIONS_SAVEDATA,m_fSaveLogoFile);
-			::SendDlgItemMessage(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,EM_LIMITTEXT,MAX_PATH-1,0);
-			::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,m_szLogoFileName);
-			EnableDlgItems(hDlg,IDC_LOGOOPTIONS_DATAFILENAME_LABEL,
-								IDC_LOGOOPTIONS_DATAFILENAME_BROWSE,
-						   m_fSaveLogoFile);
-			DlgCheckBox_Check(hDlg,IDC_LOGOOPTIONS_SAVERAWLOGO,LogoManager.GetSaveLogo());
-			DlgCheckBox_Check(hDlg,IDC_LOGOOPTIONS_SAVEBMPLOGO,LogoManager.GetSaveLogoBmp());
-			::SendDlgItemMessage(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
-			::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,LogoManager.GetLogoDirectory());
+			DlgCheckBox_Check(hDlg, IDC_LOGOOPTIONS_SAVEDATA, m_fSaveLogoFile);
+			::SendDlgItemMessage(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, EM_LIMITTEXT, MAX_PATH - 1, 0);
+			::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, m_LogoFileName.c_str());
+			EnableDlgItems(
+				hDlg,
+				IDC_LOGOOPTIONS_DATAFILENAME_LABEL,
+				IDC_LOGOOPTIONS_DATAFILENAME_BROWSE,
+				m_fSaveLogoFile);
+			DlgCheckBox_Check(hDlg, IDC_LOGOOPTIONS_SAVERAWLOGO, LogoManager.GetSaveLogo());
+			DlgCheckBox_Check(hDlg, IDC_LOGOOPTIONS_SAVEBMPLOGO, LogoManager.GetSaveLogoBmp());
+			::SendDlgItemMessage(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
+			::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, LogoManager.GetLogoDirectory());
 
-			m_CurEventInfoFont=m_EventInfoFont;
-			TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_EVENTINFOOPTIONS_FONT_INFO,m_CurEventInfoFont);
+			m_CurEventInfoFont = m_EventInfoFont;
+			StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
 		}
 		return TRUE;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_EPGOPTIONS_SAVEEPGFILE:
-			EnableDlgItemsSyncCheckBox(hDlg,
-									   IDC_EPGOPTIONS_EPGFILENAME_LABEL,
-									   IDC_EPGOPTIONS_EPGFILENAME_BROWSE,
-									   IDC_EPGOPTIONS_SAVEEPGFILE);
+			EnableDlgItemsSyncCheckBox(
+				hDlg,
+				IDC_EPGOPTIONS_EPGFILENAME_LABEL,
+				IDC_EPGOPTIONS_EPGFILENAME_BROWSE,
+				IDC_EPGOPTIONS_SAVEEPGFILE);
 			return TRUE;
 
 		case IDC_EPGOPTIONS_EPGFILENAME_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH],szInitialDir[MAX_PATH];
+				TCHAR szFileName[MAX_PATH], szInitialDir[MAX_PATH];
 
-				::GetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGFILENAME,
-								 szFileName,lengthof(szFileName));
-				ofn.lStructSize=sizeof(OPENFILENAME);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("Ç∑Ç◊ÇƒÇÃÉtÉ@ÉCÉã\0*.*\0");
-				ofn.lpstrCustomFilter=NULL;
-				ofn.nFilterIndex=1;
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrFileTitle=NULL;
-				if (szFileName[0]=='\0' || ::PathIsFileSpec(szFileName)) {
-					::GetModuleFileName(NULL,szInitialDir,lengthof(szInitialDir));
+				::GetDlgItemText(
+					hDlg, IDC_EPGOPTIONS_EPGFILENAME,
+					szFileName, lengthof(szFileName));
+				InitOpenFileName(&ofn);
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter = TEXT("„Åô„Åπ„Å¶„ÅÆ„Éï„Ç°„Ç§„É´\0*.*\0");
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = lengthof(szFileName);
+				if (szFileName[0] == '\0' || ::PathIsFileSpec(szFileName)) {
+					::GetModuleFileName(nullptr, szInitialDir, lengthof(szInitialDir));
 					::PathRemoveFileSpec(szInitialDir);
-					ofn.lpstrInitialDir=szInitialDir;
-				} else
-					ofn.lpstrInitialDir=NULL;
-				ofn.lpstrTitle=TEXT("EPGÉtÉ@ÉCÉãñº");
-				ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;
-				ofn.lpstrDefExt=NULL;
-#if _WIN32_WINNT>=0x500
-				ofn.pvReserved=NULL;
-				ofn.dwReserved=0;
-				ofn.FlagsEx=0;
-#endif
+					ofn.lpstrInitialDir = szInitialDir;
+				}
+				ofn.lpstrTitle = TEXT("EPG„Éï„Ç°„Ç§„É´Âêç");
+				ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
+
 				if (FileOpenDialog(&ofn))
-					::SetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGFILENAME,szFileName);
+					::SetDlgItemText(hDlg, IDC_EPGOPTIONS_EPGFILENAME, szFileName);
 			}
 			return TRUE;
 
 		case IDC_EPGOPTIONS_USEEPGDATA:
-			EnableDlgItemsSyncCheckBox(hDlg,
-									   IDC_EPGOPTIONS_EPGDATAFOLDER_LABEL,
-									   IDC_EPGOPTIONS_EPGDATAFOLDER_BROWSE,
-									   IDC_EPGOPTIONS_USEEPGDATA);
+			EnableDlgItemsSyncCheckBox(
+				hDlg,
+				IDC_EPGOPTIONS_EPGDATAFOLDER_LABEL,
+				IDC_EPGOPTIONS_EPGDATAFOLDER_BROWSE,
+				IDC_EPGOPTIONS_USEEPGDATA);
 			return TRUE;
 
 		case IDC_EPGOPTIONS_EPGDATAFOLDER_BROWSE:
 			{
 				TCHAR szFolder[MAX_PATH];
 
-				::GetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,szFolder,lengthof(szFolder));
-				if (BrowseFolderDialog(hDlg,szFolder,TEXT("EPGÉfÅ[É^ÇÃÉtÉHÉãÉ_")))
-					::SetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,szFolder);
+				::GetDlgItemText(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, szFolder, lengthof(szFolder));
+				if (BrowseFolderDialog(hDlg, szFolder, TEXT("EPG„Éá„Éº„Çø„ÅÆ„Éï„Ç©„É´„ÉÄ")))
+					::SetDlgItemText(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, szFolder);
 			}
 			return TRUE;
 
 		case IDC_LOGOOPTIONS_SAVEDATA:
-			EnableDlgItemsSyncCheckBox(hDlg,
-									   IDC_LOGOOPTIONS_DATAFILENAME_LABEL,
-									   IDC_LOGOOPTIONS_DATAFILENAME_BROWSE,
-									   IDC_LOGOOPTIONS_SAVEDATA);
+			EnableDlgItemsSyncCheckBox(
+				hDlg,
+				IDC_LOGOOPTIONS_DATAFILENAME_LABEL,
+				IDC_LOGOOPTIONS_DATAFILENAME_BROWSE,
+				IDC_LOGOOPTIONS_SAVEDATA);
 			return TRUE;
 
 		case IDC_LOGOOPTIONS_DATAFILENAME_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH],szInitialDir[MAX_PATH];
+				TCHAR szFileName[MAX_PATH], szInitialDir[MAX_PATH];
 
-				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,szFileName,lengthof(szFileName));
-				ofn.lStructSize=sizeof(OPENFILENAME);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("Ç∑Ç◊ÇƒÇÃÉtÉ@ÉCÉã\0*.*\0");
-				ofn.lpstrCustomFilter=NULL;
-				ofn.nFilterIndex=1;
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrFileTitle=NULL;
-				if (szFileName[0]=='\0' || ::PathIsFileSpec(szFileName)) {
-					::GetModuleFileName(NULL,szInitialDir,lengthof(szInitialDir));
+				::GetDlgItemText(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, szFileName, lengthof(szFileName));
+				InitOpenFileName(&ofn);
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter = TEXT("„Åô„Åπ„Å¶„ÅÆ„Éï„Ç°„Ç§„É´\0*.*\0");
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = lengthof(szFileName);
+				if (szFileName[0] == '\0' || ::PathIsFileSpec(szFileName)) {
+					::GetModuleFileName(nullptr, szInitialDir, lengthof(szInitialDir));
 					::PathRemoveFileSpec(szInitialDir);
-					ofn.lpstrInitialDir=szInitialDir;
-				} else
-					ofn.lpstrInitialDir=NULL;
-				ofn.lpstrTitle=TEXT("ÉçÉSÉtÉ@ÉCÉãñº");
-				ofn.Flags=OFN_EXPLORER | OFN_HIDEREADONLY;
-				ofn.lpstrDefExt=NULL;
-#if _WIN32_WINNT>=0x500
-				ofn.pvReserved=NULL;
-				ofn.dwReserved=0;
-				ofn.FlagsEx=0;
-#endif
+					ofn.lpstrInitialDir = szInitialDir;
+				}
+				ofn.lpstrTitle = TEXT("„É≠„Ç¥„Éï„Ç°„Ç§„É´Âêç");
+				ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
+
 				if (FileOpenDialog(&ofn))
-					::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,szFileName);
+					::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, szFileName);
 			}
 			return TRUE;
 
@@ -522,15 +483,15 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			{
 				TCHAR szFolder[MAX_PATH];
 
-				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,szFolder,lengthof(szFolder));
-				if (BrowseFolderDialog(hDlg,szFolder,TEXT("ÉçÉSÇÃÉtÉHÉãÉ_")))
-					::SetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,szFolder);
+				::GetDlgItemText(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, szFolder, lengthof(szFolder));
+				if (BrowseFolderDialog(hDlg, szFolder, TEXT("„É≠„Ç¥„ÅÆ„Éï„Ç©„É´„ÉÄ")))
+					::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, szFolder);
 			}
 			return TRUE;
 
 		case IDC_EVENTINFOOPTIONS_FONT_CHOOSE:
-			if (TVTest::StyleUtil::ChooseStyleFont(hDlg,&m_CurEventInfoFont))
-				TVTest::StyleUtil::SetFontInfoItem(hDlg,IDC_EVENTINFOOPTIONS_FONT_INFO,m_CurEventInfoFont);
+			if (StyleUtil::ChooseStyleFont(hDlg, &m_CurEventInfoFont))
+				StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
 			return TRUE;
 		}
 		return TRUE;
@@ -539,43 +500,40 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				CLogoManager &LogoManager=GetAppClass().LogoManager;
-				TCHAR szPath[MAX_PATH];
+				CLogoManager &LogoManager = GetAppClass().LogoManager;
 
-				m_fSaveEpgFile=
-					DlgCheckBox_IsChecked(hDlg,IDC_EPGOPTIONS_SAVEEPGFILE);
-				::GetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGFILENAME,
-								 m_szEpgFileName,lengthof(m_szEpgFileName));
-				m_fUpdateWhenStandby=
-					DlgCheckBox_IsChecked(hDlg,IDC_EPGOPTIONS_UPDATEWHENSTANDBY);
-				m_fUpdateBSExtended=
-					DlgCheckBox_IsChecked(hDlg,IDC_EPGOPTIONS_UPDATEBSEXTENDED);
-				m_fUpdateCSExtended=
-					DlgCheckBox_IsChecked(hDlg,IDC_EPGOPTIONS_UPDATECSEXTENDED);
-				bool fUseEpgData=
-					DlgCheckBox_IsChecked(hDlg,IDC_EPGOPTIONS_USEEPGDATA);
-				::GetDlgItemText(hDlg,IDC_EPGOPTIONS_EPGDATAFOLDER,
-					m_szEDCBDataFolder,lengthof(m_szEDCBDataFolder));
+				m_fSaveEpgFile =
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_SAVEEPGFILE);
+				GetDlgItemString(hDlg, IDC_EPGOPTIONS_EPGFILENAME, &m_EpgFileName);
+				m_fUpdateWhenStandby =
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_UPDATEWHENSTANDBY);
+				m_fUpdateBSExtended =
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_UPDATEBSEXTENDED);
+				m_fUpdateCSExtended =
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_UPDATECSEXTENDED);
+				bool fUseEpgData =
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_USEEPGDATA);
+				GetDlgItemString(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, &m_EDCBDataFolder);
 				if (!m_fUseEDCBData && fUseEpgData) {
-					m_fUseEDCBData=fUseEpgData;
-					AsyncLoadEDCBData();
+					m_fUseEDCBData = fUseEpgData;
+					AsyncLoadEDCBData(&GetAppClass().EpgLoadEventHandler);
 				}
-				m_fUseEDCBData=fUseEpgData;
+				m_fUseEDCBData = fUseEpgData;
 
-				m_fSaveLogoFile=DlgCheckBox_IsChecked(hDlg,IDC_LOGOOPTIONS_SAVEDATA);
-				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_DATAFILENAME,
-								 m_szLogoFileName,lengthof(m_szLogoFileName));
-				LogoManager.SetSaveLogo(DlgCheckBox_IsChecked(hDlg,IDC_LOGOOPTIONS_SAVERAWLOGO));
-				LogoManager.SetSaveLogoBmp(DlgCheckBox_IsChecked(hDlg,IDC_LOGOOPTIONS_SAVEBMPLOGO));
-				::GetDlgItemText(hDlg,IDC_LOGOOPTIONS_LOGOFOLDER,szPath,lengthof(szPath));
-				LogoManager.SetLogoDirectory(szPath);
+				m_fSaveLogoFile = DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVEDATA);
+				GetDlgItemString(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, &m_LogoFileName);
+				LogoManager.SetSaveLogo(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVERAWLOGO));
+				LogoManager.SetSaveLogoBmp(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVEBMPLOGO));
+				String Path;
+				GetDlgItemString(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, &Path);
+				LogoManager.SetLogoDirectory(Path.c_str());
 
-				if (m_EventInfoFont!=m_CurEventInfoFont) {
-					m_EventInfoFont=m_CurEventInfoFont;
+				if (m_EventInfoFont != m_CurEventInfoFont) {
+					m_EventInfoFont = m_CurEventInfoFont;
 					SetGeneralUpdateFlag(UPDATE_GENERAL_EVENTINFOFONT);
 				}
 
-				m_fChanged=true;
+				m_fChanged = true;
 			}
 			break;
 		}
@@ -584,3 +542,6 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	return FALSE;
 }
+
+
+}	// namespace TVTest

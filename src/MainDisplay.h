@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_MAIN_DISPLAY_H
 #define TVTEST_MAIN_DISPLAY_H
 
@@ -7,10 +27,10 @@
 #include "ChannelDisplay.h"
 
 
-class CAppMain;
-
 namespace TVTest
 {
+
+	class CAppMain;
 
 	class CMainDisplay
 	{
@@ -20,7 +40,7 @@ namespace TVTest
 			, protected CDisplayEventHandlerBase
 		{
 			void OnClose() override;
-			void OnMouseMessage(UINT Msg,int x,int y) override;
+			void OnMouseMessage(UINT Msg, int x, int y) override;
 		};
 
 		class CChannelDisplayEventHandler
@@ -29,20 +49,22 @@ namespace TVTest
 		{
 		public:
 			CChannelDisplayEventHandler(CAppMain &App);
-			void OnTunerSelect(LPCTSTR pszDriverFileName,int TuningSpace) override;
-			void OnChannelSelect(LPCTSTR pszDriverFileName,const CChannelInfo *pChannelInfo) override;
+
+			void OnTunerSelect(LPCTSTR pszDriverFileName, int TuningSpace) override;
+			void OnChannelSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo) override;
 			void OnClose() override;
-			void OnMouseMessage(UINT Msg,int x,int y) override;
+			void OnMouseMessage(UINT Msg, int x, int y) override;
 
 		private:
 			CAppMain &m_App;
 		};
 
 		CMainDisplay(CAppMain &App);
-		bool Create(HWND hwndParent,int ViewID,int ContainerID,HWND hwndMessage);
+
+		bool Create(HWND hwndParent, int ViewID, int ContainerID, HWND hwndMessage);
 		bool EnableViewer(bool fEnable);
 		bool IsViewerEnabled() const { return m_fViewerEnabled; }
-		bool BuildViewer(BYTE VideoStreamType=0);
+		bool BuildViewer(BYTE VideoStreamType = 0);
 		bool CloseViewer();
 		CViewWindow &GetViewWindow() { return m_ViewWindow; }
 		const CViewWindow &GetViewWindow() const { return m_ViewWindow; }

@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -7,7 +27,13 @@
 #include "Common/DebugDef.h"
 
 
-#define NUM_BUTTONS 4
+namespace TVTest
+{
+
+namespace
+{
+
+constexpr int NUM_BUTTONS = 4;
 
 enum {
 	ICON_MINIMIZE,
@@ -18,31 +44,33 @@ enum {
 	ICON_FULLSCREENCLOSE
 };
 
+}
 
 
 
-const LPCTSTR CTitleBar::CLASS_NAME=APP_NAME TEXT(" Title Bar");
-HINSTANCE CTitleBar::m_hinst=NULL;
+
+const LPCTSTR CTitleBar::CLASS_NAME = APP_NAME TEXT(" Title Bar");
+HINSTANCE CTitleBar::m_hinst = nullptr;
 
 
 bool CTitleBar::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst==NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-		wc.lpfnWndProc=WndProc;
-		wc.cbClsExtra=0;
-		wc.cbWndExtra=0;
-		wc.hInstance=hinst;
-		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
-		wc.hbrBackground=NULL;
-		wc.lpszMenuName=NULL;
-		wc.lpszClassName=CLASS_NAME;
-		if (RegisterClass(&wc)==0)
+		wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hinst;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
+		wc.lpszClassName = CLASS_NAME;
+		if (RegisterClass(&wc) == 0)
 			return false;
-		m_hinst=hinst;
+		m_hinst = hinst;
 	}
 	return true;
 }
@@ -50,65 +78,68 @@ bool CTitleBar::Initialize(HINSTANCE hinst)
 
 CTitleBar::CTitleBar()
 	: m_FontHeight(0)
-	, m_hIcon(NULL)
+	, m_hIcon(nullptr)
 	, m_HotItem(-1)
 	, m_ClickItem(-1)
 	, m_fMaximized(false)
 	, m_fFullscreen(false)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 {
-	GetSystemFont(DrawUtil::FONT_CAPTION,&m_StyleFont);
+	GetSystemFont(DrawUtil::FontType::Caption, &m_StyleFont);
 }
 
 
 CTitleBar::~CTitleBar()
 {
 	Destroy();
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pTitleBar=NULL;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pTitleBar = nullptr;
 }
 
 
-bool CTitleBar::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+bool CTitleBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 CLASS_NAME,NULL,m_hinst);
+	return CreateBasicWindow(hwndParent, Style, ExStyle, ID, CLASS_NAME, nullptr, m_hinst);
 }
 
 
 void CTitleBar::SetVisible(bool fVisible)
 {
-	m_HotItem=-1;
+	m_HotItem = -1;
 	CBasicWindow::SetVisible(fVisible);
 }
 
 
-void CTitleBar::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CTitleBar::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 }
 
 
 void CTitleBar::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
-	m_Style.NormalizeStyle(pStyleManager,pStyleScaling);
+	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 
-void CTitleBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CTitleBar::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	TitleBarTheme Theme;
 
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_CAPTION,
-							&Theme.CaptionStyle);
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
-							&Theme.IconStyle);
-	pThemeManager->GetStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
-							&Theme.HighlightIconStyle);
-	pThemeManager->GetBorderStyle(TVTest::Theme::CThemeManager::STYLE_TITLEBAR,
-								  &Theme.Border);
+	pThemeManager->GetStyle(
+		Theme::CThemeManager::STYLE_TITLEBAR_CAPTION,
+		&Theme.CaptionStyle);
+	pThemeManager->GetStyle(
+		Theme::CThemeManager::STYLE_TITLEBAR_BUTTON,
+		&Theme.IconStyle);
+	pThemeManager->GetStyle(
+		Theme::CThemeManager::STYLE_TITLEBAR_BUTTON_HOT,
+		&Theme.HighlightIconStyle);
+	pThemeManager->GetBorderStyle(
+		Theme::CThemeManager::STYLE_TITLEBAR,
+		&Theme.Border);
 
 	SetTitleBarTheme(Theme);
 }
@@ -116,36 +147,36 @@ void CTitleBar::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
 
 int CTitleBar::CalcHeight() const
 {
-	int LabelHeight=m_FontHeight+m_Style.LabelMargin.Vert();
-	int IconHeight=m_Style.IconSize.Height+m_Style.IconMargin.Vert();
-	int ButtonHeight=GetButtonHeight();
-	int Height=max(LabelHeight,IconHeight);
-	if (Height<ButtonHeight)
-		Height=ButtonHeight;
+	int LabelHeight = m_FontHeight + m_Style.LabelMargin.Vert();
+	int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
+	int ButtonHeight = GetButtonHeight();
+	int Height = std::max(LabelHeight, IconHeight);
+	if (Height < ButtonHeight)
+		Height = ButtonHeight;
 	RECT Border;
-	GetBorderWidthsInPixels(m_Theme.Border,&Border);
+	GetBorderWidthsInPixels(m_Theme.Border, &Border);
 
-	return Height+m_Style.Padding.Vert()+Border.top+Border.bottom;
+	return Height + m_Style.Padding.Vert() + Border.top + Border.bottom;
 }
 
 
 int CTitleBar::GetButtonWidth() const
 {
-	return m_Style.ButtonIconSize.Width+m_Style.ButtonPadding.Horz();
+	return m_Style.ButtonIconSize.Width + m_Style.ButtonPadding.Horz();
 }
 
 
 int CTitleBar::GetButtonHeight() const
 {
-	return m_Style.ButtonIconSize.Height+m_Style.ButtonPadding.Vert();
+	return m_Style.ButtonIconSize.Height + m_Style.ButtonPadding.Vert();
 }
 
 
 bool CTitleBar::SetLabel(LPCTSTR pszLabel)
 {
-	if (TVTest::StringUtility::Compare(m_Label,pszLabel)!=0) {
-		TVTest::StringUtility::Assign(m_Label,pszLabel);
-		if (m_hwnd!=NULL)
+	if (StringUtility::Compare(m_Label, pszLabel) != 0) {
+		StringUtility::Assign(m_Label, pszLabel);
+		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_LABEL);
 	}
 	return true;
@@ -154,9 +185,9 @@ bool CTitleBar::SetLabel(LPCTSTR pszLabel)
 
 void CTitleBar::SetMaximizeMode(bool fMaximize)
 {
-	if (m_fMaximized!=fMaximize) {
-		m_fMaximized=fMaximize;
-		if (m_hwnd!=NULL)
+	if (m_fMaximized != fMaximize) {
+		m_fMaximized = fMaximize;
+		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_MAXIMIZE);
 	}
 }
@@ -164,9 +195,9 @@ void CTitleBar::SetMaximizeMode(bool fMaximize)
 
 void CTitleBar::SetFullscreenMode(bool fFullscreen)
 {
-	if (m_fFullscreen!=fFullscreen) {
-		m_fFullscreen=fFullscreen;
-		if (m_hwnd!=NULL)
+	if (m_fFullscreen != fFullscreen) {
+		m_fFullscreen = fFullscreen;
+		if (m_hwnd != nullptr)
 			UpdateItem(ITEM_FULLSCREEN);
 	}
 }
@@ -174,20 +205,20 @@ void CTitleBar::SetFullscreenMode(bool fFullscreen)
 
 bool CTitleBar::SetEventHandler(CEventHandler *pHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pTitleBar=NULL;
-	if (pHandler!=NULL)
-		pHandler->m_pTitleBar=this;
-	m_pEventHandler=pHandler;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pTitleBar = nullptr;
+	if (pHandler != nullptr)
+		pHandler->m_pTitleBar = this;
+	m_pEventHandler = pHandler;
 	return true;
 }
 
 
 bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 {
-	m_Theme=Theme;
+	m_Theme = Theme;
 
-	if (m_hwnd!=NULL)
+	if (m_hwnd != nullptr)
 		AdjustSize();
 
 	return true;
@@ -196,18 +227,18 @@ bool CTitleBar::SetTitleBarTheme(const TitleBarTheme &Theme)
 
 bool CTitleBar::GetTitleBarTheme(TitleBarTheme *pTheme) const
 {
-	if (pTheme==NULL)
+	if (pTheme == nullptr)
 		return false;
-	*pTheme=m_Theme;
+	*pTheme = m_Theme;
 	return true;
 }
 
 
-bool CTitleBar::SetFont(const TVTest::Style::Font &Font)
+bool CTitleBar::SetFont(const Style::Font &Font)
 {
-	m_StyleFont=Font;
+	m_StyleFont = Font;
 
-	if (m_hwnd!=NULL)
+	if (m_hwnd != nullptr)
 		RealizeStyle();
 
 	return true;
@@ -216,12 +247,12 @@ bool CTitleBar::SetFont(const TVTest::Style::Font &Font)
 
 void CTitleBar::SetIcon(HICON hIcon)
 {
-	if (m_hIcon!=hIcon) {
-		m_hIcon=hIcon;
-		if (m_hwnd!=NULL) {
+	if (m_hIcon != hIcon) {
+		m_hIcon = hIcon;
+		if (m_hwnd != nullptr) {
 			RECT rc;
 
-			GetItemRect(ITEM_LABEL,&rc);
+			GetItemRect(ITEM_LABEL, &rc);
 			Invalidate(&rc);
 		}
 	}
@@ -232,55 +263,55 @@ SIZE CTitleBar::GetIconDrawSize() const
 {
 	SIZE sz;
 
-	sz.cx=m_Style.IconSize.Width;
-	sz.cy=m_Style.IconSize.Height;
+	sz.cx = m_Style.IconSize.Width;
+	sz.cy = m_Style.IconSize.Height;
 	return sz;
 }
 
 
 bool CTitleBar::IsIconDrawSmall() const
 {
-	return m_Style.IconSize.Width<=::GetSystemMetrics(SM_CXSMICON)
-		&& m_Style.IconSize.Height<=::GetSystemMetrics(SM_CYSMICON);
+	return m_Style.IconSize.Width <= ::GetSystemMetrics(SM_CXSMICON)
+		&& m_Style.IconSize.Height <= ::GetSystemMetrics(SM_CYSMICON);
 }
 
 
-LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
 			InitializeUI();
 
-			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
+			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
 			RECT rc;
 
-			rc.left=0;
-			rc.top=0;
-			rc.right=0;
-			rc.bottom=CalcHeight();
-			::AdjustWindowRectEx(&rc,pcs->style,FALSE,pcs->dwExStyle);
-			::MoveWindow(hwnd,0,0,0,rc.bottom-rc.top,FALSE);
+			rc.left = 0;
+			rc.top = 0;
+			rc.right = 0;
+			rc.bottom = CalcHeight();
+			::AdjustWindowRectEx(&rc, pcs->style, FALSE, pcs->dwExStyle);
+			::MoveWindow(hwnd, 0, 0, 0, rc.bottom - rc.top, FALSE);
 
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.SetFont(m_Font.GetHandle());
-			for (int i=ITEM_BUTTON_FIRST;i<=ITEM_LAST;i++) {
+			for (int i = ITEM_BUTTON_FIRST; i <= ITEM_LAST; i++) {
 				RECT rc;
-				GetItemRect(i,&rc);
-				m_Tooltip.AddTool(i,rc);
+				GetItemRect(i, &rc);
+				m_Tooltip.AddTool(i, rc);
 			}
 
-			m_HotItem=-1;
-			m_ClickItem=-1;
+			m_HotItem = -1;
+			m_ClickItem = -1;
 
 			m_MouseLeaveTrack.Initialize(hwnd);
 		}
 		return 0;
 
 	case WM_SIZE:
-		if (m_HotItem>=0) {
+		if (m_HotItem >= 0) {
 			UpdateItem(m_HotItem);
-			m_HotItem=-1;
+			m_HotItem = -1;
 		}
 		UpdateTooltipsRect();
 		return 0;
@@ -289,39 +320,39 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		{
 			PAINTSTRUCT ps;
 
-			::BeginPaint(hwnd,&ps);
-			Draw(ps.hdc,ps.rcPaint);
-			::EndPaint(hwnd,&ps);
+			::BeginPaint(hwnd, &ps);
+			Draw(ps.hdc, ps.rcPaint);
+			::EndPaint(hwnd, &ps);
 		}
 		return 0;
 
 	case WM_MOUSEMOVE:
 		{
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
-			int HotItem=HitTest(x,y);
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			int HotItem = HitTest(x, y);
 
-			if (GetCapture()==hwnd) {
-				if (HotItem!=m_ClickItem)
-					HotItem=-1;
-				if (HotItem!=m_HotItem) {
+			if (GetCapture() == hwnd) {
+				if (HotItem != m_ClickItem)
+					HotItem = -1;
+				if (HotItem != m_HotItem) {
 					int OldHotItem;
 
-					OldHotItem=m_HotItem;
-					m_HotItem=HotItem;
-					if (OldHotItem>=0)
+					OldHotItem = m_HotItem;
+					m_HotItem = HotItem;
+					if (OldHotItem >= 0)
 						UpdateItem(OldHotItem);
-					if (m_HotItem>=0)
+					if (m_HotItem >= 0)
 						UpdateItem(m_HotItem);
 				}
 			} else {
-				if (HotItem!=m_HotItem) {
+				if (HotItem != m_HotItem) {
 					int OldHotItem;
 
-					OldHotItem=m_HotItem;
-					m_HotItem=HotItem;
-					if (OldHotItem>=0)
+					OldHotItem = m_HotItem;
+					m_HotItem = HotItem;
+					if (OldHotItem >= 0)
 						UpdateItem(OldHotItem);
-					if (m_HotItem>=0)
+					if (m_HotItem >= 0)
 						UpdateItem(m_HotItem);
 				}
 				m_MouseLeaveTrack.OnMouseMove();
@@ -330,9 +361,9 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_MOUSELEAVE:
-		if (m_HotItem>=0) {
+		if (m_HotItem >= 0) {
 			UpdateItem(m_HotItem);
-			m_HotItem=-1;
+			m_HotItem = -1;
 		}
 		if (m_MouseLeaveTrack.OnMouseLeave()) {
 			if (m_pEventHandler)
@@ -352,15 +383,15 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		m_ClickItem=m_HotItem;
-		if (m_ClickItem==ITEM_LABEL) {
-			if (m_pEventHandler!=NULL) {
-				int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+		m_ClickItem = m_HotItem;
+		if (m_ClickItem == ITEM_LABEL) {
+			if (m_pEventHandler != nullptr) {
+				int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
-				if (PtInIcon(x,y))
-					m_pEventHandler->OnIconLButtonDown(x,y);
+				if (PtInIcon(x, y))
+					m_pEventHandler->OnIconLButtonDown(x, y);
 				else
-					m_pEventHandler->OnLabelLButtonDown(x,y);
+					m_pEventHandler->OnLabelLButtonDown(x, y);
 			}
 		} else {
 			::SetCapture(hwnd);
@@ -368,17 +399,17 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 
 	case WM_RBUTTONUP:
-		if (m_HotItem==ITEM_LABEL) {
-			if (m_pEventHandler!=NULL)
-				m_pEventHandler->OnLabelRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		if (m_HotItem == ITEM_LABEL) {
+			if (m_pEventHandler != nullptr)
+				m_pEventHandler->OnLabelRButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		}
 		return 0;
 
 	case WM_LBUTTONUP:
-		if (GetCapture()==hwnd) {
+		if (GetCapture() == hwnd) {
 			::ReleaseCapture();
-			if (m_HotItem>=0) {
-				if (m_pEventHandler!=NULL) {
+			if (m_HotItem >= 0) {
+				if (m_pEventHandler != nullptr) {
 					switch (m_HotItem) {
 					case ITEM_MINIMIZE:
 						m_pEventHandler->OnMinimize();
@@ -400,24 +431,24 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 	case WM_LBUTTONDBLCLK:
 		{
-			int x=GET_X_LPARAM(lParam),y=GET_Y_LPARAM(lParam);
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
-			if (m_HotItem<0 && HitTest(x,y)==ITEM_LABEL)
-				m_HotItem=ITEM_LABEL;
-			if (m_HotItem==ITEM_LABEL) {
-				if (m_pEventHandler!=NULL) {
-					if (PtInIcon(x,y))
-						m_pEventHandler->OnIconLButtonDoubleClick(x,y);
+			if (m_HotItem < 0 && HitTest(x, y) == ITEM_LABEL)
+				m_HotItem = ITEM_LABEL;
+			if (m_HotItem == ITEM_LABEL) {
+				if (m_pEventHandler != nullptr) {
+					if (PtInIcon(x, y))
+						m_pEventHandler->OnIconLButtonDoubleClick(x, y);
 					else
-						m_pEventHandler->OnLabelLButtonDoubleClick(x,y);
+						m_pEventHandler->OnLabelLButtonDoubleClick(x, y);
 				}
 			}
 		}
 		return 0;
 
 	case WM_SETCURSOR:
-		if (LOWORD(lParam)==HTCLIENT) {
-			if (m_HotItem>0) {
+		if (LOWORD(lParam) == HTCLIENT) {
+			if (m_HotItem > 0) {
 				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
@@ -429,20 +460,20 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		case TTN_NEEDTEXT:
 			{
 				static const LPTSTR pszToolTip[] = {
-					TEXT("ç≈è¨âª"),
-					TEXT("ç≈ëÂâª"),
-					TEXT("ëSâÊñ ï\é¶"),
-					TEXT("ï¬Ç∂ÇÈ"),
+					TEXT("ÊúÄÂ∞èÂåñ"),
+					TEXT("ÊúÄÂ§ßÂåñ"),
+					TEXT("ÂÖ®ÁîªÈù¢Ë°®Á§∫"),
+					TEXT("Èñâ„Åò„Çã"),
 				};
-				LPNMTTDISPINFO pnmttdi=reinterpret_cast<LPNMTTDISPINFO>(lParam);
+				LPNMTTDISPINFO pnmttdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
 
-				if (m_fMaximized && pnmttdi->hdr.idFrom==ITEM_MAXIMIZE)
-					pnmttdi->lpszText=TEXT("å≥ÇÃÉTÉCÉYÇ…ñﬂÇ∑");
-				else if (m_fFullscreen && pnmttdi->hdr.idFrom==ITEM_FULLSCREEN)
-					pnmttdi->lpszText=TEXT("ëSâÊñ ï\é¶âèú");
+				if (m_fMaximized && pnmttdi->hdr.idFrom == ITEM_MAXIMIZE)
+					pnmttdi->lpszText = TEXT("ÂÖÉ„ÅÆ„Çµ„Ç§„Ç∫„Å´Êàª„Åô");
+				else if (m_fFullscreen && pnmttdi->hdr.idFrom == ITEM_FULLSCREEN)
+					pnmttdi->lpszText = TEXT("ÂÖ®ÁîªÈù¢Ë°®Á§∫Ëß£Èô§");
 				else
-					pnmttdi->lpszText=pszToolTip[pnmttdi->hdr.idFrom-ITEM_BUTTON_FIRST];
-				pnmttdi->hinst=NULL;
+					pnmttdi->lpszText = pszToolTip[pnmttdi->hdr.idFrom - ITEM_BUTTON_FIRST];
+				pnmttdi->hinst = nullptr;
 			}
 			return 0;
 		}
@@ -453,7 +484,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		return 0;
 	}
 
-	return CCustomWindow::OnMessage(hwnd,uMsg,wParam,lParam);
+	return CCustomWindow::OnMessage(hwnd, uMsg, wParam, lParam);
 }
 
 
@@ -461,11 +492,11 @@ void CTitleBar::AdjustSize()
 {
 	RECT rc;
 	GetPosition(&rc);
-	const int NewHeight=CalcHeight();
-	if (NewHeight!=rc.bottom-rc.top) {
-		rc.bottom=rc.top+NewHeight;
+	const int NewHeight = CalcHeight();
+	if (NewHeight != rc.bottom - rc.top) {
+		rc.bottom = rc.top + NewHeight;
 		SetPosition(&rc);
-		if (m_pEventHandler!=NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnHeightChanged(NewHeight);
 	} else {
 		SendSizeMessage();
@@ -476,38 +507,38 @@ void CTitleBar::AdjustSize()
 
 int CTitleBar::CalcFontHeight() const
 {
-	return TVTest::Style::GetFontHeight(m_hwnd,m_Font.GetHandle(),m_Style.LabelExtraHeight);
+	return Style::GetFontHeight(m_hwnd, m_Font.GetHandle(), m_Style.LabelExtraHeight);
 }
 
 
-bool CTitleBar::GetItemRect(int Item,RECT *pRect) const
+bool CTitleBar::GetItemRect(int Item, RECT *pRect) const
 {
-	if (m_hwnd==NULL || Item<0 || Item>ITEM_LAST)
+	if (m_hwnd == nullptr || Item < 0 || Item > ITEM_LAST)
 		return false;
 
 	RECT rc;
 
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border,&rc);
-	TVTest::Style::Subtract(&rc,m_Style.Padding);
-	const int ButtonWidth=GetButtonWidth();
-	int ButtonPos=rc.right-NUM_BUTTONS*ButtonWidth;
-	if (ButtonPos<0)
-		ButtonPos=0;
-	if (Item==ITEM_LABEL) {
-		rc.right=ButtonPos;
-		if (rc.right<rc.left)
-			rc.right=rc.left;
+	Theme::SubtractBorderRect(Border, &rc);
+	Style::Subtract(&rc, m_Style.Padding);
+	const int ButtonWidth = GetButtonWidth();
+	int ButtonPos = rc.right - NUM_BUTTONS * ButtonWidth;
+	if (ButtonPos < 0)
+		ButtonPos = 0;
+	if (Item == ITEM_LABEL) {
+		rc.right = ButtonPos;
+		if (rc.right < rc.left)
+			rc.right = rc.left;
 	} else {
-		const int ButtonHeight=GetButtonHeight();
-		rc.left=ButtonPos+(Item-1)*ButtonWidth;
-		rc.right=rc.left+ButtonWidth;
-		rc.top+=((rc.bottom-rc.top)-ButtonHeight)/2;
-		rc.bottom=rc.top+ButtonHeight;
+		const int ButtonHeight = GetButtonHeight();
+		rc.left = ButtonPos + (Item - 1) * ButtonWidth;
+		rc.right = rc.left + ButtonWidth;
+		rc.top += ((rc.bottom - rc.top) - ButtonHeight) / 2;
+		rc.bottom = rc.top + ButtonHeight;
 	}
-	*pRect=rc;
+	*pRect = rc;
 	return true;
 }
 
@@ -516,38 +547,38 @@ bool CTitleBar::UpdateItem(int Item)
 {
 	RECT rc;
 
-	if (m_hwnd==NULL)
+	if (m_hwnd == nullptr)
 		return false;
-	if (!GetItemRect(Item,&rc))
+	if (!GetItemRect(Item, &rc))
 		return false;
-	Invalidate(&rc,false);
+	Invalidate(&rc, false);
 	return true;
 }
 
 
-int CTitleBar::HitTest(int x,int y) const
+int CTitleBar::HitTest(int x, int y) const
 {
 	POINT pt;
 	int i;
 	RECT rc;
 
-	pt.x=x;
-	pt.y=y;
-	for (i=ITEM_LAST;i>=0;i--) {
-		GetItemRect(i,&rc);
-		if (::PtInRect(&rc,pt))
+	pt.x = x;
+	pt.y = y;
+	for (i = ITEM_LAST; i >= 0; i--) {
+		GetItemRect(i, &rc);
+		if (::PtInRect(&rc, pt))
 			break;
 	}
 	return i;
 }
 
 
-bool CTitleBar::PtInIcon(int x,int y) const
+bool CTitleBar::PtInIcon(int x, int y) const
 {
 	RECT Border;
-	GetBorderWidthsInPixels(m_Theme.Border,&Border);
-	int IconLeft=Border.left+m_Style.Padding.Left+m_Style.IconMargin.Left;
-	if (x>=IconLeft && x<IconLeft+m_Style.IconSize.Width)
+	GetBorderWidthsInPixels(m_Theme.Border, &Border);
+	int IconLeft = Border.left + m_Style.Padding.Left + m_Style.IconMargin.Left;
+	if (x >= IconLeft && x < IconLeft + m_Style.IconSize.Width)
 		return true;
 	return false;
 }
@@ -555,115 +586,118 @@ bool CTitleBar::PtInIcon(int x,int y) const
 
 void CTitleBar::UpdateTooltipsRect()
 {
-	for (int i=ITEM_BUTTON_FIRST;i<=ITEM_LAST;i++) {
+	for (int i = ITEM_BUTTON_FIRST; i <= ITEM_LAST; i++) {
 		RECT rc;
-		GetItemRect(i,&rc);
-		m_Tooltip.SetToolRect(i,rc);
+		GetItemRect(i, &rc);
+		m_Tooltip.SetToolRect(i, rc);
 	}
 }
 
 
-void CTitleBar::Draw(HDC hdc,const RECT &PaintRect)
+void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 {
 	RECT rc;
 
-	HFONT hfontOld=DrawUtil::SelectObject(hdc,m_Font);
-	int OldBkMode=::SetBkMode(hdc,TRANSPARENT);
-	COLORREF crOldTextColor=::GetTextColor(hdc);
-	COLORREF crOldBkColor=::GetBkColor(hdc);
+	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+	COLORREF crOldTextColor = ::GetTextColor(hdc);
+	COLORREF crOldBkColor = ::GetBkColor(hdc);
 
-	TVTest::Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
+	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
 	GetClientRect(&rc);
-	TVTest::Theme::BorderStyle Border=m_Theme.Border;
+	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
-	TVTest::Theme::SubtractBorderRect(Border,&rc);
-	if (rc.left<PaintRect.left)
-		rc.left=PaintRect.left;
-	if (rc.right>PaintRect.right)
-		rc.right=PaintRect.right;
-	ThemeDraw.Draw(m_Theme.CaptionStyle.Back,rc);
+	Theme::SubtractBorderRect(Border, &rc);
+	if (rc.left < PaintRect.left)
+		rc.left = PaintRect.left;
+	if (rc.right > PaintRect.right)
+		rc.right = PaintRect.right;
+	ThemeDraw.Draw(m_Theme.CaptionStyle.Back, rc);
 
-	for (int i=0;i<=ITEM_LAST;i++) {
-		GetItemRect(i,&rc);
-		if (rc.right>rc.left
-				&& rc.left<PaintRect.right && rc.right>PaintRect.left
-				&& rc.top<PaintRect.bottom && rc.bottom>PaintRect.top) {
-			bool fHighlight=i==m_HotItem && i!=ITEM_LABEL;
+	for (int i = 0; i <= ITEM_LAST; i++) {
+		GetItemRect(i, &rc);
+		if (rc.right > rc.left
+				&& rc.left < PaintRect.right && rc.right > PaintRect.left
+				&& rc.top < PaintRect.bottom && rc.bottom > PaintRect.top) {
+			bool fHighlight = i == m_HotItem && i != ITEM_LABEL;
 
-			if (i==ITEM_LABEL) {
-				if (m_hIcon!=NULL) {
-					int Height=m_Style.IconSize.Height+m_Style.IconMargin.Vert();
-					rc.left+=m_Style.IconMargin.Left;
-					::DrawIconEx(hdc,
-								 rc.left,
-								 rc.top+m_Style.IconMargin.Top+((rc.bottom-rc.top)-Height)/2,
-								 m_hIcon,
-								 m_Style.IconSize.Width,m_Style.IconSize.Height,
-								 0,NULL,DI_NORMAL);
-					rc.left+=m_Style.IconSize.Width;
+			if (i == ITEM_LABEL) {
+				if (m_hIcon != nullptr) {
+					int Height = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
+					rc.left += m_Style.IconMargin.Left;
+					::DrawIconEx(
+						hdc,
+						rc.left,
+						rc.top + m_Style.IconMargin.Top + ((rc.bottom - rc.top) - Height) / 2,
+						m_hIcon,
+						m_Style.IconSize.Width, m_Style.IconSize.Height,
+						0, nullptr, DI_NORMAL);
+					rc.left += m_Style.IconSize.Width;
 				}
 				if (!m_Label.empty()) {
-					TVTest::Style::Subtract(&rc,m_Style.LabelMargin);
-					ThemeDraw.Draw(m_Theme.CaptionStyle.Fore,rc,m_Label.c_str(),
+					Style::Subtract(&rc, m_Style.LabelMargin);
+					ThemeDraw.Draw(
+						m_Theme.CaptionStyle.Fore, rc, m_Label.c_str(),
 						DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 				}
 			} else {
-				const TVTest::Theme::Style &Style=
-					fHighlight?m_Theme.HighlightIconStyle:m_Theme.IconStyle;
+				const Theme::Style &Style =
+					fHighlight ? m_Theme.HighlightIconStyle : m_Theme.IconStyle;
 
-				// Ç∆ÇËÇ†Ç¶Ç∏ïœÇ…Ç»ÇÁÇ»Ç¢ÇÊÇ§Ç…Ç∑ÇÈÅB
-				// îwåiÇìßâﬂéwíËÇ≈Ç´ÇÈÇÊÇ§Ç…ÇµÇΩï˚Ç™ó«Ç¢ÅB
-				if (Style.Back.Border.Type!=TVTest::Theme::BORDER_NONE
-						|| Style.Back.Fill!=m_Theme.CaptionStyle.Back.Fill)
-					ThemeDraw.Draw(Style.Back,rc);
-				m_ButtonIcons.Draw(hdc,
-					rc.left+m_Style.ButtonPadding.Left,
-					rc.top+m_Style.ButtonPadding.Top,
+				// „Å®„Çä„ÅÇ„Åà„ÅöÂ§â„Å´„Å™„Çâ„Å™„ÅÑ„Çà„ÅÜ„Å´„Åô„Çã„ÄÇ
+				// ËÉåÊôØ„ÇíÈÄèÈÅéÊåáÂÆö„Åß„Åç„Çã„Çà„ÅÜ„Å´„Åó„ÅüÊñπ„ÅåËâØ„ÅÑ„ÄÇ
+				if (Style.Back.Border.Type != Theme::BorderType::None
+						|| Style.Back.Fill != m_Theme.CaptionStyle.Back.Fill)
+					ThemeDraw.Draw(Style.Back, rc);
+				m_ButtonIcons.Draw(
+					hdc,
+					rc.left + m_Style.ButtonPadding.Left,
+					rc.top + m_Style.ButtonPadding.Top,
 					m_Style.ButtonIconSize.Width,
 					m_Style.ButtonIconSize.Height,
-					(i==ITEM_MAXIMIZE && m_fMaximized)?ICON_RESTORE:
-					((i==ITEM_FULLSCREEN && m_fFullscreen)?ICON_FULLSCREENCLOSE:
-						i-1),
+					(i == ITEM_MAXIMIZE && m_fMaximized) ? ICON_RESTORE :
+					((i == ITEM_FULLSCREEN && m_fFullscreen) ? ICON_FULLSCREENCLOSE : i - 1),
 					Style.Fore.Fill.GetSolidColor());
 			}
 		}
 	}
 
 	GetClientRect(&rc);
-	ThemeDraw.Draw(m_Theme.Border,rc);
+	ThemeDraw.Draw(m_Theme.Border, rc);
 
-	::SetBkColor(hdc,crOldBkColor);
-	::SetTextColor(hdc,crOldTextColor);
-	::SetBkMode(hdc,OldBkMode);
-	::SelectObject(hdc,hfontOld);
+	::SetBkColor(hdc, crOldBkColor);
+	::SetTextColor(hdc, crOldTextColor);
+	::SetBkMode(hdc, OldBkMode);
+	::SelectObject(hdc, hfontOld);
 }
 
 
 void CTitleBar::ApplyStyle()
 {
-	if (m_hwnd==NULL)
+	if (m_hwnd == nullptr)
 		return;
 
-	CreateDrawFont(m_StyleFont,&m_Font);
-	m_FontHeight=CalcFontHeight();
+	CreateDrawFont(m_StyleFont, &m_Font);
+	m_FontHeight = CalcFontHeight();
 
 	if (m_Tooltip.IsCreated())
 		m_Tooltip.SetFont(m_Font.GetHandle());
 
-	static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
-		{MAKEINTRESOURCE(IDB_TITLEBAR12),12,12},
-		{MAKEINTRESOURCE(IDB_TITLEBAR24),24,24},
+	static const Theme::IconList::ResourceInfo ResourceList[] = {
+		{MAKEINTRESOURCE(IDB_TITLEBAR12), 12, 12},
+		{MAKEINTRESOURCE(IDB_TITLEBAR24), 24, 24},
 	};
-	m_ButtonIcons.Load(GetAppClass().GetResourceInstance(),
-					   m_Style.ButtonIconSize.Width,m_Style.ButtonIconSize.Height,
-					   ResourceList,lengthof(ResourceList));
+	m_ButtonIcons.Load(
+		GetAppClass().GetResourceInstance(),
+		m_Style.ButtonIconSize.Width, m_Style.ButtonIconSize.Height,
+		ResourceList, lengthof(ResourceList));
 }
 
 
 void CTitleBar::RealizeStyle()
 {
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != nullptr) {
 		AdjustSize();
 	}
 }
@@ -672,48 +706,48 @@ void CTitleBar::RealizeStyle()
 
 
 CTitleBar::CEventHandler::CEventHandler()
-	: m_pTitleBar(NULL)
+	: m_pTitleBar(nullptr)
 {
 }
 
 
 CTitleBar::CEventHandler::~CEventHandler()
 {
-	if (m_pTitleBar!=NULL)
-		m_pTitleBar->SetEventHandler(NULL);
+	if (m_pTitleBar != nullptr)
+		m_pTitleBar->SetEventHandler(nullptr);
 }
 
 
 
 
 CTitleBar::TitleBarStyle::TitleBarStyle()
-	: Padding(0,0,0,0)
-	, LabelMargin(4,2,4,2)
+	: Padding(0, 0, 0, 0)
+	, LabelMargin(4, 2, 4, 2)
 	, LabelExtraHeight(4)
-	, IconSize(16,16)
-	, IconMargin(4,0,0,0)
-	, ButtonIconSize(12,12)
+	, IconSize(16, 16)
+	, IconMargin(4, 0, 0, 0)
+	, ButtonIconSize(12, 12)
 	, ButtonPadding(4)
 {
 }
 
 
-void CTitleBar::TitleBarStyle::SetStyle(const TVTest::Style::CStyleManager *pStyleManager)
+void CTitleBar::TitleBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
-	*this=TitleBarStyle();
-	pStyleManager->Get(TEXT("title-bar.padding"),&Padding);
-	pStyleManager->Get(TEXT("title-bar.label.margin"),&LabelMargin);
-	pStyleManager->Get(TEXT("title-bar.label.extra-height"),&LabelExtraHeight);
-	pStyleManager->Get(TEXT("title-bar.icon"),&IconSize);
-	pStyleManager->Get(TEXT("title-bar.icon.margin"),&IconMargin);
-	pStyleManager->Get(TEXT("title-bar.button.icon"),&ButtonIconSize);
-	pStyleManager->Get(TEXT("title-bar.button.padding"),&ButtonPadding);
+	*this = TitleBarStyle();
+	pStyleManager->Get(TEXT("title-bar.padding"), &Padding);
+	pStyleManager->Get(TEXT("title-bar.label.margin"), &LabelMargin);
+	pStyleManager->Get(TEXT("title-bar.label.extra-height"), &LabelExtraHeight);
+	pStyleManager->Get(TEXT("title-bar.icon"), &IconSize);
+	pStyleManager->Get(TEXT("title-bar.icon.margin"), &IconMargin);
+	pStyleManager->Get(TEXT("title-bar.button.icon"), &ButtonIconSize);
+	pStyleManager->Get(TEXT("title-bar.button.padding"), &ButtonPadding);
 }
 
 
 void CTitleBar::TitleBarStyle::NormalizeStyle(
-	const TVTest::Style::CStyleManager *pStyleManager,
-	const TVTest::Style::CStyleScaling *pStyleScaling)
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
 {
 	pStyleScaling->ToPixels(&Padding);
 	pStyleScaling->ToPixels(&LabelMargin);
@@ -723,3 +757,6 @@ void CTitleBar::TitleBarStyle::NormalizeStyle(
 	pStyleScaling->ToPixels(&ButtonIconSize);
 	pStyleScaling->ToPixels(&ButtonPadding);
 }
+
+
+}	// namespace TVTest

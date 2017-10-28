@@ -1,69 +1,69 @@
-/*
-	TVTest �C���^�[�t�F�[�X�w�b�_ ver.0.0.14
+﻿/*
+	TVTest インターフェースヘッダ ver.0.0.14
 
-	���̃t�@�C���͍Ĕz�z�E���ςȂǎ��R�ɍs���č\���܂���B
-	�������A���ς����ꍇ�̓I���W�i���ƈႤ�|���L�ڂ��Ē�����ƁA�������Ȃ��Ă�
-	���Ǝv���܂��B
+	このファイルは再配布・改変など自由に行って構いません。
+	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
+	いと思います。
 */
 
 /*
-	�v���O�C������ MESSAGE_REGISTERTSPROCESSOR �� ITSProcessor ��o�^����ƁA
-	TS �ɑ΂��鏈�����s����悤�ɂȂ�܂��B
+	プラグインから MESSAGE_REGISTERTSPROCESSOR で ITSProcessor を登録すると、
+	TS に対する処理が行えるようになります。
 
-	ITSProcessor �͕K�v�ɉ����Ĉȉ��̃C���^�[�t�F�[�X���������A
-	QueryInterface() �Ŏ擾�ł���悤�ɂ��܂��B
+	ITSProcessor は必要に応じて以下のインターフェースを実装し、
+	QueryInterface() で取得できるようにします。
 
-	�EIFilterManager
-	�EIFilterModule
-	�EIPersistPropertyBag
-	�EISpecifyPropertyPages
-	�EISpecifyPropertyPages2
+	・IFilterManager
+	・IFilterModule
+	・IPersistPropertyBag
+	・ISpecifyPropertyPages
+	・ISpecifyPropertyPages2
 
-	ITSProcessor �̏����̗���͈ȉ��̂悤�ɂȂ�܂��B
+	ITSProcessor の処理の流れは以下のようになります。
 
-	  ITSProcessor::Initialize()           ����������
-	    ��
-	  ITSProcessor::StartStreaming() ����  �X�g���[�~���O�̊J�n
-	    ��                             ��
-	  ITSProcessor::InputPacket()      ��  �X�g���[���̓���(�J��Ԃ��Ă΂��)
-	    ��                             ��
-	  ITSProcessor::StopStreaming()  ����  �X�g���[�~���O�̏I��
-	    ��
-	  ITSProcessor::Finalize()             �I������
+	  ITSProcessor::Initialize()           初期化処理
+	    ↓
+	  ITSProcessor::StartStreaming() ←┐  ストリーミングの開始
+	    ↓                             │
+	  ITSProcessor::InputPacket()      │  ストリームの入力(繰り返し呼ばれる)
+	    ↓                             │
+	  ITSProcessor::StopStreaming()  ─┘  ストリーミングの終了
+	    ↓
+	  ITSProcessor::Finalize()             終了処理
 
-	ITSProcessor::InputPacket() �� ITSPacket ��ʂ���TS�f�[�^���n�����̂ŁA
-	ITSProcessor::StartStreaming() �œn���ꂽ ITSOutput �� OutputPacket() ��
-	�Ăяo����TS�f�[�^���o�͂��܂��B
+	ITSProcessor::InputPacket() で ITSPacket を通じてTSデータが渡されるので、
+	ITSProcessor::StartStreaming() で渡された ITSOutput の OutputPacket() を
+	呼び出してTSデータを出力します。
 
-	TS�v���Z�b�T��o�^����ۂɁA�ڑ��ʒu�Ƃ��� TS_PROCESSOR_CONNECT_POSITION_SOURCE ��
-	�w�肵���ꍇ�AITSProcessor::InputPacket() �ɓ��͂����f�[�^�̓`���[�i�[������
-	���͂��ꂽ�X�g���[�����̂܂܂ł���AITSPacket::GetSize() �Ŏ擾�����T�C�Y�͕s��ł��B
-	����ȊO�̏ꍇ�AITSPacket ��188�o�C�g�̃p�P�b�g�f�[�^��\���܂��B
+	TSプロセッサを登録する際に、接続位置として TS_PROCESSOR_CONNECT_POSITION_SOURCE を
+	指定した場合、ITSProcessor::InputPacket() に入力されるデータはチューナー等から
+	入力されたストリームそのままであり、ITSPacket::GetSize() で取得されるサイズは不定です。
+	それ以外の場合、ITSPacket は188バイトのパケットデータを表します。
 
-	�Ȃ��AITSPacket ���p�P�b�g�f�[�^��\�����A�p�P�b�g�̃w�b�_�������������ꍇ��
-	ITSPacket::SetModified() ���Ăяo���āA�ύX���ꂽ���Ƃ�������悤�ɂ���K�v������܂��B
+	なお、ITSPacket がパケットデータを表す時、パケットのヘッダを書き換えた場合は
+	ITSPacket::SetModified() を呼び出して、変更されたことが分かるようにする必要があります。
 
-	MESSAGE_REGISTERTSPROCESSOR �� TSProcessorInfo::ConnectPosition �Ɏw�肷��
-	�ڑ��ʒu�̊֌W�͈ȉ��̂悤�ɂȂ�܂��B
+	MESSAGE_REGISTERTSPROCESSOR で TSProcessorInfo::ConnectPosition に指定する
+	接続位置の関係は以下のようになります。
 
-	  �`���[�i�[��
-	    ��(*1)
+	  チューナー等
+	    ↓(*1)
 	  TS_PROCESSOR_CONNECT_POSITION_SOURCE
-	    ��(*1)
-	  �p�P�b�g�̐؂�o��(�X�g���[�����p�P�b�g�P�ʂɐ؂�o����܂�)
-	    ��
+	    ↓(*1)
+	  パケットの切り出し(ストリームがパケット単位に切り出されます)
+	    ↓
 	  TS_PROCESSOR_CONNECT_POSITION_PREPROCESSING
-	    ��
-	  TS�̉��(PAT/PMT/SDT/NIT/EIT ���̉�͂��s���܂�)
-	    ��
+	    ↓
+	  TSの解析(PAT/PMT/SDT/NIT/EIT 等の解析が行われます)
+	    ↓
 	  TS_PROCESSOR_CONNECT_POSITION_POSTPROCESSING
-	    ����������������������������������������
-	    ��                                    ��
+	    ├──────────────────┐
+	    ↓                                    ↓
 	  TS_PROCESSOR_CONNECT_POSITION_VIEWER  TS_PROCESSOR_CONNECT_POSITION_RECORDER
-	    ��                                    ��
-	  �r���[�A                              ���R�[�_
+	    ↓                                    ↓
+	  ビューア                              レコーダ
 
-	(*1) �̓T�C�Y���s��̃X�g���[���ŁA����ȊO��188�o�C�g��TS�p�P�b�g�ł��B
+	(*1) はサイズが不定のストリームで、それ以外は188バイトのTSパケットです。
 */
 
 

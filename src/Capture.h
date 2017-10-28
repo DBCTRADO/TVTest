@@ -1,194 +1,250 @@
-#ifndef CAPTURE_H
-#define CAPTURE_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 
+#ifndef TVTEST_CAPTURE_H
+#define TVTEST_CAPTURE_H
+
+
+#include <memory>
 #include "BasicWindow.h"
 #include "StatusView.h"
 
 
-class CCaptureImage
+namespace TVTest
 {
-	HGLOBAL m_hData;
-	bool m_fLocked;
-	SYSTEMTIME m_stCaptureTime;
-	TVTest::String m_Comment;
 
-public:
-	CCaptureImage(HGLOBAL hData);
-	CCaptureImage(const BITMAPINFO *pbmi,const void *pBits);
-	~CCaptureImage();
-	bool SetClipboard(HWND hwnd);
-	bool GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const;
-	bool LockData(BITMAPINFO **ppbmi,BYTE **ppBits);
-	bool UnlockData();
-	const SYSTEMTIME &GetCaptureTime() const { return m_stCaptureTime; }
-	void SetComment(LPCTSTR pszComment);
-	LPCTSTR GetComment() const;
-};
-
-class CCapturePreview : public CCustomWindow
-{
-public:
-	class ABSTRACT_CLASS(CEventHandler) {
-	protected:
-		CCapturePreview *m_pCapturePreview;
-	public:
-		CEventHandler();
-		virtual ~CEventHandler()=0;
-		virtual void OnLButtonDown(int x,int y) {}
-		virtual void OnRButtonUp(int x,int y) {}
-		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
-		friend class CCapturePreview;
-	};
-
-	static bool Initialize(HINSTANCE hinst);
-
-	CCapturePreview();
-	~CCapturePreview();
-// CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-// CCapturePreview
-	bool SetImage(CCaptureImage *pImage);
-	bool ClearImage();
-	bool HasImage() const;
-	bool SetEventHandler(CEventHandler *pEventHandler);
-
-private:
-	static HINSTANCE m_hinst;
-
-	CCaptureImage *m_pImage;
-	COLORREF m_crBackColor;
-	CEventHandler *m_pEventHandler;
-
-// CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-};
-
-class CCaptureWindow
-	: public CCustomWindow
-	, public TVTest::CUIBase
-{
-public:
-	class ABSTRACT_CLASS(CEventHandler) {
-	protected:
-		CCaptureWindow *m_pCaptureWindow;
-	public:
-		CEventHandler();
-		virtual ~CEventHandler()=0;
-		virtual void OnRestoreSettings() {}
-		virtual bool OnClose() { return true; }
-		virtual bool OnSave(CCaptureImage *pImage) { return false; }
-		virtual bool OnKeyDown(UINT KeyCode,UINT Flags) { return false; }
-		virtual bool OnActivate(bool fActive) { return false; }
-		friend class CCaptureWindow;
-	};
-
-	static bool Initialize(HINSTANCE hinst);
-
-	CCaptureWindow();
-	~CCaptureWindow();
-
-// CBasicWindow
-	bool Create(HWND hwndParent,DWORD Style,DWORD ExStyle=0,int ID=0) override;
-
-// CUIBase
-	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
-
-// CCaptureWindow
-	bool SetImage(const BITMAPINFO *pbmi,const void *pBits);
-	bool SetImage(CCaptureImage *pImage);
-	bool ClearImage();
-	bool HasImage() const;
-	bool SetEventHandler(CEventHandler *pEventHandler);
-	void ShowStatusBar(bool fShow);
-	bool IsStatusBarVisible() const { return m_fShowStatusBar; }
-
-private:
-	class CPreviewEventHandler : public CCapturePreview::CEventHandler
+	class CCaptureImage
 	{
-		CCaptureWindow *m_pCaptureWindow;
+		HGLOBAL m_hData;
+		bool m_fLocked;
+		LibISDB::DateTime m_CaptureTime;
+		String m_Comment;
+
 	public:
-		CPreviewEventHandler(CCaptureWindow *pCaptureWindow);
-		void OnRButtonUp(int x,int y);
-		bool OnKeyDown(UINT KeyCode,UINT Flags);
+		CCaptureImage(HGLOBAL hData);
+		CCaptureImage(const BITMAPINFO *pbmi, const void *pBits);
+		~CCaptureImage();
+
+		bool SetClipboard(HWND hwnd);
+		bool GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const;
+		bool LockData(BITMAPINFO **ppbmi, BYTE **ppBits);
+		bool UnlockData();
+		const LibISDB::DateTime &GetCaptureTime() const { return m_CaptureTime; }
+		void SetComment(LPCTSTR pszComment);
+		LPCTSTR GetComment() const;
 	};
 
-	enum {
-		STATUS_ITEM_CAPTURE,
-		//STATUS_ITEM_CONTINUOUS,
-		STATUS_ITEM_SAVE,
-		STATUS_ITEM_COPY
-	};
-
-	class CCaptureStatusItem : public CIconStatusItem {
-		CCaptureWindow *m_pCaptureWindow;
-		TVTest::Theme::IconList &m_Icons;
+	class CCapturePreview
+		: public CCustomWindow
+	{
 	public:
-		CCaptureStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
-		LPCTSTR GetIDText() const override { return TEXT("Capture"); }
-		LPCTSTR GetName() const override { return TEXT("ÉLÉÉÉvÉ`ÉÉ"); }
-		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-		void OnLButtonDown(int x,int y) override;
-		void OnRButtonDown(int x,int y) override;
+		class ABSTRACT_CLASS(CEventHandler)
+		{
+		protected:
+			CCapturePreview *m_pCapturePreview;
+
+		public:
+			CEventHandler();
+			virtual ~CEventHandler() = 0;
+
+			virtual void OnLButtonDown(int x, int y) {}
+			virtual void OnRButtonUp(int x, int y) {}
+			virtual bool OnKeyDown(UINT KeyCode, UINT Flags) { return false; }
+			friend class CCapturePreview;
+		};
+
+		static bool Initialize(HINSTANCE hinst);
+
+		CCapturePreview();
+		~CCapturePreview();
+
+	// CBasicWindow
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+
+	// CCapturePreview
+		bool SetImage(const std::shared_ptr<CCaptureImage> &Image);
+		bool ClearImage();
+		bool HasImage() const;
+		bool SetEventHandler(CEventHandler *pEventHandler);
+
+	private:
+		static HINSTANCE m_hinst;
+
+		std::shared_ptr<CCaptureImage> m_Image;
+		COLORREF m_crBackColor;
+		CEventHandler *m_pEventHandler;
+
+	// CCustomWindow
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
-	class CSaveStatusItem : public CIconStatusItem {
-		CCaptureWindow *m_pCaptureWindow;
-		TVTest::Theme::IconList &m_Icons;
+	class CCaptureWindow
+		: public CCustomWindow
+		, public CUIBase
+	{
 	public:
-		CSaveStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
-		LPCTSTR GetIDText() const override { return TEXT("Save"); }
-		LPCTSTR GetName() const override { return TEXT("ï€ë∂"); }
-		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-		void OnLButtonDown(int x,int y) override;
+		class ABSTRACT_CLASS(CEventHandler)
+		{
+		protected:
+			CCaptureWindow *m_pCaptureWindow;
+
+		public:
+			CEventHandler();
+			virtual ~CEventHandler() = 0;
+
+			virtual void OnRestoreSettings() {}
+			virtual bool OnClose() { return true; }
+			virtual bool OnSave(CCaptureImage * pImage) { return false; }
+			virtual bool OnKeyDown(UINT KeyCode, UINT Flags) { return false; }
+			virtual bool OnActivate(bool fActive) { return false; }
+			friend class CCaptureWindow;
+		};
+
+		static bool Initialize(HINSTANCE hinst);
+
+		CCaptureWindow();
+		~CCaptureWindow();
+
+	// CBasicWindow
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
+
+	// CUIBase
+		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
+
+	// CCaptureWindow
+		bool SetImage(const BITMAPINFO *pbmi, const void *pBits);
+		bool SetImage(CCaptureImage *pImage);
+		bool ClearImage();
+		bool HasImage() const;
+		bool SetEventHandler(CEventHandler *pEventHandler);
+		void ShowStatusBar(bool fShow);
+		bool IsStatusBarVisible() const { return m_fShowStatusBar; }
+
+	private:
+		class CPreviewEventHandler
+			: public CCapturePreview::CEventHandler
+		{
+			CCaptureWindow *m_pCaptureWindow;
+
+		public:
+			CPreviewEventHandler(CCaptureWindow *pCaptureWindow);
+			void OnRButtonUp(int x, int y);
+			bool OnKeyDown(UINT KeyCode, UINT Flags);
+		};
+
+		enum {
+			STATUS_ITEM_CAPTURE,
+			//STATUS_ITEM_CONTINUOUS,
+			STATUS_ITEM_SAVE,
+			STATUS_ITEM_COPY
+		};
+
+		class CCaptureStatusItem
+			: public CIconStatusItem
+		{
+			CCaptureWindow *m_pCaptureWindow;
+			Theme::IconList &m_Icons;
+
+		public:
+			CCaptureStatusItem(CCaptureWindow *pCaptureWindow, Theme::IconList &Icons);
+
+			LPCTSTR GetIDText() const override { return TEXT("Capture"); }
+			LPCTSTR GetName() const override { return TEXT("„Ç≠„É£„Éó„ÉÅ„É£"); }
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void OnLButtonDown(int x, int y) override;
+			void OnRButtonDown(int x, int y) override;
+		};
+
+		class CSaveStatusItem
+			: public CIconStatusItem
+		{
+			CCaptureWindow *m_pCaptureWindow;
+			Theme::IconList &m_Icons;
+
+		public:
+			CSaveStatusItem(CCaptureWindow *pCaptureWindow, Theme::IconList &Icons);
+
+			LPCTSTR GetIDText() const override { return TEXT("Save"); }
+			LPCTSTR GetName() const override { return TEXT("‰øùÂ≠ò"); }
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void OnLButtonDown(int x, int y) override;
+		};
+
+		class CCopyStatusItem
+			: public CIconStatusItem
+		{
+			CCaptureWindow *m_pCaptureWindow;
+			Theme::IconList &m_Icons;
+
+		public:
+			CCopyStatusItem(CCaptureWindow *pCaptureWindow, Theme::IconList &Icons);
+
+			LPCTSTR GetIDText() const override { return TEXT("Copy"); }
+			LPCTSTR GetName() const override { return TEXT("„Ç≥„Éî„Éº"); }
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void OnLButtonDown(int x, int y) override;
+		};
+
+		static HINSTANCE m_hinst;
+
+		Style::CStyleScaling m_StyleScaling;
+		CCapturePreview m_Preview;
+		CPreviewEventHandler m_PreviewEventHandler;
+		CStatusView m_Status;
+		bool m_fShowStatusBar;
+		Theme::IconList m_StatusIcons;
+		std::shared_ptr<CCaptureImage> m_Image;
+		CEventHandler *m_pEventHandler;
+		bool m_fCreateFirst;
+
+		void SetTitle();
+
+	// CCustomWindow
+		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+	// CUIBase
+		void RealizeStyle() override;
 	};
 
-	class CCopyStatusItem : public CIconStatusItem {
-		CCaptureWindow *m_pCaptureWindow;
-		TVTest::Theme::IconList &m_Icons;
+	/*
+	class CImageSaveThread
+	{
+		CCaptureImage *m_pImage;
+		LPTSTR m_pszFileName;
+		int m_Format;
+		LPTSTR m_pszOption;
+		LPTSTR m_pszComment;
+		CImageCodec m_ImageCodec;
+		static void SaveProc(void *pParam);
+
 	public:
-		CCopyStatusItem(CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons);
-		LPCTSTR GetIDText() const override { return TEXT("Copy"); }
-		LPCTSTR GetName() const override { return TEXT("ÉRÉsÅ["); }
-		void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-		void OnLButtonDown(int x,int y) override;
+		CImageSaveThread(
+			CCaptureImage *pImage, LPCTSTR pszFileName, int Format,
+			LPCTSTR pszOption, LPCTSTR pszComment);
+		~CImageSaveThread();
+
+		bool BeginSave();
 	};
+	*/
 
-	static HINSTANCE m_hinst;
-
-	TVTest::Style::CStyleScaling m_StyleScaling;
-	CCapturePreview m_Preview;
-	CPreviewEventHandler m_PreviewEventHandler;
-	CStatusView m_Status;
-	bool m_fShowStatusBar;
-	TVTest::Theme::IconList m_StatusIcons;
-	CCaptureImage *m_pImage;
-	CEventHandler *m_pEventHandler;
-	bool m_fCreateFirst;
-
-	void SetTitle();
-// CCustomWindow
-	LRESULT OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-// CUIBase
-	void RealizeStyle() override;
-};
-
-/*
-class CImageSaveThread {
-	CCaptureImage *m_pImage;
-	LPTSTR m_pszFileName;
-	int m_Format;
-	LPTSTR m_pszOption;
-	LPTSTR m_pszComment;
-	CImageCodec m_ImageCodec;
-	static void SaveProc(void *pParam);
-public:
-	CImageSaveThread(CCaptureImage *pImage,LPCTSTR pszFileName,int Format,
-										LPCTSTR pszOption,LPCTSTR pszComment);
-	~CImageSaveThread();
-	bool BeginSave();
-};
-*/
+}	// namespace TVTest
 
 
 #endif

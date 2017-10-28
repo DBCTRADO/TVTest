@@ -1,105 +1,129 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
 #include "PanAndScanOptions.h"
 #include "DialogUtil.h"
-#include "HelperClass/StdUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
 
-static const int FACTOR_PERCENTAGE=100;
-static const int HORZ_FACTOR=FACTOR_PERCENTAGE*100;
-static const int VERT_FACTOR=FACTOR_PERCENTAGE*100;
+namespace TVTest
+{
+
+
+static const int FACTOR_PERCENTAGE = 100;
+static const int HORZ_FACTOR = FACTOR_PERCENTAGE * 100;
+static const int VERT_FACTOR = FACTOR_PERCENTAGE * 100;
 
 
 
 
-static void FormatValue(int Value,int Factor,LPTSTR pszText,size_t MaxLength)
+static void FormatValue(int Value, int Factor, LPTSTR pszText, size_t MaxLength)
 {
 	int Percentage;
 
-	if (Factor!=0)
-		Percentage=(Value*100)/Factor;
+	if (Factor != 0)
+		Percentage = (Value * 100) / Factor;
 	else
-		Percentage=0;
-	if (Percentage%100==0)
-		StdUtil::snprintf(pszText,MaxLength,TEXT("%d"),Percentage/100);
+		Percentage = 0;
+	if (Percentage % 100 == 0)
+		StringPrintf(pszText, MaxLength, TEXT("%d"), Percentage / 100);
 	else
-		StdUtil::snprintf(pszText,MaxLength,TEXT("%d.%02d"),Percentage/100,abs(Percentage)%100);
+		StringPrintf(pszText, MaxLength, TEXT("%d.%02d"), Percentage / 100, abs(Percentage) % 100);
 }
 
 
-static int GetValue(LPCTSTR pszValue,int Factor)
+static int GetValue(LPCTSTR pszValue, int Factor)
 {
-	int Value=0;
+	int Value = 0;
 	LPCTSTR p;
-	for (p=pszValue;*p>=_T('0') && *p<=_T('9');p++) {
-		Value=Value*10+(*p-_T('0'));
+	for (p = pszValue; *p >= _T('0') && *p <= _T('9'); p++) {
+		Value = Value * 10 + (*p - _T('0'));
 	}
-	if (*p==_T('.')) {
+	if (*p == _T('.')) {
 		p++;
-		int Decimal=1;
-		for (;Decimal<Factor && *p>=_T('0') && *p<=_T('9');p++) {
-			Value=Value*10+(*p-_T('0'));
-			Decimal*=10;
+		int Decimal = 1;
+		for (; Decimal < Factor && *p >= _T('0') && *p <= _T('9'); p++) {
+			Value = Value * 10 + (*p - _T('0'));
+			Decimal *= 10;
 		}
-		Value=Value*Factor/Decimal;
+		Value = Value * Factor / Decimal;
 	} else {
-		Value*=Factor;
+		Value *= Factor;
 	}
 
 	return Value;
 }
 
 
-static int FormatPanAndScanInfo(const CCoreEngine::PanAndScanInfo &Info,LPTSTR pszText,int MaxLength)
+static int FormatPanAndScanInfo(const CCoreEngine::PanAndScanInfo &Info, LPTSTR pszText, int MaxLength)
 {
-	TCHAR szXPos[32],szYPos[32],szWidth[32],szHeight[32];
+	TCHAR szXPos[32], szYPos[32], szWidth[32], szHeight[32];
 
-	FormatValue(Info.XPos,FACTOR_PERCENTAGE,szXPos,lengthof(szXPos));
-	FormatValue(Info.YPos,FACTOR_PERCENTAGE,szYPos,lengthof(szYPos));
-	FormatValue(Info.Width,FACTOR_PERCENTAGE,szWidth,lengthof(szWidth));
-	FormatValue(Info.Height,FACTOR_PERCENTAGE,szHeight,lengthof(szHeight));
-	return StdUtil::snprintf(pszText,MaxLength,TEXT("%s,%s,%s,%s,%d,%d"),
-							 szXPos,szYPos,szWidth,szHeight,Info.XAspect,Info.YAspect);
+	FormatValue(Info.XPos, FACTOR_PERCENTAGE, szXPos, lengthof(szXPos));
+	FormatValue(Info.YPos, FACTOR_PERCENTAGE, szYPos, lengthof(szYPos));
+	FormatValue(Info.Width, FACTOR_PERCENTAGE, szWidth, lengthof(szWidth));
+	FormatValue(Info.Height, FACTOR_PERCENTAGE, szHeight, lengthof(szHeight));
+	return StringPrintf(
+		pszText, MaxLength, TEXT("%s,%s,%s,%s,%d,%d"),
+		szXPos, szYPos, szWidth, szHeight, Info.XAspect, Info.YAspect);
 }
 
 
-static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo,LPTSTR pszText)
+static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo, LPTSTR pszText)
 {
-	LPTSTR p=pszText;
+	LPTSTR p = pszText;
 	int j;
-	for (j=0;j<6 && *p!=_T('\0');j++) {
-		while (*p==_T(' '))
+	for (j = 0; j < 6 && *p != _T('\0'); j++) {
+		while (*p == _T(' '))
 			p++;
-		LPTSTR pszValue=p;
-		while (*p!=_T('\0') && *p!=_T(','))
+		LPTSTR pszValue = p;
+		while (*p != _T('\0') && *p != _T(','))
 			p++;
-		if (*p!=_T('\0'))
-			*p++=_T('\0');
-		if (*pszValue!=_T('\0')) {
+		if (*p != _T('\0'))
+			*p++ = _T('\0');
+		if (*pszValue != _T('\0')) {
 			switch (j) {
-			case 0:	pInfo->XPos=GetValue(pszValue,FACTOR_PERCENTAGE);	break;
-			case 1:	pInfo->YPos=GetValue(pszValue,FACTOR_PERCENTAGE);	break;
-			case 2:	pInfo->Width=GetValue(pszValue,FACTOR_PERCENTAGE);	break;
-			case 3:	pInfo->Height=GetValue(pszValue,FACTOR_PERCENTAGE);	break;
-			case 4:	pInfo->XAspect=GetValue(pszValue,1);				break;
-			case 5:	pInfo->YAspect=GetValue(pszValue,1);				break;
+			case 0: pInfo->XPos = GetValue(pszValue, FACTOR_PERCENTAGE);   break;
+			case 1: pInfo->YPos = GetValue(pszValue, FACTOR_PERCENTAGE);   break;
+			case 2: pInfo->Width = GetValue(pszValue, FACTOR_PERCENTAGE);  break;
+			case 3: pInfo->Height = GetValue(pszValue, FACTOR_PERCENTAGE); break;
+			case 4: pInfo->XAspect = GetValue(pszValue, 1);                break;
+			case 5: pInfo->YAspect = GetValue(pszValue, 1);                break;
 			}
 		}
 	}
-	if (j<6)
+	if (j < 6)
 		return false;
 
-	pInfo->XFactor=HORZ_FACTOR;
-	pInfo->YFactor=VERT_FACTOR;
+	pInfo->XFactor = HORZ_FACTOR;
+	pInfo->YFactor = VERT_FACTOR;
 
-	if (pInfo->XPos<0 || pInfo->YPos<0
-			|| pInfo->Width<1 || pInfo->Height<1
-			|| pInfo->XPos+pInfo->Width>pInfo->XFactor
-			|| pInfo->YPos+pInfo->Height>pInfo->YFactor
-			|| pInfo->XAspect<1 || pInfo->YAspect<1) {
+	if (pInfo->XPos < 0 || pInfo->YPos < 0
+			|| pInfo->Width < 1 || pInfo->Height < 1
+			|| pInfo->XPos + pInfo->Width > pInfo->XFactor
+			|| pInfo->YPos + pInfo->Height > pInfo->YFactor
+			|| pInfo->XAspect < 1 || pInfo->YAspect < 1) {
 		return false;
 	}
 
@@ -107,23 +131,23 @@ static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo,LPTSTR pszTex
 }
 
 
-// ê›íËÉTÉìÉvÉã
+// Ë®≠ÂÆö„Çµ„É≥„Éó„É´
 static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
-	{   0, 1281, 10000,  7438, HORZ_FACTOR, VERT_FACTOR, 239, 100, TEXT("2.39:1 ÉVÉlÉXÉR"),   1},
-	{   0, 1218, 10000,  7565, HORZ_FACTOR, VERT_FACTOR, 235, 100, TEXT("2.35:1 ÉVÉlÉXÉR"),   2},
-	{   0,  195, 10000,  9610, HORZ_FACTOR, VERT_FACTOR, 185, 100, TEXT("1.85:1 ÉrÉXÉ^(ïƒ)"), 3},
-	{ 331,    0,  9338, 10000, HORZ_FACTOR, VERT_FACTOR, 166, 100, TEXT("1.66:1 ÉrÉXÉ^(â¢)"), 4},
+	{   0, 1281, 10000,  7438, HORZ_FACTOR, VERT_FACTOR, 239, 100, TEXT("2.39:1 „Ç∑„Éç„Çπ„Ç≥"),   1},
+	{   0, 1218, 10000,  7565, HORZ_FACTOR, VERT_FACTOR, 235, 100, TEXT("2.35:1 „Ç∑„Éç„Çπ„Ç≥"),   2},
+	{   0,  195, 10000,  9610, HORZ_FACTOR, VERT_FACTOR, 185, 100, TEXT("1.85:1 „Éì„Çπ„Çø(Á±≥)"), 3},
+	{ 331,    0,  9338, 10000, HORZ_FACTOR, VERT_FACTOR, 166, 100, TEXT("1.66:1 „Éì„Çπ„Çø(Ê¨ß)"), 4},
 };
 
 
 CPanAndScanOptions::CPanAndScanOptions()
 	: CSettingsBase(TEXT("PanAndScan"))
-	, CCommandCustomizer(CM_PANANDSCAN_PRESET_FIRST,CM_PANANDSCAN_PRESET_LAST)
+	, CCommandCustomizer(CM_PANANDSCAN_PRESET_FIRST, CM_PANANDSCAN_PRESET_LAST)
 	, m_fStateChanging(false)
-	, m_PresetID(lengthof(DefaultPresetList)+1)
+	, m_PresetID(lengthof(DefaultPresetList) + 1)
 {
-	for (size_t i=0;i<lengthof(DefaultPresetList);i++)
-		m_PresetList.push_back(DefaultPresetList[i]);
+	for (const PanAndScanInfo &e : DefaultPresetList)
+		m_PresetList.push_back(e);
 }
 
 
@@ -134,8 +158,9 @@ CPanAndScanOptions::~CPanAndScanOptions()
 
 bool CPanAndScanOptions::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),MAKEINTRESOURCE(IDD_PANANDSCANOPTIONS))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_PANANDSCANOPTIONS)) == IDOK;
 }
 
 
@@ -143,22 +168,22 @@ bool CPanAndScanOptions::ReadSettings(CSettings &Settings)
 {
 	int Count;
 
-	if (Settings.Read(TEXT("PresetCount"),&Count)) {
+	if (Settings.Read(TEXT("PresetCount"), &Count)) {
 		m_PresetList.clear();
 
-		for (int i=0;i<Count;i++) {
+		for (int i = 0; i < Count; i++) {
 			PanAndScanInfo Info;
-			TCHAR szKey[32],szSettings[256];
+			TCHAR szKey[32], szSettings[256];
 
-			::wsprintf(szKey,TEXT("Preset%d.Name"),i);
-			if (!Settings.Read(szKey,Info.szName,MAX_NAME) || Info.szName[0]==_T('\0'))
+			StringPrintf(szKey, TEXT("Preset%d.Name"), i);
+			if (!Settings.Read(szKey, Info.szName, MAX_NAME) || Info.szName[0] == _T('\0'))
 				break;
-			::wsprintf(szKey,TEXT("Preset%d"),i);
-			if (!Settings.Read(szKey,szSettings,lengthof(szSettings)) || szSettings[0]==_T('\0'))
+			StringPrintf(szKey, TEXT("Preset%d"), i);
+			if (!Settings.Read(szKey, szSettings, lengthof(szSettings)) || szSettings[0] == _T('\0'))
 				break;
 
-			if (ParsePanAndScanInfo(&Info.Info,szSettings)) {
-				Info.ID=m_PresetID++;
+			if (ParsePanAndScanInfo(&Info.Info, szSettings)) {
+				Info.ID = m_PresetID++;
 				m_PresetList.push_back(Info);
 			}
 		}
@@ -171,16 +196,16 @@ bool CPanAndScanOptions::ReadSettings(CSettings &Settings)
 bool CPanAndScanOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Clear();
-	Settings.Write(TEXT("PresetCount"),(unsigned int)m_PresetList.size());
-	for (size_t i=0;i<m_PresetList.size();i++) {
-		const PanAndScanInfo &Info=m_PresetList[i];
-		TCHAR szKey[32],szSettings[256];
+	Settings.Write(TEXT("PresetCount"), (unsigned int)m_PresetList.size());
+	for (size_t i = 0; i < m_PresetList.size(); i++) {
+		const PanAndScanInfo &Info = m_PresetList[i];
+		TCHAR szKey[32], szSettings[256];
 
-		::wsprintf(szKey,TEXT("Preset%u.Name"),(unsigned int)i);
-		Settings.Write(szKey,Info.szName);
-		::wsprintf(szKey,TEXT("Preset%u"),(unsigned int)i);
-		FormatPanAndScanInfo(Info.Info,szSettings,lengthof(szSettings));
-		Settings.Write(szKey,szSettings);
+		StringPrintf(szKey, TEXT("Preset%u.Name"), (unsigned int)i);
+		Settings.Write(szKey, Info.szName);
+		StringPrintf(szKey, TEXT("Preset%u"), (unsigned int)i);
+		FormatPanAndScanInfo(Info.Info, szSettings, lengthof(szSettings));
+		Settings.Write(szKey, szSettings);
 	}
 
 	return true;
@@ -193,24 +218,24 @@ size_t CPanAndScanOptions::GetPresetCount() const
 }
 
 
-bool CPanAndScanOptions::GetPreset(size_t Index,PanAndScanInfo *pInfo) const
+bool CPanAndScanOptions::GetPreset(size_t Index, PanAndScanInfo *pInfo) const
 {
-	if (Index>=m_PresetList.size())
+	if (Index >= m_PresetList.size())
 		return false;
 
-	*pInfo=m_PresetList[Index];
+	*pInfo = m_PresetList[Index];
 
 	return true;
 }
 
 
-bool CPanAndScanOptions::GetPresetByID(UINT ID,PanAndScanInfo *pInfo) const
+bool CPanAndScanOptions::GetPresetByID(UINT ID, PanAndScanInfo *pInfo) const
 {
-	int Index=FindPresetByID(ID);
-	if (Index<0)
+	int Index = FindPresetByID(ID);
+	if (Index < 0)
 		return false;
 
-	*pInfo=m_PresetList[Index];
+	*pInfo = m_PresetList[Index];
 
 	return true;
 }
@@ -218,7 +243,7 @@ bool CPanAndScanOptions::GetPresetByID(UINT ID,PanAndScanInfo *pInfo) const
 
 UINT CPanAndScanOptions::GetPresetID(size_t Index) const
 {
-	if (Index>=m_PresetList.size())
+	if (Index >= m_PresetList.size())
 		return 0;
 	return m_PresetList[Index].ID;
 }
@@ -226,166 +251,171 @@ UINT CPanAndScanOptions::GetPresetID(size_t Index) const
 
 int CPanAndScanOptions::FindPresetByID(UINT ID) const
 {
-	for (size_t i=0;i<m_PresetList.size();i++) {
-		if (m_PresetList[i].ID==ID)
+	for (size_t i = 0; i < m_PresetList.size(); i++) {
+		if (m_PresetList[i].ID == ID)
 			return (int)i;
 	}
 	return -1;
 }
 
 
-static void FormatInfo(const CPanAndScanOptions::PanAndScanInfo *pInfo,LPTSTR pszText,size_t MaxLength)
+static void FormatInfo(const CPanAndScanOptions::PanAndScanInfo *pInfo, LPTSTR pszText, size_t MaxLength)
 {
-	TCHAR szXPos[32],szYPos[32],szWidth[32],szHeight[32];
+	TCHAR szXPos[32], szYPos[32], szWidth[32], szHeight[32];
 
-	FormatValue(pInfo->Info.XPos,FACTOR_PERCENTAGE,szXPos,lengthof(szXPos));
-	FormatValue(pInfo->Info.YPos,FACTOR_PERCENTAGE,szYPos,lengthof(szYPos));
-	FormatValue(pInfo->Info.Width,FACTOR_PERCENTAGE,szWidth,lengthof(szWidth));
-	FormatValue(pInfo->Info.Height,FACTOR_PERCENTAGE,szHeight,lengthof(szHeight));
-	StdUtil::snprintf(pszText,MaxLength,TEXT("%s , %s / %s x %s / %d : %d"),
-					  szXPos,szYPos,szWidth,szHeight,pInfo->Info.XAspect,pInfo->Info.YAspect);
+	FormatValue(pInfo->Info.XPos, FACTOR_PERCENTAGE, szXPos, lengthof(szXPos));
+	FormatValue(pInfo->Info.YPos, FACTOR_PERCENTAGE, szYPos, lengthof(szYPos));
+	FormatValue(pInfo->Info.Width, FACTOR_PERCENTAGE, szWidth, lengthof(szWidth));
+	FormatValue(pInfo->Info.Height, FACTOR_PERCENTAGE, szHeight, lengthof(szHeight));
+	StringPrintf(
+		pszText, MaxLength, TEXT("%s , %s / %s x %s / %d : %d"),
+		szXPos, szYPos, szWidth, szHeight, pInfo->Info.XAspect, pInfo->Info.YAspect);
 }
 
-static void InsertItem(HWND hwndList,int Index,CPanAndScanOptions::PanAndScanInfo *pInfo,bool fSelect=false)
+static void InsertItem(HWND hwndList, int Index, CPanAndScanOptions::PanAndScanInfo *pInfo, bool fSelect = false)
 {
 	LVITEM lvi;
 
-	lvi.mask=LVIF_TEXT | LVIF_PARAM;
-	if (Index>=0)
-		lvi.iItem=Index;
+	lvi.mask = LVIF_TEXT | LVIF_PARAM;
+	if (Index >= 0)
+		lvi.iItem = Index;
 	else
-		lvi.iItem=ListView_GetItemCount(hwndList);
-	lvi.iSubItem=0;
-	lvi.pszText=pInfo->szName;
-	lvi.lParam=reinterpret_cast<LPARAM>(pInfo);
-	ListView_InsertItem(hwndList,&lvi);
+		lvi.iItem = ListView_GetItemCount(hwndList);
+	lvi.iSubItem = 0;
+	lvi.pszText = pInfo->szName;
+	lvi.lParam = reinterpret_cast<LPARAM>(pInfo);
+	ListView_InsertItem(hwndList, &lvi);
 
 	TCHAR szText[80];
-	FormatInfo(pInfo,szText,lengthof(szText));
-	lvi.mask=LVIF_TEXT;
-	lvi.iSubItem=1;
-	lvi.pszText=szText;
-	ListView_SetItem(hwndList,&lvi);
+	FormatInfo(pInfo, szText, lengthof(szText));
+	lvi.mask = LVIF_TEXT;
+	lvi.iSubItem = 1;
+	lvi.pszText = szText;
+	ListView_SetItem(hwndList, &lvi);
 
 	if (fSelect) {
-		ListView_SetItemState(hwndList,lvi.iItem,
-							  LVIS_FOCUSED | LVIS_SELECTED,
-							  LVIS_FOCUSED | LVIS_SELECTED);
+		ListView_SetItemState(
+			hwndList, lvi.iItem,
+			LVIS_FOCUSED | LVIS_SELECTED,
+			LVIS_FOCUSED | LVIS_SELECTED);
 	}
 }
 
-static bool UpdateItem(HWND hwndList,int Index,const CPanAndScanOptions::PanAndScanInfo &Info)
+static bool UpdateItem(HWND hwndList, int Index, const CPanAndScanOptions::PanAndScanInfo &Info)
 {
 	LVITEM lvi;
 
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Index;
-	lvi.iSubItem=0;
-	if (!ListView_GetItem(hwndList,&lvi))
+	lvi.mask = LVIF_PARAM;
+	lvi.iItem = Index;
+	lvi.iSubItem = 0;
+	if (!ListView_GetItem(hwndList, &lvi))
 		return false;
 
-	CPanAndScanOptions::PanAndScanInfo *pInfo=
+	CPanAndScanOptions::PanAndScanInfo *pInfo =
 		reinterpret_cast<CPanAndScanOptions::PanAndScanInfo*>(lvi.lParam);
-	*pInfo=Info;
+	*pInfo = Info;
 
-	lvi.mask=LVIF_TEXT;
-	lvi.pszText=pInfo->szName;
-	ListView_SetItem(hwndList,&lvi);
+	lvi.mask = LVIF_TEXT;
+	lvi.pszText = pInfo->szName;
+	ListView_SetItem(hwndList, &lvi);
 	TCHAR szText[80];
-	FormatInfo(pInfo,szText,lengthof(szText));
-	lvi.iSubItem=1;
-	lvi.pszText=szText;
-	ListView_SetItem(hwndList,&lvi);
+	FormatInfo(pInfo, szText, lengthof(szText));
+	lvi.iSubItem = 1;
+	lvi.pszText = szText;
+	ListView_SetItem(hwndList, &lvi);
 
 	return true;
 }
 
-static CPanAndScanOptions::PanAndScanInfo *GetInfo(HWND hwndList,int Index)
+static CPanAndScanOptions::PanAndScanInfo *GetInfo(HWND hwndList, int Index)
 {
 	LVITEM lvi;
 
-	lvi.mask=LVIF_PARAM;
-	lvi.iItem=Index;
-	lvi.iSubItem=0;
-	if (!ListView_GetItem(hwndList,&lvi))
-		return NULL;
+	lvi.mask = LVIF_PARAM;
+	lvi.iItem = Index;
+	lvi.iSubItem = 0;
+	if (!ListView_GetItem(hwndList, &lvi))
+		return nullptr;
 
 	return reinterpret_cast<CPanAndScanOptions::PanAndScanInfo*>(lvi.lParam);
 }
 
-INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			m_fTested=false;
+			m_fTested = false;
 
-			HWND hwndList=::GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
+			HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
 
-			ListView_SetExtendedListViewStyle(hwndList,LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
 			LVCOLUMN lvc;
-			lvc.mask=LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-			lvc.fmt=LVCFMT_LEFT;
-			lvc.cx=80;
-			lvc.pszText=TEXT("ñºëO");
-			lvc.iSubItem=0;
-			ListView_InsertColumn(hwndList,0,&lvc);
-			lvc.pszText=TEXT("ê›íË");
-			lvc.iSubItem=1;
-			ListView_InsertColumn(hwndList,1,&lvc);
+			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+			lvc.fmt = LVCFMT_LEFT;
+			lvc.cx = 80;
+			lvc.pszText = TEXT("ÂêçÂâç");
+			lvc.iSubItem = 0;
+			ListView_InsertColumn(hwndList, 0, &lvc);
+			lvc.pszText = TEXT("Ë®≠ÂÆö");
+			lvc.iSubItem = 1;
+			ListView_InsertColumn(hwndList, 1, &lvc);
 
-			for (size_t i=0;i<m_PresetList.size();i++) {
-				PanAndScanInfo *pInfo=new PanAndScanInfo(m_PresetList[i]);
+			for (size_t i = 0; i < m_PresetList.size(); i++) {
+				PanAndScanInfo *pInfo = new PanAndScanInfo(m_PresetList[i]);
 
-				InsertItem(hwndList,-1,pInfo);
+				InsertItem(hwndList, -1, pInfo);
 			}
 
-			for (int i=0;i<2;i++)
-				ListView_SetColumnWidth(hwndList,i,LVSCW_AUTOSIZE_USEHEADER);
+			for (int i = 0; i < 2; i++)
+				ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
 
-			DlgEdit_LimitText(hDlg,IDC_PANANDSCAN_NAME,MAX_NAME-1);
+			DlgEdit_LimitText(hDlg, IDC_PANANDSCAN_NAME, MAX_NAME - 1);
 
 			SetItemStatus();
 
-			AdjustDialogPos(::GetParent(hDlg),hDlg);
+			AdjustDialogPos(::GetParent(hDlg), hDlg);
 		}
 		return TRUE;
 
 	case WM_DRAWITEM:
 		{
-			LPDRAWITEMSTRUCT pdis=reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
+			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
-			if (pdis->CtlID==IDC_PANANDSCAN_PREVIEW) {
-				int ItemWidth,ItemHeight,ScreenWidth,ScreenHeight;
+			if (pdis->CtlID == IDC_PANANDSCAN_PREVIEW) {
+				int ItemWidth, ItemHeight, ScreenWidth, ScreenHeight;
 				RECT rcScreen;
 				CCoreEngine::PanAndScanInfo PanScan;
 
-				ItemWidth=pdis->rcItem.right-pdis->rcItem.left;
-				ItemHeight=pdis->rcItem.bottom-pdis->rcItem.top;
-				ScreenWidth=min(ItemHeight*16/9,ItemWidth);
-				ScreenHeight=min(ItemWidth*9/16,ItemHeight);
-				rcScreen.left=pdis->rcItem.left+(ItemWidth-ScreenWidth)/2;
-				rcScreen.top=pdis->rcItem.top+(ItemHeight-ScreenHeight)/2;
-				rcScreen.right=rcScreen.left+ScreenWidth;
-				rcScreen.bottom=rcScreen.top+ScreenHeight;
-				::FillRect(pdis->hDC,&rcScreen,
-						   static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
+				ItemWidth = pdis->rcItem.right - pdis->rcItem.left;
+				ItemHeight = pdis->rcItem.bottom - pdis->rcItem.top;
+				ScreenWidth = std::min(ItemHeight * 16 / 9, ItemWidth);
+				ScreenHeight = std::min(ItemWidth * 9 / 16, ItemHeight);
+				rcScreen.left = pdis->rcItem.left + (ItemWidth - ScreenWidth) / 2;
+				rcScreen.top = pdis->rcItem.top + (ItemHeight - ScreenHeight) / 2;
+				rcScreen.right = rcScreen.left + ScreenWidth;
+				rcScreen.bottom = rcScreen.top + ScreenHeight;
+				::FillRect(
+					pdis->hDC, &rcScreen,
+					static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 				if (GetPanAndScanSettings(&PanScan)) {
-					HBRUSH hbr=::CreateSolidBrush(RGB(128,128,128));
-					HPEN hpen=::CreatePen(PS_INSIDEFRAME,
-						m_pStyleScaling->ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL),
-						RGB(160,160,160));
-					HGDIOBJ hOldBrush=::SelectObject(pdis->hDC,hbr);
-					HGDIOBJ hOldPen=::SelectObject(pdis->hDC,hpen);
+					HBRUSH hbr = ::CreateSolidBrush(RGB(128, 128, 128));
+					HPEN hpen = ::CreatePen(
+						PS_INSIDEFRAME,
+						m_pStyleScaling->ToPixels(1, Style::UnitType::LogicalPixel),
+						RGB(160, 160, 160));
+					HGDIOBJ hOldBrush = ::SelectObject(pdis->hDC, hbr);
+					HGDIOBJ hOldPen = ::SelectObject(pdis->hDC, hpen);
 
-					::Rectangle(pdis->hDC,
-								rcScreen.left+::MulDiv(PanScan.XPos,ScreenWidth,PanScan.XFactor),
-								rcScreen.top+::MulDiv(PanScan.YPos,ScreenHeight,PanScan.YFactor),
-								rcScreen.left+::MulDiv(PanScan.XPos+PanScan.Width,ScreenWidth,PanScan.XFactor),
-								rcScreen.top+::MulDiv(PanScan.YPos+PanScan.Height,ScreenHeight,PanScan.YFactor));
-					::SelectObject(pdis->hDC,hOldBrush);
-					::SelectObject(pdis->hDC,hOldPen);
+					::Rectangle(
+						pdis->hDC,
+						rcScreen.left + ::MulDiv(PanScan.XPos, ScreenWidth, PanScan.XFactor),
+						rcScreen.top + ::MulDiv(PanScan.YPos, ScreenHeight, PanScan.YFactor),
+						rcScreen.left + ::MulDiv(PanScan.XPos + PanScan.Width, ScreenWidth, PanScan.XFactor),
+						rcScreen.top + ::MulDiv(PanScan.YPos + PanScan.Height, ScreenHeight, PanScan.YFactor));
+					::SelectObject(pdis->hDC, hOldBrush);
+					::SelectObject(pdis->hDC, hOldPen);
 					::DeleteObject(hbr);
 					::DeleteObject(hpen);
 				}
@@ -398,27 +428,27 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 		case IDC_PANANDSCAN_UP:
 		case IDC_PANANDSCAN_DOWN:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
-				int From=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED),To;
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				int From = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED), To;
 
-				if (From>=0) {
-					if (LOWORD(wParam)==IDC_PANANDSCAN_UP) {
-						if (From<1)
+				if (From >= 0) {
+					if (LOWORD(wParam) == IDC_PANANDSCAN_UP) {
+						if (From < 1)
 							break;
-						To=From-1;
+						To = From - 1;
 					} else {
-						if (From+1>=ListView_GetItemCount(hwndList))
+						if (From + 1 >= ListView_GetItemCount(hwndList))
 							break;
-						To=From+1;
+						To = From + 1;
 					}
 
-					CPanAndScanOptions::PanAndScanInfo *pInfo=GetInfo(hwndList,From);
-					if (pInfo!=NULL) {
-						m_fStateChanging=true;
-						ListView_DeleteItem(hwndList,From);
-						InsertItem(hwndList,To,pInfo,true);
+					CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(hwndList, From);
+					if (pInfo != nullptr) {
+						m_fStateChanging = true;
+						ListView_DeleteItem(hwndList, From);
+						InsertItem(hwndList, To, pInfo, true);
 						SetItemStatus();
-						m_fStateChanging=false;
+						m_fStateChanging = false;
 					}
 				}
 			}
@@ -426,13 +456,13 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 		case IDC_PANANDSCAN_REMOVE:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-				if (Sel>=0) {
-					CPanAndScanOptions::PanAndScanInfo *pInfo=GetInfo(hwndList,Sel);
-					if (pInfo!=NULL) {
-						ListView_DeleteItem(hwndList,Sel);
+				if (Sel >= 0) {
+					CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(hwndList, Sel);
+					if (pInfo != nullptr) {
+						ListView_DeleteItem(hwndList, Sel);
 						delete pInfo;
 						SetItemStatus();
 					}
@@ -442,11 +472,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 		case IDC_PANANDSCAN_CLEAR:
 			{
-				HWND hwndList=::GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
+				HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				const int ItemCount = ListView_GetItemCount(hwndList);
 
-				for (int i=0;i<ItemCount;i++)
-					delete GetInfo(hwndList,i);
+				for (int i = 0; i < ItemCount; i++)
+					delete GetInfo(hwndList, i);
 				ListView_DeleteAllItems(hwndList);
 				SetItemStatus();
 			}
@@ -457,16 +487,16 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
 
-				szFileName[0]=_T('\0');
+				szFileName[0] = _T('\0');
 				InitOpenFileName(&ofn);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=
-					TEXT("ê›íËÉtÉ@ÉCÉã(*.ini)\0*.ini\0")
-					TEXT("Ç∑Ç◊ÇƒÇÃÉtÉ@ÉCÉã\0*.*\0");
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrTitle=TEXT("ÉpÉì&ÉXÉLÉÉÉìê›íËÇÃì«Ç›çûÇ›");
-				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter =
+					TEXT("Ë®≠ÂÆö„Éï„Ç°„Ç§„É´(*.ini)\0*.ini\0")
+					TEXT("„Åô„Åπ„Å¶„ÅÆ„Éï„Ç°„Ç§„É´\0*.*\0");
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = lengthof(szFileName);
+				ofn.lpstrTitle = TEXT("„Éë„É≥&„Çπ„Ç≠„É£„É≥Ë®≠ÂÆö„ÅÆË™≠„ÅøËæº„Åø");
+				ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
 					Import(szFileName);
 				}
@@ -478,17 +508,17 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
 
-				szFileName[0]=_T('\0');
+				szFileName[0] = _T('\0');
 				InitOpenFileName(&ofn);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=
-					TEXT("ê›íËÉtÉ@ÉCÉã(*.ini)\0*.ini\0")
-					TEXT("Ç∑Ç◊ÇƒÇÃÉtÉ@ÉCÉã\0*.*\0");
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrTitle=TEXT("ÉpÉì&ÉXÉLÉÉÉìê›íËÇÃï€ë∂");
-				ofn.Flags=OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
-				ofn.lpstrDefExt=TEXT("ini");
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter =
+					TEXT("Ë®≠ÂÆö„Éï„Ç°„Ç§„É´(*.ini)\0*.ini\0")
+					TEXT("„Åô„Åπ„Å¶„ÅÆ„Éï„Ç°„Ç§„É´\0*.*\0");
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = lengthof(szFileName);
+				ofn.lpstrTitle = TEXT("„Éë„É≥&„Çπ„Ç≠„É£„É≥Ë®≠ÂÆö„ÅÆ‰øùÂ≠ò");
+				ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+				ofn.lpstrDefExt = TEXT("ini");
 				if (FileSaveDialog(&ofn)) {
 					Export(szFileName);
 				}
@@ -500,9 +530,10 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				CPanAndScanOptions::PanAndScanInfo Info;
 
 				if (GetSettings(&Info)) {
-					Info.ID=m_PresetID++;
-					InsertItem(::GetDlgItem(hDlg,IDC_PANANDSCAN_LIST),
-							   -1,new CPanAndScanOptions::PanAndScanInfo(Info),true);
+					Info.ID = m_PresetID++;
+					InsertItem(
+						::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST),
+						-1, new CPanAndScanOptions::PanAndScanInfo(Info), true);
 					SetItemStatus();
 				}
 			}
@@ -510,18 +541,18 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 		case IDC_PANANDSCAN_REPLACE:
 			{
-				HWND hwndList=GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
+				HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-				if (Sel>=0) {
-					PanAndScanInfo *pOldInfo=GetInfo(hwndList,Sel);
+				if (Sel >= 0) {
+					PanAndScanInfo *pOldInfo = GetInfo(hwndList, Sel);
 
-					if (pOldInfo!=NULL) {
+					if (pOldInfo != nullptr) {
 						CPanAndScanOptions::PanAndScanInfo Info;
 
 						if (GetSettings(&Info)) {
-							Info.ID=pOldInfo->ID;
-							UpdateItem(hwndList,Sel,Info);
+							Info.ID = pOldInfo->ID;
+							UpdateItem(hwndList, Sel, Info);
 						}
 					}
 				}
@@ -529,14 +560,14 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 			return TRUE;
 
 		case IDC_PANANDSCAN_NAME:
-			if (HIWORD(wParam)==EN_CHANGE && !m_fStateChanging) {
-				HWND hwndList=GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
-				int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-				bool fOK=IsSettingsValid();
+			if (HIWORD(wParam) == EN_CHANGE && !m_fStateChanging) {
+				HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				bool fOK = IsSettingsValid();
 
-				EnableDlgItem(hDlg,IDC_PANANDSCAN_ADD,fOK);
-				EnableDlgItem(hDlg,IDC_PANANDSCAN_REPLACE,fOK && Sel>=0);
-				EnableDlgItem(hDlg,IDC_PANANDSCAN_TEST,fOK);
+				EnableDlgItem(hDlg, IDC_PANANDSCAN_ADD, fOK);
+				EnableDlgItem(hDlg, IDC_PANANDSCAN_REPLACE, fOK && Sel >= 0);
+				EnableDlgItem(hDlg, IDC_PANANDSCAN_TEST, fOK);
 			}
 			return TRUE;
 
@@ -544,8 +575,8 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 		case IDC_PANANDSCAN_YPOS:
 		case IDC_PANANDSCAN_WIDTH:
 		case IDC_PANANDSCAN_HEIGHT:
-			if (HIWORD(wParam)==EN_CHANGE) {
-				InvalidateDlgItem(hDlg,IDC_PANANDSCAN_PREVIEW,NULL,false);
+			if (HIWORD(wParam) == EN_CHANGE) {
+				InvalidateDlgItem(hDlg, IDC_PANANDSCAN_PREVIEW, nullptr, false);
 			}
 			return TRUE;
 
@@ -554,15 +585,15 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 				PanAndScanInfo Info;
 
 				if (GetSettings(&Info)) {
-					CUICore &UICore=GetAppClass().UICore;
+					CUICore &UICore = GetAppClass().UICore;
 					CCoreEngine::PanAndScanInfo OldInfo;
 
 					if (!m_fTested)
 						UICore.GetPanAndScan(&OldInfo);
 					UICore.SetPanAndScan(Info.Info);
 					if (!m_fTested) {
-						m_fTested=true;
-						m_OldPanAndScanInfo=OldInfo;
+						m_fTested = true;
+						m_OldPanAndScanInfo = OldInfo;
 					}
 				}
 			}
@@ -570,23 +601,23 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 		case IDOK:
 			{
-				HWND hwndList=GetDlgItem(m_hDlg,IDC_PANANDSCAN_LIST);
-				const int ItemCount=ListView_GetItemCount(hwndList);
+				HWND hwndList = GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
+				const int ItemCount = ListView_GetItemCount(hwndList);
 				std::vector<PanAndScanInfo> List;
 
-				for (int i=0;i<ItemCount;i++) {
-					PanAndScanInfo *pInfo=GetInfo(hwndList,i);
-					if (pInfo!=NULL)
+				for (int i = 0; i < ItemCount; i++) {
+					PanAndScanInfo *pInfo = GetInfo(hwndList, i);
+					if (pInfo != nullptr)
 						List.push_back(*pInfo);
 				}
 
-				m_PresetList=List;
+				m_PresetList = List;
 			}
 		case IDCANCEL:
 			if (m_fTested)
 				GetAppClass().UICore.SetPanAndScan(m_OldPanAndScanInfo);
 
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -595,29 +626,29 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			{
-				LPNMLISTVIEW pnmlv=reinterpret_cast<LPNMLISTVIEW>(lParam);
+				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
 
-				if ((pnmlv->uOldState&LVIS_SELECTED)!=(pnmlv->uNewState&LVIS_SELECTED)) {
-					if ((pnmlv->uNewState&LVIS_SELECTED)!=0) {
-						CPanAndScanOptions::PanAndScanInfo *pInfo=GetInfo(pnmlv->hdr.hwndFrom,pnmlv->iItem);
+				if ((pnmlv->uOldState & LVIS_SELECTED) != (pnmlv->uNewState & LVIS_SELECTED)) {
+					if ((pnmlv->uNewState & LVIS_SELECTED) != 0) {
+						CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(pnmlv->hdr.hwndFrom, pnmlv->iItem);
 
-						if (pInfo!=NULL) {
+						if (pInfo != nullptr) {
 							TCHAR szText[32];
 
-							m_fStateChanging=true;
-							::SetDlgItemText(hDlg,IDC_PANANDSCAN_NAME,pInfo->szName);
-							FormatValue(pInfo->Info.XPos,FACTOR_PERCENTAGE,szText,lengthof(szText));
-							::SetDlgItemText(hDlg,IDC_PANANDSCAN_XPOS,szText);
-							FormatValue(pInfo->Info.YPos,FACTOR_PERCENTAGE,szText,lengthof(szText));
-							::SetDlgItemText(hDlg,IDC_PANANDSCAN_YPOS,szText);
-							FormatValue(pInfo->Info.Width,FACTOR_PERCENTAGE,szText,lengthof(szText));
-							::SetDlgItemText(hDlg,IDC_PANANDSCAN_WIDTH,szText);
-							FormatValue(pInfo->Info.Height,FACTOR_PERCENTAGE,szText,lengthof(szText));
-							::SetDlgItemText(hDlg,IDC_PANANDSCAN_HEIGHT,szText);
-							::SetDlgItemInt(hDlg,IDC_PANANDSCAN_XASPECT,pInfo->Info.XAspect,TRUE);
-							::SetDlgItemInt(hDlg,IDC_PANANDSCAN_YASPECT,pInfo->Info.YAspect,TRUE);
-							m_fStateChanging=false;
-							InvalidateDlgItem(hDlg,IDC_PANANDSCAN_PREVIEW,NULL,false);
+							m_fStateChanging = true;
+							::SetDlgItemText(hDlg, IDC_PANANDSCAN_NAME, pInfo->szName);
+							FormatValue(pInfo->Info.XPos, FACTOR_PERCENTAGE, szText, lengthof(szText));
+							::SetDlgItemText(hDlg, IDC_PANANDSCAN_XPOS, szText);
+							FormatValue(pInfo->Info.YPos, FACTOR_PERCENTAGE, szText, lengthof(szText));
+							::SetDlgItemText(hDlg, IDC_PANANDSCAN_YPOS, szText);
+							FormatValue(pInfo->Info.Width, FACTOR_PERCENTAGE, szText, lengthof(szText));
+							::SetDlgItemText(hDlg, IDC_PANANDSCAN_WIDTH, szText);
+							FormatValue(pInfo->Info.Height, FACTOR_PERCENTAGE, szText, lengthof(szText));
+							::SetDlgItemText(hDlg, IDC_PANANDSCAN_HEIGHT, szText);
+							::SetDlgItemInt(hDlg, IDC_PANANDSCAN_XASPECT, pInfo->Info.XAspect, TRUE);
+							::SetDlgItemInt(hDlg, IDC_PANANDSCAN_YASPECT, pInfo->Info.YAspect, TRUE);
+							m_fStateChanging = false;
+							InvalidateDlgItem(hDlg, IDC_PANANDSCAN_PREVIEW, nullptr, false);
 						}
 					}
 
@@ -630,11 +661,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 	case WM_DESTROY:
 		{
-			HWND hwndList=::GetDlgItem(hDlg,IDC_PANANDSCAN_LIST);
-			const int ItemCount=ListView_GetItemCount(hwndList);
+			HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+			const int ItemCount = ListView_GetItemCount(hwndList);
 
-			for (int i=0;i<ItemCount;i++)
-				delete GetInfo(hwndList,i);
+			for (int i = 0; i < ItemCount; i++)
+				delete GetInfo(hwndList, i);
 			ListView_DeleteAllItems(hwndList);
 		}
 		return TRUE;
@@ -646,37 +677,37 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 void CPanAndScanOptions::SetItemStatus() const
 {
-	HWND hwndList=GetDlgItem(m_hDlg,IDC_PANANDSCAN_LIST);
-	int Sel=ListView_GetNextItem(hwndList,-1,LVNI_SELECTED);
-	int ItemCount=ListView_GetItemCount(hwndList);
-	bool fValid=IsSettingsValid();
+	HWND hwndList = GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
+	int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+	int ItemCount = ListView_GetItemCount(hwndList);
+	bool fValid = IsSettingsValid();
 
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_UP,Sel>0);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_DOWN,Sel>=0 && Sel+1<ItemCount);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_REMOVE,Sel>=0);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_CLEAR,ItemCount>0);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_EXPORT,ItemCount>0);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_ADD,fValid);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_REPLACE,Sel>=0 && fValid);
-	EnableDlgItem(m_hDlg,IDC_PANANDSCAN_TEST,fValid);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_UP, Sel > 0);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_DOWN, Sel >= 0 && Sel + 1 < ItemCount);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_REMOVE, Sel >= 0);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_CLEAR, ItemCount > 0);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_EXPORT, ItemCount > 0);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_ADD, fValid);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_REPLACE, Sel >= 0 && fValid);
+	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_TEST, fValid);
 }
 
 
-static int GetItemValue(HWND hDlg,int ID,int Factor)
+static int GetItemValue(HWND hDlg, int ID, int Factor)
 {
 	TCHAR szValue[32];
 
-	::GetDlgItemText(hDlg,ID,szValue,lengthof(szValue));
+	::GetDlgItemText(hDlg, ID, szValue, lengthof(szValue));
 
-	return GetValue(szValue,Factor);
+	return GetValue(szValue, Factor);
 }
 
 bool CPanAndScanOptions::GetSettings(CPanAndScanOptions::PanAndScanInfo *pInfo) const
 {
-	::GetDlgItemText(m_hDlg,IDC_PANANDSCAN_NAME,pInfo->szName,MAX_NAME);
+	::GetDlgItemText(m_hDlg, IDC_PANANDSCAN_NAME, pInfo->szName, MAX_NAME);
 
 	if (!GetPanAndScanSettings(&pInfo->Info)) {
-		::MessageBox(m_hDlg,TEXT("ì¸óÕÇ≥ÇÍÇΩílÇ™ê≥ÇµÇ≠Ç†ÇËÇ‹ÇπÇÒÅB"),NULL,MB_OK | MB_ICONINFORMATION);
+		::MessageBox(m_hDlg, TEXT("ÂÖ•Âäõ„Åï„Çå„ÅüÂÄ§„ÅåÊ≠£„Åó„Åè„ÅÇ„Çä„Åæ„Åõ„Çì„ÄÇ"), nullptr, MB_OK | MB_ICONINFORMATION);
 		return false;
 	}
 
@@ -686,20 +717,20 @@ bool CPanAndScanOptions::GetSettings(CPanAndScanOptions::PanAndScanInfo *pInfo) 
 
 bool CPanAndScanOptions::GetPanAndScanSettings(CCoreEngine::PanAndScanInfo *pInfo) const
 {
-	pInfo->XFactor=HORZ_FACTOR;
-	pInfo->YFactor=VERT_FACTOR;
-	pInfo->XPos=GetItemValue(m_hDlg,IDC_PANANDSCAN_XPOS,FACTOR_PERCENTAGE);
-	pInfo->YPos=GetItemValue(m_hDlg,IDC_PANANDSCAN_YPOS,FACTOR_PERCENTAGE);
-	pInfo->Width=GetItemValue(m_hDlg,IDC_PANANDSCAN_WIDTH,FACTOR_PERCENTAGE);
-	pInfo->Height=GetItemValue(m_hDlg,IDC_PANANDSCAN_HEIGHT,FACTOR_PERCENTAGE);
-	pInfo->XAspect=::GetDlgItemInt(m_hDlg,IDC_PANANDSCAN_XASPECT,NULL,TRUE);
-	pInfo->YAspect=::GetDlgItemInt(m_hDlg,IDC_PANANDSCAN_YASPECT,NULL,TRUE);
+	pInfo->XFactor = HORZ_FACTOR;
+	pInfo->YFactor = VERT_FACTOR;
+	pInfo->XPos = GetItemValue(m_hDlg, IDC_PANANDSCAN_XPOS, FACTOR_PERCENTAGE);
+	pInfo->YPos = GetItemValue(m_hDlg, IDC_PANANDSCAN_YPOS, FACTOR_PERCENTAGE);
+	pInfo->Width = GetItemValue(m_hDlg, IDC_PANANDSCAN_WIDTH, FACTOR_PERCENTAGE);
+	pInfo->Height = GetItemValue(m_hDlg, IDC_PANANDSCAN_HEIGHT, FACTOR_PERCENTAGE);
+	pInfo->XAspect = ::GetDlgItemInt(m_hDlg, IDC_PANANDSCAN_XASPECT, nullptr, TRUE);
+	pInfo->YAspect = ::GetDlgItemInt(m_hDlg, IDC_PANANDSCAN_YASPECT, nullptr, TRUE);
 
-	if (pInfo->XPos<0 || pInfo->YPos<0
-			|| pInfo->Width<=0 || pInfo->Height<=0
-			|| pInfo->XPos+pInfo->Width>pInfo->XFactor
-			|| pInfo->YPos+pInfo->Height>pInfo->YFactor
-			|| pInfo->XAspect<=0 || pInfo->YAspect<=0) {
+	if (pInfo->XPos < 0 || pInfo->YPos < 0
+			|| pInfo->Width <= 0 || pInfo->Height <= 0
+			|| pInfo->XPos + pInfo->Width > pInfo->XFactor
+			|| pInfo->YPos + pInfo->Height > pInfo->YFactor
+			|| pInfo->XAspect <= 0 || pInfo->YAspect <= 0) {
 		return false;
 	}
 
@@ -709,7 +740,7 @@ bool CPanAndScanOptions::GetPanAndScanSettings(CCoreEngine::PanAndScanInfo *pInf
 
 bool CPanAndScanOptions::IsSettingsValid() const
 {
-	return ::GetWindowTextLength(::GetDlgItem(m_hDlg,IDC_PANANDSCAN_NAME))>0;
+	return ::GetWindowTextLength(::GetDlgItem(m_hDlg, IDC_PANANDSCAN_NAME)) > 0;
 }
 
 
@@ -717,25 +748,26 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName,CSettings::OPEN_READ)
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read)
 			|| !Settings.SetSection(TEXT("PanAndScan")))
 		return false;
 
-	for (int i=0;;i++) {
+	for (int i = 0;; i++) {
 		PanAndScanInfo Info;
-		TCHAR szKey[32],szSettings[256];
+		TCHAR szKey[32], szSettings[256];
 
-		::wsprintf(szKey,TEXT("Preset%d.Name"),i);
-		if (!Settings.Read(szKey,Info.szName,MAX_NAME) || Info.szName[0]==_T('\0'))
+		StringPrintf(szKey, TEXT("Preset%d.Name"), i);
+		if (!Settings.Read(szKey, Info.szName, MAX_NAME) || Info.szName[0] == _T('\0'))
 			break;
-		::wsprintf(szKey,TEXT("Preset%d"),i);
-		if (!Settings.Read(szKey,szSettings,lengthof(szSettings)) || szSettings[0]==_T('\0'))
+		StringPrintf(szKey, TEXT("Preset%d"), i);
+		if (!Settings.Read(szKey, szSettings, lengthof(szSettings)) || szSettings[0] == _T('\0'))
 			break;
 
-		if (ParsePanAndScanInfo(&Info.Info,szSettings)) {
-			Info.ID=m_PresetID++;
-			InsertItem(::GetDlgItem(m_hDlg,IDC_PANANDSCAN_LIST),
-					   -1,new CPanAndScanOptions::PanAndScanInfo(Info));
+		if (ParsePanAndScanInfo(&Info.Info, szSettings)) {
+			Info.ID = m_PresetID++;
+			InsertItem(
+				::GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST),
+				-1, new CPanAndScanOptions::PanAndScanInfo(Info));
 		}
 	}
 
@@ -747,37 +779,39 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 
 bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 {
-	HANDLE hFile=::CreateFile(pszFileName,GENERIC_WRITE,0,NULL,
-							  CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	if (hFile==INVALID_HANDLE_VALUE) {
-		::MessageBox(m_hDlg,TEXT("ÉtÉ@ÉCÉãÇçÏê¨Ç≈Ç´Ç‹ÇπÇÒÅB"),NULL,MB_OK | MB_ICONEXCLAMATION);
+	HANDLE hFile = ::CreateFile(
+		pszFileName, GENERIC_WRITE, 0, nullptr,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (hFile == INVALID_HANDLE_VALUE) {
+		::MessageBox(m_hDlg, TEXT("„Éï„Ç°„Ç§„É´„Çí‰ΩúÊàê„Åß„Åç„Åæ„Åõ„Çì„ÄÇ"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
 	DWORD Write;
 
 #ifdef UNICODE
-	const WORD BOM=0xFEFF;
-	::WriteFile(hFile,&BOM,2,&Write,NULL);
+	const WORD BOM = 0xFEFF;
+	::WriteFile(hFile, &BOM, 2, &Write, nullptr);
 #endif
 
 	static const TCHAR szHeader[] = TEXT("; ") APP_NAME TEXT(" Pan&Scan presets\r\n[PanAndScan]\r\n");
-	::WriteFile(hFile,szHeader,sizeof(szHeader)-sizeof(TCHAR),&Write,NULL);
+	::WriteFile(hFile, szHeader, sizeof(szHeader) - sizeof(TCHAR), &Write, nullptr);
 
-	HWND hwndList=::GetDlgItem(m_hDlg,IDC_PANANDSCAN_LIST);
-	const int ItemCount=ListView_GetItemCount(hwndList);
-	for (int i=0;i<ItemCount;i++) {
-		const PanAndScanInfo *pInfo=GetInfo(hwndList,i);
-		if (pInfo==NULL)
+	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
+	const int ItemCount = ListView_GetItemCount(hwndList);
+	for (int i = 0; i < ItemCount; i++) {
+		const PanAndScanInfo *pInfo = GetInfo(hwndList, i);
+		if (pInfo == nullptr)
 			break;
 
-		TCHAR szBuffer[256],szSettings[256];
+		TCHAR szBuffer[256], szSettings[256];
 
-		FormatPanAndScanInfo(pInfo->Info,szSettings,lengthof(szSettings));
-		int Length=StdUtil::snprintf(szBuffer,lengthof(szBuffer),
-									 TEXT("Preset%d.Name=%s\r\nPreset%d=%s\r\n"),
-									 i,pInfo->szName,i,szSettings);
-		::WriteFile(hFile,szBuffer,Length*sizeof(TCHAR),&Write,NULL);
+		FormatPanAndScanInfo(pInfo->Info, szSettings, lengthof(szSettings));
+		int Length = StringPrintf(
+			szBuffer,
+			TEXT("Preset%d.Name=%s\r\nPreset%d=%s\r\n"),
+			i, pInfo->szName, i, szSettings);
+		::WriteFile(hFile, szBuffer, Length * sizeof(TCHAR), &Write, nullptr);
 	}
 
 	::CloseHandle(hFile);
@@ -786,15 +820,19 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 }
 
 
-bool CPanAndScanOptions::GetCommandName(int Command,LPTSTR pszName,int MaxLength)
+bool CPanAndScanOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxLength)
 {
-	if (Command<m_FirstID || Command>m_LastID)
+	if (Command < m_FirstID || Command > m_LastID)
 		return false;
-	const int Index=Command-m_FirstID;
-	int Length=StdUtil::snprintf(pszName,MaxLength,TEXT("ÉpÉì&ÉXÉLÉÉÉì%d"),Index+1);
-	if ((size_t)Index<m_PresetList.size()) {
-		StdUtil::snprintf(pszName+Length,MaxLength-Length,
-						  TEXT(" : %s"),m_PresetList[Index].szName);
+	const int Index = Command - m_FirstID;
+	int Length = StringPrintf(pszText, MaxLength, TEXT("„Éë„É≥&„Çπ„Ç≠„É£„É≥%d"), Index + 1);
+	if ((size_t)Index < m_PresetList.size()) {
+		StringPrintf(
+			pszText + Length, MaxLength - Length,
+			TEXT(" : %s"), m_PresetList[Index].szName);
 	}
 	return true;
 }
+
+
+}	// namespace TVTest

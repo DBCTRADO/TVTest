@@ -1,77 +1,75 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_H
 #define TVTEST_H
 
 
-#define APP_NAME_A	"TVTest"
+#define LTEXT_(text) L##text
+#define LTEXT(text)  LTEXT_(text)
 
-#define VERSION_MAJOR		0
-#define VERSION_MINOR		9
-#define VERSION_BUILD		0
-#define VERSION_REVISION	0
-
-#define VERSION_TEXT_A	"0.9.0"
-
-//#define VERSION_STATUS_A	"dev"
-
-#define LTEXT_(text)	L##text
-#define LTEXT(text)		LTEXT_(text)
-#define APP_NAME_W			LTEXT(APP_NAME_A)
-#define VERSION_TEXT_W		LTEXT(VERSION_TEXT_A)
-#ifdef VERSION_STATUS_A
-#define VERSION_STATUS_W	LTEXT(VERSION_STATUS_A)
-#endif
+#define APP_NAME_A "TVTest"
+#define APP_NAME_W LTEXT(APP_NAME_A)
 #ifndef UNICODE
-#define APP_NAME		APP_NAME_A
-#define VERSION_TEXT	VERSION_TEXT_A
-#ifdef VERSION_STATUS_A
-#define VERSION_STATUS	VERSION_STATUS_A
-#endif
+#define APP_NAME APP_NAME_A
 #else
-#define APP_NAME		APP_NAME_W
-#define VERSION_TEXT	VERSION_TEXT_W
-#ifdef VERSION_STATUS_W
-#define VERSION_STATUS	VERSION_STATUS_W
-#endif
-#endif
-
-#if defined(_M_IX86)
-#define VERSION_PLATFORM	TEXT("x86")
-#elif defined(_M_X64)
-#define VERSION_PLATFORM	TEXT("x64")
-#endif
-
-#ifdef VERSION_STATUS
-#define ABOUT_VERSION_TEXT	APP_NAME TEXT(" ver.") VERSION_TEXT TEXT("-") VERSION_STATUS
-#else
-#define ABOUT_VERSION_TEXT	APP_NAME TEXT(" ver.") VERSION_TEXT
+#define APP_NAME APP_NAME_W
 #endif
 
 
 #ifndef RC_INVOKED
 
 
+#include "LibISDB/LibISDB/LibISDB.hpp"
+
+
+namespace TVTest
+{
+	using namespace LibISDB::Literals;
+	using namespace LibISDB::EnumFlags;
+
+#define TVTEST_ENUM_FLAGS LIBISDB_ENUM_FLAGS
+
+#define TVTEST_ENUM_CLASS_TRAILER_(first) \
+	Trailer_, \
+	First_ = first, \
+	Last_ = Trailer_ - 1
+#define TVTEST_ENUM_CLASS_TRAILER \
+	TVTEST_ENUM_CLASS_TRAILER_(0)
+
+	template<typename T> constexpr bool CheckEnumRange(T val) {
+		return (val >= T::First_) && (val <= T::Last_);
+	}
+}
+
+
 #include "Util.h"
+
 
 #define lengthof _countof
 
-#ifndef CLAMP
-#define CLAMP(val,min,max) \
-	(((val)>(max))?(max):(((val)<(min))?(min):(val)))
-#endif
+#define ABSTRACT_DECL        __declspec(novtable)
+#define ABSTRACT_CLASS(name) ABSTRACT_DECL name abstract
 
-#ifndef SAFE_DELETE
-//#define SAFE_DELETE(p)		if (p) { delete p; (p)=NULL; }
-//#define SAFE_DELETE_ARRAY(p)	if (p) { delete [] p; (p)=NULL; }
-// delete NULL ‚Å‚à‚¢‚¢‚Ì‚Å
-#define SAFE_DELETE(p)			((void)(delete p,(p)=NULL))
-#define SAFE_DELETE_ARRAY(p)	((void)(delete [] p,(p)=NULL))
-#endif
-
-#define ABSTRACT_DECL			__declspec(novtable)
-#define ABSTRACT_CLASS(name)	ABSTRACT_DECL name abstract
-
-#define CHANNEL_FILE_EXTENSION			TEXT(".ch2")
-#define DEFERRED_CHANNEL_FILE_EXTENSION	TEXT(".ch1")
+#define CHANNEL_FILE_EXTENSION          TEXT(".ch2")
+#define DEFERRED_CHANNEL_FILE_EXTENSION TEXT(".ch1")
 
 
 #endif	// ndef RC_INVOKED

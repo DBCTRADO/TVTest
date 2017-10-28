@@ -1,47 +1,65 @@
-#ifndef AERO_H
-#define AERO_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 
-class CAeroGlass
+#ifndef TVTEST_AERO_H
+#define TVTEST_AERO_H
+
+
+namespace TVTest
 {
-public:
-	CAeroGlass();
-	~CAeroGlass();
-	bool IsEnabled();
-	bool ApplyAeroGlass(HWND hwnd,const RECT *pRect);
-	bool EnableNcRendering(HWND hwnd,bool fEnable);
 
-#ifdef WIN_XP_SUPPORT
-private:
-	HMODULE m_hDwmLib;
-	bool LoadDwmLib();
-#endif
-};
+	class CAeroGlass
+	{
+	public:
+		bool IsEnabled();
+		bool ApplyAeroGlass(HWND hwnd, const RECT *pRect);
+		bool EnableNcRendering(HWND hwnd, bool fEnable);
+	};
 
-class CBufferedPaint
-{
-public:
-	CBufferedPaint();
-	~CBufferedPaint();
-	HDC Begin(HDC hdc,const RECT *pRect,bool fErase=false);
-	bool End(bool fUpdate=true);
-	bool Clear(const RECT *pRect=NULL);
-	bool SetAlpha(BYTE Alpha);
-	bool SetOpaque() { return SetAlpha(255); }
+	class CBufferedPaint
+	{
+	public:
+		CBufferedPaint();
+		~CBufferedPaint();
 
-	static bool Initialize();
-	static bool IsSupported();
+		HDC Begin(HDC hdc, const RECT *pRect, bool fErase = false);
+		bool End(bool fUpdate = true);
+		bool Clear(const RECT *pRect = nullptr);
+		bool SetAlpha(BYTE Alpha);
+		bool SetOpaque() { return SetAlpha(255); }
 
-private:
-	HANDLE m_hPaintBuffer;
-};
+		static bool Initialize();
+		static bool IsSupported();
 
-class CDoubleBufferingDraw
-{
-public:
-	virtual void Draw(HDC hdc,const RECT &PaintRect) = 0;
-	void OnPaint(HWND hwnd);
-};
+	private:
+		HANDLE m_hPaintBuffer;
+	};
+
+	class CDoubleBufferingDraw
+	{
+	public:
+		virtual void Draw(HDC hdc, const RECT &PaintRect) = 0;
+		void OnPaint(HWND hwnd);
+	};
+
+}
 
 
 #endif

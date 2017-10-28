@@ -1,88 +1,115 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
+#ifndef TVTEST_LOGGER_H
+#define TVTEST_LOGGER_H
 
 
 #include <vector>
+#include <memory>
 #include "Options.h"
 
 
-class CLogItem
+namespace TVTest
 {
-public:
-	enum LogType {
-		TYPE_INFORMATION,
-		TYPE_WARNING,
-		TYPE_ERROR
+
+	class CLogItem
+	{
+	public:
+		enum class LogType {
+			Information,
+			Warning,
+			Error,
+		};
+
+		CLogItem();
+		CLogItem(LogType Type, LPCTSTR pszText, DWORD SerialNumber);
+		~CLogItem();
+
+		LPCTSTR GetText() const { return m_Text.c_str(); }
+		void GetTime(SYSTEMTIME *pTime) const;
+		LogType GetType() const { return m_Type; }
+		DWORD GetSerialNumber() const { return m_SerialNumber; }
+		int Format(char *pszText, int MaxLength) const;
+		int Format(WCHAR *pszText, int MaxLength) const;
+		int FormatTime(char *pszText, int MaxLength) const;
+		int FormatTime(WCHAR *pszText, int MaxLength) const;
+
+	private:
+		FILETIME m_Time;
+		String m_Text;
+		LogType m_Type;
+		DWORD m_SerialNumber;
 	};
 
-	CLogItem();
-	CLogItem(LogType Type,LPCTSTR pszText,DWORD SerialNumber);
-	~CLogItem();
-	LPCTSTR GetText() const { return m_Text.c_str(); }
-	void GetTime(SYSTEMTIME *pTime) const;
-	LogType GetType() const { return m_Type; }
-	DWORD GetSerialNumber() const { return m_SerialNumber; }
-	int Format(char *pszText,int MaxLength) const;
-	int Format(WCHAR *pszText,int MaxLength) const;
-	int FormatTime(char *pszText,int MaxLength) const;
-	int FormatTime(WCHAR *pszText,int MaxLength) const;
+	class CLogger
+		: public COptions
+	{
+	public:
+		CLogger();
+		~CLogger();
 
-private:
-	FILETIME m_Time;
-	TVTest::String m_Text;
-	LogType m_Type;
-	DWORD m_SerialNumber;
-};
+	// CSettingsBase
+		bool ReadSettings(CSettings &Settings) override;
+		bool WriteSettings(CSettings &Settings) override;
 
-class CLogger
-	: public COptions
-{
-public:
-	CLogger();
-	~CLogger();
+	// CBasicDialog
+		bool Create(HWND hwndOwner) override;
 
-// CSettingsBase
-	bool ReadSettings(CSettings &Settings) override;
-	bool WriteSettings(CSettings &Settings) override;
+	// CLogger
+		bool AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
+		bool AddLogV(CLogItem::LogType Type, LPCTSTR pszText, va_list Args);
+		bool AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText);
+		void Clear();
+		std::size_t GetLogCount() const;
+		bool GetLog(std::size_t Index, CLogItem *pItem) const;
+		bool GetLogBySerialNumber(DWORD SerialNumber, CLogItem *pItem) const;
+		bool SetOutputToFile(bool fOutput);
+		bool GetOutputToFile() const { return m_fOutputToFile; }
+		bool SaveToFile(LPCTSTR pszFileName, bool fAppend);
+		void GetLogText(String *pText) const;
+		void GetLogText(AnsiString *pText) const;
+		bool CopyToClipboard(HWND hwnd);
 
-// CBasicDialog
-	bool Create(HWND hwndOwner) override;
+	private:
+		enum {
+			COLUMN_DUMMY,
+			COLUMN_TIME,
+			COLUMN_TEXT,
+			NUM_COLUMNS
+		};
 
-// CLogger
-	bool AddLog(CLogItem::LogType Type,LPCTSTR pszText, ...);
-	bool AddLogV(CLogItem::LogType Type,LPCTSTR pszText,va_list Args);
-	bool AddLogRaw(CLogItem::LogType Type,LPCTSTR pszText);
-	void Clear();
-	std::size_t GetLogCount() const;
-	bool GetLog(std::size_t Index,CLogItem *pItem) const;
-	bool GetLogBySerialNumber(DWORD SerialNumber,CLogItem *pItem) const;
-	bool SetOutputToFile(bool fOutput);
-	bool GetOutputToFile() const { return m_fOutputToFile; }
-	bool SaveToFile(LPCTSTR pszFileName,bool fAppend);
-	bool GetDefaultLogFileName(LPTSTR pszFileName,DWORD MaxLength) const;
-	void GetLogText(TVTest::String *pText) const;
-	void GetLogText(TVTest::AnsiString *pText) const;
-	bool CopyToClipboard(HWND hwnd);
+	// CBasicDialog
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-private:
-	enum {
-		COLUMN_DUMMY,
-		COLUMN_TIME,
-		COLUMN_TEXT,
-		NUM_COLUMNS
+	// CUIBase
+		void RealizeStyle() override;
+
+		std::vector<std::unique_ptr<CLogItem>> m_LogList;
+		DWORD m_SerialNumber;
+		bool m_fOutputToFile;
+		mutable MutexLock m_Lock;
+		String m_DefaultLogFileName;
 	};
 
-// CBasicDialog
-	INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
-
-// CUIBase
-	void RealizeStyle() override;
-
-	std::vector<CLogItem*> m_LogList;
-	DWORD m_SerialNumber;
-	bool m_fOutputToFile;
-	mutable CCriticalLock m_Lock;
-};
+}	// namespace TVTest
 
 
 #endif

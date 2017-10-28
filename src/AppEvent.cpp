@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppEvent.h"
@@ -15,7 +35,7 @@ namespace TVTest
 
 bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 {
-	if (pHandler==nullptr)
+	if (pHandler == nullptr)
 		return false;
 
 	m_HandlerList.push_back(pHandler);
@@ -26,8 +46,8 @@ bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 
 bool CAppEventManager::RemoveEventHandler(CAppEventHandler *pHandler)
 {
-	auto itr=std::find(m_HandlerList.begin(),m_HandlerList.end(),pHandler);
-	if (itr==m_HandlerList.end())
+	auto itr = std::find(m_HandlerList.begin(), m_HandlerList.end(), pHandler);
+	if (itr == m_HandlerList.end())
 		return false;
 	m_HandlerList.erase(itr);
 	return true;
@@ -58,7 +78,7 @@ void CAppEventManager::OnTunerShutDown()
 }
 
 
-void CAppEventManager::OnChannelChanged(unsigned int Status)
+void CAppEventManager::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 {
 	CALL_HANDLERS(OnChannelChanged(Status));
 }
@@ -148,6 +168,12 @@ void CAppEventManager::OnPanAndScanChanged()
 }
 
 
+void CAppEventManager::OnAspectRatioTypeChanged(int Type)
+{
+	CALL_HANDLERS(OnAspectRatioTypeChanged(Type));
+}
+
+
 void CAppEventManager::OnVolumeChanged(int Volume)
 {
 	CALL_HANDLERS(OnVolumeChanged(Volume));
@@ -160,13 +186,13 @@ void CAppEventManager::OnMuteChanged(bool fMute)
 }
 
 
-void CAppEventManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
+void CAppEventManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
 	CALL_HANDLERS(OnDualMonoModeChanged(Mode));
 }
 
 
-void CAppEventManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
+void CAppEventManager::OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
 {
 	CALL_HANDLERS(OnStereoModeChanged(Mode));
 }
@@ -240,9 +266,7 @@ void CAppEventManager::OnVariableChanged()
 
 
 
-CAppEventHandler::~CAppEventHandler()
-{
-}
+CAppEventHandler::~CAppEventHandler() = default;
 
 
 }	// namespace TVTest

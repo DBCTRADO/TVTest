@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_TASKBAR_OPTIONS_H
 #define TVTEST_TASKBAR_OPTIONS_H
 
@@ -6,48 +26,54 @@
 #include "Options.h"
 
 
-class CTaskbarOptions : public COptions
+namespace TVTest
 {
-public:
-	typedef std::vector<int> TaskList;
 
-	CTaskbarOptions();
-	~CTaskbarOptions();
+	class CTaskbarOptions
+		: public COptions
+	{
+	public:
+		typedef std::vector<int> TaskList;
 
-// COptions
-	bool ReadSettings(CSettings &Settings) override;
-	bool WriteSettings(CSettings &Settings) override;
+		CTaskbarOptions();
+		~CTaskbarOptions();
 
-// CTaskbarOptions
-	bool IsJumpListEnabled() const;
-	void SetEnableJumpList(bool fEnable);
-	bool GetEnableJumpList() const { return m_fEnableJumpList; }
-	bool GetShowTasks() const { return m_fShowTasks; }
-	const TaskList &GetTaskList() const { return m_TaskList; }
-	bool GetShowRecentChannels() const { return m_fShowRecentChannels; }
-	int GetMaxRecentChannels() const { return m_MaxRecentChannels; }
-	bool GetShowChannelIcon() const { return m_fShowChannelIcon; }
-	const TVTest::String &GetIconDirectory() const { return m_IconDirectory; }
-	void SetJumpListKeepSingleTask(bool fSingleTask) { m_fJumpListKeepSingleTask=fSingleTask; }
-	bool GetJumpListKeepSingleTask() const { return m_fJumpListKeepSingleTask; }
-	void SetUseUniqueAppID(bool fUnique) { m_fUseUniqueAppID=fUnique; }
-	bool GetUseUniqueAppID() const { return m_fUseUniqueAppID; }
-	const TVTest::String &GetAppID() const { return m_AppID; }
+	// COptions
+		bool ReadSettings(CSettings &Settings) override;
+		bool WriteSettings(CSettings &Settings) override;
 
-private:
-	bool m_fEnableJumpList;
-	bool m_fShowTasks;
-	TaskList m_TaskList;
-	bool m_fShowRecentChannels;
-	int m_MaxRecentChannels;
-	bool m_fShowChannelIcon;
-	TVTest::String m_IconDirectory;
-	bool m_fJumpListKeepSingleTask;
-	bool m_fUseUniqueAppID;
-	TVTest::String m_AppID;
+	// CTaskbarOptions
+		bool IsJumpListEnabled() const;
+		void SetEnableJumpList(bool fEnable);
+		bool GetEnableJumpList() const { return m_fEnableJumpList; }
+		bool GetShowTasks() const { return m_fShowTasks; }
+		const TaskList &GetTaskList() const { return m_TaskList; }
+		bool GetShowRecentChannels() const { return m_fShowRecentChannels; }
+		int GetMaxRecentChannels() const { return m_MaxRecentChannels; }
+		bool GetShowChannelIcon() const { return m_fShowChannelIcon; }
+		const String &GetIconDirectory() const { return m_IconDirectory; }
+		void SetJumpListKeepSingleTask(bool fSingleTask) { m_fJumpListKeepSingleTask = fSingleTask; }
+		bool GetJumpListKeepSingleTask() const { return m_fJumpListKeepSingleTask; }
+		void SetUseUniqueAppID(bool fUnique) { m_fUseUniqueAppID = fUnique; }
+		bool GetUseUniqueAppID() const { return m_fUseUniqueAppID; }
+		const String &GetAppID() const { return m_AppID; }
 
-	static const int m_DefaultTaskList[];
-};
+	private:
+		bool m_fEnableJumpList;
+		bool m_fShowTasks;
+		TaskList m_TaskList;
+		bool m_fShowRecentChannels;
+		int m_MaxRecentChannels;
+		bool m_fShowChannelIcon;
+		String m_IconDirectory;
+		bool m_fJumpListKeepSingleTask;
+		bool m_fUseUniqueAppID;
+		String m_AppID;
+
+		static const int m_DefaultTaskList[];
+	};
+
+}	// namespace TVTest
 
 
 #endif

@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include <algorithm>
 #include "TVTest.h"
@@ -10,14 +30,14 @@ namespace TVTest
 {
 
 
-bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,String *pString)
+bool FormatVariableString(CVariableStringMap *pVariableMap, LPCWSTR pszFormat, String *pString)
 {
-	if (pString==nullptr)
+	if (pString == nullptr)
 		return false;
 
 	pString->clear();
 
-	if (pszFormat==nullptr || pVariableMap==nullptr)
+	if (pszFormat == nullptr || pVariableMap == nullptr)
 		return false;
 
 	if (!pVariableMap->BeginFormat())
@@ -26,32 +46,32 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 	struct SeparatorInfo {
 		String::size_type Pos;
 		LPCWSTR pszSeparator;
-		SeparatorInfo(String::size_type p,LPCWSTR s) : Pos(p), pszSeparator(s) {}
+		SeparatorInfo(String::size_type p, LPCWSTR s) : Pos(p), pszSeparator(s) {}
 	};
 
 	std::vector<SeparatorInfo> SeparatorList;
-	LPCWSTR p=pszFormat;
+	LPCWSTR p = pszFormat;
 
-	while (*p!=L'\0') {
-		if (*p==L'%') {
+	while (*p != L'\0') {
+		if (*p == L'%') {
 			p++;
-			if (*p==L'%') {
+			if (*p == L'%') {
 				pString->append(L"%");
 				p++;
 			} else {
-				String Keyword,Text;
+				String Keyword, Text;
 
-				while (*p!=L'%' && *p!=L'\0')
+				while (*p != L'%' && *p != L'\0')
 					Keyword.push_back(*p++);
-				if (*p==L'%') {
+				if (*p == L'%') {
 					p++;
-					if (::lstrcmpiW(Keyword.c_str(),L"sep-hyphen")==0) {
-						SeparatorList.push_back(SeparatorInfo(pString->size(),L"-"));
-					} else if (::lstrcmpiW(Keyword.c_str(),L"sep-slash")==0) {
-						SeparatorList.push_back(SeparatorInfo(pString->size(),L"/"));
-					} else if (::lstrcmpiW(Keyword.c_str(),L"sep-backslash")==0) {
-						SeparatorList.push_back(SeparatorInfo(pString->size(),L"\\"));
-					} else if (pVariableMap->GetString(Keyword.c_str(),&Text)) {
+					if (::lstrcmpiW(Keyword.c_str(), L"sep-hyphen") == 0) {
+						SeparatorList.emplace_back(pString->size(), L"-");
+					} else if (::lstrcmpiW(Keyword.c_str(), L"sep-slash") == 0) {
+						SeparatorList.emplace_back(pString->size(), L"/");
+					} else if (::lstrcmpiW(Keyword.c_str(), L"sep-backslash") == 0) {
+						SeparatorList.emplace_back(pString->size(), L"\\");
+					} else if (pVariableMap->GetString(Keyword.c_str(), &Text)) {
 						pVariableMap->NormalizeString(&Text);
 						pString->append(Text);
 					} else {
@@ -72,21 +92,22 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 	}
 
 	if (!SeparatorList.empty()) {
-		// ëOå„Ç…ÉgÅ[ÉNÉìÇ™ë∂ç›Ç∑ÇÈèÍçáÇÃÇ›ãÊêÿÇËÇë}ì¸Ç∑ÇÈ
-		bool fLast=true;
-		for (int i=static_cast<int>(SeparatorList.size()-1);i>=0;i--) {
-			auto itBegin=pString->begin()+(i>0 ? SeparatorList[i-1].Pos : 0);
-			auto itEnd=pString->begin()+
-				(i+1<static_cast<int>(SeparatorList.size()) ? SeparatorList[i+1].Pos : pString->length());
-			auto itCur=pString->begin()+SeparatorList[i].Pos;
-			bool fPrev=
-				std::find_if(itBegin,itCur,[](WCHAR c) -> bool { return c!=L' '; })!=itCur;
-			bool fNext=
-				std::find_if(itCur,itEnd,[](WCHAR c) -> bool { return c!=L' '; })!=itEnd;
+		// ÂâçÂæå„Å´„Éà„Éº„ÇØ„É≥„ÅåÂ≠òÂú®„Åô„ÇãÂ†¥Âêà„ÅÆ„ÅøÂå∫Âàá„Çä„ÇíÊåøÂÖ•„Åô„Çã
+		bool fLast = true;
+		for (int i = static_cast<int>(SeparatorList.size() - 1); i >= 0; i--) {
+			auto itBegin = pString->begin() + (i > 0 ? SeparatorList[i - 1].Pos : 0);
+			auto itEnd =
+				pString->begin() +
+				(i + 1 < static_cast<int>(SeparatorList.size()) ? SeparatorList[i + 1].Pos : pString->length());
+			auto itCur = pString->begin() + SeparatorList[i].Pos;
+			bool fPrev =
+				std::find_if(itBegin, itCur, [](WCHAR c) -> bool { return c != L' '; }) != itCur;
+			bool fNext =
+				std::find_if(itCur, itEnd, [](WCHAR c) -> bool { return c != L' '; }) != itEnd;
 			if ((fPrev && fNext) || (fPrev && !fLast))
-				pString->insert(SeparatorList[i].Pos,SeparatorList[i].pszSeparator);
+				pString->insert(SeparatorList[i].Pos, SeparatorList[i].pszSeparator);
 			if (fPrev || fNext)
-				fLast=false;
+				fLast = false;
 		}
 	}
 
@@ -98,31 +119,31 @@ bool FormatVariableString(CVariableStringMap *pVariableMap,LPCWSTR pszFormat,Str
 
 
 
-bool CBasicVariableStringMap::GetString(LPCWSTR pszKeyword,String *pString)
+bool CBasicVariableStringMap::GetString(LPCWSTR pszKeyword, String *pString)
 {
-	if (GetPreferredGlobalString(pszKeyword,pString))
+	if (GetPreferredGlobalString(pszKeyword, pString))
 		return true;
-	bool fResult=false;
-	if (GetLocalString(pszKeyword,pString)) {
-		fResult=true;
+	bool fResult = false;
+	if (GetLocalString(pszKeyword, pString)) {
+		fResult = true;
 		if (!pString->empty())
 			return true;
 	}
-	if (GetGlobalString(pszKeyword,pString))
-		fResult=true;
+	if (GetGlobalString(pszKeyword, pString))
+		fResult = true;
 	return fResult;
 }
 
 
-bool CBasicVariableStringMap::GetPreferredGlobalString(LPCWSTR pszKeyword,String *pString)
+bool CBasicVariableStringMap::GetPreferredGlobalString(LPCWSTR pszKeyword, String *pString)
 {
-	return GetAppClass().VariableManager.GetPreferredVariable(pszKeyword,pString);
+	return GetAppClass().VariableManager.GetPreferredVariable(pszKeyword, pString);
 }
 
 
-bool CBasicVariableStringMap::GetGlobalString(LPCWSTR pszKeyword,String *pString)
+bool CBasicVariableStringMap::GetGlobalString(LPCWSTR pszKeyword, String *pString)
 {
-	return GetAppClass().VariableManager.GetVariable(pszKeyword,pString);
+	return GetAppClass().VariableManager.GetVariable(pszKeyword, pString);
 }
 
 
@@ -135,28 +156,32 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 	if (VarList.empty())
 		return true;
 
-	pList->push_back(ParameterGroup());
-	ParameterGroup &Group=pList->back();
+	pList->emplace_back();
+	ParameterGroup &Group = pList->back();
 
 	Group.ParameterList.reserve(VarList.size());
 
-	for (auto it=VarList.begin();it!=VarList.end();++it) {
-		bool fFound=false;
+	for (const auto &Var : VarList) {
+		bool fFound = false;
 
-		for (size_t i=0;i<pList->size()-1;i++) {
-			for (size_t j=0;j<(*pList)[i].ParameterList.size();j++) {
-				if (::lstrcmpiW((*pList)[i].ParameterList[j].pszParameter,it->pszKeyword)==0) {
-					fFound=true;
-					break;
-				}
+		for (size_t i = 0; i < pList->size() - 1; i++) {
+			const auto &ParameterList = (*pList)[i].ParameterList;
+			auto it = std::find_if(
+				ParameterList.begin(),
+				ParameterList.end(),
+				[&](const ParameterInfo &Info) -> bool {
+					return ::lstrcmpiW(Info.pszParameter, Var.pszKeyword) == 0; });
+			if (it != ParameterList.end()) {
+				fFound = true;
+				break;
 			}
 		}
 
 		if (!fFound) {
 			ParameterInfo Info;
 
-			Info.pszParameter=it->pszKeyword;
-			Info.pszText=it->pszDescription;
+			Info.pszParameter = Var.pszKeyword;
+			Info.pszText = Var.pszDescription;
 			Group.ParameterList.push_back(Info);
 		}
 	}
@@ -167,102 +192,105 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 
 
-bool CVariableStringMap::InputParameter(HWND hDlg,int EditID,const POINT &MenuPos)
+bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &MenuPos)
 {
 	ParameterGroupList GroupList;
 
 	if (!GetParameterList(&GroupList) || GroupList.empty())
 		return false;
 
-	HMENU hmenuRoot=::CreatePopupMenu();
+	HMENU hmenuRoot = ::CreatePopupMenu();
 
-	for (size_t i=0;i<GroupList.size();i++) {
-		const ParameterGroup &Group=GroupList[i];
+	for (size_t i = 0; i < GroupList.size(); i++) {
+		const ParameterGroup &Group = GroupList[i];
 		HMENU hmenu;
 
 		if (!Group.Text.empty()) {
-			hmenu=::CreatePopupMenu();
-			::AppendMenu(hmenuRoot,MF_POPUP | MF_STRING | MF_ENABLED,
-						 reinterpret_cast<UINT_PTR>(hmenu),
-						 Group.Text.c_str());
+			hmenu = ::CreatePopupMenu();
+			::AppendMenu(
+				hmenuRoot, MF_POPUP | MF_STRING | MF_ENABLED,
+				reinterpret_cast<UINT_PTR>(hmenu),
+				Group.Text.c_str());
 		} else {
-			hmenu=hmenuRoot;
+			hmenu = hmenuRoot;
 		}
 
-		for (int j=0;j<(int)Group.ParameterList.size();j++) {
-			const ParameterInfo &Param=Group.ParameterList[j];
+		for (int j = 0; j < (int)Group.ParameterList.size(); j++) {
+			const ParameterInfo &Param = Group.ParameterList[j];
 
 			TCHAR szText[128];
-			StdUtil::snprintf(szText,lengthof(szText),TEXT("%s\t%%%s%%"),
-							  Param.pszText,Param.pszParameter);
-			::AppendMenu(hmenu,MF_STRING | MF_ENABLED,(i<<10)|(j+1),szText);
+			StringPrintf(
+				szText, TEXT("%s\t%%%s%%"),
+				Param.pszText, Param.pszParameter);
+			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, (i << 10) | (j + 1), szText);
 		}
 	}
 
-	int Command=::TrackPopupMenu(hmenuRoot,TPM_RETURNCMD,MenuPos.x,MenuPos.y,0,hDlg,NULL);
+	int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
 	::DestroyMenu(hmenuRoot);
-	if (Command<=0)
+	if (Command <= 0)
 		return false;
 
-	const int GroupIndex=Command>>10;
-	const int ParamIndex=(Command&0x3FF)-1;
-	if (GroupIndex>=(int)GroupList.size()
-			|| ParamIndex<0
-			|| ParamIndex>=(int)GroupList[GroupIndex].ParameterList.size())
+	const int GroupIndex = Command >> 10;
+	const int ParamIndex = (Command & 0x3FF) - 1;
+	if (GroupIndex >= (int)GroupList.size()
+			|| ParamIndex < 0
+			|| ParamIndex >= (int)GroupList[GroupIndex].ParameterList.size())
 		return false;
 	String Param;
-	Param=L"%";
-	Param+=GroupList[GroupIndex].ParameterList[ParamIndex].pszParameter;
-	Param+=L"%";
-	DWORD Start,End;
-	::SendDlgItemMessage(hDlg,EditID,EM_GETSEL,
-		reinterpret_cast<WPARAM>(&Start),reinterpret_cast<LPARAM>(&End));
-	::SendDlgItemMessage(hDlg,EditID,EM_REPLACESEL,
-		TRUE,reinterpret_cast<LPARAM>(Param.c_str()));
-	::SetFocus(::GetDlgItem(hDlg,EditID));
-	if (End<Start)
-		Start=End;
-	::SendDlgItemMessage(hDlg,EditID,EM_SETSEL,
-		Start,Start+Param.length());
+	Param = L"%";
+	Param += GroupList[GroupIndex].ParameterList[ParamIndex].pszParameter;
+	Param += L"%";
+	DWORD Start, End;
+	::SendDlgItemMessage(
+		hDlg, EditID, EM_GETSEL,
+		reinterpret_cast<WPARAM>(&Start), reinterpret_cast<LPARAM>(&End));
+	::SendDlgItemMessage(
+		hDlg, EditID, EM_REPLACESEL,
+		TRUE, reinterpret_cast<LPARAM>(Param.c_str()));
+	::SetFocus(::GetDlgItem(hDlg, EditID));
+	if (End < Start)
+		Start = End;
+	::SendDlgItemMessage(
+		hDlg, EditID, EM_SETSEL,
+		Start, Start + Param.length());
 
 	return true;
 }
 
 
-bool CVariableStringMap::GetTimeString(LPCWSTR pszKeyword,const SYSTEMTIME &Time,String *pString) const
+bool CVariableStringMap::GetTimeString(LPCWSTR pszKeyword, const LibISDB::DateTime &Time, String *pString) const
 {
-	if (::lstrcmpiW(pszKeyword,L"date")==0) {
-		StringUtility::Format(*pString,L"%d%02d%02d",
-							  Time.wYear,Time.wMonth,Time.wDay);
-	} else if (::lstrcmpiW(pszKeyword,L"time")==0) {
-		StringUtility::Format(*pString,L"%02d%02d%02d",
-							  Time.wHour,Time.wMinute,Time.wSecond);
-	} else if (::lstrcmpiW(pszKeyword,L"year")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wYear);
-	} else if (::lstrcmpiW(pszKeyword,L"year2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wYear%100);
-	} else if (::lstrcmpiW(pszKeyword,L"month")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wMonth);
-	} else if (::lstrcmpiW(pszKeyword,L"month2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wMonth);
-	} else if (::lstrcmpiW(pszKeyword,L"day")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wDay);
-	} else if (::lstrcmpiW(pszKeyword,L"day2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wDay);
-	} else if (::lstrcmpiW(pszKeyword,L"hour")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wHour);
-	} else if (::lstrcmpiW(pszKeyword,L"hour2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wHour);
-	} else if (::lstrcmpiW(pszKeyword,L"minute")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wMinute);
-	} else if (::lstrcmpiW(pszKeyword,L"minute2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wMinute);
-	} else if (::lstrcmpiW(pszKeyword,L"second")==0) {
-		StringUtility::Format(*pString,L"%d",Time.wSecond);
-	} else if (::lstrcmpiW(pszKeyword,L"second2")==0) {
-		StringUtility::Format(*pString,L"%02d",Time.wSecond);
-	} else if (::lstrcmpiW(pszKeyword,L"day-of-week")==0) {
-		*pString=GetDayOfWeekText(Time.wDayOfWeek);
+	if (::lstrcmpiW(pszKeyword, L"date") == 0) {
+		StringUtility::Format(*pString, L"%d%02d%02d", Time.Year, Time.Month, Time.Day);
+	} else if (::lstrcmpiW(pszKeyword, L"time") == 0) {
+		StringUtility::Format(*pString, L"%02d%02d%02d", Time.Hour, Time.Minute, Time.Second);
+	} else if (::lstrcmpiW(pszKeyword, L"year") == 0) {
+		StringUtility::Format(*pString, L"%d", Time.Year);
+	} else if (::lstrcmpiW(pszKeyword, L"year2") == 0) {
+		StringUtility::Format(*pString, L"%02d", Time.Year % 100);
+	} else if (::lstrcmpiW(pszKeyword, L"month") == 0) {
+		StringUtility::Format(*pString, L"%d", Time.Month);
+	} else if (::lstrcmpiW(pszKeyword, L"month2") == 0) {
+		StringUtility::Format(*pString, L"%02d", Time.Month);
+	} else if (::lstrcmpiW(pszKeyword, L"day") == 0) {
+		StringUtility::Format(*pString, L"%d", Time.Day);
+	} else if (::lstrcmpiW(pszKeyword, L"day2") == 0) {
+		StringUtility::Format(*pString, L"%02d", Time.Day);
+	} else if (::lstrcmpiW(pszKeyword, L"hour") == 0) {
+		StringUtility::Format(*pString, L"%d", Time.Hour);
+	} else if (::lstrcmpiW(pszKeyword, L"hour2") == 0) {
+		StringUtility::Format(*pString, L"%02d", Time.Hour);
+	} else if (::lstrcmpiW(pszKeyword, L"minute") == 0) {
+		StringUtility::Format(*pString, L"%d", Time.Minute);
+	} else if (::lstrcmpiW(pszKeyword, L"minute2") == 0) {
+		StringUtility::Format(*pString, L"%02d", Time.Minute);
+	} else if (::lstrcmpiW(pszKeyword, L"second") == 0) {
+		StringUtility::Format(*pString, L"%d", Time.Second);
+	} else if (::lstrcmpiW(pszKeyword, L"second2") == 0) {
+		StringUtility::Format(*pString, L"%02d", Time.Second);
+	} else if (::lstrcmpiW(pszKeyword, L"day-of-week") == 0) {
+		*pString = GetDayOfWeekText(Time.DayOfWeek);
 	} else {
 		return false;
 	}
@@ -291,8 +319,8 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 		TEXT("day-of-week"),
 	};
 
-	for (int i=0;i<lengthof(ParameterList);i++) {
-		if (::lstrcmpi(ParameterList[i],pszKeyword)==0)
+	for (LPCTSTR e : ParameterList) {
+		if (::lstrcmpi(e, pszKeyword) == 0)
 			return true;
 	}
 
@@ -303,14 +331,14 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 
 
 CEventVariableStringMap::CEventVariableStringMap()
-	: m_Flags(0)
+	: m_Flags(Flag::None)
 	, m_fCurrentTimeSet(false)
 {
 }
 
 
 CEventVariableStringMap::CEventVariableStringMap(const EventInfo &Info)
-	: m_Flags(0)
+	: m_Flags(Flag::None)
 	, m_EventInfo(Info)
 	, m_fCurrentTimeSet(false)
 {
@@ -320,89 +348,95 @@ CEventVariableStringMap::CEventVariableStringMap(const EventInfo &Info)
 bool CEventVariableStringMap::BeginFormat()
 {
 	if (!m_fCurrentTimeSet)
-		::GetLocalTime(&m_CurrentTime);
+		m_CurrentTime.NowLocal();
 
 	return true;
 }
 
 
-bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
+bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 {
-	if (::lstrcmpi(pszKeyword,TEXT("channel-name"))==0) {
-		*pString=m_EventInfo.Channel.GetName();
-	} else if (::lstrcmpi(pszKeyword,TEXT("channel-no"))==0) {
-		if (m_EventInfo.Channel.GetChannelNo()==0)
+	if (::lstrcmpi(pszKeyword, TEXT("channel-name")) == 0) {
+		*pString = m_EventInfo.Channel.GetName();
+	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no")) == 0) {
+		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetChannelNo());
-	} else if (::lstrcmpi(pszKeyword,TEXT("channel-no2"))==0) {
-		if (m_EventInfo.Channel.GetChannelNo()==0)
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetChannelNo());
+	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no2")) == 0) {
+		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString,TEXT("%02d"),m_EventInfo.Channel.GetChannelNo());
-	} else if (::lstrcmpi(pszKeyword,TEXT("channel-no3"))==0) {
-		if (m_EventInfo.Channel.GetChannelNo()==0)
+		StringUtility::Format(*pString, TEXT("%02d"), m_EventInfo.Channel.GetChannelNo());
+	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no3")) == 0) {
+		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString,TEXT("%03d"),m_EventInfo.Channel.GetChannelNo());
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-name"))==0) {
-		*pString=m_EventInfo.Event.m_EventName;
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-title"))==0) {
-		GetEventTitle(m_EventInfo.Event.m_EventName,pString);
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-mark"))==0) {
-		GetEventMark(m_EventInfo.Event.m_EventName,pString);
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-id"))==0) {
-		StringUtility::Format(*pString,TEXT("%04X"),m_EventInfo.Event.m_EventID);
-	} else if (::lstrcmpi(pszKeyword,TEXT("service-name"))==0) {
-		*pString=m_EventInfo.ServiceName;
-	} else if (::lstrcmpi(pszKeyword,TEXT("service-id"))==0) {
-		StringUtility::Format(*pString,TEXT("%04X"),m_EventInfo.Event.m_ServiceID);
-	} else if (::lstrcmpi(pszKeyword,TEXT("tuner-filename"))==0) {
-		*pString=m_EventInfo.Channel.GetTunerName();
-	} else if (::lstrcmpi(pszKeyword,TEXT("tuner-name"))==0) {
-		LPCTSTR pszTuner=::PathFindFileName(m_EventInfo.Channel.GetTunerName());
-		if (::StrCmpNI(pszTuner,TEXT("BonDriver_"),10)==0)
-			pszTuner+=10;
-		pString->assign(pszTuner,::PathFindExtension(pszTuner)-pszTuner);
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-hour"))==0) {
-		StringUtility::Format(*pString,TEXT("%d"),
-							  (int)(m_EventInfo.Event.m_Duration/(60*60)));
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-hour2"))==0) {
-		StringUtility::Format(*pString,TEXT("%02d"),
-							  (int)(m_EventInfo.Event.m_Duration/(60*60)));
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-min"))==0) {
-		StringUtility::Format(*pString,TEXT("%d"),
-							  (int)(m_EventInfo.Event.m_Duration/60%60));
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-min2"))==0) {
-		StringUtility::Format(*pString,TEXT("%02d"),
-							  (int)(m_EventInfo.Event.m_Duration/60%60));
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-sec"))==0) {
-		StringUtility::Format(*pString,TEXT("%d"),
-							  (int)(m_EventInfo.Event.m_Duration%60));
-	} else if (::lstrcmpi(pszKeyword,TEXT("event-duration-sec2"))==0) {
-		StringUtility::Format(*pString,TEXT("%02d"),
-							  (int)(m_EventInfo.Event.m_Duration%60));
+		StringUtility::Format(*pString, TEXT("%03d"), m_EventInfo.Channel.GetChannelNo());
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-name")) == 0) {
+		*pString = m_EventInfo.Event.EventName;
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-title")) == 0) {
+		GetEventTitle(m_EventInfo.Event.EventName, pString);
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-mark")) == 0) {
+		GetEventMark(m_EventInfo.Event.EventName, pString);
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-id")) == 0) {
+		StringUtility::Format(*pString, TEXT("%04X"), m_EventInfo.Event.EventID);
+	} else if (::lstrcmpi(pszKeyword, TEXT("service-name")) == 0) {
+		*pString = m_EventInfo.ServiceName;
+	} else if (::lstrcmpi(pszKeyword, TEXT("service-id")) == 0) {
+		StringUtility::Format(*pString, TEXT("%04X"), m_EventInfo.Event.ServiceID);
+	} else if (::lstrcmpi(pszKeyword, TEXT("tuner-filename")) == 0) {
+		*pString = m_EventInfo.Channel.GetTunerName();
+	} else if (::lstrcmpi(pszKeyword, TEXT("tuner-name")) == 0) {
+		LPCTSTR pszTuner = ::PathFindFileName(m_EventInfo.Channel.GetTunerName());
+		if (::StrCmpNI(pszTuner, TEXT("BonDriver_"), 10) == 0)
+			pszTuner += 10;
+		pString->assign(pszTuner, ::PathFindExtension(pszTuner) - pszTuner);
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour")) == 0) {
+		StringUtility::Format(
+			*pString, TEXT("%d"),
+			(int)(m_EventInfo.Event.Duration / (60 * 60)));
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour2")) == 0) {
+		StringUtility::Format(
+			*pString, TEXT("%02d"),
+			(int)(m_EventInfo.Event.Duration / (60 * 60)));
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min")) == 0) {
+		StringUtility::Format(
+			*pString, TEXT("%d"),
+			(int)(m_EventInfo.Event.Duration / 60 % 60));
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min2")) == 0) {
+		StringUtility::Format(
+			*pString, TEXT("%02d"),
+			(int)(m_EventInfo.Event.Duration / 60 % 60));
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec")) == 0) {
+		StringUtility::Format(
+			*pString, TEXT("%d"),
+			(int)(m_EventInfo.Event.Duration % 60));
+	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec2")) == 0) {
+		StringUtility::Format(
+			*pString, TEXT("%02d"),
+			(int)(m_EventInfo.Event.Duration % 60));
 	} else if (IsDateTimeParameter(pszKeyword)) {
-		if ((m_Flags & FLAG_NO_CURRENT_TIME)!=0)
+		if (!!(m_Flags & Flag::NoCurrentTime))
 			return false;
-		return GetTimeString(pszKeyword,m_CurrentTime,pString);
-	} else if (::StrCmpNI(pszKeyword,TEXT("start-"),6)==0
-			&& IsDateTimeParameter(pszKeyword+6)) {
-		if (!m_EventInfo.Event.m_bValidStartTime) {
-			*pString=TEXT("x");
+		return GetTimeString(pszKeyword, m_CurrentTime, pString);
+	} else if (::StrCmpNI(pszKeyword, TEXT("start-"), 6) == 0
+			&& IsDateTimeParameter(pszKeyword + 6)) {
+		if (!m_EventInfo.Event.StartTime.IsValid()) {
+			*pString = TEXT("x");
 			return true;
 		}
-		return GetTimeString(pszKeyword+6,m_EventInfo.Event.m_StartTime,pString);
-	} else if (::StrCmpNI(pszKeyword,TEXT("end-"),4)==0
-			&& IsDateTimeParameter(pszKeyword+4)) {
-		SYSTEMTIME EndTime;
+		return GetTimeString(pszKeyword + 6, m_EventInfo.Event.StartTime, pString);
+	} else if (::StrCmpNI(pszKeyword, TEXT("end-"), 4) == 0
+			&& IsDateTimeParameter(pszKeyword + 4)) {
+		LibISDB::DateTime EndTime;
 		if (!m_EventInfo.Event.GetEndTime(&EndTime)) {
-			*pString=TEXT("x");
+			*pString = TEXT("x");
 			return true;
 		}
-		return GetTimeString(pszKeyword+4,EndTime,pString);
-	} else if (::StrCmpNI(pszKeyword,TEXT("tot-"),4)==0
-			&& IsDateTimeParameter(pszKeyword+4)) {
-		if ((m_Flags & FLAG_NO_TOT_TIME)!=0)
+		return GetTimeString(pszKeyword + 4, EndTime, pString);
+	} else if (::StrCmpNI(pszKeyword, TEXT("tot-"), 4) == 0
+			&& IsDateTimeParameter(pszKeyword + 4)) {
+		if (!!(m_Flags & Flag::NoTOTTime))
 			return false;
-		return GetTimeString(pszKeyword+4,m_EventInfo.TotTime,pString);
+		return GetTimeString(pszKeyword + 4, m_EventInfo.TOTTime, pString);
 	} else {
 		return false;
 	}
@@ -413,29 +447,29 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword,String *pString)
 
 bool CEventVariableStringMap::NormalizeString(String *pString) const
 {
-	if ((m_Flags & FLAG_NO_NORMALIZE)!=0)
+	if (!!(m_Flags & Flag::NoNormalize))
 		return false;
 
-	// ÉtÉ@ÉCÉãñºÇ…égópÇ≈Ç´Ç»Ç¢ï∂éöÇíuÇ´ä∑Ç¶ÇÈ
-	for (auto i=pString->begin();i!=pString->end();++i) {
+	// „Éï„Ç°„Ç§„É´Âêç„Å´‰ΩøÁî®„Åß„Åç„Å™„ÅÑÊñáÂ≠ó„ÇíÁΩÆ„ÅçÊèõ„Åà„Çã
+	for (auto &e : *pString) {
 		static const struct {
 			WCHAR From;
 			WCHAR To;
 		} CharMap[] = {
-			{L'\\',	L'Åè'},
-			{L'/',	L'Å^'},
-			{L':',	L'ÅF'},
-			{L'*',	L'Åñ'},
-			{L'?',	L'ÅH'},
-			{L'"',	L'Åh'},
-			{L'<',	L'ÅÉ'},
-			{L'>',	L'ÅÑ'},
-			{L'|',	L'Åb'},
+			{L'\\', L'Ôø•'},
+			{L'/',  L'Ôºè'},
+			{L':',  L'Ôºö'},
+			{L'*',  L'Ôºä'},
+			{L'?',  L'Ôºü'},
+			{L'"',  L'‚Äù'},
+			{L'<',  L'Ôºú'},
+			{L'>',  L'Ôºû'},
+			{L'|',  L'ÔΩú'},
 		};
 
-		for (int j=0;j<lengthof(CharMap);j++) {
-			if (CharMap[j].From==*i) {
-				*i=CharMap[j].To;
+		for (const auto &Map : CharMap) {
+			if (Map.From == e) {
+				e = Map.To;
 				break;
 			}
 		}
@@ -447,144 +481,144 @@ bool CEventVariableStringMap::NormalizeString(String *pString) const
 
 bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 {
-	if (pList==nullptr)
+	if (pList == nullptr)
 		return false;
 
 	static const ParameterInfo DateTimeParams[] =
 	{
-		{TEXT("date"),					TEXT("îNåéì˙")},
-		{TEXT("year"),					TEXT("îN")},
-		{TEXT("year2"),					TEXT("îN(â∫2åÖ)")},
-		{TEXT("month"),					TEXT("åé")},
-		{TEXT("month2"),				TEXT("åé(2åÖ)")},
-		{TEXT("day"),					TEXT("ì˙")},
-		{TEXT("day2"),					TEXT("ì˙(2åÖ)")},
-		{TEXT("time"),					TEXT("éûçè(éû+ï™+ïb)")},
-		{TEXT("hour"),					TEXT("éû")},
-		{TEXT("hour2"),					TEXT("éû(2åÖ)")},
-		{TEXT("minute"),				TEXT("ï™")},
-		{TEXT("minute2"),				TEXT("ï™(2åÖ)")},
-		{TEXT("second"),				TEXT("ïb")},
-		{TEXT("second2"),				TEXT("ïb(2åÖ)")},
-		{TEXT("day-of-week"),			TEXT("ójì˙(äøéö)")},
+		{TEXT("date"),                  TEXT("Âπ¥ÊúàÊó•")},
+		{TEXT("year"),                  TEXT("Âπ¥")},
+		{TEXT("year2"),                 TEXT("Âπ¥(‰∏ã2Ê°Å)")},
+		{TEXT("month"),                 TEXT("Êúà")},
+		{TEXT("month2"),                TEXT("Êúà(2Ê°Å)")},
+		{TEXT("day"),                   TEXT("Êó•")},
+		{TEXT("day2"),                  TEXT("Êó•(2Ê°Å)")},
+		{TEXT("time"),                  TEXT("ÊôÇÂàª(ÊôÇ+ÂàÜ+Áßí)")},
+		{TEXT("hour"),                  TEXT("ÊôÇ")},
+		{TEXT("hour2"),                 TEXT("ÊôÇ(2Ê°Å)")},
+		{TEXT("minute"),                TEXT("ÂàÜ")},
+		{TEXT("minute2"),               TEXT("ÂàÜ(2Ê°Å)")},
+		{TEXT("second"),                TEXT("Áßí")},
+		{TEXT("second2"),               TEXT("Áßí(2Ê°Å)")},
+		{TEXT("day-of-week"),           TEXT("ÊõúÊó•(Êº¢Â≠ó)")},
 	};
 
 	static const ParameterInfo StartTimeParams[] =
 	{
-		{TEXT("start-date"),			TEXT("îNåéì˙")},
-		{TEXT("start-year"),			TEXT("îN")},
-		{TEXT("start-year2"),			TEXT("îN(â∫2åÖ)")},
-		{TEXT("start-month"),			TEXT("åé")},
-		{TEXT("start-month2"),			TEXT("åé(2åÖ)")},
-		{TEXT("start-day"),				TEXT("ì˙")},
-		{TEXT("start-day2"),			TEXT("ì˙(2åÖ)")},
-		{TEXT("start-time"),			TEXT("éûçè(éû+ï™+ïb)")},
-		{TEXT("start-hour"),			TEXT("éû")},
-		{TEXT("start-hour2"),			TEXT("éû(2åÖ)")},
-		{TEXT("start-minute"),			TEXT("ï™")},
-		{TEXT("start-minute2"),			TEXT("ï™(2åÖ)")},
-		{TEXT("start-second"),			TEXT("ïb")},
-		{TEXT("start-second2"),			TEXT("ïb(2åÖ)")},
-		{TEXT("start-day-of-week"),		TEXT("ójì˙(äøéö)")},
+		{TEXT("start-date"),            TEXT("Âπ¥ÊúàÊó•")},
+		{TEXT("start-year"),            TEXT("Âπ¥")},
+		{TEXT("start-year2"),           TEXT("Âπ¥(‰∏ã2Ê°Å)")},
+		{TEXT("start-month"),           TEXT("Êúà")},
+		{TEXT("start-month2"),          TEXT("Êúà(2Ê°Å)")},
+		{TEXT("start-day"),             TEXT("Êó•")},
+		{TEXT("start-day2"),            TEXT("Êó•(2Ê°Å)")},
+		{TEXT("start-time"),            TEXT("ÊôÇÂàª(ÊôÇ+ÂàÜ+Áßí)")},
+		{TEXT("start-hour"),            TEXT("ÊôÇ")},
+		{TEXT("start-hour2"),           TEXT("ÊôÇ(2Ê°Å)")},
+		{TEXT("start-minute"),          TEXT("ÂàÜ")},
+		{TEXT("start-minute2"),         TEXT("ÂàÜ(2Ê°Å)")},
+		{TEXT("start-second"),          TEXT("Áßí")},
+		{TEXT("start-second2"),         TEXT("Áßí(2Ê°Å)")},
+		{TEXT("start-day-of-week"),     TEXT("ÊõúÊó•(Êº¢Â≠ó)")},
 	};
 
 	static const ParameterInfo EndTimeParams[] =
 	{
-		{TEXT("end-date"),				TEXT("îNåéì˙")},
-		{TEXT("end-year"),				TEXT("îN")},
-		{TEXT("end-year2"),				TEXT("îN(â∫2åÖ)")},
-		{TEXT("end-month"),				TEXT("åé")},
-		{TEXT("end-month2"),			TEXT("åé(2åÖ)")},
-		{TEXT("end-day"),				TEXT("ì˙")},
-		{TEXT("end-day2"),				TEXT("ì˙(2åÖ)")},
-		{TEXT("end-time"),				TEXT("éûçè(éû+ï™+ïb)")},
-		{TEXT("end-hour"),				TEXT("éû")},
-		{TEXT("end-hour2"),				TEXT("éû(2åÖ)")},
-		{TEXT("end-minute"),			TEXT("ï™")},
-		{TEXT("end-minute2"),			TEXT("ï™(2åÖ)")},
-		{TEXT("end-second"),			TEXT("ïb")},
-		{TEXT("end-second2"),			TEXT("ïb(2åÖ)")},
-		{TEXT("end-day-of-week"),		TEXT("ójì˙(äøéö)")},
+		{TEXT("end-date"),              TEXT("Âπ¥ÊúàÊó•")},
+		{TEXT("end-year"),              TEXT("Âπ¥")},
+		{TEXT("end-year2"),             TEXT("Âπ¥(‰∏ã2Ê°Å)")},
+		{TEXT("end-month"),             TEXT("Êúà")},
+		{TEXT("end-month2"),            TEXT("Êúà(2Ê°Å)")},
+		{TEXT("end-day"),               TEXT("Êó•")},
+		{TEXT("end-day2"),              TEXT("Êó•(2Ê°Å)")},
+		{TEXT("end-time"),              TEXT("ÊôÇÂàª(ÊôÇ+ÂàÜ+Áßí)")},
+		{TEXT("end-hour"),              TEXT("ÊôÇ")},
+		{TEXT("end-hour2"),             TEXT("ÊôÇ(2Ê°Å)")},
+		{TEXT("end-minute"),            TEXT("ÂàÜ")},
+		{TEXT("end-minute2"),           TEXT("ÂàÜ(2Ê°Å)")},
+		{TEXT("end-second"),            TEXT("Áßí")},
+		{TEXT("end-second2"),           TEXT("Áßí(2Ê°Å)")},
+		{TEXT("end-day-of-week"),       TEXT("ÊõúÊó•(Êº¢Â≠ó)")},
 	};
 
 	static const ParameterInfo TotTimeParams[] =
 	{
-		{TEXT("tot-date"),				TEXT("îNåéì˙")},
-		{TEXT("tot-year"),				TEXT("îN")},
-		{TEXT("tot-year2"),				TEXT("îN(â∫2åÖ)")},
-		{TEXT("tot-month"),				TEXT("åé")},
-		{TEXT("tot-month2"),			TEXT("åé(2åÖ)")},
-		{TEXT("tot-day"),				TEXT("ì˙")},
-		{TEXT("tot-day2"),				TEXT("ì˙(2åÖ)")},
-		{TEXT("tot-time"),				TEXT("éûçè(éû+ï™+ïb)")},
-		{TEXT("tot-hour"),				TEXT("éû")},
-		{TEXT("tot-hour2"),				TEXT("éû(2åÖ)")},
-		{TEXT("tot-minute"),			TEXT("ï™")},
-		{TEXT("tot-minute2"),			TEXT("ï™(2åÖ)")},
-		{TEXT("tot-second"),			TEXT("ïb")},
-		{TEXT("tot-second2"),			TEXT("ïb(2åÖ)")},
-		{TEXT("tot-day-of-week"),		TEXT("ójì˙(äøéö)")},
+		{TEXT("tot-date"),              TEXT("Âπ¥ÊúàÊó•")},
+		{TEXT("tot-year"),              TEXT("Âπ¥")},
+		{TEXT("tot-year2"),             TEXT("Âπ¥(‰∏ã2Ê°Å)")},
+		{TEXT("tot-month"),             TEXT("Êúà")},
+		{TEXT("tot-month2"),            TEXT("Êúà(2Ê°Å)")},
+		{TEXT("tot-day"),               TEXT("Êó•")},
+		{TEXT("tot-day2"),              TEXT("Êó•(2Ê°Å)")},
+		{TEXT("tot-time"),              TEXT("ÊôÇÂàª(ÊôÇ+ÂàÜ+Áßí)")},
+		{TEXT("tot-hour"),              TEXT("ÊôÇ")},
+		{TEXT("tot-hour2"),             TEXT("ÊôÇ(2Ê°Å)")},
+		{TEXT("tot-minute"),            TEXT("ÂàÜ")},
+		{TEXT("tot-minute2"),           TEXT("ÂàÜ(2Ê°Å)")},
+		{TEXT("tot-second"),            TEXT("Áßí")},
+		{TEXT("tot-second2"),           TEXT("Áßí(2Ê°Å)")},
+		{TEXT("tot-day-of-week"),       TEXT("ÊõúÊó•(Êº¢Â≠ó)")},
 	};
 
 	static const ParameterInfo EventDurationParams[] =
 	{
-		{TEXT("event-duration-hour"),	TEXT("éûä‘")},
-		{TEXT("event-duration-hour2"),	TEXT("éûä‘(2åÖ)")},
-		{TEXT("event-duration-min"),	TEXT("ï™")},
-		{TEXT("event-duration-min2"),	TEXT("ï™(2åÖ)")},
-		{TEXT("event-duration-sec"),	TEXT("ïb")},
-		{TEXT("event-duration-sec2"),	TEXT("ïb(2åÖ)")},
+		{TEXT("event-duration-hour"),   TEXT("ÊôÇÈñì")},
+		{TEXT("event-duration-hour2"),  TEXT("ÊôÇÈñì(2Ê°Å)")},
+		{TEXT("event-duration-min"),    TEXT("ÂàÜ")},
+		{TEXT("event-duration-min2"),   TEXT("ÂàÜ(2Ê°Å)")},
+		{TEXT("event-duration-sec"),    TEXT("Áßí")},
+		{TEXT("event-duration-sec2"),   TEXT("Áßí(2Ê°Å)")},
 	};
 
 	static const ParameterInfo EventParams[] =
 	{
-		{TEXT("channel-name"),			TEXT("É`ÉÉÉìÉlÉãñº")},
-		{TEXT("channel-no"),			TEXT("É`ÉÉÉìÉlÉãî‘çÜ")},
-		{TEXT("channel-no2"),			TEXT("É`ÉÉÉìÉlÉãî‘çÜ(2åÖ)")},
-		{TEXT("channel-no3"),			TEXT("É`ÉÉÉìÉlÉãî‘çÜ(3åÖ)")},
-		{TEXT("event-name"),			TEXT("î‘ëgñº")},
-		{TEXT("event-title"),			TEXT("î‘ëgÉ^ÉCÉgÉã")},
-		{TEXT("event-mark"),			TEXT("î‘ëgèÓïÒÉ}Å[ÉN")},
-		{TEXT("event-id"),				TEXT("ÉCÉxÉìÉgID")},
-		{TEXT("service-name"),			TEXT("ÉTÅ[ÉrÉXñº")},
-		{TEXT("service-id"),			TEXT("ÉTÅ[ÉrÉXID")},
-		{TEXT("tuner-filename"),		TEXT("É`ÉÖÅ[ÉiÅ[ÉtÉ@ÉCÉãñº")},
-		{TEXT("tuner-name"),			TEXT("É`ÉÖÅ[ÉiÅ[ñº")},
+		{TEXT("channel-name"),          TEXT("„ÉÅ„É£„É≥„Éç„É´Âêç")},
+		{TEXT("channel-no"),            TEXT("„ÉÅ„É£„É≥„Éç„É´Áï™Âè∑")},
+		{TEXT("channel-no2"),           TEXT("„ÉÅ„É£„É≥„Éç„É´Áï™Âè∑(2Ê°Å)")},
+		{TEXT("channel-no3"),           TEXT("„ÉÅ„É£„É≥„Éç„É´Áï™Âè∑(3Ê°Å)")},
+		{TEXT("event-name"),            TEXT("Áï™ÁµÑÂêç")},
+		{TEXT("event-title"),           TEXT("Áï™ÁµÑ„Çø„Ç§„Éà„É´")},
+		{TEXT("event-mark"),            TEXT("Áï™ÁµÑÊÉÖÂ†±„Éû„Éº„ÇØ")},
+		{TEXT("event-id"),              TEXT("„Ç§„Éô„É≥„ÉàID")},
+		{TEXT("service-name"),          TEXT("„Çµ„Éº„Éì„ÇπÂêç")},
+		{TEXT("service-id"),            TEXT("„Çµ„Éº„Éì„ÇπID")},
+		{TEXT("tuner-filename"),        TEXT("„ÉÅ„É•„Éº„Éä„Éº„Éï„Ç°„Ç§„É´Âêç")},
+		{TEXT("tuner-name"),            TEXT("„ÉÅ„É•„Éº„Éä„ÉºÂêç")},
 	};
 
 	static const ParameterInfo SeparatorParams[] =
 	{
-		{TEXT("sep-hyphen"),			TEXT("-(ÉnÉCÉtÉì)ãÊêÿÇË")},
-		{TEXT("sep-slash"),				TEXT("/(ÉXÉâÉbÉVÉÖ)ãÊêÿÇË")},
-		{TEXT("sep-backslash"),			TEXT("\\(ÉoÉbÉNÉXÉâÉbÉVÉÖ)ãÊêÿÇË")},
+		{TEXT("sep-hyphen"),            TEXT("-(„Éè„Ç§„Éï„É≥)Âå∫Âàá„Çä")},
+		{TEXT("sep-slash"),             TEXT("/(„Çπ„É©„ÉÉ„Ç∑„É•)Âå∫Âàá„Çä")},
+		{TEXT("sep-backslash"),         TEXT("\\(„Éê„ÉÉ„ÇØ„Çπ„É©„ÉÉ„Ç∑„É•)Âå∫Âàá„Çä")},
 	};
 
 	static const struct {
 		LPCTSTR pszText;
 		const ParameterInfo *pList;
 		int ListLength;
-		unsigned int Flags;
+		Flag Flags;
 	} GroupList[] = {
-		{TEXT("åªç›ì˙éû"),		DateTimeParams,			lengthof(DateTimeParams),		FLAG_NO_CURRENT_TIME},
-		{TEXT("î‘ëgäJénì˙éû"),	StartTimeParams,		lengthof(StartTimeParams),		0},
-		{TEXT("î‘ëgèIóπì˙éû"),	EndTimeParams,			lengthof(EndTimeParams),		0},
-		{TEXT("TOTì˙éû"),		TotTimeParams,			lengthof(TotTimeParams),		FLAG_NO_TOT_TIME},
-		{TEXT("î‘ëgÇÃí∑Ç≥"),	EventDurationParams,	lengthof(EventDurationParams),	0},
-		{TEXT("ãÊêÿÇË"),		SeparatorParams,		lengthof(SeparatorParams),		FLAG_NO_SEPARATOR},
-		{nullptr,				EventParams,			lengthof(EventParams),			0},
+		{TEXT("ÁèæÂú®Êó•ÊôÇ"),     DateTimeParams,      lengthof(DateTimeParams),      Flag::NoCurrentTime},
+		{TEXT("Áï™ÁµÑÈñãÂßãÊó•ÊôÇ"), StartTimeParams,     lengthof(StartTimeParams),     Flag::None},
+		{TEXT("Áï™ÁµÑÁµÇ‰∫ÜÊó•ÊôÇ"), EndTimeParams,       lengthof(EndTimeParams),       Flag::None},
+		{TEXT("TOTÊó•ÊôÇ"),      TotTimeParams,       lengthof(TotTimeParams),       Flag::NoTOTTime},
+		{TEXT("Áï™ÁµÑ„ÅÆÈï∑„Åï"),   EventDurationParams, lengthof(EventDurationParams), Flag::None},
+		{TEXT("Âå∫Âàá„Çä"),       SeparatorParams,     lengthof(SeparatorParams),     Flag::NoSeparator},
+		{nullptr,              EventParams,         lengthof(EventParams),         Flag::None},
 	};
 
-	for (int i=0;i<lengthof(GroupList);i++) {
-		if ((GroupList[i].Flags & m_Flags)==0) {
-			pList->push_back(ParameterGroup());
-			ParameterGroup &Group=pList->back();
+	for (const auto &e : GroupList) {
+		if (!(e.Flags & m_Flags)) {
+			pList->emplace_back();
+			ParameterGroup &Group = pList->back();
 
-			if (GroupList[i].pszText!=nullptr)
-				Group.Text=GroupList[i].pszText;
+			if (e.pszText != nullptr)
+				Group.Text = e.pszText;
 			Group.ParameterList.insert(
 				Group.ParameterList.begin(),
-				GroupList[i].pList,
-				GroupList[i].pList+GroupList[i].ListLength);
+				e.pList,
+				e.pList + e.ListLength);
 		}
 	}
 
@@ -600,112 +634,111 @@ void CEventVariableStringMap::SetSampleEventInfo()
 }
 
 
-void CEventVariableStringMap::SetCurrentTime(const SYSTEMTIME *pTime)
+void CEventVariableStringMap::SetCurrentTime(const LibISDB::DateTime *pTime)
 {
-	if (pTime!=nullptr) {
-		m_fCurrentTimeSet=true;
-		m_CurrentTime=*pTime;
+	if (pTime != nullptr) {
+		m_fCurrentTimeSet = true;
+		m_CurrentTime = *pTime;
 	} else {
-		m_fCurrentTimeSet=false;
+		m_fCurrentTimeSet = false;
 	}
 }
 
 
 bool CEventVariableStringMap::GetSampleEventInfo(EventInfo *pInfo)
 {
-	if (pInfo==nullptr)
+	if (pInfo == nullptr)
 		return false;
 
-	SYSTEMTIME st;
+	LibISDB::DateTime Time;
 
-	::GetLocalTime(&st);
-	st.wMilliseconds=0;
+	Time.NowLocal();
+	Time.Millisecond = 0;
 
 	pInfo->Channel.SetSpace(0);
 	pInfo->Channel.SetChannelIndex(8);
 	pInfo->Channel.SetChannelNo(13);
-	pInfo->Channel.SetName(TEXT("ÉAÉtÉäÉJíÜâõÉeÉåÉr"));
+	pInfo->Channel.SetName(TEXT("„Ç¢„Éï„É™„Ç´‰∏≠Â§Æ„ÉÜ„É¨„Éì"));
 	pInfo->Channel.SetNetworkID(0x1234);
 	pInfo->Channel.SetTransportStreamID(0x1234);
 	pInfo->Channel.SetServiceID(123);
 	pInfo->Channel.SetTunerName(TEXT("BonDriver_TV.dll"));
-	pInfo->ServiceName=TEXT("ÉAÉtÉeÉå1");
-	pInfo->TotTime=st;
-	pInfo->Event.m_NetworkID=0x1234;
-	pInfo->Event.m_TransportStreamID=0x1234;
-	pInfo->Event.m_ServiceID=123;
-	pInfo->Event.m_EventID=0xABCD;
-	pInfo->Event.m_EventName=TEXT("[ìÒ][éö]ç°ì˙ÇÃÉjÉÖÅ[ÉX");
-	pInfo->Event.m_EventText=TEXT("ñ{ì˙ÇÃÉjÉÖÅ[ÉXÇÇ®ì`Ç¶ÇµÇ‹Ç∑ÅB");
-	pInfo->Event.m_bValidStartTime=true;
-	OffsetSystemTime(&st,5*TimeConsts::SYSTEMTIME_MINUTE);
-	st.wMinute=st.wMinute/5*5;
-	st.wSecond=0;
-	pInfo->Event.m_StartTime=st;
-	pInfo->Event.m_Duration=60*60;
+	pInfo->ServiceName = TEXT("„Ç¢„Éï„ÉÜ„É¨1");
+	pInfo->TOTTime = Time;
+	pInfo->Event.NetworkID = 0x1234;
+	pInfo->Event.TransportStreamID = 0x1234;
+	pInfo->Event.ServiceID = 123;
+	pInfo->Event.EventID = 0xABCD;
+	pInfo->Event.EventName = TEXT("[‰∫å][Â≠ó]‰ªäÊó•„ÅÆ„Éã„É•„Éº„Çπ");
+	pInfo->Event.EventText = TEXT("Êú¨Êó•„ÅÆ„Éã„É•„Éº„Çπ„Çí„Åä‰ºù„Åà„Åó„Åæ„Åô„ÄÇ");
+	Time.OffsetMinutes(5);
+	Time.Minute = Time.Minute / 5 * 5;
+	Time.Second = 0;
+	pInfo->Event.StartTime = Time;
+	pInfo->Event.Duration = 60 * 60;
 
 	return true;
 }
 
 
-#define MAX_MARK_LENGTH 3
+constexpr std::size_t MAX_MARK_LENGTH = 3;
 
-void CEventVariableStringMap::GetEventTitle(const String &EventName,String *pTitle)
+void CEventVariableStringMap::GetEventTitle(const String &EventName, String *pTitle)
 {
-	// î‘ëgñºÇ©ÇÁ [éö] ÇÃÇÊÇ§Ç»Ç‡ÇÃÇèúãéÇ∑ÇÈ
+	// Áï™ÁµÑÂêç„Åã„Çâ [Â≠ó] „ÅÆ„Çà„ÅÜ„Å™„ÇÇ„ÅÆ„ÇíÈô§Âéª„Åô„Çã
 
 	pTitle->clear();
 
-	String::size_type Next=0;
+	String::size_type Next = 0;
 
-	while (Next<EventName.length()) {
-		String::size_type Left=EventName.find(L'[',Next);
-		if (Left==String::npos) {
+	while (Next < EventName.length()) {
+		String::size_type Left = EventName.find(L'[', Next);
+		if (Left == String::npos) {
 			pTitle->append(EventName.substr(Next));
 			break;
 		}
 
-		String::size_type Right=EventName.find(L']',Left+1);
-		if (Right==String::npos) {
+		String::size_type Right = EventName.find(L']', Left + 1);
+		if (Right == String::npos) {
 			pTitle->append(EventName.substr(Next));
 			break;
 		}
 
-		if (Left>Next)
-			pTitle->append(EventName.substr(Next,Left-Next));
+		if (Left > Next)
+			pTitle->append(EventName.substr(Next, Left - Next));
 
-		if (Right-Left+1>MAX_MARK_LENGTH+2)
-			pTitle->append(EventName.substr(Left,Right-Left+1));
+		if (Right - Left + 1 > MAX_MARK_LENGTH + 2)
+			pTitle->append(EventName.substr(Left, Right - Left + 1));
 
-		Next=Right+1;
+		Next = Right + 1;
 	}
 
-	StringUtility::Trim(*pTitle,L" ");
+	StringUtility::Trim(*pTitle, L" ");
 }
 
 
-void CEventVariableStringMap::GetEventMark(const String &EventName,String *pMarks)
+void CEventVariableStringMap::GetEventMark(const String &EventName, String *pMarks)
 {
-	// î‘ëgñºÇ©ÇÁ [éö] ÇÃÇÊÇ§Ç»Ç‡ÇÃÇíäèoÇ∑ÇÈ
+	// Áï™ÁµÑÂêç„Åã„Çâ [Â≠ó] „ÅÆ„Çà„ÅÜ„Å™„ÇÇ„ÅÆ„ÇíÊäΩÂá∫„Åô„Çã
 
 	pMarks->clear();
 
-	String::size_type Next=0;
+	String::size_type Next = 0;
 
-	while (Next<EventName.length()) {
-		String::size_type Left=EventName.find(L'[',Next);
-		if (Left==String::npos)
+	while (Next < EventName.length()) {
+		String::size_type Left = EventName.find(L'[', Next);
+		if (Left == String::npos)
 			break;
 
-		String::size_type Right=EventName.find(L']',Left+1);
-		if (Right==String::npos)
+		String::size_type Right = EventName.find(L']', Left + 1);
+		if (Right == String::npos)
 			break;
 
-		String::size_type Length=Right-Left+1;
-		if (Length>2 && Length<=MAX_MARK_LENGTH+2)
-			pMarks->append(EventName.substr(Left,Length));
+		String::size_type Length = Right - Left + 1;
+		if (Length > 2 && Length <= MAX_MARK_LENGTH + 2)
+			pMarks->append(EventName.substr(Left, Length));
 
-		Next=Right+1;
+		Next = Right + 1;
 	}
 }
 

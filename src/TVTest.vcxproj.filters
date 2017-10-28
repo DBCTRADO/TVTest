@@ -1,1287 +1,880 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ソース ファイル">
+    <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="ヘッダー ファイル">
+    <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="リソース ファイル">
+    <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="BonTsEngine">
-      <UniqueIdentifier>{ebc74ece-2946-4810-a8b1-05033a2f3288}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="BonTsEngine\Header Files">
-      <UniqueIdentifier>{7d78e873-d005-4025-b72d-4ce44aa4ff18}</UniqueIdentifier>
-      <Extensions>*.h</Extensions>
-    </Filter>
-    <Filter Include="BonTsEngine\Source Files">
-      <UniqueIdentifier>{d142d028-fcc8-490d-a33a-45bda5b30c28}</UniqueIdentifier>
-      <Extensions>*.cpp</Extensions>
-    </Filter>
-    <Filter Include="DtvEngine">
-      <UniqueIdentifier>{3514e139-b153-4cc8-bc63-fe552df6aff4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DtvEngine\Header Files">
-      <UniqueIdentifier>{38a503a7-928d-4706-bd60-760616510985}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DtvEngine\Source Files">
-      <UniqueIdentifier>{22e7048d-a67e-4e75-8b99-787d2d99f4c7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectShowFilter">
-      <UniqueIdentifier>{21615349-cf21-4adf-bf80-8f8c9c2c3af0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectShowFilter\Header Files">
-      <UniqueIdentifier>{af20110a-9753-4d12-b53f-b326b5ca5244}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectShowFilter\Source Files">
-      <UniqueIdentifier>{50af0baf-9785-48e0-9171-745c5f0f8801}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="HelperClass">
-      <UniqueIdentifier>{b172d75d-e736-4fc8-8d2c-aaa9a8161852}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="HelperClass\Header Files">
-      <UniqueIdentifier>{0e2b3f1a-366b-4642-b1af-ec6ad5af6766}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="HelperClass\Source Files">
-      <UniqueIdentifier>{53948db7-4ab4-486e-b666-8d24470b2483}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Common">
-      <UniqueIdentifier>{1fa25962-066c-4495-84de-0f33b8089366}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectShowFilter\EVRCustomPresenter">
-      <UniqueIdentifier>{8a272bff-48e3-4701-99e8-b7ccad90bbe6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectShowFilter\EVRCustomPresenter\Header Files">
-      <UniqueIdentifier>{d5d7a659-d657-4d11-9664-26baf2ef131e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DirectShowFilter\EVRCustomPresenter\Source Files">
-      <UniqueIdentifier>{b48c4688-32a1-4344-bec4-07b46b3459ec}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BonTsEngine\Bitstream.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\BonBaseClass.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\BonSrcDecoder.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\CaptionDecoder.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\CaptionParser.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\EventManager.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\Exception.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\LogoDownloader.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaData.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaDecoder.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaGrabber.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaTee.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\MediaViewer.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsAnalyzer.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsDescriptor.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsDownload.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsEncode.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsMedia.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsPacketParser.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsSelector.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsStream.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsTable.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsUtilClass.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DtvEngine\DtvEngine.cpp">
-      <Filter>DtvEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\AacDecoder.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\BonSrcFilter.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\BonSrcPin.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\DirectShowUtil.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRenderer.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\ImageMixer.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\TsSrcStream.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\VideoRenderer.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\VMR9Renderless.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HelperClass\NCachedFile.cpp">
-      <Filter>HelperClass\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HelperClass\NFile.cpp">
-      <Filter>HelperClass\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HelperClass\StdUtil.cpp">
-      <Filter>HelperClass\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Accelerator.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Aero.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AppUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BasicWindow.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CaptionPanel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Capture.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CaptureOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelHistory.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelList.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelPanel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelScan.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ColorPalette.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ColorScheme.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Command.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CommandLine.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Controller.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ControlPanel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ControlPanelItems.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CoreEngine.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DebugHelper.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Dialog.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DialogUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DrawUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DriverManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DriverOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EpgDataLoader.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EpgOptions.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="EpgProgramList.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EventInfoPopup.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GeneralOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Help.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Image.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InformationPanel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InitialSettings.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Layout.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LogoManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Menu.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MessageDialog.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AboutDialog.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NotificationBar.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OperationOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Options.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OSDManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OSDOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Panel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PanelForm.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PanelOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PlaybackOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Plugin.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramGuide.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramGuideOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramListPanel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramSearch.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PseudoOSD.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RawInput.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Record.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RecordOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RichEditUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Settings.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SideBar.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SideBarOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StatusItems.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StatusOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StatusView.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StreamInfo.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Taskbar.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Theme.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="ThemeDraw.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TitleBar.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tooltip.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TVTest.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UISkin.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="View.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ViewOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WindowUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ZoomOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EpgUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PanAndScanOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OptionDialog.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StringUtility.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="IniFile.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Favorites.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EpgChannelSettings.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RegExp.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MenuOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelDisplay.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HomeDisplay.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramGuideFavorites.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FeaturedEvents.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\AudioDecoder.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\AudioDecFilter.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\Mpeg2ParserFilter.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\VideoParser.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\H264ParserFilter.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\PATGenerator.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsInformation.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\H265ParserFilter.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainWindow.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AppCore.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AppMain.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UICore.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UIBase.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Style.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Graphics.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="KeywordSearch.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EventInfoUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ThemeManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NetworkDefinition.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\EventInfo.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AppEvent.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsRecorder.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\BasicFile.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EpgCapture.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramGuideToolbarOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ListView.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TSProcessorManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TSProcessor.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TSProcessorOptions.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\TsPacketCounter.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TSProcessorErrorDialog.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ComUtility.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AudioOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AudioManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WheelCommand.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TaskTray.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TextDraw.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChannelInput.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainPanel.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Epg.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainDisplay.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GUIUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VariableString.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TaskbarOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VideoOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TaskbarSharedProperties.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SharedMemory.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DirectWrite.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectWriteOptionsDialog.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TextDrawClient.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectWriteOptionsDialog.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProgramGuideTool.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BonTsEngine\Simd.cpp">
-      <Filter>BonTsEngine\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\InternalDecoder.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VideoDecoderOptions.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StyleUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ThemeDraw.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ColorSchemeOptions.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\MpegAudioDecoder.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\Ac3Decoder.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VariableManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRCustomPresenter.cpp">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRHelpers.cpp">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRMediaType.cpp">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRPresentEngine.cpp">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRPresenter.cpp">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.cpp">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectShowFilter\VMR7Renderless.cpp">
-      <Filter>DirectShowFilter\Source Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DPIUtil.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EpgDataStore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PathUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AppCommand.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BonTsEngine\Bitstream.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\BonBaseClass.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\BonSrcDecoder.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\CaptionDecoder.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\CaptionParser.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\Common.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\EventManager.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\Exception.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\LogoDownloader.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaData.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaDecoder.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaGrabber.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaTee.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\MediaViewer.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsAnalyzer.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsDescriptor.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsDownload.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsEncode.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsMedia.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsPacketParser.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsSelector.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsStream.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsTable.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsUtilClass.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DtvEngine\DtvEngine.h">
-      <Filter>DtvEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\AacDecoder.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\BonSrcFilter.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\BonSrcPin.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\DirectShowUtil.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRenderer.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\ImageMixer.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\TsSrcStream.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\VideoRenderer.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\VMR9Renderless.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HelperClass\NCachedFile.h">
-      <Filter>HelperClass\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HelperClass\NFile.h">
-      <Filter>HelperClass\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HelperClass\StdUtil.h">
-      <Filter>HelperClass\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Accelerator.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Aero.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AppUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BasicWindow.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CaptionPanel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Capture.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CaptureOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelHistory.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelList.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelPanel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelScan.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ColorPalette.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ColorScheme.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Command.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CommandLine.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Controller.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ControlPanel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ControlPanelItems.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CoreEngine.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DebugHelper.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Dialog.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DialogUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DrawUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DriverManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DriverOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EpgDataLoader.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EpgOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="EpgProgramList.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EventInfoPopup.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GeneralOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Help.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Image.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="InformationPanel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="InitialSettings.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Layout.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LogoManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MainWindow.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Menu.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MessageDialog.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AboutDialog.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NotificationBar.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OperationOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Options.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OSDManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OSDOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Panel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PanelForm.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PanelOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PlaybackOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Plugin.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramGuide.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramGuideOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramListPanel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramSearch.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PseudoOSD.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RawInput.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Record.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RecordOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RichEditUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Settings.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SideBar.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SideBarOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StatusItems.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StatusOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StatusView.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StreamInfo.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Taskbar.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Theme.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ThemeDraw.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TitleBar.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Tooltip.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TVTest.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TVTestPlugin.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UICore.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UISkin.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Util.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="View.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ViewOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ZoomOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Help\HelpID.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EpgUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PanAndScanOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OptionDialog.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StringUtility.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IniFile.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Favorites.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EpgChannelSettings.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RegExp.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MenuOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelDisplay.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HomeDisplay.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramGuideFavorites.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FeaturedEvents.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\AudioDecoder.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\AudioDecFilter.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\Mpeg2ParserFilter.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\VideoParser.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\H264ParserFilter.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\PATGenerator.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsInformation.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\H265ParserFilter.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AppCore.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AppMain.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UIBase.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Style.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Graphics.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="KeywordSearch.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EventInfoUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ThemeManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NetworkDefinition.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsUtil.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\RingBuffer.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\EventInfo.h">
-      <Filter>BonTsEngine\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AppEvent.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsRecorder.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\BasicFile.h">
-      <Filter>BonTsEngine\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EpgCapture.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramGuideToolbarOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ListView.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TVTestInterface.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TSProcessorManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TSProcessor.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TSProcessorOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\TsPacketCounter.h">
-      <Filter>BonTsEngine\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TSProcessorErrorDialog.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ComUtility.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AudioOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AudioManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WheelCommand.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TaskTray.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextDraw.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ChannelInput.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MainPanel.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Epg.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MainDisplay.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GUIUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VariableString.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\DebugDef.h">
-      <Filter>Common</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\Common.h">
-      <Filter>Common</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TaskbarOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TaskbarSharedProperties.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SharedMemory.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirectWrite.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectWriteOptionsDialog.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextDrawClient.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectWriteOptionsDialog.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProgramGuideTool.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="BonTsEngine\Simd.h">
-      <Filter>BonTsEngine\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\InternalDecoder.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoDecoderOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StyleUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThemeDraw.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ColorSchemeOptions.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\MpegAudioDecoder.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\Ac3Decoder.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VariableManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRCustomPresenter.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRHelpers.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRMediaType.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresentEngine.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresenter.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRPresenterBase.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\EVRCustomPresenter\EVRScheduler.h">
-      <Filter>DirectShowFilter\EVRCustomPresenter\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectShowFilter\VMR7Renderless.h">
-      <Filter>DirectShowFilter\Header Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DPIUtil.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EpgDataStore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PathUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TVTestVersion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppCommand.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TVTest.rc">
-      <Filter>リソース ファイル</Filter>
+      <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="Resource\TVTest.exe.manifest">
-      <Filter>リソース ファイル</Filter>
+      <Filter>Resource Files</Filter>
     </Manifest>
   </ItemGroup>
 </Project>

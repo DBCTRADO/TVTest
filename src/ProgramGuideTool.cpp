@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -10,34 +30,37 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
-class CEpgVariableStringMap : public TVTest::CEventVariableStringMap
+class CEpgVariableStringMap
+	: public CEventVariableStringMap
 {
 public:
 	CEpgVariableStringMap();
 	CEpgVariableStringMap(const EventInfo &Info);
-	bool NormalizeString(TVTest::String *pString) const override { return false; }
+	bool NormalizeString(String *pString) const override { return false; }
 	bool GetParameterList(ParameterGroupList *pList) const override;
-	const TVTest::String &GetiEpgFileName() const { return m_iEpgFileName; }
+	const String &GetiEpgFileName() const { return m_iEpgFileName; }
 
 private:
-	bool GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString) override;
+	bool GetLocalString(LPCWSTR pszKeyword, String *pString) override;
 
 	static const ParameterInfo m_EpgParameterList[];
 
-	TVTest::String m_iEpgFileName;
+	String m_iEpgFileName;
 };
 
 
 const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameterList[] = {
-//	{TEXT("eid"),			TEXT("ƒCƒxƒ“ƒgID")},
-	{TEXT("nid"),			TEXT("ƒlƒbƒgƒ[ƒNID")},
-	{TEXT("tsid"),			TEXT("ƒXƒgƒŠ[ƒ€ID")},
-//	{TEXT("sid"),			TEXT("ƒT[ƒrƒXID")},
-	{TEXT("tvpid"),			TEXT("iEPGƒtƒ@ƒCƒ‹")},
-	{TEXT("duration-sec"),	TEXT("”Ô‘g‚Ì’·‚³(•b’PˆÊ)")},
-	{TEXT("duration-min"),	TEXT("”Ô‘g‚Ì’·‚³(•ª’PˆÊ)")},
+//	{TEXT("eid"),          TEXT("ã‚¤ãƒ™ãƒ³ãƒˆID")},
+	{TEXT("nid"),          TEXT("ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ID")},
+	{TEXT("tsid"),         TEXT("ã‚¹ãƒˆãƒªãƒ¼ãƒ ID")},
+//	{TEXT("sid"),          TEXT("ã‚µãƒ¼ãƒ“ã‚¹ID")},
+	{TEXT("tvpid"),        TEXT("iEPGãƒ•ã‚¡ã‚¤ãƒ«")},
+	{TEXT("duration-sec"), TEXT("ç•ªçµ„ã®é•·ã•(ç§’å˜ä½)")},
+	{TEXT("duration-min"), TEXT("ç•ªçµ„ã®é•·ã•(åˆ†å˜ä½)")},
 };
 
 
@@ -52,31 +75,31 @@ CEpgVariableStringMap::CEpgVariableStringMap(const EventInfo &Info)
 }
 
 
-bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword,TVTest::String *pString)
+bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 {
-	if (::lstrcmpi(pszKeyword,TEXT("tvpid"))==0) {
+	if (::lstrcmpi(pszKeyword, TEXT("tvpid")) == 0) {
 		if (m_iEpgFileName.empty()) {
-			TCHAR sziEpgFileName[MAX_PATH+11];
+			TCHAR sziEpgFileName[MAX_PATH + 11];
 
 			GetAppClass().GetAppDirectory(sziEpgFileName);
-			::PathAppend(sziEpgFileName,TEXT("iepg.tvpid"));
-			m_iEpgFileName=sziEpgFileName;
+			::PathAppend(sziEpgFileName, TEXT("iepg.tvpid"));
+			m_iEpgFileName = sziEpgFileName;
 		}
-		*pString=m_iEpgFileName;
-	} else if (::lstrcmpi(pszKeyword,TEXT("eid"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.m_EventID);
-	} else if (::lstrcmpi(pszKeyword,TEXT("nid"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetNetworkID());
-	} else if (::lstrcmpi(pszKeyword,TEXT("tsid"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetTransportStreamID());
-	} else if (::lstrcmpi(pszKeyword,TEXT("sid"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Channel.GetServiceID());
-	} else if (::lstrcmpi(pszKeyword,TEXT("duration-sec"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),m_EventInfo.Event.m_Duration);
-	} else if (::lstrcmpi(pszKeyword,TEXT("duration-min"))==0) {
-		TVTest::StringUtility::Format(*pString,TEXT("%d"),(m_EventInfo.Event.m_Duration+59)/60);
+		*pString = m_iEpgFileName;
+	} else if (::lstrcmpi(pszKeyword, TEXT("eid")) == 0) {
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.EventID);
+	} else if (::lstrcmpi(pszKeyword, TEXT("nid")) == 0) {
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetNetworkID());
+	} else if (::lstrcmpi(pszKeyword, TEXT("tsid")) == 0) {
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetTransportStreamID());
+	} else if (::lstrcmpi(pszKeyword, TEXT("sid")) == 0) {
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetServiceID());
+	} else if (::lstrcmpi(pszKeyword, TEXT("duration-sec")) == 0) {
+		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.Duration);
+	} else if (::lstrcmpi(pszKeyword, TEXT("duration-min")) == 0) {
+		StringUtility::Format(*pString, TEXT("%d"), (m_EventInfo.Event.Duration + 59) / 60);
 	} else {
-		return CEventVariableStringMap::GetLocalString(pszKeyword,pString);
+		return CEventVariableStringMap::GetLocalString(pszKeyword, pString);
 	}
 
 	return true;
@@ -88,11 +111,11 @@ bool CEpgVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 	if (!CEventVariableStringMap::GetParameterList(pList))
 		return false;
 
-	pList->push_back(ParameterGroup());
+	pList->emplace_back();
 	pList->back().ParameterList.insert(
 		pList->back().ParameterList.end(),
 		m_EpgParameterList,
-		m_EpgParameterList+lengthof(m_EpgParameterList));
+		m_EpgParameterList + lengthof(m_EpgParameterList));
 
 	return true;
 }
@@ -105,25 +128,25 @@ CProgramGuideTool::CProgramGuideTool()
 }
 
 
-CProgramGuideTool::CProgramGuideTool(const TVTest::String &Name,const TVTest::String &Command)
+CProgramGuideTool::CProgramGuideTool(const String &Name, const String &Command)
 	: m_Name(Name)
 	, m_Command(Command)
 {
 }
 
 
-CProgramGuideTool::CProgramGuideTool(LPCTSTR pszName,LPCTSTR pszCommand)
+CProgramGuideTool::CProgramGuideTool(LPCTSTR pszName, LPCTSTR pszCommand)
 {
-	TVTest::StringUtility::Assign(m_Name,pszName);
-	TVTest::StringUtility::Assign(m_Command,pszCommand);
+	StringUtility::Assign(m_Name, pszName);
+	StringUtility::Assign(m_Command, pszCommand);
 }
 
 
-bool CProgramGuideTool::GetPath(LPTSTR pszPath,int MaxLength) const
+bool CProgramGuideTool::GetPath(LPTSTR pszPath, int MaxLength) const
 {
-	LPCTSTR p=m_Command.c_str();
+	LPCTSTR p = m_Command.c_str();
 
-	return GetCommandFileName(&p,pszPath,MaxLength);
+	return GetCommandFileName(&p, pszPath, MaxLength);
 }
 
 
@@ -131,12 +154,11 @@ HICON CProgramGuideTool::GetIcon()
 {
 	if (!m_Icon && !m_Command.empty()) {
 		TCHAR szFileName[MAX_PATH];
-		LPCTSTR p=m_Command.c_str();
+		LPCTSTR p = m_Command.c_str();
 
-		if (GetCommandFileName(&p,szFileName,lengthof(szFileName))) {
+		if (GetCommandFileName(&p, szFileName, lengthof(szFileName))) {
 			SHFILEINFO shfi;
-			if (::SHGetFileInfo(szFileName,0,&shfi,sizeof(shfi),
-								SHGFI_ICON | SHGFI_SMALLICON))
+			if (::SHGetFileInfo(szFileName, 0, &shfi, sizeof(shfi), SHGFI_ICON | SHGFI_SMALLICON))
 				m_Icon.Attach(shfi.hIcon);
 		}
 	}
@@ -144,48 +166,47 @@ HICON CProgramGuideTool::GetIcon()
 }
 
 
-bool CProgramGuideTool::Execute(const ProgramGuide::CServiceInfo *pServiceInfo,
-								const CEventInfoData *pEventInfo,HWND hwnd)
+bool CProgramGuideTool::Execute(
+	const ProgramGuide::CServiceInfo *pServiceInfo,
+	const LibISDB::EventInfo *pEventInfo, HWND hwnd)
 {
-	if (pServiceInfo==nullptr || pEventInfo==nullptr)
+	if (pServiceInfo == nullptr || pEventInfo == nullptr)
 		return false;
 
-	SYSTEMTIME stStart,stEnd;
 	TCHAR szFileName[MAX_PATH];
 	LPCTSTR p;
 
-	pEventInfo->GetStartTime(&stStart);
-	pEventInfo->GetEndTime(&stEnd);
-	p=m_Command.c_str();
-	if (!GetCommandFileName(&p,szFileName,lengthof(szFileName))) {
-		::MessageBox(hwnd,TEXT("ƒpƒX‚ª’·‚·‚¬‚Ü‚·B"),nullptr,MB_OK | MB_ICONEXCLAMATION);
+	p = m_Command.c_str();
+	if (!GetCommandFileName(&p, szFileName, lengthof(szFileName))) {
+		::MessageBox(hwnd, TEXT("ãƒ‘ã‚¹ãŒé•·ã™ãŽã¾ã™ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
-	while (*p==_T(' '))
+	while (*p == _T(' '))
 		p++;
 
-	TVTest::CEventVariableStringMap::EventInfo Info;
-	Info.Channel=pServiceInfo->GetChannelInfo();
-	Info.Event=*pEventInfo;
-	Info.ServiceName=pServiceInfo->GetServiceName();
-	::GetLocalTime(&Info.TotTime);
+	CEventVariableStringMap::EventInfo Info;
+	Info.Channel = pServiceInfo->GetChannelInfo();
+	Info.Event = *pEventInfo;
+	Info.ServiceName = pServiceInfo->GetServiceName();
+	Info.TOTTime.NowLocal();
 
 	CEpgVariableStringMap VarStrMap(Info);
-	TVTest::String Parameter;
-	TVTest::FormatVariableString(&VarStrMap,p,&Parameter);
-	const TVTest::String &iEpgFileName=VarStrMap.GetiEpgFileName();
+	String Parameter;
+	FormatVariableString(&VarStrMap, p, &Parameter);
+	const String &iEpgFileName = VarStrMap.GetiEpgFileName();
 	if (!iEpgFileName.empty()) {
-		if (!pServiceInfo->SaveiEpgFile(pEventInfo,iEpgFileName.c_str(),true)) {
-			::MessageBox(hwnd,TEXT("iEPGƒtƒ@ƒCƒ‹‚Ì‘‚«o‚µ‚ª‚Å‚«‚Ü‚¹‚ñB"),nullptr,
-						 MB_OK | MB_ICONEXCLAMATION);
+		if (!pServiceInfo->SaveiEpgFile(pEventInfo, iEpgFileName.c_str(), true)) {
+			::MessageBox(
+				hwnd, TEXT("iEPGãƒ•ã‚¡ã‚¤ãƒ«ã®æ›¸ãå‡ºã—ãŒã§ãã¾ã›ã‚“ã€‚"), nullptr,
+				MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 	}
 
-	TRACE(TEXT("ŠO•”ƒc[ƒ‹ŽÀs : %s, %s\n"),szFileName,Parameter.c_str());
+	TRACE(TEXT("å¤–éƒ¨ãƒ„ãƒ¼ãƒ«å®Ÿè¡Œ : %s, %s\n"), szFileName, Parameter.c_str());
 
-	return ::ShellExecute(nullptr,nullptr,szFileName,Parameter.c_str(),nullptr,SW_SHOWNORMAL)>=(HINSTANCE)32;
+	return ::ShellExecute(nullptr, nullptr, szFileName, Parameter.c_str(), nullptr, SW_SHOWNORMAL) >= (HINSTANCE)32;
 }
 
 
@@ -197,35 +218,35 @@ bool CProgramGuideTool::ShowDialog(HWND hwndOwner)
 }
 
 
-bool CProgramGuideTool::GetCommandFileName(LPCTSTR *ppszCommand,LPTSTR pszFileName,int MaxFileName)
+bool CProgramGuideTool::GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileName, int MaxFileName)
 {
 	LPCTSTR p;
 	LPTSTR q;
 	TCHAR cDelimiter;
 
-	p=*ppszCommand;
-	q=pszFileName;
-	if (*p==_T('"')) {
-		cDelimiter=_T('"');
+	p = *ppszCommand;
+	q = pszFileName;
+	if (*p == _T('"')) {
+		cDelimiter = _T('"');
 		p++;
 	} else {
-		cDelimiter=_T(' ');
+		cDelimiter = _T(' ');
 	}
-	int Length=0;
-	while (*p!=_T('\0') && *p!=cDelimiter) {
-		int CharLength=StringCharLength(p);
-		if (CharLength==0 || Length+CharLength>=MaxFileName) {
-			pszFileName[0]=_T('\0');
+	int Length = 0;
+	while (*p != _T('\0') && *p != cDelimiter) {
+		int CharLength = StringCharLength(p);
+		if (CharLength == 0 || Length + CharLength >= MaxFileName) {
+			pszFileName[0] = _T('\0');
 			return false;
 		}
-		for (int i=0;i<CharLength;i++)
-			*q++=*p++;
-		Length+=CharLength;
+		for (int i = 0; i < CharLength; i++)
+			*q++ = *p++;
+		Length += CharLength;
 	}
-	*q=_T('\0');
-	if (*p==cDelimiter)
+	*q = _T('\0');
+	if (*p == cDelimiter)
 		p++;
-	*ppszCommand=p;
+	*ppszCommand = p;
 	return true;
 }
 
@@ -240,21 +261,22 @@ CProgramGuideTool::CProgramGuideToolDialog::CProgramGuideToolDialog(CProgramGuid
 
 bool CProgramGuideTool::CProgramGuideToolDialog::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_PROGRAMGUIDETOOL))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_PROGRAMGUIDETOOL)) == IDOK;
 }
 
 
-INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_NAME,m_pTool->m_Name.c_str());
-			::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,m_pTool->m_Command.c_str());
-			EnableDlgItem(hDlg,IDOK,!m_pTool->m_Name.empty() && !m_pTool->m_Command.empty());
-			AdjustDialogPos(::GetParent(hDlg),hDlg);
+			::SetDlgItemText(hDlg, IDC_PROGRAMGUIDETOOL_NAME, m_pTool->m_Name.c_str());
+			::SetDlgItemText(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, m_pTool->m_Command.c_str());
+			EnableDlgItem(hDlg, IDOK, !m_pTool->m_Name.empty() && !m_pTool->m_Command.empty());
+			AdjustDialogPos(::GetParent(hDlg), hDlg);
 		}
 		return TRUE;
 
@@ -262,48 +284,50 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg,UINT uMsg,
 		switch (LOWORD(wParam)) {
 		case IDC_PROGRAMGUIDETOOL_NAME:
 		case IDC_PROGRAMGUIDETOOL_COMMAND:
-			if (HIWORD(wParam)==EN_CHANGE) {
-				EnableDlgItem(hDlg,IDOK,
-					GetDlgItemTextLength(hDlg,IDC_PROGRAMGUIDETOOL_NAME)>0 &&
-					GetDlgItemTextLength(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND)>0);
+			if (HIWORD(wParam) == EN_CHANGE) {
+				EnableDlgItem(
+					hDlg, IDOK,
+					GetDlgItemTextLength(hDlg, IDC_PROGRAMGUIDETOOL_NAME) > 0 &&
+					GetDlgItemTextLength(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND) > 0);
 			}
 			return TRUE;
 
 		case IDC_PROGRAMGUIDETOOL_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TVTest::String Command;
-				TCHAR szFileName[MAX_PATH],szDirectory[MAX_PATH];
+				String Command;
+				TCHAR szFileName[MAX_PATH];
+				String Directory;
 
-				GetDlgItemString(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,&Command);
+				GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, &Command);
 				if (!Command.empty()) {
-					LPCTSTR p=Command.c_str();
-					GetCommandFileName(&p,szFileName,lengthof(szFileName));
+					LPCTSTR p = Command.c_str();
+					GetCommandFileName(&p, szFileName, lengthof(szFileName));
 				} else {
-					szFileName[0]=_T('\0');
+					szFileName[0] = _T('\0');
 				}
 				InitOpenFileName(&ofn);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=TEXT("ŽÀsƒtƒ@ƒCƒ‹(*.exe;*.bat)\0*.exe;*.bat\0")
-								TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
-				ofn.nFilterIndex=1;
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=MAX_PATH;
-				if (szFileName[0]!='\0') {
-					CFilePath Path(szFileName);
-					Path.GetDirectory(szDirectory);
-					ofn.lpstrInitialDir=szDirectory;
-					::lstrcpy(szFileName,Path.GetFileName());
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter =
+					TEXT("å®Ÿè¡Œãƒ•ã‚¡ã‚¤ãƒ«(*.exe;*.bat)\0*.exe;*.bat\0")
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
+				ofn.nFilterIndex = 1;
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = MAX_PATH;
+				if (szFileName[0] != '\0') {
+					String Name;
+					if (PathUtil::Split(szFileName, &Directory, &Name)) {
+						ofn.lpstrInitialDir = Directory.c_str();
+						StringCopy(szFileName, Name.c_str());
+					}
 				}
-				ofn.Flags=OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
+				ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
 					::PathQuoteSpaces(szFileName);
-					//::lstrcat(szFileName,TEXT(" \"%tvpid%\""));
-					::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,szFileName);
-					if (GetDlgItemTextLength(hDlg,IDC_PROGRAMGUIDETOOL_NAME)==0) {
+					::SetDlgItemText(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, szFileName);
+					if (GetDlgItemTextLength(hDlg, IDC_PROGRAMGUIDETOOL_NAME) == 0) {
 						::PathRemoveExtension(szFileName);
-						::SetDlgItemText(hDlg,IDC_PROGRAMGUIDETOOL_NAME,
-										 ::PathFindFileName(szFileName));
+						::SetDlgItemText(hDlg, IDC_PROGRAMGUIDETOOL_NAME, ::PathFindFileName(szFileName));
 					}
 				}
 			}
@@ -315,10 +339,10 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg,UINT uMsg,
 				RECT rc;
 				POINT pt;
 
-				::GetWindowRect(::GetDlgItem(hDlg,IDC_PROGRAMGUIDETOOL_PARAMETER),&rc);
-				pt.x=rc.left;
-				pt.y=rc.bottom;
-				VarStrMap.InputParameter(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,pt);
+				::GetWindowRect(::GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_PARAMETER), &rc);
+				pt.x = rc.left;
+				pt.y = rc.bottom;
+				VarStrMap.InputParameter(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, pt);
 			}
 			return TRUE;
 
@@ -327,11 +351,11 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg,UINT uMsg,
 			return TRUE;
 
 		case IDOK:
-			GetDlgItemString(hDlg,IDC_PROGRAMGUIDETOOL_NAME,&m_pTool->m_Name);
-			GetDlgItemString(hDlg,IDC_PROGRAMGUIDETOOL_COMMAND,&m_pTool->m_Command);
+			GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_NAME, &m_pTool->m_Name);
+			GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, &m_pTool->m_Command);
 			m_pTool->m_Icon.Destroy();
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -350,24 +374,18 @@ CProgramGuideToolList::CProgramGuideToolList()
 
 CProgramGuideToolList::CProgramGuideToolList(const CProgramGuideToolList &Src)
 {
-	*this=Src;
-}
-
-
-CProgramGuideToolList::~CProgramGuideToolList()
-{
-	Clear();
+	*this = Src;
 }
 
 
 CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolList &Src)
 {
-	if (&Src!=this) {
+	if (&Src != this) {
 		Clear();
 		if (!Src.m_ToolList.empty()) {
 			m_ToolList.resize(Src.m_ToolList.size());
-			for (size_t i=0;i<Src.m_ToolList.size();i++)
-				m_ToolList[i]=new CProgramGuideTool(*Src.m_ToolList[i]);
+			for (size_t i = 0; i < Src.m_ToolList.size(); i++)
+				m_ToolList[i].reset(new CProgramGuideTool(*Src.m_ToolList[i]));
 		}
 	}
 	return *this;
@@ -376,32 +394,33 @@ CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolL
 
 void CProgramGuideToolList::Clear()
 {
-	for (size_t i=0;i<m_ToolList.size();i++)
-		delete m_ToolList[i];
 	m_ToolList.clear();
 }
 
 
 bool CProgramGuideToolList::Add(CProgramGuideTool *pTool)
 {
-	if (pTool==nullptr)
+	if (pTool == nullptr)
 		return false;
-	m_ToolList.push_back(pTool);
+	m_ToolList.emplace_back(pTool);
 	return true;
 }
 
 
 CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index)
 {
-	if (Index>=m_ToolList.size())
+	if (Index >= m_ToolList.size())
 		return nullptr;
-	return m_ToolList[Index];
+	return m_ToolList[Index].get();
 }
 
 
 const CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index) const
 {
-	if (Index>=m_ToolList.size())
+	if (Index >= m_ToolList.size())
 		return nullptr;
-	return m_ToolList[Index];
+	return m_ToolList[Index].get();
 }
+
+
+}	// namespace TVTest

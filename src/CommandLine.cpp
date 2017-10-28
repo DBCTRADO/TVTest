@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "CommandLine.h"
@@ -5,6 +25,8 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 class CArgsParser
@@ -18,17 +40,17 @@ public:
 	~CArgsParser();
 	bool IsSwitch() const;
 	bool IsOption(LPCWSTR pszOption) const;
-	bool GetOption(LPCWSTR pszOption,bool *pValue);
-	bool GetOption(LPCWSTR pszOption,TVTest::String *pValue);
-	bool GetOption(LPCWSTR pszOption,LPTSTR pszValue,int MaxLength);
-	bool GetOption(LPCWSTR pszOption,int *pValue);
-	bool GetOption(LPCWSTR pszOption,DWORD *pValue);
-	bool GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue);
-	bool GetDurationOption(LPCWSTR pszOption,int *pValue);
-	bool IsEnd() const { return m_CurPos>=m_Args; }
+	bool GetOption(LPCWSTR pszOption, bool *pValue);
+	bool GetOption(LPCWSTR pszOption, String *pValue);
+	bool GetOption(LPCWSTR pszOption, LPTSTR pszValue, int MaxLength);
+	bool GetOption(LPCWSTR pszOption, int *pValue);
+	bool GetOption(LPCWSTR pszOption, DWORD *pValue);
+	bool GetOption(LPCWSTR pszOption, SYSTEMTIME *pValue);
+	bool GetDurationOption(LPCWSTR pszOption, int *pValue);
+	bool IsEnd() const { return m_CurPos >= m_Args; }
 	bool Next();
 	LPCWSTR GetText() const;
-	bool GetText(LPWSTR pszText,int MaxLength) const;
+	bool GetText(LPWSTR pszText, int MaxLength) const;
 	bool GetValue(int *pValue) const;
 	bool GetValue(DWORD *pValue) const;
 	bool GetValue(SYSTEMTIME *pValue) const;
@@ -38,10 +60,10 @@ public:
 
 CArgsParser::CArgsParser(LPCWSTR pszCmdLine)
 {
-	m_ppszArgList=::CommandLineToArgvW(pszCmdLine,&m_Args);
-	if (m_ppszArgList==0)
-		m_Args=0;
-	m_CurPos=0;
+	m_ppszArgList = ::CommandLineToArgvW(pszCmdLine, &m_Args);
+	if (m_ppszArgList == 0)
+		m_Args = 0;
+	m_CurPos = 0;
 }
 
 
@@ -56,8 +78,8 @@ bool CArgsParser::IsSwitch() const
 {
 	if (IsEnd())
 		return false;
-	return m_ppszArgList[m_CurPos][0]==L'-'
-		|| m_ppszArgList[m_CurPos][0]==L'/';
+	return m_ppszArgList[m_CurPos][0] == L'-'
+		|| m_ppszArgList[m_CurPos][0] == L'/';
 }
 
 
@@ -65,25 +87,25 @@ bool CArgsParser::IsOption(LPCWSTR pszOption) const
 {
 	if (IsEnd())
 		return false;
-	return ::lstrcmpi(m_ppszArgList[m_CurPos]+1,pszOption)==0;
+	return ::lstrcmpi(m_ppszArgList[m_CurPos] + 1, pszOption) == 0;
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,bool *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption, bool *pValue)
 {
 	if (IsOption(pszOption)) {
-		*pValue=true;
+		*pValue = true;
 		return true;
 	}
 	return false;
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,TVTest::String *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption, String *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next()) {
-			TVTest::StringUtility::Assign(*pValue,GetText());
+			StringUtility::Assign(*pValue, GetText());
 			return true;
 		}
 	}
@@ -91,27 +113,17 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,TVTest::String *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,LPTSTR pszValue,int MaxLength)
+bool CArgsParser::GetOption(LPCWSTR pszOption, LPTSTR pszValue, int MaxLength)
 {
 	if (IsOption(pszOption)) {
 		if (Next())
-			return GetText(pszValue,MaxLength);
+			return GetText(pszValue, MaxLength);
 	}
 	return false;
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,int *pValue)
-{
-	if (IsOption(pszOption)) {
-		if (Next())
-			return GetValue(pValue);
-	}
-	return false;
-}
-
-
-bool CArgsParser::GetOption(LPCWSTR pszOption,DWORD *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption, int *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next())
@@ -121,7 +133,7 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,DWORD *pValue)
 }
 
 
-bool CArgsParser::GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption, DWORD *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next())
@@ -131,7 +143,17 @@ bool CArgsParser::GetOption(LPCWSTR pszOption,SYSTEMTIME *pValue)
 }
 
 
-bool CArgsParser::GetDurationOption(LPCWSTR pszOption,int *pValue)
+bool CArgsParser::GetOption(LPCWSTR pszOption, SYSTEMTIME *pValue)
+{
+	if (IsOption(pszOption)) {
+		if (Next())
+			return GetValue(pValue);
+	}
+	return false;
+}
+
+
+bool CArgsParser::GetDurationOption(LPCWSTR pszOption, int *pValue)
 {
 	if (IsOption(pszOption)) {
 		if (Next())
@@ -144,7 +166,7 @@ bool CArgsParser::GetDurationOption(LPCWSTR pszOption,int *pValue)
 bool CArgsParser::Next()
 {
 	m_CurPos++;
-	return m_CurPos<m_Args;
+	return m_CurPos < m_Args;
 }
 
 
@@ -156,13 +178,13 @@ LPCWSTR CArgsParser::GetText() const
 }
 
 
-bool CArgsParser::GetText(LPWSTR pszText,int MaxLength) const
+bool CArgsParser::GetText(LPWSTR pszText, int MaxLength) const
 {
 	if (IsEnd())
 		return false;
-	if (::lstrlen(m_ppszArgList[m_CurPos])>=MaxLength)
+	if (::lstrlen(m_ppszArgList[m_CurPos]) >= MaxLength)
 		return false;
-	::lstrcpy(pszText,m_ppszArgList[m_CurPos]);
+	StringCopy(pszText, m_ppszArgList[m_CurPos]);
 	return true;
 }
 
@@ -171,7 +193,7 @@ bool CArgsParser::GetValue(int *pValue) const
 {
 	if (IsEnd())
 		return false;
-	*pValue=_wtoi(m_ppszArgList[m_CurPos]);
+	*pValue = _wtoi(m_ppszArgList[m_CurPos]);
 	return true;
 }
 
@@ -180,7 +202,7 @@ bool CArgsParser::GetValue(DWORD *pValue) const
 {
 	if (IsEnd())
 		return false;
-	*pValue=wcstoul(m_ppszArgList[m_CurPos],NULL,0);
+	*pValue = wcstoul(m_ppszArgList[m_CurPos], nullptr, 0);
 	return true;
 }
 
@@ -191,107 +213,107 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 		return false;
 
 	/*
-		ì˙ïtÇ∆éûçèÇÃÉpÅ[ÉXÇçsÇ§
-		Y-M-DTh:m:s Ç‚ Y/M/D-h:m:s Ç»Ç«ÇÉAÉoÉEÉgÇ…éÛÇØïtÇØÇÈ
-		YÅAMÅAsÇÕè»ó™â¬î\
-		ì˙ïtÇÃÇ›ÇéwíËÇµÇΩèÍçáÅAÇªÇÃì˙ÇÃ0éû0ï™0ïbÇ©ÇÁÇ∆Ç∑ÇÈ
-		éûçèÇÃÇ›ÇéwíËÇµÇΩèÍçáÅAéüÇ…ÇªÇÃéûçèÇ™óàÇÈéûÇ∆Ç∑ÇÈ
+		Êó•‰ªò„Å®ÊôÇÂàª„ÅÆ„Éë„Éº„Çπ„ÇíË°å„ÅÜ
+		Y-M-DTh:m:s „ÇÑ Y/M/D-h:m:s „Å™„Å©„Çí„Ç¢„Éê„Ç¶„Éà„Å´Âèó„Åë‰ªò„Åë„Çã
+		Y„ÄÅM„ÄÅs„ÅØÁúÅÁï•ÂèØËÉΩ
+		Êó•‰ªò„ÅÆ„Åø„ÇíÊåáÂÆö„Åó„ÅüÂ†¥Âêà„ÄÅ„Åù„ÅÆÊó•„ÅÆ0ÊôÇ0ÂàÜ0Áßí„Åã„Çâ„Å®„Åô„Çã
+		ÊôÇÂàª„ÅÆ„Åø„ÇíÊåáÂÆö„Åó„ÅüÂ†¥Âêà„ÄÅÊ¨°„Å´„Åù„ÅÆÊôÇÂàª„ÅåÊù•„ÇãÊôÇ„Å®„Åô„Çã
 	*/
-	SYSTEMTIME CurTime,Time;
+	SYSTEMTIME CurTime, Time = {};
 	::GetLocalTime(&CurTime);
-	::ZeroMemory(&Time,sizeof(Time));
 
-	WORD Date[3],TimeValue[3];
-	int DateCount=0,TimeCount=0;
-	UINT Value=0;
-	for (LPCWSTR p=m_ppszArgList[m_CurPos];;p++) {
-		if (*p>=L'0' && *p<=L'9') {
-			Value=Value*10+(*p-L'0');
-			if (Value>0xFFFF)
+	WORD Date[3], TimeValue[3];
+	int DateCount = 0, TimeCount = 0;
+	UINT Value = 0;
+	for (LPCWSTR p = m_ppszArgList[m_CurPos];; p++) {
+		if (*p >= L'0' && *p <= L'9') {
+			Value = Value * 10 + (*p - L'0');
+			if (Value > 0xFFFF)
 				return false;
 		} else {
-			if (*p==L'/' || *p==L'-' || *p==L'T') {
-				if (DateCount==3)
+			if (*p == L'/' || *p == L'-' || *p == L'T') {
+				if (DateCount == 3)
 					return false;
-				Date[DateCount++]=(WORD)Value;
-			} else if (*p==L':' || *p==L'\0') {
-				if (TimeCount==3)
+				Date[DateCount++] = (WORD)Value;
+			} else if (*p == L':' || *p == L'\0') {
+				if (TimeCount == 3)
 					return false;
-				TimeValue[TimeCount++]=(WORD)Value;
-				if (*p==L'\0')
+				TimeValue[TimeCount++] = (WORD)Value;
+				if (*p == L'\0')
 					break;
 			}
-			Value=0;
+			Value = 0;
 		}
 	}
 
-	if ((DateCount==0 && TimeCount<2) || TimeCount==1)
+	if ((DateCount == 0 && TimeCount < 2) || TimeCount == 1)
 		return false;
 
-	int i=0;
-	if (DateCount>2) {
-		Time.wYear=Date[i++];
-		if (Time.wYear<100)
-			Time.wYear+=CurTime.wYear/100*100;
+	int i = 0;
+	if (DateCount > 2) {
+		Time.wYear = Date[i++];
+		if (Time.wYear < 100)
+			Time.wYear += CurTime.wYear / 100 * 100;
 	}
-	if (DateCount>1) {
-		Time.wMonth=Date[i++];
-		if (Time.wMonth<1 || Time.wMonth>12)
+	if (DateCount > 1) {
+		Time.wMonth = Date[i++];
+		if (Time.wMonth < 1 || Time.wMonth > 12)
 			return false;
 	}
-	if (DateCount>0) {
-		Time.wDay=Date[i];
-		if (Time.wDay<1 || Time.wDay>31)
+	if (DateCount > 0) {
+		Time.wDay = Date[i];
+		if (Time.wDay < 1 || Time.wDay > 31)
 			return false;
 	}
-	if (Time.wYear==0) {
-		Time.wYear=CurTime.wYear;
-		if (Time.wMonth==0) {
-			Time.wMonth=CurTime.wMonth;
-			if (Time.wDay==0) {
-				Time.wDay=CurTime.wDay;
-			} else if (Time.wDay<CurTime.wDay) {
+	if (Time.wYear == 0) {
+		Time.wYear = CurTime.wYear;
+		if (Time.wMonth == 0) {
+			Time.wMonth = CurTime.wMonth;
+			if (Time.wDay == 0) {
+				Time.wDay = CurTime.wDay;
+			} else if (Time.wDay < CurTime.wDay) {
 				Time.wMonth++;
-				if (Time.wMonth>12) {
-					Time.wMonth=1;
+				if (Time.wMonth > 12) {
+					Time.wMonth = 1;
 					Time.wYear++;
 				}
 			}
-		} else if (Time.wMonth<CurTime.wMonth) {
+		} else if (Time.wMonth < CurTime.wMonth) {
 			Time.wYear++;
 		}
 	}
 
-	if (TimeCount>0) {
-		Time.wHour=TimeValue[0];
-		if (TimeCount>1) {
-			Time.wMinute=TimeValue[1];
-			if (Time.wMinute>59)
+	if (TimeCount > 0) {
+		Time.wHour = TimeValue[0];
+		if (TimeCount > 1) {
+			Time.wMinute = TimeValue[1];
+			if (Time.wMinute > 59)
 				return false;
-			if (TimeCount>2) {
-				Time.wSecond=TimeValue[2];
-				if (Time.wSecond>59)	// WindowsÇ…â[ïbÇÕñ≥Ç¢ÇÁÇµÇ¢
+			if (TimeCount > 2) {
+				Time.wSecond = TimeValue[2];
+				if (Time.wSecond > 59)	// Windows„Å´ÈñèÁßí„ÅØÁÑ°„ÅÑ„Çâ„Åó„ÅÑ
 					return false;
 			}
 		}
 	}
-	if (DateCount==0) {
-		if (Time.wHour<CurTime.wHour)
-			Time.wHour+=24;
+	if (DateCount == 0) {
+		if (Time.wHour < CurTime.wHour)
+			Time.wHour += 24;
 	}
 
-	SYSTEMTIME st={};
+	SYSTEMTIME st = {};
 
-	st.wYear=Time.wYear;
-	st.wMonth=Time.wMonth;
-	st.wDay=Time.wDay;
+	st.wYear = Time.wYear;
+	st.wMonth = Time.wMonth;
+	st.wDay = Time.wDay;
 
-	OffsetSystemTime(&st,
-		(LONGLONG)Time.wHour*TimeConsts::SYSTEMTIME_HOUR+
-		(LONGLONG)Time.wMinute*TimeConsts::SYSTEMTIME_MINUTE+
-		(LONGLONG)Time.wSecond*TimeConsts::SYSTEMTIME_SECOND);
+	OffsetSystemTime(
+		&st,
+		(LONGLONG)Time.wHour * TimeConsts::SYSTEMTIME_HOUR +
+		(LONGLONG)Time.wMinute * TimeConsts::SYSTEMTIME_MINUTE +
+		(LONGLONG)Time.wSecond * TimeConsts::SYSTEMTIME_SECOND);
 
-	*pValue=st;
+	*pValue = st;
 
 	return true;
 }
@@ -302,57 +324,57 @@ bool CArgsParser::GetDurationValue(int *pValue) const
 	if (IsEnd())
 		return false;
 
-	// ?h?m?s å`éÆÇÃéûä‘éwíËÇÉpÅ[ÉXÇ∑ÇÈ
-	// íPà ÇÃéwíËÇ™ñ≥Ç¢èÍçáÇÕïbíPà Ç∆âéﬂÇ∑ÇÈ
-	LPCWSTR p=m_ppszArgList[m_CurPos];
-	int DurationSec=0,Duration=0;
+	// ?h?m?s ÂΩ¢Âºè„ÅÆÊôÇÈñìÊåáÂÆö„Çí„Éë„Éº„Çπ„Åô„Çã
+	// Âçò‰Ωç„ÅÆÊåáÂÆö„ÅåÁÑ°„ÅÑÂ†¥Âêà„ÅØÁßíÂçò‰Ωç„Å®Ëß£Èáà„Åô„Çã
+	LPCWSTR p = m_ppszArgList[m_CurPos];
+	int DurationSec = 0, Duration = 0;
 
-	while (*p!=L'\0') {
-		if (*p==L'-' || (*p>=L'0' && *p<=L'9')) {
-			Duration=wcstol(p,(wchar_t**)&p,10);
-			if (Duration==LONG_MAX || Duration==LONG_MIN)
+	while (*p != L'\0') {
+		if (*p == L'-' || (*p >= L'0' && *p <= L'9')) {
+			Duration = wcstol(p, (wchar_t**)&p, 10);
+			if (Duration == LONG_MAX || Duration == LONG_MIN)
 				return false;
 		} else {
 			switch (*p) {
 			case L'h': case L'H':
-				DurationSec+=Duration*(60*60);
+				DurationSec += Duration * (60 * 60);
 				break;
 			case L'm': case L'M':
-				DurationSec+=Duration*60;
+				DurationSec += Duration * 60;
 				break;
 			case L's': case L'S':
-				DurationSec+=Duration;
+				DurationSec += Duration;
 				break;
 			}
-			Duration=0;
+			Duration = 0;
 			p++;
 		}
 	}
-	DurationSec+=Duration;
-	*pValue=DurationSec;
+	DurationSec += Duration;
+	*pValue = DurationSec;
 
 	return true;
 }
 
 
-static bool GetIniEntry(LPCWSTR pszText,CCommandLineOptions::IniEntry *pEntry)
+static bool GetIniEntry(LPCWSTR pszText, CCommandLineOptions::IniEntry *pEntry)
 {
-	LPCWSTR p=pszText;
+	LPCWSTR p = pszText;
 
-	if (*p==L'[') {
+	if (*p == L'[') {
 		p++;
-		LPCWSTR pEnd=::StrChrW(p,L']');
-		if (pEnd==NULL)
+		LPCWSTR pEnd = ::StrChrW(p, L']');
+		if (pEnd == nullptr)
 			return false;
-		pEntry->Section.assign(p,pEnd-p);
-		p=pEnd+1;
+		pEntry->Section.assign(p, pEnd - p);
+		p = pEnd + 1;
 	}
 
-	LPCWSTR pEnd=::StrChrW(p,L'=');
-	if (pEnd==NULL || pEnd-p<1)
+	LPCWSTR pEnd = ::StrChrW(p, L'=');
+	if (pEnd == nullptr || pEnd - p < 1)
 		return false;
-	pEntry->Name.assign(p,pEnd-p);
-	p=pEnd+1;
+	pEntry->Name.assign(p, pEnd - p);
+	p = pEnd + 1;
 	pEntry->Value.assign(p);
 
 	return true;
@@ -423,65 +445,65 @@ CCommandLineOptions::CCommandLineOptions()
 
 
 /*
-	óòópâ¬î\Ç»ÉRÉ}ÉìÉhÉâÉCÉìÉIÉvÉVÉáÉì
+	Âà©Áî®ÂèØËÉΩ„Å™„Ç≥„Éû„É≥„Éâ„É©„Ç§„É≥„Ç™„Éó„Ç∑„Éß„É≥
 
-	/ch				ï®óùÉ`ÉÉÉìÉlÉã (e.g. /ch 13)
-	/chi			É`ÉÉÉìÉlÉãÉCÉìÉfÉbÉNÉX
-	/chspace		É`ÉÖÅ[ÉjÉìÉOãÛä‘ (e.g. /chspace 1)
-	/d				ÉhÉâÉCÉoÇÃéwíË (e.g. /d BonDriver.dll)
-	/f /fullscreen	ÉtÉãÉXÉNÉäÅ[Éì
-	/ini			INIÉtÉ@ÉCÉãñº
-	/init			èâä˙ê›íËÉ_ÉCÉAÉçÉOÇï\é¶Ç∑ÇÈ
-	/inikey			INIÉtÉ@ÉCÉãÇÃílÇê›íË
-	/log			èIóπéûÇ…ÉçÉOÇï€ë∂Ç∑ÇÈ
-	/max			ç≈ëÂâªèÛë‘Ç≈ãNìÆ
-	/min			ç≈è¨âªèÛë‘Ç≈ãNìÆ
-	/tray			ãNìÆéûÇ…É^ÉXÉNÉgÉåÉCÇ…äiî[
-	/posx			ÉEÉBÉìÉhÉEÇÃç∂à íuÇÃéwíË
-	/posy			ÉEÉBÉìÉhÉEÇÃè„à íuÇÃéwíË
-	/width			ÉEÉBÉìÉhÉEÇÃïùÇÃéwíË
-	/height			ÉEÉBÉìÉhÉEÇÃçÇÇ≥ÇÃéwíË
-	/mute			è¡âπ
-	/nd				TSÉvÉçÉZÉbÉTÅ[Çñ≥å¯Ç…Ç∑ÇÈ
-	/nid			ÉlÉbÉgÉèÅ[ÉNID
-	/nodriver		BonDriverÇì«Ç›çûÇ‹Ç»Ç¢
-	/nodshow		DirectShowÇÃèâä˙âªÇÇµÇ»Ç¢
-	/noplugin		ÉvÉâÉOÉCÉìÇì«Ç›çûÇ‹Ç»Ç¢
-	/noview			ÉvÉåÉrÉÖÅ[ñ≥å¯
-	/mpeg2			MPEG-2ÇóLå¯
-	/h264			H.264ÇóLå¯
-	/h265			H.265ÇóLå¯
-	/1seg			ÉèÉìÉZÉOÉÇÅ[Éh
-	/nr				ÉlÉbÉgÉèÅ[ÉNÉäÉÇÉRÉìÇégópÇ∑ÇÈ
-	/p /port		UDP ÇÃÉ|Å[Égî‘çÜ (e.g. /p 1234)
-	/plugin-		éwíËÇ≥ÇÍÇΩÉvÉâÉOÉCÉìÇì«Ç›çûÇ‹Ç»Ç¢
-	/plugindir		ÉvÉâÉOÉCÉìÇÃÉtÉHÉãÉ_
-	/rch			ÉäÉÇÉRÉìÉ`ÉÉÉìÉlÉã
-	/rec			ò^âÊ
-	/reccurservice	åªç›ÇÃÉTÅ[ÉrÉXÇÃÇ›ò^âÊ
-	/recstarttime	ò^âÊäJénì˙éû
-	/recdelay		ò^âÊÇ‹Ç≈ÇÃéûä‘
-	/recduration	ò^âÊéûä‘
-	/recexit		ò^âÊèIóπéûÇ…ÉvÉçÉOÉâÉÄÇèIóπ
-	/recfile		ò^âÊÉtÉ@ÉCÉãñº
-	/reconly		ò^âÊêÍópÉÇÅ[Éh
-	/recstop		ò^âÊí‚é~
-	/s				ï°êîãNìÆÇµÇ»Ç¢
-	/sid			ÉTÅ[ÉrÉXID
-	/silent			ÉGÉâÅ[éûÇ…É_ÉCÉAÉçÉOÇï\é¶ÇµÇ»Ç¢
-	/standby		ë“ã@èÛë‘Ç≈ãNìÆ
-	/tsid			ÉgÉâÉìÉXÉ|Å[ÉgÉXÉgÉäÅ[ÉÄID
-	/volume			âπó 
-	/noepg			EPGèÓïÒÇÃéÊìæÇçsÇÌÇ»Ç¢
-	/epg			EPGî‘ëgï\Çï\é¶Ç∑ÇÈ
-	/epgonly		EPGî‘ëgï\ÇÃÇ›ï\é¶Ç∑ÇÈ
-	/epgtuner		EPGî‘ëgï\ÇÃÉfÉtÉHÉãÉgÉ`ÉÖÅ[ÉiÅ[
-	/epgspace		EPGî‘ëgï\ÇÃÉfÉtÉHÉãÉgÉ`ÉÖÅ[ÉjÉìÉOãÛä‘
-	/home			ÉzÅ[ÉÄâÊñ ï\é¶
-	/chdisplay		É`ÉÉÉìÉlÉãëIëâÊñ ï\é¶
-	/style			ÉXÉ^ÉCÉãÉtÉ@ÉCÉãñº
-	/command		ÉRÉ}ÉìÉhé¿çs
-	/jumplist		ÉWÉÉÉìÉvÉäÉXÉgÇ©ÇÁÇÃãNìÆ
+	/ch             Áâ©ÁêÜ„ÉÅ„É£„É≥„Éç„É´ (e.g. /ch 13)
+	/chi            „ÉÅ„É£„É≥„Éç„É´„Ç§„É≥„Éá„ÉÉ„ÇØ„Çπ
+	/chspace        „ÉÅ„É•„Éº„Éã„É≥„Ç∞Á©∫Èñì (e.g. /chspace 1)
+	/d              „Éâ„É©„Ç§„Éê„ÅÆÊåáÂÆö (e.g. /d BonDriver.dll)
+	/f /fullscreen  „Éï„É´„Çπ„ÇØ„É™„Éº„É≥
+	/ini            INI„Éï„Ç°„Ç§„É´Âêç
+	/init           ÂàùÊúüË®≠ÂÆö„ÉÄ„Ç§„Ç¢„É≠„Ç∞„ÇíË°®Á§∫„Åô„Çã
+	/inikey         INI„Éï„Ç°„Ç§„É´„ÅÆÂÄ§„ÇíË®≠ÂÆö
+	/log            ÁµÇ‰∫ÜÊôÇ„Å´„É≠„Ç∞„Çí‰øùÂ≠ò„Åô„Çã
+	/max            ÊúÄÂ§ßÂåñÁä∂ÊÖã„ÅßËµ∑Âãï
+	/min            ÊúÄÂ∞èÂåñÁä∂ÊÖã„ÅßËµ∑Âãï
+	/tray           Ëµ∑ÂãïÊôÇ„Å´„Çø„Çπ„ÇØ„Éà„É¨„Ç§„Å´Ê†ºÁ¥ç
+	/posx           „Ç¶„Ç£„É≥„Éâ„Ç¶„ÅÆÂ∑¶‰ΩçÁΩÆ„ÅÆÊåáÂÆö
+	/posy           „Ç¶„Ç£„É≥„Éâ„Ç¶„ÅÆ‰∏ä‰ΩçÁΩÆ„ÅÆÊåáÂÆö
+	/width          „Ç¶„Ç£„É≥„Éâ„Ç¶„ÅÆÂπÖ„ÅÆÊåáÂÆö
+	/height         „Ç¶„Ç£„É≥„Éâ„Ç¶„ÅÆÈ´ò„Åï„ÅÆÊåáÂÆö
+	/mute           Ê∂àÈü≥
+	/nd             TS„Éó„É≠„Çª„ÉÉ„Çµ„Éº„ÇíÁÑ°Âäπ„Å´„Åô„Çã
+	/nid            „Éç„ÉÉ„Éà„ÉØ„Éº„ÇØID
+	/nodriver       BonDriver„ÇíË™≠„ÅøËæº„Åæ„Å™„ÅÑ
+	/nodshow        DirectShow„ÅÆÂàùÊúüÂåñ„Çí„Åó„Å™„ÅÑ
+	/noplugin       „Éó„É©„Ç∞„Ç§„É≥„ÇíË™≠„ÅøËæº„Åæ„Å™„ÅÑ
+	/noview         „Éó„É¨„Éì„É•„ÉºÁÑ°Âäπ
+	/mpeg2          MPEG-2„ÇíÊúâÂäπ
+	/h264           H.264„ÇíÊúâÂäπ
+	/h265           H.265„ÇíÊúâÂäπ
+	/1seg           „ÉØ„É≥„Çª„Ç∞„É¢„Éº„Éâ
+	/nr             „Éç„ÉÉ„Éà„ÉØ„Éº„ÇØ„É™„É¢„Ç≥„É≥„Çí‰ΩøÁî®„Åô„Çã
+	/p /port        UDP „ÅÆ„Éù„Éº„ÉàÁï™Âè∑ (e.g. /p 1234)
+	/plugin-        ÊåáÂÆö„Åï„Çå„Åü„Éó„É©„Ç∞„Ç§„É≥„ÇíË™≠„ÅøËæº„Åæ„Å™„ÅÑ
+	/plugindir      „Éó„É©„Ç∞„Ç§„É≥„ÅÆ„Éï„Ç©„É´„ÉÄ
+	/rch            „É™„É¢„Ç≥„É≥„ÉÅ„É£„É≥„Éç„É´
+	/rec            Èå≤Áîª
+	/reccurservice  ÁèæÂú®„ÅÆ„Çµ„Éº„Éì„Çπ„ÅÆ„ÅøÈå≤Áîª
+	/recstarttime   Èå≤ÁîªÈñãÂßãÊó•ÊôÇ
+	/recdelay       Èå≤Áîª„Åæ„Åß„ÅÆÊôÇÈñì
+	/recduration    Èå≤ÁîªÊôÇÈñì
+	/recexit        Èå≤ÁîªÁµÇ‰∫ÜÊôÇ„Å´„Éó„É≠„Ç∞„É©„É†„ÇíÁµÇ‰∫Ü
+	/recfile        Èå≤Áîª„Éï„Ç°„Ç§„É´Âêç
+	/reconly        Èå≤ÁîªÂ∞ÇÁî®„É¢„Éº„Éâ
+	/recstop        Èå≤ÁîªÂÅúÊ≠¢
+	/s              Ë§áÊï∞Ëµ∑Âãï„Åó„Å™„ÅÑ
+	/sid            „Çµ„Éº„Éì„ÇπID
+	/silent         „Ç®„É©„ÉºÊôÇ„Å´„ÉÄ„Ç§„Ç¢„É≠„Ç∞„ÇíË°®Á§∫„Åó„Å™„ÅÑ
+	/standby        ÂæÖÊ©üÁä∂ÊÖã„ÅßËµ∑Âãï
+	/tsid           „Éà„É©„É≥„Çπ„Éù„Éº„Éà„Çπ„Éà„É™„Éº„É†ID
+	/volume         Èü≥Èáè
+	/noepg          EPGÊÉÖÂ†±„ÅÆÂèñÂæó„ÇíË°å„Çè„Å™„ÅÑ
+	/epg            EPGÁï™ÁµÑË°®„ÇíË°®Á§∫„Åô„Çã
+	/epgonly        EPGÁï™ÁµÑË°®„ÅÆ„ÅøË°®Á§∫„Åô„Çã
+	/epgtuner       EPGÁï™ÁµÑË°®„ÅÆ„Éá„Éï„Ç©„É´„Éà„ÉÅ„É•„Éº„Éä„Éº
+	/epgspace       EPGÁï™ÁµÑË°®„ÅÆ„Éá„Éï„Ç©„É´„Éà„ÉÅ„É•„Éº„Éã„É≥„Ç∞Á©∫Èñì
+	/home           „Éõ„Éº„É†ÁîªÈù¢Ë°®Á§∫
+	/chdisplay      „ÉÅ„É£„É≥„Éç„É´ÈÅ∏ÊäûÁîªÈù¢Ë°®Á§∫
+	/style          „Çπ„Çø„Ç§„É´„Éï„Ç°„Ç§„É´Âêç
+	/command        „Ç≥„Éû„É≥„ÉâÂÆüË°å
+	/jumplist       „Ç∏„É£„É≥„Éó„É™„Çπ„Éà„Åã„Çâ„ÅÆËµ∑Âãï
 */
 void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 {
@@ -491,132 +513,137 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 		return;
 	do {
 		if (Args.IsSwitch()) {
-			if (!Args.GetOption(TEXT("1seg"),&m_f1Seg)
-					&& !Args.GetOption(TEXT("ch"),&m_Channel)
-					&& !Args.GetOption(TEXT("chdisplay"),&m_fChannelDisplay)
-					&& !Args.GetOption(TEXT("chi"),&m_ChannelIndex)
-					&& !Args.GetOption(TEXT("chspace"),&m_TuningSpace)
-					&& !Args.GetOption(TEXT("command"),&m_Command)
-					&& !Args.GetOption(TEXT("d"),&m_DriverName)
-					&& !Args.GetOption(TEXT("epg"),&m_fShowProgramGuide)
-					&& !Args.GetOption(TEXT("epgonly"),&m_fProgramGuideOnly)
-					&& !Args.GetOption(TEXT("epgspace"),&m_ProgramGuideSpace)
-					&& !Args.GetOption(TEXT("epgtuner"),&m_ProgramGuideTuner)
-					&& !Args.GetOption(TEXT("f"),&m_fFullscreen)
-					&& !Args.GetOption(TEXT("fullscreen"),&m_fFullscreen)
-					&& !Args.GetOption(TEXT("h264"),&m_fH264)
-					&& !Args.GetOption(TEXT("h265"),&m_fH265)
-					&& !Args.GetOption(TEXT("height"),&m_WindowHeight)
-					&& !Args.GetOption(TEXT("home"),&m_fHomeDisplay)
-					&& !Args.GetOption(TEXT("ini"),&m_IniFileName)
-					&& !Args.GetOption(TEXT("init"),&m_fInitialSettings)
-					&& !Args.GetOption(TEXT("jumplist"),&m_fJumpList)
-					&& !Args.GetOption(TEXT("log"),&m_fSaveLog)
-					&& !Args.GetOption(TEXT("max"),&m_fMaximize)
-					&& !Args.GetOption(TEXT("min"),&m_fMinimize)
-					&& !Args.GetOption(TEXT("mpeg2"),&m_fMpeg2)
-					&& !Args.GetOption(TEXT("mute"),&m_fMute)
-					&& !Args.GetOption(TEXT("nd"),&m_fNoTSProcessor)
-					&& !Args.GetOption(TEXT("nodriver"),&m_fNoDriver)
-					&& !Args.GetOption(TEXT("nodshow"),&m_fNoDirectShow)
-					&& !Args.GetOption(TEXT("noepg"),&m_fNoEpg)
-					&& !Args.GetOption(TEXT("noplugin"),&m_fNoPlugin)
-					&& !Args.GetOption(TEXT("noview"),&m_fNoView)
-					&& !Args.GetOption(TEXT("nr"),&m_fUseNetworkRemocon)
-					&& !Args.GetOption(TEXT("nid"),&m_NetworkID)
-					&& !Args.GetOption(TEXT("p"),&m_UDPPort)
-					&& !Args.GetOption(TEXT("port"),&m_UDPPort)
-					&& !Args.GetOption(TEXT("posx"),&m_WindowLeft)
-					&& !Args.GetOption(TEXT("posy"),&m_WindowTop)
-					&& !Args.GetOption(TEXT("plugindir"),&m_PluginsDirectory)
-					&& !Args.GetOption(TEXT("pluginsdir"),&m_PluginsDirectory)
-					&& !Args.GetOption(TEXT("rec"),&m_fRecord)
-					&& !Args.GetOption(TEXT("reccurservice"),&m_fRecordCurServiceOnly)
-					&& !Args.GetOption(TEXT("recstarttime"),&m_RecordStartTime)
-					&& !Args.GetDurationOption(TEXT("recdelay"),&m_RecordDelay)
-					&& !Args.GetDurationOption(TEXT("recduration"),&m_RecordDuration)
-					&& !Args.GetOption(TEXT("recexit"),&m_fExitOnRecordEnd)
-					&& !Args.GetOption(TEXT("recfile"),&m_RecordFileName)
-					&& !Args.GetOption(TEXT("reconly"),&m_fRecordOnly)
-					&& !Args.GetOption(TEXT("recstop"),&m_fRecordStop)
-					&& !Args.GetOption(TEXT("rch"),&m_ControllerChannel)
-					&& !Args.GetOption(TEXT("s"),&m_fSingleTask)
-					&& !Args.GetOption(TEXT("sid"),&m_ServiceID)
-					&& !Args.GetOption(TEXT("silent"),&m_fSilent)
-					&& !Args.GetOption(TEXT("standby"),&m_fStandby)
-					&& !Args.GetOption(TEXT("style"),&m_StyleFileName)
-					&& !Args.GetOption(TEXT("tray"),&m_fTray)
-					&& !Args.GetOption(TEXT("tsid"),&m_TransportStreamID)
-					&& !Args.GetOption(TEXT("volume"),&m_Volume)
-					&& !Args.GetOption(TEXT("width"),&m_WindowWidth)) {
+			if (!Args.GetOption(TEXT("1seg"), &m_f1Seg)
+					&& !Args.GetOption(TEXT("ch"), &m_Channel)
+					&& !Args.GetOption(TEXT("chdisplay"), &m_fChannelDisplay)
+					&& !Args.GetOption(TEXT("chi"), &m_ChannelIndex)
+					&& !Args.GetOption(TEXT("chspace"), &m_TuningSpace)
+					&& !Args.GetOption(TEXT("command"), &m_Command)
+					&& !Args.GetOption(TEXT("d"), &m_DriverName)
+					&& !Args.GetOption(TEXT("epg"), &m_fShowProgramGuide)
+					&& !Args.GetOption(TEXT("epgonly"), &m_fProgramGuideOnly)
+					&& !Args.GetOption(TEXT("epgspace"), &m_ProgramGuideSpace)
+					&& !Args.GetOption(TEXT("epgtuner"), &m_ProgramGuideTuner)
+					&& !Args.GetOption(TEXT("f"), &m_fFullscreen)
+					&& !Args.GetOption(TEXT("fullscreen"), &m_fFullscreen)
+					&& !Args.GetOption(TEXT("h264"), &m_fH264)
+					&& !Args.GetOption(TEXT("h265"), &m_fH265)
+					&& !Args.GetOption(TEXT("height"), &m_WindowHeight)
+					&& !Args.GetOption(TEXT("home"), &m_fHomeDisplay)
+					&& !Args.GetOption(TEXT("ini"), &m_IniFileName)
+					&& !Args.GetOption(TEXT("init"), &m_fInitialSettings)
+					&& !Args.GetOption(TEXT("jumplist"), &m_fJumpList)
+					&& !Args.GetOption(TEXT("log"), &m_fSaveLog)
+					&& !Args.GetOption(TEXT("max"), &m_fMaximize)
+					&& !Args.GetOption(TEXT("min"), &m_fMinimize)
+					&& !Args.GetOption(TEXT("mpeg2"), &m_fMpeg2)
+					&& !Args.GetOption(TEXT("mute"), &m_fMute)
+					&& !Args.GetOption(TEXT("nd"), &m_fNoTSProcessor)
+					&& !Args.GetOption(TEXT("nodriver"), &m_fNoDriver)
+					&& !Args.GetOption(TEXT("nodshow"), &m_fNoDirectShow)
+					&& !Args.GetOption(TEXT("noepg"), &m_fNoEpg)
+					&& !Args.GetOption(TEXT("noplugin"), &m_fNoPlugin)
+					&& !Args.GetOption(TEXT("noview"), &m_fNoView)
+					&& !Args.GetOption(TEXT("nr"), &m_fUseNetworkRemocon)
+					&& !Args.GetOption(TEXT("nid"), &m_NetworkID)
+					&& !Args.GetOption(TEXT("p"), &m_UDPPort)
+					&& !Args.GetOption(TEXT("port"), &m_UDPPort)
+					&& !Args.GetOption(TEXT("posx"), &m_WindowLeft)
+					&& !Args.GetOption(TEXT("posy"), &m_WindowTop)
+					&& !Args.GetOption(TEXT("plugindir"), &m_PluginsDirectory)
+					&& !Args.GetOption(TEXT("pluginsdir"), &m_PluginsDirectory)
+					&& !Args.GetOption(TEXT("rec"), &m_fRecord)
+					&& !Args.GetOption(TEXT("reccurservice"), &m_fRecordCurServiceOnly)
+					&& !Args.GetOption(TEXT("recstarttime"), &m_RecordStartTime)
+					&& !Args.GetDurationOption(TEXT("recdelay"), &m_RecordDelay)
+					&& !Args.GetDurationOption(TEXT("recduration"), &m_RecordDuration)
+					&& !Args.GetOption(TEXT("recexit"), &m_fExitOnRecordEnd)
+					&& !Args.GetOption(TEXT("recfile"), &m_RecordFileName)
+					&& !Args.GetOption(TEXT("reconly"), &m_fRecordOnly)
+					&& !Args.GetOption(TEXT("recstop"), &m_fRecordStop)
+					&& !Args.GetOption(TEXT("rch"), &m_ControllerChannel)
+					&& !Args.GetOption(TEXT("s"), &m_fSingleTask)
+					&& !Args.GetOption(TEXT("sid"), &m_ServiceID)
+					&& !Args.GetOption(TEXT("silent"), &m_fSilent)
+					&& !Args.GetOption(TEXT("standby"), &m_fStandby)
+					&& !Args.GetOption(TEXT("style"), &m_StyleFileName)
+					&& !Args.GetOption(TEXT("tray"), &m_fTray)
+					&& !Args.GetOption(TEXT("tsid"), &m_TransportStreamID)
+					&& !Args.GetOption(TEXT("volume"), &m_Volume)
+					&& !Args.GetOption(TEXT("width"), &m_WindowWidth)) {
 				if (Args.IsOption(TEXT("inikey"))) {
 					if (Args.Next()) {
 						IniEntry Entry;
-						if (GetIniEntry(Args.GetText(),&Entry))
+						if (GetIniEntry(Args.GetText(), &Entry))
 							m_IniValueList.push_back(Entry);
 					}
 				} else if (Args.IsOption(TEXT("plugin-"))) {
 					if (Args.Next()) {
 						TCHAR szPlugin[MAX_PATH];
-						if (Args.GetText(szPlugin,MAX_PATH))
-							m_NoLoadPlugins.push_back(TVTest::String(szPlugin));
+						if (Args.GetText(szPlugin, MAX_PATH))
+							m_NoLoadPlugins.emplace_back(szPlugin);
 					}
 				} else if (Args.IsOption(TEXT("did"))) {
 					if (Args.Next()) {
-						const WCHAR DID=Args.GetText()[0];
+						const WCHAR DID = Args.GetText()[0];
 
-						if (DID>=L'A' && DID<=L'Z')
-							m_TvRockDID=DID-L'A';
-						else if (DID>=L'a' && DID<=L'z')
-							m_TvRockDID=DID-L'a';
+						if (DID >= L'A' && DID <= L'Z')
+							m_TvRockDID = DID - L'A';
+						else if (DID >= L'a' && DID <= L'z')
+							m_TvRockDID = DID - L'a';
 					}
 				}
 #ifdef _DEBUG
 				else {
-					TRACE(TEXT("Unknown command line option %s\n"),Args.GetText());
-					// ÉvÉâÉOÉCÉìÇ≈âéﬂÇ∑ÇÈÉIÉvÉVÉáÉìÇ‡Ç†ÇÈÇÃÇ≈Åc
-					//GetAppClass().AddLong(TEXT("ïsñæÇ»ÉRÉ}ÉìÉhÉâÉCÉìÉIÉvÉVÉáÉì %s Çñ≥éãÇµÇ‹Ç∑ÅB"),Args.GetText());
+					TRACE(TEXT("Unknown command line option %s\n"), Args.GetText());
+					// „Éó„É©„Ç∞„Ç§„É≥„ÅßËß£Èáà„Åô„Çã„Ç™„Éó„Ç∑„Éß„É≥„ÇÇ„ÅÇ„Çã„ÅÆ„Åß‚Ä¶
+					//GetAppClass().AddLong(TEXT("‰∏çÊòé„Å™„Ç≥„Éû„É≥„Éâ„É©„Ç§„É≥„Ç™„Éó„Ç∑„Éß„É≥ %s „ÇíÁÑ°Ë¶ñ„Åó„Åæ„Åô„ÄÇ"), Args.GetText());
 				}
 #endif
 			}
 		} else {
-			// Ç»Ç∫Ç©udp://@:1234ÇÃÇÊÇ§Ç…É|Å[ÉgÇéwíËÇ≈Ç´ÇÈÇ∆évÇ¡ÇƒÇ¢ÇÈêlÇ™ëΩÇ¢ÇÃÇ≈ÅAëŒâûÇµÇƒÇ®Ç≠
-			if (::wcsncmp(Args.GetText(),L"udp://@:",8)==0)
-				m_UDPPort=::_wtoi(Args.GetText()+8);
+			// „Å™„Åú„Åãudp://@:1234„ÅÆ„Çà„ÅÜ„Å´„Éù„Éº„Éà„ÇíÊåáÂÆö„Åß„Åç„Çã„Å®ÊÄù„Å£„Å¶„ÅÑ„Çã‰∫∫„ÅåÂ§ö„ÅÑ„ÅÆ„Åß„ÄÅÂØæÂøú„Åó„Å¶„Åä„Åè
+			if (::wcsncmp(Args.GetText(), L"udp://@:", 8) == 0)
+				m_UDPPort = ::_wtoi(Args.GetText() + 8);
 		}
 	} while (Args.Next());
 	if (m_fRecordOnly) {
-		m_fNoDirectShow=true;
+		m_fNoDirectShow = true;
 	}
 
-/*
+	/*
 #ifdef _DEBUG
-	// ÉRÉ}ÉìÉhÉâÉCÉìÇÃâêÕÇÃÉeÉXÉg
+	// „Ç≥„Éû„É≥„Éâ„É©„Ç§„É≥„ÅÆËß£Êûê„ÅÆ„ÉÜ„Çπ„Éà
 	{
 		CArgsParser Args(L"/d 120 /d -45 /d 1h30m5s /t 2011/12/25-1:30:25 /t 1:30 /t 12/25 /t 12/25-1:30 /t 12/25-26:25");
 		do {
 			if (Args.IsSwitch()) {
 				int Duration;
 				SYSTEMTIME Time;
-				if (Args.GetDurationOption(L"d",&Duration)) {
-					TRACE(L"Commandline parse test : \"%s\" %d\n",
-						  Args.GetText(),Duration);
-				} else if (Args.GetOption(L"t",&Time)) {
-					TRACE(L"Commandline parse test : \"%s\" %d/%d/%d %d:%d:%d\n",
-						  Args.GetText(),
-						  Time.wYear,Time.wMonth,Time.wDay,Time.wHour,Time.wMinute,Time.wSecond);
+				if (Args.GetDurationOption(L"d", &Duration)) {
+					TRACE(
+						L"Commandline parse test : \"%s\" %d\n",
+						Args.GetText(), Duration);
+				} else if (Args.GetOption(L"t", &Time)) {
+					TRACE(
+						L"Commandline parse test : \"%s\" %d/%d/%d %d:%d:%d\n",
+						Args.GetText(),
+						Time.wYear, Time.wMonth, Time.wDay, Time.wHour, Time.wMinute, Time.wSecond);
 				}
 			}
 		} while (Args.Next());
 	}
 #endif
-*/
+	*/
 }
 
 
 bool CCommandLineOptions::IsChannelSpecified() const
 {
-	return m_Channel>0 || m_ControllerChannel>0
-		|| (m_ChannelIndex>=0 && m_TuningSpace>=0)
-		|| m_ServiceID>0 || m_NetworkID>0 || m_TransportStreamID>0;
+	return m_Channel > 0 || m_ControllerChannel > 0
+		|| (m_ChannelIndex >= 0 && m_TuningSpace >= 0)
+		|| m_ServiceID > 0 || m_NetworkID > 0 || m_TransportStreamID > 0;
 }
+
+
+}	// namespace TVTest

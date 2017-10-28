@@ -1,8 +1,29 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "ComUtility.h"
 #include "Dialog.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "TVTestInterface.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
@@ -270,7 +291,8 @@ STDMETHODIMP CPropertyPageSite::GetLocaleID(LCID *pLocaleID)
 
 
 
-class CPropertyPageFrame : public CBasicDialog
+class CPropertyPageFrame
+	: public CBasicDialog
 {
 public:
 	CPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages, CPropertyPageSite *pPageSite);
@@ -317,10 +339,10 @@ CPropertyPageFrame::CPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages
 
 CPropertyPageFrame::~CPropertyPageFrame()
 {
-	for (auto it = m_PageList.begin(); it != m_PageList.end(); ++it) {
-		it->pPropPage->SetObjects(0, nullptr);
-		it->pPropPage->SetPageSite(nullptr);
-		it->pPropPage->Release();
+	for (auto &e : m_PageList) {
+		e.pPropPage->SetObjects(0, nullptr);
+		e.pPropPage->SetPageSite(nullptr);
+		e.pPropPage->Release();
 	}
 
 	m_pPageSite->Release();
@@ -389,21 +411,25 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			else
 				YOffset = 0;
 			::GetWindowRect(hDlg, &rc);
-			::MoveWindow(hDlg, rc.left, rc.top,
-						 rc.right - rc.left + XOffset,
-						 rc.bottom - rc.top + YOffset,
-						 FALSE);
-			::MoveWindow(hwndTab,
-						 rcTab.left, rcTab.top,
-						 rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, FALSE);
+			::MoveWindow(
+				hDlg, rc.left, rc.top,
+				rc.right - rc.left + XOffset,
+				rc.bottom - rc.top + YOffset,
+				FALSE);
+			::MoveWindow(
+				hwndTab,
+				rcTab.left, rcTab.top,
+				rcTab.right - rcTab.left, rcTab.bottom - rcTab.top, FALSE);
 			GetDlgItemRect(hDlg, IDOK, &rc);
-			::MoveWindow(::GetDlgItem(hDlg, IDOK),
-						 rc.left + XOffset, rc.top + YOffset,
-						 rc.right - rc.left, rc.bottom - rc.top, FALSE);
+			::MoveWindow(
+				::GetDlgItem(hDlg, IDOK),
+				rc.left + XOffset, rc.top + YOffset,
+				rc.right - rc.left, rc.bottom - rc.top, FALSE);
 			GetDlgItemRect(hDlg, IDCANCEL, &rc);
-			::MoveWindow(::GetDlgItem(hDlg, IDCANCEL),
-						 rc.left + XOffset, rc.top + YOffset,
-						 rc.right - rc.left, rc.bottom - rc.top, FALSE);
+			::MoveWindow(
+				::GetDlgItem(hDlg, IDCANCEL),
+				rc.left + XOffset, rc.top + YOffset,
+				rc.right - rc.left, rc.bottom - rc.top, FALSE);
 
 			m_PageRect = rcTab;
 			TabCtrl_AdjustRect(hwndTab, FALSE, &m_PageRect);
@@ -419,12 +445,12 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDOK:
-			for (auto it = m_PageList.begin(); it != m_PageList.end(); ++it) {
-				if (it->fActivated)
-					it->pPropPage->Apply();
+			for (auto &e : m_PageList) {
+				if (e.fActivated)
+					e.pPropPage->Apply();
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -443,10 +469,10 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		break;
 
 	case WM_DESTROY:
-		for (auto it = m_PageList.begin(); it != m_PageList.end(); ++it) {
-			if (it->fActivated) {
-				it->pPropPage->Deactivate();
-				it->fActivated = false;
+		for (auto &e : m_PageList) {
+			if (e.fActivated) {
+				e.pPropPage->Deactivate();
+				e.fActivated = false;
 			}
 		}
 		return TRUE;
@@ -485,8 +511,9 @@ void CPropertyPageFrame::SetCurTab(int Tab)
 
 
 
-HRESULT ShowPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages,
-							  IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst)
+HRESULT ShowPropertyPageFrame(
+	IPropertyPage **ppPropPages, int NumPages,
+	IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst)
 {
 	if (ppPropPages == nullptr)
 		return E_POINTER;
@@ -510,6 +537,9 @@ HRESULT ShowPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages,
 		for (int i = 0; i < NumPages; i++)
 			ppPropPages[i]->SetObjects(1, &pObject);
 	}
+
+	// TVTest DTV Video Decoder のダイアログが欠けるのでとりあえず System DPI とする
+	SystemDPIBlock SystemDPI;
 
 	CPropertyPageFrame Frame(ppPropPages, NumPages, pPageSite);
 
