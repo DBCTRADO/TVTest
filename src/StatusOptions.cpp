@@ -777,7 +777,7 @@ bool CStatusOptions::IsCursorResize(HWND hwndList, int x, int y)
 
 	if (!GetItemPreviewRect(hwndList, ListBox_GetHitItem(hwndList, x, y), &rc))
 		return false;
-	int Margin = (::GetSystemMetrics(SM_CXSIZEFRAME) + 1) / 2;
+	int Margin = (GetSystemMetricsWithDPI(SM_CXSIZEFRAME, m_CurrentDPI) + 1) / 2;
 	return x >= rc.right - Margin && x <= rc.right + Margin;
 }
 

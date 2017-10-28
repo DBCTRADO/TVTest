@@ -623,8 +623,6 @@ CPanelFrame::~CPanelFrame()
 
 bool CPanelFrame::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	PerMonitorDPIBlock DPIBlock;
-
 	if (!CreateBasicWindow(
 				hwndParent, Style, ExStyle, ID,
 				PANEL_FRAME_WINDOW_CLASS, TEXT("パネル"), m_hinst))

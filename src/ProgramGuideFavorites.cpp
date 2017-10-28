@@ -25,6 +25,7 @@
 #include "ProgramGuideFavorites.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -193,13 +194,9 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			m_fChanging = true;
 
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT);
-			RECT rc;
-			GetClientRect(hwndList, &rc);
-			rc.right -= GetSystemMetrics(SM_CXHSCROLL);
 			LVCOLUMN lvc;
-			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+			lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
-			lvc.cx = rc.right;
 			lvc.pszText = TEXT("");
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
@@ -221,6 +218,8 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 					hwndList, m_CurItem,
 					LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 			}
+
+			ListView_SetColumnWidth(hwndList, 0, LVSCW_AUTOSIZE_USEHEADER);
 
 			SetItemState(hDlg);
 			m_fChanging = false;

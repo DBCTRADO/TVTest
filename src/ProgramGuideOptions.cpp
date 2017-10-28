@@ -25,6 +25,7 @@
 #include "DirectWriteOptionsDialog.h"
 #include "DialogUtil.h"
 #include "StyleUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -603,7 +604,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
 			HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 			HIMAGELIST himl = ::ImageList_Create(
-				::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON),
+				GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI),
+				GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI),
 				ILC_COLOR32 | ILC_MASK, 1, 4);
 			RECT rc;
 			LV_COLUMN lvc;
@@ -617,7 +619,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			ListView_InsertColumn(hwndList, 0, &lvc);
 			lvc.fmt = LVCFMT_LEFT;
 			GetClientRect(hwndList, &rc);
-			rc.right -= GetSystemMetrics(SM_CXVSCROLL);
 			lvc.cx = rc.right - lvc.cx;
 			lvc.pszText = TEXT("コマンド");
 			ListView_InsertColumn(hwndList, 1, &lvc);
@@ -644,10 +645,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					ListView_SetItem(hwndList, &lvi);
 				}
 				ListView_SetColumnWidth(hwndList, 0, LVSCW_AUTOSIZE_USEHEADER);
-				int Width = ListView_GetColumnWidth(hwndList, 0);
 				ListView_SetColumnWidth(hwndList, 1, LVSCW_AUTOSIZE_USEHEADER);
-				if (ListView_GetColumnWidth(hwndList, 1) < rc.right - Width)
-					ListView_SetColumnWidth(hwndList, 1, rc.right - Width);
 				SetDlgItemState();
 			}
 		}

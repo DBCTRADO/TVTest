@@ -23,6 +23,7 @@
 #include "SideBarOptions.h"
 #include "AppMain.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -502,8 +503,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DlgCheckBox_Check(hDlg, IDC_SIDEBAR_SHOWCHANNELLOGO, m_fShowChannelLogo);
 
 			const COLORREF IconColor = ::GetSysColor(COLOR_WINDOWTEXT);
-			const int IconWidth = ::GetSystemMetrics(SM_CXSMICON);
-			const int IconHeight = ::GetSystemMetrics(SM_CYSMICON);
+			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
+			const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
 			SIZE sz;
 			HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
 			Theme::IconList Bitmap;
@@ -552,7 +553,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
 			RECT rc;
 			::GetClientRect(hwndList, &rc);
-			rc.right -= ::GetSystemMetrics(SM_CXVSCROLL);
+			rc.right -= GetScrollBarWidth(hwndList);
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
@@ -564,7 +565,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
 			::GetClientRect(hwndList, &rc);
-			rc.right -= ::GetSystemMetrics(SM_CXVSCROLL);
+			rc.right -= GetScrollBarWidth(hwndList);
 			lvc.cx = rc.right;
 			ListView_InsertColumn(hwndList, 0, &lvc);
 			std::vector<int> List;

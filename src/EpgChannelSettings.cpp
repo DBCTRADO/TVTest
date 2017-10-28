@@ -24,6 +24,7 @@
 #include "ProgramGuide.h"
 #include "AppMain.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "LogoManager.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
@@ -66,8 +67,8 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				hwndList,
 				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
 
-			const int IconWidth = ::GetSystemMetrics(SM_CXSMICON);
-			const int IconHeight = ::GetSystemMetrics(SM_CYSMICON);
+			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
+			const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
 			HIMAGELIST himl = ::ImageList_Create(
 				IconWidth, IconHeight, ILC_COLOR24 | ILC_MASK,
 				m_ChannelList.NumChannels() + 1, 100);
@@ -82,7 +83,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
-			lvc.cx = rc.right - ::GetSystemMetrics(SM_CXVSCROLL);
+			lvc.cx = rc.right - GetScrollBarWidth(hwndList);
 			lvc.pszText = TEXT("");
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);

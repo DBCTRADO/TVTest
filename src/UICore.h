@@ -160,6 +160,8 @@ namespace TVTest
 		void InitTunerMenu(HMENU hmenu);
 		bool ProcessTunerMenu(int Command);
 		bool HandleInitMenuPopup(HMENU hmenu);
+		void SetPopupMenuDPI(int DPI);
+		int GetPopupMenuDPI() const { return m_PopupMenuDPI; }
 
 		bool DoCommand(int Command);
 		bool DoCommand(LPCTSTR pszCommand);
@@ -249,6 +251,7 @@ namespace TVTest
 		BOOL m_fPowerOffActiveOriginal;
 		*/
 
+		int m_PopupMenuDPI;
 		CTunerSelectMenu m_TunerSelectMenu;
 
 		std::vector<CBasicDialog*> m_ModelessDialogList;

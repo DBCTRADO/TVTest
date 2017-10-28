@@ -250,7 +250,9 @@ bool CMainMenu::SetAccelerator(CAccelerator *pAccelerator)
 
 
 CMenuPainter::CMenuPainter()
-	: m_fFlatMenu(false)
+	: m_hwnd(nullptr)
+	, m_DPI(0)
+	, m_fFlatMenu(false)
 {
 }
 
@@ -260,11 +262,19 @@ CMenuPainter::~CMenuPainter()
 }
 
 
-void CMenuPainter::Initialize(HWND hwnd)
+void CMenuPainter::Initialize(HWND hwnd, int DPI)
 {
+	m_hwnd = hwnd;
+	if (DPI > 0)
+		m_DPI = DPI;
+	else if (IsWindowPerMonitorDPIV2(hwnd))
+		m_DPI = GetWindowDPI(hwnd);
+	else
+		m_DPI = 0;
 	m_fFlatMenu = false;
+
 	if (m_UxTheme.Initialize() && m_UxTheme.IsActive()
-			&& m_UxTheme.Open(hwnd, VSCLASS_MENU)) {
+			&& m_UxTheme.Open(hwnd, VSCLASS_MENU, DPI)) {
 		// Use theme
 	} else {
 		BOOL fFlatMenu = FALSE;
@@ -282,8 +292,16 @@ void CMenuPainter::Finalize()
 
 void CMenuPainter::GetFont(LOGFONT *pFont)
 {
-	if (!m_UxTheme.IsActive()
-			|| !m_UxTheme.GetFont(MENU_POPUPITEM, 0, TMT_GLYPHFONT, pFont))
+#if 0
+	// OpenThemeDataForDpi を使ってもサイズがスケーリングされない模様
+	if (m_UxTheme.IsOpen()
+			//&& m_UxTheme.GetFont(MENU_POPUPITEM, 0, TMT_GLYPHFONT, pFont))
+			&& m_UxTheme.GetSysFont(TMT_MENUFONT, pFont))
+		return;
+#endif
+	if ((m_DPI > 0) && IsWindowPerMonitorDPIV2(m_hwnd))
+		DrawUtil::GetSystemFontWithDPI(DrawUtil::FontType::Menu, pFont, m_DPI);
+	else
 		DrawUtil::GetSystemFont(DrawUtil::FontType::Menu, pFont);
 }
 
@@ -334,6 +352,14 @@ void CMenuPainter::GetItemMargins(MARGINS *pMargins)
 		pMargins->cyTopHeight = 2;
 		pMargins->cyBottomHeight = 2;
 	}
+
+	if ((m_DPI > 0) && IsWindowPerMonitorDPIV2(m_hwnd)) {
+		const int SystemDPI = GetSystemDPI();
+		pMargins->cxLeftWidth = ::MulDiv(pMargins->cxLeftWidth, m_DPI, SystemDPI);
+		pMargins->cxRightWidth = ::MulDiv(pMargins->cxRightWidth, m_DPI, SystemDPI);
+		pMargins->cyTopHeight = ::MulDiv(pMargins->cyTopHeight, m_DPI, SystemDPI);
+		pMargins->cyBottomHeight = ::MulDiv(pMargins->cyBottomHeight, m_DPI, SystemDPI);
+	}
 }
 
 
@@ -344,6 +370,12 @@ void CMenuPainter::GetMargins(MARGINS *pMargins)
 	if (!m_UxTheme.IsOpen()
 			|| !m_UxTheme.GetInt(MENU_POPUPBACKGROUND, 0, TMT_BORDERSIZE, &BorderSize))
 		BorderSize = 2;
+
+	if ((m_DPI > 0) && IsWindowPerMonitorDPIV2(m_hwnd)) {
+		const int SystemDPI = GetSystemDPI();
+		BorderSize = ::MulDiv(BorderSize, m_DPI, SystemDPI);
+	}
+
 	/*
 	SIZE sz;
 	GetBorderSize(&sz);
@@ -365,6 +397,12 @@ void CMenuPainter::GetBorderSize(SIZE *pSize)
 			|| !m_UxTheme.GetPartSize(nullptr, MENU_POPUPBORDERS, 0, pSize)) {
 		pSize->cx = 1;
 		pSize->cy = 1;
+	}
+
+	if ((m_DPI > 0) && IsWindowPerMonitorDPIV2(m_hwnd)) {
+		const int SystemDPI = GetSystemDPI();
+		pSize->cx = ::MulDiv(pSize->cx, m_DPI, SystemDPI);
+		pSize->cy = ::MulDiv(pSize->cy, m_DPI, SystemDPI);
 	}
 }
 
@@ -664,12 +702,20 @@ CChannelMenu::~CChannelMenu()
 
 bool CChannelMenu::Create(
 	const CChannelList *pChannelList, int CurChannel, UINT Command,
-	HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows)
+	HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows, int DPI)
 {
 	Destroy();
 
 	if (pChannelList == nullptr)
 		return false;
+
+	if (DPI <= 0) {
+		/*
+			本来はメニューそのものの DPI が必要だが、WM_MEASUREITEM で DPI を取得できないため
+			とりあえずウィンドウの DPI を使っている
+		*/
+		DPI = GetWindowDPI(hwnd);
+	}
 
 	m_ChannelList = *pChannelList;
 	m_CurChannel = CurChannel;
@@ -678,7 +724,7 @@ bool CChannelMenu::Create(
 	m_Flags = Flags;
 	m_hwnd = hwnd;
 
-	m_MenuPainter.Initialize(hwnd);
+	m_MenuPainter.Initialize(hwnd, DPI);
 	m_MenuPainter.GetItemMargins(&m_Margins);
 	if (m_Margins.cxLeftWidth < 2)
 		m_Margins.cxLeftWidth = 2;
@@ -775,7 +821,7 @@ bool CChannelMenu::Create(
 	}
 
 	if (!!(Flags & CreateFlag::ShowLogo)) {
-		m_Logo.Initialize(::GetSystemMetrics(SM_CYSMICON));
+		m_Logo.Initialize(GetSystemMetricsWithDPI(SM_CYSMICON, DPI));
 	}
 
 	return true;
@@ -1034,9 +1080,6 @@ int CChannelMenu::GetEventText(
 
 void CChannelMenu::CreateFont(HDC hdc)
 {
-	if (m_Font.IsCreated())
-		return;
-
 	LOGFONT lf;
 	m_MenuPainter.GetFont(&lf);
 	m_Font.Create(&lf);
@@ -1756,7 +1799,7 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 			pThis->m_hwnd = hwnd;
 			pThis->m_fTrackMouseEvent = false;
 
-			pThis->m_MenuPainter.Initialize(hwnd);
+			pThis->m_MenuPainter.Initialize(hwnd, GetWindowDPI(hwnd));
 			pThis->m_MenuPainter.GetItemMargins(&pThis->m_ItemMargin);
 			if (pThis->m_ItemMargin.cxLeftWidth < 4)
 				pThis->m_ItemMargin.cxLeftWidth = 4;

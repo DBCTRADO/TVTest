@@ -126,7 +126,7 @@ namespace TVTest
 
 		bool Create(
 			const CFavoriteFolder *pFolder, UINT Command,
-			HMENU hmenu, HWND hwnd, CreateFlag Flags);
+			HMENU hmenu, HWND hwnd, CreateFlag Flags, int DPI = 0);
 		void Destroy();
 		bool Show(UINT Flags, int x, int y);
 		bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
@@ -195,6 +195,8 @@ namespace TVTest
 
 		CFavoritesManager *m_pManager;
 
+		int m_IconWidth;
+		int m_IconHeight;
 		bool m_fItemDragging;
 		HIMAGELIST m_himlDrag;
 		HTREEITEM m_hDraggingItem;

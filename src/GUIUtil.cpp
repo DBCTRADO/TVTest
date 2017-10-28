@@ -105,16 +105,12 @@ void CIcon::Destroy()
 
 
 HIMAGELIST CreateImageListFromIcons(
-	HINSTANCE hinst, const LPCTSTR *ppszIcons, int IconCount, IconSizeType Size)
+	HINSTANCE hinst, const LPCTSTR *ppszIcons, int IconCount, int Width, int Height)
 {
 	if (ppszIcons == nullptr || IconCount <= 0)
 		return nullptr;
 
-	int IconWidth, IconHeight;
-
-	GetStandardIconSize(Size, &IconWidth, &IconHeight);
-
-	HIMAGELIST himl = ::ImageList_Create(IconWidth, IconHeight, ILC_COLOR32 | ILC_MASK, IconCount, 1);
+	HIMAGELIST himl = ::ImageList_Create(Width, Height, ILC_COLOR32 | ILC_MASK, IconCount, 1);
 	if (himl == nullptr)
 		return nullptr;
 
@@ -122,14 +118,25 @@ HIMAGELIST CreateImageListFromIcons(
 		HICON hicon = nullptr;
 
 		if (ppszIcons[i] != nullptr)
-			hicon = LoadIconStandardSize(hinst, ppszIcons[i], Size);
+			hicon = LoadIconSpecificSize(hinst, ppszIcons[i], Width, Height);
 		if (hicon == nullptr)
-			hicon = CreateEmptyIcon(IconWidth, IconHeight, 32);
+			hicon = CreateEmptyIcon(Width, Height, 32);
 		::ImageList_AddIcon(himl, hicon);
 		::DestroyIcon(hicon);
 	}
 
 	return himl;
+}
+
+
+HIMAGELIST CreateImageListFromIcons(
+	HINSTANCE hinst, const LPCTSTR *ppszIcons, int IconCount, IconSizeType Size)
+{
+	int IconWidth, IconHeight;
+
+	GetStandardIconSize(Size, &IconWidth, &IconHeight);
+
+	return CreateImageListFromIcons(hinst, ppszIcons, IconCount, IconWidth, IconHeight);
 }
 
 

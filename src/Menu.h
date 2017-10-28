@@ -86,13 +86,15 @@ namespace TVTest
 		int ItemStateToID(UINT State) const;
 
 		CUxTheme m_UxTheme;
+		HWND m_hwnd;
+		int m_DPI;
 		bool m_fFlatMenu;
 
 	public:
 		CMenuPainter();
 		~CMenuPainter();
 
-		void Initialize(HWND hwnd);
+		void Initialize(HWND hwnd, int DPI);
 		void Finalize();
 		void GetFont(LOGFONT *pFont);
 		COLORREF GetTextColor(UINT State = 0);
@@ -180,7 +182,7 @@ namespace TVTest
 
 		bool Create(
 			const CChannelList *pChannelList, int CurChannel, UINT Command,
-			HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows = 0);
+			HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows = 0, int DPI = 0);
 		void Destroy();
 		int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = nullptr);
 		bool SetHighlightedItem(int Index);
@@ -282,7 +284,6 @@ namespace TVTest
 		HMENU m_hmenu;
 		std::vector<ItemIconInfo> m_ItemList;
 		std::vector<HBITMAP> m_BitmapList;
-		CMenuPainter m_MenuPainter;
 	};
 
 	class CDropDownMenu

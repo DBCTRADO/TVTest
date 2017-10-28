@@ -26,6 +26,7 @@
 #include "DialogUtil.h"
 #include "LogoManager.h"
 #include "EpgUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -239,14 +240,15 @@ bool CFeaturedEventsMatcher::IsMatch(const LibISDB::EventInfo &EventInfo)
 static void InitServiceListView(
 	HWND hwndList,
 	const CChannelList &ServiceList,
-	const CEventSearchServiceList &SearchServiceList)
+	const CEventSearchServiceList &SearchServiceList,
+	int DPI)
 {
 	::SetWindowTheme(hwndList, L"explorer", nullptr);
 	ListView_SetExtendedListViewStyle(
 		hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	const int IconWidth = ::GetSystemMetrics(SM_CXSMICON);
-	const int IconHeight = ::GetSystemMetrics(SM_CYSMICON);
+	const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, DPI);
+	const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, DPI);
 	HIMAGELIST himl = ::ImageList_Create(
 		IconWidth, IconHeight, ILC_COLOR24 | ILC_MASK,
 		ServiceList.NumChannels() + 1, 100);
@@ -284,7 +286,7 @@ static void InitServiceListView(
 	::GetClientRect(hwndList, &rc);
 	lvc.mask = LVCF_FMT | LVCF_WIDTH;
 	lvc.fmt = LVCFMT_LEFT;
-	lvc.cx = rc.right - ::GetSystemMetrics(SM_CXVSCROLL);
+	lvc.cx = rc.right - GetScrollBarWidth(hwndList);
 	ListView_InsertColumn(hwndList, 0, &lvc);
 
 	LVITEM lvi;
@@ -489,7 +491,8 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 		InitServiceListView(
 			::GetDlgItem(hDlg, IDC_FEATUREDEVENTSSEARCH_SERVICELIST),
-			m_ServiceList, m_SearchSettings.ServiceList);
+			m_ServiceList, m_SearchSettings.ServiceList,
+			m_CurrentDPI);
 
 		DlgCheckBox_Check(hDlg, IDC_FEATUREDEVENTSSEARCH_USESERVICELIST, m_SearchSettings.fServiceList);
 		EnableDlgItems(
@@ -655,7 +658,8 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 		GetAppClass().DriverManager.GetAllServiceList(&m_ServiceList);
 		InitServiceListView(
 			::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SERVICELIST),
-			m_ServiceList, m_Settings.GetDefaultServiceList());
+			m_ServiceList, m_Settings.GetDefaultServiceList(),
+			m_CurrentDPI);
 
 		{
 			const CEventSearchSettingsList &SettingsList = m_Settings.GetSearchSettingsList();

@@ -23,6 +23,7 @@
 #include "AppMain.h"
 #include "Logger.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -400,12 +401,13 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				IDI_WARNING,
 				IDI_ERROR
 			};
+			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
+			const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
 			HIMAGELIST himl = ::ImageList_Create(
-				::GetSystemMetrics(SM_CXSMICON),
-				::GetSystemMetrics(SM_CYSMICON),
+				IconWidth, IconHeight,
 				ILC_COLOR32, lengthof(IconList), 1);
 			for (LPCTSTR pszIcon : IconList) {
-				HICON hico = LoadSystemIcon(pszIcon, IconSizeType::Small);
+				HICON hico = LoadSystemIcon(pszIcon, IconWidth, IconHeight);
 				::ImageList_AddIcon(himl, hico);
 				::DestroyIcon(hico);
 			}

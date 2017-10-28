@@ -464,7 +464,7 @@ void InitOpenFileName(OPENFILENAME *pofn)
 
 bool FileOpenDialog(OPENFILENAME *pofn)
 {
-	SystemDPIBlock SystemDPI;
+	CommonDialogDPIBlock SystemDPI;
 
 	return ::GetOpenFileName(pofn) != FALSE;
 }
@@ -472,7 +472,7 @@ bool FileOpenDialog(OPENFILENAME *pofn)
 
 bool FileSaveDialog(OPENFILENAME *pofn)
 {
-	SystemDPIBlock SystemDPI;
+	CommonDialogDPIBlock SystemDPI;
 
 	return ::GetSaveFileName(pofn) != FALSE;
 }
@@ -510,7 +510,7 @@ bool ChooseColorDialog(HWND hwndOwner, COLORREF *pcrResult)
 	cc.Flags = CC_RGBINIT | CC_FULLOPEN;
 
 	{
-		SystemDPIBlock SystemDPI;
+		CommonDialogDPIBlock SystemDPI;
 
 		if (!ChooseColor(&cc))
 			return false;
@@ -531,7 +531,7 @@ bool ChooseFontDialog(HWND hwndOwner, LOGFONT *plf, int *pPointSize)
 	cf.Flags = CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT | CF_SCREENFONTS;
 
 	{
-		SystemDPIBlock SystemDPI;
+		CommonDialogDPIBlock SystemDPI;
 
 		if (!ChooseFont(&cf))
 			return false;
@@ -576,7 +576,7 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 	bi.lParam = (LPARAM)pszDirectory;
 
 	{
-		SystemDPIBlock SystemDPI;
+		CommonDialogDPIBlock SystemDPI;
 
 		pidl = SHBrowseForFolder(&bi);
 		if (pidl == nullptr)
@@ -1248,6 +1248,20 @@ HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size)
 }
 
 
+HICON LoadIconSpecificSize(HINSTANCE hinst, LPCTSTR pszName, int Width, int Height)
+{
+	if (Width <= 0 || Height <= 0)
+		return nullptr;
+
+	HICON hico;
+
+	if (SUCCEEDED(::LoadIconWithScaleDown(hinst, pszName, Width, Height, &hico)))
+		return hico;
+
+	return (HICON)::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR);
+}
+
+
 HICON LoadSystemIcon(LPCTSTR pszName, IconSizeType Size)
 {
 	int Metric;
@@ -1541,11 +1555,6 @@ bool IsWindows10()
 	return CheckOSVersion(10, 0);
 }
 
-bool IsWindows10AnniversaryUpdate()
-{
-	return CheckOSVersion(10, 0, 14393);
-}
-
 bool IsWindowsXPOrLater()
 {
 	return CheckOSVersionLater(5, 1);
@@ -1579,6 +1588,11 @@ bool IsWindows10OrLater()
 bool IsWindows10AnniversaryUpdateOrLater()
 {
 	return CheckOSVersionLater(10, 0, 14393);
+}
+
+bool IsWindows10CreatorsUpdateOrLater()
+{
+	return CheckOSVersionLater(10, 0, 15063);
 }
 
 

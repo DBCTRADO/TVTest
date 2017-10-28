@@ -23,6 +23,7 @@
 #include "DrawUtil.h"
 #include "Graphics.h"
 #include "Util.h"
+#include "DPIUtil.h"
 #include "Common/DebugDef.h"
 
 
@@ -699,6 +700,50 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 		}
 		*pLogFont = *plf;
 	}
+	return true;
+}
+
+
+// DPI を指定してシステムフォントを取得する
+bool GetSystemFontWithDPI(FontType Type, LOGFONT *pLogFont, int DPI)
+{
+	if (pLogFont == nullptr)
+		return false;
+
+	bool fNeedScaling = false;
+
+	if (Type == FontType::Default) {
+		if (::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pLogFont) != sizeof(LOGFONT))
+			return false;
+		fNeedScaling = true;
+	} else {
+		NONCLIENTMETRICS ncm;
+		ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
+		if (!SystemParametersInfoWithDPI(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0, DPI)) {
+			if (!::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0))
+				return false;
+			fNeedScaling = true;
+		}
+
+		LOGFONT *plf;
+		switch (Type) {
+		case FontType::Message:      plf = &ncm.lfMessageFont;   break;
+		case FontType::Menu:         plf = &ncm.lfMenuFont;      break;
+		case FontType::Caption:      plf = &ncm.lfCaptionFont;   break;
+		case FontType::SmallCaption: plf = &ncm.lfSmCaptionFont; break;
+		case FontType::Status:       plf = &ncm.lfStatusFont;    break;
+		default:
+			return false;
+		}
+
+		*pLogFont = *plf;
+	}
+
+	if (fNeedScaling) {
+		const int SystemDPI = GetSystemDPI();
+		pLogFont->lfHeight = ::MulDiv(pLogFont->lfHeight, DPI, SystemDPI != 0 ? SystemDPI : 96);
+	}
+
 	return true;
 }
 
@@ -1695,6 +1740,13 @@ bool COffscreen::CopyTo(HDC hdc, const RECT *pDstRect)
 
 #pragma comment(lib, "uxtheme.lib")
 
+namespace
+{
+
+HTHEME WINAPI OpenThemeDataForDpi(HWND hwnd, PCWSTR pszClassIdList, UINT dpi);
+
+}
+
 
 CUxTheme::CUxTheme()
 	: m_hTheme(nullptr)
@@ -1711,14 +1763,26 @@ bool CUxTheme::Initialize()
 	return true;
 }
 
-bool CUxTheme::Open(HWND hwnd, LPCWSTR pszClassList)
+bool CUxTheme::Open(HWND hwnd, LPCWSTR pszClassList, int DPI)
 {
 	Close();
+
 	if (!Initialize())
 		return false;
+
+	if ((DPI > 0) && Util::OS::IsWindows10CreatorsUpdateOrLater()) {
+		auto pOpenThemeDataForDpi = GET_MODULE_FUNCTION(TEXT("uxtheme.dll"), OpenThemeDataForDpi);
+		if (pOpenThemeDataForDpi != nullptr) {
+			m_hTheme = pOpenThemeDataForDpi(hwnd, pszClassList, DPI);
+			if (m_hTheme != nullptr)
+				return true;
+		}
+	}
+
 	m_hTheme = ::OpenThemeData(hwnd, pszClassList);
 	if (m_hTheme == nullptr)
 		return false;
+
 	return true;
 }
 
@@ -1806,6 +1870,13 @@ bool CUxTheme::GetFont(int PartID, int StateID, int PropID, LOGFONT *pFont)
 	if (m_hTheme == nullptr)
 		return false;
 	return ::GetThemeFont(m_hTheme, nullptr, PartID, StateID, PropID, pFont) == S_OK;
+}
+
+bool CUxTheme::GetSysFont(int FontID, LOGFONT *pFont)
+{
+	if (m_hTheme == nullptr)
+		return false;
+	return ::GetThemeSysFont(m_hTheme, FontID, pFont) == S_OK;
 }
 
 bool CUxTheme::GetInt(int PartID, int StateID, int PropID, int *pValue)

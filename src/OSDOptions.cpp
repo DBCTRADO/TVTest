@@ -392,7 +392,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							bool fMargins = false;
 							CUxTheme Theme;
 							if (Theme.IsActive()) {
-								if (Theme.Open(pnmcd->hdr.hwndFrom, L"BUTTON")) {
+								if (Theme.Open(pnmcd->hdr.hwndFrom, L"BUTTON", m_CurrentDPI)) {
 									MARGINS margins;
 									if (Theme.GetMargins(BP_PUSHBUTTON, PBS_NORMAL, TMT_CONTENTMARGINS, &margins)) {
 										rc.left += margins.cxLeftWidth + 1;

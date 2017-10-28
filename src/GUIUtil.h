@@ -54,6 +54,8 @@ namespace TVTest
 
 
 	HIMAGELIST CreateImageListFromIcons(
+		HINSTANCE hinst, const LPCTSTR *ppszIcons, int IconCount, int Width, int Height);
+	HIMAGELIST CreateImageListFromIcons(
 		HINSTANCE hinst, const LPCTSTR *ppszIcons, int IconCount, IconSizeType Size);
 	void SetWindowIcon(HWND hwnd, HINSTANCE hinst, LPCTSTR pszIcon);
 

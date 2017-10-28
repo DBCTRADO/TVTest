@@ -106,6 +106,7 @@ namespace TVTest
 		};
 
 		bool GetSystemFont(FontType Type, LOGFONT *pLogFont);
+		bool GetSystemFontWithDPI(FontType Type, LOGFONT *pLogFont, int DPI);
 		bool GetDefaultUIFont(LOGFONT *pFont);
 		bool IsFontAvailable(const LOGFONT &Font, HDC hdc = nullptr);
 		bool IsFontSmoothingEnabled();
@@ -335,7 +336,7 @@ namespace TVTest
 		~CUxTheme();
 
 		bool Initialize();
-		bool Open(HWND hwnd, LPCWSTR pszClassList);
+		bool Open(HWND hwnd, LPCWSTR pszClassList, int DPI = 0);
 		void Close();
 		bool IsOpen() const;
 		bool IsActive();
@@ -353,6 +354,7 @@ namespace TVTest
 		bool GetMargins(int PartID, int StateID, int PropID, MARGINS *pMargins);
 		bool GetColor(int PartID, int StateID, int PropID, COLORREF *pColor);
 		bool GetFont(int PartID, int StateID, int PropID, LOGFONT *pFont);
+		bool GetSysFont(int FontID, LOGFONT *pFont);
 		bool GetInt(int PartID, int StateID, int PropID, int *pValue);
 		bool GetPartSize(HDC hdc, int PartID, int StateID, SIZE *pSize);
 

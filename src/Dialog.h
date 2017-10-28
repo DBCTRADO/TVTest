@@ -90,8 +90,10 @@ namespace TVTest
 		int m_OriginalDPI;
 		int m_CurrentDPI;
 		HFONT m_hOriginalFont;
+		LOGFONT m_lfOriginalFont;
 		DrawUtil::CFont m_Font;
 		bool m_fInitializing;
+		bool m_fOwnDPIScaling;
 
 		static CBasicDialog *GetThis(HWND hDlg);
 		static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

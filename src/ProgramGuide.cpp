@@ -7284,8 +7284,6 @@ CProgramGuideFrame::~CProgramGuideFrame()
 
 bool CProgramGuideFrame::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	PerMonitorDPIBlock DPIBlock;
-
 	if (m_WindowPosition.fMaximized)
 		Style |= WS_MAXIMIZE;
 	if (m_fAlwaysOnTop)
@@ -7424,6 +7422,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 		break;
 
 	case WM_DPICHANGED:
+		m_UxTheme.Close();
 		OnDPIChanged(hwnd, wParam, lParam);
 		break;
 
@@ -7469,7 +7468,8 @@ void CProgramGuideFrame::DrawBackground(HDC hdc, bool fActive)
 	rc.bottom = rcGuide.top;
 
 	if (m_UxTheme.IsActive()
-			&& (m_UxTheme.IsOpen() || m_UxTheme.Open(m_hwnd, L"Window"))) {
+			&& (m_UxTheme.IsOpen()
+				|| m_UxTheme.Open(m_hwnd, L"Window", m_pStyleScaling->GetDPI()))) {
 		COLORREF Color;
 		m_UxTheme.GetColor(
 			WP_CAPTION,

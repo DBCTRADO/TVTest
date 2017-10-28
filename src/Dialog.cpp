@@ -38,6 +38,7 @@ CBasicDialog::CBasicDialog()
 	, m_CurrentDPI(0)
 	, m_hOriginalFont(nullptr)
 	, m_fInitializing(false)
+	, m_fOwnDPIScaling(false)
 {
 	SetStyleScaling(&m_StyleScaling);
 }
@@ -190,9 +191,6 @@ int CBasicDialog::ShowDialog(HWND hwndOwner, HINSTANCE hinst, LPCTSTR pszTemplat
 	if (m_hDlg != nullptr)
 		return -1;
 
-	// ダイアログは Per-Monitor DPI 対応
-	PerMonitorDPIBlock DPIBlock;
-
 	return (int)::DialogBoxParam(
 		hinst, pszTemplate, hwndOwner, DialogProc,
 		reinterpret_cast<LPARAM>(this));
@@ -203,9 +201,6 @@ bool CBasicDialog::CreateDialogWindow(HWND hwndOwner, HINSTANCE hinst, LPCTSTR p
 {
 	if (m_hDlg != nullptr)
 		return false;
-
-	// ダイアログは Per-Monitor DPI 対応
-	PerMonitorDPIBlock DPIBlock;
 
 	if (::CreateDialogParam(
 				hinst, pszTemplate, hwndOwner, DialogProc,
@@ -229,6 +224,7 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 	if (uMsg == WM_INITDIALOG) {
 		pThis = reinterpret_cast<CBasicDialog*>(lParam);
 		pThis->m_hDlg = hDlg;
+		pThis->m_fOwnDPIScaling = IsWindowPerMonitorDPIV1(hDlg);
 		::SetProp(hDlg, TEXT("This"), pThis);
 	} else {
 		pThis = GetThis(hDlg);
@@ -270,13 +266,15 @@ INT_PTR CBasicDialog::HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 	case WM_DESTROY:
 		StorePosition();
 
-		if (!m_ItemList.empty()) {
-			for (const auto &e : m_ItemList)
-				SetWindowFont(e.hwnd, m_hOriginalFont, FALSE);
-			m_ItemList.clear();
+		if (m_fOwnDPIScaling) {
+			if (!m_ItemList.empty()) {
+				for (const auto &e : m_ItemList)
+					SetWindowFont(e.hwnd, m_hOriginalFont, FALSE);
+				m_ItemList.clear();
+			}
+			if (m_hOriginalFont != nullptr)
+				SetWindowFont(hDlg, m_hOriginalFont, FALSE);
 		}
-		if (m_hOriginalFont != nullptr)
-			SetWindowFont(hDlg, m_hOriginalFont, FALSE);
 		break;
 	}
 
@@ -349,13 +347,17 @@ void CBasicDialog::InitDialog()
 		InitStyleScaling(m_hDlg, false);
 	}
 
-	m_OriginalDPI = m_pStyleScaling->GetSystemDPI();
+	if (IsWindowPerMonitorDPIV2(m_hDlg))
+		m_OriginalDPI = GetWindowDPI(m_hDlg);
+	else
+		m_OriginalDPI = m_pStyleScaling->GetSystemDPI();
 	m_CurrentDPI = m_OriginalDPI;
 	m_hOriginalFont = GetWindowFont(m_hDlg);
+	::GetObject(m_hOriginalFont, sizeof(LOGFONT), &m_lfOriginalFont);
 
 	InitializeUI();
 
-	if (m_pStyleScaling->GetDPI() != m_OriginalDPI) {
+	if (m_fOwnDPIScaling && m_pStyleScaling->GetDPI() != m_OriginalDPI) {
 		RealizeStyle();
 
 		RECT rc;
@@ -377,8 +379,7 @@ void CBasicDialog::ApplyStyle()
 	if (m_hDlg != nullptr) {
 		const int DPI = m_pStyleScaling->GetDPI();
 
-		LOGFONT lf;
-		::GetObject(m_hOriginalFont, sizeof(LOGFONT), &lf);
+		LOGFONT lf = m_lfOriginalFont;
 		LONG Height = ::MulDiv(abs(lf.lfHeight), DPI, m_OriginalDPI);
 		lf.lfHeight = lf.lfHeight < 0 ? -Height : Height;
 		lf.lfWidth = 0;
@@ -389,7 +390,7 @@ void CBasicDialog::ApplyStyle()
 
 void CBasicDialog::RealizeStyle()
 {
-	if (m_hDlg != nullptr) {
+	if (m_hDlg != nullptr && m_fOwnDPIScaling) {
 		const int DPI = m_pStyleScaling->GetDPI();
 
 		if (m_CurrentDPI != DPI) {
@@ -473,7 +474,10 @@ INT_PTR CResizableDialog::HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 		{
 			RECT rc;
 
-			m_BaseDPI = m_pStyleScaling->GetSystemDPI();
+			if (IsWindowPerMonitorDPIV2(hDlg))
+				m_BaseDPI = GetWindowDPI(hDlg);
+			else
+				m_BaseDPI = m_pStyleScaling->GetSystemDPI();
 
 			::GetClientRect(hDlg, &rc);
 			m_OriginalClientSize.cx = rc.right;

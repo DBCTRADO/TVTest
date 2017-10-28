@@ -126,6 +126,7 @@ namespace TVTest
 	};
 	bool GetStandardIconSize(IconSizeType Size, int *pWidth, int *pHeight);
 	HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size);
+	HICON LoadIconSpecificSize(HINSTANCE hinst, LPCTSTR pszName, int Width, int Height);
 	HICON LoadSystemIcon(LPCTSTR pszName, IconSizeType Size);
 	HICON LoadSystemIcon(LPCTSTR pszName, int Width, int Height);
 
@@ -217,7 +218,6 @@ namespace TVTest
 			bool IsWindows8();
 			bool IsWindows8_1();
 			bool IsWindows10();
-			bool IsWindows10AnniversaryUpdate();
 			bool IsWindowsXPOrLater();
 			bool IsWindowsVistaOrLater();
 			bool IsWindows7OrLater();
@@ -225,6 +225,7 @@ namespace TVTest
 			bool IsWindows8_1OrLater();
 			bool IsWindows10OrLater();
 			bool IsWindows10AnniversaryUpdateOrLater();
+			bool IsWindows10CreatorsUpdateOrLater();
 
 		}	// namespace OS
 

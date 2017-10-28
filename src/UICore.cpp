@@ -22,6 +22,7 @@
 #include <algorithm>
 #include "TVTest.h"
 #include "AppMain.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -48,6 +49,7 @@ CUICore::CUICore(CAppMain &App)
 	, m_fPowerOffActiveOriginal(FALSE)
 	*/
 
+	, m_PopupMenuDPI(0)
 	, m_TunerSelectMenu(*this)
 
 	, m_pColorScheme(nullptr)
@@ -1100,15 +1102,36 @@ void CUICore::PopupMenu(const POINT *pPos, PopupMenuFlag Flags)
 	if (!fDefault)
 		m_App.MenuOptions.GetMenuItemList(&ItemList);
 
+	const int OldDPI = m_PopupMenuDPI;
+	HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+	if (hMonitor != nullptr)
+		m_PopupMenuDPI = GetMonitorDPI(hMonitor);
+
 	m_App.MainMenu.Show(
 		TPM_RIGHTBUTTON, pt.x, pt.y, m_pSkin->GetMainWindow(), true,
 		fDefault ? nullptr : &ItemList);
+
+	m_PopupMenuDPI = OldDPI;
 }
 
 
 void CUICore::PopupSubMenu(int SubMenu, const POINT *pPos, UINT Flags, const RECT *pExcludeRect)
 {
-	m_App.MainMenu.PopupSubMenu(SubMenu, Flags, m_pSkin->GetMainWindow(), pPos, true, pExcludeRect);
+	POINT pt;
+
+	if (pPos != nullptr)
+		pt = *pPos;
+	else
+		::GetCursorPos(&pt);
+
+	const int OldDPI = m_PopupMenuDPI;
+	HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+	if (hMonitor != nullptr)
+		m_PopupMenuDPI = GetMonitorDPI(hMonitor);
+
+	m_App.MainMenu.PopupSubMenu(SubMenu, Flags, m_pSkin->GetMainWindow(), &pt, true, pExcludeRect);
+
+	m_PopupMenuDPI = OldDPI;
 }
 
 
@@ -1385,6 +1408,12 @@ bool CUICore::HandleInitMenuPopup(HMENU hmenu)
 		return true;
 
 	return false;
+}
+
+
+void CUICore::SetPopupMenuDPI(int DPI)
+{
+	m_PopupMenuDPI = DPI;
 }
 
 
@@ -1745,7 +1774,8 @@ bool CUICore::CreateChannelMenu(
 	return m_App.ChannelMenu.Create(
 		pChannelList, CurChannel,
 		Command, hmenu, hwnd, MenuFlags,
-		fEventInfo ? 0 : m_App.MenuOptions.GetMaxChannelMenuRows());
+		fEventInfo ? 0 : m_App.MenuOptions.GetMaxChannelMenuRows(),
+		m_PopupMenuDPI);
 }
 
 

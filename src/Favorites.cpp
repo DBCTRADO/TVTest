@@ -26,6 +26,7 @@
 #include "LogoManager.h"
 #include "DriverManager.h"
 #include "GUIUtil.h"
+#include "DPIUtil.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -41,7 +42,7 @@ enum {
 };
 
 
-static HIMAGELIST CreateFavoritesIconImageList(HINSTANCE hinst)
+static HIMAGELIST CreateFavoritesIconImageList(HINSTANCE hinst, int Width, int Height)
 {
 	static const LPCTSTR Icons[] = {
 		nullptr,
@@ -50,7 +51,7 @@ static HIMAGELIST CreateFavoritesIconImageList(HINSTANCE hinst)
 		MAKEINTRESOURCE(IDI_FAVORITES),
 	};
 
-	return CreateImageListFromIcons(hinst, Icons, lengthof(Icons), IconSizeType::Small);
+	return CreateImageListFromIcons(hinst, Icons, lengthof(Icons), Width, Height);
 }
 
 
@@ -768,21 +769,29 @@ CFavoritesMenu::~CFavoritesMenu()
 
 bool CFavoritesMenu::Create(
 	const CFavoriteFolder *pFolder, UINT Command,
-	HMENU hmenu, HWND hwnd, CreateFlag Flags)
+	HMENU hmenu, HWND hwnd, CreateFlag Flags, int DPI)
 {
 	if (pFolder == nullptr)
 		return false;
 
 	Destroy();
 
+	if (DPI <= 0) {
+		/*
+			本来はメニューそのものの DPI が必要だが、WM_MEASUREITEM で DPI を取得できないため
+			とりあえずウィンドウの DPI を使っている
+		*/
+		DPI = GetWindowDPI(hwnd);
+	}
+
 	m_FirstCommand = Command;
 	m_Flags = Flags;
 	m_hwnd = hwnd;
 
-	m_IconWidth = ::GetSystemMetrics(SM_CXSMICON);
-	m_IconHeight = ::GetSystemMetrics(SM_CYSMICON);
+	m_IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, DPI);
+	m_IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, DPI);
 
-	m_MenuPainter.Initialize(hwnd);
+	m_MenuPainter.Initialize(hwnd, DPI);
 	m_MenuPainter.GetItemMargins(&m_Margins);
 	if (m_Margins.cxLeftWidth < 2)
 		m_Margins.cxLeftWidth = 2;
@@ -854,7 +863,7 @@ bool CFavoritesMenu::Create(
 				m_TextWidth = rc.right;
 		}
 
-		m_himlIcons = CreateFavoritesIconImageList(hinstRes);
+		m_himlIcons = CreateFavoritesIconImageList(hinstRes, m_IconWidth, m_IconHeight);
 	} else {
 		m_LastCommand = Command;
 
@@ -1214,9 +1223,6 @@ int CFavoritesMenu::GetEventText(
 
 void CFavoritesMenu::CreateFont(HDC hdc)
 {
-	if (m_Font.IsCreated())
-		return;
-
 	LOGFONT lf;
 	m_MenuPainter.GetFont(&lf);
 	m_Font.Create(&lf);
@@ -1352,7 +1358,9 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 			HINSTANCE hinstRes = GetAppClass().GetResourceInstance();
 			HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
 
-			HIMAGELIST himl = CreateFavoritesIconImageList(hinstRes);
+			m_IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
+			m_IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
+			HIMAGELIST himl = CreateFavoritesIconImageList(hinstRes, m_IconWidth, m_IconHeight);
 			ImageList_SetBkColor(himl, TreeView_GetBkColor(hwndTree));
 			TreeView_SetImageList(hwndTree, himl, TVSIL_NORMAL);
 
@@ -1736,8 +1744,7 @@ void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree, HTREEITEM hParent,
 					if (ChannelInfo.GetNetworkID() != 0 && ChannelInfo.GetServiceID() != 0) {
 						HICON hico = GetAppClass().LogoManager.CreateLogoIcon(
 							ChannelInfo.GetNetworkID(), ChannelInfo.GetServiceID(),
-							::GetSystemMetrics(SM_CXSMICON),
-							::GetSystemMetrics(SM_CYSMICON));
+							m_IconWidth, m_IconHeight);
 						if (hico != nullptr) {
 							tvis.item.iImage = ImageList_AddIcon(
 								TreeView_GetImageList(hwndTree, TVSIL_NORMAL), hico);

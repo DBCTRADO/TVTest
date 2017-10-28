@@ -23,6 +23,7 @@
 #include "ComUtility.h"
 #include "Dialog.h"
 #include "DialogUtil.h"
+#include "DPIUtil.h"
 #include "TVTestInterface.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
@@ -536,6 +537,9 @@ HRESULT ShowPropertyPageFrame(
 		for (int i = 0; i < NumPages; i++)
 			ppPropPages[i]->SetObjects(1, &pObject);
 	}
+
+	// TVTest DTV Video Decoder のダイアログが欠けるのでとりあえず System DPI とする
+	SystemDPIBlock SystemDPI;
 
 	CPropertyPageFrame Frame(ppPropPages, NumPages, pPageSite);
 

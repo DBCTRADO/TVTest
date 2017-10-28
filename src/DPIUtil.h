@@ -22,12 +22,15 @@
 #define TVTEST_DPI_UTIL_H
 
 
-// from <windef.h> (SDK 10.0.14393.0)
+// from <windef.h> (SDK 10.0.16299.0)
 #ifndef _DPI_AWARENESS_CONTEXTS_
 DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
-#define DPI_AWARENESS_CONTEXT_UNAWARE           ((DPI_AWARENESS_CONTEXT)-1)
-#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE      ((DPI_AWARENESS_CONTEXT)-2)
-#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
+#define DPI_AWARENESS_CONTEXT_UNAWARE              ((DPI_AWARENESS_CONTEXT)-1)
+#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE         ((DPI_AWARENESS_CONTEXT)-2)
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE    ((DPI_AWARENESS_CONTEXT)-3)
+#endif
+#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ((DPI_AWARENESS_CONTEXT)-4)
 #endif
 
 
@@ -41,6 +44,10 @@ namespace TVTest
 	int GetSystemMetricsWithDPI(int Index, int DPI, bool fFallbackScaling = true);
 	bool SystemParametersInfoWithDPI(UINT Action, UINT Param, void *pParam, UINT Flags, int DPI);
 	bool AdjustWindowRectWithDPI(RECT *pRect, DWORD Style, DWORD ExStyle, bool fMenu, int DPI);
+	int GetScrollBarWidth(HWND hwnd);
+	DPI_AWARENESS_CONTEXT GetWindowDPIAwareness(HWND hwnd);
+	bool IsWindowPerMonitorDPIV1(HWND hwnd);
+	bool IsWindowPerMonitorDPIV2(HWND hwnd);
 
 	class DPIBlockBase
 	{
@@ -64,6 +71,13 @@ namespace TVTest
 	{
 	public:
 		PerMonitorDPIBlock() : DPIBlockBase(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE) {}
+	};
+
+	class CommonDialogDPIBlock
+		: public DPIBlockBase
+	{
+	public:
+		CommonDialogDPIBlock();
 	};
 
 }

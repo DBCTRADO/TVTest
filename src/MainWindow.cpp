@@ -3006,7 +3006,8 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.FavoritesMenu.Create(
 			&m_App.FavoritesManager.GetRootFolder(),
 			CM_FAVORITECHANNEL_FIRST, hmenu, m_hwnd,
-			CFavoritesMenu::CreateFlag::ShowEventInfo | CFavoritesMenu::CreateFlag::ShowLogo);
+			CFavoritesMenu::CreateFlag::ShowEventInfo | CFavoritesMenu::CreateFlag::ShowLogo,
+			m_pCore->GetPopupMenuDPI());
 		::EnableMenuItem(
 			hmenu, CM_ADDTOFAVORITES,
 			MF_BYCOMMAND | (m_App.ChannelManager.GetCurrentChannelInfo() != nullptr ? MF_ENABLED : MF_GRAYED));
@@ -3085,7 +3086,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				&ChList, CurService, CM_SERVICE_FIRST, hmenu, m_hwnd,
 				CChannelMenu::CreateFlag::ShowLogo |
 				CChannelMenu::CreateFlag::ShowEventInfo |
-				CChannelMenu::CreateFlag::CurrentServices);
+				CChannelMenu::CreateFlag::CurrentServices,
+				0,
+				m_pCore->GetPopupMenuDPI());
 		}
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_AUDIO)) {
 		CPopupMenu Menu(hmenu);
