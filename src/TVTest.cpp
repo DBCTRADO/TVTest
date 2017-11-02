@@ -208,7 +208,12 @@ int APIENTRY _tWinMain(
 		TEXT(" ") VERSION_PLATFORM
 #endif
 		TEXT(") 起動 ********"));
-	App.AddLog(TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING);
+	App.AddLog(
+		TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING
+#ifdef LIBISDB_VERSION_HASH
+		TEXT(" ") LIBISDB_VERSION_HASH
+#endif
+		);
 #ifdef _MSC_FULL_VER
 	App.AddLog(
 		TEXT("Compiled with MSVC %d.%d.%d.%d"),

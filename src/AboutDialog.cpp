@@ -109,7 +109,11 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			int Length = StringPrintf(
 				szText,
-				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING TEXT("\r\n")
+				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING
+#ifdef LIBISDB_VERSION_HASH
+				TEXT(" ") LIBISDB_VERSION_HASH
+#endif
+				TEXT("\r\n")
 #ifdef _MSC_FULL_VER
 				TEXT("Compiled with MSVC %d.%d.%d.%d\r\n"),
 				_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD
