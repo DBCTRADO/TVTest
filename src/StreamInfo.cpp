@@ -769,7 +769,7 @@ void CPIDInfoPage::UpdateInfo()
 		PacketCountInfo PacketCount = pParser->GetPacketCount(PID);
 
 		if (PacketCount.Input > 0) {
-			if (m_PIDInfoList.size() <= PIDCount)
+			if (m_PIDInfoList.size() <= static_cast<size_t>(PIDCount))
 				m_PIDInfoList.emplace_back();
 			PIDInfo &Info = m_PIDInfoList[PIDCount];
 			Info.PID = PID;
