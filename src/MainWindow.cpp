@@ -2783,7 +2783,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 
 				case PANEL_ID_CHANNEL:
 					// チャンネルタブ更新
-					if (!m_App.EpgOptions.IsEpgFileLoading()) {
+					if (!m_App.EpgOptions.IsEpgDataLoading()) {
 						if (m_App.Panel.ChannelPanel.QueryUpdate()) {
 							m_App.Panel.ChannelPanel.UpdateAllChannels();
 						} else if (fUpdateEventInfo) {
@@ -2852,8 +2852,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 
 	case TIMER_ID_PROGRAMLISTUPDATE:
 		// EPG情報の同期
-		if (!m_App.EpgOptions.IsEpgFileLoading()
-				&& !m_App.EpgOptions.IsEDCBDataLoading()) {
+		if (!m_App.EpgOptions.IsEpgDataLoading()) {
 			m_App.Panel.EnableProgramListUpdate(true);
 
 			CChannelInfo ChInfo;
@@ -3545,7 +3544,7 @@ void CMainWindow::OnTunerChanged()
 	if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID() == PANEL_ID_CHANNEL) {
 		m_App.Panel.ChannelPanel.SetChannelList(
 			m_App.ChannelManager.GetCurrentChannelList(),
-			!m_App.EpgOptions.IsEpgFileLoading());
+			!m_App.EpgOptions.IsEpgDataLoading());
 	} else {
 		m_App.Panel.ChannelPanel.ClearChannelList();
 	}
@@ -3632,8 +3631,7 @@ void CMainWindow::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_TUNER);
 	if (pCurChannel != nullptr && m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::Channel))
 		ShowChannelOSD();
-	const bool fEpgLoading =
-		m_App.EpgOptions.IsEpgFileLoading() || m_App.EpgOptions.IsEDCBDataLoading();
+	const bool fEpgLoading = m_App.EpgOptions.IsEpgDataLoading();
 	m_App.Panel.EnableProgramListUpdate(!fEpgLoading);
 	m_Timer.BeginTimer(TIMER_ID_PROGRAMLISTUPDATE, 10000);
 	m_ProgramListUpdateTimerCount = 0;
@@ -4621,11 +4619,9 @@ bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const
 			m_App.Epg.ProgramGuideFrame.Update();
 		}
 
-		if (m_App.EpgOptions.IsEpgFileLoading()
-				|| m_App.EpgOptions.IsEDCBDataLoading()) {
+		if (m_App.EpgOptions.IsEpgFileLoading()) {
 			m_App.Epg.ProgramGuide.SetMessage(TEXT("EPGファイルの読み込み中..."));
 			m_App.EpgOptions.WaitEpgFileLoad();
-			m_App.EpgOptions.WaitEDCBDataLoad();
 			m_App.Epg.ProgramGuide.SetMessage(nullptr);
 		}
 

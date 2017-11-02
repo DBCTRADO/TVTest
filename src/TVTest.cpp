@@ -104,34 +104,44 @@ bool CTotTimeAdjuster::AdjustTime()
 
 
 
-void CEpgLoadEventHandler::OnBeginLoading()
+void CEpgLoadEventHandler::OnBeginEpgDataLoading()
 {
 	TRACE(TEXT("Start EPG file loading ...\n"));
 }
 
 
-void CEpgLoadEventHandler::OnEndLoading(bool fSuccess)
+void CEpgLoadEventHandler::OnEndEpgDataLoading(bool fSuccess)
 {
-	TRACE(TEXT("End EPG file loading : %s\n"), fSuccess ? TEXT("Succeeded") : TEXT("Failed"));
-	if (fSuccess)
-		GetAppClass().MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
+	CAppMain &App = GetAppClass();
+
+	if (fSuccess) {
+		App.AddLog(TEXT("EPG データを読み込みました。"));
+
+		App.MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
+	} else {
+		App.AddLog(CLogItem::LogType::Error, TEXT("EPG データを読み込めませんでした。"));
+	}
 }
 
 
-void CEpgLoadEventHandler::OnStart()
+void CEpgLoadEventHandler::OnBeginEdcbDataLoading()
 {
 	TRACE(TEXT("Start EDCB data loading ...\n"));
 }
 
 
-void CEpgLoadEventHandler::OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase)
+void CEpgLoadEventHandler::OnEndEdcbDataLoading(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase)
 {
-	TRACE(TEXT("End EDCB data loading : %s\n"), fSuccess ? TEXT("Succeeded") : TEXT("Failed"));
+	CAppMain &App = GetAppClass();
+
 	if (fSuccess) {
-		CAppMain &App = GetAppClass();
+		GetAppClass().AddLog(TEXT("EDCB の EPG データを読み込みました。"));
+
 		if (App.EPGDatabase.Merge(pEPGDatabase, LibISDB::EPGDatabase::MergeFlag::Database)) {
 			App.MainWindow.PostMessage(WM_APP_EPGLOADED, 0, 0);
 		}
+	} else {
+		App.AddLog(CLogItem::LogType::Error, TEXT("EDCB の EPG データを読み込めませんでした。"));
 	}
 }
 

@@ -189,12 +189,18 @@ void CEpgDataStore::SetEventHandler(CEventHandler *pEventHandler)
 
 bool CEpgDataStore::LoadMain()
 {
-	if (!m_EPGDataFile.Load())
-		return false;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnBeginLoading();
 
-	m_UpdateCount = m_EPGDataFile.GetUpdateCount();
+	bool fOK = m_EPGDataFile.Load();
 
-	return true;
+	if (fOK)
+		m_UpdateCount = m_EPGDataFile.GetUpdateCount();
+
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnEndLoading(fOK);
+
+	return fOK;
 }
 
 
@@ -218,13 +224,7 @@ unsigned int __stdcall CEpgDataStore::LoadThread(void *pParameter)
 	if (!!(pThis->m_OpenFlags & OpenFlag::LoadBackground))
 		::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 
-	if (pThis->m_pEventHandler != nullptr)
-		pThis->m_pEventHandler->OnBeginLoading();
-
-	bool fOK = pThis->LoadMain();
-
-	if (pThis->m_pEventHandler != nullptr)
-		pThis->m_pEventHandler->OnEndLoading(fOK);
+	pThis->LoadMain();
 
 	return 0;
 }

@@ -44,7 +44,7 @@ namespace TVTest
 		CEpgDataLoader();
 		~CEpgDataLoader();
 
-		bool Load(LPCTSTR pszFolder, HANDLE hAbortEvent = nullptr);
+		bool Load(LPCTSTR pszFolder, HANDLE hAbortEvent = nullptr, CEventHandler *pEventHandler = nullptr);
 		bool LoadAsync(LPCTSTR pszFolder, CEventHandler *pEventHandler = nullptr);
 		bool IsLoading() const;
 		bool Abort(DWORD Timeout = 10000);

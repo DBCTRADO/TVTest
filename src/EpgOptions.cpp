@@ -67,8 +67,8 @@ CEpgOptions::~CEpgOptions()
 
 void CEpgOptions::Finalize()
 {
+	m_EpgFileLoader.reset();
 	m_EpgDataStore.Close();
-
 	m_EpgDataLoader.reset();
 }
 
@@ -151,40 +151,42 @@ bool CEpgOptions::Create(HWND hwndOwner)
 }
 
 
-bool CEpgOptions::LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
+bool CEpgOptions::LoadEpgFile(
+	LibISDB::EPGDatabase *pEPGDatabase,
+	CEpgFileLoadEventHandler *pEventHandler,
+	EpgFileLoadFlag Flags)
 {
-	if (m_fSaveEpgFile) {
-		CFilePath FilePath;
+	CEpgDataStore *pEpgDataStore = nullptr;
+	CFilePath EpgDataPath;
+	CEpgDataLoader *pEdcbDataLoader = nullptr;
+	String EdcbDataFolder;
 
-		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
-			return false;
-		if (FilePath.IsFileExists()) {
-			GetAppClass().AddLog(TEXT("EPG データを \"%s\" から読み込みます..."), FilePath.c_str());
-			if (!m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str()))
-				return false;
-			if (!m_EpgDataStore.Load())
-				return false;
+	if (!!(Flags & EpgFileLoadFlag::EpgData) && m_fSaveEpgFile) {
+		if (GetAbsolutePath(m_EpgFileName, &EpgDataPath)) {
+			if (EpgDataPath.IsFileExists()) {
+				pEpgDataStore = &m_EpgDataStore;
+			}
 		}
 	}
-	return true;
-}
 
+	if (!!(Flags & EpgFileLoadFlag::EdcbData) && m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
+		if (GetAbsolutePath(m_EDCBDataFolder, &EdcbDataFolder)) {
+			if (::PathIsDirectory(EdcbDataFolder.c_str())) {
+				m_EpgDataLoader = std::make_unique<CEpgDataLoader>();
+				pEdcbDataLoader = m_EpgDataLoader.get();
+			}
+		}
+	}
 
-bool CEpgOptions::AsyncLoadEpgFile(
-	LibISDB::EPGDatabase *pEPGDatabase, CEpgDataStore::CEventHandler *pEventHandler)
-{
-	if (m_fSaveEpgFile) {
-		CFilePath FilePath;
-
-		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
+	if ((pEpgDataStore != nullptr) || (pEdcbDataLoader != nullptr)) {
+		m_EpgFileLoader = std::make_unique<CEpgFileLoader>();
+		if (!m_EpgFileLoader->StartLoading(
+					pEPGDatabase,
+					pEpgDataStore, EpgDataPath,
+					pEdcbDataLoader, EdcbDataFolder,
+					pEventHandler)) {
+			m_EpgFileLoader.reset();
 			return false;
-		if (FilePath.IsFileExists()) {
-			GetAppClass().AddLog(TEXT("EPG データを \"%s\" から読み込みます..."), FilePath.c_str());
-			m_EpgDataStore.SetEventHandler(pEventHandler);
-			if (!m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str(), CEpgDataStore::OpenFlag::LoadBackground))
-				return false;
-			if (!m_EpgDataStore.LoadAsync())
-				return false;
 		}
 	}
 
@@ -194,13 +196,22 @@ bool CEpgOptions::AsyncLoadEpgFile(
 
 bool CEpgOptions::IsEpgFileLoading() const
 {
-	return m_EpgDataStore.IsLoading();
+	return m_EpgFileLoader
+		&& m_EpgFileLoader->IsLoading();
+}
+
+
+bool CEpgOptions::IsEpgDataLoading() const
+{
+	return m_EpgFileLoader
+		&& m_EpgFileLoader->IsEpgDataLoading();
 }
 
 
 bool CEpgOptions::WaitEpgFileLoad(DWORD Timeout)
 {
-	return m_EpgDataStore.Wait(Timeout);
+	return !m_EpgFileLoader
+		|| m_EpgFileLoader->WaitLoading(Timeout);
 }
 
 
@@ -216,7 +227,10 @@ bool CEpgOptions::SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 		if (!GetAbsolutePath(m_EpgFileName, &FilePath))
 			return false;
 		if (pEPGDatabase->GetServiceCount() > 0) {
+			WaitEpgFileLoad();
+
 			GetAppClass().AddLog(TEXT("EPG データを \"%s\" に保存します..."), FilePath.c_str());
+
 			if (m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str())) {
 				if (!m_EpgDataStore.Save()) {
 					::DeleteFile(FilePath.c_str());
@@ -234,56 +248,6 @@ bool CEpgOptions::SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 	}
 
 	return fOK;
-}
-
-
-bool CEpgOptions::LoadEDCBData()
-{
-	bool fOK = true;
-
-	if (m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
-		String Path;
-
-		if (!GetAbsolutePath(m_EDCBDataFolder, &Path))
-			return false;
-
-		CEpgDataLoader Loader;
-
-		fOK = Loader.Load(Path.c_str());
-	}
-	return fOK;
-}
-
-
-bool CEpgOptions::AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler)
-{
-	bool fOK = true;
-
-	if (m_fUseEDCBData && !m_EDCBDataFolder.empty()) {
-		String Path;
-
-		if (!GetAbsolutePath(m_EDCBDataFolder, &Path))
-			return false;
-
-		m_EpgDataLoader = std::make_unique<CEpgDataLoader>();
-
-		fOK = m_EpgDataLoader->LoadAsync(Path.c_str(), pEventHandler);
-	}
-	return fOK;
-}
-
-
-bool CEpgOptions::IsEDCBDataLoading() const
-{
-	return m_EpgDataLoader
-		&& m_EpgDataLoader->IsLoading();
-}
-
-
-bool CEpgOptions::WaitEDCBDataLoad(DWORD Timeout)
-{
-	return !m_EpgDataLoader
-		|| m_EpgDataLoader->Wait(Timeout);
 }
 
 
@@ -516,7 +480,11 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				GetDlgItemString(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, &m_EDCBDataFolder);
 				if (!m_fUseEDCBData && fUseEpgData) {
 					m_fUseEDCBData = fUseEpgData;
-					AsyncLoadEDCBData(&GetAppClass().EpgLoadEventHandler);
+					CAppMain &App = GetAppClass();
+					LoadEpgFile(
+						&App.EPGDatabase,
+						&App.EpgLoadEventHandler,
+						EpgFileLoadFlag::EdcbData);
 				}
 				m_fUseEDCBData = fUseEpgData;
 
@@ -541,6 +509,164 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return FALSE;
+}
+
+
+
+
+CEpgOptions::CEpgFileLoader::~CEpgFileLoader()
+{
+	if (m_hThread != nullptr) {
+		if (::WaitForSingleObject(m_hThread, 0) == WAIT_TIMEOUT) {
+			if (m_hAbortEvent != nullptr)
+				::SetEvent(m_hAbortEvent);
+			::CancelSynchronousIo(m_hThread);
+			if (::WaitForSingleObject(m_hThread, 10000) == WAIT_TIMEOUT) {
+				TRACE(TEXT("Terminate CEpgFileLoader thread\n"));
+				::TerminateThread(m_hThread, -1);
+			}
+		}
+		::CloseHandle(m_hThread);
+	}
+
+	if (m_hAbortEvent != nullptr) {
+		::CloseHandle(m_hAbortEvent);
+		m_hAbortEvent = nullptr;
+	}
+}
+
+
+bool CEpgOptions::CEpgFileLoader::StartLoading(
+	LibISDB::EPGDatabase *pEPGDatabase,
+	CEpgDataStore *pEpgDataStore, const String &EpgDataPath,
+	CEpgDataLoader *pEdcbDataLoader, const String &EdcbDataFolder,
+	CEpgFileLoadEventHandler *pEventHandler)
+{
+	if (m_hThread != nullptr) {
+		if (::WaitForSingleObject(m_hThread, 0) == WAIT_TIMEOUT)
+			return false;
+		::CloseHandle(m_hThread);
+		m_hThread = nullptr;
+	}
+	if (m_hAbortEvent != nullptr) {
+		::CloseHandle(m_hAbortEvent);
+		m_hAbortEvent = nullptr;
+	}
+
+	m_State = STATE_READY;
+
+	m_pEPGDatabase = pEPGDatabase;
+	m_EpgDataPath = EpgDataPath;
+	m_pEpgDataStore = pEpgDataStore;
+	m_EdcbDataFolder = EdcbDataFolder;
+	m_pEdcbDataLoader = pEdcbDataLoader;
+	m_pEventHandler = pEventHandler;
+
+	m_hAbortEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+
+	m_hThread = reinterpret_cast<HANDLE>(::_beginthreadex(nullptr, 0, LoadThread, this, 0, nullptr));
+	if (m_hThread == nullptr) {
+		m_State = STATE_ERROR;
+		return false;
+	}
+	m_State = STATE_THREAD_START;
+
+	return true;
+}
+
+
+bool CEpgOptions::CEpgFileLoader::IsLoading()
+{
+	return m_hThread != nullptr
+		&& ::WaitForSingleObject(m_hThread, 0) == WAIT_TIMEOUT;
+}
+
+
+bool CEpgOptions::CEpgFileLoader::IsEpgDataLoading()
+{
+	if (!IsLoading())
+		return false;
+
+	const int State = m_State;
+
+	return (State == STATE_EPG_DATA_LOADING)
+		|| (State == STATE_THREAD_START && m_pEpgDataStore != nullptr);
+}
+
+
+bool CEpgOptions::CEpgFileLoader::WaitLoading(DWORD Timeout)
+{
+	if (m_hThread != nullptr) {
+		if (::WaitForSingleObject(m_hThread, Timeout) == WAIT_TIMEOUT)
+			return false;
+	}
+	return true;
+}
+
+
+void CEpgOptions::CEpgFileLoader::OnBeginLoading()
+{
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnBeginEpgDataLoading();
+}
+
+
+void CEpgOptions::CEpgFileLoader::OnEndLoading(bool fSuccess)
+{
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnEndEpgDataLoading(fSuccess);
+}
+
+
+void CEpgOptions::CEpgFileLoader::OnStart()
+{
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnBeginEdcbDataLoading();
+}
+
+
+void CEpgOptions::CEpgFileLoader::OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase)
+{
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnEndEdcbDataLoading(fSuccess, pEPGDatabase);
+}
+
+
+void CEpgOptions::CEpgFileLoader::LoadMain()
+{
+	if (m_pEpgDataStore != nullptr) {
+		GetAppClass().AddLog(TEXT("EPG データを \"%s\" から読み込みます..."), m_EpgDataPath.c_str());
+
+		if (m_pEpgDataStore->Open(m_pEPGDatabase, m_EpgDataPath.c_str(), CEpgDataStore::OpenFlag::LoadBackground)) {
+			m_State = STATE_EPG_DATA_LOADING;
+			m_pEpgDataStore->SetEventHandler(this);
+			m_pEpgDataStore->Load();
+		}
+	}
+
+	if (::WaitForSingleObject(m_hAbortEvent, 0) == WAIT_OBJECT_0)
+		return;
+
+	if (m_pEdcbDataLoader != nullptr) {
+		GetAppClass().AddLog(TEXT("EDCB の EPG データを \"%s\" から読み込みます..."), m_EdcbDataFolder.c_str());
+
+		m_State = STATE_EDCB_DATA_LOADING;
+		m_pEdcbDataLoader->Load(m_EdcbDataFolder.c_str(), m_hAbortEvent, this);
+	}
+}
+
+
+unsigned int __stdcall CEpgOptions::CEpgFileLoader::LoadThread(void *pParameter)
+{
+	CEpgFileLoader *pLoader = static_cast<CEpgFileLoader*>(pParameter);
+
+	::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+
+	pLoader->LoadMain();
+
+	pLoader->m_State = STATE_THREAD_END;
+
+	return 0;
 }
 
 

@@ -42,11 +42,18 @@ namespace TVTest
 		public:
 			virtual ~CEpgFileLoadEventHandler() = default;
 
-			virtual void OnBeginLoad() {}
-			virtual void OnEndLoad(bool fSuccess) {}
+			virtual void OnBeginEpgDataLoading() {}
+			virtual void OnEndEpgDataLoading(bool fSuccess) {}
+			virtual void OnBeginEdcbDataLoading() {}
+			virtual void OnEndEdcbDataLoading(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase) {}
 		};
 
-		typedef CEpgDataLoader::CEventHandler CEDCBDataLoadEventHandler;
+		enum class EpgFileLoadFlag : unsigned int {
+			None     = 0x0000U,
+			EpgData  = 0x0001U,
+			EdcbData = 0x0002U,
+			AllData  = EpgData | EdcbData,
+		};
 
 		enum class EpgTimeMode {
 			Raw,
@@ -76,18 +83,14 @@ namespace TVTest
 
 		const Style::Font &GetEventInfoFont() const { return m_EventInfoFont; }
 
-		bool LoadEpgFile(LibISDB::EPGDatabase *pEPGDatabase);
-		bool AsyncLoadEpgFile(
+		bool LoadEpgFile(
 			LibISDB::EPGDatabase *pEPGDatabase,
-			CEpgDataStore::CEventHandler *pEventHandler = nullptr);
+			CEpgFileLoadEventHandler *pEventHandler = nullptr,
+			EpgFileLoadFlag Flags = EpgFileLoadFlag::AllData);
 		bool IsEpgFileLoading() const;
+		bool IsEpgDataLoading() const;
 		bool WaitEpgFileLoad(DWORD Timeout = INFINITE);
 		bool SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase);
-
-		bool LoadEDCBData();
-		bool AsyncLoadEDCBData(CEDCBDataLoadEventHandler *pEventHandler = nullptr);
-		bool IsEDCBDataLoading() const;
-		bool WaitEDCBDataLoad(DWORD Timeout = INFINITE);
 
 		EpgTimeMode GetEpgTimeMode() const { return m_EpgTimeMode; }
 
@@ -95,6 +98,54 @@ namespace TVTest
 		bool SaveLogoFile();
 
 	private:
+		class CEpgFileLoader
+			: protected CEpgDataStore::CEventHandler
+			, protected CEpgDataLoader::CEventHandler
+		{
+		public:
+			~CEpgFileLoader();
+
+			bool StartLoading(
+				LibISDB::EPGDatabase *pEPGDatabase,
+				CEpgDataStore *pEpgDataStore, const String &EpgDataPath,
+				CEpgDataLoader *pEdcbDataLoader, const String &EdcbDataFolder,
+				CEpgFileLoadEventHandler *pEventHandler);
+			bool IsLoading();
+			bool IsEpgDataLoading();
+			bool WaitLoading(DWORD Timeout = INFINITE);
+
+		private:
+			enum {
+				STATE_READY,
+				STATE_ERROR,
+				STATE_THREAD_START,
+				STATE_THREAD_END,
+				STATE_EPG_DATA_LOADING,
+				STATE_EDCB_DATA_LOADING,
+			};
+
+			LibISDB::EPGDatabase *m_pEPGDatabase = nullptr;
+			CEpgDataStore *m_pEpgDataStore = nullptr;
+			String m_EpgDataPath;
+			CEpgDataLoader *m_pEdcbDataLoader = nullptr;
+			String m_EdcbDataFolder;
+			CEpgFileLoadEventHandler *m_pEventHandler = nullptr;
+			HANDLE m_hThread = nullptr;
+			HANDLE m_hAbortEvent = nullptr;
+			std::atomic<int> m_State = STATE_READY;
+
+		// CEpgDataStore::CEventHandler
+			void OnBeginLoading() override;
+			void OnEndLoading(bool fSuccess) override;
+
+		// CEDCBDataLoadEventHandler
+			void OnStart() override;
+			void OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase) override;
+
+			void LoadMain();
+			static unsigned int __stdcall LoadThread(void *pParameter);
+		};
+
 		bool m_fSaveEpgFile;
 		CFilePath m_EpgFileName;
 		bool m_fUpdateWhenStandby;
@@ -106,6 +157,7 @@ namespace TVTest
 		bool m_fSaveLogoFile;
 		CFilePath m_LogoFileName;
 
+		std::unique_ptr<CEpgFileLoader> m_EpgFileLoader;
 		CEpgDataStore m_EpgDataStore;
 		std::unique_ptr<CEpgDataLoader> m_EpgDataLoader;
 
@@ -116,8 +168,9 @@ namespace TVTest
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		bool GetEpgFileFullPath(LPTSTR pszFileName);
-		static unsigned int __stdcall EpgFileLoadThread(void *pParameter);
 	};
+
+	TVTEST_ENUM_FLAGS(CEpgOptions::EpgFileLoadFlag)
 
 }	// namespace TVTest
 

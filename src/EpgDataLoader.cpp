@@ -124,7 +124,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 }
 
 
-bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent)
+bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent, CEventHandler *pEventHandler)
 {
 	if (pszFolder == nullptr)
 		return false;
@@ -139,6 +139,10 @@ bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent)
 	hFind = ::FindFirstFile(szFileMask, &fd);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return false;
+
+	if (pEventHandler != nullptr)
+		pEventHandler->OnStart();
+
 	do {
 		if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0
 				&& ftCurrent - fd.ftLastWriteTime < FILETIME_HOUR * 24 * 14
@@ -153,6 +157,10 @@ bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent)
 		}
 	} while (::FindNextFile(hFind, &fd));
 	::FindClose(hFind);
+
+	if (pEventHandler != nullptr)
+		pEventHandler->OnEnd(true, &m_EPGDatabase);
+
 	return true;
 }
 
