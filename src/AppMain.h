@@ -98,16 +98,12 @@ namespace TVTest
 	};
 
 	class CEpgLoadEventHandler
-		: public CEpgDataStore::CEventHandler
-		, public CEpgOptions::CEDCBDataLoadEventHandler
+		: public CEpgOptions::CEpgFileLoadEventHandler
 	{
-	// CEpgDataStore::CEventHandler
-		void OnBeginLoading() override;
-		void OnEndLoading(bool fSuccess) override;
-
-	// CEDCBDataLoadEventHandler
-		void OnStart() override;
-		void OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase) override;
+		void OnBeginEpgDataLoading() override;
+		void OnEndEpgDataLoading(bool fSuccess) override;
+		void OnBeginEdcbDataLoading() override;
+		void OnEndEdcbDataLoading(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase) override;
 	};
 
 	class CServiceUpdateInfo

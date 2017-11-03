@@ -1136,8 +1136,9 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	}
 
 	if (!CmdLineOptions.m_fNoEpg) {
-		EpgOptions.AsyncLoadEpgFile(&EPGDatabase, &EpgLoadEventHandler);
-		EpgOptions.AsyncLoadEDCBData(&EpgLoadEventHandler);
+		EpgOptions.LoadEpgFile(
+			&EPGDatabase, &EpgLoadEventHandler,
+			CEpgOptions::EpgFileLoadFlag::AllData);
 	}
 
 	ApplyEventInfoFont();
