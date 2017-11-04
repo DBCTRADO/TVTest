@@ -172,9 +172,9 @@ void CMainPanel::UpdateChannelPanel()
 	if (ChannelPanel.IsChannelListEmpty()) {
 		ChannelPanel.SetChannelList(
 			App.ChannelManager.GetCurrentChannelList(),
-			!App.EpgOptions.IsEpgFileLoading());
+			!App.EpgOptions.IsEpgDataLoading());
 	} else {
-		if (!App.EpgOptions.IsEpgFileLoading())
+		if (!App.EpgOptions.IsEpgDataLoading())
 			ChannelPanel.UpdateAllChannels();
 	}
 	ChannelPanel.SetCurrentChannel(App.ChannelManager.GetCurrentChannel());

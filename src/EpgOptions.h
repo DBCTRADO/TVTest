@@ -121,7 +121,9 @@ namespace TVTest
 				STATE_THREAD_START,
 				STATE_THREAD_END,
 				STATE_EPG_DATA_LOADING,
+				STATE_EPG_DATA_LOADED,
 				STATE_EDCB_DATA_LOADING,
+				STATE_EDCB_DATA_LOADED,
 			};
 
 			LibISDB::EPGDatabase *m_pEPGDatabase = nullptr;

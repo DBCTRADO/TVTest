@@ -606,6 +606,7 @@ bool CEpgOptions::CEpgFileLoader::WaitLoading(DWORD Timeout)
 
 void CEpgOptions::CEpgFileLoader::OnBeginLoading()
 {
+	m_State = STATE_EPG_DATA_LOADING;
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnBeginEpgDataLoading();
 }
@@ -613,6 +614,7 @@ void CEpgOptions::CEpgFileLoader::OnBeginLoading()
 
 void CEpgOptions::CEpgFileLoader::OnEndLoading(bool fSuccess)
 {
+	m_State = STATE_EPG_DATA_LOADED;
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnEndEpgDataLoading(fSuccess);
 }
@@ -620,6 +622,7 @@ void CEpgOptions::CEpgFileLoader::OnEndLoading(bool fSuccess)
 
 void CEpgOptions::CEpgFileLoader::OnStart()
 {
+	m_State = STATE_EDCB_DATA_LOADING;
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnBeginEdcbDataLoading();
 }
@@ -627,6 +630,7 @@ void CEpgOptions::CEpgFileLoader::OnStart()
 
 void CEpgOptions::CEpgFileLoader::OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEPGDatabase)
 {
+	m_State = STATE_EDCB_DATA_LOADED;
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnEndEdcbDataLoading(fSuccess, pEPGDatabase);
 }
@@ -638,7 +642,6 @@ void CEpgOptions::CEpgFileLoader::LoadMain()
 		GetAppClass().AddLog(TEXT("EPG データを \"%s\" から読み込みます..."), m_EpgDataPath.c_str());
 
 		if (m_pEpgDataStore->Open(m_pEPGDatabase, m_EpgDataPath.c_str(), CEpgDataStore::OpenFlag::LoadBackground)) {
-			m_State = STATE_EPG_DATA_LOADING;
 			m_pEpgDataStore->SetEventHandler(this);
 			m_pEpgDataStore->Load();
 		}
@@ -650,7 +653,6 @@ void CEpgOptions::CEpgFileLoader::LoadMain()
 	if (m_pEdcbDataLoader != nullptr) {
 		GetAppClass().AddLog(TEXT("EDCB の EPG データを \"%s\" から読み込みます..."), m_EdcbDataFolder.c_str());
 
-		m_State = STATE_EDCB_DATA_LOADING;
 		m_pEdcbDataLoader->Load(m_EdcbDataFolder.c_str(), m_hAbortEvent, this);
 	}
 }
