@@ -97,6 +97,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		return false;
 	}
 	m_EPGDatabaseFilter.Reset();
+	m_EPGDatabase.SetNoPastEvents(false);
 	for (RemainSize = ReadSize; RemainSize >= 188; RemainSize -= Size) {
 		Size = std::min(RemainSize, BUFFER_SIZE);
 		if (!::ReadFile(hFile, pBuffer, Size, &Read, nullptr))
