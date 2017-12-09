@@ -355,10 +355,10 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 80;
-			lvc.pszText = TEXT("名前");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("名前"));
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
-			lvc.pszText = TEXT("設定");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("設定"));
 			lvc.iSubItem = 1;
 			ListView_InsertColumn(hwndList, 1, &lvc);
 

@@ -270,14 +270,14 @@ static void InitServiceListView(
 	lvg.mask |= LVGF_STATE | LVGF_TASK;
 	lvg.stateMask = ~0U;
 	lvg.state = LVGS_COLLAPSIBLE;
-	lvg.pszTask = TEXT("選択");
-	lvg.pszHeader = TEXT("地上");
+	lvg.pszTask = const_cast<LPTSTR>(TEXT("選択"));
+	lvg.pszHeader = const_cast<LPTSTR>(TEXT("地上"));
 	lvg.iGroupId = GROUP_ID_TERRESTRIAL;
 	ListView_InsertGroup(hwndList, -1, &lvg);
-	lvg.pszHeader = TEXT("BS");
+	lvg.pszHeader = const_cast<LPTSTR>(TEXT("BS"));
 	lvg.iGroupId = GROUP_ID_BS;
 	ListView_InsertGroup(hwndList, -1, &lvg);
-	lvg.pszHeader = TEXT("CS");
+	lvg.pszHeader = const_cast<LPTSTR>(TEXT("CS"));
 	lvg.iGroupId = GROUP_ID_CS;
 	ListView_InsertGroup(hwndList, -1, &lvg);
 
@@ -672,15 +672,15 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = m_SettingsColumnWidth[SETTINGS_COLUMN_NAME];
-			lvc.pszText = TEXT("名前");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("名前"));
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
 			lvc.cx = m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD];
-			lvc.pszText = TEXT("キーワード");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("キーワード"));
 			lvc.iSubItem = 1;
 			ListView_InsertColumn(hwndList, 1, &lvc);
 			lvc.cx = m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE];
-			lvc.pszText = TEXT("ジャンル");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("ジャンル"));
 			lvc.iSubItem = 2;
 			ListView_InsertColumn(hwndList, 2, &lvc);
 
@@ -991,7 +991,7 @@ int CFeaturedEventsDialog::AddSearchSettingsItem(HWND hDlg, const CEventSearchSe
 	lvi.mask = LVIF_TEXT | LVIF_PARAM;
 	lvi.iItem = ListView_GetItemCount(hwndList);
 	lvi.iSubItem = 0;
-	lvi.pszText = TEXT("");
+	lvi.pszText = const_cast<LPTSTR>(TEXT(""));
 	lvi.lParam = reinterpret_cast<LPARAM>(pSettings);
 	int Item = ListView_InsertItem(hwndList, &lvi);
 	UpdateSearchSettingsItem(hDlg, Item);

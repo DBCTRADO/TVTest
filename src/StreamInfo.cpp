@@ -209,7 +209,7 @@ void CStreamInfoPage::SetService()
 	tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 	tvis.item.state = TVIS_EXPANDED;
 	tvis.item.stateMask = (UINT) - 1;
-	tvis.item.pszText = TEXT("サービス");
+	tvis.item.pszText = const_cast<LPTSTR>(TEXT("サービス"));
 	tvis.item.cChildren = !ServiceList.empty() ? 1 : 0;
 	hItem = TreeView_InsertItem(hwndTree, &tvis);
 	if (hItem != nullptr) {
@@ -312,7 +312,7 @@ void CStreamInfoPage::SetService()
 		tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state = TVIS_EXPANDED;
 		tvis.item.stateMask = ~0U;
-		tvis.item.pszText = TEXT("チャンネルファイル用フォーマット");
+		tvis.item.pszText = const_cast<LPTSTR>(TEXT("チャンネルファイル用フォーマット"));
 		tvis.item.cChildren = !ServiceList.empty() ? 1 : 0;;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
 		if (hItem != nullptr) {
@@ -350,7 +350,7 @@ void CStreamInfoPage::SetService()
 		tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state = 0;
 		tvis.item.stateMask = ~0U;
-		tvis.item.pszText = TEXT("ネットワークTS (NIT)");
+		tvis.item.pszText = const_cast<LPTSTR>(TEXT("ネットワークTS (NIT)"));
 		tvis.item.cChildren = 1;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
 		if (hItem != nullptr) {
@@ -392,7 +392,7 @@ void CStreamInfoPage::SetService()
 		tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state = 0;
 		tvis.item.stateMask = ~0U;
-		tvis.item.pszText = TEXT("ネットワークサービス (SDT)");
+		tvis.item.pszText = const_cast<LPTSTR>(TEXT("ネットワークサービス (SDT)"));
 		tvis.item.cChildren = 1;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
 		if (hItem != nullptr) {
@@ -436,7 +436,7 @@ void CStreamInfoPage::SetService()
 		tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 		tvis.item.state = TVIS_EXPANDED;
 		tvis.item.stateMask = ~0U;
-		tvis.item.pszText = TEXT("地上分配システム");
+		tvis.item.pszText = const_cast<LPTSTR>(TEXT("地上分配システム"));
 		tvis.item.cChildren = !TerrestrialList.empty() ? 1 : 0;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
 		if (hItem != nullptr) {
@@ -479,7 +479,7 @@ void CStreamInfoPage::SetService()
 			tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 			tvis.item.state = 0;
 			tvis.item.stateMask = ~0U;
-			tvis.item.pszText = TEXT("衛星分配システム");
+			tvis.item.pszText = const_cast<LPTSTR>(TEXT("衛星分配システム"));
 			tvis.item.cChildren = !SatelliteList.empty() ? 1 : 0;
 			hItem = TreeView_InsertItem(hwndTree, &tvis);
 			if (hItem != nullptr) {

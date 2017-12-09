@@ -2231,7 +2231,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				pInfo->SrcRect.left, pInfo->SrcRect.top,
 				pInfo->SrcRect.right - pInfo->SrcRect.left,
 				pInfo->SrcRect.bottom - pInfo->SrcRect.top,
-				pInfo->Color != CLR_INVALID ? pInfo->Color : Style.Fill.GetSolidColor(),
+				pInfo->Color != CLR_INVALID ? pInfo->Color : Style.Fill.GetSolidColor().GetCOLORREF(),
 				pInfo->Opacity);
 		}
 		return TRUE;
@@ -5359,13 +5359,13 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 120;
-			lvc.pszText = TEXT("ファイル名");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("ファイル名"));
 			ListView_InsertColumn(hwndList, COLUMN_FILENAME, &lvc);
-			lvc.pszText = TEXT("プラグイン名");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("プラグイン名"));
 			ListView_InsertColumn(hwndList, COLUMN_PLUGINNAME, &lvc);
-			lvc.pszText = TEXT("説明");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("説明"));
 			ListView_InsertColumn(hwndList, COLUMN_DESCRIPTION, &lvc);
-			lvc.pszText = TEXT("著作権");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("著作権"));
 			ListView_InsertColumn(hwndList, COLUMN_COPYRIGHT, &lvc);
 
 			for (int i = 0; i < m_pPluginManager->NumPlugins(); i++) {

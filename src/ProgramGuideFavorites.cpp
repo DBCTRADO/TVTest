@@ -197,7 +197,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
-			lvc.pszText = TEXT("");
+			lvc.pszText = const_cast<LPTSTR>(TEXT(""));
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
 

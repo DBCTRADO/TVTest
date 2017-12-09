@@ -313,7 +313,7 @@ bool CBalloonTip::Initialize(HWND hwnd)
 	ti.hwnd = hwnd;
 	ti.uId = 0;
 	ti.hinst = nullptr;
-	ti.lpszText = TEXT("");
+	ti.lpszText = const_cast<LPTSTR>(TEXT(""));
 	::SendMessage(m_hwndToolTips, TTM_ADDTOOL, 0, (LPARAM)&ti);
 
 	m_hwndOwner = hwnd;

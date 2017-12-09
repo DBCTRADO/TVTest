@@ -5208,7 +5208,7 @@ class CProgramGuideTunerStatusItem
 	CDropDownMenu m_Menu;
 
 public:
-	CProgramGuideTunerStatusItem::CProgramGuideTunerStatusItem(CProgramGuide *pProgramGuide)
+	CProgramGuideTunerStatusItem(CProgramGuide *pProgramGuide)
 		: CStatusItemBase(STATUS_ITEM_TUNER, SizeValue(14 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
@@ -5306,7 +5306,7 @@ class CListSelectStatusItem
 	};
 
 public:
-	CListSelectStatusItem::CListSelectStatusItem(CProgramGuide *pProgramGuide)
+	CListSelectStatusItem(CProgramGuide *pProgramGuide)
 		: CStatusItemBase(STATUS_ITEM_DATE, SizeValue(14 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
@@ -5403,7 +5403,7 @@ class CListPrevStatusItem
 	CProgramGuide *m_pProgramGuide;
 
 public:
-	CListPrevStatusItem::CListPrevStatusItem(CProgramGuide *pProgramGuide)
+	CListPrevStatusItem(CProgramGuide *pProgramGuide)
 		: CStatusItemBase(STATUS_ITEM_DATEPREV, SizeValue(1 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{
@@ -5447,7 +5447,7 @@ class CListNextStatusItem
 	CProgramGuide *m_pProgramGuide;
 
 public:
-	CListNextStatusItem::CListNextStatusItem(CProgramGuide *pProgramGuide)
+	CListNextStatusItem(CProgramGuide *pProgramGuide)
 		: CStatusItemBase(STATUS_ITEM_DATENEXT, SizeValue(1 * EM_FACTOR, SizeUnit::EM))
 		, m_pProgramGuide(pProgramGuide)
 	{

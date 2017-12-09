@@ -680,7 +680,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem = Sel >= 0 ? Sel : ListView_GetItemCount(hwndList);
 				lvi.iSubItem = 0;
-				lvi.pszText = TEXT("(区切り)");
+				lvi.pszText = const_cast<LPTSTR>(TEXT("(区切り)"));
 				lvi.iImage = -1;
 				lvi.lParam = ITEM_SEPARATOR;
 				ListView_InsertItem(hwndList, &lvi);

@@ -615,12 +615,12 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 80;
-			lvc.pszText = TEXT("名前");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("名前"));
 			ListView_InsertColumn(hwndList, 0, &lvc);
 			lvc.fmt = LVCFMT_LEFT;
 			GetClientRect(hwndList, &rc);
 			lvc.cx = rc.right - lvc.cx;
-			lvc.pszText = TEXT("コマンド");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("コマンド"));
 			ListView_InsertColumn(hwndList, 1, &lvc);
 			if (pToolList->NumTools() > 0) {
 				ListView_SetItemCount(hwndList, pToolList->NumTools());

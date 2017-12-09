@@ -461,11 +461,11 @@ void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 	ListView_SetItem(hwndList, &lvi);
 	lvi.mask = LVIF_TEXT;
 	lvi.iSubItem = 1;
+	lvi.pszText = szText;
 	if (Command > 0) {
 		GetAppClass().CommandManager.GetCommandText(Command, szText, lengthof(szText));
-		lvi.pszText = szText;
 	} else {
-		lvi.pszText = TEXT("");
+		szText[0] = TEXT('\0');
 	}
 	ListView_SetItem(hwndList, &lvi);
 	m_CurSettingsList[CurController].AssignList[Index] = (WORD)Command;
@@ -542,9 +542,9 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 120;
-			lvc.pszText = TEXT("ボタン");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("ボタン"));
 			ListView_InsertColumn(hwndList, 0, &lvc);
-			lvc.pszText = TEXT("コマンド");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("コマンド"));
 			ListView_InsertColumn(hwndList, 1, &lvc);
 
 			const CCommandManager &CommandManager = GetAppClass().CommandManager;

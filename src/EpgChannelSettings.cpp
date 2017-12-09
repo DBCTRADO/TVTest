@@ -84,7 +84,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = rc.right - GetScrollBarWidth(hwndList);
-			lvc.pszText = TEXT("");
+			lvc.pszText = const_cast<LPTSTR>(TEXT(""));
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
 

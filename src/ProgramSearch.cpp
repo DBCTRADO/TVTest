@@ -1964,13 +1964,13 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = m_ColumnWidth[COLUMN_CHANNEL] >= 0 ? m_ColumnWidth[COLUMN_CHANNEL] : 8 * FontSize;
-			lvc.pszText = TEXT("チャンネル");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("チャンネル"));
 			ListView_InsertColumn(hwndList, COLUMN_CHANNEL, &lvc);
 			lvc.cx = m_ColumnWidth[COLUMN_TIME] >= 0 ? m_ColumnWidth[COLUMN_TIME] : 12 * FontSize;
-			lvc.pszText = TEXT("日時");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("日時"));
 			ListView_InsertColumn(hwndList, COLUMN_TIME, &lvc);
 			lvc.cx = m_ColumnWidth[COLUMN_EVENTNAME] >= 0 ? m_ColumnWidth[COLUMN_EVENTNAME] : 20 * FontSize;
-			lvc.pszText = TEXT("番組名");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("番組名"));
 			ListView_InsertColumn(hwndList, COLUMN_EVENTNAME, &lvc);
 
 			m_SortColumn = -1;

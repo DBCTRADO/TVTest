@@ -811,7 +811,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					RemoveTrailingWhitespace(szText);
 					pnmtdi->lpszText = szText;
 				} else {
-					pnmtdi->lpszText = TEXT("");
+					pnmtdi->lpszText = pnmtdi->szText;
 				}
 				pnmtdi->szText[0] = '\0';
 				pnmtdi->hinst = nullptr;

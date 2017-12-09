@@ -79,7 +79,7 @@ bool CListView::InitCheckList()
 	lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvc.fmt = LVCFMT_LEFT;
 	lvc.cx = rc.right - GetScrollBarWidth(m_hwnd);
-	lvc.pszText = TEXT("");
+	lvc.pszText = const_cast<LPTSTR>(TEXT(""));
 	lvc.iSubItem = 0;
 	ListView_InsertColumn(m_hwnd, 0, &lvc);
 

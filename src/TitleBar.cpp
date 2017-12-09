@@ -459,7 +459,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (reinterpret_cast<NMHDR*>(lParam)->code) {
 		case TTN_NEEDTEXT:
 			{
-				static const LPTSTR pszToolTip[] = {
+				static const LPCTSTR pszToolTip[] = {
 					TEXT("最小化"),
 					TEXT("最大化"),
 					TEXT("全画面表示"),
@@ -468,11 +468,12 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				LPNMTTDISPINFO pnmttdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
 
 				if (m_fMaximized && pnmttdi->hdr.idFrom == ITEM_MAXIMIZE)
-					pnmttdi->lpszText = TEXT("元のサイズに戻す");
+					StringCopy(pnmttdi->szText, TEXT("元のサイズに戻す"));
 				else if (m_fFullscreen && pnmttdi->hdr.idFrom == ITEM_FULLSCREEN)
-					pnmttdi->lpszText = TEXT("全画面表示解除");
+					StringCopy(pnmttdi->szText, TEXT("全画面表示解除"));
 				else
-					pnmttdi->lpszText = pszToolTip[pnmttdi->hdr.idFrom - ITEM_BUTTON_FIRST];
+					StringCopy(pnmttdi->szText, pszToolTip[pnmttdi->hdr.idFrom - ITEM_BUTTON_FIRST]);
+				pnmttdi->lpszText = pnmttdi->szText;
 				pnmttdi->hinst = nullptr;
 			}
 			return 0;

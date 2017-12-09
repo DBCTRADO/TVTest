@@ -184,7 +184,11 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 		}
 
 		if (ChangeType != COSDOptions::ChannelChangeType::LogoOnly && !IsStringEmpty(pszText)) {
-			CompositeText(pszText, ClientInfo.ClientRect, hbmLogo != nullptr ? m_Style.LogoSize.Width : 0, m_pOptions->GetFadeTime());
+			CompositeText(
+				pszText,
+				ClientInfo.ClientRect,
+				hbmLogo != nullptr ? static_cast<int>(m_Style.LogoSize.Width) : 0,
+				m_pOptions->GetFadeTime());
 		}
 	} else {
 		m_OSD.SetText(pszText, hbmLogo, m_Style.LogoSize.Width, m_Style.LogoSize.Height, ImageEffect);

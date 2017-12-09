@@ -627,12 +627,12 @@ void CSideBar::GetItemRect(int Item, RECT *pRect) const
 		pRect->left = rcBorder.left;
 		pRect->right = rcBorder.left + ItemWidth;
 		pRect->top = rcBorder.top + Offset;
-		pRect->bottom = pRect->top + (m_ItemList[Item].Command == ITEM_SEPARATOR ? m_Style.SeparatorWidth : ItemHeight);
+		pRect->bottom = pRect->top + (m_ItemList[Item].Command == ITEM_SEPARATOR ? static_cast<int>(m_Style.SeparatorWidth) : ItemHeight);
 	} else {
 		pRect->top = rcBorder.top;
 		pRect->bottom = rcBorder.top + ItemHeight;
 		pRect->left = rcBorder.left + Offset;
-		pRect->right = pRect->left + (m_ItemList[Item].Command == ITEM_SEPARATOR ? m_Style.SeparatorWidth : ItemWidth);
+		pRect->right = pRect->left + (m_ItemList[Item].Command == ITEM_SEPARATOR ? static_cast<int>(m_Style.SeparatorWidth) : ItemWidth);
 	}
 }
 

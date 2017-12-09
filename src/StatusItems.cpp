@@ -361,7 +361,7 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 	const CRecordManager &RecordManager = GetAppClass().RecordManager;
 	const int FontHeight = m_pStatus->GetFontHeight();
 	RECT rc;
-	TCHAR szText[32], *pszText;
+	TCHAR szText[32];
 
 	rc = DrawRect;
 	if (RecordManager.IsRecording()) {
@@ -414,13 +414,12 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 			szText, TEXT("%s%d:%02d:%02d"),
 			fRemain ? TEXT("-") : TEXT(""),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
-		pszText = szText;
 	} else if (RecordManager.IsReserved()) {
-		pszText = TEXT("■ 録画待機");
+		StringCopy(szText, TEXT("■ 録画待機"));
 	} else {
-		pszText = TEXT("■ <録画>");
+		StringCopy(szText, TEXT("■ <録画>"));
 	}
-	DrawText(hdc, rc, pszText);
+	DrawText(hdc, rc, szText);
 }
 
 void CRecordStatusItem::OnLButtonDown(int x, int y)

@@ -419,12 +419,12 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 0;
-			lvc.pszText = TEXT("");
+			lvc.pszText = const_cast<LPTSTR>(TEXT(""));
 			ListView_InsertColumn(hwndList, COLUMN_DUMMY, &lvc);
 			lvc.cx = 80;
-			lvc.pszText = TEXT("日時");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("日時"));
 			ListView_InsertColumn(hwndList, COLUMN_TIME, &lvc);
-			lvc.pszText = TEXT("内容");
+			lvc.pszText = const_cast<LPTSTR>(TEXT("内容"));
 			ListView_InsertColumn(hwndList, COLUMN_TEXT, &lvc);
 
 			LVITEM lvi;
@@ -436,7 +436,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				lvi.mask = LVIF_TEXT;
 				lvi.iSubItem = COLUMN_DUMMY;
-				lvi.pszText = TEXT("");
+				lvi.pszText = const_cast<LPTSTR>(TEXT(""));
 				ListView_InsertItem(hwndList, &lvi);
 
 				lvi.mask = LVIF_TEXT;

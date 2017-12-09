@@ -132,7 +132,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, PNGText.text, Length, nullptr, nullptr);
 #endif
 		PNGText.compression = PNG_ITXT_COMPRESSION_NONE;
-		PNGText.key = "Comment";
+		PNGText.key = const_cast<png_charp>("Comment");
 		PNGText.text_length = 0;
 		PNGText.itxt_length =::lstrlenA(PNGText.text);
 		PNGText.lang = nullptr;
