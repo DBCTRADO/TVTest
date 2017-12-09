@@ -293,7 +293,7 @@ void CAppCommand::RegisterDefaultCommands()
 				TEXT("Service"), CCommandManager::BindHandler(&CAppCommand::SelectService, this)
 			},
 			{
-				CM_SPACE_FIRST, CM_SPACE_FIRST, CM_SPACE_FIRST + 4,
+				CM_SPACE_FIRST, CM_SPACE_LAST, CM_SPACE_FIRST + 4,
 				TEXT("TuningSpace"), CCommandManager::BindHandler(&CAppCommand::SelectSpace, this)
 			},
 
