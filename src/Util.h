@@ -52,7 +52,6 @@ namespace TVTest
 	inline DWORD TickTimeSpan(DWORD Start, DWORD End) { return End - Start; }
 	inline ULONGLONG TickTimeSpan(ULONGLONG Start, ULONGLONG End) { _ASSERT(Start <= End); return End - Start; }
 
-	extern __declspec(selectany) const FILETIME FILETIME_NULL = {0, 0};
 	constexpr LONGLONG FILETIME_MILLISECOND = 10000LL;
 	constexpr LONGLONG FILETIME_SECOND      = 1000LL * FILETIME_MILLISECOND;
 	constexpr LONGLONG FILETIME_MINUTE      = 60LL * FILETIME_SECOND;

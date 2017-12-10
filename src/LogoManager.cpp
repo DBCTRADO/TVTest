@@ -141,8 +141,8 @@ CLogoManager::CLogoManager()
 	, m_fSaveBmp(false)
 	, m_fLogoUpdated(false)
 	, m_fLogoIDMapUpdated(false)
-	, m_LogoFileLastWriteTime(FILETIME_NULL)
-	, m_LogoIDMapFileLastWriteTime(FILETIME_NULL)
+	, m_LogoFileLastWriteTime()
+	, m_LogoIDMapFileLastWriteTime()
 {
 }
 

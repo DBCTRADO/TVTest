@@ -3220,7 +3220,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 					SystemTimeToLocalFileTime(&st, &pRecInfo->ReserveTime);
 				}
 			} else {
-				pRecInfo->ReserveTime = FILETIME_NULL;
+				pRecInfo->ReserveTime = FILETIME();
 			}
 
 			if ((pRecInfo->Mask & RECORD_MASK_STARTTIME) != 0) {
