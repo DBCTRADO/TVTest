@@ -39,6 +39,10 @@ namespace TVTest
 	public:
 		CAppMutex(bool fEnable);
 		~CAppMutex();
+
+		CAppMutex(const CAppMutex &) = delete;
+		CAppMutex &operator=(const CAppMutex &) = delete;
+
 		bool AlreadyExists() const { return m_fAlreadyExists; }
 	};
 

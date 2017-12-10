@@ -35,6 +35,9 @@ namespace TVTest
 		CTooltip();
 		~CTooltip();
 
+		CTooltip(const CTooltip &) = delete;
+		CTooltip &operator=(const CTooltip &) = delete;
+
 		bool Create(HWND hwnd);
 		void Destroy();
 		bool IsCreated() const { return m_hwndTooltip != nullptr; }
@@ -64,6 +67,9 @@ namespace TVTest
 	public:
 		CBalloonTip();
 		~CBalloonTip();
+
+		CBalloonTip(const CBalloonTip &) = delete;
+		CBalloonTip &operator=(const CBalloonTip &) = delete;
 
 		bool Initialize(HWND hwnd);
 		void Finalize();

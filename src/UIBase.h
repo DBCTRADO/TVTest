@@ -37,6 +37,9 @@ namespace TVTest
 		CUIBase();
 		virtual ~CUIBase() = 0;
 
+		CUIBase(const CUIBase &) = delete;
+		CUIBase &operator=(const CUIBase &) = delete;
+
 		virtual void SetStyle(const Style::CStyleManager *pStyleManager);
 		virtual void NormalizeStyle(
 			const Style::CStyleManager *pStyleManager,

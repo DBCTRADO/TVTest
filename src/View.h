@@ -131,6 +131,10 @@ namespace TVTest
 
 		CDisplayBase();
 		~CDisplayBase();
+
+		CDisplayBase(const CDisplayBase &) = delete;
+		CDisplayBase &operator=(const CDisplayBase &) = delete;
+
 		void SetEventHandler(CEventHandler *pHandler);
 		void SetParent(CBasicWindow *pWindow);
 		CBasicWindow *GetParent() const { return m_pParentWindow; }

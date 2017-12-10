@@ -67,6 +67,9 @@ namespace TVTest
 		CMainMenu();
 		~CMainMenu();
 
+		CMainMenu(const CMainMenu &) = delete;
+		CMainMenu &operator=(const CMainMenu &) = delete;
+
 		bool Create(HINSTANCE hinst);
 		void Destroy();
 		bool Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle = true, const std::vector<int> *pItemList = nullptr);
@@ -93,6 +96,9 @@ namespace TVTest
 	public:
 		CMenuPainter();
 		~CMenuPainter();
+
+		CMenuPainter(const CMenuPainter &) = delete;
+		CMenuPainter &operator=(const CMenuPainter &) = delete;
 
 		void Initialize(HWND hwnd, int DPI);
 		void Finalize();
@@ -180,6 +186,9 @@ namespace TVTest
 		CChannelMenu();
 		~CChannelMenu();
 
+		CChannelMenu(const CChannelMenu &) = delete;
+		CChannelMenu &operator=(const CChannelMenu &) = delete;
+
 		bool Create(
 			const CChannelList *pChannelList, int CurChannel, UINT Command,
 			HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows = 0, int DPI = 0);
@@ -212,6 +221,9 @@ namespace TVTest
 		CPopupMenu(HINSTANCE hinst, UINT ID);
 		CPopupMenu(HMENU hmenu);
 		~CPopupMenu();
+
+		CPopupMenu(const CPopupMenu &) = delete;
+		CPopupMenu &operator=(const CPopupMenu &) = delete;
 
 		bool Create();
 		bool IsCreated() const { return m_hmenu != nullptr; }
@@ -256,6 +268,9 @@ namespace TVTest
 
 		CIconMenu();
 		~CIconMenu();
+
+		CIconMenu(const CIconMenu &) = delete;
+		CIconMenu &operator=(const CIconMenu &) = delete;
 
 		bool Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemList, int ItemCount);
 		void Finalize();
@@ -310,6 +325,9 @@ namespace TVTest
 		static bool Initialize(HINSTANCE hinst);
 
 		CDropDownMenu();
+
+		CDropDownMenu(const CDropDownMenu &) = delete;
+		CDropDownMenu &operator=(const CDropDownMenu &) = delete;
 
 		void Clear();
 		bool AppendItem(CItem *pItem);

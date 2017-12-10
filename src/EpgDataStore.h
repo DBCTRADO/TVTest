@@ -48,6 +48,9 @@ namespace TVTest
 		CEpgDataStore();
 		~CEpgDataStore();
 
+		CEpgDataStore(const CEpgDataStore &) = delete;
+		CEpgDataStore &operator=(const CEpgDataStore &) = delete;
+
 		bool Open(LibISDB::EPGDatabase *pEPGDatabase, LPCTSTR pszFileName, OpenFlag Flags = OpenFlag::None);
 		void Close();
 		bool IsOpen() const;

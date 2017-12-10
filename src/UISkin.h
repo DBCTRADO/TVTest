@@ -63,6 +63,9 @@ namespace TVTest
 		CUISkin();
 		virtual ~CUISkin() = default;
 
+		CUISkin(const CUISkin &) = delete;
+		CUISkin &operator=(const CUISkin &) = delete;
+
 		virtual HWND GetMainWindow() const = 0;
 		virtual HWND GetFullscreenWindow() const = 0;
 		virtual HWND GetVideoHostWindow() const = 0;

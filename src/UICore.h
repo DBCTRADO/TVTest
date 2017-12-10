@@ -93,6 +93,9 @@ namespace TVTest
 		CUICore(CAppMain &App);
 		~CUICore();
 
+		CUICore(const CUICore &) = delete;
+		CUICore &operator=(const CUICore &) = delete;
+
 		bool SetSkin(CUISkin *pSkin);
 		CUISkin *GetSkin() const { return m_pSkin; }
 		HWND GetMainWindow() const;

@@ -42,6 +42,9 @@ namespace TVTest
 		CCaptureImage(const BITMAPINFO *pbmi, const void *pBits);
 		~CCaptureImage();
 
+		CCaptureImage(const CCaptureImage &) = delete;
+		CCaptureImage &operator=(const CCaptureImage &) = delete;
+
 		bool SetClipboard(HWND hwnd);
 		bool GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const;
 		bool LockData(BITMAPINFO **ppbmi, BYTE **ppBits);

@@ -35,6 +35,9 @@ namespace TVTest
 		CDirectWriteSystem();
 		~CDirectWriteSystem();
 
+		CDirectWriteSystem(const CDirectWriteSystem &) = delete;
+		CDirectWriteSystem &operator=(const CDirectWriteSystem &) = delete;
+
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
@@ -53,7 +56,11 @@ namespace TVTest
 	class CDirectWriteResource
 	{
 	public:
+		CDirectWriteResource() = default;
 		virtual ~CDirectWriteResource() = default;
+
+		CDirectWriteResource(const CDirectWriteResource &) = delete;
+		CDirectWriteResource &operator=(const CDirectWriteResource &) = delete;
 
 		virtual void Destroy() = 0;
 		virtual bool IsCreated() const = 0;
@@ -141,6 +148,9 @@ namespace TVTest
 
 		CDirectWriteRenderer(CDirectWriteSystem &System);
 		~CDirectWriteRenderer();
+
+		CDirectWriteRenderer(const CDirectWriteRenderer &) = delete;
+		CDirectWriteRenderer &operator=(const CDirectWriteRenderer &) = delete;
 
 		bool Initialize(HWND hwnd);
 		void Finalize();

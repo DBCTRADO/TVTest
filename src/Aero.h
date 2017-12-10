@@ -39,6 +39,9 @@ namespace TVTest
 		CBufferedPaint();
 		~CBufferedPaint();
 
+		CBufferedPaint(const CBufferedPaint &) = delete;
+		CBufferedPaint &operator=(const CBufferedPaint &) = delete;
+
 		HDC Begin(HDC hdc, const RECT *pRect, bool fErase = false);
 		bool End(bool fUpdate = true);
 		bool Clear(const RECT *pRect = nullptr);

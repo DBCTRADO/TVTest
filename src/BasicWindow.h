@@ -57,6 +57,9 @@ namespace TVTest
 		CBasicWindow();
 		virtual ~CBasicWindow();
 
+		CBasicWindow(const CBasicWindow &) = delete;
+		CBasicWindow &operator=(const CBasicWindow &) = delete;
+
 		virtual bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) = 0;
 		bool IsCreated() const { return m_hwnd != nullptr; }
 		void Destroy();

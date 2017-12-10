@@ -44,6 +44,9 @@ namespace TVTest
 		CEpgDataLoader();
 		~CEpgDataLoader();
 
+		CEpgDataLoader(const CEpgDataLoader &) = delete;
+		CEpgDataLoader &operator=(const CEpgDataLoader &) = delete;
+
 		bool Load(LPCTSTR pszFolder, HANDLE hAbortEvent = nullptr, CEventHandler *pEventHandler = nullptr);
 		bool LoadAsync(LPCTSTR pszFolder, CEventHandler *pEventHandler = nullptr);
 		bool IsLoading() const;

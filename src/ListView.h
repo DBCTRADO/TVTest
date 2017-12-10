@@ -31,6 +31,9 @@ namespace TVTest
 		CListView();
 		~CListView();
 
+		CListView(const CListView &) = delete;
+		CListView &operator=(const CListView &) = delete;
+
 		bool Attach(HWND hwnd);
 		void Detach();
 		void SetExtendedStyle(DWORD Style);

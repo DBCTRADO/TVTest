@@ -68,6 +68,9 @@ namespace TVTest
 		CPlugin();
 		~CPlugin();
 
+		CPlugin(const CPlugin &) = delete;
+		CPlugin &operator=(const CPlugin &) = delete;
+
 		bool Load(LPCTSTR pszFileName);
 		void Free();
 		bool IsLoaded() const { return m_hLib != nullptr; }

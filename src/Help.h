@@ -41,6 +41,9 @@ namespace TVTest
 		CHtmlHelp();
 		~CHtmlHelp();
 
+		CHtmlHelp(const CHtmlHelp &) = delete;
+		CHtmlHelp &operator=(const CHtmlHelp &) = delete;
+
 		bool Initialize();
 		void Finalize();
 		bool ShowIndex();

@@ -180,6 +180,9 @@ namespace TVTest
 			CGraphicsCore();
 			~CGraphicsCore();
 
+			CGraphicsCore(const CGraphicsCore &) = delete;
+			CGraphicsCore &operator=(const CGraphicsCore &) = delete;
+
 			bool Initialize();
 			void Finalize();
 			bool IsInitialized() const { return m_fInitialized; }

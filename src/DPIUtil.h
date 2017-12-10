@@ -55,6 +55,9 @@ namespace TVTest
 		DPIBlockBase(DPI_AWARENESS_CONTEXT Context);
 		~DPIBlockBase();
 
+		DPIBlockBase(const DPIBlockBase &) = delete;
+		DPIBlockBase &operator=(const DPIBlockBase &) = delete;
+
 	private:
 		DPI_AWARENESS_CONTEXT m_OldContext;
 	};

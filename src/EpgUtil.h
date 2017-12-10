@@ -140,6 +140,9 @@ namespace TVTest
 		CEpgIcons();
 		~CEpgIcons();
 
+		CEpgIcons(const CEpgIcons &) = delete;
+		CEpgIcons &operator=(const CEpgIcons &) = delete;
+
 		bool Load();
 		bool BeginDraw(HDC hdc, int IconWidth = 0, int IconHeight = 0);
 		void EndDraw();

@@ -56,6 +56,9 @@ namespace TVTest
 		CBasicDialog();
 		virtual ~CBasicDialog();
 
+		CBasicDialog(const CBasicDialog &) = delete;
+		CBasicDialog &operator=(const CBasicDialog &) = delete;
+
 		virtual bool Show(HWND hwndOwner) { return false; }
 		virtual bool Create(HWND hwndOwner) { return false; }
 		bool IsCreated() const;

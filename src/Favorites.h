@@ -124,6 +124,9 @@ namespace TVTest
 		CFavoritesMenu();
 		~CFavoritesMenu();
 
+		CFavoritesMenu(const CFavoritesMenu &) = delete;
+		CFavoritesMenu &operator=(const CFavoritesMenu &) = delete;
+
 		bool Create(
 			const CFavoriteFolder *pFolder, UINT Command,
 			HMENU hmenu, HWND hwnd, CreateFlag Flags, int DPI = 0);

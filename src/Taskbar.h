@@ -37,6 +37,9 @@ namespace TVTest
 		CTaskbarManager();
 		~CTaskbarManager();
 
+		CTaskbarManager(const CTaskbarManager &) = delete;
+		CTaskbarManager &operator=(const CTaskbarManager &) = delete;
+
 		void SetAppID(LPCTSTR pszID);
 		bool Initialize(HWND hwnd);
 		void Finalize();

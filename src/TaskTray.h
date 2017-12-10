@@ -45,6 +45,9 @@ namespace TVTest
 		CTaskTrayManager();
 		~CTaskTrayManager();
 
+		CTaskTrayManager(const CTaskTrayManager &) = delete;
+		CTaskTrayManager &operator=(const CTaskTrayManager &) = delete;
+
 		bool Initialize(HWND hwnd, UINT Message);
 		void Finalize();
 		bool SetResident(bool fResident);

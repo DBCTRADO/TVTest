@@ -78,6 +78,9 @@ namespace TVTest
 		public:
 			CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver);
 
+			CServiceInfo(const CServiceInfo &) = delete;
+			CServiceInfo &operator=(const CServiceInfo &) = delete;
+
 			const CTunerChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 			const LibISDB::EPGDatabase::ServiceInfo &GetServiceInfo() const { return m_ServiceInfo; }
 			WORD GetNetworkID() const { return m_ServiceInfo.NetworkID; }

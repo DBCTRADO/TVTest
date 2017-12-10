@@ -54,6 +54,9 @@ namespace TVTest
 		CIniFile();
 		~CIniFile();
 
+		CIniFile(const CIniFile &) = delete;
+		CIniFile &operator=(const CIniFile &) = delete;
+
 		bool Open(LPCWSTR pszFileName, UINT Flags);
 		bool Close();
 		bool SelectSection(LPCWSTR pszSection);

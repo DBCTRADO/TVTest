@@ -67,6 +67,9 @@ namespace TVTest
 		CTextDraw();
 		~CTextDraw();
 
+		CTextDraw(const CTextDraw &) = delete;
+		CTextDraw &operator=(const CTextDraw &) = delete;
+
 		bool SetEngine(CTextDrawEngine *pEngine);
 		bool Begin(HDC hdc, const RECT &Rect, Flag Flags = Flag::None);
 		void End();
@@ -109,7 +112,11 @@ namespace TVTest
 		typedef CTextDraw::FontMetrics FontMetrics;
 		typedef CTextDraw::TextMetrics TextMetrics;
 
+		CTextDrawEngine() = default;
 		virtual ~CTextDrawEngine() = default;
+
+		CTextDrawEngine(const CTextDrawEngine &) = delete;
+		CTextDrawEngine &operator=(const CTextDrawEngine &) = delete;
 
 		virtual void Finalize();
 		virtual bool BeginDraw(HDC hdc, const RECT &Rect);

@@ -34,6 +34,9 @@ namespace TVTest
 	public:
 		CMouseLeaveTrack();
 
+		CMouseLeaveTrack(const CMouseLeaveTrack &) = delete;
+		CMouseLeaveTrack &operator=(const CMouseLeaveTrack &) = delete;
+
 		void Initialize(HWND hwnd);
 		bool OnMouseMove();
 		bool OnMouseLeave();
@@ -78,6 +81,9 @@ namespace TVTest
 	public:
 		CWindowTimerManager();
 
+		CWindowTimerManager(const CWindowTimerManager &) = delete;
+		CWindowTimerManager &operator=(const CWindowTimerManager &) = delete;
+
 		void InitializeTimer(HWND hwnd);
 		bool BeginTimer(unsigned int ID, DWORD Interval);
 		void EndTimer(unsigned int ID);
@@ -94,6 +100,9 @@ namespace TVTest
 	public:
 		CWindowSubclass();
 		virtual ~CWindowSubclass();
+
+		CWindowSubclass(const CWindowSubclass &) = delete;
+		CWindowSubclass &operator=(const CWindowSubclass &) = delete;
 
 		bool SetSubclass(HWND hwnd);
 		void RemoveSubclass();

@@ -153,13 +153,13 @@ namespace TVTest
 		HANDLE m_hMutex;
 		bool m_fOwner;
 
-		// delete
-		CGlobalLock(const CGlobalLock &);
-		CGlobalLock &operator=(const CGlobalLock &);
-
 	public:
 		CGlobalLock();
 		~CGlobalLock();
+
+		CGlobalLock(const CGlobalLock &) = delete;
+		CGlobalLock &operator=(const CGlobalLock &) = delete;
+
 		bool Create(LPCTSTR pszName, bool fInheritHandle = false);
 		bool Open(
 			LPCTSTR pszName,

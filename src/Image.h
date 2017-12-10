@@ -56,6 +56,9 @@ namespace TVTest
 		CImageCodec();
 		~CImageCodec();
 
+		CImageCodec(const CImageCodec &) = delete;
+		CImageCodec &operator=(const CImageCodec &) = delete;
+
 		bool Init();
 		bool SaveImage(
 			LPCTSTR pszFileName, int Format, LPCTSTR pszOption,

@@ -278,6 +278,9 @@ namespace TVTest
 			CMemoryDC(HDC hdc);
 			~CMemoryDC();
 
+			CMemoryDC(const CMemoryDC &) = delete;
+			CMemoryDC &operator=(const CMemoryDC &) = delete;
+
 			bool Create(HDC hdc = nullptr);
 			void Delete();
 			bool IsCreated() const { return m_hdc != nullptr; }
@@ -307,6 +310,9 @@ namespace TVTest
 			COffscreen();
 			~COffscreen();
 
+			COffscreen(const COffscreen &) = delete;
+			COffscreen &operator=(const COffscreen &) = delete;
+
 			bool Create(int Width, int Height, HDC hdc = nullptr);
 			void Destroy();
 			bool IsCreated() const { return m_hdc != nullptr; }
@@ -334,6 +340,9 @@ namespace TVTest
 	public:
 		CUxTheme();
 		~CUxTheme();
+
+		CUxTheme(const CUxTheme &) = delete;
+		CUxTheme &operator=(const CUxTheme &) = delete;
 
 		bool Initialize();
 		bool Open(HWND hwnd, LPCWSTR pszClassList, int DPI = 0);

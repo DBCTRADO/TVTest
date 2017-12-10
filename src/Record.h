@@ -98,6 +98,9 @@ namespace TVTest
 		CRecordTask();
 		virtual ~CRecordTask();
 
+		CRecordTask(const CRecordTask &) = delete;
+		CRecordTask &operator=(const CRecordTask &) = delete;
+
 		void SetRecorderFilter(
 			LibISDB::TSEngine *pTSEngine,
 			LibISDB::RecorderFilter *pRecorderFilter);
@@ -184,6 +187,9 @@ namespace TVTest
 	public:
 		CRecordManager();
 		~CRecordManager();
+
+		CRecordManager(const CRecordManager &) = delete;
+		CRecordManager &operator=(const CRecordManager &) = delete;
 
 		void Terminate();
 		bool SetFileName(LPCTSTR pszFileName);

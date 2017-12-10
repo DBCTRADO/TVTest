@@ -37,6 +37,9 @@ namespace TVTest
 		CRichEditUtil();
 		~CRichEditUtil();
 
+		CRichEditUtil(const CRichEditUtil &) = delete;
+		CRichEditUtil &operator=(const CRichEditUtil &) = delete;
+
 		bool LoadRichEditLib();
 		void UnloadRichEditLib();
 		bool IsRichEditLibLoaded() const { return m_hLib != nullptr; }
