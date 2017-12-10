@@ -71,9 +71,7 @@ static const struct {
 
 
 CRawInput::CRawInput()
-	: m_pRegisterRawInputDevices(nullptr)
-	, m_pGetRawInputData(nullptr)
-	, m_pEventHandler(nullptr)
+	: m_pEventHandler(nullptr)
 {
 }
 
@@ -85,22 +83,6 @@ CRawInput::~CRawInput()
 
 bool CRawInput::Initialize(HWND hwnd)
 {
-	if (m_pRegisterRawInputDevices == nullptr || m_pGetRawInputData == nullptr) {
-		HMODULE hLib = ::GetModuleHandle(TEXT("user32.dll"));
-		if (hLib == nullptr)
-			return false;
-
-		m_pRegisterRawInputDevices =
-			reinterpret_cast<RegisterRawInputDevicesFunc>(::GetProcAddress(hLib, "RegisterRawInputDevices"));
-		m_pGetRawInputData =
-			reinterpret_cast<GetRawInputDataFunc>(::GetProcAddress(hLib, "GetRawInputData"));
-		if (m_pRegisterRawInputDevices == nullptr || m_pGetRawInputData == nullptr) {
-			m_pRegisterRawInputDevices = nullptr;
-			m_pGetRawInputData = nullptr;
-			return false;
-		}
-	}
-
 	RAWINPUTDEVICE rid[2];
 
 	rid[0].usUsagePage = 0xFFBC;
@@ -111,7 +93,7 @@ bool CRawInput::Initialize(HWND hwnd)
 	rid[1].usUsage = 0x01;
 	rid[1].dwFlags = RIDEV_INPUTSINK;
 	rid[1].hwndTarget = hwnd;
-	return m_pRegisterRawInputDevices(rid, lengthof(rid), sizeof(RAWINPUTDEVICE)) != FALSE;
+	return ::RegisterRawInputDevices(rid, lengthof(rid), sizeof(RAWINPUTDEVICE)) != FALSE;
 }
 
 
@@ -121,13 +103,13 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	UINT Size = 0;
 	BYTE *pData;
 
-	if (m_pGetRawInputData == nullptr || m_pEventHandler == nullptr)
+	if (m_pEventHandler == nullptr)
 		return 0;
-	m_pGetRawInputData(hRawInput, RID_INPUT, nullptr, &Size, sizeof(RAWINPUTHEADER));
+	::GetRawInputData(hRawInput, RID_INPUT, nullptr, &Size, sizeof(RAWINPUTHEADER));
 	if (Size == 0)
 		return 0;
 	pData = new BYTE[Size];
-	if (m_pGetRawInputData(hRawInput, RID_INPUT, pData, &Size, sizeof(RAWINPUTHEADER)) == Size) {
+	if (::GetRawInputData(hRawInput, RID_INPUT, pData, &Size, sizeof(RAWINPUTHEADER)) == Size) {
 		RAWINPUT *pri = reinterpret_cast<RAWINPUT*>(pData);
 
 		if (pri->header.dwType == RIM_TYPEHID) {

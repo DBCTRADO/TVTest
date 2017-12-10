@@ -38,11 +38,6 @@ namespace TVTest
 		};
 
 	protected:
-		typedef BOOL (WINAPI *RegisterRawInputDevicesFunc)(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize);
-		typedef UINT (WINAPI *GetRawInputDataFunc)(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
-
-		RegisterRawInputDevicesFunc m_pRegisterRawInputDevices;
-		GetRawInputDataFunc m_pGetRawInputData;
 		CEventHandler *m_pEventHandler;
 
 	public:
