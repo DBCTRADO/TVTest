@@ -1,28 +1,33 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
+#include "TVTest.h"
 #include "DPIUtil.h"
 #include "Util.h"
+#include <ShellScalingApi.h>
 #include "Common/DebugDef.h"
 
 
 extern "C"
 {
-
-// from <ShellScalingApi.h>
-#ifndef DPI_ENUMS_DECLARED
-typedef enum MONITOR_DPI_TYPE {
-	MDT_EFFECTIVE_DPI = 0,
-	MDT_ANGULAR_DPI   = 1,
-	MDT_RAW_DPI       = 2,
-	MDT_DEFAULT       = MDT_EFFECTIVE_DPI
-} MONITOR_DPI_TYPE;
-#endif
-
-STDAPI GetDpiForMonitor(
-	HMONITOR hmonitor,
-	MONITOR_DPI_TYPE dpiType,
-	UINT *dpiX,
-	UINT *dpiY
-);
 
 WINUSERAPI UINT WINAPI GetDpiForSystem(void);
 WINUSERAPI UINT WINAPI GetDpiForWindow(HWND hwnd);
@@ -48,6 +53,14 @@ WINUSERAPI int WINAPI GetSystemMetricsForDpi(
 WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI SetThreadDpiAwarenessContext(
 	DPI_AWARENESS_CONTEXT dpiContext
 );
+WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetThreadDpiAwarenessContext();
+WINUSERAPI DPI_AWARENESS_CONTEXT WINAPI GetWindowDpiAwarenessContext(
+	HWND hwnd
+);
+WINUSERAPI BOOL WINAPI AreDpiAwarenessContextsEqual(
+	DPI_AWARENESS_CONTEXT dpiContextA,
+	DPI_AWARENESS_CONTEXT dpiContextB
+);
 
 }
 
@@ -68,6 +81,30 @@ DPI_AWARENESS_CONTEXT MySetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT Conte
 			return pSetThreadDpiAwarenessContext(Context);
 	}
 	return nullptr;
+}
+
+
+DPI_AWARENESS_CONTEXT MyGetThreadDpiAwarenessContext()
+{
+	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
+		auto pGetThreadDpiAwarenessContext =
+			GET_MODULE_FUNCTION(TEXT("user32.dll"), GetThreadDpiAwarenessContext);
+		if (pGetThreadDpiAwarenessContext != nullptr)
+			return pGetThreadDpiAwarenessContext();
+	}
+	return nullptr;
+}
+
+
+bool MyAreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT Context1, DPI_AWARENESS_CONTEXT Context2)
+{
+	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
+		auto pAreDpiAwarenessContextsEqual =
+			GET_MODULE_FUNCTION(TEXT("user32.dll"), AreDpiAwarenessContextsEqual);
+		if (pAreDpiAwarenessContextsEqual != nullptr)
+			return pAreDpiAwarenessContextsEqual(Context1, Context2) != FALSE;
+	}
+	return Context1 == Context2;
 }
 
 
@@ -97,7 +134,7 @@ int GetSystemDPI()
 
 	auto pGetDpiForSystem = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetDpiForSystem);
 	if (pGetDpiForSystem != nullptr) {
-		// GetDpiForSystem ÇÃåãâ ÇÕÉLÉÉÉbÉVÉÖÇµÇƒÇÕÇ¢ÇØÇ»Ç¢
+		// GetDpiForSystem „ÅÆÁµêÊûú„ÅØ„Ç≠„É£„ÉÉ„Ç∑„É•„Åó„Å¶„ÅØ„ÅÑ„Åë„Å™„ÅÑ
 		DPI = pGetDpiForSystem();
 	} else {
 		if (SystemDPI == 0) {
@@ -163,13 +200,13 @@ int GetSystemMetricsWithDPI(int Index, int DPI, bool fFallbackScaling)
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
 		auto pGetSystemMetricsForDpi =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), GetSystemMetricsForDpi);
-		if (pGetSystemMetricsForDpi == nullptr)
+		if (pGetSystemMetricsForDpi != nullptr)
 			return pGetSystemMetricsForDpi(Index, DPI);
 	}
 
 	int Value = ::GetSystemMetrics(Index);
 	if (fFallbackScaling && Value != 0)
-		Value = ::MulDiv(Value, GetSystemDPI(), 96);
+		Value = ::MulDiv(Value, DPI, GetSystemDPI());
 
 	return Value;
 }
@@ -201,8 +238,66 @@ bool AdjustWindowRectWithDPI(RECT *pRect, DWORD Style, DWORD ExStyle, bool fMenu
 }
 
 
+int GetScrollBarWidth(HWND hwnd)
+{
+	if (IsWindowPerMonitorDPIV2(hwnd))
+		return GetSystemMetricsWithDPI(SM_CXVSCROLL, GetWindowDPI(hwnd));
+
+	return ::GetSystemMetrics(SM_CXVSCROLL);
+}
+
+
+DPI_AWARENESS_CONTEXT GetWindowDPIAwareness(HWND hwnd)
+{
+	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
+		auto pGetWindowDpiAwarenessContext = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetWindowDpiAwarenessContext);
+		if (pGetWindowDpiAwarenessContext != nullptr)
+			return pGetWindowDpiAwarenessContext(hwnd);
+	}
+
+	if (Util::OS::IsWindows8_1OrLater()) {
+		HMODULE hLib = Util::LoadSystemLibrary(TEXT("shcore.dll"));
+		if (hLib != nullptr) {
+			auto pGetProcessDpiAwareness = GET_LIBRARY_FUNCTION(hLib, GetProcessDpiAwareness);
+			PROCESS_DPI_AWARENESS Awareness;
+			if ((pGetProcessDpiAwareness != nullptr)
+					&& (pGetProcessDpiAwareness(nullptr, &Awareness) == S_OK)) {
+				::FreeLibrary(hLib);
+				switch (Awareness) {
+				case PROCESS_DPI_UNAWARE:           return DPI_AWARENESS_CONTEXT_UNAWARE;
+				case PROCESS_SYSTEM_DPI_AWARE:      return DPI_AWARENESS_CONTEXT_SYSTEM_AWARE;
+				case PROCESS_PER_MONITOR_DPI_AWARE: return DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE;
+				}
+			}
+			::FreeLibrary(hLib);
+		}
+	}
+
+	return nullptr;
+}
+
+
+bool IsWindowPerMonitorDPIV1(HWND hwnd)
+{
+	return MyAreDpiAwarenessContextsEqual(GetWindowDPIAwareness(hwnd), DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+}
+
+
+bool IsWindowPerMonitorDPIV2(HWND hwnd)
+{
+	if (Util::OS::IsWindows10CreatorsUpdateOrLater()) {
+		auto pGetWindowDpiAwarenessContext = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetWindowDpiAwarenessContext);
+		if (pGetWindowDpiAwarenessContext != nullptr) {
+			return MyAreDpiAwarenessContextsEqual(
+				pGetWindowDpiAwarenessContext(hwnd), DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+		}
+	}
+	return false;
+}
+
+
 DPIBlockBase::DPIBlockBase(DPI_AWARENESS_CONTEXT Context)
-	: m_OldContext(MySetThreadDpiAwarenessContext(Context))
+	: m_OldContext((Context != nullptr) ? MySetThreadDpiAwarenessContext(Context) : nullptr)
 {
 }
 
@@ -210,6 +305,16 @@ DPIBlockBase::~DPIBlockBase()
 {
 	if (m_OldContext != nullptr)
 		MySetThreadDpiAwarenessContext(m_OldContext);
+}
+
+
+CommonDialogDPIBlock::CommonDialogDPIBlock()
+	: DPIBlockBase(
+		MyAreDpiAwarenessContextsEqual(
+			MyGetThreadDpiAwarenessContext(), DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) ?
+			nullptr :
+			DPI_AWARENESS_CONTEXT_SYSTEM_AWARE)
+{
 }
 
 

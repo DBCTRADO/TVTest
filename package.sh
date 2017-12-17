@@ -102,7 +102,7 @@ if [ "$arch" = x86 ]
 then
     cp -fp data/TVTest_Logo.bmp "${dst_dir}/TVTest_Logo.bmp"
 else
-    cp -fp "data/${arch}/TVTest_Logo.bmp" "${dst_dir}/TVTest_Logo.bmp"
+    cp -fp "data/Data_${arch}/TVTest_Logo.bmp" "${dst_dir}/TVTest_Logo.bmp"
 fi
 
 cp -fp data/Themes/*.httheme ${dst_dir}/Themes
@@ -122,7 +122,7 @@ do
 done
 
 version=
-if [[ $(grep -aE ^#define[[:space:]]+VERSION_TEXT_A src/TVTest.h) =~ \"(.+)\"$ ]]
+if [[ $(grep -aE ^#define[[:space:]]+VERSION_TEXT_A src/TVTestVersion.h) =~ \"(.+)\"$ ]]
 then
     version=${BASH_REMATCH[1]}_
 fi

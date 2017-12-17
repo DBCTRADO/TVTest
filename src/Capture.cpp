@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -9,15 +29,23 @@
 #include "Common/DebugDef.h"
 
 
-#define CAPTURE_WINDOW_CLASS			APP_NAME TEXT(" Capture Window")
-#define CAPTURE_PREVIEW_WINDOW_CLASS	APP_NAME TEXT(" Capture Preview")
-#define CAPTURE_TITLE_TEXT TEXT("ƒLƒƒƒvƒ`ƒƒ")
+namespace TVTest
+{
+
+namespace
+{
+
+const LPCTSTR CAPTURE_WINDOW_CLASS         = APP_NAME TEXT(" Capture Window");
+const LPCTSTR CAPTURE_PREVIEW_WINDOW_CLASS = APP_NAME TEXT(" Capture Preview");
+const LPCTSTR CAPTURE_TITLE_TEXT = TEXT("ã‚­ãƒ£ãƒ—ãƒãƒ£");
 
 enum {
 	CAPTURE_ICON_CAPTURE,
 	CAPTURE_ICON_SAVE,
 	CAPTURE_ICON_COPY
 };
+
+}
 
 
 
@@ -26,37 +54,37 @@ CCaptureImage::CCaptureImage(HGLOBAL hData)
 	: m_hData(hData)
 	, m_fLocked(false)
 {
-	::GetLocalTime(&m_stCaptureTime);
+	m_CaptureTime.NowLocal();
 }
 
 
-CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi,const void *pBits)
+CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi, const void *pBits)
 {
-	SIZE_T InfoSize,BitsSize;
+	SIZE_T InfoSize, BitsSize;
 
-	InfoSize=CalcDIBInfoSize(&pbmi->bmiHeader);
-	BitsSize=CalcDIBBitsSize(&pbmi->bmiHeader);
-	m_hData=::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE,InfoSize+BitsSize);
-	if (m_hData!=NULL) {
-		BYTE *pData=static_cast<BYTE*>(::GlobalLock(m_hData));
+	InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
+	BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
+	m_hData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, InfoSize + BitsSize);
+	if (m_hData != nullptr) {
+		BYTE *pData = static_cast<BYTE*>(::GlobalLock(m_hData));
 
-		if (pData!=NULL) {
-			::CopyMemory(pData,pbmi,InfoSize);
-			::CopyMemory(pData+InfoSize,pBits,BitsSize);
+		if (pData != nullptr) {
+			::CopyMemory(pData, pbmi, InfoSize);
+			::CopyMemory(pData + InfoSize, pBits, BitsSize);
 			::GlobalUnlock(m_hData);
 		} else {
 			::GlobalFree(m_hData);
-			m_hData=NULL;
+			m_hData = nullptr;
 		}
 	}
-	m_fLocked=false;
-	::GetLocalTime(&m_stCaptureTime);
+	m_fLocked = false;
+	m_CaptureTime.NowLocal();
 }
 
 
 CCaptureImage::~CCaptureImage()
 {
-	if (m_hData!=NULL) {
+	if (m_hData != nullptr) {
 		if (m_fLocked)
 			::GlobalUnlock(m_hData);
 		::GlobalFree(m_hData);
@@ -66,17 +94,17 @@ CCaptureImage::~CCaptureImage()
 
 bool CCaptureImage::SetClipboard(HWND hwnd)
 {
-	if (m_hData==NULL || m_fLocked)
+	if (m_hData == nullptr || m_fLocked)
 		return false;
 
 	HGLOBAL hCopy;
 	SIZE_T Size;
 
-	Size=::GlobalSize(m_hData);
-	hCopy=::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE,Size);
-	if (hCopy==NULL)
+	Size = ::GlobalSize(m_hData);
+	hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
+	if (hCopy == nullptr)
 		return false;
-	::CopyMemory(::GlobalLock(hCopy),::GlobalLock(m_hData),Size);
+	::CopyMemory(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
 	::GlobalUnlock(hCopy);
 	::GlobalUnlock(m_hData);
 	if (!::OpenClipboard(hwnd)) {
@@ -84,7 +112,7 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 		return false;
 	}
 	::EmptyClipboard();
-	bool fOK=::SetClipboardData(CF_DIB,hCopy)!=NULL;
+	bool fOK = ::SetClipboardData(CF_DIB, hCopy) != nullptr;
 	::CloseClipboard();
 	return fOK;
 }
@@ -92,35 +120,35 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 
 bool CCaptureImage::GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const
 {
-	if (m_hData==NULL || m_fLocked)
+	if (m_hData == nullptr || m_fLocked)
 		return false;
 
-	BITMAPINFOHEADER *pbmihSrc=static_cast<BITMAPINFOHEADER*>(::GlobalLock(m_hData));
+	BITMAPINFOHEADER *pbmihSrc = static_cast<BITMAPINFOHEADER*>(::GlobalLock(m_hData));
 
-	if (pbmihSrc==NULL)
+	if (pbmihSrc == nullptr)
 		return false;
-	*pbmih=*pbmihSrc;
+	*pbmih = *pbmihSrc;
 	::GlobalUnlock(m_hData);
 	return true;
 }
 
 
-bool CCaptureImage::LockData(BITMAPINFO **ppbmi,BYTE **ppBits)
+bool CCaptureImage::LockData(BITMAPINFO **ppbmi, BYTE **ppBits)
 {
-	if (m_hData==NULL || m_fLocked)
+	if (m_hData == nullptr || m_fLocked)
 		return false;
 
-	void *pDib=::GlobalLock(m_hData);
+	void *pDib = ::GlobalLock(m_hData);
 	BITMAPINFO *pbmi;
 
-	if (pDib==NULL)
+	if (pDib == nullptr)
 		return false;
-	pbmi=static_cast<BITMAPINFO*>(pDib);
-	if (ppbmi!=NULL)
-		*ppbmi=pbmi;
-	if (ppBits!=NULL)
-		*ppBits=static_cast<BYTE*>(pDib)+CalcDIBInfoSize(&pbmi->bmiHeader);
-	m_fLocked=true;
+	pbmi = static_cast<BITMAPINFO*>(pDib);
+	if (ppbmi != nullptr)
+		*ppbmi = pbmi;
+	if (ppBits != nullptr)
+		*ppBits = static_cast<BYTE*>(pDib) + CalcDIBInfoSize(&pbmi->bmiHeader);
+	m_fLocked = true;
 	return true;
 }
 
@@ -130,68 +158,65 @@ bool CCaptureImage::UnlockData()
 	if (!m_fLocked)
 		return false;
 	::GlobalUnlock(m_hData);
-	m_fLocked=false;
+	m_fLocked = false;
 	return true;
 }
 
 
 void CCaptureImage::SetComment(LPCTSTR pszComment)
 {
-	TVTest::StringUtility::Assign(m_Comment,pszComment);
+	StringUtility::Assign(m_Comment, pszComment);
 }
 
 
 LPCTSTR CCaptureImage::GetComment() const
 {
-	return TVTest::StringUtility::GetCStrOrNull(m_Comment);
+	return StringUtility::GetCStrOrNull(m_Comment);
 }
 
 
 
 
 CCapturePreview::CEventHandler::CEventHandler()
-	: m_pCapturePreview(NULL)
+	: m_pCapturePreview(nullptr)
 {
 }
 
 
-CCapturePreview::CEventHandler::~CEventHandler()
-{
-}
+CCapturePreview::CEventHandler::~CEventHandler() = default;
 
 
 
 
-HINSTANCE CCapturePreview::m_hinst=NULL;
+HINSTANCE CCapturePreview::m_hinst = nullptr;
 
 
 bool CCapturePreview::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst==NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
-		wc.style=CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc=WndProc;
-		wc.cbClsExtra=0;
-		wc.cbWndExtra=0;
-		wc.hInstance=hinst;
-		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
-		wc.hbrBackground=NULL;
-		wc.lpszMenuName=NULL;
-		wc.lpszClassName=CAPTURE_PREVIEW_WINDOW_CLASS;
-		if (::RegisterClass(&wc)==0)
+		wc.style = CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hinst;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
+		wc.lpszClassName = CAPTURE_PREVIEW_WINDOW_CLASS;
+		if (::RegisterClass(&wc) == 0)
 			return false;
-		m_hinst=hinst;
+		m_hinst = hinst;
 	}
 	return true;
 }
 
 
 CCapturePreview::CCapturePreview()
-	: m_pImage(NULL)
-	, m_crBackColor(RGB(0,0,0))
-	, m_pEventHandler(NULL)
+	: m_crBackColor(RGB(0, 0, 0))
+	, m_pEventHandler(nullptr)
 {
 }
 
@@ -202,18 +227,19 @@ CCapturePreview::~CCapturePreview()
 }
 
 
-bool CCapturePreview::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+bool CCapturePreview::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
-	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 CAPTURE_PREVIEW_WINDOW_CLASS,NULL,m_hinst);
+	return CreateBasicWindow(
+		hwndParent, Style, ExStyle, ID,
+		CAPTURE_PREVIEW_WINDOW_CLASS, nullptr, m_hinst);
 }
 
 
-bool CCapturePreview::SetImage(CCaptureImage *pImage)
+bool CCapturePreview::SetImage(const std::shared_ptr<CCaptureImage> &Image)
 {
 	ClearImage();
-	m_pImage=pImage;
-	if (m_hwnd!=NULL) {
+	m_Image = Image;
+	if (m_hwnd != nullptr) {
 		Invalidate();
 		Update();
 	}
@@ -223,9 +249,9 @@ bool CCapturePreview::SetImage(CCaptureImage *pImage)
 
 bool CCapturePreview::ClearImage()
 {
-	if (m_pImage!=NULL) {
-		m_pImage=NULL;
-		if (m_hwnd!=NULL) {
+	if (m_Image) {
+		m_Image.reset();
+		if (m_hwnd != nullptr) {
 			Invalidate();
 		}
 	}
@@ -235,22 +261,22 @@ bool CCapturePreview::ClearImage()
 
 bool CCapturePreview::HasImage() const
 {
-	return m_pImage!=NULL;
+	return static_cast<bool>(m_Image);
 }
 
 
 bool CCapturePreview::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pCapturePreview=NULL;
-	if (pEventHandler!=NULL)
-		pEventHandler->m_pCapturePreview=this;
-	m_pEventHandler=pEventHandler;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pCapturePreview = nullptr;
+	if (pEventHandler != nullptr)
+		pEventHandler->m_pCapturePreview = this;
+	m_pEventHandler = pEventHandler;
 	return true;
 }
 
 
-LRESULT CCapturePreview::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_PAINT:
@@ -260,98 +286,96 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPar
 			BITMAPINFO *pbmi;
 			BYTE *pBits;
 
-			::BeginPaint(hwnd,&ps);
+			::BeginPaint(hwnd, &ps);
 			GetClientRect(&rc);
-			if (m_pImage!=NULL && m_pImage->LockData(&pbmi,&pBits)) {
-				int DstX,DstY,DstWidth,DstHeight;
+			if (m_Image && m_Image->LockData(&pbmi, &pBits)) {
+				int DstX, DstY, DstWidth, DstHeight;
 				RECT rcDest;
 
-				DstWidth=pbmi->bmiHeader.biWidth*rc.bottom/abs(pbmi->bmiHeader.biHeight);
-				if (DstWidth>rc.right)
-					DstWidth=rc.right;
-				DstHeight=pbmi->bmiHeader.biHeight*rc.right/pbmi->bmiHeader.biWidth;
-				if (DstHeight>rc.bottom)
-					DstHeight=rc.bottom;
-				DstX=(rc.right-DstWidth)/2;
-				DstY=(rc.bottom-DstHeight)/2;
-				if (DstWidth>0 && DstHeight>0) {
+				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / abs(pbmi->bmiHeader.biHeight);
+				if (DstWidth > rc.right)
+					DstWidth = rc.right;
+				DstHeight = pbmi->bmiHeader.biHeight * rc.right / pbmi->bmiHeader.biWidth;
+				if (DstHeight > rc.bottom)
+					DstHeight = rc.bottom;
+				DstX = (rc.right - DstWidth) / 2;
+				DstY = (rc.bottom - DstHeight) / 2;
+				if (DstWidth > 0 && DstHeight > 0) {
 					int OldStretchBltMode;
 
-					OldStretchBltMode=::SetStretchBltMode(ps.hdc,STRETCH_HALFTONE);
-					::StretchDIBits(ps.hdc,DstX,DstY,DstWidth,DstHeight,
-						0,0,pbmi->bmiHeader.biWidth,pbmi->bmiHeader.biHeight,
-						pBits,pbmi,DIB_RGB_COLORS,SRCCOPY);
-					::SetStretchBltMode(ps.hdc,OldStretchBltMode);
+					OldStretchBltMode = ::SetStretchBltMode(ps.hdc, STRETCH_HALFTONE);
+					::StretchDIBits(ps.hdc, DstX, DstY, DstWidth, DstHeight,
+									0, 0, pbmi->bmiHeader.biWidth, pbmi->bmiHeader.biHeight,
+									pBits, pbmi, DIB_RGB_COLORS, SRCCOPY);
+					::SetStretchBltMode(ps.hdc, OldStretchBltMode);
 				}
-				m_pImage->UnlockData();
-				rcDest.left=DstX;
-				rcDest.top=DstY;
-				rcDest.right=DstX+DstWidth;
-				rcDest.bottom=DstY+DstHeight;
-				DrawUtil::FillBorder(ps.hdc,&rc,&rcDest,&ps.rcPaint,m_crBackColor);
+				m_Image->UnlockData();
+				rcDest.left = DstX;
+				rcDest.top = DstY;
+				rcDest.right = DstX + DstWidth;
+				rcDest.bottom = DstY + DstHeight;
+				DrawUtil::FillBorder(ps.hdc, &rc, &rcDest, &ps.rcPaint, m_crBackColor);
 			} else {
-				DrawUtil::Fill(ps.hdc,&rc,m_crBackColor);
+				DrawUtil::Fill(ps.hdc, &rc, m_crBackColor);
 			}
-			::EndPaint(hwnd,&ps);
+			::EndPaint(hwnd, &ps);
 		}
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnLButtonDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		if (m_pEventHandler != nullptr)
+			m_pEventHandler->OnLButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return TRUE;
 
 	case WM_RBUTTONUP:
-		if (m_pEventHandler!=NULL)
-			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		if (m_pEventHandler != nullptr)
+			m_pEventHandler->OnRButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return TRUE;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler!=NULL
-				&& m_pEventHandler->OnKeyDown((UINT)wParam,(UINT)lParam))
+		if (m_pEventHandler != nullptr
+				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
 
 
 CCaptureWindow::CEventHandler::CEventHandler()
-	: m_pCaptureWindow(NULL)
+	: m_pCaptureWindow(nullptr)
 {
 }
 
 
-CCaptureWindow::CEventHandler::~CEventHandler()
-{
-}
+CCaptureWindow::CEventHandler::~CEventHandler() = default;
 
 
 
 
-HINSTANCE CCaptureWindow::m_hinst=NULL;
+HINSTANCE CCaptureWindow::m_hinst = nullptr;
 
 
 bool CCaptureWindow::Initialize(HINSTANCE hinst)
 {
-	if (m_hinst==NULL) {
+	if (m_hinst == nullptr) {
 		WNDCLASS wc;
 
-		wc.style=0;
-		wc.lpfnWndProc=WndProc;
-		wc.cbClsExtra=0;
-		wc.cbWndExtra=0;
-		wc.hInstance=hinst;
-		wc.hIcon=NULL;
-		wc.hCursor=LoadCursor(NULL,IDC_ARROW);
-		wc.hbrBackground=(HBRUSH)(COLOR_3DFACE+1);
-		wc.lpszMenuName=NULL;
-		wc.lpszClassName=CAPTURE_WINDOW_CLASS;
-		if (::RegisterClass(&wc)==0)
+		wc.style = 0;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = hinst;
+		wc.hIcon = nullptr;
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+		wc.lpszMenuName = nullptr;
+		wc.lpszClassName = CAPTURE_WINDOW_CLASS;
+		if (::RegisterClass(&wc) == 0)
 			return false;
-		m_hinst=hinst;
+		m_hinst = hinst;
 	}
 	if (!CCapturePreview::Initialize(hinst))
 		return false;
@@ -362,12 +386,11 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 CCaptureWindow::CCaptureWindow()
 	: m_PreviewEventHandler(this)
 	, m_fShowStatusBar(true)
-	, m_pImage(NULL)
-	, m_pEventHandler(NULL)
+	, m_pEventHandler(nullptr)
 	, m_fCreateFirst(true)
 {
-	m_WindowPosition.Width=320;
-	m_WindowPosition.Height=240;
+	m_WindowPosition.Width = 320;
+	m_WindowPosition.Height = 240;
 
 	RegisterUIChild(&m_Status);
 	SetStyleScaling(&m_StyleScaling);
@@ -377,36 +400,35 @@ CCaptureWindow::CCaptureWindow()
 CCaptureWindow::~CCaptureWindow()
 {
 	Destroy();
-
-	delete m_pImage;
 }
 
 
-bool CCaptureWindow::Create(HWND hwndParent,DWORD Style,DWORD ExStyle,int ID)
+bool CCaptureWindow::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	if (m_fCreateFirst) {
-		if (m_pEventHandler!=NULL)
+		if (m_pEventHandler != nullptr)
 			m_pEventHandler->OnRestoreSettings();
-		m_fCreateFirst=false;
+		m_fCreateFirst = false;
 	}
 
-	return CreateBasicWindow(hwndParent,Style,ExStyle,ID,
-							 CAPTURE_WINDOW_CLASS,CAPTURE_TITLE_TEXT,m_hinst);
+	return CreateBasicWindow(
+		hwndParent, Style, ExStyle, ID,
+		CAPTURE_WINDOW_CLASS, CAPTURE_TITLE_TEXT, m_hinst);
 }
 
 
-void CCaptureWindow::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CCaptureWindow::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	m_Status.SetTheme(pThemeManager);
 }
 
 
-bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi,const void *pBits)
+bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi, const void *pBits)
 {
 	ClearImage();
-	m_pImage=new CCaptureImage(pbmi,pBits);
-	if (m_hwnd!=NULL) {
-		m_Preview.SetImage(m_pImage);
+	m_Image = std::make_shared<CCaptureImage>(pbmi, pBits);
+	if (m_hwnd != nullptr) {
+		m_Preview.SetImage(m_Image);
 		SetTitle();
 	}
 	return true;
@@ -416,9 +438,9 @@ bool CCaptureWindow::SetImage(const BITMAPINFO *pbmi,const void *pBits)
 bool CCaptureWindow::SetImage(CCaptureImage *pImage)
 {
 	ClearImage();
-	m_pImage=pImage;
-	if (m_hwnd!=NULL) {
-		m_Preview.SetImage(m_pImage);
+	m_Image.reset(pImage);
+	if (m_hwnd != nullptr) {
+		m_Preview.SetImage(m_Image);
 		SetTitle();
 	}
 	return true;
@@ -427,10 +449,9 @@ bool CCaptureWindow::SetImage(CCaptureImage *pImage)
 
 bool CCaptureWindow::ClearImage()
 {
-	if (m_pImage!=NULL) {
-		delete m_pImage;
-		m_pImage=NULL;
-		if (m_hwnd!=NULL) {
+	if (m_Image) {
+		m_Image.reset();
+		if (m_hwnd != nullptr) {
 			m_Preview.ClearImage();
 			Invalidate();
 			SetTitle();
@@ -442,26 +463,26 @@ bool CCaptureWindow::ClearImage()
 
 bool CCaptureWindow::HasImage() const
 {
-	return m_pImage!=NULL;
+	return static_cast<bool>(m_Image);
 }
 
 
 bool CCaptureWindow::SetEventHandler(CEventHandler *pEventHandler)
 {
-	if (m_pEventHandler!=NULL)
-		m_pEventHandler->m_pCaptureWindow=NULL;
-	if (pEventHandler!=NULL)
-		pEventHandler->m_pCaptureWindow=this;
-	m_pEventHandler=pEventHandler;
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->m_pCaptureWindow = nullptr;
+	if (pEventHandler != nullptr)
+		pEventHandler->m_pCaptureWindow = this;
+	m_pEventHandler = pEventHandler;
 	return true;
 }
 
 
 void CCaptureWindow::ShowStatusBar(bool fShow)
 {
-	if (m_fShowStatusBar!=fShow) {
-		m_fShowStatusBar=fShow;
-		if (m_hwnd!=NULL) {
+	if (m_fShowStatusBar != fShow) {
+		m_fShowStatusBar = fShow;
+		if (m_hwnd != nullptr) {
 			SendSizeMessage();
 			m_Status.SetVisible(fShow);
 		}
@@ -471,102 +492,107 @@ void CCaptureWindow::ShowStatusBar(bool fShow)
 
 void CCaptureWindow::SetTitle()
 {
-	if (m_hwnd!=NULL) {
+	if (m_hwnd != nullptr) {
 		TCHAR szTitle[64];
 
-		::lstrcpy(szTitle,CAPTURE_TITLE_TEXT);
-		if (m_pImage!=NULL) {
+		StringCopy(szTitle, CAPTURE_TITLE_TEXT);
+		if (m_Image) {
 			BITMAPINFOHEADER bmih;
 
-			if (m_pImage->GetBitmapInfoHeader(&bmih)) {
-				StdUtil::snprintf(szTitle,lengthof(szTitle),
-								  CAPTURE_TITLE_TEXT TEXT(" - %d x %d (%d bpp)"),
-								  bmih.biWidth,abs(bmih.biHeight),bmih.biBitCount);
+			if (m_Image->GetBitmapInfoHeader(&bmih)) {
+				StringPrintf(
+					szTitle,
+					TEXT("%s - %d x %d (%d bpp)"),
+					CAPTURE_TITLE_TEXT, bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount);
 			}
 		}
-		::SetWindowText(m_hwnd,szTitle);
+		::SetWindowText(m_hwnd, szTitle);
 	}
 }
 
 
-LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		InitializeUI();
 
-		m_Preview.Create(hwnd,WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,WS_EX_CLIENTEDGE);
+		m_Preview.Create(hwnd, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, WS_EX_CLIENTEDGE);
 		m_Preview.SetEventHandler(&m_PreviewEventHandler);
-		m_Status.Create(hwnd,
-						WS_CHILD | WS_CLIPSIBLINGS | (m_fShowStatusBar?WS_VISIBLE:0),
-						/*WS_EX_STATICEDGE*/0);
+		m_Status.Create(
+			hwnd,
+			WS_CHILD | WS_CLIPSIBLINGS | (m_fShowStatusBar ? WS_VISIBLE : 0),
+			/*WS_EX_STATICEDGE*/0);
 		//m_Status.SetEventHandler(pThis);
-		if (m_Status.NumItems()==0) {
+		if (m_Status.NumItems() == 0) {
 			if (!m_StatusIcons.IsCreated()) {
-				static const TVTest::Theme::IconList::ResourceInfo ResourceList[] = {
-					{MAKEINTRESOURCE(IDB_CAPTURE16),16,16},
-					{MAKEINTRESOURCE(IDB_CAPTURE32),32,32},
+				static const Theme::IconList::ResourceInfo ResourceList[] = {
+					{MAKEINTRESOURCE(IDB_CAPTURE16), 16, 16},
+					{MAKEINTRESOURCE(IDB_CAPTURE32), 32, 32},
 				};
-				TVTest::Style::Size IconSize=m_Status.GetIconSize();
-				m_StatusIcons.Load(GetAppClass().GetResourceInstance(),
-								   IconSize.Width,IconSize.Height,
-								   ResourceList,lengthof(ResourceList));
+				Style::Size IconSize = m_Status.GetIconSize();
+				m_StatusIcons.Load(
+					GetAppClass().GetResourceInstance(),
+					IconSize.Width, IconSize.Height,
+					ResourceList, lengthof(ResourceList));
 			}
-			m_Status.AddItem(new CCaptureStatusItem(this,m_StatusIcons));
+			m_Status.AddItem(new CCaptureStatusItem(this, m_StatusIcons));
 			//m_Status.AddItem(new CContinuousStatusItem(m_StatusIcons));
-			m_Status.AddItem(new CSaveStatusItem(this,m_StatusIcons));
-			m_Status.AddItem(new CCopyStatusItem(this,m_StatusIcons));
+			m_Status.AddItem(new CSaveStatusItem(this, m_StatusIcons));
+			m_Status.AddItem(new CCopyStatusItem(this, m_StatusIcons));
 		}
-		if (m_pImage!=NULL) {
-			m_Preview.SetImage(m_pImage);
+		if (m_Image) {
+			m_Preview.SetImage(m_Image);
 			SetTitle();
 		}
 		return 0;
 
 	case WM_SIZE:
 		{
-			int Width=LOWORD(lParam),Height=HIWORD(lParam);
+			int Width = LOWORD(lParam), Height = HIWORD(lParam);
 
 			if (m_fShowStatusBar) {
-				Height-=m_Status.GetHeight();
-				m_Status.SetPosition(0,Height,Width,m_Status.GetHeight());
+				Height -= m_Status.GetHeight();
+				m_Status.SetPosition(0, Height, Width, m_Status.GetHeight());
 			}
-			m_Preview.SetPosition(0,0,Width,Height);
+			m_Preview.SetPosition(0, 0, Width, Height);
 		}
 		return 0;
 
 	case WM_KEYDOWN:
-		if (m_pEventHandler!=NULL
-				&& m_pEventHandler->OnKeyDown((UINT)wParam,(UINT)lParam))
+		if (m_pEventHandler != nullptr
+				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
 			return 0;
 		break;
 
 	case WM_ACTIVATE:
-		if (m_pEventHandler!=NULL
-				&& m_pEventHandler->OnActivate(LOWORD(wParam)!=WA_INACTIVE))
+		if (m_pEventHandler != nullptr
+				&& m_pEventHandler->OnActivate(LOWORD(wParam) != WA_INACTIVE))
 			return 0;
 		break;
 
 	case WM_DPICHANGED:
-		OnDPIChanged(hwnd,wParam,lParam);
+		OnDPIChanged(hwnd, wParam, lParam);
 		break;
 
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case CM_SAVEIMAGE:
-			if (m_pImage!=NULL && m_pEventHandler!=NULL) {
-				if (!m_pEventHandler->OnSave(m_pImage)) {
-					::MessageBox(hwnd,TEXT("‰æ‘œ‚Ì•Û‘¶‚ª‚Å‚«‚Ü‚¹‚ñB"),NULL,
-								 MB_OK | MB_ICONEXCLAMATION);
+			if (m_Image && m_pEventHandler != nullptr) {
+				if (!m_pEventHandler->OnSave(m_Image.get())) {
+					::MessageBox(
+						hwnd, TEXT("ç”»åƒã®ä¿å­˜ãŒã§ãã¾ã›ã‚“ã€‚"), nullptr,
+						MB_OK | MB_ICONEXCLAMATION);
 				}
 			}
 			return 0;
 
-		case CM_COPY:
-			if (m_pImage!=NULL) {
-				if (!m_pImage->SetClipboard(hwnd)) {
-					::MessageBox(hwnd,TEXT("ƒNƒŠƒbƒvƒ{[ƒh‚Éƒf[ƒ^‚ðÝ’è‚Å‚«‚Ü‚¹‚ñB"),NULL,
-								 MB_OK | MB_ICONEXCLAMATION);
+		case CM_COPYIMAGE:
+			if (m_Image) {
+				if (!m_Image->SetClipboard(hwnd)) {
+					::MessageBox(
+						hwnd, TEXT("ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ãƒ‡ãƒ¼ã‚¿ã‚’è¨­å®šã§ãã¾ã›ã‚“ã€‚"), nullptr,
+						MB_OK | MB_ICONEXCLAMATION);
 				}
 			}
 			return 0;
@@ -578,18 +604,18 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPara
 		return 0;
 
 	case WM_CLOSE:
-		if (m_pEventHandler!=NULL
+		if (m_pEventHandler != nullptr
 				&& !m_pEventHandler->OnClose())
 			return 0;
 		break;
 	}
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
 void CCaptureWindow::RealizeStyle()
 {
-	if (m_hwnd!=NULL)
+	if (m_hwnd != nullptr)
 		SendSizeMessage();
 }
 
@@ -602,22 +628,22 @@ CCaptureWindow::CPreviewEventHandler::CPreviewEventHandler(CCaptureWindow *pCapt
 }
 
 
-void CCaptureWindow::CPreviewEventHandler::OnRButtonUp(int x,int y)
+void CCaptureWindow::CPreviewEventHandler::OnRButtonUp(int x, int y)
 {
-	CPopupMenu Menu(GetAppClass().GetResourceInstance(),IDM_CAPTUREPREVIEW);
+	CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_CAPTUREPREVIEW);
 
-	Menu.EnableItem(CM_COPY,m_pCaptureWindow->HasImage());
-	Menu.EnableItem(CM_SAVEIMAGE,m_pCaptureWindow->HasImage());
-	Menu.CheckItem(CM_CAPTURESTATUSBAR,m_pCaptureWindow->IsStatusBarVisible());
-	POINT pt={x,y};
-	::ClientToScreen(m_pCapturePreview->GetHandle(),&pt);
-	Menu.Show(m_pCaptureWindow->GetHandle(),&pt,TPM_RIGHTBUTTON);
+	Menu.EnableItem(CM_COPYIMAGE, m_pCaptureWindow->HasImage());
+	Menu.EnableItem(CM_SAVEIMAGE, m_pCaptureWindow->HasImage());
+	Menu.CheckItem(CM_CAPTURESTATUSBAR, m_pCaptureWindow->IsStatusBarVisible());
+	POINT pt = {x, y};
+	::ClientToScreen(m_pCapturePreview->GetHandle(), &pt);
+	Menu.Show(m_pCaptureWindow->GetHandle(), &pt, TPM_RIGHTBUTTON);
 }
 
 
-bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
+bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 {
-	::SendMessage(m_pCaptureWindow->GetHandle(),WM_KEYDOWN,KeyCode,Flags);
+	::SendMessage(m_pCaptureWindow->GetHandle(), WM_KEYDOWN, KeyCode, Flags);
 	return true;
 }
 
@@ -625,85 +651,85 @@ bool CCaptureWindow::CPreviewEventHandler::OnKeyDown(UINT KeyCode,UINT Flags)
 
 
 CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(
-	CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons)
-	: CIconStatusItem(STATUS_ITEM_CAPTURE,pCaptureWindow->m_Status.GetIconSize().Width)
+	CCaptureWindow *pCaptureWindow, Theme::IconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_CAPTURE, pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
 {
 }
 
-void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
 {
-	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_CAPTURE);
+	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_CAPTURE);
 }
 
-void CCaptureWindow::CCaptureStatusItem::OnLButtonDown(int x,int y)
+void CCaptureWindow::CCaptureStatusItem::OnLButtonDown(int x, int y)
 {
 	GetAppClass().UICore.DoCommand(CM_CAPTURE);
 }
 
-void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x,int y)
+void CCaptureWindow::CCaptureStatusItem::OnRButtonDown(int x, int y)
 {
 	/*
 	POINT pt;
 	UINT Flags;
 
-	GetMenuPos(&pt,&Flags);
-	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CAPTURE,
-										 &pt,Flags | TPM_RIGHTBUTTON);
+	GetMenuPos(&pt, &Flags);
+	GetAppClass().UICore.ShowSpecialMenu(CUICore::MENU_CAPTURE, &pt, Flags | TPM_RIGHTBUTTON);
 	*/
 }
 
 
 CCaptureWindow::CSaveStatusItem::CSaveStatusItem(
-	CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons)
-	: CIconStatusItem(STATUS_ITEM_SAVE,pCaptureWindow->m_Status.GetIconSize().Width)
+	CCaptureWindow *pCaptureWindow, Theme::IconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_SAVE, pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
 {
 }
 
-void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
 {
-	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_SAVE);
+	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_SAVE);
 }
 
-void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x,int y)
+void CCaptureWindow::CSaveStatusItem::OnLButtonDown(int x, int y)
 {
-	m_pCaptureWindow->SendMessage(WM_COMMAND,CM_SAVEIMAGE,0);
+	m_pCaptureWindow->SendMessage(WM_COMMAND, CM_SAVEIMAGE, 0);
 }
 
 
 CCaptureWindow::CCopyStatusItem::CCopyStatusItem(
-	CCaptureWindow *pCaptureWindow,TVTest::Theme::IconList &Icons)
-	: CIconStatusItem(STATUS_ITEM_COPY,pCaptureWindow->m_Status.GetIconSize().Width)
+	CCaptureWindow *pCaptureWindow, Theme::IconList &Icons)
+	: CIconStatusItem(STATUS_ITEM_COPY, pCaptureWindow->m_Status.GetIconSize().Width)
 	, m_pCaptureWindow(pCaptureWindow)
 	, m_Icons(Icons)
 {
 }
 
-void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags)
+void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
 {
-	DrawIcon(hdc,DrawRect,m_Icons,CAPTURE_ICON_COPY);
+	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_COPY);
 }
 
-void CCaptureWindow::CCopyStatusItem::OnLButtonDown(int x,int y)
+void CCaptureWindow::CCopyStatusItem::OnLButtonDown(int x, int y)
 {
-	m_pCaptureWindow->SendMessage(WM_COMMAND,CM_COPY,0);
+	m_pCaptureWindow->SendMessage(WM_COMMAND, CM_COPYIMAGE, 0);
 }
 
 
 
 
 /*
-CImageSaveThread::CImageSaveThread(CCaptureImage *pImage,LPCTSTR pszFileName,int Format,
-										LPCTSTR pszOption,LPCTSTR pszComment)
+CImageSaveThread::CImageSaveThread(
+	CCaptureImage *pImage, LPCTSTR pszFileName, int Format,
+	\LPCTSTR pszOption, LPCTSTR pszComment)
 {
-	m_pImage=new CCaptureImage(*pImage);
-	m_pszFileName=DuplicateString(pszFileName);
-	m_Format=Format;
-	m_pszOptions=DuplicateString(pszOption);
-	m_pszComment=DuplicateString(pszComment);
+	m_pImage = new CCaptureImage(*pImage);
+	m_pszFileName = DuplicateString(pszFileName);
+	m_Format = Format;
+	m_pszOptions = DuplicateString(pszOption);
+	m_pszComment = DuplicateString(pszComment);
 }
 
 
@@ -718,24 +744,28 @@ CImageSaveThread::CImageSaveThread(CCaptureImage *pImage,LPCTSTR pszFileName,int
 
 bool CImageSaveThread::BeginSave()
 {
-	_beginthread(SaveProc,0,this);
+	_beginthread(SaveProc, 0, this);
 	return true;
 }
 
 
 void CImageSaveThread::SaveProc(void *pParam)
 {
-	CImageSaveThread *pThis=static_cast<CImageSaveThread*>(pParam);
+	CImageSaveThread *pThis = static_cast<CImageSaveThread*>(pParam);
 	BITMAPINFO *pbmi;
 	BYTE *pBits;
-	bool fResult=false;
+	bool fResult = false;
 
-	if (pThis->m_pImage->LockData(&pbmi,&pBits)) {
-		fResult=m_ImageCodec.SaveImage(pThis->m_pszFileName,pThis->m_Format,
-							pThis->m_pszOption,pbmi,pBits,pThis->m_pszComment);
+	if (pThis->m_pImage->LockData(&pbmi, &pBits)) {
+		fResult = m_ImageCodec.SaveImage(
+			pThis->m_pszFileName, pThis->m_Format,
+			pThis->m_pszOption, pbmi, pBits, pThis->m_pszComment);
 		pThis->m_pImage->UnlockData();
 	}
 	delete pThis;
 	_endthread();
 }
 */
+
+
+}	// namespace TVTest

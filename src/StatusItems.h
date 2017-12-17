@@ -1,5 +1,25 @@
-#ifndef STATUS_ITEMS_H
-#define STATUS_ITEMS_H
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
+#ifndef TVTEST_STATUS_ITEMS_H
+#define TVTEST_STATUS_ITEMS_H
 
 
 #include "StatusView.h"
@@ -8,307 +28,346 @@
 #include "EpgUtil.h"
 
 
-enum {
-	STATUS_ITEM_CHANNEL,
-	STATUS_ITEM_VIDEOSIZE,
-	STATUS_ITEM_VOLUME,
-	STATUS_ITEM_AUDIOCHANNEL,
-	STATUS_ITEM_RECORD,
-	STATUS_ITEM_CAPTURE,
-	STATUS_ITEM_ERROR,
-	STATUS_ITEM_SIGNALLEVEL,
-	STATUS_ITEM_CLOCK,
-	STATUS_ITEM_PROGRAMINFO,
-	STATUS_ITEM_BUFFERING,
-	STATUS_ITEM_TUNER,
-	STATUS_ITEM_MEDIABITRATE,
-	STATUS_ITEM_FAVORITES
-};
-#define STATUS_ITEM_FIRST	STATUS_ITEM_CHANNEL
-#define STATUS_ITEM_LAST	STATUS_ITEM_FAVORITES
-
-
-class CChannelStatusItem : public CStatusItem
+namespace TVTest
 {
-public:
-	CChannelStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Channel"); }
-	LPCTSTR GetName() const override { return TEXT("É`ÉÉÉìÉlÉã"); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
-};
 
-class CVideoSizeStatusItem : public CStatusItem
-{
-public:
-	CVideoSizeStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Video"); }
-	LPCTSTR GetName() const override { return TEXT("âfëúÉTÉCÉY"); }
-	bool UpdateContent() override;
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
+	enum {
+		STATUS_ITEM_CHANNEL,
+		STATUS_ITEM_VIDEOSIZE,
+		STATUS_ITEM_VOLUME,
+		STATUS_ITEM_AUDIOCHANNEL,
+		STATUS_ITEM_RECORD,
+		STATUS_ITEM_CAPTURE,
+		STATUS_ITEM_ERROR,
+		STATUS_ITEM_SIGNALLEVEL,
+		STATUS_ITEM_CLOCK,
+		STATUS_ITEM_PROGRAMINFO,
+		STATUS_ITEM_BUFFERING,
+		STATUS_ITEM_TUNER,
+		STATUS_ITEM_MEDIABITRATE,
+		STATUS_ITEM_FAVORITES
+	};
+#define STATUS_ITEM_FIRST STATUS_ITEM_CHANNEL
+#define STATUS_ITEM_LAST  STATUS_ITEM_FAVORITES
 
-private:
-	int m_OriginalVideoWidth;
-	int m_OriginalVideoHeight;
-	int m_ZoomPercentage;
-};
 
-class CVolumeStatusItem : public CStatusItem
-{
-public:
-	CVolumeStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Volume"); }
-	LPCTSTR GetName() const override { return TEXT("âπó "); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-	void OnMouseMove(int x,int y) override;
-	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
-	void SetStyle(const TVTest::Style::CStyleManager *pStyleManager) override;
-	void NormalizeStyle(
-		const TVTest::Style::CStyleManager *pStyleManager,
-		const TVTest::Style::CStyleScaling *pStyleScaling) override;
+	class CChannelStatusItem
+		: public CStatusItem
+	{
+	public:
+		CChannelStatusItem();
 
-private:
-	struct VolumeStatusStyle {
-		TVTest::Style::IntValue BarHeight;
-		TVTest::Style::Margins BarPadding;
-		TVTest::Style::IntValue BarBorderWidth;
-
-		VolumeStatusStyle();
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Channel"); }
+		LPCTSTR GetName() const override { return TEXT("„ÉÅ„É£„É≥„Éç„É´"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		bool OnMouseWheel(int x, int y, bool fHorz, int Delta, int *pCommand) override;
 	};
 
-	VolumeStatusStyle m_Style;
-};
+	class CVideoSizeStatusItem
+		: public CStatusItem
+	{
+	public:
+		CVideoSizeStatusItem();
 
-class CAudioChannelStatusItem : public CStatusItem
-{
-public:
-	CAudioChannelStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Audio"); }
-	LPCTSTR GetName() const override { return TEXT("âπê∫"); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-	bool OnMouseWheel(int x,int y,bool fHorz,int Delta,int *pCommand) override;
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Video"); }
+		LPCTSTR GetName() const override { return TEXT("Êò†ÂÉè„Çµ„Ç§„Ç∫"); }
+		bool UpdateContent() override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 
-private:
-	TVTest::Theme::IconList m_Icons;
-};
+	private:
+		int m_OriginalVideoWidth;
+		int m_OriginalVideoHeight;
+		int m_ZoomPercentage;
+	};
 
-class CRecordStatusItem : public CStatusItem
-{
-	COLORREF m_CircleColor;
-	bool m_fRemain;
-	CTooltip m_Tooltip;
+	class CVolumeStatusItem
+		: public CStatusItem
+	{
+	public:
+		CVolumeStatusItem();
 
-	int GetTipText(LPTSTR pszText,int MaxLength);
-	void SetTipFont();
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Volume"); }
+		LPCTSTR GetName() const override { return TEXT("Èü≥Èáè"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		void OnMouseMove(int x, int y) override;
+		bool OnMouseWheel(int x, int y, bool fHorz, int Delta, int *pCommand) override;
+		void SetStyle(const Style::CStyleManager *pStyleManager) override;
+		void NormalizeStyle(
+			const Style::CStyleManager *pStyleManager,
+			const Style::CStyleScaling *pStyleScaling) override;
 
-public:
-	CRecordStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Record"); }
-	LPCTSTR GetName() const override { return TEXT("ò^âÊ"); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-	bool OnMouseHover(int x,int y) override;
-	void OnFocus(bool fFocus) override;
-	LRESULT OnNotifyMessage(LPNMHDR pnmh) override;
-	void OnFontChanged() override;
-// CUIBase
-	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
-// CRecordStatusItem
-	void ShowRemainTime(bool fRemain);
-	void SetCircleColor(COLORREF Color);
-};
+	private:
+		struct VolumeStatusStyle
+		{
+			Style::IntValue BarHeight;
+			Style::Margins BarPadding;
+			Style::IntValue BarBorderWidth;
 
-class CCaptureStatusItem : public CIconStatusItem
-{
-public:
-	CCaptureStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Capture"); }
-	LPCTSTR GetName() const override { return TEXT("ÉLÉÉÉvÉ`ÉÉ"); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
+			VolumeStatusStyle();
+		};
 
-private:
-	TVTest::Theme::IconList m_Icons;
-};
+		VolumeStatusStyle m_Style;
+	};
 
-class CErrorStatusItem : public CStatusItem
-{
-public:
-	CErrorStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Error"); }
-	LPCTSTR GetName() const override { return TEXT("ÉGÉâÅ["); }
-	bool UpdateContent() override;
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
+	class CAudioChannelStatusItem
+		: public CStatusItem
+	{
+	public:
+		CAudioChannelStatusItem();
 
-private:
-	ULONGLONG m_ContinuityErrorPacketCount;
-	ULONGLONG m_ErrorPacketCount;
-	ULONGLONG m_ScramblePacketCount;
-};
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Audio"); }
+		LPCTSTR GetName() const override { return TEXT("Èü≥Â£∞"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		bool OnMouseWheel(int x, int y, bool fHorz, int Delta, int *pCommand) override;
 
-class CSignalLevelStatusItem : public CStatusItem
-{
-public:
-	CSignalLevelStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Signal"); }
-	LPCTSTR GetName() const override { return TEXT("êMçÜÉåÉxÉã"); }
-	bool UpdateContent() override;
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-// CSignalLevelStatusItem
-	void ShowSignalLevel(bool fShow);
+	private:
+		Theme::IconList m_Icons;
+	};
 
-private:
-	bool m_fShowSignalLevel;
-	float m_SignalLevel;
-	DWORD m_BitRate;
-};
+	class CRecordStatusItem
+		: public CStatusItem
+	{
+		COLORREF m_CircleColor;
+		bool m_fRemain;
+		CTooltip m_Tooltip;
 
-class CClockStatusItem : public CStatusItem
-{
-public:
-	CClockStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Clock"); }
-	LPCTSTR GetName() const override { return TEXT("éûåv"); }
-	bool UpdateContent() override;
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-// CClockStatusItem
-	void SetTOT(bool fTOT);
-	bool IsTOT() const { return m_fTOT; }
-	void SetInterpolateTOT(bool fInterpolate);
-	bool IsInterpolateTOT() const { return m_fInterpolateTOT; }
+		int GetTipText(LPTSTR pszText, int MaxLength);
+		void SetTipFont();
 
-private:
-	void FormatTime(const SYSTEMTIME &Time,LPTSTR pszText,int MaxLength) const;
+	public:
+		CRecordStatusItem();
 
-	bool m_fTOT;
-	bool m_fInterpolateTOT;
-	SYSTEMTIME m_Time;
-	CCriticalLock m_Lock;
-};
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Record"); }
+		LPCTSTR GetName() const override { return TEXT("Èå≤Áîª"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		bool OnMouseHover(int x, int y) override;
+		void OnFocus(bool fFocus) override;
+		LRESULT OnNotifyMessage(LPNMHDR pnmh) override;
+		void OnFontChanged() override;
 
-class CProgramInfoStatusItem : public CStatusItem
-{
-	bool m_fNext;
-	bool m_fShowProgress;
-	bool m_fEnablePopupInfo;
-	CEventInfoPopup m_EventInfoPopup;
-	TVTest::String m_Text;
-	CEpgTheme m_EpgTheme;
-	TVTest::Theme::BackgroundStyle m_ProgressBackStyle;
-	TVTest::Theme::BackgroundStyle m_ProgressElapsedStyle;
-	bool m_fValidProgress;
-	SYSTEMTIME m_EventStartTime;
-	DWORD m_EventDuration;
-	SYSTEMTIME m_CurTime;
+	// CUIBase
+		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
 
-	void ShowPopupInfo();
+	// CRecordStatusItem
+		void ShowRemainTime(bool fRemain);
+		void SetCircleColor(COLORREF Color);
+	};
 
-public:
-	CProgramInfoStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Program"); }
-	LPCTSTR GetName() const override { return TEXT("î‘ëgèÓïÒ"); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	bool UpdateContent() override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-	void OnLButtonDoubleClick(int x,int y) override;
-	void OnFocus(bool fFocus) override;
-	bool OnMouseHover(int x,int y) override;
-// CUIBase
-	void SetTheme(const TVTest::Theme::CThemeManager *pThemeManager) override;
-// CProgramInfoStatusItem
-	void SetShowProgress(bool fShow);
-	bool GetShowProgress() const { return m_fShowProgress; }
-	void EnablePopupInfo(bool fEnable);
-	bool UpdateProgress();
-	bool SetEventInfoFont(const TVTest::Style::Font &Font) {
-		return m_EventInfoPopup.SetFont(Font);
-	}
-	void SetPopupInfoSize(int Width,int Height);
-	void GetPopupInfoSize(int *pWidth,int *pHeight) const;
-};
+	class CCaptureStatusItem
+		: public CIconStatusItem
+	{
+	public:
+		CCaptureStatusItem();
 
-class CBufferingStatusItem : public CStatusItem
-{
-public:
-	CBufferingStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Buffering"); }
-	LPCTSTR GetName() const override { return TEXT("ÉoÉbÉtÉ@ÉäÉìÉO"); }
-	bool UpdateContent() override;
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Capture"); }
+		LPCTSTR GetName() const override { return TEXT("„Ç≠„É£„Éó„ÉÅ„É£"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 
-private:
-	DWORD m_StreamRemain;
-	int m_PacketBufferUsedPercentage;
-};
+	private:
+		Theme::IconList m_Icons;
+	};
 
-class CTunerStatusItem : public CStatusItem
-{
-public:
-	CTunerStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
-	LPCTSTR GetName() const override { return TEXT("É`ÉÖÅ[ÉiÅ["); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
-};
+	class CErrorStatusItem
+		: public CStatusItem
+	{
+	public:
+		CErrorStatusItem();
 
-class CMediaBitRateStatusItem : public CStatusItem
-{
-public:
-	CMediaBitRateStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Bitrate"); }
-	LPCTSTR GetName() const override { return TEXT("ÉrÉbÉgÉåÅ[Ég"); }
-	bool UpdateContent() override;
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Error"); }
+		LPCTSTR GetName() const override { return TEXT("„Ç®„É©„Éº"); }
+		bool UpdateContent() override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
 
-private:
-	DWORD m_VideoBitRate;
-	DWORD m_AudioBitRate;
-};
+	private:
+		ULONGLONG m_ContinuityErrorPacketCount;
+		ULONGLONG m_ErrorPacketCount;
+		ULONGLONG m_ScramblePacketCount;
+	};
 
-class CFavoritesStatusItem : public CIconStatusItem
-{
-public:
-	CFavoritesStatusItem();
-// CStatusItem
-	LPCTSTR GetIDText() const override { return TEXT("Favorites"); }
-	LPCTSTR GetName() const override { return TEXT("Ç®ãCÇ…ì¸ÇË"); }
-	void Draw(HDC hdc,const RECT &ItemRect,const RECT &DrawRect,unsigned int Flags) override;
-	void OnLButtonDown(int x,int y) override;
-	void OnRButtonDown(int x,int y) override;
+	class CSignalLevelStatusItem
+		: public CStatusItem
+	{
+	public:
+		CSignalLevelStatusItem();
 
-private:
-	TVTest::Theme::IconList m_Icons;
-};
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Signal"); }
+		LPCTSTR GetName() const override { return TEXT("‰ø°Âè∑„É¨„Éô„É´"); }
+		bool UpdateContent() override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+
+	// CSignalLevelStatusItem
+		void ShowSignalLevel(bool fShow);
+
+	private:
+		bool m_fShowSignalLevel;
+		float m_SignalLevel;
+		DWORD m_BitRate;
+	};
+
+	class CClockStatusItem
+		: public CStatusItem
+	{
+	public:
+		CClockStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Clock"); }
+		LPCTSTR GetName() const override { return TEXT("ÊôÇË®à"); }
+		bool UpdateContent() override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+
+	// CClockStatusItem
+		void SetTOT(bool fTOT);
+		bool IsTOT() const { return m_fTOT; }
+		void SetInterpolateTOT(bool fInterpolate);
+		bool IsInterpolateTOT() const { return m_fInterpolateTOT; }
+
+	private:
+		void FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText, int MaxLength) const;
+
+		bool m_fTOT;
+		bool m_fInterpolateTOT;
+		LibISDB::DateTime m_Time;
+		LibISDB::MutexLock m_Lock;
+	};
+
+	class CProgramInfoStatusItem
+		: public CStatusItem
+	{
+		bool m_fNext;
+		bool m_fShowProgress;
+		bool m_fEnablePopupInfo;
+		CEventInfoPopup m_EventInfoPopup;
+		String m_Text;
+		CEpgTheme m_EpgTheme;
+		Theme::BackgroundStyle m_ProgressBackStyle;
+		Theme::BackgroundStyle m_ProgressElapsedStyle;
+		bool m_fValidProgress;
+		LibISDB::EventInfo m_EventInfo;
+		LibISDB::DateTime m_CurTime;
+
+		void ShowPopupInfo();
+
+	public:
+		CProgramInfoStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Program"); }
+		LPCTSTR GetName() const override { return TEXT("Áï™ÁµÑÊÉÖÂ†±"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		bool UpdateContent() override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+		void OnLButtonDoubleClick(int x, int y) override;
+		void OnFocus(bool fFocus) override;
+		bool OnMouseHover(int x, int y) override;
+
+	// CUIBase
+		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
+
+	// CProgramInfoStatusItem
+		void SetShowProgress(bool fShow);
+		bool GetShowProgress() const { return m_fShowProgress; }
+		void EnablePopupInfo(bool fEnable);
+		bool UpdateProgress();
+		bool SetEventInfoFont(const Style::Font &Font) {
+			return m_EventInfoPopup.SetFont(Font);
+		}
+		void SetPopupInfoSize(int Width, int Height);
+		void GetPopupInfoSize(int *pWidth, int *pHeight) const;
+	};
+
+	class CBufferingStatusItem
+		: public CStatusItem
+	{
+	public:
+		CBufferingStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Buffering"); }
+		LPCTSTR GetName() const override { return TEXT("„Éê„ÉÉ„Éï„Ç°„É™„É≥„Ç∞"); }
+		bool UpdateContent() override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+
+	private:
+		DWORD m_StreamRemain;
+		int m_PacketBufferUsedPercentage;
+	};
+
+	class CTunerStatusItem
+		: public CStatusItem
+	{
+	public:
+		CTunerStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
+		LPCTSTR GetName() const override { return TEXT("„ÉÅ„É•„Éº„Éä„Éº"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+	};
+
+	class CMediaBitRateStatusItem
+		: public CStatusItem
+	{
+	public:
+		CMediaBitRateStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Bitrate"); }
+		LPCTSTR GetName() const override { return TEXT("„Éì„ÉÉ„Éà„É¨„Éº„Éà"); }
+		bool UpdateContent() override;
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+
+	private:
+		DWORD m_VideoBitRate;
+		DWORD m_AudioBitRate;
+	};
+
+	class CFavoritesStatusItem
+		: public CIconStatusItem
+	{
+	public:
+		CFavoritesStatusItem();
+
+	// CStatusItem
+		LPCTSTR GetIDText() const override { return TEXT("Favorites"); }
+		LPCTSTR GetName() const override { return TEXT("„ÅäÊ∞ó„Å´ÂÖ•„Çä"); }
+		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+		void OnLButtonDown(int x, int y) override;
+		void OnRButtonDown(int x, int y) override;
+
+	private:
+		Theme::IconList m_Icons;
+	};
+
+}	// namespace TVTest
 
 
 #endif

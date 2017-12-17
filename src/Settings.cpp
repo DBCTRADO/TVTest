@@ -1,20 +1,42 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "Settings.h"
 #include <utility>
 #include "Common/DebugDef.h"
 
-using namespace TVTest;
+
+namespace TVTest
+{
 
 
 static unsigned int StrToUInt(LPCTSTR pszValue)
 {
-	return (unsigned int)_tcstoul(pszValue,nullptr,0);
+	return (unsigned int)_tcstoul(pszValue, nullptr, 0);
 }
 
 
 CSettings::CSettings()
-	: m_OpenFlags(0)
+	: m_OpenFlags(OpenFlag::None)
 {
 }
 
@@ -25,28 +47,28 @@ CSettings::~CSettings()
 }
 
 
-bool CSettings::Open(LPCTSTR pszFileName,unsigned int Flags)
+bool CSettings::Open(LPCTSTR pszFileName, OpenFlag Flags)
 {
 	Close();
 
-	if (IsStringEmpty(pszFileName) || ::lstrlen(pszFileName)>=MAX_PATH
-			|| (Flags & (OPEN_READ | OPEN_WRITE))==0
-			|| (Flags & (OPEN_WRITE | OPEN_WRITE_VOLATILE))==(OPEN_WRITE | OPEN_WRITE_VOLATILE))
+	if (IsStringEmpty(pszFileName) || ::lstrlen(pszFileName) >= MAX_PATH
+			|| !(Flags & (OpenFlag::Read | OpenFlag::Write))
+			|| (Flags & (OpenFlag::Write | OpenFlag::WriteVolatile)) == (OpenFlag::Write | OpenFlag::WriteVolatile))
 		return false;
 
-	UINT IniFlags=0;
-	if ((Flags&OPEN_READ)!=0)
-		IniFlags|=CIniFile::OPEN_READ;
-	if ((Flags&OPEN_WRITE)!=0)
-		IniFlags|=CIniFile::OPEN_WRITE;
-	if ((Flags&OPEN_WRITE_VOLATILE)!=0)
-		IniFlags|=CIniFile::OPEN_WRITE_VOLATILE;
-	if (!m_IniFile.Open(pszFileName,IniFlags))
+	UINT IniFlags = 0;
+	if (!!(Flags & OpenFlag::Read))
+		IniFlags |= CIniFile::OPEN_READ;
+	if (!!(Flags & OpenFlag::Write))
+		IniFlags |= CIniFile::OPEN_WRITE;
+	if (!!(Flags & OpenFlag::WriteVolatile))
+		IniFlags |= CIniFile::OPEN_WRITE_VOLATILE;
+	if (!m_IniFile.Open(pszFileName, IniFlags))
 		return false;
 
-	m_OpenFlags=Flags;
-	if ((Flags & OPEN_WRITE_VOLATILE)!=0)
-		m_OpenFlags|=OPEN_WRITE;
+	m_OpenFlags = Flags;
+	if (!!(Flags & OpenFlag::WriteVolatile))
+		m_OpenFlags |= OpenFlag::Write;
 
 	return true;
 }
@@ -55,19 +77,19 @@ bool CSettings::Open(LPCTSTR pszFileName,unsigned int Flags)
 void CSettings::Close()
 {
 	m_IniFile.Close();
-	m_OpenFlags=0;
+	m_OpenFlags = OpenFlag::None;
 }
 
 
 bool CSettings::IsOpened() const
 {
-	return m_OpenFlags!=0;
+	return !!m_OpenFlags;
 }
 
 
 bool CSettings::Clear()
 {
-	if ((m_OpenFlags&OPEN_WRITE)==0)
+	if (!(m_OpenFlags & OpenFlag::Write))
 		return false;
 
 	return m_IniFile.ClearSection();
@@ -76,7 +98,7 @@ bool CSettings::Clear()
 
 bool CSettings::SetSection(LPCTSTR pszSection)
 {
-	if (m_OpenFlags==0)
+	if (!m_OpenFlags)
 		return false;
 
 	return m_IniFile.SelectSection(pszSection);
@@ -103,258 +125,263 @@ bool CSettings::IsValueExists(LPCTSTR pszValueName)
 
 bool CSettings::DeleteValue(LPCTSTR pszValueName)
 {
-	if ((m_OpenFlags&OPEN_WRITE)==0)
+	if (!(m_OpenFlags & OpenFlag::Write))
 		return false;
 
 	return m_IniFile.DeleteValue(pszValueName);
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,int *pData)
+bool CSettings::Read(LPCTSTR pszValueName, int *pData)
 {
 	TCHAR szValue[16];
 
-	if (!Read(pszValueName,szValue,lengthof(szValue)) || szValue[0]==_T('\0'))
+	if (!Read(pszValueName, szValue, lengthof(szValue)) || szValue[0] == _T('\0'))
 		return false;
-	*pData=::StrToInt(szValue);
+	*pData = ::StrToInt(szValue);
 	return true;
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,int Data)
+bool CSettings::Write(LPCTSTR pszValueName, int Data)
 {
 	TCHAR szValue[16];
 
-	wsprintf(szValue,TEXT("%d"),Data);
-	return Write(pszValueName,szValue);
+	StringPrintf(szValue, TEXT("%d"), Data);
+	return Write(pszValueName, szValue);
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,unsigned int *pData)
+bool CSettings::Read(LPCTSTR pszValueName, unsigned int *pData)
 {
 	TCHAR szValue[16];
 
-	if (!Read(pszValueName,szValue,16) || szValue[0]==_T('\0'))
+	if (!Read(pszValueName, szValue, 16) || szValue[0] == _T('\0'))
 		return false;
-	*pData=StrToUInt(szValue);
+	*pData = StrToUInt(szValue);
 	return true;
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,unsigned int Data)
+bool CSettings::Write(LPCTSTR pszValueName, unsigned int Data)
 {
 	TCHAR szValue[16];
 
-	wsprintf(szValue,TEXT("%u"),Data);
-	return Write(pszValueName,szValue);
+	StringPrintf(szValue, TEXT("%u"), Data);
+	return Write(pszValueName, szValue);
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,LPTSTR pszData,unsigned int Max)
+bool CSettings::Read(LPCTSTR pszValueName, LPTSTR pszData, unsigned int Max)
 {
-	if ((m_OpenFlags&OPEN_READ)==0)
+	if (!(m_OpenFlags & OpenFlag::Read))
 		return false;
 
-	if (pszData==NULL)
+	if (pszData == nullptr)
 		return false;
 
 	String Value;
-	if (!m_IniFile.GetValue(pszValueName,&Value))
+	if (!m_IniFile.GetValue(pszValueName, &Value))
 		return false;
 
-	::lstrcpyn(pszData,Value.c_str(),Max);
+	StringCopy(pszData, Value.c_str(), Max);
 
 	return true;
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,LPCTSTR pszData)
+bool CSettings::Write(LPCTSTR pszValueName, LPCTSTR pszData)
 {
-	if ((m_OpenFlags&OPEN_WRITE)==0)
+	if (!(m_OpenFlags & OpenFlag::Write))
 		return false;
 
-	if (pszData==NULL)
+	if (pszData == nullptr)
 		return false;
 
-	// ï∂éöóÒÇ™ ' Ç© " Ç≈àÕÇ‹ÇÍÇƒÇ¢ÇÈÇ∆ì«Ç›çûÇ›éûÇ…èúãéÇ≥ÇÍÇƒÇµÇ‹Ç§ÇÃÇ≈ÅA
-	// ó]ï™Ç… " Ç≈àÕÇ¡ÇƒÇ®Ç≠ÅB
-	if (pszData[0]==_T('"') || pszData[0]==_T('\'')) {
+	// ÊñáÂ≠óÂàó„Åå ' „Åã " „ÅßÂõ≤„Åæ„Çå„Å¶„ÅÑ„Çã„Å®Ë™≠„ÅøËæº„ÅøÊôÇ„Å´Èô§Âéª„Åï„Çå„Å¶„Åó„Åæ„ÅÜ„ÅÆ„Åß„ÄÅ
+	// ‰ΩôÂàÜ„Å´ " „ÅßÂõ≤„Å£„Å¶„Åä„Åè„ÄÇ
+	if (pszData[0] == _T('"') || pszData[0] == _T('\'')) {
 		String Buff;
-		Buff=TEXT("\"");
-		Buff+=pszData;
-		Buff+=TEXT("\"");
-		return m_IniFile.SetValue(pszValueName,Buff.c_str());
+		Buff = TEXT("\"");
+		Buff += pszData;
+		Buff += TEXT("\"");
+		return m_IniFile.SetValue(pszValueName, Buff.c_str());
 	}
 
-	return m_IniFile.SetValue(pszValueName,pszData);
+	return m_IniFile.SetValue(pszValueName, pszData);
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,TVTest::String *pValue)
+bool CSettings::Read(LPCTSTR pszValueName, String *pValue)
 {
-	if ((m_OpenFlags&OPEN_READ)==0)
+	if (!(m_OpenFlags & OpenFlag::Read))
 		return false;
 
-	if (pValue==NULL)
+	if (pValue == nullptr)
 		return false;
 
-	TVTest::String Value;
-	if (!m_IniFile.GetValue(pszValueName,&Value))
+	String Value;
+	if (!m_IniFile.GetValue(pszValueName, &Value))
 		return false;
 
-	*pValue=std::move(Value);
+	*pValue = std::move(Value);
 
 	return true;
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,const TVTest::String &Value)
+bool CSettings::Write(LPCTSTR pszValueName, const String &Value)
 {
-	return Write(pszValueName,Value.c_str());
+	return Write(pszValueName, Value.c_str());
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,bool *pfData)
+bool CSettings::Read(LPCTSTR pszValueName, bool *pfData)
 {
 	TCHAR szData[8];
 
-	if (!Read(pszValueName,szData,lengthof(szData)))
+	if (!Read(pszValueName, szData, lengthof(szData)))
 		return false;
-	if (lstrcmpi(szData,TEXT("yes"))==0 || lstrcmpi(szData,TEXT("true"))==0)
-		*pfData=true;
-	else if (lstrcmpi(szData,TEXT("no"))==0 || lstrcmpi(szData,TEXT("false"))==0)
-		*pfData=false;
+	if (lstrcmpi(szData, TEXT("yes")) == 0 || lstrcmpi(szData, TEXT("true")) == 0)
+		*pfData = true;
+	else if (lstrcmpi(szData, TEXT("no")) == 0 || lstrcmpi(szData, TEXT("false")) == 0)
+		*pfData = false;
 	else
 		return false;
 	return true;
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,bool fData)
+bool CSettings::Write(LPCTSTR pszValueName, bool fData)
 {
-	// ÇÊÇ≠çlÇ¶ÇΩÇÁî€íËï∂Ç‡Ç†ÇÈÇÃÇ≈ yes/no ÇÕïœÇæÇ™Åc
-	// (ÇªÇÃêÃÅAiniÉtÉ@ÉCÉãÇíºê⁄ï“èWÇµÇƒê›íËÇ∑ÇÈÇÊÇ§Ç…ÇµÇƒÇ¢ÇΩç†ÇÃñºéc)
-	return Write(pszValueName,fData?TEXT("yes"):TEXT("no"));
+	// „Çà„ÅèËÄÉ„Åà„Åü„ÇâÂê¶ÂÆöÊñá„ÇÇ„ÅÇ„Çã„ÅÆ„Åß yes/no „ÅØÂ§â„Å†„Åå‚Ä¶
+	// („Åù„ÅÆÊòî„ÄÅini„Éï„Ç°„Ç§„É´„ÇíÁõ¥Êé•Á∑®ÈõÜ„Åó„Å¶Ë®≠ÂÆö„Åô„Çã„Çà„ÅÜ„Å´„Åó„Å¶„ÅÑ„ÅüÈ†É„ÅÆÂêçÊÆã)
+	return Write(pszValueName, fData ? TEXT("yes") : TEXT("no"));
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,double *pData)
+bool CSettings::Read(LPCTSTR pszValueName, double *pData)
 {
-	if (pData==NULL)
+	if (pData == nullptr)
 		return false;
 
-	TVTest::String Value;
+	String Value;
 
-	if (!Read(pszValueName,&Value))
+	if (!Read(pszValueName, &Value))
 		return false;
 
-	*pData=std::_tcstod(Value.c_str(),NULL);
+	*pData = std::_tcstod(Value.c_str(), nullptr);
 
 	return true;
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,double Data,int Digits)
+bool CSettings::Write(LPCTSTR pszValueName, double Data, int Digits)
 {
 	TCHAR szText[64];
 
-	StdUtil::snprintf(szText,lengthof(szText),TEXT("%.*f"),Digits,Data);
-	return Write(pszValueName,szText);
+	StringPrintf(szText, TEXT("%.*f"), Digits, Data);
+	return Write(pszValueName, szText);
 }
 
 
-bool CSettings::Read(LPCTSTR pszValueName,float *pData)
+bool CSettings::Read(LPCTSTR pszValueName, float *pData)
 {
-	if (pData==NULL)
+	if (pData == nullptr)
 		return false;
 
 	double Value;
 
-	if (!Read(pszValueName,&Value))
+	if (!Read(pszValueName, &Value))
 		return false;
 
-	*pData=static_cast<float>(Value);
+	*pData = static_cast<float>(Value);
 
 	return true;
 }
 
 
-bool CSettings::ReadColor(LPCTSTR pszValueName,COLORREF *pcrData)
+bool CSettings::ReadColor(LPCTSTR pszValueName, COLORREF *pcrData)
 {
 	TCHAR szText[8];
 
-	if (!Read(pszValueName,szText,lengthof(szText)) || szText[0]!=_T('#') || lstrlen(szText)<7)
+	if (!Read(pszValueName, szText, lengthof(szText)) || szText[0] != _T('#') || lstrlen(szText) < 7)
 		return false;
-	*pcrData=RGB(HexStringToUInt(&szText[1],2),
-				 HexStringToUInt(&szText[3],2),
-				 HexStringToUInt(&szText[5],2));
+	*pcrData = RGB(
+		HexStringToUInt(&szText[1], 2),
+		HexStringToUInt(&szText[3], 2),
+		HexStringToUInt(&szText[5], 2));
 	return true;
 }
 
 
-bool CSettings::WriteColor(LPCTSTR pszValueName,COLORREF crData)
+bool CSettings::WriteColor(LPCTSTR pszValueName, COLORREF crData)
 {
 	TCHAR szText[8];
 
-	wsprintf(szText,TEXT("#%02x%02x%02x"),
-			 GetRValue(crData),GetGValue(crData),GetBValue(crData));
-	return Write(pszValueName,szText);
+	StringPrintf(
+		szText, TEXT("#%02x%02x%02x"),
+		GetRValue(crData), GetGValue(crData), GetBValue(crData));
+	return Write(pszValueName, szText);
 }
 
 
-#define FONT_FLAG_ITALIC	0x0001U
-#define FONT_FLAG_UNDERLINE	0x0002U
-#define FONT_FLAG_STRIKEOUT	0x0004U
-
-bool CSettings::Read(LPCTSTR pszValueName,LOGFONT *pFont)
+namespace
 {
-	TCHAR szData[LF_FACESIZE+32];
+constexpr unsigned int FONT_FLAG_ITALIC    = 0x0001U;
+constexpr unsigned int FONT_FLAG_UNDERLINE = 0x0002U;
+constexpr unsigned int FONT_FLAG_STRIKEOUT = 0x0004U;
+}
 
-	if (!Read(pszValueName,szData,sizeof(szData)/sizeof(TCHAR)) || szData[0]=='\0')
+bool CSettings::Read(LPCTSTR pszValueName, LOGFONT *pFont)
+{
+	TCHAR szData[LF_FACESIZE + 32];
+
+	if (!Read(pszValueName, szData, sizeof(szData) / sizeof(TCHAR)) || szData[0] == '\0')
 		return false;
 
-	LPTSTR p=szData,q;
-	for (int i=0;*p!=_T('\0');i++) {
-		while (*p==_T(' '))
+	LPTSTR p = szData, q;
+	for (int i = 0; *p != _T('\0'); i++) {
+		while (*p == _T(' '))
 			p++;
-		q=p;
-		while (*p!=_T('\0') && *p!=_T(','))
+		q = p;
+		while (*p != _T('\0') && *p != _T(','))
 			p++;
-		if (*p!=_T('\0'))
-			*p++=_T('\0');
-		if (*q!=_T('\0')) {
+		if (*p != _T('\0'))
+			*p++ = _T('\0');
+		if (*q != _T('\0')) {
 			switch (i) {
 			case 0:
-				::lstrcpyn(pFont->lfFaceName,q,LF_FACESIZE);
-				pFont->lfWidth=0;
-				pFont->lfEscapement=0;
-				pFont->lfOrientation=0;
-				pFont->lfWeight=FW_NORMAL;
-				pFont->lfItalic=0;
-				pFont->lfUnderline=0;
-				pFont->lfStrikeOut=0;
-				pFont->lfCharSet=DEFAULT_CHARSET;
-				pFont->lfOutPrecision=OUT_DEFAULT_PRECIS;
-				pFont->lfClipPrecision=CLIP_DEFAULT_PRECIS;
-				pFont->lfQuality=DRAFT_QUALITY;
-				pFont->lfPitchAndFamily=DEFAULT_PITCH | FF_DONTCARE;
+				StringCopy(pFont->lfFaceName, q);
+				pFont->lfWidth = 0;
+				pFont->lfEscapement = 0;
+				pFont->lfOrientation = 0;
+				pFont->lfWeight = FW_NORMAL;
+				pFont->lfItalic = 0;
+				pFont->lfUnderline = 0;
+				pFont->lfStrikeOut = 0;
+				pFont->lfCharSet = DEFAULT_CHARSET;
+				pFont->lfOutPrecision = OUT_DEFAULT_PRECIS;
+				pFont->lfClipPrecision = CLIP_DEFAULT_PRECIS;
+				pFont->lfQuality = DRAFT_QUALITY;
+				pFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 				break;
 			case 1:
-				pFont->lfHeight=::StrToInt(q);
+				pFont->lfHeight = ::StrToInt(q);
 				break;
 			case 2:
-				pFont->lfWeight=::StrToInt(q);
+				pFont->lfWeight = ::StrToInt(q);
 				break;
 			case 3:
 				{
-					unsigned int Flags=StrToUInt(q);
-					pFont->lfItalic=(Flags&FONT_FLAG_ITALIC)!=0;
-					pFont->lfUnderline=(Flags&FONT_FLAG_UNDERLINE)!=0;
-					pFont->lfStrikeOut=(Flags&FONT_FLAG_STRIKEOUT)!=0;
+					unsigned int Flags = StrToUInt(q);
+					pFont->lfItalic = (Flags & FONT_FLAG_ITALIC) != 0;
+					pFont->lfUnderline = (Flags & FONT_FLAG_UNDERLINE) != 0;
+					pFont->lfStrikeOut = (Flags & FONT_FLAG_STRIKEOUT) != 0;
 				}
 				break;
 			}
-		} else if (i==0) {
+		} else if (i == 0) {
 			return false;
 		}
 	}
@@ -362,20 +389,21 @@ bool CSettings::Read(LPCTSTR pszValueName,LOGFONT *pFont)
 }
 
 
-bool CSettings::Write(LPCTSTR pszValueName,const LOGFONT *pFont)
+bool CSettings::Write(LPCTSTR pszValueName, const LOGFONT *pFont)
 {
-	TCHAR szData[LF_FACESIZE+32];
-	unsigned int Flags=0;
+	TCHAR szData[LF_FACESIZE + 32];
+	unsigned int Flags = 0;
 
 	if (pFont->lfItalic)
-		Flags|=FONT_FLAG_ITALIC;
+		Flags |= FONT_FLAG_ITALIC;
 	if (pFont->lfUnderline)
-		Flags|=FONT_FLAG_UNDERLINE;
+		Flags |= FONT_FLAG_UNDERLINE;
 	if (pFont->lfStrikeOut)
-		Flags|=FONT_FLAG_STRIKEOUT;
-	::wsprintf(szData,TEXT("%s,%d,%d,%u"),
-			   pFont->lfFaceName,pFont->lfHeight,pFont->lfWeight,Flags);
-	return Write(pszValueName,szData);
+		Flags |= FONT_FLAG_STRIKEOUT;
+	StringPrintf(
+		szData, TEXT("%s,%d,%d,%u"),
+		pFont->lfFaceName, pFont->lfHeight, pFont->lfWeight, Flags);
+	return Write(pszValueName, szData);
 }
 
 
@@ -391,11 +419,6 @@ CSettingsBase::CSettingsBase()
 CSettingsBase::CSettingsBase(LPCTSTR pszSection)
 	: m_pszSection(pszSection)
 	, m_fChanged(false)
-{
-}
-
-
-CSettingsBase::~CSettingsBase()
 {
 }
 
@@ -420,7 +443,7 @@ bool CSettingsBase::LoadSettings(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName,CSettings::OPEN_READ))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read))
 		return false;
 	return LoadSettings(Settings);
 }
@@ -430,7 +453,10 @@ bool CSettingsBase::SaveSettings(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName,CSettings::OPEN_WRITE))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Write))
 		return false;
 	return SaveSettings(Settings);
 }
+
+
+}	// namespace TVTest

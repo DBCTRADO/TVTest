@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -23,55 +43,55 @@ CEpgCaptureManager::~CEpgCaptureManager()
 
 
 bool CEpgCaptureManager::BeginCapture(
-	LPCTSTR pszTuner,const CChannelList *pChannelList,unsigned int Flags)
+	LPCTSTR pszTuner, const CChannelList *pChannelList, BeginFlag Flags)
 {
 	if (m_fCapturing)
 		return false;
 
-	CAppMain &App=GetAppClass();
-	const bool fNoUI=(Flags & BEGIN_NO_UI)!=0;
+	CAppMain &App = GetAppClass();
+	const bool fNoUI = !!(Flags & BeginFlag::NoUI);
 
 	if (App.CmdLineOptions.m_fNoEpg) {
 		if (!fNoUI) {
 			App.UICore.GetSkin()->ShowMessage(
-				TEXT("ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ƒIƒvƒVƒ‡ƒ“‚ÅEPGî•ñ‚ğæ“¾‚µ‚È‚¢‚æ‚¤‚Éw’è‚³‚ê‚Ä‚¢‚é‚½‚ßA\n”Ô‘g•\‚Ìæ“¾‚ª‚Å‚«‚Ü‚¹‚ñB"),
-				TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+				TEXT("ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã§EPGæƒ…å ±ã‚’å–å¾—ã—ãªã„ã‚ˆã†ã«æŒ‡å®šã•ã‚Œã¦ã„ã‚‹ãŸã‚ã€\nç•ªçµ„è¡¨ã®å–å¾—ãŒã§ãã¾ã›ã‚“ã€‚"),
+				TEXT("ãŠçŸ¥ã‚‰ã›"), MB_OK | MB_ICONINFORMATION);
 		}
 		return false;
 	}
 	if (App.RecordManager.IsRecording()) {
 		if (!fNoUI) {
 			App.UICore.GetSkin()->ShowMessage(
-				TEXT("˜^‰æ’†‚Í”Ô‘g•\‚Ìæ“¾‚ğs‚¦‚Ü‚¹‚ñB"),
-				TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+				TEXT("éŒ²ç”»ä¸­ã¯ç•ªçµ„è¡¨ã®å–å¾—ã‚’è¡Œãˆã¾ã›ã‚“ã€‚"),
+				TEXT("ãŠçŸ¥ã‚‰ã›"), MB_OK | MB_ICONINFORMATION);
 		}
 		return false;
 	}
 	if (!IsStringEmpty(pszTuner)) {
 		CDriverManager::TunerSpec Spec;
-		if (App.DriverManager.GetTunerSpec(pszTuner,&Spec)
-				&& (Spec.Flags &
-					(CDriverManager::TunerSpec::FLAG_NETWORK |
-					 CDriverManager::TunerSpec::FLAG_FILE))!=0) {
+		if (App.DriverManager.GetTunerSpec(pszTuner, &Spec)
+				&& !!(Spec.Flags &
+					(CDriverManager::TunerSpec::Flag::Network |
+					 CDriverManager::TunerSpec::Flag::File))) {
 			if (!fNoUI) {
 				App.UICore.GetSkin()->ShowMessage(
-					TEXT("ƒlƒbƒgƒ[ƒNÄ¶‹y‚Ñƒtƒ@ƒCƒ‹Ä¶‚Å‚Í”Ô‘g•\‚Ìæ“¾‚Í‚Å‚«‚Ü‚¹‚ñB"),
-					TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+					TEXT("ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯å†ç”ŸåŠã³ãƒ•ã‚¡ã‚¤ãƒ«å†ç”Ÿã§ã¯ç•ªçµ„è¡¨ã®å–å¾—ã¯ã§ãã¾ã›ã‚“ã€‚"),
+					TEXT("ãŠçŸ¥ã‚‰ã›"), MB_OK | MB_ICONINFORMATION);
 			}
 			return false;
 		}
 	}
 
-	const bool fTunerAlreadyOpened=App.CoreEngine.IsTunerOpen();
+	const bool fTunerAlreadyOpened = App.CoreEngine.IsTunerOpen();
 
 	if (!IsStringEmpty(pszTuner)) {
 		if (!App.Core.OpenTuner(pszTuner))
 			return false;
 	}
 
-	if (pChannelList==nullptr) {
-		pChannelList=App.ChannelManager.GetCurrentChannelList();
-		if (pChannelList==nullptr) {
+	if (pChannelList == nullptr) {
+		pChannelList = App.ChannelManager.GetCurrentChannelList();
+		if (pChannelList == nullptr) {
 			if (!fTunerAlreadyOpened)
 				App.Core.CloseTuner();
 			return false;
@@ -80,29 +100,29 @@ bool CEpgCaptureManager::BeginCapture(
 
 	m_ChannelList.clear();
 
-	for (int i=0;i<pChannelList->NumChannels();i++) {
-		const CChannelInfo *pChInfo=pChannelList->GetChannelInfo(i);
+	for (int i = 0; i < pChannelList->NumChannels(); i++) {
+		const CChannelInfo *pChInfo = pChannelList->GetChannelInfo(i);
 
 		if (pChInfo->IsEnabled()) {
-			const CNetworkDefinition::NetworkType Network=
+			const CNetworkDefinition::NetworkType Network =
 				App.NetworkDefinition.GetNetworkType(pChInfo->GetNetworkID());
 			std::vector<ChannelGroup>::iterator itr;
 
-			for (itr=m_ChannelList.begin();itr!=m_ChannelList.end();++itr) {
-				if (pChInfo->GetSpace()==itr->Space && pChInfo->GetChannelIndex()==itr->Channel)
+			for (itr = m_ChannelList.begin(); itr != m_ChannelList.end(); ++itr) {
+				if (pChInfo->GetSpace() == itr->Space && pChInfo->GetChannelIndex() == itr->Channel)
 					break;
-				if (pChInfo->GetNetworkID()==itr->ChannelList.GetChannelInfo(0)->GetNetworkID()
-						&& ((Network==CNetworkDefinition::NETWORK_BS && !App.EpgOptions.GetUpdateBSExtended())
-						 || (Network==CNetworkDefinition::NETWORK_CS && !App.EpgOptions.GetUpdateCSExtended())))
+				if (pChInfo->GetNetworkID() == itr->ChannelList.GetChannelInfo(0)->GetNetworkID()
+						&& ((Network == CNetworkDefinition::NetworkType::BS && !App.EpgOptions.GetUpdateBSExtended())
+							|| (Network == CNetworkDefinition::NetworkType::CS && !App.EpgOptions.GetUpdateCSExtended())))
 					break;
 			}
-			if (itr==m_ChannelList.end()) {
+			if (itr == m_ChannelList.end()) {
 				m_ChannelList.push_back(ChannelGroup());
-				itr=m_ChannelList.end();
+				itr = m_ChannelList.end();
 				--itr;
-				itr->Space=pChInfo->GetSpace();
-				itr->Channel=pChInfo->GetChannelIndex();
-				itr->Time=0;
+				itr->Space = pChInfo->GetSpace();
+				itr->Channel = pChInfo->GetChannelIndex();
+				itr->Time = 0;
 			}
 			itr->ChannelList.AddChannel(*pChInfo);
 		}
@@ -113,28 +133,28 @@ bool CEpgCaptureManager::BeginCapture(
 		return false;
 	}
 
-	unsigned int Status=0;
+	BeginStatus Status = BeginStatus::None;
 	if (fTunerAlreadyOpened)
-		Status|=BEGIN_STATUS_TUNER_ALREADY_OPENED;
+		Status |= BeginStatus::TunerAlreadyOpened;
 
 	if (App.UICore.GetStandby()) {
 		if (!App.Core.OpenTuner())
 			return false;
-		Status|=BEGIN_STATUS_STANDBY;
+		Status |= BeginStatus::Standby;
 	} else {
 		if (!App.CoreEngine.IsTunerOpen())
 			return false;
-		if ((Flags & BEGIN_STANDBY)!=0)
-			Status|=BEGIN_STATUS_STANDBY;
+		if (!!(Flags & BeginFlag::Standby))
+			Status |= BeginStatus::Standby;
 	}
 
-	m_fCapturing=true;
-	m_CurChannel=-1;
+	m_fCapturing = true;
+	m_CurChannel = -1;
 
-	App.AddLog(TEXT("”Ô‘g•\‚Ìæ“¾‚ğŠJn‚µ‚Ü‚·B"));
+	App.AddLog(TEXT("ç•ªçµ„è¡¨ã®å–å¾—ã‚’é–‹å§‹ã—ã¾ã™ã€‚"));
 
-	if (m_pEventHandler!=nullptr)
-		m_pEventHandler->OnBeginCapture(Flags,Status);
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnBeginCapture(Flags, Status);
 
 	NextChannel();
 
@@ -142,20 +162,20 @@ bool CEpgCaptureManager::BeginCapture(
 }
 
 
-void CEpgCaptureManager::EndCapture(unsigned int Flags)
+void CEpgCaptureManager::EndCapture(EndFlag Flags)
 {
 	if (!m_fCapturing)
 		return;
 
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
-	App.AddLog(TEXT("”Ô‘g•\‚Ìæ“¾‚ğI—¹‚µ‚Ü‚·B"));
+	App.AddLog(TEXT("ç•ªçµ„è¡¨ã®å–å¾—ã‚’çµ‚äº†ã—ã¾ã™ã€‚"));
 
-	m_fCapturing=false;
-	m_CurChannel=-1;
+	m_fCapturing = false;
+	m_CurChannel = -1;
 	m_ChannelList.clear();
 
-	if (m_pEventHandler!=nullptr)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnEndCapture(Flags);
 }
 
@@ -165,66 +185,67 @@ bool CEpgCaptureManager::ProcessCapture()
 	if (!m_fCapturing)
 		return true;
 
-	CAppMain &App=GetAppClass();
-	CEventManager &EventManager=App.CoreEngine.m_DtvEngine.m_EventManager;
-	const CChannelList *pChannelList=App.ChannelManager.GetCurrentChannelList();
-	const CChannelInfo *pCurChannelInfo=App.ChannelManager.GetCurrentChannelInfo();
-	if (pChannelList==nullptr || pCurChannelInfo==nullptr) {
+	CAppMain &App = GetAppClass();
+	LibISDB::EPGDatabase &EPGDatabase = App.EPGDatabase;
+
+	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
+	const CChannelInfo *pCurChannelInfo = App.ChannelManager.GetCurrentChannelInfo();
+	if (pChannelList == nullptr || pCurChannelInfo == nullptr) {
 		EndCapture();
 		return true;
 	}
 
-	bool fComplete=true,fBasic=false,fNoBasic=false;
-	ChannelGroup &CurChGroup=m_ChannelList[m_CurChannel];
-	for (int i=0;i<CurChGroup.ChannelList.NumChannels();i++) {
-		const CChannelInfo *pChannelInfo=CurChGroup.ChannelList.GetChannelInfo(i);
-		const WORD NetworkID=pChannelInfo->GetNetworkID();
-		const WORD TSID=pChannelInfo->GetTransportStreamID();
-		const WORD ServiceID=pChannelInfo->GetServiceID();
-		const CNetworkDefinition::NetworkType Network=
+	bool fComplete = true, fBasic = false, fNoBasic = false;
+	ChannelGroup &CurChGroup = m_ChannelList[m_CurChannel];
+	for (int i = 0; i < CurChGroup.ChannelList.NumChannels(); i++) {
+		const CChannelInfo *pChannelInfo = CurChGroup.ChannelList.GetChannelInfo(i);
+		const WORD NetworkID = pChannelInfo->GetNetworkID();
+		const WORD TSID = pChannelInfo->GetTransportStreamID();
+		const WORD ServiceID = pChannelInfo->GetServiceID();
+		const CNetworkDefinition::NetworkType Network =
 			App.NetworkDefinition.GetNetworkType(NetworkID);
 
-		if (EventManager.HasSchedule(NetworkID,TSID,ServiceID,false)) {
-			fBasic=true;
-			if (!EventManager.IsScheduleComplete(NetworkID,TSID,ServiceID,false)) {
-				fComplete=false;
+		if (EPGDatabase.HasSchedule(NetworkID, TSID, ServiceID, false)) {
+			fBasic = true;
+			if (!EPGDatabase.IsScheduleComplete(NetworkID, TSID, ServiceID, false)) {
+				fComplete = false;
 				break;
 			}
-			if ((Network!=CNetworkDefinition::NETWORK_BS && Network!=CNetworkDefinition::NETWORK_CS)
-					|| (Network==CNetworkDefinition::NETWORK_BS && App.EpgOptions.GetUpdateBSExtended())
-					|| (Network==CNetworkDefinition::NETWORK_CS && App.EpgOptions.GetUpdateCSExtended())) {
-				if (EventManager.HasSchedule(NetworkID,TSID,ServiceID,true)
-						&& !EventManager.IsScheduleComplete(NetworkID,TSID,ServiceID,true)) {
-					fComplete=false;
+			if ((Network != CNetworkDefinition::NetworkType::BS && Network != CNetworkDefinition::NetworkType::CS)
+					|| (Network == CNetworkDefinition::NetworkType::BS && App.EpgOptions.GetUpdateBSExtended())
+					|| (Network == CNetworkDefinition::NetworkType::CS && App.EpgOptions.GetUpdateCSExtended())) {
+				if (EPGDatabase.HasSchedule(NetworkID, TSID, ServiceID, true)
+						&& !EPGDatabase.IsScheduleComplete(NetworkID, TSID, ServiceID, true)) {
+					fComplete = false;
 					break;
 				}
 			}
 		} else {
-			fNoBasic=true;
+			fNoBasic = true;
 		}
 	}
 
 	if (fComplete && fBasic && fNoBasic
-			&& m_AccumulateClock.GetSpan()<60000)
-		fComplete=false;
+			&& m_AccumulateClock.GetSpan() < 60000)
+		fComplete = false;
 
 	if (fComplete) {
 		TRACE(TEXT("EPG schedule complete\n"));
 	} else {
-		WORD NetworkID=App.CoreEngine.m_DtvEngine.m_TsAnalyzer.GetNetworkID();
+		WORD NetworkID = App.CoreEngine.GetNetworkID();
 		DWORD Timeout;
 
-		// ^–Ê–Ú‚É”»’è‚·‚éê‡BIT‚©‚çüŠú‚ğæ‚Á‚Ä‚­‚é•K—v‚ª‚ ‚é
+		// çœŸé¢ç›®ã«åˆ¤å®šã™ã‚‹å ´åˆBITã‹ã‚‰å‘¨æœŸã‚’å–ã£ã¦ãã‚‹å¿…è¦ãŒã‚ã‚‹
 		if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
-			Timeout=360000;
+			Timeout = 360000;
 		else
-			Timeout=120000;
-		if (m_AccumulateClock.GetSpan()<Timeout)
+			Timeout = 120000;
+		if (m_AccumulateClock.GetSpan() < Timeout)
 			return false;
 		TRACE(TEXT("EPG schedule timeout\n"));
 	}
 
-	if (m_pEventHandler!=nullptr)
+	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnChannelEnd(fComplete);
 
 	NextChannel();
@@ -235,22 +256,22 @@ bool CEpgCaptureManager::ProcessCapture()
 
 void CEpgCaptureManager::SetEventHandler(CEventHandler *pEventHandler)
 {
-	m_pEventHandler=pEventHandler;
+	m_pEventHandler = pEventHandler;
 }
 
 
 DWORD CEpgCaptureManager::GetRemainingTime() const
 {
-	// TODO: c‚èŠÔ‚ğ‚¿‚á‚ñ‚ÆZo‚·‚é
-	CAppMain &App=GetAppClass();
-	DWORD Time=0;
+	// TODO: æ®‹ã‚Šæ™‚é–“ã‚’ã¡ã‚ƒã‚“ã¨ç®—å‡ºã™ã‚‹
+	CAppMain &App = GetAppClass();
+	DWORD Time = 0;
 
-	for (size_t i=m_CurChannel;i<m_ChannelList.size();i++) {
-		WORD NetworkID=m_ChannelList[i].ChannelList.GetChannelInfo(0)->GetNetworkID();
+	for (size_t i = m_CurChannel; i < m_ChannelList.size(); i++) {
+		WORD NetworkID = m_ChannelList[i].ChannelList.GetChannelInfo(0)->GetNetworkID();
 		if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
-			Time+=180000;
+			Time += 180000;
 		else
-			Time+=60000;
+			Time += 60000;
 	}
 
 	return Time;
@@ -259,18 +280,18 @@ DWORD CEpgCaptureManager::GetRemainingTime() const
 
 bool CEpgCaptureManager::NextChannel()
 {
-	CAppMain &App=GetAppClass();
+	CAppMain &App = GetAppClass();
 
-	for (size_t i=m_CurChannel+1;i<m_ChannelList.size();i++) {
-		const ChannelGroup &ChGroup=m_ChannelList[i];
+	for (size_t i = m_CurChannel + 1; i < m_ChannelList.size(); i++) {
+		const ChannelGroup &ChGroup = m_ChannelList[i];
 
-		m_fChannelChanging=true;
-		bool fOK=App.Core.SetChannelByIndex(ChGroup.Space,ChGroup.Channel);
-		m_fChannelChanging=false;
+		m_fChannelChanging = true;
+		bool fOK = App.Core.SetChannelByIndex(ChGroup.Space, ChGroup.Channel);
+		m_fChannelChanging = false;
 		if (fOK) {
-			m_CurChannel=(int)i;
+			m_CurChannel = (int)i;
 			m_AccumulateClock.Start();
-			if (m_pEventHandler!=nullptr)
+			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnChannelChanged();
 			return true;
 		}

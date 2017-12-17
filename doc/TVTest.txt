@@ -21,7 +21,7 @@
 
 ◆ 試験環境
 
-  ・Windows XP SP2 以降 / Vista / 7 / 8 / 10
+  ・Windows 7 / 8.1 / 10
 
 
 ◆ 仕様
@@ -45,12 +45,23 @@
 
 ◆ ビルド
 
-  Visual Studio 2010/2013/2015 のプロジェクトファイルが付属しています。
-  C++11 の機能を利用しているため、2010 より前の Visual Studio ではビルドできませ
-  ん。Express Edition でもビルドできると思いますが、確認はしていません。
+  まずソースファイルを GitHub からダウンロードするか、または clone を行います。
+  clone する場合、サブモジュールを含むために --recursive を指定します。
+
+    git clone --recursive https://github.com/DBCTRADO/TVTest.git
+
+  GitHub から Zip ファイルをダウンロードする場合、サブモジュールは含まれないので
+  src/LibISDB フォルダに LibISDB のファイルを展開する必要があります。
+  その場合、サブモジュールの参照先として指定されているコミット以外のソースツリー
+  を利用した場合、ビルドできない、もしくは正常に動作しない可能性があります。
+
+  Visual Studio 2017 Update 5 のプロジェクトファイルが付属しています。
+  C++17 の機能を利用しているため、2017 Update 5 より前の Visual Studio ではビル
+  ドできません。
   TVTest のビルドには以下の SDK/ライブラリが必要になります。
 
-  ・Microsoft Windows SDK v7.0 以上
+  ・Microsoft Windows SDK v10 以上
+  ・LibISDB      https://github.com/DBCTRADO/LibISDB
   ・FAAD2        http://www.audiocoding.com/faad2.html
   ・libmad       http://www.underbit.com/products/mad/
   ・liba52       http://liba52.sourceforge.net/
@@ -60,9 +71,7 @@
 
   (*) TVTest_Image.dll のビルドに必要
 
-  DirectShow の BaseClasses ライブラリ(Windows SDK の Samples\Multimedia\
-  DirectShow\BaseClasses)のファイルを src/BaseClasses にコピーしてください。
-  BaseClasses 以外のライブラリは TVTest のリポジトリに含まれています。
+  必要なライブラリは TVTest / LibISDB のリポジトリに含まれています。
 
   src フォルダ内に以下のソリューションがありますので、ビルドしたい対象に合わせて
   利用してください。
@@ -71,16 +80,15 @@
   ・TVTest_Image.sln  TVTest_Image.dll のソリューション
   ・TVTest_All.sln    TVTest.exe と TVTest_Image.dll 両方のソリューション
 
-  ファイル名に VS2013 の付いたものは Visual Studio 2013/2015 用、付いていないも
-  のは Visual Studio 2010 用です。
+  TVTest より先に LibISDB をビルドしておく必要があります。
+  src/LibISDB/Projects/LibISDB.sln を開いて、ソリューションのビルドを行ってくだ
+  さい。
+  その際、TVTest とソリューション構成/プラットフォームを統一する必要がありますの
+  で注意してください。
 
-  ソリューション構成の名称に _XP が付いたものは Windows XP 対応版、_MD が付いた
-  ものはランタイムライブラリ動的リンク版です。
-  _XP の付いていないソリューション構成では、Windows XP では動作しない実行ファイ
-  ルが作成されます。
-
-  プラグインは sdk\Samples にある Samples.sln か Samples.VS2013.sln を使ってビル
-  ドできます。
+  プラグインは Visual Studio 2010 以降でビルドできます。
+  sdk\Samples 内の Samples.sln (VS 2010 用) か Samples.VS2013.sln (VS 2013/2015
+  用) を開いてビルドしてください。
 
   なお、デコーダによっては、(恐らくリバースエンジニアリング対策で)デバッグ実行時
   に接続できなかったり不正終了させられたりします。
@@ -519,11 +527,6 @@
                   (e.g. /epgtuner BonDriver_Hoge.dll)
                   favorites にするとお気に入りチャンネルの番組表
   /epgspace       EPG 番組表のデフォルトチューニング空間の指定 (e.g. /epgspace 1)
-
-
-◆ 注意事項
-
-  オリジナルの BonTest の注意事項に準拠します。
 
 
 ◆ ライセンス

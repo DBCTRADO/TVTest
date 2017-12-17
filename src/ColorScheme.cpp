@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include <algorithm>
 #include "TVTest.h"
@@ -8,8 +28,12 @@
 #include "resource.h"
 #include "Common/DebugDef.h"
 
-using namespace TVTest;
 
+namespace TVTest
+{
+
+namespace
+{
 
 static const LPCTSTR GradientDirectionList[] = {
 	TEXT("horizontal"),
@@ -19,485 +43,392 @@ static const LPCTSTR GradientDirectionList[] = {
 };
 
 
-#define HEXRGB(hex) RGB((hex)>>16,((hex)>>8)&0xFF,(hex)&0xFF)
+constexpr COLORREF HEXRGB(DWORD hex) { return RGB(hex >> 16, (hex >> 8) & 0xFF, hex & 0xFF); }
+
+}
+
 
 const CColorScheme::ColorInfo CColorScheme::m_ColorInfoList[NUM_COLORS] = {
-	{HEXRGB(0x333333),	TEXT("StatusBack"),							TEXT("ƒXƒe[ƒ^ƒXƒo[ ”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("StatusBack2"),						TEXT("ƒXƒe[ƒ^ƒXƒo[ ”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("StatusText"),							TEXT("ƒXƒe[ƒ^ƒXƒo[ •¶š")},
-	{HEXRGB(0x777777),	TEXT("StatusItemBorder"),					TEXT("ƒXƒe[ƒ^ƒXƒo[ €–ÚŠO˜g")},
-	{HEXRGB(0x111111),	TEXT("StatusBottomItemBack"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‰º’i”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("StatusBottomItemBack2"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‰º’i”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("StatusBottomItemText"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‰º’i•¶š")},
-	{HEXRGB(0x111111),	TEXT("StatusBottomItemBorder"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‰º’iŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("StatusHighlightBack"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‘I‘ğ”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("StatusHighlightBack2"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‘I‘ğ”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("StatusHighlightText"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‘I‘ğ•¶š")},
-	{HEXRGB(0x3C76CC),	TEXT("StatusHighlightBorder"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ‘I‘ğŠO˜g")},
-	{HEXRGB(0x111111),	TEXT("StatusBorder"),						TEXT("ƒXƒe[ƒ^ƒXƒo[ ŠO˜g")},
-	{HEXRGB(0xDF3F00),	TEXT("StatusRecordingCircle"),				TEXT("ƒXƒe[ƒ^ƒXƒo[ ˜^‰æœ")},
-	{HEXRGB(0x444444),	TEXT("StatusEventProgressBack"),			TEXT("ƒXƒe[ƒ^ƒXƒo[ ”Ô‘gŒo‰ßŠÔ”wŒi1")},
-	{HEXRGB(0x444444),	TEXT("StatusEventProgressBack2"),			TEXT("ƒXƒe[ƒ^ƒXƒo[ ”Ô‘gŒo‰ßŠÔ”wŒi2")},
-	{HEXRGB(0x444444),	TEXT("StatusEventProgressBorder"),			TEXT("ƒXƒe[ƒ^ƒXƒo[ ”Ô‘gŒo‰ßŠÔŠO˜g")},
-	{HEXRGB(0x3465B0),	TEXT("StatusEventProgressElapsed"),			TEXT("ƒXƒe[ƒ^ƒXƒo[ ”Ô‘gŒo‰ßŠÔƒo[1")},
-	{HEXRGB(0x3465B0),	TEXT("StatusEventProgressElapsed2"),		TEXT("ƒXƒe[ƒ^ƒXƒo[ ”Ô‘gŒo‰ßŠÔƒo[2")},
-	{HEXRGB(0x3465B0),	TEXT("StatusEventProgressElapsedBorder"),	TEXT("ƒXƒe[ƒ^ƒXƒo[ ”Ô‘gŒo‰ßŠÔƒo[ŠO˜g")},
-	{HEXRGB(0x222222),	TEXT("Splitter"),							TEXT("•ªŠ„ü")},
-	{HEXRGB(0x000000),	TEXT("ScreenBorder"),						TEXT("‰æ–Ê‚ÌŠO˜g")},
-	{HEXRGB(0x555555),	TEXT("WindowFrame"),						TEXT("ƒEƒBƒ“ƒhƒE ×˜g")},
-	{HEXRGB(0x555555),	TEXT("WindowFrameBorder"),					TEXT("ƒEƒBƒ“ƒhƒE ×˜g‚Ì‹«ŠE")},
-	{HEXRGB(0x666666),	TEXT("WindowActiveFrame"),					TEXT("ƒEƒBƒ“ƒhƒE ƒAƒNƒeƒBƒu×˜g")},
-	{HEXRGB(0x666666),	TEXT("WindowActiveFrameBorder"),			TEXT("ƒEƒBƒ“ƒhƒE ƒAƒNƒeƒBƒu×˜g‚Ì‹«ŠE")},
-	{HEXRGB(0x333333),	TEXT("PanelBack"),							TEXT("ƒpƒlƒ‹ ”wŒi")},
-	{HEXRGB(0x999999),	TEXT("PanelText"),							TEXT("ƒpƒlƒ‹ •¶š")},
-	{HEXRGB(0x000000),	TEXT("PanelTabBack"),						TEXT("ƒpƒlƒ‹ ƒ^ƒu”wŒi1")},
-	{HEXRGB(0x222222),	TEXT("PanelTabBack2"),						TEXT("ƒpƒlƒ‹ ƒ^ƒu”wŒi2")},
-	{HEXRGB(0x888888),	TEXT("PanelTabText"),						TEXT("ƒpƒlƒ‹ ƒ^ƒu•¶š")},
-	{HEXRGB(0x000000),	TEXT("PanelTabBorder"),						TEXT("ƒpƒlƒ‹ ƒ^ƒuŠO˜g")},
-	{HEXRGB(0x555555),	TEXT("PanelCurTabBack"),					TEXT("ƒpƒlƒ‹ ‘I‘ğƒ^ƒu”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("PanelCurTabBack2"),					TEXT("ƒpƒlƒ‹ ‘I‘ğƒ^ƒu”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("PanelCurTabText"),					TEXT("ƒpƒlƒ‹ ‘I‘ğƒ^ƒu•¶š")},
-	{HEXRGB(0x444444),	TEXT("PanelCurTabBorder"),					TEXT("ƒpƒlƒ‹ ‘I‘ğƒ^ƒuŠO˜g")},
-	{HEXRGB(0x000000),	TEXT("PanelTabMargin"),						TEXT("ƒpƒlƒ‹ ƒ^ƒu—]”’1")},
-	{HEXRGB(0x222222),	TEXT("PanelTabMargin2"),					TEXT("ƒpƒlƒ‹ ƒ^ƒu—]”’2")},
-	{HEXRGB(0x888888),	TEXT("PanelTabMarginBorder"),				TEXT("ƒpƒlƒ‹ ƒ^ƒu—]”’ŠO˜g")},
-	{HEXRGB(0x444444),	TEXT("PanelTabLine"),						TEXT("ƒpƒlƒ‹ ƒ^ƒuü")},
-	{HEXRGB(0x333333),	TEXT("PanelTitleBack"),						TEXT("ƒpƒlƒ‹ ƒ^ƒCƒgƒ‹”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("PanelTitleBack2"),					TEXT("ƒpƒlƒ‹ ƒ^ƒCƒgƒ‹”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("PanelTitleText"),						TEXT("ƒpƒlƒ‹ ƒ^ƒCƒgƒ‹•¶š")},
-	{HEXRGB(0x111111),	TEXT("PanelTitleBorder"),					TEXT("ƒpƒlƒ‹ ƒ^ƒCƒgƒ‹ŠO˜g")},
-	{HEXRGB(0x111111),	TEXT("ProgramInfoBack"),					TEXT("î•ñƒpƒlƒ‹ ”Ô‘gî•ñ”wŒi")},
-	{HEXRGB(0xAAAAAA),	TEXT("ProgramInfoText"),					TEXT("î•ñƒpƒlƒ‹ ”Ô‘gî•ñ•¶š")},
-	{HEXRGB(0x111111),	TEXT("ProgramInfoBorder"),					TEXT("î•ñƒpƒlƒ‹ ”Ô‘gî•ñŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("InformationPanelButtonBack"),			TEXT("î•ñƒpƒlƒ‹ ƒ{ƒ^ƒ“”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("InformationPanelButtonBack2"),		TEXT("î•ñƒpƒlƒ‹ ƒ{ƒ^ƒ“”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("InformationPanelButtonText"),			TEXT("î•ñƒpƒlƒ‹ ƒ{ƒ^ƒ“•¶š")},
-	{HEXRGB(0x333333),	TEXT("InformationPanelButtonBorder"),		TEXT("î•ñƒpƒlƒ‹ ƒ{ƒ^ƒ“‹«ŠE")},
-	{HEXRGB(0x4486E8),	TEXT("InformationPanelHotButtonBack"),		TEXT("î•ñƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("InformationPanelHotButtonBack2"),		TEXT("î•ñƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("InformationPanelHotButtonText"),		TEXT("î•ñƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“•¶š")},
-	{HEXRGB(0x3C76CC),	TEXT("InformationPanelHotButtonBorder"),	TEXT("î•ñƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“‹«ŠE")},
-	{HEXRGB(0x333333),	TEXT("ProgramListChannelBack"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ ‹Ç–¼”wŒi1")},
-	{HEXRGB(0x000000),	TEXT("ProgramListChannelBack2"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ ‹Ç–¼”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ProgramListChannelText"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ ‹Ç–¼•¶š")},
-	{HEXRGB(0x000000),	TEXT("ProgramListChannelBorder"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ ‹Ç–¼ŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("ProgramListCurChannelBack"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ‹Ç–¼”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("ProgramListCurChannelBack2"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ‹Ç–¼”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ProgramListCurChannelText"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ‹Ç–¼•¶š")},
-	{HEXRGB(0x000000),	TEXT("ProgramListCurChannelBorder"),		TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ‹Ç–¼ŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ProgramListChannelButtonBack"),		TEXT("”Ô‘g•\ƒpƒlƒ‹ ƒ{ƒ^ƒ“”wŒi1")},
-	{HEXRGB(0x000000),	TEXT("ProgramListChannelButtonBack2"),		TEXT("”Ô‘g•\ƒpƒlƒ‹ ƒ{ƒ^ƒ“”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ProgramListChannelButtonText"),		TEXT("”Ô‘g•\ƒpƒlƒ‹ ƒ{ƒ^ƒ“•¶š")},
-	{HEXRGB(0x000000),	TEXT("ProgramListChannelButtonBorder"),		TEXT("”Ô‘g•\ƒpƒlƒ‹ ƒ{ƒ^ƒ“ŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("ProgramListChannelButtonHotBack"),	TEXT("”Ô‘g•\ƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("ProgramListChannelButtonHotBack2"),	TEXT("”Ô‘g•\ƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ProgramListChannelButtonHotText"),	TEXT("”Ô‘g•\ƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“•¶š")},
-	{HEXRGB(0x3C76CC),	TEXT("ProgramListChannelButtonHotBorder"),	TEXT("”Ô‘g•\ƒpƒlƒ‹ ‘I‘ğƒ{ƒ^ƒ“ŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ProgramListBack"),					TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g“à—e”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("ProgramListBack2"),					TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g“à—e”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("ProgramListText"),					TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g“à—e•¶š")},
-	{HEXRGB(0x444444),	TEXT("ProgramListBorder"),					TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g“à—eŠO˜g")},
-	{HEXRGB(0x222222),	TEXT("ProgramListCurBack"),					TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g“à—e”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("ProgramListCurBack2"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g“à—e”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ProgramListCurText"),					TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g“à—e•¶š")},
-	{HEXRGB(0x555555),	TEXT("ProgramListCurBorder"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g“à—eŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ProgramListTitleBack"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g–¼”wŒi1")},
-	{HEXRGB(0x000000),	TEXT("ProgramListTitleBack2"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g–¼”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ProgramListTitleText"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g–¼•¶š")},
-	{HEXRGB(0x000000),	TEXT("ProgramListTitleBorder"),				TEXT("”Ô‘g•\ƒpƒlƒ‹ ”Ô‘g–¼ŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("ProgramListCurTitleBack"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g–¼”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("ProgramListCurTitleBack2"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g–¼”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ProgramListCurTitleText"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g–¼•¶š")},
-	{HEXRGB(0x000000),	TEXT("ProgramListCurTitleBorder"),			TEXT("”Ô‘g•\ƒpƒlƒ‹ Œ»İ”Ô‘g–¼ŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ChannelPanelChannelNameBack"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‹Ç–¼”wŒi1")},
-	{HEXRGB(0x000000),	TEXT("ChannelPanelChannelNameBack2"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‹Ç–¼”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ChannelPanelChannelNameText"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‹Ç–¼•¶š")},
-	{HEXRGB(0x000000),	TEXT("ChannelPanelChannelNameBorder"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‹Ç–¼ŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("ChannelPanelCurChannelNameBack"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ Œ»İ‹Ç–¼”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("ChannelPanelCurChannelNameBack2"),	TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ Œ»İ‹Ç–¼”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ChannelPanelCurChannelNameText"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ Œ»İ‹Ç–¼•¶š")},
-	{HEXRGB(0x000000),	TEXT("ChannelPanelCurChannelNameBorder"),	TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ Œ»İ‹Ç–¼ŠO˜g")},
-	{HEXRGB(0x444444),	TEXT("ChannelPanelEventNameBack"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼1”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("ChannelPanelEventNameBack2"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼1”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("ChannelPanelEventNameText"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼1•¶š")},
-	{HEXRGB(0x444444),	TEXT("ChannelPanelEventNameBorder"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼1ŠO˜g")},
-	{HEXRGB(0x222222),	TEXT("ChannelPanelEventName2Back"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼2”wŒi1")},
-	{HEXRGB(0x222222),	TEXT("ChannelPanelEventName2Back2"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼2”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("ChannelPanelEventName2Text"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼2•¶š")},
-	{HEXRGB(0x333333),	TEXT("ChannelPanelEventName2Border"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘g–¼2ŠO˜g")},
-	{HEXRGB(0x444444),	TEXT("ChannelPanelCurEventNameBack"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼1”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("ChannelPanelCurEventNameBack2"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼1”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ChannelPanelCurEventNameText"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼1•¶š")},
-	{HEXRGB(0x444444),	TEXT("ChannelPanelCurEventNameBorder"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼1ŠO˜g")},
-	{HEXRGB(0x222222),	TEXT("ChannelPanelCurEventName2Back"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼2”wŒi1")},
-	{HEXRGB(0x222222),	TEXT("ChannelPanelCurEventName2Back2"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼2”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("ChannelPanelCurEventName2Text"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼2•¶š")},
-	{HEXRGB(0x333333),	TEXT("ChannelPanelCurEventName2Border"),	TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘g–¼2ŠO˜g")},
-	{HEXRGB(0x00FF00),	TEXT("ChannelPanelFeaturedMark"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ’–Úƒ}[ƒN”wŒi1")},
-	{HEXRGB(0x00FF00),	TEXT("ChannelPanelFeaturedMark2"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ’–Úƒ}[ƒN”wŒi2")},
-	{HEXRGB(0x00BF00),	TEXT("ChannelPanelFeaturedMarkBorder"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ’–Úƒ}[ƒNŠO˜g")},
-	{HEXRGB(0x2D5899),	TEXT("ChannelPanelProgress"),				TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘gŒo‰ßŠÔƒo[1")},
-	{HEXRGB(0x2D5899),	TEXT("ChannelPanelProgress2"),				TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘gŒo‰ßŠÔƒo[2")},
-	{HEXRGB(0x2D5899),	TEXT("ChannelPanelProgressBorder"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ”Ô‘gŒo‰ßŠÔƒo[ŠO˜g")},
-	{HEXRGB(0x3465B0),	TEXT("ChannelPanelCurProgress"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘gŒo‰ßŠÔƒo[1")},
-	{HEXRGB(0x3465B0),	TEXT("ChannelPanelCurProgress2"),			TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘gŒo‰ßŠÔƒo[2")},
-	{HEXRGB(0x3465B0),	TEXT("ChannelPanelCurProgressBorder"),		TEXT("ƒ`ƒƒƒ“ƒlƒ‹ƒpƒlƒ‹ ‘I‘ğ”Ô‘gŒo‰ßŠÔƒo[ŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ControlPanelBack"),					TEXT("‘€ìƒpƒlƒ‹ ”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("ControlPanelBack2"),					TEXT("‘€ìƒpƒlƒ‹ ”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("ControlPanelText"),					TEXT("‘€ìƒpƒlƒ‹ •¶š")},
-	{HEXRGB(0x666666),	TEXT("ControlPanelItemBorder"),				TEXT("‘€ìƒpƒlƒ‹ €–ÚŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("ControlPanelHighlightBack"),			TEXT("‘€ìƒpƒlƒ‹ ‘I‘ğ”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("ControlPanelHighlightBack2"),			TEXT("‘€ìƒpƒlƒ‹ ‘I‘ğ”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ControlPanelHighlightText"),			TEXT("‘€ìƒpƒlƒ‹ ‘I‘ğ•¶š")},
-	{HEXRGB(0x3C76CC),	TEXT("ControlPanelHighlightBorder"),		TEXT("‘€ìƒpƒlƒ‹ ‘I‘ğ€–ÚŠO˜g")},
-	{HEXRGB(0x444444),	TEXT("ControlPanelCheckedBack"),			TEXT("‘€ìƒpƒlƒ‹ ƒ`ƒFƒbƒN”wŒi1")},
-	{HEXRGB(0x555555),	TEXT("ControlPanelCheckedBack2"),			TEXT("‘€ìƒpƒlƒ‹ ƒ`ƒFƒbƒN”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ControlPanelCheckedText"),			TEXT("‘€ìƒpƒlƒ‹ ƒ`ƒFƒbƒN•¶š")},
-	{HEXRGB(0x333333),	TEXT("ControlPanelCheckedBorder"),			TEXT("‘€ìƒpƒlƒ‹ ƒ`ƒFƒbƒN€–ÚŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ControlPanelMargin"),					TEXT("‘€ìƒpƒlƒ‹ —]”’")},
-	{HEXRGB(0x333333),	TEXT("CaptionPanelBack"),					TEXT("š–‹ƒpƒlƒ‹ ”wŒi")},
-	{HEXRGB(0x999999),	TEXT("CaptionPanelText"),					TEXT("š–‹ƒpƒlƒ‹ •¶š")},
-	{HEXRGB(0x333333),	TEXT("TitleBarBack"),						TEXT("ƒ^ƒCƒgƒ‹ƒo[ ”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("TitleBarBack2"),						TEXT("ƒ^ƒCƒgƒ‹ƒo[ ”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("TitleBarText"),						TEXT("ƒ^ƒCƒgƒ‹ƒo[ •¶š")},
-	{HEXRGB(0x777777),	TEXT("TitleBarTextBorder"),					TEXT("ƒ^ƒCƒgƒ‹ƒo[ •¶šŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("TitleBarIconBack"),					TEXT("ƒ^ƒCƒgƒ‹ƒo[ ƒAƒCƒRƒ“”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("TitleBarIconBack2"),					TEXT("ƒ^ƒCƒgƒ‹ƒo[ ƒAƒCƒRƒ“”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("TitleBarIcon"),						TEXT("ƒ^ƒCƒgƒ‹ƒo[ ƒAƒCƒRƒ“")},
-	{HEXRGB(0x777777),	TEXT("TitleBarIconBorder"),					TEXT("ƒ^ƒCƒgƒ‹ƒo[ ƒAƒCƒRƒ“ŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("TitleBarHighlightBack"),				TEXT("ƒ^ƒCƒgƒ‹ƒo[ ‘I‘ğ”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("TitleBarHighlightBack2"),				TEXT("ƒ^ƒCƒgƒ‹ƒo[ ‘I‘ğ”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("TitleBarHighlightIcon"),				TEXT("ƒ^ƒCƒgƒ‹ƒo[ ‘I‘ğƒAƒCƒRƒ“")},
-	{HEXRGB(0x3C76CC),	TEXT("TitleBarHighlightIconBorder"),		TEXT("ƒ^ƒCƒgƒ‹ƒo[ ‘I‘ğƒAƒCƒRƒ“ŠO˜g")},
-	{HEXRGB(0x111111),	TEXT("TitleBarBorder"),						TEXT("ƒ^ƒCƒgƒ‹ƒo[ ŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("SideBarBack"),						TEXT("ƒTƒCƒhƒo[ ”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("SideBarBack2"),						TEXT("ƒTƒCƒhƒo[ ”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("SideBarIcon"),						TEXT("ƒTƒCƒhƒo[ ƒAƒCƒRƒ“")},
-	{HEXRGB(0x777777),	TEXT("SideBarItemBorder"),					TEXT("ƒTƒCƒhƒo[ €–ÚŠO˜g")},
-	{HEXRGB(0x4486E8),	TEXT("SideBarHighlightBack"),				TEXT("ƒTƒCƒhƒo[ ‘I‘ğ”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("SideBarHighlightBack2"),				TEXT("ƒTƒCƒhƒo[ ‘I‘ğ”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("SideBarHighlightIcon"),				TEXT("ƒTƒCƒhƒo[ ‘I‘ğƒAƒCƒRƒ“")},
-	{HEXRGB(0x3C76CC),	TEXT("SideBarHighlightBorder"),				TEXT("ƒTƒCƒhƒo[ ‘I‘ğŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("SideBarCheckBack"),					TEXT("ƒTƒCƒhƒo[ ƒ`ƒFƒbƒN”wŒi1")},
-	{HEXRGB(0x444444),	TEXT("SideBarCheckBack2"),					TEXT("ƒTƒCƒhƒo[ ƒ`ƒFƒbƒN”wŒi2")},
-	{HEXRGB(0xAAAAAA),	TEXT("SideBarCheckIcon"),					TEXT("ƒTƒCƒhƒo[ ƒ`ƒFƒbƒNƒAƒCƒRƒ“")},
-	{HEXRGB(0x222222),	TEXT("SideBarCheckBorder"),					TEXT("ƒTƒCƒhƒo[ ƒ`ƒFƒbƒNŠO˜g")},
-	{HEXRGB(0x111111),	TEXT("SideBarBorder"),						TEXT("ƒTƒCƒhƒo[ ŠO˜g")},
-	{HEXRGB(0x222222),	TEXT("NotificationBarBack"),				TEXT("’Ê’mƒo[ ”wŒi1")},
-	{HEXRGB(0x333333),	TEXT("NotificationBarBack2"),				TEXT("’Ê’mƒo[ ”wŒi2")},
-	{HEXRGB(0xBBBBBB),	TEXT("NotificationBarText"),				TEXT("’Ê’mƒo[ •¶š")},
-	{HEXRGB(0xFF9F44),	TEXT("NotificationBarWarningText"),			TEXT("’Ê’mƒo[ Œx•¶š")},
-	{HEXRGB(0xFF4444),	TEXT("NotificationBarErrorText"),			TEXT("’Ê’mƒo[ ƒGƒ‰[•¶š")},
-	{HEXRGB(0x333333),	TEXT("ProgramGuideBack"),					TEXT("EPG”Ô‘g•\ ”wŒi")},
-	{HEXRGB(0x222222),	TEXT("ProgramGuideText"),					TEXT("EPG”Ô‘g•\ ”Ô‘g“à—e")},
-	{HEXRGB(0x000000),	TEXT("ProgramGuideEventTitle"),				TEXT("EPG”Ô‘g•\ ”Ô‘g–¼")},
-	{HEXRGB(0x0000BF),	TEXT("ProgramGuideHighlightText"),			TEXT("EPG”Ô‘g•\ ŒŸõ”Ô‘g“à—e")},
-	{HEXRGB(0x0000FF),	TEXT("ProgramGuideHighlightTitle"),			TEXT("EPG”Ô‘g•\ ŒŸõ”Ô‘g–¼")},
-	{HEXRGB(0x9999FF),	TEXT("ProgramGuideHighlightBack"),			TEXT("EPG”Ô‘g•\ ŒŸõ”Ô‘g”wŒi")},
-	{HEXRGB(0x6666FF),	TEXT("ProgramGuideHighlightBorder"),		TEXT("EPG”Ô‘g•\ ŒŸõ”Ô‘g˜g")},
-	{HEXRGB(0xCCFFCC),	TEXT("ProgramGuideFeaturedMark"),			TEXT("EPG”Ô‘g•\ ’–Úƒ}[ƒN”wŒi1")},
-	{HEXRGB(0x99FF99),	TEXT("ProgramGuideFeaturedMark2"),			TEXT("EPG”Ô‘g•\ ’–Úƒ}[ƒN”wŒi2")},
-	{HEXRGB(0x00EF00),	TEXT("ProgramGuideFeaturedMarkBorder"),		TEXT("EPG”Ô‘g•\ ’–Úƒ}[ƒNŠO˜g")},
-	{HEXRGB(0x333333),	TEXT("ProgramGuideChannelBack"),			TEXT("EPG”Ô‘g•\ ƒ`ƒƒƒ“ƒlƒ‹–¼”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("ProgramGuideChannelBack2"),			TEXT("EPG”Ô‘g•\ ƒ`ƒƒƒ“ƒlƒ‹–¼”wŒi2")},
-	{HEXRGB(0x999999),	TEXT("ProgramGuideChannelText"),			TEXT("EPG”Ô‘g•\ ƒ`ƒƒƒ“ƒlƒ‹–¼•¶š")},
-	{HEXRGB(0x4486E8),	TEXT("ProgramGuideCurChannelBack"),			TEXT("EPG”Ô‘g•\ ƒ`ƒƒƒ“ƒlƒ‹–¼‘I‘ğ”wŒi1")},
-	{HEXRGB(0x3C76CC),	TEXT("ProgramGuideCurChannelBack2"),		TEXT("EPG”Ô‘g•\ ƒ`ƒƒƒ“ƒlƒ‹–¼‘I‘ğ”wŒi2")},
-	{HEXRGB(0xDDDDDD),	TEXT("ProgramGuideCurChannelText"),			TEXT("EPG”Ô‘g•\ ƒ`ƒƒƒ“ƒlƒ‹–¼‘I‘ğ•¶š")},
-	{HEXRGB(0x333333),	TEXT("ProgramGuideTimeBack"),				TEXT("EPG”Ô‘g•\ “ú”wŒi1")},
-	{HEXRGB(0x111111),	TEXT("ProgramGuideTimeBack2"),				TEXT("EPG”Ô‘g•\ “ú”wŒi2")},
-	{HEXRGB(0x00337F),	TEXT("ProgramGuideTime0To2Back"),			TEXT("EPG”Ô‘g•\ 0`2”wŒi1")},
-	{HEXRGB(0x00193F),	TEXT("ProgramGuideTime0To2Back2"),			TEXT("EPG”Ô‘g•\ 0`2”wŒi2")},
-	{HEXRGB(0x00667F),	TEXT("ProgramGuideTime3To5Back"),			TEXT("EPG”Ô‘g•\ 3`5”wŒi1")},
-	{HEXRGB(0x00333F),	TEXT("ProgramGuideTime3To5Back2"),			TEXT("EPG”Ô‘g•\ 3`5”wŒi2")},
-	{HEXRGB(0x007F66),	TEXT("ProgramGuideTime6To8Back"),			TEXT("EPG”Ô‘g•\ 6`8”wŒi1")},
-	{HEXRGB(0x003F33),	TEXT("ProgramGuideTime6To8Back2"),			TEXT("EPG”Ô‘g•\ 6`8”wŒi2")},
-	{HEXRGB(0x667F00),	TEXT("ProgramGuideTime9To11Back"),			TEXT("EPG”Ô‘g•\ 9`11”wŒi1")},
-	{HEXRGB(0x333F00),	TEXT("ProgramGuideTime9To11Back2"),			TEXT("EPG”Ô‘g•\ 9`11”wŒi2")},
-	{HEXRGB(0x7F6600),	TEXT("ProgramGuideTime12To14Back"),			TEXT("EPG”Ô‘g•\ 12`14”wŒi1")},
-	{HEXRGB(0x3F3300),	TEXT("ProgramGuideTime12To14Back2"),		TEXT("EPG”Ô‘g•\ 12`14”wŒi2")},
-	{HEXRGB(0x7F3300),	TEXT("ProgramGuideTime15To17Back"),			TEXT("EPG”Ô‘g•\ 15`17”wŒi1")},
-	{HEXRGB(0x3F1900),	TEXT("ProgramGuideTime15To17Back2"),		TEXT("EPG”Ô‘g•\ 15`17ŠÔ”wŒi2")},
-	{HEXRGB(0x7F0066),	TEXT("ProgramGuideTime18To20Back"),			TEXT("EPG”Ô‘g•\ 18`20”wŒi1")},
-	{HEXRGB(0x3F0033),	TEXT("ProgramGuideTime18To20Back2"),		TEXT("EPG”Ô‘g•\ 18`20”wŒi2")},
-	{HEXRGB(0x66007F),	TEXT("ProgramGuideTime21To23Back"),			TEXT("EPG”Ô‘g•\ 21`23”wŒi1")},
-	{HEXRGB(0x33003F),	TEXT("ProgramGuideTime21To23Back2"),		TEXT("EPG”Ô‘g•\ 21`23”wŒi2")},
-	{HEXRGB(0xBBBBBB),	TEXT("ProgramGuideTimeText"),				TEXT("EPG”Ô‘g•\ ŠÔ•¶š")},
-	{HEXRGB(0x888888),	TEXT("ProgramGuideTimeLine"),				TEXT("EPG”Ô‘g•\ ŠÔü")},
-	{HEXRGB(0xFF6600),	TEXT("ProgramGuideCurTimeLine"),			TEXT("EPG”Ô‘g•\ Œ»İü")},
-	{HEXRGB(0xFFFFE0),	TEXT("EPGContentNews"),						TEXT("EPG”Ô‘g•\ ƒjƒ…[ƒX”Ô‘g")},
-	{HEXRGB(0xE0E0FF),	TEXT("EPGContentSports"),					TEXT("EPG”Ô‘g•\ ƒXƒ|[ƒc”Ô‘g")},
-	{HEXRGB(0xFFE0F0),	TEXT("EPGContentInformation"),				TEXT("EPG”Ô‘g•\ î•ñ”Ô‘g")},
-	{HEXRGB(0xFFE0E0),	TEXT("EPGContentDrama"),					TEXT("EPG”Ô‘g•\ ƒhƒ‰ƒ}")},
-	{HEXRGB(0xE0FFE0),	TEXT("EPGContentMusic"),					TEXT("EPG”Ô‘g•\ ‰¹Šy”Ô‘g")},
-	{HEXRGB(0xE0FFFF),	TEXT("EPGContentVariety"),					TEXT("EPG”Ô‘g•\ ƒoƒ‰ƒGƒeƒB”Ô‘g")},
-	{HEXRGB(0xFFF0E0),	TEXT("EPGContentMovie"),					TEXT("EPG”Ô‘g•\ ‰f‰æ")},
-	{HEXRGB(0xFFE0FF),	TEXT("EPGContentAnime"),					TEXT("EPG”Ô‘g•\ ƒAƒjƒ/“ÁB")},
-	{HEXRGB(0xFFFFE0),	TEXT("EPGContentDocumentary"),				TEXT("EPG”Ô‘g•\ ƒhƒLƒ…ƒƒ“ƒ^ƒŠ[/‹³—{”Ô‘g")},
-	{HEXRGB(0xFFF0E0),	TEXT("EPGContentTheater"),					TEXT("EPG”Ô‘g•\ Œ€ê/Œö‰‰")},
-	{HEXRGB(0xE0F0FF),	TEXT("EPGContentEducation"),				TEXT("EPG”Ô‘g•\ ï–¡/‹³ˆç”Ô‘g")},
-	{HEXRGB(0xE0F0FF),	TEXT("EPGContentWelfare"),					TEXT("EPG”Ô‘g•\ •Ÿƒ”Ô‘g")},
-	{HEXRGB(0xF0F0F0),	TEXT("EPGContentOther"),					TEXT("EPG”Ô‘g•\ ‚»‚Ì‘¼‚Ì”Ô‘g")},
+	{HEXRGB(0x333333),  TEXT("StatusBack"),                        TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ èƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("StatusBack2"),                       TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("StatusText"),                        TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ æ–‡å­—")},
+	{HEXRGB(0x777777),  TEXT("StatusItemBorder"),                  TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ é …ç›®å¤–æ ")},
+	{HEXRGB(0x111111),  TEXT("StatusBottomItemBack"),              TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ä¸‹æ®µèƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("StatusBottomItemBack2"),             TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ä¸‹æ®µèƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("StatusBottomItemText"),              TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ä¸‹æ®µæ–‡å­—")},
+	{HEXRGB(0x111111),  TEXT("StatusBottomItemBorder"),            TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ä¸‹æ®µå¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("StatusHighlightBack"),               TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ é¸æŠèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("StatusHighlightBack2"),              TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ é¸æŠèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("StatusHighlightText"),               TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ é¸æŠæ–‡å­—")},
+	{HEXRGB(0x3C76CC),  TEXT("StatusHighlightBorder"),             TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ é¸æŠå¤–æ ")},
+	{HEXRGB(0x111111),  TEXT("StatusBorder"),                      TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ å¤–æ ")},
+	{HEXRGB(0xDF3F00),  TEXT("StatusRecordingCircle"),             TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ éŒ²ç”»â—")},
+	{HEXRGB(0x444444),  TEXT("StatusEventProgressBack"),           TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ç•ªçµ„çµŒéæ™‚é–“èƒŒæ™¯1")},
+	{HEXRGB(0x444444),  TEXT("StatusEventProgressBack2"),          TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ç•ªçµ„çµŒéæ™‚é–“èƒŒæ™¯2")},
+	{HEXRGB(0x444444),  TEXT("StatusEventProgressBorder"),         TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ç•ªçµ„çµŒéæ™‚é–“å¤–æ ")},
+	{HEXRGB(0x3465B0),  TEXT("StatusEventProgressElapsed"),        TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼1")},
+	{HEXRGB(0x3465B0),  TEXT("StatusEventProgressElapsed2"),       TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼2")},
+	{HEXRGB(0x3465B0),  TEXT("StatusEventProgressElapsedBorder"),  TEXT("ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ ç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼å¤–æ ")},
+	{HEXRGB(0x222222),  TEXT("Splitter"),                          TEXT("åˆ†å‰²ç·š")},
+	{HEXRGB(0x000000),  TEXT("ScreenBorder"),                      TEXT("ç”»é¢ã®å¤–æ ")},
+	{HEXRGB(0x555555),  TEXT("WindowFrame"),                       TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ç´°æ ")},
+	{HEXRGB(0x555555),  TEXT("WindowFrameBorder"),                 TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ç´°æ ã®å¢ƒç•Œ")},
+	{HEXRGB(0x666666),  TEXT("WindowActiveFrame"),                 TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ç´°æ ")},
+	{HEXRGB(0x666666),  TEXT("WindowActiveFrameBorder"),           TEXT("ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ ã‚¢ã‚¯ãƒ†ã‚£ãƒ–ç´°æ ã®å¢ƒç•Œ")},
+	{HEXRGB(0x333333),  TEXT("PanelBack"),                         TEXT("ãƒ‘ãƒãƒ« èƒŒæ™¯")},
+	{HEXRGB(0x999999),  TEXT("PanelText"),                         TEXT("ãƒ‘ãƒãƒ« æ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("PanelTabBack"),                      TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–èƒŒæ™¯1")},
+	{HEXRGB(0x222222),  TEXT("PanelTabBack2"),                     TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–èƒŒæ™¯2")},
+	{HEXRGB(0x888888),  TEXT("PanelTabText"),                      TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–æ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("PanelTabBorder"),                    TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–å¤–æ ")},
+	{HEXRGB(0x555555),  TEXT("PanelCurTabBack"),                   TEXT("ãƒ‘ãƒãƒ« é¸æŠã‚¿ãƒ–èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("PanelCurTabBack2"),                  TEXT("ãƒ‘ãƒãƒ« é¸æŠã‚¿ãƒ–èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("PanelCurTabText"),                   TEXT("ãƒ‘ãƒãƒ« é¸æŠã‚¿ãƒ–æ–‡å­—")},
+	{HEXRGB(0x444444),  TEXT("PanelCurTabBorder"),                 TEXT("ãƒ‘ãƒãƒ« é¸æŠã‚¿ãƒ–å¤–æ ")},
+	{HEXRGB(0x000000),  TEXT("PanelTabMargin"),                    TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–ä½™ç™½1")},
+	{HEXRGB(0x222222),  TEXT("PanelTabMargin2"),                   TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–ä½™ç™½2")},
+	{HEXRGB(0x888888),  TEXT("PanelTabMarginBorder"),              TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–ä½™ç™½å¤–æ ")},
+	{HEXRGB(0x444444),  TEXT("PanelTabLine"),                      TEXT("ãƒ‘ãƒãƒ« ã‚¿ãƒ–ç·š")},
+	{HEXRGB(0x333333),  TEXT("PanelTitleBack"),                    TEXT("ãƒ‘ãƒãƒ« ã‚¿ã‚¤ãƒˆãƒ«èƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("PanelTitleBack2"),                   TEXT("ãƒ‘ãƒãƒ« ã‚¿ã‚¤ãƒˆãƒ«èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("PanelTitleText"),                    TEXT("ãƒ‘ãƒãƒ« ã‚¿ã‚¤ãƒˆãƒ«æ–‡å­—")},
+	{HEXRGB(0x111111),  TEXT("PanelTitleBorder"),                  TEXT("ãƒ‘ãƒãƒ« ã‚¿ã‚¤ãƒˆãƒ«å¤–æ ")},
+	{HEXRGB(0x111111),  TEXT("ProgramInfoBack"),                   TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ç•ªçµ„æƒ…å ±èƒŒæ™¯")},
+	{HEXRGB(0xAAAAAA),  TEXT("ProgramInfoText"),                   TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ç•ªçµ„æƒ…å ±æ–‡å­—")},
+	{HEXRGB(0x111111),  TEXT("ProgramInfoBorder"),                 TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ç•ªçµ„æƒ…å ±å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("InformationPanelButtonBack"),        TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("InformationPanelButtonBack2"),       TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("InformationPanelButtonText"),        TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³æ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("InformationPanelButtonBorder"),      TEXT("æƒ…å ±ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³å¢ƒç•Œ")},
+	{HEXRGB(0x4486E8),  TEXT("InformationPanelHotButtonBack"),     TEXT("æƒ…å ±ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³èƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("InformationPanelHotButtonBack2"),    TEXT("æƒ…å ±ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³èƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("InformationPanelHotButtonText"),     TEXT("æƒ…å ±ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³æ–‡å­—")},
+	{HEXRGB(0x3C76CC),  TEXT("InformationPanelHotButtonBorder"),   TEXT("æƒ…å ±ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³å¢ƒç•Œ")},
+	{HEXRGB(0x333333),  TEXT("ProgramListChannelBack"),            TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« å±€åèƒŒæ™¯1")},
+	{HEXRGB(0x000000),  TEXT("ProgramListChannelBack2"),           TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« å±€åèƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ProgramListChannelText"),            TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« å±€åæ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ProgramListChannelBorder"),          TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« å±€åå¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("ProgramListCurChannelBack"),         TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨å±€åèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("ProgramListCurChannelBack2"),        TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨å±€åèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ProgramListCurChannelText"),         TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨å±€åæ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ProgramListCurChannelBorder"),       TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨å±€åå¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ProgramListChannelButtonBack"),      TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³èƒŒæ™¯1")},
+	{HEXRGB(0x000000),  TEXT("ProgramListChannelButtonBack2"),     TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ProgramListChannelButtonText"),      TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³æ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ProgramListChannelButtonBorder"),    TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ãƒœã‚¿ãƒ³å¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("ProgramListChannelButtonHotBack"),   TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³èƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("ProgramListChannelButtonHotBack2"),  TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³èƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ProgramListChannelButtonHotText"),   TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³æ–‡å­—")},
+	{HEXRGB(0x3C76CC),  TEXT("ProgramListChannelButtonHotBorder"), TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« é¸æŠãƒœã‚¿ãƒ³å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ProgramListBack"),                   TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„å†…å®¹èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("ProgramListBack2"),                  TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„å†…å®¹èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("ProgramListText"),                   TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„å†…å®¹æ–‡å­—")},
+	{HEXRGB(0x444444),  TEXT("ProgramListBorder"),                 TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„å†…å®¹å¤–æ ")},
+	{HEXRGB(0x222222),  TEXT("ProgramListCurBack"),                TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„å†…å®¹èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("ProgramListCurBack2"),               TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„å†…å®¹èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ProgramListCurText"),                TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„å†…å®¹æ–‡å­—")},
+	{HEXRGB(0x555555),  TEXT("ProgramListCurBorder"),              TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„å†…å®¹å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ProgramListTitleBack"),              TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„åèƒŒæ™¯1")},
+	{HEXRGB(0x000000),  TEXT("ProgramListTitleBack2"),             TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„åèƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ProgramListTitleText"),              TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„åæ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ProgramListTitleBorder"),            TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç•ªçµ„åå¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("ProgramListCurTitleBack"),           TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„åèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("ProgramListCurTitleBack2"),          TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„åèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ProgramListCurTitleText"),           TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„åæ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ProgramListCurTitleBorder"),         TEXT("ç•ªçµ„è¡¨ãƒ‘ãƒãƒ« ç¾åœ¨ç•ªçµ„åå¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ChannelPanelChannelNameBack"),       TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« å±€åèƒŒæ™¯1")},
+	{HEXRGB(0x000000),  TEXT("ChannelPanelChannelNameBack2"),      TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« å±€åèƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ChannelPanelChannelNameText"),       TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« å±€åæ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ChannelPanelChannelNameBorder"),     TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« å±€åå¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("ChannelPanelCurChannelNameBack"),    TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç¾åœ¨å±€åèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("ChannelPanelCurChannelNameBack2"),   TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç¾åœ¨å±€åèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ChannelPanelCurChannelNameText"),    TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç¾åœ¨å±€åæ–‡å­—")},
+	{HEXRGB(0x000000),  TEXT("ChannelPanelCurChannelNameBorder"),  TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç¾åœ¨å±€åå¤–æ ")},
+	{HEXRGB(0x444444),  TEXT("ChannelPanelEventNameBack"),         TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å1èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("ChannelPanelEventNameBack2"),        TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å1èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("ChannelPanelEventNameText"),         TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å1æ–‡å­—")},
+	{HEXRGB(0x444444),  TEXT("ChannelPanelEventNameBorder"),       TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å1å¤–æ ")},
+	{HEXRGB(0x222222),  TEXT("ChannelPanelEventName2Back"),        TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å2èƒŒæ™¯1")},
+	{HEXRGB(0x222222),  TEXT("ChannelPanelEventName2Back2"),       TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å2èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("ChannelPanelEventName2Text"),        TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å2æ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("ChannelPanelEventName2Border"),      TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„å2å¤–æ ")},
+	{HEXRGB(0x444444),  TEXT("ChannelPanelCurEventNameBack"),      TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å1èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("ChannelPanelCurEventNameBack2"),     TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å1èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ChannelPanelCurEventNameText"),      TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å1æ–‡å­—")},
+	{HEXRGB(0x444444),  TEXT("ChannelPanelCurEventNameBorder"),    TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å1å¤–æ ")},
+	{HEXRGB(0x222222),  TEXT("ChannelPanelCurEventName2Back"),     TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å2èƒŒæ™¯1")},
+	{HEXRGB(0x222222),  TEXT("ChannelPanelCurEventName2Back2"),    TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å2èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("ChannelPanelCurEventName2Text"),     TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å2æ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("ChannelPanelCurEventName2Border"),   TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„å2å¤–æ ")},
+	{HEXRGB(0x00FF00),  TEXT("ChannelPanelFeaturedMark"),          TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« æ³¨ç›®ãƒãƒ¼ã‚¯èƒŒæ™¯1")},
+	{HEXRGB(0x00FF00),  TEXT("ChannelPanelFeaturedMark2"),         TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« æ³¨ç›®ãƒãƒ¼ã‚¯èƒŒæ™¯2")},
+	{HEXRGB(0x00BF00),  TEXT("ChannelPanelFeaturedMarkBorder"),    TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« æ³¨ç›®ãƒãƒ¼ã‚¯å¤–æ ")},
+	{HEXRGB(0x2D5899),  TEXT("ChannelPanelProgress"),              TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼1")},
+	{HEXRGB(0x2D5899),  TEXT("ChannelPanelProgress2"),             TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼2")},
+	{HEXRGB(0x2D5899),  TEXT("ChannelPanelProgressBorder"),        TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« ç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼å¤–æ ")},
+	{HEXRGB(0x3465B0),  TEXT("ChannelPanelCurProgress"),           TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼1")},
+	{HEXRGB(0x3465B0),  TEXT("ChannelPanelCurProgress2"),          TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼2")},
+	{HEXRGB(0x3465B0),  TEXT("ChannelPanelCurProgressBorder"),     TEXT("ãƒãƒ£ãƒ³ãƒãƒ«ãƒ‘ãƒãƒ« é¸æŠç•ªçµ„çµŒéæ™‚é–“ãƒãƒ¼å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ControlPanelBack"),                  TEXT("æ“ä½œãƒ‘ãƒãƒ« èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("ControlPanelBack2"),                 TEXT("æ“ä½œãƒ‘ãƒãƒ« èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("ControlPanelText"),                  TEXT("æ“ä½œãƒ‘ãƒãƒ« æ–‡å­—")},
+	{HEXRGB(0x666666),  TEXT("ControlPanelItemBorder"),            TEXT("æ“ä½œãƒ‘ãƒãƒ« é …ç›®å¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("ControlPanelHighlightBack"),         TEXT("æ“ä½œãƒ‘ãƒãƒ« é¸æŠèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("ControlPanelHighlightBack2"),        TEXT("æ“ä½œãƒ‘ãƒãƒ« é¸æŠèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ControlPanelHighlightText"),         TEXT("æ“ä½œãƒ‘ãƒãƒ« é¸æŠæ–‡å­—")},
+	{HEXRGB(0x3C76CC),  TEXT("ControlPanelHighlightBorder"),       TEXT("æ“ä½œãƒ‘ãƒãƒ« é¸æŠé …ç›®å¤–æ ")},
+	{HEXRGB(0x444444),  TEXT("ControlPanelCheckedBack"),           TEXT("æ“ä½œãƒ‘ãƒãƒ« ãƒã‚§ãƒƒã‚¯èƒŒæ™¯1")},
+	{HEXRGB(0x555555),  TEXT("ControlPanelCheckedBack2"),          TEXT("æ“ä½œãƒ‘ãƒãƒ« ãƒã‚§ãƒƒã‚¯èƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ControlPanelCheckedText"),           TEXT("æ“ä½œãƒ‘ãƒãƒ« ãƒã‚§ãƒƒã‚¯æ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("ControlPanelCheckedBorder"),         TEXT("æ“ä½œãƒ‘ãƒãƒ« ãƒã‚§ãƒƒã‚¯é …ç›®å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ControlPanelMargin"),                TEXT("æ“ä½œãƒ‘ãƒãƒ« ä½™ç™½")},
+	{HEXRGB(0x333333),  TEXT("CaptionPanelBack"),                  TEXT("å­—å¹•ãƒ‘ãƒãƒ« èƒŒæ™¯")},
+	{HEXRGB(0x999999),  TEXT("CaptionPanelText"),                  TEXT("å­—å¹•ãƒ‘ãƒãƒ« æ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("TitleBarBack"),                      TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ èƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("TitleBarBack2"),                     TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("TitleBarText"),                      TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ æ–‡å­—")},
+	{HEXRGB(0x777777),  TEXT("TitleBarTextBorder"),                TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ æ–‡å­—å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("TitleBarIconBack"),                  TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ ã‚¢ã‚¤ã‚³ãƒ³èƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("TitleBarIconBack2"),                 TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ ã‚¢ã‚¤ã‚³ãƒ³èƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("TitleBarIcon"),                      TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ ã‚¢ã‚¤ã‚³ãƒ³")},
+	{HEXRGB(0x777777),  TEXT("TitleBarIconBorder"),                TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ ã‚¢ã‚¤ã‚³ãƒ³å¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("TitleBarHighlightBack"),             TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ é¸æŠèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("TitleBarHighlightBack2"),            TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ é¸æŠèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("TitleBarHighlightIcon"),             TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ é¸æŠã‚¢ã‚¤ã‚³ãƒ³")},
+	{HEXRGB(0x3C76CC),  TEXT("TitleBarHighlightIconBorder"),       TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ é¸æŠã‚¢ã‚¤ã‚³ãƒ³å¤–æ ")},
+	{HEXRGB(0x111111),  TEXT("TitleBarBorder"),                    TEXT("ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("SideBarBack"),                       TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ èƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("SideBarBack2"),                      TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("SideBarIcon"),                       TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ ã‚¢ã‚¤ã‚³ãƒ³")},
+	{HEXRGB(0x777777),  TEXT("SideBarItemBorder"),                 TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ é …ç›®å¤–æ ")},
+	{HEXRGB(0x4486E8),  TEXT("SideBarHighlightBack"),              TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ é¸æŠèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("SideBarHighlightBack2"),             TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ é¸æŠèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("SideBarHighlightIcon"),              TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ é¸æŠã‚¢ã‚¤ã‚³ãƒ³")},
+	{HEXRGB(0x3C76CC),  TEXT("SideBarHighlightBorder"),            TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ é¸æŠå¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("SideBarCheckBack"),                  TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ ãƒã‚§ãƒƒã‚¯èƒŒæ™¯1")},
+	{HEXRGB(0x444444),  TEXT("SideBarCheckBack2"),                 TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ ãƒã‚§ãƒƒã‚¯èƒŒæ™¯2")},
+	{HEXRGB(0xAAAAAA),  TEXT("SideBarCheckIcon"),                  TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ ãƒã‚§ãƒƒã‚¯ã‚¢ã‚¤ã‚³ãƒ³")},
+	{HEXRGB(0x222222),  TEXT("SideBarCheckBorder"),                TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ ãƒã‚§ãƒƒã‚¯å¤–æ ")},
+	{HEXRGB(0x111111),  TEXT("SideBarBorder"),                     TEXT("ã‚µã‚¤ãƒ‰ãƒãƒ¼ å¤–æ ")},
+	{HEXRGB(0x222222),  TEXT("NotificationBarBack"),               TEXT("é€šçŸ¥ãƒãƒ¼ èƒŒæ™¯1")},
+	{HEXRGB(0x333333),  TEXT("NotificationBarBack2"),              TEXT("é€šçŸ¥ãƒãƒ¼ èƒŒæ™¯2")},
+	{HEXRGB(0xBBBBBB),  TEXT("NotificationBarText"),               TEXT("é€šçŸ¥ãƒãƒ¼ æ–‡å­—")},
+	{HEXRGB(0xFF9F44),  TEXT("NotificationBarWarningText"),        TEXT("é€šçŸ¥ãƒãƒ¼ è­¦å‘Šæ–‡å­—")},
+	{HEXRGB(0xFF4444),  TEXT("NotificationBarErrorText"),          TEXT("é€šçŸ¥ãƒãƒ¼ ã‚¨ãƒ©ãƒ¼æ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("ProgramGuideBack"),                  TEXT("EPGç•ªçµ„è¡¨ èƒŒæ™¯")},
+	{HEXRGB(0x222222),  TEXT("ProgramGuideText"),                  TEXT("EPGç•ªçµ„è¡¨ ç•ªçµ„å†…å®¹")},
+	{HEXRGB(0x000000),  TEXT("ProgramGuideEventTitle"),            TEXT("EPGç•ªçµ„è¡¨ ç•ªçµ„å")},
+	{HEXRGB(0x0000BF),  TEXT("ProgramGuideHighlightText"),         TEXT("EPGç•ªçµ„è¡¨ æ¤œç´¢ç•ªçµ„å†…å®¹")},
+	{HEXRGB(0x0000FF),  TEXT("ProgramGuideHighlightTitle"),        TEXT("EPGç•ªçµ„è¡¨ æ¤œç´¢ç•ªçµ„å")},
+	{HEXRGB(0x9999FF),  TEXT("ProgramGuideHighlightBack"),         TEXT("EPGç•ªçµ„è¡¨ æ¤œç´¢ç•ªçµ„èƒŒæ™¯")},
+	{HEXRGB(0x6666FF),  TEXT("ProgramGuideHighlightBorder"),       TEXT("EPGç•ªçµ„è¡¨ æ¤œç´¢ç•ªçµ„æ ")},
+	{HEXRGB(0xCCFFCC),  TEXT("ProgramGuideFeaturedMark"),          TEXT("EPGç•ªçµ„è¡¨ æ³¨ç›®ãƒãƒ¼ã‚¯èƒŒæ™¯1")},
+	{HEXRGB(0x99FF99),  TEXT("ProgramGuideFeaturedMark2"),         TEXT("EPGç•ªçµ„è¡¨ æ³¨ç›®ãƒãƒ¼ã‚¯èƒŒæ™¯2")},
+	{HEXRGB(0x00EF00),  TEXT("ProgramGuideFeaturedMarkBorder"),    TEXT("EPGç•ªçµ„è¡¨ æ³¨ç›®ãƒãƒ¼ã‚¯å¤–æ ")},
+	{HEXRGB(0x333333),  TEXT("ProgramGuideChannelBack"),           TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ£ãƒ³ãƒãƒ«åèƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("ProgramGuideChannelBack2"),          TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ£ãƒ³ãƒãƒ«åèƒŒæ™¯2")},
+	{HEXRGB(0x999999),  TEXT("ProgramGuideChannelText"),           TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ£ãƒ³ãƒãƒ«åæ–‡å­—")},
+	{HEXRGB(0x4486E8),  TEXT("ProgramGuideCurChannelBack"),        TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ£ãƒ³ãƒãƒ«åé¸æŠèƒŒæ™¯1")},
+	{HEXRGB(0x3C76CC),  TEXT("ProgramGuideCurChannelBack2"),       TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ£ãƒ³ãƒãƒ«åé¸æŠèƒŒæ™¯2")},
+	{HEXRGB(0xDDDDDD),  TEXT("ProgramGuideCurChannelText"),        TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ£ãƒ³ãƒãƒ«åé¸æŠæ–‡å­—")},
+	{HEXRGB(0x333333),  TEXT("ProgramGuideTimeBack"),              TEXT("EPGç•ªçµ„è¡¨ æ—¥æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x111111),  TEXT("ProgramGuideTimeBack2"),             TEXT("EPGç•ªçµ„è¡¨ æ—¥æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x00337F),  TEXT("ProgramGuideTime0To2Back"),          TEXT("EPGç•ªçµ„è¡¨ 0ï½2æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x00193F),  TEXT("ProgramGuideTime0To2Back2"),         TEXT("EPGç•ªçµ„è¡¨ 0ï½2æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x00667F),  TEXT("ProgramGuideTime3To5Back"),          TEXT("EPGç•ªçµ„è¡¨ 3ï½5æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x00333F),  TEXT("ProgramGuideTime3To5Back2"),         TEXT("EPGç•ªçµ„è¡¨ 3ï½5æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x007F66),  TEXT("ProgramGuideTime6To8Back"),          TEXT("EPGç•ªçµ„è¡¨ 6ï½8æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x003F33),  TEXT("ProgramGuideTime6To8Back2"),         TEXT("EPGç•ªçµ„è¡¨ 6ï½8æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x667F00),  TEXT("ProgramGuideTime9To11Back"),         TEXT("EPGç•ªçµ„è¡¨ 9ï½11æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x333F00),  TEXT("ProgramGuideTime9To11Back2"),        TEXT("EPGç•ªçµ„è¡¨ 9ï½11æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x7F6600),  TEXT("ProgramGuideTime12To14Back"),        TEXT("EPGç•ªçµ„è¡¨ 12ï½14æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x3F3300),  TEXT("ProgramGuideTime12To14Back2"),       TEXT("EPGç•ªçµ„è¡¨ 12ï½14æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x7F3300),  TEXT("ProgramGuideTime15To17Back"),        TEXT("EPGç•ªçµ„è¡¨ 15ï½17æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x3F1900),  TEXT("ProgramGuideTime15To17Back2"),       TEXT("EPGç•ªçµ„è¡¨ 15ï½17é–“èƒŒæ™¯2")},
+	{HEXRGB(0x7F0066),  TEXT("ProgramGuideTime18To20Back"),        TEXT("EPGç•ªçµ„è¡¨ 18ï½20æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x3F0033),  TEXT("ProgramGuideTime18To20Back2"),       TEXT("EPGç•ªçµ„è¡¨ 18ï½20æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0x66007F),  TEXT("ProgramGuideTime21To23Back"),        TEXT("EPGç•ªçµ„è¡¨ 21ï½23æ™‚èƒŒæ™¯1")},
+	{HEXRGB(0x33003F),  TEXT("ProgramGuideTime21To23Back2"),       TEXT("EPGç•ªçµ„è¡¨ 21ï½23æ™‚èƒŒæ™¯2")},
+	{HEXRGB(0xBBBBBB),  TEXT("ProgramGuideTimeText"),              TEXT("EPGç•ªçµ„è¡¨ æ™‚é–“æ–‡å­—")},
+	{HEXRGB(0x888888),  TEXT("ProgramGuideTimeLine"),              TEXT("EPGç•ªçµ„è¡¨ æ™‚é–“ç·š")},
+	{HEXRGB(0xFF6600),  TEXT("ProgramGuideCurTimeLine"),           TEXT("EPGç•ªçµ„è¡¨ ç¾åœ¨æ™‚åˆ»ç·š")},
+	{HEXRGB(0xFFFFE0),  TEXT("EPGContentNews"),                    TEXT("EPGç•ªçµ„è¡¨ ãƒ‹ãƒ¥ãƒ¼ã‚¹ç•ªçµ„")},
+	{HEXRGB(0xE0E0FF),  TEXT("EPGContentSports"),                  TEXT("EPGç•ªçµ„è¡¨ ã‚¹ãƒãƒ¼ãƒ„ç•ªçµ„")},
+	{HEXRGB(0xFFE0F0),  TEXT("EPGContentInformation"),             TEXT("EPGç•ªçµ„è¡¨ æƒ…å ±ç•ªçµ„")},
+	{HEXRGB(0xFFE0E0),  TEXT("EPGContentDrama"),                   TEXT("EPGç•ªçµ„è¡¨ ãƒ‰ãƒ©ãƒ")},
+	{HEXRGB(0xE0FFE0),  TEXT("EPGContentMusic"),                   TEXT("EPGç•ªçµ„è¡¨ éŸ³æ¥½ç•ªçµ„")},
+	{HEXRGB(0xE0FFFF),  TEXT("EPGContentVariety"),                 TEXT("EPGç•ªçµ„è¡¨ ãƒãƒ©ã‚¨ãƒ†ã‚£ç•ªçµ„")},
+	{HEXRGB(0xFFF0E0),  TEXT("EPGContentMovie"),                   TEXT("EPGç•ªçµ„è¡¨ æ˜ ç”»")},
+	{HEXRGB(0xFFE0FF),  TEXT("EPGContentAnime"),                   TEXT("EPGç•ªçµ„è¡¨ ã‚¢ãƒ‹ãƒ¡/ç‰¹æ’®")},
+	{HEXRGB(0xFFFFE0),  TEXT("EPGContentDocumentary"),             TEXT("EPGç•ªçµ„è¡¨ ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ã‚¿ãƒªãƒ¼/æ•™é¤Šç•ªçµ„")},
+	{HEXRGB(0xFFF0E0),  TEXT("EPGContentTheater"),                 TEXT("EPGç•ªçµ„è¡¨ åŠ‡å ´/å…¬æ¼”")},
+	{HEXRGB(0xE0F0FF),  TEXT("EPGContentEducation"),               TEXT("EPGç•ªçµ„è¡¨ è¶£å‘³/æ•™è‚²ç•ªçµ„")},
+	{HEXRGB(0xE0F0FF),  TEXT("EPGContentWelfare"),                 TEXT("EPGç•ªçµ„è¡¨ ç¦ç¥‰ç•ªçµ„")},
+	{HEXRGB(0xF0F0F0),  TEXT("EPGContentOther"),                   TEXT("EPGç•ªçµ„è¡¨ ãã®ä»–ã®ç•ªçµ„")},
 };
 
 const CColorScheme::GradientInfo CColorScheme::m_GradientInfoList[NUM_GRADIENTS] = {
-	{TEXT("StatusBackGradient"),						Theme::DIRECTION_VERT,	false,
-		COLOR_STATUSBACK1,						COLOR_STATUSBACK2},
-	{TEXT("StatusBottomItemBackGradient"),				Theme::DIRECTION_VERT,	false,
-		COLOR_STATUSBOTTOMITEMBACK1,			COLOR_STATUSBOTTOMITEMBACK2},
-	{TEXT("StatusHighlightBackGradient"),				Theme::DIRECTION_VERT,	true,
-		COLOR_STATUSHIGHLIGHTBACK1,				COLOR_STATUSHIGHLIGHTBACK2},
-	{TEXT("StatusEventProgressBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_STATUSEVENTPROGRESSBACK1,			COLOR_STATUSEVENTPROGRESSBACK2},
-	{TEXT("StatusEventProgressElapsedGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_STATUSEVENTPROGRESSELAPSED1,		COLOR_STATUSEVENTPROGRESSELAPSED2},
-	{TEXT("PanelTabBackGradient"),						Theme::DIRECTION_VERT,	true,
-		COLOR_PANELTABBACK1,					COLOR_PANELTABBACK2},
-	{TEXT("PanelCurTabBackGradient"),					Theme::DIRECTION_VERT,	true,
-		COLOR_PANELCURTABBACK1,					COLOR_PANELCURTABBACK2},
-	{TEXT("PanelTabMarginGradient"),					Theme::DIRECTION_VERT,	false,
-		COLOR_PANELTABMARGIN1,					COLOR_PANELTABMARGIN2},
-	{TEXT("PanelTitleBackGradient"),					Theme::DIRECTION_VERT,	true,
-		COLOR_PANELTITLEBACK1,					COLOR_PANELTITLEBACK2},
-	{TEXT("InformationPanelButtonBackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_INFORMATIONPANEL_BUTTONBACK1,		COLOR_INFORMATIONPANEL_BUTTONBACK2},
-	{TEXT("InformationPanelHotButtonBackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_INFORMATIONPANEL_HOTBUTTONBACK1,	COLOR_INFORMATIONPANEL_HOTBUTTONBACK2},
-	{TEXT("ProgramListChannelBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_CHANNELBACK1,	COLOR_PROGRAMLISTPANEL_CHANNELBACK2},
-	{TEXT("ProgramListCurChannelBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_CURCHANNELBACK1,	COLOR_PROGRAMLISTPANEL_CURCHANNELBACK2},
-	{TEXT("ProgramListChannelButtonBackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK1,	COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK2},
-	{TEXT("ProgramListChannelButtonHotBackGradient"),	Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK1,	COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK2},
-	{TEXT("ProgramListBackGradient"),					Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_EVENTBACK1,		COLOR_PROGRAMLISTPANEL_EVENTBACK2},
-	{TEXT("ProgramListCurBackGradient"),				Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_CUREVENTBACK1,	COLOR_PROGRAMLISTPANEL_CUREVENTBACK2},
-	{TEXT("ProgramListTitleBackGradient"),				Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_TITLEBACK1,		COLOR_PROGRAMLISTPANEL_TITLEBACK2},
-	{TEXT("ProgramListCurTitleBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMLISTPANEL_CURTITLEBACK1,	COLOR_PROGRAMLISTPANEL_CURTITLEBACK2},
-	{TEXT("ChannelPanelChannelNameBackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_CHANNELNAMEBACK1,	COLOR_CHANNELPANEL_CHANNELNAMEBACK2},
-	{TEXT("ChannelPanelCurChannelNameBackGradient"),	Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_CURCHANNELNAMEBACK1,	COLOR_CHANNELPANEL_CURCHANNELNAMEBACK2},
-	{TEXT("ChannelPanelEventNameBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_EVENTNAME1BACK1,		COLOR_CHANNELPANEL_EVENTNAME1BACK2},
-	{TEXT("ChannelPanelEventName2BackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_EVENTNAME2BACK1,		COLOR_CHANNELPANEL_EVENTNAME2BACK2},
-	{TEXT("ChannelPanelCurEventNameBackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_CUREVENTNAME1BACK1,	COLOR_CHANNELPANEL_CUREVENTNAME1BACK2},
-	{TEXT("ChannelPanelCurEventName2BackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_CUREVENTNAME2BACK1,	COLOR_CHANNELPANEL_CUREVENTNAME2BACK2},
-	{TEXT("ChannelPanelFeaturedMarkGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_FEATUREDMARK1,		COLOR_CHANNELPANEL_FEATUREDMARK2},
-	{TEXT("ChannelPanelProgressGradient"),				Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_PROGRESS1,			COLOR_CHANNELPANEL_PROGRESS2},
-	{TEXT("ChannelPanelCurProgressGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_CHANNELPANEL_CURPROGRESS1,		COLOR_CHANNELPANEL_CURPROGRESS2},
-	{TEXT("ControlPanelBackGradient"),					Theme::DIRECTION_VERT,	true,
-		COLOR_CONTROLPANELBACK1,				COLOR_CONTROLPANELBACK2},
-	{TEXT("ControlPanelHighlightBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_CONTROLPANELHIGHLIGHTBACK1,		COLOR_CONTROLPANELHIGHLIGHTBACK2},
-	{TEXT("ControlPanelCheckedBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_CONTROLPANELCHECKEDBACK1,			COLOR_CONTROLPANELCHECKEDBACK2},
-	{TEXT("TitleBarBackGradient"),						Theme::DIRECTION_VERT,	true,
-		COLOR_TITLEBARBACK1,					COLOR_TITLEBARBACK2},
-	{TEXT("TitleBarIconBackGradient"),					Theme::DIRECTION_VERT,	true,
-		COLOR_TITLEBARICONBACK1,				COLOR_TITLEBARICONBACK2},
-	{TEXT("TitleBarHighlightBackGradient"),				Theme::DIRECTION_VERT,	true,
-		COLOR_TITLEBARHIGHLIGHTBACK1,			COLOR_TITLEBARHIGHLIGHTBACK2},
-	{TEXT("SideBarBackGradient"),						Theme::DIRECTION_HORZ,	true,
-		COLOR_SIDEBARBACK1,						COLOR_SIDEBARBACK2},
-	{TEXT("SideBarHighlightBackGradient"),				Theme::DIRECTION_HORZ,	true,
-		COLOR_SIDEBARHIGHLIGHTBACK1,			COLOR_SIDEBARHIGHLIGHTBACK2},
-	{TEXT("SideBarCheckBackGradient"),					Theme::DIRECTION_HORZ,	true,
-		COLOR_SIDEBARCHECKBACK1,				COLOR_SIDEBARCHECKBACK2},
-	{TEXT("NotificationBarBackGradient"),				Theme::DIRECTION_VERT,	true,
-		COLOR_NOTIFICATIONBARBACK1,				COLOR_NOTIFICATIONBARBACK2},
-	{TEXT("ProgramGuideFeaturedMarkGradient"),			Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_FEATUREDMARK1,		COLOR_PROGRAMGUIDE_FEATUREDMARK2},
-	{TEXT("ProgramGuideChannelBackGradient"),			Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMGUIDE_CHANNELBACK1,		COLOR_PROGRAMGUIDE_CHANNELBACK2},
-	{TEXT("ProgramGuideCurChannelBackGradient"),		Theme::DIRECTION_VERT,	true,
-		COLOR_PROGRAMGUIDE_CURCHANNELBACK1,		COLOR_PROGRAMGUIDE_CURCHANNELBACK2},
-	{TEXT("ProgramGuideTimeBackGradient"),				Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK1,			COLOR_PROGRAMGUIDE_TIMEBACK2},
-	{TEXT("ProgramGuideTime0To2BackGradient"),			Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_1,		COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_2},
-	{TEXT("ProgramGuideTime3To5BackGradient"),			Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_1,		COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_2},
-	{TEXT("ProgramGuideTime6To8BackGradient"),			Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_1,		COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_2},
-	{TEXT("ProgramGuideTime9To11BackGradient"),			Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_1,	COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_2},
-	{TEXT("ProgramGuideTime12To14BackGradient"),		Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_1,	COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_2},
-	{TEXT("ProgramGuideTime15To17BackGradient"),		Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_1,	COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_2},
-	{TEXT("ProgramGuideTime18To20BackGradient"),		Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_1,	COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_2},
-	{TEXT("ProgramGuideTime21To23BackGradient"),		Theme::DIRECTION_HORZ,	true,
-		COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_1,	COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_2},
+	{TEXT("StatusBackGradient"),                      Theme::GradientDirection::Vert, false, COLOR_STATUSBACK1,                            COLOR_STATUSBACK2},
+	{TEXT("StatusBottomItemBackGradient"),            Theme::GradientDirection::Vert, false, COLOR_STATUSBOTTOMITEMBACK1,                  COLOR_STATUSBOTTOMITEMBACK2},
+	{TEXT("StatusHighlightBackGradient"),             Theme::GradientDirection::Vert, true,  COLOR_STATUSHIGHLIGHTBACK1,                   COLOR_STATUSHIGHLIGHTBACK2},
+	{TEXT("StatusEventProgressBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_STATUSEVENTPROGRESSBACK1,               COLOR_STATUSEVENTPROGRESSBACK2},
+	{TEXT("StatusEventProgressElapsedGradient"),      Theme::GradientDirection::Vert, true,  COLOR_STATUSEVENTPROGRESSELAPSED1,            COLOR_STATUSEVENTPROGRESSELAPSED2},
+	{TEXT("PanelTabBackGradient"),                    Theme::GradientDirection::Vert, true,  COLOR_PANELTABBACK1,                          COLOR_PANELTABBACK2},
+	{TEXT("PanelCurTabBackGradient"),                 Theme::GradientDirection::Vert, true,  COLOR_PANELCURTABBACK1,                       COLOR_PANELCURTABBACK2},
+	{TEXT("PanelTabMarginGradient"),                  Theme::GradientDirection::Vert, false, COLOR_PANELTABMARGIN1,                        COLOR_PANELTABMARGIN2},
+	{TEXT("PanelTitleBackGradient"),                  Theme::GradientDirection::Vert, true,  COLOR_PANELTITLEBACK1,                        COLOR_PANELTITLEBACK2},
+	{TEXT("InformationPanelButtonBackGradient"),      Theme::GradientDirection::Vert, true,  COLOR_INFORMATIONPANEL_BUTTONBACK1,           COLOR_INFORMATIONPANEL_BUTTONBACK2},
+	{TEXT("InformationPanelHotButtonBackGradient"),   Theme::GradientDirection::Vert, true,  COLOR_INFORMATIONPANEL_HOTBUTTONBACK1,        COLOR_INFORMATIONPANEL_HOTBUTTONBACK2},
+	{TEXT("ProgramListChannelBackGradient"),          Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CHANNELBACK1,          COLOR_PROGRAMLISTPANEL_CHANNELBACK2},
+	{TEXT("ProgramListCurChannelBackGradient"),       Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CURCHANNELBACK1,       COLOR_PROGRAMLISTPANEL_CURCHANNELBACK2},
+	{TEXT("ProgramListChannelButtonBackGradient"),    Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK1,    COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBACK2},
+	{TEXT("ProgramListChannelButtonHotBackGradient"), Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK1, COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK2},
+	{TEXT("ProgramListBackGradient"),                 Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_EVENTBACK1,            COLOR_PROGRAMLISTPANEL_EVENTBACK2},
+	{TEXT("ProgramListCurBackGradient"),              Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CUREVENTBACK1,         COLOR_PROGRAMLISTPANEL_CUREVENTBACK2},
+	{TEXT("ProgramListTitleBackGradient"),            Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_TITLEBACK1,            COLOR_PROGRAMLISTPANEL_TITLEBACK2},
+	{TEXT("ProgramListCurTitleBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_PROGRAMLISTPANEL_CURTITLEBACK1,         COLOR_PROGRAMLISTPANEL_CURTITLEBACK2},
+	{TEXT("ChannelPanelChannelNameBackGradient"),     Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CHANNELNAMEBACK1,          COLOR_CHANNELPANEL_CHANNELNAMEBACK2},
+	{TEXT("ChannelPanelCurChannelNameBackGradient"),  Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CURCHANNELNAMEBACK1,       COLOR_CHANNELPANEL_CURCHANNELNAMEBACK2},
+	{TEXT("ChannelPanelEventNameBackGradient"),       Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_EVENTNAME1BACK1,           COLOR_CHANNELPANEL_EVENTNAME1BACK2},
+	{TEXT("ChannelPanelEventName2BackGradient"),      Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_EVENTNAME2BACK1,           COLOR_CHANNELPANEL_EVENTNAME2BACK2},
+	{TEXT("ChannelPanelCurEventNameBackGradient"),    Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CUREVENTNAME1BACK1,        COLOR_CHANNELPANEL_CUREVENTNAME1BACK2},
+	{TEXT("ChannelPanelCurEventName2BackGradient"),   Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CUREVENTNAME2BACK1,        COLOR_CHANNELPANEL_CUREVENTNAME2BACK2},
+	{TEXT("ChannelPanelFeaturedMarkGradient"),        Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_FEATUREDMARK1,             COLOR_CHANNELPANEL_FEATUREDMARK2},
+	{TEXT("ChannelPanelProgressGradient"),            Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_PROGRESS1,                 COLOR_CHANNELPANEL_PROGRESS2},
+	{TEXT("ChannelPanelCurProgressGradient"),         Theme::GradientDirection::Vert, true,  COLOR_CHANNELPANEL_CURPROGRESS1,              COLOR_CHANNELPANEL_CURPROGRESS2},
+	{TEXT("ControlPanelBackGradient"),                Theme::GradientDirection::Vert, true,  COLOR_CONTROLPANELBACK1,                      COLOR_CONTROLPANELBACK2},
+	{TEXT("ControlPanelHighlightBackGradient"),       Theme::GradientDirection::Vert, true,  COLOR_CONTROLPANELHIGHLIGHTBACK1,             COLOR_CONTROLPANELHIGHLIGHTBACK2},
+	{TEXT("ControlPanelCheckedBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_CONTROLPANELCHECKEDBACK1,               COLOR_CONTROLPANELCHECKEDBACK2},
+	{TEXT("TitleBarBackGradient"),                    Theme::GradientDirection::Vert, true,  COLOR_TITLEBARBACK1,                          COLOR_TITLEBARBACK2},
+	{TEXT("TitleBarIconBackGradient"),                Theme::GradientDirection::Vert, true,  COLOR_TITLEBARICONBACK1,                      COLOR_TITLEBARICONBACK2},
+	{TEXT("TitleBarHighlightBackGradient"),           Theme::GradientDirection::Vert, true,  COLOR_TITLEBARHIGHLIGHTBACK1,                 COLOR_TITLEBARHIGHLIGHTBACK2},
+	{TEXT("SideBarBackGradient"),                     Theme::GradientDirection::Horz, true,  COLOR_SIDEBARBACK1,                           COLOR_SIDEBARBACK2},
+	{TEXT("SideBarHighlightBackGradient"),            Theme::GradientDirection::Horz, true,  COLOR_SIDEBARHIGHLIGHTBACK1,                  COLOR_SIDEBARHIGHLIGHTBACK2},
+	{TEXT("SideBarCheckBackGradient"),                Theme::GradientDirection::Horz, true,  COLOR_SIDEBARCHECKBACK1,                      COLOR_SIDEBARCHECKBACK2},
+	{TEXT("NotificationBarBackGradient"),             Theme::GradientDirection::Vert, true,  COLOR_NOTIFICATIONBARBACK1,                   COLOR_NOTIFICATIONBARBACK2},
+	{TEXT("ProgramGuideFeaturedMarkGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_FEATUREDMARK1,             COLOR_PROGRAMGUIDE_FEATUREDMARK2},
+	{TEXT("ProgramGuideChannelBackGradient"),         Theme::GradientDirection::Vert, true,  COLOR_PROGRAMGUIDE_CHANNELBACK1,              COLOR_PROGRAMGUIDE_CHANNELBACK2},
+	{TEXT("ProgramGuideCurChannelBackGradient"),      Theme::GradientDirection::Vert, true,  COLOR_PROGRAMGUIDE_CURCHANNELBACK1,           COLOR_PROGRAMGUIDE_CURCHANNELBACK2},
+	{TEXT("ProgramGuideTimeBackGradient"),            Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK1,                 COLOR_PROGRAMGUIDE_TIMEBACK2},
+	{TEXT("ProgramGuideTime0To2BackGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_1,           COLOR_PROGRAMGUIDE_TIMEBACK_0TO2_2},
+	{TEXT("ProgramGuideTime3To5BackGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_1,           COLOR_PROGRAMGUIDE_TIMEBACK_3TO5_2},
+	{TEXT("ProgramGuideTime6To8BackGradient"),        Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_1,           COLOR_PROGRAMGUIDE_TIMEBACK_6TO8_2},
+	{TEXT("ProgramGuideTime9To11BackGradient"),       Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_1,          COLOR_PROGRAMGUIDE_TIMEBACK_9TO11_2},
+	{TEXT("ProgramGuideTime12To14BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_1,         COLOR_PROGRAMGUIDE_TIMEBACK_12TO14_2},
+	{TEXT("ProgramGuideTime15To17BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_1,         COLOR_PROGRAMGUIDE_TIMEBACK_15TO17_2},
+	{TEXT("ProgramGuideTime18To20BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_1,         COLOR_PROGRAMGUIDE_TIMEBACK_18TO20_2},
+	{TEXT("ProgramGuideTime21To23BackGradient"),      Theme::GradientDirection::Horz, true,  COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_1,         COLOR_PROGRAMGUIDE_TIMEBACK_21TO23_2},
 };
 
 const CColorScheme::BorderInfo CColorScheme::m_BorderInfoList[NUM_BORDERS] = {
-	{TEXT("ScreenBorder"),						Theme::BORDER_NONE,
-		COLOR_SCREENBORDER},
-	{TEXT("WindowFrameBorder"),					Theme::BORDER_NONE,
-		COLOR_WINDOWFRAMEBORDER},
-	{TEXT("WindowActiveFrameBorder"),			Theme::BORDER_NONE,
-		COLOR_WINDOWACTIVEFRAMEBORDER},
-	{TEXT("StatusBorder"),						Theme::BORDER_RAISED,
-		COLOR_STATUSBORDER},
-	{TEXT("StatusItemBorder"),					Theme::BORDER_NONE,
-		COLOR_STATUSITEMBORDER},
-	{TEXT("StatusBottomItemBorder"),			Theme::BORDER_NONE,
-		COLOR_STATUSBOTTOMITEMBORDER},
-	{TEXT("StatusHighlightBorder"),				Theme::BORDER_NONE,
-		COLOR_STATUSHIGHLIGHTBORDER},
-	{TEXT("StatusEventProgressBorder"),			Theme::BORDER_NONE,
-		COLOR_STATUSEVENTPROGRESSBORDER},
-	{TEXT("StatusEventProgressElapsedBorder"),	Theme::BORDER_NONE,
-		COLOR_STATUSEVENTPROGRESSELAPSEDBORDER},
-	{TEXT("TitleBarBorder"),					Theme::BORDER_RAISED,
-		COLOR_TITLEBARBORDER},
-	{TEXT("TitleBarCaptionBorder"),				Theme::BORDER_NONE,
-		COLOR_TITLEBARTEXTBORDER},
-	{TEXT("TitleBarIconBorder"),				Theme::BORDER_NONE,
-		COLOR_TITLEBARICONBORDER},
-	{TEXT("TitleBarHighlightBorder"),			Theme::BORDER_NONE,
-		COLOR_TITLEBARHIGHLIGHTBORDER},
-	{TEXT("SideBarBorder"),						Theme::BORDER_RAISED,
-		COLOR_SIDEBARBORDER},
-	{TEXT("SideBarItemBorder"),					Theme::BORDER_NONE,
-		COLOR_SIDEBARITEMBORDER},
-	{TEXT("SideBarHighlightBorder"),			Theme::BORDER_NONE,
-		COLOR_SIDEBARHIGHLIGHTBORDER},
-	{TEXT("SideBarCheckBorder"),				Theme::BORDER_SUNKEN,
-		COLOR_SIDEBARCHECKBORDER},
-	{TEXT("ProgramGuideStatusBorder"),			Theme::BORDER_SUNKEN,
-		COLOR_STATUSBORDER},
-	{TEXT("PanelTabBorder"),					Theme::BORDER_SOLID,
-		COLOR_PANELTABBORDER},
-	{TEXT("PanelCurTabBorder"),					Theme::BORDER_SOLID,
-		COLOR_PANELCURTABBORDER},
-	{TEXT("PanelTabMarginBorder"),				Theme::BORDER_NONE,
-		COLOR_PANELTABMARGINBORDER},
-	{TEXT("PanelTitleBorder"),					Theme::BORDER_RAISED,
-		COLOR_PANELTITLEBORDER},
-	{TEXT("InformationPanelEventInfoBorder"),	Theme::BORDER_NONE,
-		COLOR_INFORMATIONPANEL_EVENTINFOBORDER},
-	{TEXT("InformationPanelButtonBorder"),		Theme::BORDER_NONE,
-		COLOR_INFORMATIONPANEL_BUTTONBORDER},
-	{TEXT("InformationPanelHotButtonBorder"),	Theme::BORDER_NONE,
-		COLOR_INFORMATIONPANEL_HOTBUTTONBORDER},
-	{TEXT("ProgramListPanelChannelBorder"),		Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CHANNELBORDER},
-	{TEXT("ProgramListPanelCurChannelBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CURCHANNELBORDER},
-	{TEXT("ProgramListPanelChannelButtonBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBORDER},
-	{TEXT("ProgramListPanelChannelButtonHotBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBORDER},
-	{TEXT("ProgramListPanelEventBorder"),		Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_EVENTBORDER},
-	{TEXT("ProgramListPanelCurEventBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CUREVENTBORDER},
-	{TEXT("ProgramListPanelTitleBorder"),		Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_TITLEBORDER},
-	{TEXT("ProgramListPanelCurTitleBorder"),	Theme::BORDER_NONE,
-		COLOR_PROGRAMLISTPANEL_CURTITLEBORDER},
-	{TEXT("ChannelPanelChannelNameBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CHANNELNAMEBORDER},
-	{TEXT("ChannelPanelCurChannelNameBorder"),	Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CURCHANNELNAMEBORDER},
-	{TEXT("ChannelPanelEventNameBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_EVENTNAME1BORDER},
-	{TEXT("ChannelPanelEventName2Border"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_EVENTNAME2BORDER},
-	{TEXT("ChannelPanelCurEventNameBorder"),	Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
-	{TEXT("ChannelPanelCurEventName2Border"),	Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CUREVENTNAME2BORDER},
-	{TEXT("ChannelPanelFeaturedMarkBorder"),	Theme::BORDER_SOLID,
-		COLOR_CHANNELPANEL_FEATUREDMARKBORDER},
-	{TEXT("ChannelPanelProgressBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_PROGRESSBORDER},
-	{TEXT("ChannelPanelCurProgressBorder"),		Theme::BORDER_NONE,
-		COLOR_CHANNELPANEL_CURPROGRESSBORDER},
-	{TEXT("ControlPanelItemBorder"),			Theme::BORDER_NONE,
-		COLOR_CONTROLPANELITEMBORDER},
-	{TEXT("ControlPanelHighlightBorder"),		Theme::BORDER_NONE,
-		COLOR_CONTROLPANELHIGHLIGHTBORDER},
-	{TEXT("ControlPanelCheckedBorder"),			Theme::BORDER_NONE,
-		COLOR_CONTROLPANELCHECKEDBORDER},
-	{TEXT("ProgramGuideFeaturedMarkBorder"),	Theme::BORDER_SOLID,
-		COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER},
+	{TEXT("ScreenBorder"),                           Theme::BorderType::None,   COLOR_SCREENBORDER},
+	{TEXT("WindowFrameBorder"),                      Theme::BorderType::None,   COLOR_WINDOWFRAMEBORDER},
+	{TEXT("WindowActiveFrameBorder"),                Theme::BorderType::None,   COLOR_WINDOWACTIVEFRAMEBORDER},
+	{TEXT("StatusBorder"),                           Theme::BorderType::Raised, COLOR_STATUSBORDER},
+	{TEXT("StatusItemBorder"),                       Theme::BorderType::None,   COLOR_STATUSITEMBORDER},
+	{TEXT("StatusBottomItemBorder"),                 Theme::BorderType::None,   COLOR_STATUSBOTTOMITEMBORDER},
+	{TEXT("StatusHighlightBorder"),                  Theme::BorderType::None,   COLOR_STATUSHIGHLIGHTBORDER},
+	{TEXT("StatusEventProgressBorder"),              Theme::BorderType::None,   COLOR_STATUSEVENTPROGRESSBORDER},
+	{TEXT("StatusEventProgressElapsedBorder"),       Theme::BorderType::None,   COLOR_STATUSEVENTPROGRESSELAPSEDBORDER},
+	{TEXT("TitleBarBorder"),                         Theme::BorderType::Raised, COLOR_TITLEBARBORDER},
+	{TEXT("TitleBarCaptionBorder"),                  Theme::BorderType::None,   COLOR_TITLEBARTEXTBORDER},
+	{TEXT("TitleBarIconBorder"),                     Theme::BorderType::None,   COLOR_TITLEBARICONBORDER},
+	{TEXT("TitleBarHighlightBorder"),                Theme::BorderType::None,   COLOR_TITLEBARHIGHLIGHTBORDER},
+	{TEXT("SideBarBorder"),                          Theme::BorderType::Raised, COLOR_SIDEBARBORDER},
+	{TEXT("SideBarItemBorder"),                      Theme::BorderType::None,   COLOR_SIDEBARITEMBORDER},
+	{TEXT("SideBarHighlightBorder"),                 Theme::BorderType::None,   COLOR_SIDEBARHIGHLIGHTBORDER},
+	{TEXT("SideBarCheckBorder"),                     Theme::BorderType::Sunken, COLOR_SIDEBARCHECKBORDER},
+	{TEXT("ProgramGuideStatusBorder"),               Theme::BorderType::Sunken, COLOR_STATUSBORDER},
+	{TEXT("PanelTabBorder"),                         Theme::BorderType::Solid,  COLOR_PANELTABBORDER},
+	{TEXT("PanelCurTabBorder"),                      Theme::BorderType::Solid,  COLOR_PANELCURTABBORDER},
+	{TEXT("PanelTabMarginBorder"),                   Theme::BorderType::None,   COLOR_PANELTABMARGINBORDER},
+	{TEXT("PanelTitleBorder"),                       Theme::BorderType::Raised, COLOR_PANELTITLEBORDER},
+	{TEXT("InformationPanelEventInfoBorder"),        Theme::BorderType::None,   COLOR_INFORMATIONPANEL_EVENTINFOBORDER},
+	{TEXT("InformationPanelButtonBorder"),           Theme::BorderType::None,   COLOR_INFORMATIONPANEL_BUTTONBORDER},
+	{TEXT("InformationPanelHotButtonBorder"),        Theme::BorderType::None,   COLOR_INFORMATIONPANEL_HOTBUTTONBORDER},
+	{TEXT("ProgramListPanelChannelBorder"),          Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CHANNELBORDER},
+	{TEXT("ProgramListPanelCurChannelBorder"),       Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CURCHANNELBORDER},
+	{TEXT("ProgramListPanelChannelButtonBorder"),    Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CHANNELBUTTONBORDER},
+	{TEXT("ProgramListPanelChannelButtonHotBorder"), Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTBORDER},
+	{TEXT("ProgramListPanelEventBorder"),            Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_EVENTBORDER},
+	{TEXT("ProgramListPanelCurEventBorder"),         Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CUREVENTBORDER},
+	{TEXT("ProgramListPanelTitleBorder"),            Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_TITLEBORDER},
+	{TEXT("ProgramListPanelCurTitleBorder"),         Theme::BorderType::None,   COLOR_PROGRAMLISTPANEL_CURTITLEBORDER},
+	{TEXT("ChannelPanelChannelNameBorder"),          Theme::BorderType::None,   COLOR_CHANNELPANEL_CHANNELNAMEBORDER},
+	{TEXT("ChannelPanelCurChannelNameBorder"),       Theme::BorderType::None,   COLOR_CHANNELPANEL_CURCHANNELNAMEBORDER},
+	{TEXT("ChannelPanelEventNameBorder"),            Theme::BorderType::None,   COLOR_CHANNELPANEL_EVENTNAME1BORDER},
+	{TEXT("ChannelPanelEventName2Border"),           Theme::BorderType::None,   COLOR_CHANNELPANEL_EVENTNAME2BORDER},
+	{TEXT("ChannelPanelCurEventNameBorder"),         Theme::BorderType::None,   COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
+	{TEXT("ChannelPanelCurEventName2Border"),        Theme::BorderType::None,   COLOR_CHANNELPANEL_CUREVENTNAME2BORDER},
+	{TEXT("ChannelPanelFeaturedMarkBorder"),         Theme::BorderType::Solid,  COLOR_CHANNELPANEL_FEATUREDMARKBORDER},
+	{TEXT("ChannelPanelProgressBorder"),             Theme::BorderType::None,   COLOR_CHANNELPANEL_PROGRESSBORDER},
+	{TEXT("ChannelPanelCurProgressBorder"),          Theme::BorderType::None,   COLOR_CHANNELPANEL_CURPROGRESSBORDER},
+	{TEXT("ControlPanelItemBorder"),                 Theme::BorderType::None,   COLOR_CONTROLPANELITEMBORDER},
+	{TEXT("ControlPanelHighlightBorder"),            Theme::BorderType::None,   COLOR_CONTROLPANELHIGHLIGHTBORDER},
+	{TEXT("ControlPanelCheckedBorder"),              Theme::BorderType::None,   COLOR_CONTROLPANELCHECKEDBORDER},
+	{TEXT("ProgramGuideFeaturedMarkBorder"),         Theme::BorderType::Solid,  COLOR_PROGRAMGUIDE_FEATUREDMARKBORDER},
 };
 
 const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_NONE,
-	Theme::BORDER_RAISED,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_SOLID,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_NONE,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SUNKEN,
-	Theme::BORDER_SOLID,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::None,
+	Theme::BorderType::Solid,
+	Theme::BorderType::None,
+	Theme::BorderType::Raised,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::Solid,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::None,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Sunken,
+	Theme::BorderType::Solid,
 };
 
 
 CColorScheme::CColorScheme()
 {
 	SetDefault();
-	::ZeroMemory(m_LoadedFlags,sizeof(m_LoadedFlags));
+	::ZeroMemory(m_LoadedFlags, sizeof(m_LoadedFlags));
 }
 
 
 CColorScheme::CColorScheme(const CColorScheme &ColorScheme)
 {
-	*this=ColorScheme;
+	*this = ColorScheme;
 }
 
 
@@ -508,13 +439,13 @@ CColorScheme::~CColorScheme()
 
 CColorScheme &CColorScheme::operator=(const CColorScheme &ColorScheme)
 {
-	if (&ColorScheme!=this) {
-		::CopyMemory(m_ColorList,ColorScheme.m_ColorList,sizeof(m_ColorList));
-		::CopyMemory(m_GradientList,ColorScheme.m_GradientList,sizeof(m_GradientList));
-		::CopyMemory(m_BorderList,ColorScheme.m_BorderList,sizeof(m_BorderList));
-		m_Name=ColorScheme.m_Name;
-		m_FileName=ColorScheme.m_FileName;
-		::CopyMemory(m_LoadedFlags,ColorScheme.m_LoadedFlags,sizeof(m_LoadedFlags));
+	if (&ColorScheme != this) {
+		::CopyMemory(m_ColorList, ColorScheme.m_ColorList, sizeof(m_ColorList));
+		::CopyMemory(m_GradientList, ColorScheme.m_GradientList, sizeof(m_GradientList));
+		::CopyMemory(m_BorderList, ColorScheme.m_BorderList, sizeof(m_BorderList));
+		m_Name = ColorScheme.m_Name;
+		m_FileName = ColorScheme.m_FileName;
+		::CopyMemory(m_LoadedFlags, ColorScheme.m_LoadedFlags, sizeof(m_LoadedFlags));
 	}
 	return *this;
 }
@@ -522,7 +453,7 @@ CColorScheme &CColorScheme::operator=(const CColorScheme &ColorScheme)
 
 COLORREF CColorScheme::GetColor(int Type) const
 {
-	if (Type<0 || Type>=NUM_COLORS)
+	if (Type < 0 || Type >= NUM_COLORS)
 		return CLR_INVALID;
 	return m_ColorList[Type];
 }
@@ -530,103 +461,103 @@ COLORREF CColorScheme::GetColor(int Type) const
 
 COLORREF CColorScheme::GetColor(LPCTSTR pszText) const
 {
-	for (int i=0;i<NUM_COLORS;i++) {
-		if (::lstrcmpi(m_ColorInfoList[i].pszText,pszText)==0)
+	for (int i = 0; i < NUM_COLORS; i++) {
+		if (::lstrcmpi(m_ColorInfoList[i].pszText, pszText) == 0)
 			return m_ColorList[i];
 	}
 	return CLR_INVALID;
 }
 
 
-bool CColorScheme::SetColor(int Type,COLORREF Color)
+bool CColorScheme::SetColor(int Type, COLORREF Color)
 {
-	if (Type<0 || Type>=NUM_COLORS)
+	if (Type < 0 || Type >= NUM_COLORS)
 		return false;
-	m_ColorList[Type]=Color;
+	m_ColorList[Type] = Color;
 	return true;
 }
 
 
 Theme::GradientType CColorScheme::GetGradientType(int Gradient) const
 {
-	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
-		return Theme::GRADIENT_NORMAL;
+	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
+		return Theme::GradientType::Normal;
 	return m_GradientList[Gradient].Type;
 }
 
 
 Theme::GradientType CColorScheme::GetGradientType(LPCTSTR pszText) const
 {
-	for (int i=0;i<NUM_GRADIENTS;i++) {
-		if (::lstrcmpi(m_GradientInfoList[i].pszText,pszText)==0)
+	for (int i = 0; i < NUM_GRADIENTS; i++) {
+		if (::lstrcmpi(m_GradientInfoList[i].pszText, pszText) == 0)
 			return m_GradientList[i].Type;
 	}
-	return Theme::GRADIENT_NORMAL;
+	return Theme::GradientType::Normal;
 }
 
 
-bool CColorScheme::SetGradientStyle(int Gradient,const GradientStyle &Style)
+bool CColorScheme::SetGradientStyle(int Gradient, const GradientStyle &Style)
 {
-	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
+	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
 		return false;
-	m_GradientList[Gradient].Type=Style.Type;
-	m_GradientList[Gradient].Direction=Style.Direction;
+	m_GradientList[Gradient].Type = Style.Type;
+	m_GradientList[Gradient].Direction = Style.Direction;
 	return true;
 }
 
 
-bool CColorScheme::GetGradientStyle(int Gradient,GradientStyle *pStyle) const
+bool CColorScheme::GetGradientStyle(int Gradient, GradientStyle *pStyle) const
 {
-	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
+	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
 		return false;
-	*pStyle=m_GradientList[Gradient];
+	*pStyle = m_GradientList[Gradient];
 	return true;
 }
 
 
-bool CColorScheme::GetGradientStyle(int Gradient,Theme::GradientStyle *pStyle) const
+bool CColorScheme::GetGradientStyle(int Gradient, Theme::GradientStyle *pStyle) const
 {
-	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
+	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
 		return false;
-	pStyle->Type=m_GradientList[Gradient].Type;
-	pStyle->Direction=m_GradientList[Gradient].Direction;
-	pStyle->Color1=m_ColorList[m_GradientInfoList[Gradient].Color1];
-	pStyle->Color2=m_ColorList[m_GradientInfoList[Gradient].Color2];
+	pStyle->Type = m_GradientList[Gradient].Type;
+	pStyle->Direction = m_GradientList[Gradient].Direction;
+	pStyle->Color1 = m_ColorList[m_GradientInfoList[Gradient].Color1];
+	pStyle->Color2 = m_ColorList[m_GradientInfoList[Gradient].Color2];
 	return true;
 }
 
 
 Theme::BorderType CColorScheme::GetBorderType(int Border) const
 {
-	if (Border<0 || Border>=NUM_BORDERS)
-		return Theme::BORDER_NONE;
+	if (Border < 0 || Border >= NUM_BORDERS)
+		return Theme::BorderType::None;
 	return m_BorderList[Border];
 }
 
 
-bool CColorScheme::SetBorderType(int Border,Theme::BorderType Type)
+bool CColorScheme::SetBorderType(int Border, Theme::BorderType Type)
 {
-	if (Border<0 || Border>=NUM_BORDERS
-			|| Type<Theme::BORDER_NONE || Type>Theme::BORDER_RAISED)
+	if (Border < 0 || Border >= NUM_BORDERS
+			|| Type < Theme::BorderType::None || Type > Theme::BorderType::Raised)
 		return false;
-	m_BorderList[Border]=Type;
+	m_BorderList[Border] = Type;
 	return true;
 }
 
 
-bool CColorScheme::GetBorderStyle(int Border,Theme::BorderStyle *pStyle) const
+bool CColorScheme::GetBorderStyle(int Border, Theme::BorderStyle *pStyle) const
 {
-	if (Border<0 || Border>=NUM_BORDERS)
+	if (Border < 0 || Border >= NUM_BORDERS)
 		return false;
-	pStyle->Type=m_BorderList[Border];
-	pStyle->Color=m_ColorList[m_BorderInfoList[Border].Color];
+	pStyle->Type = m_BorderList[Border];
+	pStyle->Color = m_ColorList[m_BorderInfoList[Border].Color];
 	return true;
 }
 
 
 void CColorScheme::SetName(LPCTSTR pszName)
 {
-	TVTest::StringUtility::Assign(m_Name,pszName);
+	StringUtility::Assign(m_Name, pszName);
 }
 
 
@@ -636,230 +567,230 @@ bool CColorScheme::Load(CSettings &Settings)
 
 	if (!Settings.SetSection(TEXT("ColorScheme")))
 		return false;
-	if (Settings.Read(TEXT("Name"),szText,lengthof(szText)))
+	if (Settings.Read(TEXT("Name"), szText, lengthof(szText)))
 		SetName(szText);
-	::ZeroMemory(m_LoadedFlags,sizeof(m_LoadedFlags));
-	for (int i=0;i<NUM_COLORS;i++) {
-		if (Settings.ReadColor(m_ColorInfoList[i].pszText,&m_ColorList[i]))
+	::ZeroMemory(m_LoadedFlags, sizeof(m_LoadedFlags));
+	for (int i = 0; i < NUM_COLORS; i++) {
+		if (Settings.ReadColor(m_ColorInfoList[i].pszText, &m_ColorList[i]))
 			SetLoadedFlag(i);
 	}
 
-	for (int i=0;i<NUM_GRADIENTS;i++) {
+	for (int i = 0; i < NUM_GRADIENTS; i++) {
 		if (IsLoaded(m_GradientInfoList[i].Color1)
 				&& !IsLoaded(m_GradientInfoList[i].Color2)) {
-			m_ColorList[m_GradientInfoList[i].Color2]=m_ColorList[m_GradientInfoList[i].Color1];
+			m_ColorList[m_GradientInfoList[i].Color2] = m_ColorList[m_GradientInfoList[i].Color1];
 			SetLoadedFlag(m_GradientInfoList[i].Color2);
-			m_GradientList[i].Type=Theme::GRADIENT_NORMAL;
+			m_GradientList[i].Type = Theme::GradientType::Normal;
 		}
 	}
 
 	static const struct {
-		int To,From;
+		int To, From;
 	} ColorMap[] = {
-	//	{COLOR_STATUSBORDER,							COLOR_STATUSBACK1},
-		{COLOR_STATUSBOTTOMITEMBACK1,					COLOR_STATUSBACK2},
-		{COLOR_STATUSBOTTOMITEMBACK2,					COLOR_STATUSBOTTOMITEMBACK1},
-		{COLOR_STATUSBOTTOMITEMTEXT,					COLOR_STATUSTEXT},
-		{COLOR_STATUSBOTTOMITEMBORDER,					COLOR_STATUSBOTTOMITEMBACK1},
-		{COLOR_STATUSEVENTPROGRESSBORDER,				COLOR_STATUSEVENTPROGRESSBACK1},
-		{COLOR_STATUSEVENTPROGRESSELAPSEDBORDER,		COLOR_STATUSEVENTPROGRESSELAPSED1},
-		{COLOR_WINDOWFRAMEBORDER,						COLOR_WINDOWFRAMEBACK},
-		{COLOR_WINDOWACTIVEFRAMEBACK,					COLOR_WINDOWFRAMEBACK},
-		{COLOR_WINDOWACTIVEFRAMEBORDER,					COLOR_WINDOWACTIVEFRAMEBACK},
-		{COLOR_INFORMATIONPANEL_EVENTINFOBORDER,		COLOR_PROGRAMINFOBACK},
-		{COLOR_INFORMATIONPANEL_BUTTONBACK1,			COLOR_PANELBACK},
-		{COLOR_INFORMATIONPANEL_BUTTONBACK2,			COLOR_INFORMATIONPANEL_BUTTONBACK1},
-		{COLOR_INFORMATIONPANEL_BUTTONTEXT,				COLOR_PANELTEXT},
-		{COLOR_INFORMATIONPANEL_HOTBUTTONBACK1,			COLOR_PANELBACK},
-		{COLOR_INFORMATIONPANEL_HOTBUTTONBACK2,			COLOR_INFORMATIONPANEL_HOTBUTTONBACK1},
-		{COLOR_INFORMATIONPANEL_HOTBUTTONTEXT,			COLOR_PANELTEXT},
-		{COLOR_PROGRAMLISTPANEL_CUREVENTTEXT,			COLOR_PROGRAMLISTPANEL_EVENTTEXT},
-		{COLOR_PROGRAMLISTPANEL_CURTITLETEXT,			COLOR_PROGRAMLISTPANEL_TITLETEXT},
-		{COLOR_PANELTABLINE,							COLOR_PANELTABBORDER},
-	//	{COLOR_PANELTITLEBORDER,						COLOR_PANELTITLEBACK1},
-		{COLOR_CHANNELPANEL_CURCHANNELNAMETEXT,			COLOR_CHANNELPANEL_CHANNELNAMETEXT},
-		{COLOR_CHANNELPANEL_EVENTNAME2TEXT,				COLOR_CHANNELPANEL_EVENTNAME1TEXT},
-		{COLOR_CHANNELPANEL_EVENTNAME2BORDER,			COLOR_CHANNELPANEL_EVENTNAME1BORDER},
-		{COLOR_CHANNELPANEL_CUREVENTNAME1TEXT,			COLOR_CHANNELPANEL_EVENTNAME1TEXT},
-		{COLOR_CHANNELPANEL_CUREVENTNAME1BORDER,		COLOR_CHANNELPANEL_EVENTNAME1BORDER},
-		{COLOR_CHANNELPANEL_CUREVENTNAME2TEXT,			COLOR_CHANNELPANEL_CUREVENTNAME1TEXT},
-		{COLOR_CHANNELPANEL_CUREVENTNAME2BORDER,		COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
-		{COLOR_CHANNELPANEL_PROGRESSBORDER,				COLOR_CHANNELPANEL_PROGRESS1},
-		{COLOR_CHANNELPANEL_CURPROGRESSBORDER,			COLOR_CHANNELPANEL_CURPROGRESS1},
-		{COLOR_PROGRAMLISTPANEL_CHANNELTEXT,			COLOR_CHANNELPANEL_CHANNELNAMETEXT},
-		{COLOR_PROGRAMLISTPANEL_CURCHANNELTEXT,			COLOR_CHANNELPANEL_CURCHANNELNAMETEXT},
-		{COLOR_PROGRAMLISTPANEL_CHANNELBUTTONTEXT,		COLOR_PROGRAMLISTPANEL_CHANNELTEXT},
-		{COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTTEXT,	COLOR_PROGRAMLISTPANEL_CURCHANNELTEXT},
-		{COLOR_CONTROLPANELBACK1,						COLOR_PANELBACK},
-		{COLOR_CONTROLPANELBACK2,						COLOR_PANELBACK},
-		{COLOR_CONTROLPANELTEXT,						COLOR_PANELTEXT},
-		{COLOR_CONTROLPANELCHECKEDTEXT,					COLOR_CONTROLPANELHIGHLIGHTTEXT},
-		{COLOR_CONTROLPANELMARGIN,						COLOR_PANELBACK},
-		{COLOR_CAPTIONPANELBACK,						COLOR_PROGRAMINFOBACK},
-		{COLOR_CAPTIONPANELTEXT,						COLOR_PROGRAMINFOTEXT},
-		{COLOR_TITLEBARTEXT,							COLOR_STATUSTEXT},
-		{COLOR_TITLEBARICON,							COLOR_TITLEBARTEXT},
-		{COLOR_TITLEBARHIGHLIGHTICON,					COLOR_STATUSHIGHLIGHTTEXT},
-	//	{COLOR_TITLEBARBORDER,							COLOR_TITLEBARBACK1},
-		{COLOR_SIDEBARICON,								COLOR_STATUSTEXT},
-		{COLOR_SIDEBARHIGHLIGHTICON,					COLOR_STATUSHIGHLIGHTTEXT},
-		{COLOR_SIDEBARCHECKICON,						COLOR_SIDEBARICON},
-	//	{COLOR_SIDEBARCHECKBORDER,						COLOR_SIDEBARCHECKBACK2},
-	//	{COLOR_SIDEBARBORDER,							COLOR_SIDEBARBACK1},
-		{COLOR_PROGRAMGUIDE_CURCHANNELTEXT,				COLOR_PROGRAMGUIDE_CHANNELTEXT},
-		{COLOR_PROGRAMGUIDE_TIMELINE,					COLOR_PROGRAMGUIDE_TIMETEXT},
+//		{COLOR_STATUSBORDER,                          COLOR_STATUSBACK1},
+		{COLOR_STATUSBOTTOMITEMBACK1,                 COLOR_STATUSBACK2},
+		{COLOR_STATUSBOTTOMITEMBACK2,                 COLOR_STATUSBOTTOMITEMBACK1},
+		{COLOR_STATUSBOTTOMITEMTEXT,                  COLOR_STATUSTEXT},
+		{COLOR_STATUSBOTTOMITEMBORDER,                COLOR_STATUSBOTTOMITEMBACK1},
+		{COLOR_STATUSEVENTPROGRESSBORDER,             COLOR_STATUSEVENTPROGRESSBACK1},
+		{COLOR_STATUSEVENTPROGRESSELAPSEDBORDER,      COLOR_STATUSEVENTPROGRESSELAPSED1},
+		{COLOR_WINDOWFRAMEBORDER,                     COLOR_WINDOWFRAMEBACK},
+		{COLOR_WINDOWACTIVEFRAMEBACK,                 COLOR_WINDOWFRAMEBACK},
+		{COLOR_WINDOWACTIVEFRAMEBORDER,               COLOR_WINDOWACTIVEFRAMEBACK},
+		{COLOR_INFORMATIONPANEL_EVENTINFOBORDER,      COLOR_PROGRAMINFOBACK},
+		{COLOR_INFORMATIONPANEL_BUTTONBACK1,          COLOR_PANELBACK},
+		{COLOR_INFORMATIONPANEL_BUTTONBACK2,          COLOR_INFORMATIONPANEL_BUTTONBACK1},
+		{COLOR_INFORMATIONPANEL_BUTTONTEXT,           COLOR_PANELTEXT},
+		{COLOR_INFORMATIONPANEL_HOTBUTTONBACK1,       COLOR_PANELBACK},
+		{COLOR_INFORMATIONPANEL_HOTBUTTONBACK2,       COLOR_INFORMATIONPANEL_HOTBUTTONBACK1},
+		{COLOR_INFORMATIONPANEL_HOTBUTTONTEXT,        COLOR_PANELTEXT},
+		{COLOR_PROGRAMLISTPANEL_CUREVENTTEXT,         COLOR_PROGRAMLISTPANEL_EVENTTEXT},
+		{COLOR_PROGRAMLISTPANEL_CURTITLETEXT,         COLOR_PROGRAMLISTPANEL_TITLETEXT},
+		{COLOR_PANELTABLINE,                          COLOR_PANELTABBORDER},
+//		{COLOR_PANELTITLEBORDER,                      COLOR_PANELTITLEBACK1},
+		{COLOR_CHANNELPANEL_CURCHANNELNAMETEXT,       COLOR_CHANNELPANEL_CHANNELNAMETEXT},
+		{COLOR_CHANNELPANEL_EVENTNAME2TEXT,           COLOR_CHANNELPANEL_EVENTNAME1TEXT},
+		{COLOR_CHANNELPANEL_EVENTNAME2BORDER,         COLOR_CHANNELPANEL_EVENTNAME1BORDER},
+		{COLOR_CHANNELPANEL_CUREVENTNAME1TEXT,        COLOR_CHANNELPANEL_EVENTNAME1TEXT},
+		{COLOR_CHANNELPANEL_CUREVENTNAME1BORDER,      COLOR_CHANNELPANEL_EVENTNAME1BORDER},
+		{COLOR_CHANNELPANEL_CUREVENTNAME2TEXT,        COLOR_CHANNELPANEL_CUREVENTNAME1TEXT},
+		{COLOR_CHANNELPANEL_CUREVENTNAME2BORDER,      COLOR_CHANNELPANEL_CUREVENTNAME1BORDER},
+		{COLOR_CHANNELPANEL_PROGRESSBORDER,           COLOR_CHANNELPANEL_PROGRESS1},
+		{COLOR_CHANNELPANEL_CURPROGRESSBORDER,        COLOR_CHANNELPANEL_CURPROGRESS1},
+		{COLOR_PROGRAMLISTPANEL_CHANNELTEXT,          COLOR_CHANNELPANEL_CHANNELNAMETEXT},
+		{COLOR_PROGRAMLISTPANEL_CURCHANNELTEXT,       COLOR_CHANNELPANEL_CURCHANNELNAMETEXT},
+		{COLOR_PROGRAMLISTPANEL_CHANNELBUTTONTEXT,    COLOR_PROGRAMLISTPANEL_CHANNELTEXT},
+		{COLOR_PROGRAMLISTPANEL_CHANNELBUTTONHOTTEXT, COLOR_PROGRAMLISTPANEL_CURCHANNELTEXT},
+		{COLOR_CONTROLPANELBACK1,                     COLOR_PANELBACK},
+		{COLOR_CONTROLPANELBACK2,                     COLOR_PANELBACK},
+		{COLOR_CONTROLPANELTEXT,                      COLOR_PANELTEXT},
+		{COLOR_CONTROLPANELCHECKEDTEXT,               COLOR_CONTROLPANELHIGHLIGHTTEXT},
+		{COLOR_CONTROLPANELMARGIN,                    COLOR_PANELBACK},
+		{COLOR_CAPTIONPANELBACK,                      COLOR_PROGRAMINFOBACK},
+		{COLOR_CAPTIONPANELTEXT,                      COLOR_PROGRAMINFOTEXT},
+		{COLOR_TITLEBARTEXT,                          COLOR_STATUSTEXT},
+		{COLOR_TITLEBARICON,                          COLOR_TITLEBARTEXT},
+		{COLOR_TITLEBARHIGHLIGHTICON,                 COLOR_STATUSHIGHLIGHTTEXT},
+//		{COLOR_TITLEBARBORDER,                        COLOR_TITLEBARBACK1},
+		{COLOR_SIDEBARICON,                           COLOR_STATUSTEXT},
+		{COLOR_SIDEBARHIGHLIGHTICON,                  COLOR_STATUSHIGHLIGHTTEXT},
+		{COLOR_SIDEBARCHECKICON,                      COLOR_SIDEBARICON},
+//		{COLOR_SIDEBARCHECKBORDER,                    COLOR_SIDEBARCHECKBACK2},
+//		{COLOR_SIDEBARBORDER,                         COLOR_SIDEBARBACK1},
+		{COLOR_PROGRAMGUIDE_CURCHANNELTEXT,           COLOR_PROGRAMGUIDE_CHANNELTEXT},
+		{COLOR_PROGRAMGUIDE_TIMELINE,                 COLOR_PROGRAMGUIDE_TIMETEXT},
 	};
 
-	for (int i=0;i<lengthof(ColorMap);i++) {
-		const int To=ColorMap[i].To;
+	for (int i = 0; i < lengthof(ColorMap); i++) {
+		const int To = ColorMap[i].To;
 		if (!IsLoaded(To) && IsLoaded(ColorMap[i].From)) {
-			m_ColorList[To]=m_ColorList[ColorMap[i].From];
+			m_ColorList[To] = m_ColorList[ColorMap[i].From];
 			SetLoadedFlag(To);
 		}
 	}
 
 	static const struct {
-		int To,From1,From2;
+		int To, From1, From2;
 	} MixMap[] = {
-		{COLOR_STATUSBORDER,				COLOR_STATUSBACK1,			COLOR_STATUSBACK2},
-		{COLOR_PANELTITLEBORDER,			COLOR_PANELTITLEBACK1,		COLOR_PANELTITLEBACK2},
-		{COLOR_TITLEBARBORDER,				COLOR_TITLEBARBACK1,		COLOR_TITLEBARBACK2},
-		{COLOR_SIDEBARCHECKBORDER,			COLOR_SIDEBARCHECKBACK1,	COLOR_SIDEBARCHECKBACK2},
-		{COLOR_SIDEBARBORDER,				COLOR_SIDEBARBACK1,			COLOR_SIDEBARBACK2},
+		{COLOR_STATUSBORDER,       COLOR_STATUSBACK1,       COLOR_STATUSBACK2},
+		{COLOR_PANELTITLEBORDER,   COLOR_PANELTITLEBACK1,   COLOR_PANELTITLEBACK2},
+		{COLOR_TITLEBARBORDER,     COLOR_TITLEBARBACK1,     COLOR_TITLEBARBACK2},
+		{COLOR_SIDEBARCHECKBORDER, COLOR_SIDEBARCHECKBACK1, COLOR_SIDEBARCHECKBACK2},
+		{COLOR_SIDEBARBORDER,      COLOR_SIDEBARBACK1,      COLOR_SIDEBARBACK2},
 	};
 
-	for (int i=0;i<lengthof(MixMap);i++) {
-		const int To=MixMap[i].To;
+	for (int i = 0; i < lengthof(MixMap); i++) {
+		const int To = MixMap[i].To;
 		if (!IsLoaded(To) && IsLoaded(MixMap[i].From1) && IsLoaded(MixMap[i].From2)) {
-			m_ColorList[To]=MixColor(m_ColorList[MixMap[i].From1],m_ColorList[MixMap[i].From2]);
+			m_ColorList[To] = MixColor(m_ColorList[MixMap[i].From1], m_ColorList[MixMap[i].From2]);
 			SetLoadedFlag(To);
 		}
 	}
 
-	for (int i=0;i<NUM_GRADIENTS;i++) {
-		if (Settings.Read(m_GradientInfoList[i].pszText,szText,lengthof(szText))) {
-			if (szText[0]=='\0' || ::lstrcmpi(szText,TEXT("normal"))==0)
-				m_GradientList[i].Type=Theme::GRADIENT_NORMAL;
-			else if (::lstrcmpi(szText,TEXT("glossy"))==0)
-				m_GradientList[i].Type=Theme::GRADIENT_GLOSSY;
-			else if (::lstrcmpi(szText,TEXT("interlaced"))==0)
-				m_GradientList[i].Type=Theme::GRADIENT_INTERLACED;
+	for (int i = 0; i < NUM_GRADIENTS; i++) {
+		if (Settings.Read(m_GradientInfoList[i].pszText, szText, lengthof(szText))) {
+			if (szText[0] == '\0' || ::lstrcmpi(szText, TEXT("normal")) == 0)
+				m_GradientList[i].Type = Theme::GradientType::Normal;
+			else if (::lstrcmpi(szText, TEXT("glossy")) == 0)
+				m_GradientList[i].Type = Theme::GradientType::Glossy;
+			else if (::lstrcmpi(szText, TEXT("interlaced")) == 0)
+				m_GradientList[i].Type = Theme::GradientType::Interlaced;
 		} else {
 			switch (i) {
 			case GRADIENT_TITLEBARICON:
-				m_GradientList[i].Type=m_GradientList[GRADIENT_TITLEBARBACK].Type;
+				m_GradientList[i].Type = m_GradientList[GRADIENT_TITLEBARBACK].Type;
 				break;
 			case GRADIENT_SIDEBARCHECKBACK:
-				m_GradientList[i].Type=m_GradientList[GRADIENT_SIDEBARBACK].Type;
+				m_GradientList[i].Type = m_GradientList[GRADIENT_SIDEBARBACK].Type;
 				break;
 			}
 		}
 
 		TCHAR szName[128];
-		::wsprintf(szName,TEXT("%sDirection"),m_GradientInfoList[i].pszText);
-		m_GradientList[i].Direction=m_GradientInfoList[i].Direction;
-		if (Settings.Read(szName,szText,lengthof(szText))) {
-			for (int j=0;j<lengthof(GradientDirectionList);j++) {
-				if (::lstrcmpi(szText,GradientDirectionList[j])==0) {
-					m_GradientList[i].Direction=(Theme::GradientDirection)j;
+		StringPrintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
+		m_GradientList[i].Direction = m_GradientInfoList[i].Direction;
+		if (Settings.Read(szName, szText, lengthof(szText))) {
+			for (int j = 0; j < lengthof(GradientDirectionList); j++) {
+				if (::lstrcmpi(szText, GradientDirectionList[j]) == 0) {
+					m_GradientList[i].Direction = (Theme::GradientDirection)j;
 					break;
 				}
 			}
 		} else {
 			switch (i) {
 			case GRADIENT_TITLEBARICON:
-				m_GradientList[i].Direction=m_GradientList[GRADIENT_TITLEBARBACK].Direction;
+				m_GradientList[i].Direction = m_GradientList[GRADIENT_TITLEBARBACK].Direction;
 				break;
 			case GRADIENT_SIDEBARCHECKBACK:
-				m_GradientList[i].Direction=m_GradientList[GRADIENT_SIDEBARBACK].Direction;
+				m_GradientList[i].Direction = m_GradientList[GRADIENT_SIDEBARBACK].Direction;
 				break;
 			}
 		}
 	}
 
 	static const struct {
-		int To,From;
+		int To, From;
 	} GradientMap[] = {
-		{GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK,			GRADIENT_CHANNELPANEL_CHANNELNAMEBACK},
-		{GRADIENT_CHANNELPANEL_EVENTNAMEBACK2,				GRADIENT_CHANNELPANEL_EVENTNAMEBACK1},
-		{GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK1,			GRADIENT_CHANNELPANEL_EVENTNAMEBACK1},
-		{GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK2,			GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK1},
-		{GRADIENT_CHANNELPANEL_PROGRESS,					GRADIENT_STATUSEVENTPROGRESSELAPSED},
-		{GRADIENT_CHANNELPANEL_CURPROGRESS,					GRADIENT_CHANNELPANEL_PROGRESS},
-		{GRADIENT_PROGRAMLISTPANEL_CHANNELBACK,				GRADIENT_CHANNELPANEL_CHANNELNAMEBACK},
-		{GRADIENT_PROGRAMLISTPANEL_CURCHANNELBACK,			GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK},
-		{GRADIENT_PROGRAMLISTPANEL_CHANNELBUTTONBACK,		GRADIENT_CHANNELPANEL_CHANNELNAMEBACK},
-	//	{GRADIENT_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK,	GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK},
-		{GRADIENT_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK,	GRADIENT_CONTROLPANELHIGHLIGHTBACK},
-		{GRADIENT_PROGRAMLISTPANEL_CUREVENTBACK,			GRADIENT_PROGRAMLISTPANEL_EVENTBACK},
-		{GRADIENT_PROGRAMLISTPANEL_CURTITLEBACK,			GRADIENT_PROGRAMLISTPANEL_TITLEBACK},
-		{GRADIENT_CONTROLPANELCHECKEDBACK,					GRADIENT_CONTROLPANELHIGHLIGHTBACK},
-		{GRADIENT_TITLEBARBACK,								GRADIENT_STATUSBACK},
-		{GRADIENT_TITLEBARICON,								GRADIENT_TITLEBARBACK},
-		{GRADIENT_TITLEBARHIGHLIGHTBACK,					GRADIENT_STATUSHIGHLIGHTBACK},
-		{GRADIENT_SIDEBARBACK,								GRADIENT_STATUSBACK},
-		{GRADIENT_SIDEBARHIGHLIGHTBACK,						GRADIENT_STATUSHIGHLIGHTBACK},
-		{GRADIENT_SIDEBARCHECKBACK,							GRADIENT_SIDEBARBACK},
-		{GRADIENT_PROGRAMGUIDECURCHANNELBACK,				GRADIENT_PROGRAMGUIDECHANNELBACK},
+		{GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK,       GRADIENT_CHANNELPANEL_CHANNELNAMEBACK},
+		{GRADIENT_CHANNELPANEL_EVENTNAMEBACK2,           GRADIENT_CHANNELPANEL_EVENTNAMEBACK1},
+		{GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK1,        GRADIENT_CHANNELPANEL_EVENTNAMEBACK1},
+		{GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK2,        GRADIENT_CHANNELPANEL_CUREVENTNAMEBACK1},
+		{GRADIENT_CHANNELPANEL_PROGRESS,                 GRADIENT_STATUSEVENTPROGRESSELAPSED},
+		{GRADIENT_CHANNELPANEL_CURPROGRESS,              GRADIENT_CHANNELPANEL_PROGRESS},
+		{GRADIENT_PROGRAMLISTPANEL_CHANNELBACK,          GRADIENT_CHANNELPANEL_CHANNELNAMEBACK},
+		{GRADIENT_PROGRAMLISTPANEL_CURCHANNELBACK,       GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK},
+		{GRADIENT_PROGRAMLISTPANEL_CHANNELBUTTONBACK,    GRADIENT_CHANNELPANEL_CHANNELNAMEBACK},
+//		{GRADIENT_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK, GRADIENT_CHANNELPANEL_CURCHANNELNAMEBACK},
+		{GRADIENT_PROGRAMLISTPANEL_CHANNELBUTTONHOTBACK, GRADIENT_CONTROLPANELHIGHLIGHTBACK},
+		{GRADIENT_PROGRAMLISTPANEL_CUREVENTBACK,         GRADIENT_PROGRAMLISTPANEL_EVENTBACK},
+		{GRADIENT_PROGRAMLISTPANEL_CURTITLEBACK,         GRADIENT_PROGRAMLISTPANEL_TITLEBACK},
+		{GRADIENT_CONTROLPANELCHECKEDBACK,               GRADIENT_CONTROLPANELHIGHLIGHTBACK},
+		{GRADIENT_TITLEBARBACK,                          GRADIENT_STATUSBACK},
+		{GRADIENT_TITLEBARICON,                          GRADIENT_TITLEBARBACK},
+		{GRADIENT_TITLEBARHIGHLIGHTBACK,                 GRADIENT_STATUSHIGHLIGHTBACK},
+		{GRADIENT_SIDEBARBACK,                           GRADIENT_STATUSBACK},
+		{GRADIENT_SIDEBARHIGHLIGHTBACK,                  GRADIENT_STATUSHIGHLIGHTBACK},
+		{GRADIENT_SIDEBARCHECKBACK,                      GRADIENT_SIDEBARBACK},
+		{GRADIENT_PROGRAMGUIDECURCHANNELBACK,            GRADIENT_PROGRAMGUIDECHANNELBACK},
 	};
 
-	for (int i=0;i<lengthof(GradientMap);i++) {
-		const int To=GradientMap[i].To,From=GradientMap[i].From;
+	for (const auto &Map : GradientMap) {
+		const int To = Map.To, From = Map.From;
 		if (!IsLoaded(m_GradientInfoList[To].Color1)
 				&& IsLoaded(m_GradientInfoList[From].Color1)) {
-			m_ColorList[m_GradientInfoList[To].Color1]=m_ColorList[m_GradientInfoList[From].Color1];
-			m_ColorList[m_GradientInfoList[To].Color2]=m_ColorList[m_GradientInfoList[From].Color2];
+			m_ColorList[m_GradientInfoList[To].Color1] = m_ColorList[m_GradientInfoList[From].Color1];
+			m_ColorList[m_GradientInfoList[To].Color2] = m_ColorList[m_GradientInfoList[From].Color2];
 			SetLoadedFlag(m_GradientInfoList[To].Color1);
 			SetLoadedFlag(m_GradientInfoList[To].Color2);
-			m_GradientList[To]=m_GradientList[From];
+			m_GradientList[To] = m_GradientList[From];
 		}
 	}
 
 	bool BorderLoaded[NUM_BORDERS];
 
-	for (int i=0;i<NUM_BORDERS;i++) {
-		m_BorderList[i]=m_BorderInfoList[i].DefaultType;
-		BorderLoaded[i]=false;
+	for (int i = 0; i < NUM_BORDERS; i++) {
+		m_BorderList[i] = m_BorderInfoList[i].DefaultType;
+		BorderLoaded[i] = false;
 	}
 	if (Settings.SetSection(TEXT("Style"))) {
-		for (int i=0;i<NUM_BORDERS;i++) {
-			if (Settings.Read(m_BorderInfoList[i].pszText,szText,lengthof(szText))) {
-				bool fLoaded=true;
-				if (::lstrcmpi(szText,TEXT("none"))==0) {
-					m_BorderList[i]=Theme::BORDER_NONE;
-				} else if (::lstrcmpi(szText,TEXT("solid"))==0)
-					m_BorderList[i]=Theme::BORDER_SOLID;
-				else if (::lstrcmpi(szText,TEXT("sunken"))==0)
-					m_BorderList[i]=Theme::BORDER_SUNKEN;
-				else if (::lstrcmpi(szText,TEXT("raised"))==0)
-					m_BorderList[i]=Theme::BORDER_RAISED;
+		for (int i = 0; i < NUM_BORDERS; i++) {
+			if (Settings.Read(m_BorderInfoList[i].pszText, szText, lengthof(szText))) {
+				bool fLoaded = true;
+				if (::lstrcmpi(szText, TEXT("none")) == 0) {
+					m_BorderList[i] = Theme::BorderType::None;
+				} else if (::lstrcmpi(szText, TEXT("solid")) == 0)
+					m_BorderList[i] = Theme::BorderType::Solid;
+				else if (::lstrcmpi(szText, TEXT("sunken")) == 0)
+					m_BorderList[i] = Theme::BorderType::Sunken;
+				else if (::lstrcmpi(szText, TEXT("raised")) == 0)
+					m_BorderList[i] = Theme::BorderType::Raised;
 				else
-					fLoaded=false;
-				BorderLoaded[i]=fLoaded;
+					fLoaded = false;
+				BorderLoaded[i] = fLoaded;
 			}
 		}
 	}
 
 	static const struct {
-		int To,From;
+		int To, From;
 	} BorderMap[] = {
-		{BORDER_PROGRAMLISTPANEL_CHANNEL,			BORDER_CHANNELPANEL_CHANNELNAME},
-		{BORDER_PROGRAMLISTPANEL_CURCHANNEL,		BORDER_CHANNELPANEL_CURCHANNELNAME},
-		{BORDER_PROGRAMLISTPANEL_CHANNELBUTTONHOT,	BORDER_CONTROLPANELHIGHLIGHTITEM},
-		{BORDER_SIDEBARITEM,						BORDER_STATUSITEM},
-		{BORDER_SIDEBARHIGHLIGHT,					BORDER_STATUSHIGHLIGHT},
+		{BORDER_PROGRAMLISTPANEL_CHANNEL,          BORDER_CHANNELPANEL_CHANNELNAME},
+		{BORDER_PROGRAMLISTPANEL_CURCHANNEL,       BORDER_CHANNELPANEL_CURCHANNELNAME},
+		{BORDER_PROGRAMLISTPANEL_CHANNELBUTTONHOT, BORDER_CONTROLPANELHIGHLIGHTITEM},
+		{BORDER_SIDEBARITEM,                       BORDER_STATUSITEM},
+		{BORDER_SIDEBARHIGHLIGHT,                  BORDER_STATUSHIGHLIGHT},
 	};
 
-	for (int i=0;i<lengthof(BorderMap);i++) {
-		const int To=BorderMap[i].To;
-		const int From=BorderMap[i].From;
+	for (const auto &Map : BorderMap) {
+		const int To = Map.To;
+		const int From = Map.From;
 		if (!BorderLoaded[To] && BorderLoaded[From]) {
-			m_BorderList[To]=m_BorderList[From];
+			m_BorderList[To] = m_BorderList[From];
 		}
-		const int ColorTo=m_BorderInfoList[To].Color;
-		const int ColorFrom=m_BorderInfoList[From].Color;
+		const int ColorTo = m_BorderInfoList[To].Color;
+		const int ColorFrom = m_BorderInfoList[From].Color;
 		if (!IsLoaded(ColorTo) && IsLoaded(ColorFrom)) {
-			m_ColorList[ColorTo]=m_ColorList[ColorFrom];
+			m_ColorList[ColorTo] = m_ColorList[ColorFrom];
 			SetLoadedFlag(ColorTo);
 		}
 	}
@@ -868,69 +799,69 @@ bool CColorScheme::Load(CSettings &Settings)
 }
 
 
-bool CColorScheme::Save(CSettings &Settings,unsigned int Flags) const
+bool CColorScheme::Save(CSettings &Settings, SaveFlag Flags) const
 {
 	if (!Settings.SetSection(TEXT("ColorScheme")))
 		return false;
 
-	bool fSaveAllColors=true,fSaveGradients=true;
+	bool fSaveAllColors = true, fSaveGradients = true;
 
-	if ((Flags & SAVE_NODEFAULT)!=0) {
+	if (!!(Flags & SaveFlag::NoDefault)) {
 		/*
-			SAVE_NODEFAULT ‚ªw’è‚³‚ê‚Ä‚¢‚éê‡AƒfƒtƒHƒ‹ƒg‚©‚ç•ÏX‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚İİ’è‚ğ•Û‘¶‚·‚éB
-			Load‚Ìˆ—‚ª•¡G‚È‚Ì‚ÅA’Pƒ‚É•ÏX‚³‚ê‚Ä‚¢‚é‚à‚Ì‚Ì‚İ•Û‘¶‚·‚ê‚Î‚¢‚¢‚Æ‚¢‚¤–ó‚Å‚Í‚È‚¢‚½‚ßA
-			ƒfƒtƒHƒ‹ƒg‚©‚ç•ÏX‚³‚ê‚Ä‚¢‚éê‡‚Í‘S‚Ä‚Ìİ’è‚ğ•Û‘¶‚·‚éB
+			SaveFlag::NoDefault ãŒæŒ‡å®šã•ã‚Œã¦ã„ã‚‹å ´åˆã€ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‹ã‚‰å¤‰æ›´ã•ã‚Œã¦ã„ãªã„æ™‚ã®ã¿è¨­å®šã‚’ä¿å­˜ã™ã‚‹ã€‚
+			Loadã®å‡¦ç†ãŒè¤‡é›‘ãªã®ã§ã€å˜ç´”ã«å¤‰æ›´ã•ã‚Œã¦ã„ã‚‹ã‚‚ã®ã®ã¿ä¿å­˜ã™ã‚Œã°ã„ã„ã¨ã„ã†è¨³ã§ã¯ãªã„ãŸã‚ã€
+			ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‹ã‚‰å¤‰æ›´ã•ã‚Œã¦ã„ã‚‹å ´åˆã¯å…¨ã¦ã®è¨­å®šã‚’ä¿å­˜ã™ã‚‹ã€‚
 		*/
 		CColorScheme DefaultColorScheme;
 		int i;
 
-		for (i=0;i<NUM_COLORS;i++) {
-			if ((i<COLOR_PROGRAMGUIDE_CONTENT_FIRST || i>COLOR_PROGRAMGUIDE_CONTENT_LAST)
-					&& m_ColorList[i]!=DefaultColorScheme.m_ColorList[i])
+		for (i = 0; i < NUM_COLORS; i++) {
+			if ((i < COLOR_PROGRAMGUIDE_CONTENT_FIRST || i > COLOR_PROGRAMGUIDE_CONTENT_LAST)
+					&& m_ColorList[i] != DefaultColorScheme.m_ColorList[i])
 				break;
 		}
-		if (i==NUM_COLORS)
-			fSaveAllColors=false;
+		if (i == NUM_COLORS)
+			fSaveAllColors = false;
 
-		for (i=0;i<NUM_GRADIENTS;i++) {
-			if (m_GradientList[i]!=DefaultColorScheme.m_GradientList[i])
+		for (i = 0; i < NUM_GRADIENTS; i++) {
+			if (m_GradientList[i] != DefaultColorScheme.m_GradientList[i])
 				break;
 		}
-		if (i==NUM_GRADIENTS)
-			fSaveGradients=false;
+		if (i == NUM_GRADIENTS)
+			fSaveGradients = false;
 
 		if (!fSaveAllColors || !fSaveGradients)
 			Settings.Clear();
 	}
 
-	if ((Flags & SAVE_NONAME)==0)
-		Settings.Write(TEXT("Name"),m_Name);
+	if (!(Flags & SaveFlag::NoName))
+		Settings.Write(TEXT("Name"), m_Name);
 
-	for (int i=0;i<NUM_COLORS;i++) {
-		if (fSaveAllColors || m_ColorList[i]!=m_ColorInfoList[i].DefaultColor)
-			Settings.WriteColor(m_ColorInfoList[i].pszText,m_ColorList[i]);
+	for (int i = 0; i < NUM_COLORS; i++) {
+		if (fSaveAllColors || m_ColorList[i] != m_ColorInfoList[i].DefaultColor)
+			Settings.WriteColor(m_ColorInfoList[i].pszText, m_ColorList[i]);
 	}
 
 	if (fSaveGradients) {
-		for (int i=0;i<NUM_GRADIENTS;i++) {
+		for (int i = 0; i < NUM_GRADIENTS; i++) {
 			static const LPCTSTR pszTypeName[] = {
-				TEXT("normal"),	TEXT("glossy"), TEXT("interlaced")
+				TEXT("normal"), TEXT("glossy"), TEXT("interlaced")
 			};
 			TCHAR szName[128];
 
-			Settings.Write(m_GradientInfoList[i].pszText,pszTypeName[m_GradientList[i].Type]);
-			::wsprintf(szName,TEXT("%sDirection"),m_GradientInfoList[i].pszText);
-			Settings.Write(szName,GradientDirectionList[m_GradientList[i].Direction]);
+			Settings.Write(m_GradientInfoList[i].pszText, pszTypeName[(int)m_GradientList[i].Type]);
+			StringPrintf(szName, TEXT("%sDirection"), m_GradientInfoList[i].pszText);
+			Settings.Write(szName, GradientDirectionList[(int)m_GradientList[i].Direction]);
 		}
 	}
 
 	if (Settings.SetSection(TEXT("Style"))) {
 		static const LPCTSTR pszTypeName[] = {
-			TEXT("none"),	TEXT("solid"),	TEXT("sunken"),	TEXT("raised")
+			TEXT("none"), TEXT("solid"), TEXT("sunken"), TEXT("raised")
 		};
 
-		for (int i=0;i<NUM_BORDERS;i++)
-			Settings.Write(m_BorderInfoList[i].pszText,pszTypeName[m_BorderList[i]]);
+		for (int i = 0; i < NUM_BORDERS; i++)
+			Settings.Write(m_BorderInfoList[i].pszText, pszTypeName[(int)m_BorderList[i]]);
 	}
 
 	return true;
@@ -941,7 +872,7 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName,CSettings::OPEN_READ))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Read))
 		return false;
 
 	if (!Load(Settings))
@@ -951,7 +882,7 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 
 	if (m_Name.empty()) {
 		TCHAR szName[MAX_COLORSCHEME_NAME];
-		::lstrcpyn(szName,::PathFindFileName(pszFileName),lengthof(szName));
+		StringCopy(szName, ::PathFindFileName(pszFileName));
 		::PathRemoveExtension(szName);
 		SetName(szName);
 	}
@@ -960,48 +891,48 @@ bool CColorScheme::Load(LPCTSTR pszFileName)
 }
 
 
-bool CColorScheme::Save(LPCTSTR pszFileName,unsigned int Flags) const
+bool CColorScheme::Save(LPCTSTR pszFileName, SaveFlag Flags) const
 {
 	CSettings Settings;
 
-	if (!Settings.Open(pszFileName,CSettings::OPEN_WRITE))
+	if (!Settings.Open(pszFileName, CSettings::OpenFlag::Write))
 		return false;
 
-	return Save(Settings,Flags);
+	return Save(Settings, Flags);
 }
 
 
 bool CColorScheme::SetFileName(LPCTSTR pszFileName)
 {
-	TVTest::StringUtility::Assign(m_FileName,pszFileName);
+	StringUtility::Assign(m_FileName, pszFileName);
 	return true;
 }
 
 
 void CColorScheme::SetDefault()
 {
-	for (int i=0;i<NUM_COLORS;i++)
-		m_ColorList[i]=m_ColorInfoList[i].DefaultColor;
-	for (int i=0;i<NUM_GRADIENTS;i++) {
-		m_GradientList[i].Type=Theme::GRADIENT_NORMAL;
-		m_GradientList[i].Direction=m_GradientInfoList[i].Direction;
+	for (int i = 0; i < NUM_COLORS; i++)
+		m_ColorList[i] = m_ColorInfoList[i].DefaultColor;
+	for (int i = 0; i < NUM_GRADIENTS; i++) {
+		m_GradientList[i].Type = Theme::GradientType::Normal;
+		m_GradientList[i].Direction = m_GradientInfoList[i].Direction;
 	}
-	for (int i=0;i<NUM_BORDERS;i++)
-		m_BorderList[i]=m_CustomDefaultBorderList[i];
+	for (int i = 0; i < NUM_BORDERS; i++)
+		m_BorderList[i] = m_CustomDefaultBorderList[i];
 }
 
 
 LPCTSTR CColorScheme::GetColorName(int Type)
 {
-	if (Type<0 || Type>=NUM_COLORS)
-		return NULL;
+	if (Type < 0 || Type >= NUM_COLORS)
+		return nullptr;
 	return m_ColorInfoList[Type].pszName;
 }
 
 
 COLORREF CColorScheme::GetDefaultColor(int Type)
 {
-	if (Type<0 || Type>=NUM_COLORS)
+	if (Type < 0 || Type >= NUM_COLORS)
 		return CLR_INVALID;
 	return m_ColorInfoList[Type].DefaultColor;
 }
@@ -1009,23 +940,23 @@ COLORREF CColorScheme::GetDefaultColor(int Type)
 
 Theme::GradientType CColorScheme::GetDefaultGradientType(int Gradient)
 {
-	return Theme::GRADIENT_NORMAL;
+	return Theme::GradientType::Normal;
 }
 
 
-bool CColorScheme::GetDefaultGradientStyle(int Gradient,GradientStyle *pStyle)
+bool CColorScheme::GetDefaultGradientStyle(int Gradient, GradientStyle *pStyle)
 {
-	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
+	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
 		return false;
-	pStyle->Type=Theme::GRADIENT_NORMAL;
-	pStyle->Direction=m_GradientInfoList[Gradient].Direction;
+	pStyle->Type = Theme::GradientType::Normal;
+	pStyle->Direction = m_GradientInfoList[Gradient].Direction;
 	return true;
 }
 
 
 bool CColorScheme::IsGradientDirectionEnabled(int Gradient)
 {
-	if (Gradient<0 || Gradient>=NUM_GRADIENTS)
+	if (Gradient < 0 || Gradient >= NUM_GRADIENTS)
 		return false;
 	return m_GradientInfoList[Gradient].fEnableDirection;
 }
@@ -1033,40 +964,40 @@ bool CColorScheme::IsGradientDirectionEnabled(int Gradient)
 
 Theme::BorderType CColorScheme::GetDefaultBorderType(int Border)
 {
-	if (Border<0 || Border>=NUM_BORDERS)
-		return Theme::BORDER_NONE;
+	if (Border < 0 || Border >= NUM_BORDERS)
+		return Theme::BorderType::None;
 	return m_BorderInfoList[Border].DefaultType;
 }
 
 
 bool CColorScheme::IsLoaded(int Type) const
 {
-	if (Type<0 || Type>=NUM_COLORS)
+	if (Type < 0 || Type >= NUM_COLORS)
 		return false;
-	return (m_LoadedFlags[Type/32]&(1<<(Type%32)))!=0;
+	return (m_LoadedFlags[Type / 32] & (1 << (Type % 32))) != 0;
 }
 
 
 void CColorScheme::SetLoaded()
 {
-	::FillMemory(m_LoadedFlags,sizeof(m_LoadedFlags),0xFF);
+	::FillMemory(m_LoadedFlags, sizeof(m_LoadedFlags), 0xFF);
 }
 
 
 bool CColorScheme::CompareScheme(const CColorScheme &Scheme) const
 {
-	for (int i=0;i<NUM_COLORS;i++) {
-		if (Scheme.IsLoaded(i) && m_ColorList[i]!=Scheme.m_ColorList[i])
+	for (int i = 0; i < NUM_COLORS; i++) {
+		if (Scheme.IsLoaded(i) && m_ColorList[i] != Scheme.m_ColorList[i])
 			return false;
 	}
 
-	for (int i=0;i<NUM_GRADIENTS;i++) {
-		if (m_GradientList[i]!=Scheme.m_GradientList[i])
+	for (int i = 0; i < NUM_GRADIENTS; i++) {
+		if (m_GradientList[i] != Scheme.m_GradientList[i])
 			return false;
 	}
 
-	for (int i=0;i<NUM_BORDERS;i++) {
-		if (m_BorderList[i]!=Scheme.m_BorderList[i])
+	for (int i = 0; i < NUM_BORDERS; i++) {
+		if (m_BorderList[i] != Scheme.m_BorderList[i])
 			return false;
 	}
 
@@ -1076,9 +1007,9 @@ bool CColorScheme::CompareScheme(const CColorScheme &Scheme) const
 
 int CColorScheme::GetColorGradient(int Type)
 {
-	for (int i=0;i<NUM_GRADIENTS;i++) {
-		if (m_GradientInfoList[i].Color1==Type
-				|| m_GradientInfoList[i].Color2==Type)
+	for (int i = 0; i < NUM_GRADIENTS; i++) {
+		if (m_GradientInfoList[i].Color1 == Type
+				|| m_GradientInfoList[i].Color2 == Type)
 			return i;
 	}
 	return -1;
@@ -1087,8 +1018,8 @@ int CColorScheme::GetColorGradient(int Type)
 
 int CColorScheme::GetColorBorder(int Type)
 {
-	for (int i=0;i<NUM_BORDERS;i++) {
-		if (m_BorderInfoList[i].Color==Type)
+	for (int i = 0; i < NUM_BORDERS; i++) {
+		if (m_BorderInfoList[i].Color == Type)
 			return i;
 	}
 	return -1;
@@ -1097,41 +1028,30 @@ int CColorScheme::GetColorBorder(int Type)
 
 void CColorScheme::SetLoadedFlag(int Color)
 {
-	m_LoadedFlags[Color/32]|=1<<(Color%32);
+	m_LoadedFlags[Color / 32] |= 1 << (Color % 32);
 }
 
 
-
-
-CColorSchemeList::CColorSchemeList()
-{
-}
-
-
-CColorSchemeList::~CColorSchemeList()
-{
-	Clear();
-}
 
 
 bool CColorSchemeList::Add(CColorScheme *pColorScheme)
 {
-	if (pColorScheme==NULL)
+	if (pColorScheme == nullptr)
 		return false;
-	m_List.push_back(pColorScheme);
+	m_List.emplace_back(pColorScheme);
 	return true;
 }
 
 
-bool CColorSchemeList::Insert(int Index,CColorScheme *pColorScheme)
+bool CColorSchemeList::Insert(int Index, CColorScheme *pColorScheme)
 {
-	if (Index<0)
+	if (Index < 0)
 		return false;
-	if ((size_t)Index>=m_List.size())
+	if ((size_t)Index >= m_List.size())
 		return Add(pColorScheme);
-	auto i=m_List.begin();
-	std::advance(i,Index);
-	m_List.insert(i,pColorScheme);
+	auto i = m_List.begin();
+	std::advance(i, Index);
+	m_List.emplace(i, pColorScheme);
 	return true;
 }
 
@@ -1142,19 +1062,19 @@ bool CColorSchemeList::Load(LPCTSTR pszDirectory)
 	WIN32_FIND_DATA wfd;
 	TCHAR szFileName[MAX_PATH];
 
-	::PathCombine(szFileName,pszDirectory,TEXT("*.httheme"));
-	hFind=::FindFirstFile(szFileName,&wfd);
-	if (hFind!=INVALID_HANDLE_VALUE) {
+	::PathCombine(szFileName, pszDirectory, TEXT("*.httheme"));
+	hFind = ::FindFirstFile(szFileName, &wfd);
+	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			CColorScheme *pColorScheme;
 
-			::PathCombine(szFileName,pszDirectory,wfd.cFileName);
-			pColorScheme=new CColorScheme;
+			::PathCombine(szFileName, pszDirectory, wfd.cFileName);
+			pColorScheme = new CColorScheme;
 			if (pColorScheme->Load(szFileName))
 				Add(pColorScheme);
 			else
 				delete pColorScheme;
-		} while (::FindNextFile(hFind,&wfd));
+		} while (::FindNextFile(hFind, &wfd));
 		::FindClose(hFind);
 	}
 	return true;
@@ -1163,37 +1083,35 @@ bool CColorSchemeList::Load(LPCTSTR pszDirectory)
 
 void CColorSchemeList::Clear()
 {
-	for (auto i=m_List.begin();i!=m_List.end();i++)
-		delete *i;
 	m_List.clear();
 }
 
 
 CColorScheme *CColorSchemeList::GetColorScheme(int Index)
 {
-	if (Index<0 || (size_t)Index>=m_List.size())
-		return NULL;
-	return m_List[Index];
+	if (Index < 0 || (size_t)Index >= m_List.size())
+		return nullptr;
+	return m_List[Index].get();
 }
 
 
-bool CColorSchemeList::SetColorScheme(int Index,const CColorScheme *pColorScheme)
+bool CColorSchemeList::SetColorScheme(int Index, const CColorScheme *pColorScheme)
 {
-	if (Index<0 || (size_t)Index>=m_List.size() || pColorScheme==NULL)
+	if (Index < 0 || (size_t)Index >= m_List.size() || pColorScheme == nullptr)
 		return false;
-	*m_List[Index]=*pColorScheme;
+	*m_List[Index] = *pColorScheme;
 	return true;
 }
 
 
-int CColorSchemeList::FindByName(LPCTSTR pszName,int FirstIndex) const
+int CColorSchemeList::FindByName(LPCTSTR pszName, int FirstIndex) const
 {
-	if (pszName==NULL)
+	if (pszName == nullptr)
 		return -1;
 
-	for (int i=max(FirstIndex,0);i<(int)m_List.size();i++) {
+	for (int i = std::max(FirstIndex, 0); i < (int)m_List.size(); i++) {
 		if (!IsStringEmpty(m_List[i]->GetName())
-				&& ::lstrcmpi(m_List[i]->GetName(),pszName)==0)
+				&& ::lstrcmpi(m_List[i]->GetName(), pszName) == 0)
 			return i;
 	}
 	return -1;
@@ -1202,10 +1120,15 @@ int CColorSchemeList::FindByName(LPCTSTR pszName,int FirstIndex) const
 
 void CColorSchemeList::SortByName()
 {
-	if (m_List.size()>1) {
-		std::sort(m_List.begin(),m_List.end(),
-			[](const CColorScheme *pColorScheme1,const CColorScheme *pColorScheme2) -> bool {
-				return ::lstrcmpi(pColorScheme1->GetName(),pColorScheme2->GetName())<0;
+	if (m_List.size() > 1) {
+		std::sort(
+			m_List.begin(), m_List.end(),
+			[](const std::unique_ptr<CColorScheme> &ColorScheme1,
+			   const std::unique_ptr<CColorScheme> &ColorScheme2) -> bool {
+				return ::lstrcmpi(ColorScheme1->GetName(), ColorScheme2->GetName()) < 0;
 			});
 	}
 }
+
+
+}	// namespace TVTest

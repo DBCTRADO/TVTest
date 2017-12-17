@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "TaskTray.h"
@@ -11,11 +31,11 @@ namespace TVTest
 
 
 CTaskTrayManager::CTaskTrayManager()
-	: m_hwnd(NULL)
+	: m_hwnd(nullptr)
 	, m_TrayIconMessage(0)
 	, m_fResident(false)
 	, m_fMinimizeToTray(true)
-	, m_Status(0)
+	, m_Status(StatusFlag::None)
 	, m_TaskbarCreatedMessage(0)
 {
 }
@@ -27,11 +47,11 @@ CTaskTrayManager::~CTaskTrayManager()
 }
 
 
-bool CTaskTrayManager::Initialize(HWND hwnd,UINT Message)
+bool CTaskTrayManager::Initialize(HWND hwnd, UINT Message)
 {
-	m_hwnd=hwnd;
-	m_TrayIconMessage=Message;
-	m_TaskbarCreatedMessage=::RegisterWindowMessage(TEXT("TaskbarCreated"));
+	m_hwnd = hwnd;
+	m_TrayIconMessage = Message;
+	m_TaskbarCreatedMessage = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
 	if (NeedTrayIcon()) {
 		if (!AddTrayIcon())
 			return false;
@@ -49,13 +69,13 @@ void CTaskTrayManager::Finalize()
 
 bool CTaskTrayManager::SetResident(bool fResident)
 {
-	if (m_fResident!=fResident) {
-		if (m_hwnd!=NULL && !NeedTrayIcon() && fResident) {
+	if (m_fResident != fResident) {
+		if (m_hwnd != nullptr && !NeedTrayIcon() && fResident) {
 			if (!AddTrayIcon())
 				return false;
 		}
-		m_fResident=fResident;
-		if (m_hwnd!=NULL && !NeedTrayIcon())
+		m_fResident = fResident;
+		if (m_hwnd != nullptr && !NeedTrayIcon())
 			RemoveTrayIcon();
 	}
 	return true;
@@ -64,18 +84,18 @@ bool CTaskTrayManager::SetResident(bool fResident)
 
 bool CTaskTrayManager::SetMinimizeToTray(bool fMinimizeToTray)
 {
-	if (m_fMinimizeToTray!=fMinimizeToTray) {
-		if (m_hwnd!=NULL) {
-			if ((m_Status&STATUS_MINIMIZED)!=0) {
+	if (m_fMinimizeToTray != fMinimizeToTray) {
+		if (m_hwnd != nullptr) {
+			if (!!(m_Status & StatusFlag::Minimized)) {
 				if (fMinimizeToTray && !NeedTrayIcon()) {
 					if (!AddTrayIcon())
 						return false;
 				}
-				::ShowWindow(m_hwnd,fMinimizeToTray?SW_HIDE:SW_SHOW);
+				::ShowWindow(m_hwnd, fMinimizeToTray ? SW_HIDE : SW_SHOW);
 			}
 		}
-		m_fMinimizeToTray=fMinimizeToTray;
-		if (m_hwnd!=NULL && !NeedTrayIcon())
+		m_fMinimizeToTray = fMinimizeToTray;
+		if (m_hwnd != nullptr && !NeedTrayIcon())
 			RemoveTrayIcon();
 	}
 	return true;
@@ -86,20 +106,20 @@ bool CTaskTrayManager::AddTrayIcon()
 {
 	NOTIFYICONDATA nid;
 
-	nid.cbSize=NOTIFYICONDATA_V2_SIZE;
-	nid.hWnd=m_hwnd;
-	nid.uID=1;
-	nid.uFlags=NIF_MESSAGE | NIF_ICON | NIF_TIP;
-	nid.uCallbackMessage=m_TrayIconMessage;
-	nid.hIcon=LoadTrayIcon();
-	::lstrcpyn(nid.szTip,!m_TipText.empty()?m_TipText.c_str():APP_NAME,lengthof(nid.szTip));
-	bool fResult=::Shell_NotifyIcon(NIM_ADD,&nid)!=FALSE;
+	nid.cbSize = NOTIFYICONDATA_V2_SIZE;
+	nid.hWnd = m_hwnd;
+	nid.uID = 1;
+	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+	nid.uCallbackMessage = m_TrayIconMessage;
+	nid.hIcon = LoadTrayIcon();
+	StringCopy(nid.szTip, !m_TipText.empty() ? m_TipText.c_str() : APP_NAME);
+	bool fResult = ::Shell_NotifyIcon(NIM_ADD, &nid) != FALSE;
 	::DestroyIcon(nid.hIcon);
 	if (!fResult)
 		return false;
 	/*
-	nid.uVersion=NOTIFYICON_VERSION;
-	::Shell_NotifyIcon(NIM_SETVERSION,&nid);
+	nid.uVersion = NOTIFYICON_VERSION;
+	::Shell_NotifyIcon(NIM_SETVERSION, &nid);
 	*/
 	return true;
 }
@@ -109,11 +129,11 @@ bool CTaskTrayManager::RemoveTrayIcon()
 {
 	NOTIFYICONDATA nid;
 
-	nid.cbSize=NOTIFYICONDATA_V2_SIZE;
-	nid.hWnd=m_hwnd;
-	nid.uID=1;
-	nid.uFlags=0;
-	return Shell_NotifyIcon(NIM_DELETE,&nid)!=FALSE;
+	nid.cbSize = NOTIFYICONDATA_V2_SIZE;
+	nid.hWnd = m_hwnd;
+	nid.uID = 1;
+	nid.uFlags = 0;
+	return Shell_NotifyIcon(NIM_DELETE, &nid) != FALSE;
 }
 
 
@@ -121,12 +141,12 @@ bool CTaskTrayManager::ChangeTrayIcon()
 {
 	NOTIFYICONDATA nid;
 
-	nid.cbSize=NOTIFYICONDATA_V2_SIZE;
-	nid.hWnd=m_hwnd;
-	nid.uID=1;
-	nid.uFlags=NIF_ICON;
-	nid.hIcon=LoadTrayIcon();
-	bool fResult=Shell_NotifyIcon(NIM_MODIFY,&nid)!=FALSE;
+	nid.cbSize = NOTIFYICONDATA_V2_SIZE;
+	nid.hWnd = m_hwnd;
+	nid.uID = 1;
+	nid.uFlags = NIF_ICON;
+	nid.hIcon = LoadTrayIcon();
+	bool fResult = Shell_NotifyIcon(NIM_MODIFY, &nid) != FALSE;
 	::DestroyIcon(nid.hIcon);
 	if (!fResult) {
 		if (!AddTrayIcon())
@@ -141,8 +161,8 @@ HICON CTaskTrayManager::LoadTrayIcon() const
 {
 	return LoadIconStandardSize(
 		GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE((m_Status & STATUS_RECORDING)!=0?IDI_TRAY_RECORDING:IDI_TRAY),
-		ICON_SIZE_SMALL);
+		MAKEINTRESOURCE(!!(m_Status & StatusFlag::Recording) ? IDI_TRAY_RECORDING : IDI_TRAY),
+		IconSizeType::Small);
 }
 
 
@@ -150,41 +170,41 @@ bool CTaskTrayManager::UpdateTipText()
 {
 	NOTIFYICONDATA nid;
 
-	nid.cbSize=NOTIFYICONDATA_V2_SIZE;
-	nid.hWnd=m_hwnd;
-	nid.uID=1;
-	nid.uFlags=NIF_TIP;
-	::lstrcpyn(nid.szTip,!m_TipText.empty()?m_TipText.c_str():APP_NAME,lengthof(nid.szTip));
-	return ::Shell_NotifyIcon(NIM_MODIFY,&nid)!=FALSE;
+	nid.cbSize = NOTIFYICONDATA_V2_SIZE;
+	nid.hWnd = m_hwnd;
+	nid.uID = 1;
+	nid.uFlags = NIF_TIP;
+	StringCopy(nid.szTip, !m_TipText.empty() ? m_TipText.c_str() : APP_NAME);
+	return ::Shell_NotifyIcon(NIM_MODIFY, &nid) != FALSE;
 }
 
 
 bool CTaskTrayManager::NeedTrayIcon() const
 {
-	return m_hwnd!=NULL
+	return m_hwnd != nullptr
 		&& (m_fResident
-			|| (m_Status & STATUS_STANDBY)!=0
-			|| (m_fMinimizeToTray && (m_Status & STATUS_MINIMIZED)!=0));
+			|| !!(m_Status & StatusFlag::Standby)
+			|| (m_fMinimizeToTray && !!(m_Status & StatusFlag::Minimized)));
 }
 
 
-bool CTaskTrayManager::SetStatus(UINT Status,UINT Mask)
+bool CTaskTrayManager::SetStatus(StatusFlag Status, StatusFlag Mask)
 {
-	const UINT NewStatus=(m_Status&~Mask)|(Status&Mask);
+	const StatusFlag NewStatus = (m_Status & ~Mask) | (Status & Mask);
 
-	if (m_Status!=NewStatus) {
-		const UINT StatusDiff=m_Status^NewStatus;
-		const bool fNeedTrayIconOld=NeedTrayIcon();
-		bool fChangeIcon=false;
+	if (m_Status != NewStatus) {
+		const StatusFlag StatusDiff = m_Status ^ NewStatus;
+		const bool fNeedTrayIconOld = NeedTrayIcon();
+		bool fChangeIcon = false;
 
-		if ((StatusDiff & STATUS_RECORDING)!=0)
-			fChangeIcon=true;
-		if ((StatusDiff & STATUS_MINIMIZED)!=0) {
-			if (m_hwnd!=NULL && m_fMinimizeToTray)
-				::ShowWindow(m_hwnd,(NewStatus & STATUS_MINIMIZED)!=0?SW_HIDE:SW_SHOW);
+		if (!!(StatusDiff & StatusFlag::Recording))
+			fChangeIcon = true;
+		if (!!(StatusDiff & StatusFlag::Minimized)) {
+			if (m_hwnd != nullptr && m_fMinimizeToTray)
+				::ShowWindow(m_hwnd, !!(NewStatus & StatusFlag::Minimized) ? SW_HIDE : SW_SHOW);
 		}
 
-		m_Status=NewStatus;
+		m_Status = NewStatus;
 
 		if (NeedTrayIcon()) {
 			if (!fNeedTrayIconOld)
@@ -203,8 +223,8 @@ bool CTaskTrayManager::SetStatus(UINT Status,UINT Mask)
 
 bool CTaskTrayManager::SetTipText(LPCTSTR pszText)
 {
-	if (StringUtility::Compare(m_TipText,pszText)!=0) {
-		StringUtility::Assign(m_TipText,pszText);
+	if (StringUtility::Compare(m_TipText, pszText) != 0) {
+		StringUtility::Assign(m_TipText, pszText);
 		if (NeedTrayIcon())
 			UpdateTipText();
 	}
@@ -212,34 +232,34 @@ bool CTaskTrayManager::SetTipText(LPCTSTR pszText)
 }
 
 
-bool CTaskTrayManager::ShowMessage(LPCTSTR pszText,LPCTSTR pszTitle,int Icon,DWORD TimeOut)
+bool CTaskTrayManager::ShowMessage(LPCTSTR pszText, LPCTSTR pszTitle, int Icon, DWORD TimeOut)
 {
 	if (!NeedTrayIcon())
 		return false;
 
-	NOTIFYICONDATA nid;
+	NOTIFYICONDATA nid = {};
 
-	::ZeroMemory(&nid,sizeof(nid));
-	nid.cbSize=NOTIFYICONDATA_V2_SIZE;
-	nid.hWnd=m_hwnd;
-	nid.uID=1;
-	nid.uFlags=NIF_INFO;
-	::lstrcpyn(nid.szInfo,pszText,lengthof(nid.szInfo));
+	nid.cbSize = NOTIFYICONDATA_V2_SIZE;
+	nid.hWnd = m_hwnd;
+	nid.uID = 1;
+	nid.uFlags = NIF_INFO;
+	StringCopy(nid.szInfo, pszText);
 	if (pszTitle)
-		::lstrcpyn(nid.szInfoTitle,pszTitle,lengthof(nid.szInfoTitle));
-	nid.dwInfoFlags=Icon==MESSAGE_ICON_INFO?NIIF_INFO:
-					Icon==MESSAGE_ICON_WARNING?NIIF_WARNING:
-					Icon==MESSAGE_ICON_ERROR?NIIF_ERROR:NIIF_NONE;
-	nid.uTimeout=TimeOut;
-	return Shell_NotifyIcon(NIM_MODIFY,&nid)!=FALSE;
+		StringCopy(nid.szInfoTitle, pszTitle);
+	nid.dwInfoFlags =
+		Icon == MESSAGE_ICON_INFO ? NIIF_INFO :
+		Icon == MESSAGE_ICON_WARNING ? NIIF_WARNING :
+		Icon == MESSAGE_ICON_ERROR ? NIIF_ERROR : NIIF_NONE;
+	nid.uTimeout = TimeOut;
+	return Shell_NotifyIcon(NIM_MODIFY, &nid) != FALSE;
 }
 
 
-bool CTaskTrayManager::HandleMessage(UINT Message,WPARAM wParam,LPARAM lParam)
+bool CTaskTrayManager::HandleMessage(UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	// ÉVÉFÉãÇ™çƒãNìÆÇµÇΩéûÇÃëŒçÙ
-	if (m_TaskbarCreatedMessage!=0
-			&& Message==m_TaskbarCreatedMessage) {
+	// „Ç∑„Çß„É´„ÅåÂÜçËµ∑Âãï„Åó„ÅüÊôÇ„ÅÆÂØæÁ≠ñ
+	if (m_TaskbarCreatedMessage != 0
+			&& Message == m_TaskbarCreatedMessage) {
 		if (NeedTrayIcon())
 			AddTrayIcon();
 		return true;

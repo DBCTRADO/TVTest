@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "UIBase.h"
@@ -12,310 +32,308 @@ namespace TVTest
 {
 
 
-	Style::Font CUIBase::m_DefaultFont;
-	bool CUIBase::m_fValidDefaultFont=false;
+Style::Font CUIBase::m_DefaultFont;
+bool CUIBase::m_fValidDefaultFont = false;
 
 
-	CUIBase::CUIBase()
-		: m_pStyleScaling(nullptr)
-	{
-	}
+CUIBase::CUIBase()
+	: m_pStyleScaling(nullptr)
+{
+}
 
 
-	CUIBase::~CUIBase()
-	{
-	}
+CUIBase::~CUIBase() = default;
 
 
-	void CUIBase::SetStyle(const Style::CStyleManager *pStyleManager)
-	{
-	}
+void CUIBase::SetStyle(const Style::CStyleManager *pStyleManager)
+{
+}
 
 
-	void CUIBase::NormalizeStyle(
-		const Style::CStyleManager *pStyleManager,
-		const Style::CStyleScaling *pStyleScaling)
-	{
-	}
+void CUIBase::NormalizeStyle(
+	const Style::CStyleManager *pStyleManager,
+	const Style::CStyleScaling *pStyleScaling)
+{
+}
 
 
-	void CUIBase::SetTheme(const Theme::CThemeManager *pThemeManager)
-	{
-	}
+void CUIBase::SetTheme(const Theme::CThemeManager *pThemeManager)
+{
+}
 
 
-	void CUIBase::SetStyleScaling(Style::CStyleScaling *pStyleScaling)
-	{
-		m_pStyleScaling=pStyleScaling;
+void CUIBase::SetStyleScaling(Style::CStyleScaling *pStyleScaling)
+{
+	m_pStyleScaling = pStyleScaling;
 
-		for (auto it=m_UIChildList.begin();it!=m_UIChildList.end();++it)
-			(*it)->SetStyleScaling(pStyleScaling);
-	}
-
-
-	void CUIBase::UpdateStyle()
-	{
-		ResetStyle();
-		ApplyStyle();
-		UpdateChildrenStyle();
-		RealizeStyle();
-	}
+	for (CUIBase *e : m_UIChildList)
+		e->SetStyleScaling(pStyleScaling);
+}
 
 
-	void CUIBase::InitializeUI()
-	{
-		ResetStyle();
-		ApplyStyle();
-	}
+void CUIBase::UpdateStyle()
+{
+	ResetStyle();
+	ApplyStyle();
+	UpdateChildrenStyle();
+	RealizeStyle();
+}
 
 
-	const Style::CStyleManager *CUIBase::GetStyleManager() const
-	{
-		return &GetAppClass().StyleManager;
-	}
+void CUIBase::InitializeUI()
+{
+	ResetStyle();
+	ApplyStyle();
+}
 
 
-	void CUIBase::ResetStyle()
-	{
-		const Style::CStyleManager *pStyleManager=GetStyleManager();
-
-		SetStyle(pStyleManager);
-
-		Style::CStyleScaling DefaultStyleScaling;
-		if (m_pStyleScaling==nullptr)
-			pStyleManager->InitStyleScaling(&DefaultStyleScaling);
-		NormalizeStyle(pStyleManager,m_pStyleScaling!=nullptr?m_pStyleScaling:&DefaultStyleScaling);
-	}
+const Style::CStyleManager *CUIBase::GetStyleManager() const
+{
+	return &GetAppClass().StyleManager;
+}
 
 
-	void CUIBase::UpdateChildrenStyle()
-	{
-		for (auto it=m_UIChildList.begin();it!=m_UIChildList.end();++it)
-			(*it)->UpdateStyle();
-	}
+void CUIBase::ResetStyle()
+{
+	const Style::CStyleManager *pStyleManager = GetStyleManager();
+
+	SetStyle(pStyleManager);
+
+	Style::CStyleScaling DefaultStyleScaling;
+	if (m_pStyleScaling == nullptr)
+		pStyleManager->InitStyleScaling(&DefaultStyleScaling);
+	NormalizeStyle(pStyleManager, m_pStyleScaling != nullptr ? m_pStyleScaling : &DefaultStyleScaling);
+}
 
 
-	bool CUIBase::GetDefaultFont(Style::Font *pFont) const
-	{
-		if (pFont==nullptr)
+void CUIBase::UpdateChildrenStyle()
+{
+	for (CUIBase *e : m_UIChildList)
+		e->UpdateStyle();
+}
+
+
+bool CUIBase::GetDefaultFont(Style::Font *pFont) const
+{
+	if (pFont == nullptr)
+		return false;
+
+	if (!m_fValidDefaultFont) {
+		if (!StyleUtil::GetDefaultUIFont(&m_DefaultFont))
 			return false;
-
-		if (!m_fValidDefaultFont) {
-			if (!StyleUtil::GetDefaultUIFont(&m_DefaultFont))
-				return false;
-			m_fValidDefaultFont=true;
-		}
-
-		*pFont=m_DefaultFont;
-
-		return true;
+		m_fValidDefaultFont = true;
 	}
 
+	*pFont = m_DefaultFont;
 
-	bool CUIBase::GetSystemFont(DrawUtil::FontType Type,Style::Font *pFont) const
-	{
-		return StyleUtil::GetSystemFont(Type,pFont);
-	}
-
-
-	bool CUIBase::CreateDrawFont(const Style::Font &Font,DrawUtil::CFont *pDrawFont) const
-	{
-		if (pDrawFont==nullptr)
-			return false;
-
-		Style::Font f=Font;
-
-		if (m_pStyleScaling!=nullptr) {
-			m_pStyleScaling->RealizeFontSize(&f);
-		} else {
-			Style::CStyleScaling StyleScaling;
-			GetStyleManager()->InitStyleScaling(&StyleScaling);
-			StyleScaling.RealizeFontSize(&f);
-		}
-
-		return pDrawFont->Create(&f.LogFont);
-	}
+	return true;
+}
 
 
-	bool CUIBase::CreateDrawFontAndBoldFont(
-		const Style::Font &Font,DrawUtil::CFont *pDrawFont,DrawUtil::CFont *pBoldFont) const
-	{
-		if (!CreateDrawFont(Font,pDrawFont))
-			return false;
-
-		if (pBoldFont!=nullptr) {
-			LOGFONT lf;
-
-			if (!pDrawFont->GetLogFont(&lf))
-				return false;
-
-			lf.lfWeight=FW_BOLD;
-
-			if (!pBoldFont->Create(&lf))
-				return false;
-		}
-
-		return true;
-	}
+bool CUIBase::GetSystemFont(DrawUtil::FontType Type, Style::Font *pFont) const
+{
+	return StyleUtil::GetSystemFont(Type, pFont);
+}
 
 
-	bool CUIBase::CreateDefaultFont(DrawUtil::CFont *pDefaultFont) const
-	{
-		Style::Font Font;
+bool CUIBase::CreateDrawFont(const Style::Font &Font, DrawUtil::CFont *pDrawFont) const
+{
+	if (pDrawFont == nullptr)
+		return false;
 
-		if (!GetDefaultFont(&Font))
-			return false;
+	Style::Font f = Font;
 
-		return CreateDrawFont(Font,pDefaultFont);
-	}
-
-
-	bool CUIBase::CreateDefaultFontAndBoldFont(DrawUtil::CFont *pDefaultFont,DrawUtil::CFont *pBoldFont) const
-	{
-		if (!CreateDefaultFont(pDefaultFont))
-			return false;
-
-		if (pBoldFont!=nullptr) {
-			LOGFONT lf;
-
-			if (!pDefaultFont->GetLogFont(&lf))
-				return false;
-
-			lf.lfWeight=FW_BOLD;
-
-			if (!pBoldFont->Create(&lf))
-				return false;
-		}
-
-		return true;
-	}
-
-
-	HCURSOR CUIBase::GetActionCursor() const
-	{
-		return GetAppClass().UICore.GetActionCursor();
-	}
-
-
-	HCURSOR CUIBase::GetLinkCursor() const
-	{
-		return GetAppClass().UICore.GetLinkCursor();
-	}
-
-
-	Theme::CThemeDraw CUIBase::BeginThemeDraw(HDC hdc) const
-	{
-		Theme::CThemeDraw ThemeDraw(GetStyleManager(),m_pStyleScaling);
-		ThemeDraw.Begin(hdc);
-		return ThemeDraw;
-	}
-
-
-	bool CUIBase::ConvertBorderWidthsInPixels(Theme::BorderStyle *pStyle) const
-	{
-		if (pStyle==nullptr)
-			return false;
-
-		const Style::CStyleScaling *pStyleScaling;
+	if (m_pStyleScaling != nullptr) {
+		m_pStyleScaling->RealizeFontSize(&f);
+	} else {
 		Style::CStyleScaling StyleScaling;
-
-		if (m_pStyleScaling!=nullptr) {
-			pStyleScaling=m_pStyleScaling;
-		} else {
-			GetStyleManager()->InitStyleScaling(&StyleScaling);
-			pStyleScaling=&StyleScaling;
-		}
-
-		pStyleScaling->ToPixels(&pStyle->Width.Left);
-		pStyleScaling->ToPixels(&pStyle->Width.Top);
-		pStyleScaling->ToPixels(&pStyle->Width.Right);
-		pStyleScaling->ToPixels(&pStyle->Width.Bottom);
-
-		return true;
+		GetStyleManager()->InitStyleScaling(&StyleScaling);
+		StyleScaling.RealizeFontSize(&f);
 	}
 
+	return pDrawFont->Create(&f.LogFont);
+}
 
-	bool CUIBase::GetBorderWidthsInPixels(const Theme::BorderStyle &Style,RECT *pWidths) const
-	{
-		Theme::BorderStyle Border=Style;
 
-		ConvertBorderWidthsInPixels(&Border);
-		return Theme::GetBorderWidths(Border,pWidths);
+bool CUIBase::CreateDrawFontAndBoldFont(
+	const Style::Font &Font, DrawUtil::CFont *pDrawFont, DrawUtil::CFont *pBoldFont) const
+{
+	if (!CreateDrawFont(Font, pDrawFont))
+		return false;
+
+	if (pBoldFont != nullptr) {
+		LOGFONT lf;
+
+		if (!pDrawFont->GetLogFont(&lf))
+			return false;
+
+		lf.lfWeight = FW_BOLD;
+
+		if (!pBoldFont->Create(&lf))
+			return false;
 	}
 
+	return true;
+}
 
-	int CUIBase::GetHairlineWidth() const
-	{
-		int Width;
 
-		if (m_pStyleScaling!=nullptr) {
-			Width=m_pStyleScaling->ToPixels(1,Style::UNIT_LOGICAL_PIXEL);
-		} else {
-			Style::CStyleScaling StyleScaling;
-			GetStyleManager()->InitStyleScaling(&StyleScaling);
-			Width=StyleScaling.ToPixels(1,Style::UNIT_LOGICAL_PIXEL);
-		}
+bool CUIBase::CreateDefaultFont(DrawUtil::CFont *pDefaultFont) const
+{
+	Style::Font Font;
 
-		return max(Width,1);
+	if (!GetDefaultFont(&Font))
+		return false;
+
+	return CreateDrawFont(Font, pDefaultFont);
+}
+
+
+bool CUIBase::CreateDefaultFontAndBoldFont(DrawUtil::CFont *pDefaultFont, DrawUtil::CFont *pBoldFont) const
+{
+	if (!CreateDefaultFont(pDefaultFont))
+		return false;
+
+	if (pBoldFont != nullptr) {
+		LOGFONT lf;
+
+		if (!pDefaultFont->GetLogFont(&lf))
+			return false;
+
+		lf.lfWeight = FW_BOLD;
+
+		if (!pBoldFont->Create(&lf))
+			return false;
 	}
 
+	return true;
+}
 
-	void CUIBase::RegisterUIChild(CUIBase *pChild)
-	{
-		if (pChild==nullptr)
-			return;
-		if (std::find(m_UIChildList.begin(),m_UIChildList.end(),pChild)==m_UIChildList.end())
-			m_UIChildList.push_back(pChild);
+
+HCURSOR CUIBase::GetActionCursor() const
+{
+	return GetAppClass().UICore.GetActionCursor();
+}
+
+
+HCURSOR CUIBase::GetLinkCursor() const
+{
+	return GetAppClass().UICore.GetLinkCursor();
+}
+
+
+Theme::CThemeDraw CUIBase::BeginThemeDraw(HDC hdc) const
+{
+	Theme::CThemeDraw ThemeDraw(GetStyleManager(), m_pStyleScaling);
+	ThemeDraw.Begin(hdc);
+	return ThemeDraw;
+}
+
+
+bool CUIBase::ConvertBorderWidthsInPixels(Theme::BorderStyle *pStyle) const
+{
+	if (pStyle == nullptr)
+		return false;
+
+	const Style::CStyleScaling *pStyleScaling;
+	Style::CStyleScaling StyleScaling;
+
+	if (m_pStyleScaling != nullptr) {
+		pStyleScaling = m_pStyleScaling;
+	} else {
+		GetStyleManager()->InitStyleScaling(&StyleScaling);
+		pStyleScaling = &StyleScaling;
 	}
 
+	pStyleScaling->ToPixels(&pStyle->Width.Left);
+	pStyleScaling->ToPixels(&pStyle->Width.Top);
+	pStyleScaling->ToPixels(&pStyle->Width.Right);
+	pStyleScaling->ToPixels(&pStyle->Width.Bottom);
 
-	void CUIBase::RemoveUIChild(CUIBase *pChild)
-	{
-		auto it=std::find(m_UIChildList.begin(),m_UIChildList.end(),pChild);
-		if (it!=m_UIChildList.end())
-			m_UIChildList.erase(it);
+	return true;
+}
+
+
+bool CUIBase::GetBorderWidthsInPixels(const Theme::BorderStyle &Style, RECT *pWidths) const
+{
+	Theme::BorderStyle Border = Style;
+
+	ConvertBorderWidthsInPixels(&Border);
+	return Theme::GetBorderWidths(Border, pWidths);
+}
+
+
+int CUIBase::GetHairlineWidth() const
+{
+	int Width;
+
+	if (m_pStyleScaling != nullptr) {
+		Width = m_pStyleScaling->ToPixels(1, Style::UnitType::LogicalPixel);
+	} else {
+		Style::CStyleScaling StyleScaling;
+		GetStyleManager()->InitStyleScaling(&StyleScaling);
+		Width = StyleScaling.ToPixels(1, Style::UnitType::LogicalPixel);
 	}
 
+	return std::max(Width, 1);
+}
 
-	void CUIBase::ClearUIChildList()
-	{
-		m_UIChildList.clear();
+
+void CUIBase::RegisterUIChild(CUIBase *pChild)
+{
+	if (pChild == nullptr)
+		return;
+	if (std::find(m_UIChildList.begin(), m_UIChildList.end(), pChild) == m_UIChildList.end())
+		m_UIChildList.push_back(pChild);
+}
+
+
+void CUIBase::RemoveUIChild(CUIBase *pChild)
+{
+	auto it = std::find(m_UIChildList.begin(), m_UIChildList.end(), pChild);
+	if (it != m_UIChildList.end())
+		m_UIChildList.erase(it);
+}
+
+
+void CUIBase::ClearUIChildList()
+{
+	m_UIChildList.clear();
+}
+
+
+void CUIBase::InitStyleScaling(HWND hwnd, bool fNonClientScaling)
+{
+	if (fNonClientScaling)
+		EnableNonClientDPIScaling(hwnd);
+
+	if (m_pStyleScaling != nullptr)
+		GetStyleManager()->InitStyleScaling(m_pStyleScaling, hwnd);
+}
+
+
+void CUIBase::OnDPIChanged(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+	TRACE(TEXT("DPI changed : %dx%d\n"), LOWORD(wParam), HIWORD(wParam));
+
+	if (GetStyleManager()->IsHandleDPIChanged() && m_pStyleScaling != nullptr) {
+		m_pStyleScaling->SetDPI(HIWORD(wParam));
+
+		UpdateStyle();
+
+		const RECT *prc = reinterpret_cast<RECT*>(lParam);
+		::SetWindowPos(
+			hwnd, nullptr,
+			prc->left, prc->top,
+			prc->right - prc->left, prc->bottom - prc->top,
+			SWP_NOZORDER | SWP_NOACTIVATE);
 	}
+}
 
 
-	void CUIBase::InitStyleScaling(HWND hwnd,bool fNonClientScaling)
-	{
-		if (fNonClientScaling)
-			EnableNonClientDPIScaling(hwnd);
-
-		if (m_pStyleScaling!=nullptr)
-			GetStyleManager()->InitStyleScaling(m_pStyleScaling,hwnd);
-	}
-
-
-	void CUIBase::OnDPIChanged(HWND hwnd,WPARAM wParam,LPARAM lParam)
-	{
-		TRACE(TEXT("DPI changed : %dx%d\n"),LOWORD(wParam),HIWORD(wParam));
-
-		if (GetStyleManager()->IsHandleDPIChanged() && m_pStyleScaling!=nullptr) {
-			m_pStyleScaling->SetDPI(HIWORD(wParam));
-
-			UpdateStyle();
-
-			const RECT *prc=reinterpret_cast<RECT*>(lParam);
-			::SetWindowPos(
-				hwnd,nullptr,
-				prc->left,prc->top,
-				prc->right-prc->left,prc->bottom-prc->top,
-				SWP_NOZORDER | SWP_NOACTIVATE);
-		}
-	}
-
-
-	void CUIBase::ResetDefaultFont()
-	{
-		m_fValidDefaultFont=false;
-	}
+void CUIBase::ResetDefaultFont()
+{
+	m_fValidDefaultFont = false;
+}
 
 
 }	// namespace TVTest

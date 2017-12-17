@@ -1,8 +1,28 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
 #include "InitialSettings.h"
-#include "DirectShowFilter/DirectShowUtil.h"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/DirectShowUtilities.hpp"
 #include "VideoOptions.h"
 #include "DialogUtil.h"
 #include "DrawUtil.h"
@@ -13,34 +33,23 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	: m_pDriverManager(pDriverManager)
 	, m_fDrawLogo(false)
 {
-	m_szDriverFileName[0]='\0';
+	// ãƒ“ãƒ‡ã‚ªãƒ¬ãƒ³ãƒ€ãƒ©ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚’EVRã«ã™ã‚‹
+	m_VideoRenderer = LibISDB::DirectShow::VideoRenderer::RendererType::EVR;
 
-	// VistaˆÈ~‚Å‚ÍƒrƒfƒIƒŒƒ“ƒ_ƒ‰‚ÌƒfƒtƒHƒ‹ƒg‚ğEVR‚É‚·‚é
-	m_VideoRenderer=
-#ifdef WIN_XP_SUPPORT
-		!Util::OS::IsWindowsVistaOrLater() ? CVideoRenderer::RENDERER_DEFAULT :
-#endif
-		CVideoRenderer::RENDERER_EVR;
-
-#ifdef WIN_XP_SUPPORT
-	TCHAR szRecFolder[MAX_PATH];
-	if (::SHGetSpecialFolderPath(NULL,szRecFolder,CSIDL_MYVIDEO,FALSE)
-			|| ::SHGetSpecialFolderPath(NULL,szRecFolder,CSIDL_PERSONAL,FALSE))
-		m_RecordFolder=szRecFolder;
-#else
 	PWSTR pszRecFolder;
-	if (::SHGetKnownFolderPath(FOLDERID_Videos,0,NULL,&pszRecFolder)==S_OK
-			|| ::SHGetKnownFolderPath(FOLDERID_Documents,0,NULL,&pszRecFolder)==S_OK) {
-		m_RecordFolder=pszRecFolder;
+	if (::SHGetKnownFolderPath(FOLDERID_Videos, 0, nullptr, &pszRecFolder) == S_OK
+			|| ::SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pszRecFolder) == S_OK) {
+		m_RecordFolder = pszRecFolder;
 		::CoTaskMemFree(pszRecFolder);
 	}
-#endif
 }
 
 
@@ -52,107 +61,107 @@ CInitialSettings::~CInitialSettings()
 
 bool CInitialSettings::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_INITIALSETTINGS))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_INITIALSETTINGS)) == IDOK;
 }
 
 
-bool CInitialSettings::GetDriverFileName(LPTSTR pszFileName,int MaxLength) const
-{
-	if (::lstrlen(m_szDriverFileName)>=MaxLength)
-		return false;
-	::lstrcpy(pszFileName,m_szDriverFileName);
-	return true;
-}
-
-
-INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
 			{
-				HWND hwndLogo=::GetDlgItem(hDlg,IDC_INITIALSETTINGS_LOGO);
+				HWND hwndLogo = ::GetDlgItem(hDlg, IDC_INITIALSETTINGS_LOGO);
 				RECT rc;
 
-				::GetWindowRect(hwndLogo,&rc);
-				::SetRect(&rc,rc.right-rc.left,0,0,0);
+				::GetWindowRect(hwndLogo, &rc);
+				::SetRect(&rc, rc.right - rc.left, 0, 0, 0);
 				if (!Util::OS::IsWindows8OrLater()
-						&& m_AeroGlass.ApplyAeroGlass(hDlg,&rc)) {
-					m_fDrawLogo=true;
-					m_LogoImage.LoadFromResource(GetAppClass().GetResourceInstance(),
-						MAKEINTRESOURCE(IDB_LOGO32),TEXT("PNG"));
-					::ShowWindow(hwndLogo,SW_HIDE);
+						&& m_AeroGlass.ApplyAeroGlass(hDlg, &rc)) {
+					m_fDrawLogo = true;
+					m_LogoImage.LoadFromResource(
+						GetAppClass().GetResourceInstance(),
+						MAKEINTRESOURCE(IDB_LOGO32), TEXT("PNG"));
+					::ShowWindow(hwndLogo, SW_HIDE);
 				} else {
-					HBITMAP hbm=static_cast<HBITMAP>(
-						::LoadImage(GetAppClass().GetResourceInstance(),
-									MAKEINTRESOURCE(IDB_LOGO),
-									IMAGE_BITMAP,0,0,LR_DEFAULTCOLOR));
-					::SendMessage(hwndLogo,STM_SETIMAGE,
-								  IMAGE_BITMAP,reinterpret_cast<LPARAM>(hbm));
+					HBITMAP hbm = static_cast<HBITMAP>(
+						::LoadImage(
+							GetAppClass().GetResourceInstance(),
+							MAKEINTRESOURCE(IDB_LOGO),
+							IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR));
+					::SendMessage(
+						hwndLogo, STM_SETIMAGE,
+						IMAGE_BITMAP, reinterpret_cast<LPARAM>(hbm));
 				}
 			}
 
 			// BonDriver
 			{
-				int NormalDriverCount=0;
+				int NormalDriverCount = 0;
 
-				DlgComboBox_LimitText(hDlg,IDC_INITIALSETTINGS_DRIVER,MAX_PATH-1);
-				for (int i=0;i<m_pDriverManager->NumDrivers();i++) {
-					const CDriverInfo *pDriverInfo=m_pDriverManager->GetDriverInfo(i);
+				DlgComboBox_LimitText(hDlg, IDC_INITIALSETTINGS_DRIVER, MAX_PATH - 1);
+				for (int i = 0; i < m_pDriverManager->NumDrivers(); i++) {
+					const CDriverInfo *pDriverInfo = m_pDriverManager->GetDriverInfo(i);
 					CDriverManager::TunerSpec Spec;
 					int Index;
 
-					// ƒlƒbƒgƒ[ƒN‚âƒtƒ@ƒCƒ‹Ä¶—p‚Ì“Áê‚ÈBonDriver‚ÍŒã‚É‚È‚é‚æ‚¤‚É‚·‚é
-					if (m_pDriverManager->GetTunerSpec(pDriverInfo->GetFileName(),&Spec)
-							&& (Spec.Flags &
-								(CDriverManager::TunerSpec::FLAG_NETWORK |
-								 CDriverManager::TunerSpec::FLAG_FILE))!=0) {
-						Index=i;
+					// ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯ã‚„ãƒ•ã‚¡ã‚¤ãƒ«å†ç”Ÿç”¨ã®ç‰¹æ®ŠãªBonDriverã¯å¾Œã«ãªã‚‹ã‚ˆã†ã«ã™ã‚‹
+					if (m_pDriverManager->GetTunerSpec(pDriverInfo->GetFileName(), &Spec)
+						&& !!(Spec.Flags &
+							(CDriverManager::TunerSpec::Flag::Network |
+							 CDriverManager::TunerSpec::Flag::File))) {
+						Index = i;
 					} else {
-						Index=NormalDriverCount++;
+						Index = NormalDriverCount++;
 					}
-					DlgComboBox_InsertString(hDlg,IDC_INITIALSETTINGS_DRIVER,
-											 Index,pDriverInfo->GetFileName());
+					DlgComboBox_InsertString(
+						hDlg, IDC_INITIALSETTINGS_DRIVER,
+						Index, pDriverInfo->GetFileName());
 				}
-				if (m_pDriverManager->NumDrivers()>0) {
-					DlgComboBox_GetLBString(hDlg,IDC_INITIALSETTINGS_DRIVER,
-											0,m_szDriverFileName);
-					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,m_szDriverFileName);
+				if (m_pDriverManager->NumDrivers() > 0) {
+					DlgComboBox_GetLBString(
+						hDlg, IDC_INITIALSETTINGS_DRIVER,
+						0, &m_DriverFileName);
+					::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, m_DriverFileName.c_str());
 				}
 			}
 
-			// ‰f‘œƒfƒR[ƒ_
-			InitDecoderList(IDC_INITIALSETTINGS_MPEG2DECODER,
-							MEDIASUBTYPE_MPEG2_VIDEO,
-							m_Mpeg2DecoderName.c_str());
-			InitDecoderList(IDC_INITIALSETTINGS_H264DECODER,
-							MEDIASUBTYPE_H264,
-							m_H264DecoderName.c_str());
-			InitDecoderList(IDC_INITIALSETTINGS_H265DECODER,
-							MEDIASUBTYPE_HEVC,
-							m_H265DecoderName.c_str());
+			// æ˜ åƒãƒ‡ã‚³ãƒ¼ãƒ€
+			InitDecoderList(
+				IDC_INITIALSETTINGS_MPEG2DECODER,
+				MEDIASUBTYPE_MPEG2_VIDEO,
+				m_Mpeg2DecoderName.c_str());
+			InitDecoderList(
+				IDC_INITIALSETTINGS_H264DECODER,
+				MEDIASUBTYPE_H264,
+				m_H264DecoderName.c_str());
+			InitDecoderList(
+				IDC_INITIALSETTINGS_H265DECODER,
+				MEDIASUBTYPE_HEVC,
+				m_H265DecoderName.c_str());
 
 			// Video renderer
 			{
-				int Sel=-1;
+				int Sel = -1;
 				CVideoOptions::RendererInfo Info;
 
-				for (int i=0;CVideoOptions::GetRendererInfo(i,&Info);i++) {
-					DlgComboBox_AddString(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,Info.pszName);
-					DlgComboBox_SetItemData(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,i,(LPARAM)Info.Renderer);
-					if (Info.Renderer==m_VideoRenderer)
-						Sel=i;
+				for (int i = 0; CVideoOptions::GetRendererInfo(i, &Info); i++) {
+					DlgComboBox_AddString(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER, Info.pszName);
+					DlgComboBox_SetItemData(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER, i, (LPARAM)Info.Renderer);
+					if (Info.Renderer == m_VideoRenderer)
+						Sel = i;
 				}
-				DlgComboBox_SetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,Sel);
+				DlgComboBox_SetCurSel(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER, Sel);
 			}
 
-			// ˜^‰æƒtƒHƒ‹ƒ_
-			::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,m_RecordFolder.c_str());
-			::SendDlgItemMessage(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,EM_LIMITTEXT,MAX_PATH-1,0);
+			// éŒ²ç”»ãƒ•ã‚©ãƒ«ãƒ€
+			::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER, m_RecordFolder.c_str());
+			::SendDlgItemMessage(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
 
-			AdjustDialogPos(NULL,hDlg);
+			AdjustDialogPos(nullptr, hDlg);
 		}
 		return TRUE;
 
@@ -161,28 +170,27 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 		case IDC_INITIALSETTINGS_DRIVER_BROWSE:
 			{
 				OPENFILENAME ofn;
-				TCHAR szFileName[MAX_PATH],szInitDir[MAX_PATH];
-				CFilePath FilePath;
+				TCHAR szFileName[MAX_PATH];
+				String FileName, InitDir;
 
-				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,szFileName,lengthof(szFileName));
-				FilePath.SetPath(szFileName);
-				if (FilePath.GetDirectory(szInitDir)) {
-					::lstrcpy(szFileName,FilePath.GetFileName());
+				::GetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, szFileName, lengthof(szFileName));
+				if (PathUtil::Split(szFileName, &InitDir, &FileName)) {
+					StringCopy(szFileName, FileName.c_str());
 				} else {
-					GetAppClass().GetAppDirectory(szInitDir);
+					GetAppClass().GetAppDirectory(&InitDir);
 				}
 				InitOpenFileName(&ofn);
-				ofn.hwndOwner=hDlg;
-				ofn.lpstrFilter=
+				ofn.hwndOwner = hDlg;
+				ofn.lpstrFilter =
 					TEXT("BonDriver(BonDriver*.dll)\0BonDriver*.dll\0")
-					TEXT("‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹\0*.*\0");
-				ofn.lpstrFile=szFileName;
-				ofn.nMaxFile=lengthof(szFileName);
-				ofn.lpstrInitialDir=szInitDir;
-				ofn.lpstrTitle=TEXT("BonDriver‚Ì‘I‘ğ");
-				ofn.Flags=OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+					TEXT("ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«\0*.*\0");
+				ofn.lpstrFile = szFileName;
+				ofn.nMaxFile = lengthof(szFileName);
+				ofn.lpstrInitialDir = InitDir.c_str();
+				ofn.lpstrTitle = TEXT("BonDriverã®é¸æŠ");
+				ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 				if (FileOpenDialog(&ofn)) {
-					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,szFileName);
+					::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_DRIVER, szFileName);
 				}
 			}
 			return TRUE;
@@ -191,10 +199,11 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			{
 				TCHAR szFolder[MAX_PATH];
 
-				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,szFolder,lengthof(szFolder));
-				if (BrowseFolderDialog(hDlg,szFolder,
-										TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_:")))
-					::SetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,szFolder);
+				::GetDlgItemText(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER, szFolder, lengthof(szFolder));
+				if (BrowseFolderDialog(
+							hDlg, szFolder,
+							TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€:")))
+					::SetDlgItemText(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER, szFolder);
 			}
 			return TRUE;
 
@@ -204,102 +213,108 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 		case IDOK:
 			{
-				bool fMpeg2Decoder=
-					DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_MPEG2DECODER)>1;
-				bool fH264Decoder=
-					DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_H264DECODER)>1;
-				bool fH265Decoder=
-					DlgComboBox_GetCount(hDlg,IDC_INITIALSETTINGS_H265DECODER)>1;
+				bool fMpeg2Decoder =
+					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_MPEG2DECODER) > 1;
+				bool fH264Decoder =
+					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_H264DECODER) > 1;
+				bool fH265Decoder =
+					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_H265DECODER) > 1;
 				if (!fMpeg2Decoder || !fH264Decoder || !fH265Decoder) {
-					TCHAR szCodecs[64],szMessage[256];
-					szCodecs[0]=_T('\0');
+					String Codecs, Message;
 					if (!fMpeg2Decoder)
-						::lstrcat(szCodecs,TEXT("MPEG-2"));
+						Codecs = TEXT("MPEG-2");
 					if (!fH264Decoder) {
-						if (szCodecs[0]!=_T('\0'))
-							::lstrcat(szCodecs,TEXT("/"));
-						::lstrcat(szCodecs,TEXT("H.264(AVC)"));
+						if (!Codecs.empty())
+							Codecs += TEXT("/");
+						Codecs += TEXT("H.264(AVC)");
 					}
 					if (!fH265Decoder) {
-						if (szCodecs[0]!=_T('\0'))
-							::lstrcat(szCodecs,TEXT("/"));
-						::lstrcat(szCodecs,TEXT("H.265(HEVC)"));
+						if (!Codecs.empty())
+							Codecs += TEXT("/");
+						Codecs += TEXT("H.265(HEVC)");
 					}
-					StdUtil::snprintf(szMessage,lengthof(szMessage),
-						TEXT("%s ‚ÌƒfƒR[ƒ_‚ªŒ©•t‚©‚ç‚È‚¢‚½‚ßA%s ‚Ì‰f‘œ‚ÍÄ¶‚Å‚«‚Ü‚¹‚ñB\n")
-						TEXT("‰f‘œ‚ğÄ¶‚·‚é‚É‚ÍƒfƒR[ƒ_‚ğƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚­‚¾‚³‚¢B"),
-						szCodecs,szCodecs);
-					::MessageBox(hDlg,szMessage,TEXT("‚¨’m‚ç‚¹"),MB_OK | MB_ICONINFORMATION);
+					StringUtility::Format(
+						Message,
+						TEXT("%s ã®ãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚‰ãªã„ãŸã‚ã€%s ã®æ˜ åƒã¯å†ç”Ÿã§ãã¾ã›ã‚“ã€‚\n")
+						TEXT("æ˜ åƒã‚’å†ç”Ÿã™ã‚‹ã«ã¯ãƒ‡ã‚³ãƒ¼ãƒ€ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„ã€‚"),
+						Codecs.c_str(), Codecs.c_str());
+					::MessageBox(hDlg, Message.c_str(), TEXT("ãŠçŸ¥ã‚‰ã›"), MB_OK | MB_ICONINFORMATION);
 				}
 
-				TVTest::String Mpeg2DecoderName,H264DecoderName,H265DecoderName;
+				String Mpeg2DecoderName, H264DecoderName, H265DecoderName;
 				if (fMpeg2Decoder)
-					GetDecoderSetting(IDC_INITIALSETTINGS_MPEG2DECODER,&Mpeg2DecoderName);
+					GetDecoderSetting(IDC_INITIALSETTINGS_MPEG2DECODER, &Mpeg2DecoderName);
 				if (fH264Decoder)
-					GetDecoderSetting(IDC_INITIALSETTINGS_H264DECODER,&H264DecoderName);
+					GetDecoderSetting(IDC_INITIALSETTINGS_H264DECODER, &H264DecoderName);
 				if (fH265Decoder)
-					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER,&H265DecoderName);
+					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER, &H265DecoderName);
 
-				CVideoRenderer::RendererType VideoRenderer=(CVideoRenderer::RendererType)
-					DlgComboBox_GetItemData(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER,
-						DlgComboBox_GetCurSel(hDlg,IDC_INITIALSETTINGS_VIDEORENDERER));
+				LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer =
+					(LibISDB::DirectShow::VideoRenderer::RendererType)
+						DlgComboBox_GetItemData(
+							hDlg, IDC_INITIALSETTINGS_VIDEORENDERER,
+							DlgComboBox_GetCurSel(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER));
 
-				// ‘Š«‚Ìˆ«‚¢‘g‚İ‡‚í‚¹‚É‘Î‚µ‚Ä’ˆÓ‚ğ•\¦‚·‚é
+				// ç›¸æ€§ã®æ‚ªã„çµ„ã¿åˆã‚ã›ã«å¯¾ã—ã¦æ³¨æ„ã‚’è¡¨ç¤ºã™ã‚‹
 				static const struct {
 					LPCTSTR pszDecoder;
-					CVideoRenderer::RendererType Renderer;
+					LibISDB::DirectShow::VideoRenderer::RendererType Renderer;
 					LPCTSTR pszMessage;
 				} ConflictList[] = {
-					{TEXT("CyberLink"),	CVideoRenderer::RENDERER_DEFAULT,
-						TEXT("CyberLink ‚ÌƒfƒR[ƒ_‚ÆƒfƒtƒHƒ‹ƒgƒŒƒ“ƒ_ƒ‰‚Ì‘g‚İ‡‚í‚¹‚ÅA\n")
-						TEXT("ˆê•”‚Ì”Ô‘g‚Å”ä—¦‚ª‚¨‚©‚µ‚­‚È‚éŒ»Û‚ªo‚é–‚ª‚ ‚é‚½‚ßA\n")
-						TEXT("ƒŒƒ“ƒ_ƒ‰‚ğƒfƒtƒHƒ‹ƒgˆÈŠO‚É‚·‚é‚±‚Æ‚ğ‚¨§‚ß‚µ‚Ü‚·B\n")
-						TEXT("Œ»İ‚Ìİ’è‚ğ•ÏX‚µ‚Ü‚·‚©?")},
+					{
+						TEXT("CyberLink"), LibISDB::DirectShow::VideoRenderer::RendererType::Default,
+						TEXT("CyberLink ã®ãƒ‡ã‚³ãƒ¼ãƒ€ã¨ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆãƒ¬ãƒ³ãƒ€ãƒ©ã®çµ„ã¿åˆã‚ã›ã§ã€\n")
+						TEXT("ä¸€éƒ¨ã®ç•ªçµ„ã§æ¯”ç‡ãŒãŠã‹ã—ããªã‚‹ç¾è±¡ãŒå‡ºã‚‹äº‹ãŒã‚ã‚‹ãŸã‚ã€\n")
+						TEXT("ãƒ¬ãƒ³ãƒ€ãƒ©ã‚’ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆä»¥å¤–ã«ã™ã‚‹ã“ã¨ã‚’ãŠå¥¨ã‚ã—ã¾ã™ã€‚\n")
+						TEXT("ç¾åœ¨ã®è¨­å®šã‚’å¤‰æ›´ã—ã¾ã™ã‹?")
+					},
 				};
-				for (int i=0;i<lengthof(ConflictList);i++) {
-					int Length=::lstrlen(ConflictList[i].pszDecoder);
-					if (VideoRenderer==ConflictList[i].Renderer
-							&& (::StrCmpNI(Mpeg2DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0
-								|| ::StrCmpNI(H264DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0)
-								|| ::StrCmpNI(H265DecoderName.c_str(),ConflictList[i].pszDecoder,Length)==0) {
-						if (::MessageBox(hDlg,ConflictList[i].pszMessage,TEXT("’ˆÓ"),
-										 MB_YESNO | MB_ICONINFORMATION)==IDYES)
+				for (const auto &e : ConflictList) {
+					int Length = ::lstrlen(e.pszDecoder);
+					if (VideoRenderer == e.Renderer
+							&& (::StrCmpNI(Mpeg2DecoderName.c_str(), e.pszDecoder, Length) == 0
+								|| ::StrCmpNI(H264DecoderName.c_str(), e.pszDecoder, Length) == 0)
+							|| ::StrCmpNI(H265DecoderName.c_str(), e.pszDecoder, Length) == 0) {
+						if (::MessageBox(
+									hDlg, e.pszMessage, TEXT("æ³¨æ„"),
+									MB_YESNO | MB_ICONINFORMATION) == IDYES)
 							return TRUE;
 						break;
 					}
 				}
 
-				if (!CVideoRenderer::IsAvailable(VideoRenderer)) {
-					::MessageBox(hDlg,TEXT("‘I‘ğ‚³‚ê‚½ƒŒƒ“ƒ_ƒ‰‚Í‚±‚ÌŠÂ‹«‚Å—˜—p‰Â”\‚É‚È‚Á‚Ä‚¢‚Ü‚¹‚ñB"),
-								 NULL,MB_OK | MB_ICONEXCLAMATION);
+				if (!LibISDB::DirectShow::VideoRenderer::IsAvailable(VideoRenderer)) {
+					::MessageBox(
+						hDlg, TEXT("é¸æŠã•ã‚ŒãŸãƒ¬ãƒ³ãƒ€ãƒ©ã¯ã“ã®ç’°å¢ƒã§åˆ©ç”¨å¯èƒ½ã«ãªã£ã¦ã„ã¾ã›ã‚“ã€‚"),
+						nullptr, MB_OK | MB_ICONEXCLAMATION);
 					return TRUE;
 				}
 
-				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_DRIVER,
-								 m_szDriverFileName,MAX_PATH);
+				GetDlgItemString(hDlg, IDC_INITIALSETTINGS_DRIVER, &m_DriverFileName);
 
-				m_Mpeg2DecoderName=Mpeg2DecoderName;
-				m_H264DecoderName=H264DecoderName;
-				m_H265DecoderName=H265DecoderName;
+				m_Mpeg2DecoderName = Mpeg2DecoderName;
+				m_H264DecoderName = H264DecoderName;
+				m_H265DecoderName = H265DecoderName;
 
-				m_VideoRenderer=VideoRenderer;
+				m_VideoRenderer = VideoRenderer;
 
 				TCHAR szRecordFolder[MAX_PATH];
-				::GetDlgItemText(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER,
-								 szRecordFolder,lengthof(szRecordFolder));
-				CAppMain::CreateDirectoryResult CreateDirResult=
+				::GetDlgItemText(
+					hDlg, IDC_INITIALSETTINGS_RECORDFOLDER,
+					szRecordFolder, lengthof(szRecordFolder));
+				CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
-						hDlg,szRecordFolder,
-						TEXT("˜^‰æƒtƒ@ƒCƒ‹‚Ì•Û‘¶æƒtƒHƒ‹ƒ_ \"%s\" ‚ª‚ ‚è‚Ü‚¹‚ñB\n")
-						TEXT("ì¬‚µ‚Ü‚·‚©?"));
-				if (CreateDirResult==CAppMain::CREATEDIRECTORY_RESULT_ERROR) {
-					SetDlgItemFocus(hDlg,IDC_INITIALSETTINGS_RECORDFOLDER);
+						hDlg, szRecordFolder,
+						TEXT("éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒã‚ã‚Šã¾ã›ã‚“ã€‚\n")
+						TEXT("ä½œæˆã—ã¾ã™ã‹?"));
+				if (CreateDirResult == CAppMain::CreateDirectoryResult::Error) {
+					SetDlgItemFocus(hDlg, IDC_INITIALSETTINGS_RECORDFOLDER);
 					return TRUE;
 				}
-				m_RecordFolder=szRecordFolder;
+				m_RecordFolder = szRecordFolder;
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -308,38 +323,41 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 		if (m_fDrawLogo) {
 			PAINTSTRUCT ps;
 
-			::BeginPaint(hDlg,&ps);
+			::BeginPaint(hDlg, &ps);
 			{
-				TVTest::Graphics::CCanvas Canvas(ps.hdc);
-				TVTest::Graphics::CBrush Brush(::GetSysColor(COLOR_3DFACE));
-				RECT rc,rcClient;
+				Graphics::CCanvas Canvas(ps.hdc);
+				Graphics::CBrush Brush(::GetSysColor(COLOR_3DFACE));
+				RECT rc, rcClient;
 
-				::GetWindowRect(::GetDlgItem(hDlg,IDC_INITIALSETTINGS_LOGO),&rc);
-				::OffsetRect(&rc,-rc.left,-rc.top);
-				Canvas.Clear(0,0,0,0);
-				::GetClientRect(hDlg,&rcClient);
-				rcClient.left=rc.right;
-				Canvas.FillRect(&Brush,rcClient);
-				Canvas.DrawImage(&m_LogoImage,
-					(rc.right-m_LogoImage.GetWidth())/2,
-					(rc.bottom-m_LogoImage.GetHeight())/2);
+				::GetWindowRect(::GetDlgItem(hDlg, IDC_INITIALSETTINGS_LOGO), &rc);
+				::OffsetRect(&rc, -rc.left, -rc.top);
+				Canvas.Clear(0, 0, 0, 0);
+				::GetClientRect(hDlg, &rcClient);
+				rcClient.left = rc.right;
+				Canvas.FillRect(&Brush, rcClient);
+				Canvas.DrawImage(
+					&m_LogoImage,
+					(rc.right - m_LogoImage.GetWidth()) / 2,
+					(rc.bottom - m_LogoImage.GetHeight()) / 2);
 			}
-			::EndPaint(hDlg,&ps);
+			::EndPaint(hDlg, &ps);
 			return TRUE;
 		}
 		break;
 
 	case WM_CTLCOLORSTATIC:
-		if (reinterpret_cast<HWND>(lParam)==::GetDlgItem(hDlg,IDC_INITIALSETTINGS_LOGO))
+		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_INITIALSETTINGS_LOGO))
 			return reinterpret_cast<INT_PTR>(::GetStockObject(WHITE_BRUSH));
 		break;
 
 	case WM_DESTROY:
 		{
-			HBITMAP hbm=reinterpret_cast<HBITMAP>(::SendDlgItemMessage(hDlg,IDC_INITIALSETTINGS_LOGO,
-				STM_SETIMAGE,IMAGE_BITMAP,reinterpret_cast<LPARAM>((HBITMAP)NULL)));
+			HBITMAP hbm = reinterpret_cast<HBITMAP>(
+				::SendDlgItemMessage(
+					hDlg, IDC_INITIALSETTINGS_LOGO,
+					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
 
-			if (hbm!=NULL) {
+			if (hbm != nullptr) {
 				::DeleteObject(hbm);
 			} else {
 				m_LogoImage.Free();
@@ -352,60 +370,66 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 }
 
 
-void CInitialSettings::InitDecoderList(int ID,const GUID &SubType,LPCTSTR pszDecoderName)
+void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszDecoderName)
 {
-	LPCWSTR pszDefaultDecoderName=
-		CInternalDecoderManager::IsDecoderAvailable(SubType)?
-			CInternalDecoderManager::GetDecoderName(SubType):NULL;
-	CDirectShowFilterFinder FilterFinder;
-	std::vector<TVTest::String> FilterList;
-	int Sel=0;
+	LPCWSTR pszDefaultDecoderName =
+		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
+		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
+	LibISDB::DirectShow::FilterFinder FilterFinder;
+	std::vector<String> FilterList;
+	int Sel = 0;
 
-	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+	if (FilterFinder.FindFilters(&MEDIATYPE_Video, &SubType)) {
 		FilterList.reserve(FilterFinder.GetFilterCount());
-		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
-			TVTest::String FilterName;
+		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
+			String FilterName;
 
-			if (FilterFinder.GetFilterInfo(i,NULL,&FilterName)
-					&& (pszDefaultDecoderName==NULL
-						|| ::lstrcmpi(FilterName.c_str(),pszDefaultDecoderName)!=0)) {
+			if (FilterFinder.GetFilterInfo(i, nullptr, &FilterName)
+					&& (pszDefaultDecoderName == nullptr
+						|| ::lstrcmpi(FilterName.c_str(), pszDefaultDecoderName) != 0)) {
 				FilterList.push_back(FilterName);
 			}
 		}
-		if (FilterList.size()>1) {
-			std::sort(FilterList.begin(),FilterList.end(),
-				[](const TVTest::String Filter1,const TVTest::String &Filter2) {
-					return ::CompareString(LOCALE_USER_DEFAULT,
-										   NORM_IGNORECASE | NORM_IGNORESYMBOLS,
-										   Filter1.data(),(int)Filter1.length(),
-										   Filter2.data(),(int)Filter2.length())==CSTR_LESS_THAN;
+		if (FilterList.size() > 1) {
+			std::sort(
+				FilterList.begin(), FilterList.end(),
+				[](const String Filter1, const String & Filter2) {
+					return ::CompareString(
+						LOCALE_USER_DEFAULT,
+						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
+						Filter1.data(), (int)Filter1.length(),
+						Filter2.data(), (int)Filter2.length()) == CSTR_LESS_THAN;
 				});
 		}
-		for (size_t i=0;i<FilterList.size();i++) {
-			DlgComboBox_AddString(m_hDlg,ID,FilterList[i].c_str());
+		for (const String &e :FilterList) {
+			DlgComboBox_AddString(m_hDlg, ID, e.c_str());
 		}
 	}
 
-	if (pszDefaultDecoderName!=NULL)
-		DlgComboBox_InsertString(m_hDlg,ID,0,pszDefaultDecoderName);
+	if (pszDefaultDecoderName != nullptr)
+		DlgComboBox_InsertString(m_hDlg, ID, 0, pszDefaultDecoderName);
 
 	if (!IsStringEmpty(pszDecoderName))
-		Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,pszDecoderName)+1;
+		Sel = (int)DlgComboBox_FindStringExact(m_hDlg, ID, -1, pszDecoderName) + 1;
 
-	DlgComboBox_InsertString(m_hDlg,ID,
-		0,!FilterList.empty() || pszDefaultDecoderName!=NULL?TEXT("©“®"):TEXT("<ƒfƒR[ƒ_‚ªŒ©•t‚©‚è‚Ü‚¹‚ñ>"));
-	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
+	DlgComboBox_InsertString(
+		m_hDlg, ID,
+		0, !FilterList.empty() || pszDefaultDecoderName != nullptr ? TEXT("è‡ªå‹•") : TEXT("<ãƒ‡ã‚³ãƒ¼ãƒ€ãŒè¦‹ä»˜ã‹ã‚Šã¾ã›ã‚“>"));
+	DlgComboBox_SetCurSel(m_hDlg, ID, Sel);
 }
 
 
-void CInitialSettings::GetDecoderSetting(int ID,TVTest::String *pDecoderName) const
+void CInitialSettings::GetDecoderSetting(int ID, String *pDecoderName) const
 {
-	int Sel=(int)DlgComboBox_GetCurSel(m_hDlg,ID);
-	if (Sel>0) {
+	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
+	if (Sel > 0) {
 		TCHAR szDecoder[MAX_DECODER_NAME];
-		DlgComboBox_GetLBString(m_hDlg,ID,Sel,szDecoder);
-		*pDecoderName=szDecoder;
+		DlgComboBox_GetLBString(m_hDlg, ID, Sel, szDecoder);
+		*pDecoderName = szDecoder;
 	} else {
 		pDecoderName->clear();
 	}
 }
+
+
+}	// namespace TVTest

@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -9,36 +29,39 @@
 #include "Common/DebugDef.h"
 
 
+namespace TVTest
+{
 
 
 const CVideoOptions::RendererInfo CVideoOptions::m_RendererList[] = {
-	{CVideoRenderer::RENDERER_DEFAULT,            TEXT("ÉVÉXÉeÉÄÉfÉtÉHÉãÉg")},
-	{CVideoRenderer::RENDERER_VMR7,               TEXT("VMR7")},
-	{CVideoRenderer::RENDERER_VMR9,               TEXT("VMR9")},
-	{CVideoRenderer::RENDERER_VMR7RENDERLESS,     TEXT("VMR7 Renderless")},
-	{CVideoRenderer::RENDERER_VMR9RENDERLESS,     TEXT("VMR9 Renderless")},
-	{CVideoRenderer::RENDERER_EVR,                TEXT("EVR")},
-	{CVideoRenderer::RENDERER_EVRCUSTOMPRESENTER, TEXT("EVR (Custom Presenter)")},
-	{CVideoRenderer::RENDERER_OVERLAYMIXER,       TEXT("Overlay Mixer")},
-	{CVideoRenderer::RENDERER_madVR,              TEXT("madVR")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::Default,            TEXT("„Ç∑„Çπ„ÉÜ„É†„Éá„Éï„Ç©„É´„Éà")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR7,               TEXT("VMR7")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR9,               TEXT("VMR9")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR7Renderless,     TEXT("VMR7 Renderless")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR9Renderless,     TEXT("VMR9 Renderless")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::EVR,                TEXT("EVR")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::EVRCustomPresenter, TEXT("EVR (Custom Presenter)")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::OverlayMixer,       TEXT("Overlay Mixer")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::madVR,              TEXT("madVR")},
 };
 
 
-bool CVideoOptions::GetRendererInfo(int Index,RendererInfo *pInfo)
+bool CVideoOptions::GetRendererInfo(int Index, RendererInfo *pInfo)
 {
-	if (Index<0 || Index>=lengthof(m_RendererList))
+	if (Index < 0 || Index >= lengthof(m_RendererList))
 		return false;
-	*pInfo=m_RendererList[Index];
+	*pInfo = m_RendererList[Index];
 	return true;
 }
 
 
 CVideoOptions::CVideoOptions()
-	: m_VideoRendererType(CVideoRenderer::RENDERER_DEFAULT)
+	: m_VideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType::Default)
 	, m_fResetPanScanEventChange(true)
 	, m_fNoMaskSideCut(true)
-	, m_FullscreenStretchMode(CMediaViewer::STRETCH_KEEPASPECTRATIO)
-	, m_MaximizeStretchMode(CMediaViewer::STRETCH_KEEPASPECTRATIO)
+	, m_StretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
+	, m_FullscreenStretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
+	, m_MaximizeStretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
 	, m_fIgnoreDisplayExtension(false)
 	, m_fClipToDevice(true)
 {
@@ -53,18 +76,21 @@ CVideoOptions::~CVideoOptions()
 
 bool CVideoOptions::Apply(DWORD Flags)
 {
-	CAppMain &App=GetAppClass();
+	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-	if ((Flags & UPDATE_MASKCUTAREA)!=0) {
-		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetNoMaskSideCut(m_fNoMaskSideCut);
+	if (pViewer == nullptr)
+		return false;
+
+	if ((Flags & UPDATE_MASKCUTAREA) != 0) {
+		pViewer->SetNoMaskSideCut(m_fNoMaskSideCut);
 	}
 
-	if ((Flags & UPDATE_IGNOREDISPLAYEXTENSION)!=0) {
-		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetIgnoreDisplayExtension(m_fIgnoreDisplayExtension);
+	if ((Flags & UPDATE_IGNOREDISPLAYEXTENSION) != 0) {
+		pViewer->SetIgnoreDisplayExtension(m_fIgnoreDisplayExtension);
 	}
 
-	if ((Flags & UPDATE_CLIPTODEVICE)!=0) {
-		App.CoreEngine.m_DtvEngine.m_MediaViewer.SetClipToDevice(m_fClipToDevice);
+	if ((Flags & UPDATE_CLIPTODEVICE) != 0) {
+		pViewer->SetClipToDevice(m_fClipToDevice);
 	}
 
 	return true;
@@ -75,31 +101,48 @@ bool CVideoOptions::ReadSettings(CSettings &Settings)
 {
 	int Value;
 
-	Settings.Read(TEXT("Mpeg2Decoder"),&m_Mpeg2DecoderName);
-	Settings.Read(TEXT("H264Decoder"),&m_H264DecoderName);
-	Settings.Read(TEXT("H265Decoder"),&m_H265DecoderName);
+	Settings.Read(TEXT("Mpeg2Decoder"), &m_Mpeg2DecoderName);
+	Settings.Read(TEXT("H264Decoder"), &m_H264DecoderName);
+	Settings.Read(TEXT("H265Decoder"), &m_H265DecoderName);
 
 	TCHAR szRenderer[32];
-	if (Settings.Read(TEXT("Renderer"),szRenderer,lengthof(szRenderer))) {
-		if (szRenderer[0]=='\0') {
-			m_VideoRendererType=CVideoRenderer::RENDERER_DEFAULT;
+	if (Settings.Read(TEXT("Renderer"), szRenderer, lengthof(szRenderer))) {
+		if (szRenderer[0] == '\0') {
+			m_VideoRendererType = LibISDB::DirectShow::VideoRenderer::RendererType::Default;
 		} else {
-			CVideoRenderer::RendererType Renderer=CVideoRenderer::ParseName(szRenderer);
-			if (Renderer!=CVideoRenderer::RENDERER_UNDEFINED)
-				m_VideoRendererType=Renderer;
+			LibISDB::DirectShow::VideoRenderer::RendererType Renderer =
+				LibISDB::DirectShow::VideoRenderer::ParseName(szRenderer);
+			if (Renderer != LibISDB::DirectShow::VideoRenderer::RendererType::Invalid)
+				m_VideoRendererType = Renderer;
 		}
 	}
 
-	Settings.Read(TEXT("ResetPanScanEventChange"),&m_fResetPanScanEventChange);
-	Settings.Read(TEXT("NoMaskSideCut"),&m_fNoMaskSideCut);
-	if (Settings.Read(TEXT("FullscreenStretchMode"),&Value))
-		m_FullscreenStretchMode=Value==1?CMediaViewer::STRETCH_CUTFRAME:
-										 CMediaViewer::STRETCH_KEEPASPECTRATIO;
-	if (Settings.Read(TEXT("MaximizeStretchMode"),&Value))
-		m_MaximizeStretchMode=Value==1?CMediaViewer::STRETCH_CUTFRAME:
-									   CMediaViewer::STRETCH_KEEPASPECTRATIO;
-	Settings.Read(TEXT("IgnoreDisplayExtension"),&m_fIgnoreDisplayExtension);
-	Settings.Read(TEXT("ClipToDevice"),&m_fClipToDevice);
+	Settings.Read(TEXT("ResetPanScanEventChange"), &m_fResetPanScanEventChange);
+	Settings.Read(TEXT("NoMaskSideCut"), &m_fNoMaskSideCut);
+
+	if (bool fFrameCut; Settings.Read(TEXT("FrameCut"), &fFrameCut)) {
+		m_StretchMode =
+			fFrameCut ?
+				LibISDB::ViewerFilter::ViewStretchMode::Crop :
+				LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+	}
+
+	if (Settings.Read(TEXT("FullscreenStretchMode"), &Value)) {
+		m_FullscreenStretchMode =
+			Value == 1 ?
+				LibISDB::ViewerFilter::ViewStretchMode::Crop :
+				LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+	}
+
+	if (Settings.Read(TEXT("MaximizeStretchMode"), &Value)) {
+		m_MaximizeStretchMode =
+			Value == 1 ?
+				LibISDB::ViewerFilter::ViewStretchMode::Crop :
+				LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+	}
+
+	Settings.Read(TEXT("IgnoreDisplayExtension"), &m_fIgnoreDisplayExtension);
+	Settings.Read(TEXT("ClipToDevice"), &m_fClipToDevice);
 
 	return true;
 }
@@ -107,17 +150,17 @@ bool CVideoOptions::ReadSettings(CSettings &Settings)
 
 bool CVideoOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("Mpeg2Decoder"),m_Mpeg2DecoderName);
-	Settings.Write(TEXT("H264Decoder"),m_H264DecoderName);
-	Settings.Write(TEXT("H265Decoder"),m_H265DecoderName);
-	Settings.Write(TEXT("Renderer"),
-				   CVideoRenderer::EnumRendererName((int)m_VideoRendererType));
-	Settings.Write(TEXT("ResetPanScanEventChange"),m_fResetPanScanEventChange);
-	Settings.Write(TEXT("NoMaskSideCut"),m_fNoMaskSideCut);
-	Settings.Write(TEXT("FullscreenStretchMode"),(int)m_FullscreenStretchMode);
-	Settings.Write(TEXT("MaximizeStretchMode"),(int)m_MaximizeStretchMode);
-	Settings.Write(TEXT("IgnoreDisplayExtension"),m_fIgnoreDisplayExtension);
-	Settings.Write(TEXT("ClipToDevice"),m_fClipToDevice);
+	Settings.Write(TEXT("Mpeg2Decoder"), m_Mpeg2DecoderName);
+	Settings.Write(TEXT("H264Decoder"), m_H264DecoderName);
+	Settings.Write(TEXT("H265Decoder"), m_H265DecoderName);
+	Settings.Write(TEXT("Renderer"), LibISDB::DirectShow::VideoRenderer::EnumRendererName(m_VideoRendererType));
+	Settings.Write(TEXT("ResetPanScanEventChange"), m_fResetPanScanEventChange);
+	Settings.Write(TEXT("NoMaskSideCut"), m_fNoMaskSideCut);
+	Settings.Write(TEXT("FrameCut"), m_StretchMode == LibISDB::ViewerFilter::ViewStretchMode::Crop);
+	Settings.Write(TEXT("FullscreenStretchMode"), (int)m_FullscreenStretchMode);
+	Settings.Write(TEXT("MaximizeStretchMode"), (int)m_MaximizeStretchMode);
+	Settings.Write(TEXT("IgnoreDisplayExtension"), m_fIgnoreDisplayExtension);
+	Settings.Write(TEXT("ClipToDevice"), m_fClipToDevice);
 
 	return true;
 }
@@ -125,9 +168,10 @@ bool CVideoOptions::WriteSettings(CSettings &Settings)
 
 bool CVideoOptions::Create(HWND hwndOwner)
 {
-	return CreateDialogWindow(hwndOwner,
-							  GetAppClass().GetResourceInstance(),
-							  MAKEINTRESOURCE(IDD_OPTIONS_VIDEO));
+	return CreateDialogWindow(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_OPTIONS_VIDEO));
 }
 
 
@@ -139,7 +183,7 @@ LPCTSTR CVideoOptions::GetMpeg2DecoderName() const
 
 void CVideoOptions::SetMpeg2DecoderName(LPCTSTR pszDecoderName)
 {
-	TVTest::StringUtility::Assign(m_Mpeg2DecoderName,pszDecoderName);
+	StringUtility::Assign(m_Mpeg2DecoderName, pszDecoderName);
 }
 
 
@@ -151,7 +195,7 @@ LPCTSTR CVideoOptions::GetH264DecoderName() const
 
 void CVideoOptions::SetH264DecoderName(LPCTSTR pszDecoderName)
 {
-	TVTest::StringUtility::Assign(m_H264DecoderName,pszDecoderName);
+	StringUtility::Assign(m_H264DecoderName, pszDecoderName);
 }
 
 
@@ -163,71 +207,87 @@ LPCTSTR CVideoOptions::GetH265DecoderName() const
 
 void CVideoOptions::SetH265DecoderName(LPCTSTR pszDecoderName)
 {
-	TVTest::StringUtility::Assign(m_H265DecoderName,pszDecoderName);
+	StringUtility::Assign(m_H265DecoderName, pszDecoderName);
 }
 
 
-CVideoRenderer::RendererType CVideoOptions::GetVideoRendererType() const
+LibISDB::DirectShow::VideoRenderer::RendererType CVideoOptions::GetVideoRendererType() const
 {
 	return m_VideoRendererType;
 }
 
 
-bool CVideoOptions::SetVideoRendererType(CVideoRenderer::RendererType Renderer)
+bool CVideoOptions::SetVideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType Renderer)
 {
-	if (CVideoRenderer::EnumRendererName((int)Renderer)==NULL)
+	if (LibISDB::DirectShow::VideoRenderer::EnumRendererName(Renderer) == nullptr)
 		return false;
-	m_VideoRendererType=Renderer;
+	m_VideoRendererType = Renderer;
 	return true;
 }
 
 
-INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+bool CVideoOptions::SetStretchMode(LibISDB::ViewerFilter::ViewStretchMode Mode)
+{
+	m_StretchMode = Mode;
+	return true;
+}
+
+
+INT_PTR CVideoOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAppMain &App=GetAppClass();
+			CAppMain &App = GetAppClass();
 
-			// MPEG-2 ÉfÉRÅ[É_
-			SetVideoDecoderList(IDC_OPTIONS_MPEG2DECODER,
-								MEDIASUBTYPE_MPEG2_VIDEO,
-								STREAM_TYPE_MPEG2_VIDEO,
-								m_Mpeg2DecoderName);
-			// H.264 ÉfÉRÅ[É_
-			SetVideoDecoderList(IDC_OPTIONS_H264DECODER,
-								MEDIASUBTYPE_H264,
-								STREAM_TYPE_H264,
-								m_H264DecoderName);
-			// H.265 ÉfÉRÅ[É_
-			SetVideoDecoderList(IDC_OPTIONS_H265DECODER,
-								MEDIASUBTYPE_HEVC,
-								STREAM_TYPE_H265,
-								m_H265DecoderName);
+			// MPEG-2 „Éá„Ç≥„Éº„ÉÄ
+			SetVideoDecoderList(
+				IDC_OPTIONS_MPEG2DECODER,
+				MEDIASUBTYPE_MPEG2_VIDEO,
+				LibISDB::STREAM_TYPE_MPEG2_VIDEO,
+				m_Mpeg2DecoderName);
+			// H.264 „Éá„Ç≥„Éº„ÉÄ
+			SetVideoDecoderList(
+				IDC_OPTIONS_H264DECODER,
+				MEDIASUBTYPE_H264,
+				LibISDB::STREAM_TYPE_H264,
+				m_H264DecoderName);
+			// H.265 „Éá„Ç≥„Éº„ÉÄ
+			SetVideoDecoderList(
+				IDC_OPTIONS_H265DECODER,
+				MEDIASUBTYPE_HEVC,
+				LibISDB::STREAM_TYPE_H265,
+				m_H265DecoderName);
 
-			// âfëúÉåÉìÉ_Éâ
-			int Sel=-1;
+			// Êò†ÂÉè„É¨„É≥„ÉÄ„É©
+			int Sel = -1;
 			RendererInfo Info;
-			for (int i=0;GetRendererInfo(i,&Info);i++) {
-				DlgComboBox_AddString(hDlg,IDC_OPTIONS_RENDERER,Info.pszName);
-				DlgComboBox_SetItemData(hDlg,IDC_OPTIONS_RENDERER,i,(LPARAM)Info.Renderer);
-				if (Info.Renderer==m_VideoRendererType)
-					Sel=i;
+			for (int i = 0; GetRendererInfo(i, &Info); i++) {
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_RENDERER, Info.pszName);
+				DlgComboBox_SetItemData(hDlg, IDC_OPTIONS_RENDERER, i, (LPARAM)Info.Renderer);
+				if (Info.Renderer == m_VideoRendererType)
+					Sel = i;
 			}
-			DlgComboBox_SetCurSel(hDlg,IDC_OPTIONS_RENDERER,Sel);
+			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_RENDERER, Sel);
 
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_RESETPANSCANEVENTCHANGE,
-							  m_fResetPanScanEventChange);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_NOMASKSIDECUT,
-							  m_fNoMaskSideCut);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_FULLSCREENCUTFRAME,
-				m_FullscreenStretchMode==CMediaViewer::STRETCH_CUTFRAME);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_MAXIMIZECUTFRAME,
-				m_MaximizeStretchMode==CMediaViewer::STRETCH_CUTFRAME);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_IGNOREDISPLAYSIZE,
-							  m_fIgnoreDisplayExtension);
-			DlgCheckBox_Check(hDlg,IDC_OPTIONS_CLIPTODEVICE,
-							  m_fClipToDevice);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_RESETPANSCANEVENTCHANGE,
+				m_fResetPanScanEventChange);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_NOMASKSIDECUT,
+				m_fNoMaskSideCut);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_FULLSCREENCUTFRAME,
+				m_FullscreenStretchMode == LibISDB::ViewerFilter::ViewStretchMode::Crop);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_MAXIMIZECUTFRAME,
+				m_MaximizeStretchMode == LibISDB::ViewerFilter::ViewStretchMode::Crop);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_IGNOREDISPLAYSIZE,
+				m_fIgnoreDisplayExtension);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_CLIPTODEVICE,
+				m_fClipToDevice);
 		}
 		return TRUE;
 
@@ -235,63 +295,72 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
-				CAppMain &App=GetAppClass();
+				CAppMain &App = GetAppClass();
 				bool f;
 
-				CVideoRenderer::RendererType Renderer=(CVideoRenderer::RendererType)
-					DlgComboBox_GetItemData(hDlg,IDC_OPTIONS_RENDERER,
-						DlgComboBox_GetCurSel(hDlg,IDC_OPTIONS_RENDERER));
-				if (Renderer!=m_VideoRendererType) {
-					if (!CVideoRenderer::IsAvailable(Renderer)) {
+				LibISDB::DirectShow::VideoRenderer::RendererType Renderer =
+					(LibISDB::DirectShow::VideoRenderer::RendererType)
+					DlgComboBox_GetItemData(hDlg, IDC_OPTIONS_RENDERER,
+											DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_RENDERER));
+				if (Renderer != m_VideoRendererType) {
+					if (!LibISDB::DirectShow::VideoRenderer::IsAvailable(Renderer)) {
 						SettingError();
-						::MessageBox(hDlg,TEXT("ëIëÇ≥ÇÍÇΩÉåÉìÉ_ÉâÇÕÇ±ÇÃä¬ã´Ç≈óòópâ¬î\Ç…Ç»Ç¡ÇƒÇ¢Ç‹ÇπÇÒÅB"),
-									 NULL,MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(
+							hDlg, TEXT("ÈÅ∏Êäû„Åï„Çå„Åü„É¨„É≥„ÉÄ„É©„ÅØ„Åì„ÅÆÁí∞Â¢É„ÅßÂà©Áî®ÂèØËÉΩ„Å´„Å™„Å£„Å¶„ÅÑ„Åæ„Åõ„Çì„ÄÇ"),
+							nullptr, MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
-					m_VideoRendererType=Renderer;
+					m_VideoRendererType = Renderer;
 					SetUpdateFlag(UPDATE_RENDERER);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
-				GetVideoDecoderSetting(IDC_OPTIONS_MPEG2DECODER,
-									   STREAM_TYPE_MPEG2_VIDEO,
-									   &m_Mpeg2DecoderName);
-				GetVideoDecoderSetting(IDC_OPTIONS_H264DECODER,
-									   STREAM_TYPE_H264,
-									   &m_H264DecoderName);
-				GetVideoDecoderSetting(IDC_OPTIONS_H265DECODER,
-									   STREAM_TYPE_H265,
-									   &m_H265DecoderName);
+				GetVideoDecoderSetting(
+					IDC_OPTIONS_MPEG2DECODER,
+					LibISDB::STREAM_TYPE_MPEG2_VIDEO,
+					&m_Mpeg2DecoderName);
+				GetVideoDecoderSetting(
+					IDC_OPTIONS_H264DECODER,
+					LibISDB::STREAM_TYPE_H264,
+					&m_H264DecoderName);
+				GetVideoDecoderSetting(
+					IDC_OPTIONS_H265DECODER,
+					LibISDB::STREAM_TYPE_H265,
+					&m_H265DecoderName);
 
-				m_fResetPanScanEventChange=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_RESETPANSCANEVENTCHANGE);
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_NOMASKSIDECUT);
-				if (m_fNoMaskSideCut!=f) {
-					m_fNoMaskSideCut=f;
+				LibISDB::ViewerFilter *pViewer = App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+
+				m_fResetPanScanEventChange =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_RESETPANSCANEVENTCHANGE);
+				f = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMASKSIDECUT);
+				if (m_fNoMaskSideCut != f) {
+					m_fNoMaskSideCut = f;
 					SetUpdateFlag(UPDATE_MASKCUTAREA);
 				}
-				m_FullscreenStretchMode=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_FULLSCREENCUTFRAME)?
-						CMediaViewer::STRETCH_CUTFRAME:CMediaViewer::STRETCH_KEEPASPECTRATIO;
-				if (App.UICore.GetFullscreen())
-					App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_FullscreenStretchMode);
-				m_MaximizeStretchMode=
-					DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_MAXIMIZECUTFRAME)?
-						CMediaViewer::STRETCH_CUTFRAME:CMediaViewer::STRETCH_KEEPASPECTRATIO;
-				if (::IsZoomed(App.UICore.GetMainWindow()))
-					App.CoreEngine.m_DtvEngine.m_MediaViewer.SetViewStretchMode(m_MaximizeStretchMode);
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_IGNOREDISPLAYSIZE);
-				if (m_fIgnoreDisplayExtension!=f) {
-					m_fIgnoreDisplayExtension=f;
+				m_FullscreenStretchMode =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_FULLSCREENCUTFRAME) ?
+					LibISDB::ViewerFilter::ViewStretchMode::Crop :
+					LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+				if (pViewer != nullptr && App.UICore.GetFullscreen())
+					pViewer->SetViewStretchMode(m_FullscreenStretchMode);
+				m_MaximizeStretchMode =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_MAXIMIZECUTFRAME) ?
+					LibISDB::ViewerFilter::ViewStretchMode::Crop :
+					LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+				if (pViewer != nullptr && ::IsZoomed(App.UICore.GetMainWindow()))
+					pViewer->SetViewStretchMode(m_MaximizeStretchMode);
+				f = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_IGNOREDISPLAYSIZE);
+				if (m_fIgnoreDisplayExtension != f) {
+					m_fIgnoreDisplayExtension = f;
 					SetUpdateFlag(UPDATE_IGNOREDISPLAYEXTENSION);
 				}
-				f=DlgCheckBox_IsChecked(hDlg,IDC_OPTIONS_CLIPTODEVICE);
-				if (m_fClipToDevice!=f) {
-					m_fClipToDevice=f;
+				f = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_CLIPTODEVICE);
+				if (m_fClipToDevice != f) {
+					m_fClipToDevice = f;
 					SetUpdateFlag(UPDATE_CLIPTODEVICE);
 				}
 
-				m_fChanged=true;
+				m_fChanged = true;
 			}
 			return TRUE;
 		}
@@ -303,79 +372,91 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 
 void CVideoOptions::SetVideoDecoderList(
-	int ID,const GUID &SubType,BYTE StreamType,const TVTest::String &DecoderName)
+	int ID, const GUID &SubType, BYTE StreamType, const String &DecoderName)
 {
-	LPCWSTR pszDefaultDecoderName=
-		CInternalDecoderManager::IsDecoderAvailable(SubType)?
-			CInternalDecoderManager::GetDecoderName(SubType):NULL;
+	LPCWSTR pszDefaultDecoderName =
+		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
+		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
 
-	CDirectShowFilterFinder FilterFinder;
-	std::vector<TVTest::String> FilterList;
-	if (FilterFinder.FindFilter(&MEDIATYPE_Video,&SubType)) {
+	LibISDB::DirectShow::FilterFinder FilterFinder;
+	std::vector<String> FilterList;
+	if (FilterFinder.FindFilters(&MEDIATYPE_Video, &SubType)) {
 		FilterList.reserve(FilterFinder.GetFilterCount());
-		for (int i=0;i<FilterFinder.GetFilterCount();i++) {
-			TVTest::String FilterName;
+		for (int i = 0; i < FilterFinder.GetFilterCount(); i++) {
+			String FilterName;
 
-			if (FilterFinder.GetFilterInfo(i,NULL,&FilterName)
-					&& (pszDefaultDecoderName==NULL
-						|| ::lstrcmpi(FilterName.c_str(),pszDefaultDecoderName)!=0)) {
+			if (FilterFinder.GetFilterInfo(i, nullptr, &FilterName)
+					&& (pszDefaultDecoderName == nullptr
+						|| ::lstrcmpi(FilterName.c_str(), pszDefaultDecoderName) != 0)) {
 				FilterList.push_back(FilterName);
 			}
 		}
 	}
-	int Sel=0;
+	int Sel = 0;
 	if (FilterList.empty()) {
-		DlgComboBox_AddString(m_hDlg,ID,
-			pszDefaultDecoderName!=NULL?
-				pszDefaultDecoderName:
-				TEXT("<ÉfÉRÅ[É_Ç™å©ïtÇ©ÇËÇ‹ÇπÇÒ>"));
+		DlgComboBox_AddString(
+			m_hDlg, ID,
+			pszDefaultDecoderName != nullptr ?
+			pszDefaultDecoderName :
+			TEXT("<„Éá„Ç≥„Éº„ÉÄ„ÅåË¶ã‰ªò„Åã„Çä„Åæ„Åõ„Çì>"));
 	} else {
-		if (pszDefaultDecoderName!=NULL)
-			DlgComboBox_AddString(m_hDlg,ID,pszDefaultDecoderName);
-		if (FilterList.size()>1) {
-			std::sort(FilterList.begin(),FilterList.end(),
-				[](const TVTest::String Filter1,const TVTest::String &Filter2) {
-					return ::CompareString(LOCALE_USER_DEFAULT,
-										   NORM_IGNORECASE | NORM_IGNORESYMBOLS,
-										   Filter1.data(),(int)Filter1.length(),
-										   Filter2.data(),(int)Filter2.length())==CSTR_LESS_THAN;
+		if (pszDefaultDecoderName != nullptr)
+			DlgComboBox_AddString(m_hDlg, ID, pszDefaultDecoderName);
+		if (FilterList.size() > 1) {
+			std::sort(
+				FilterList.begin(), FilterList.end(),
+				[](const String &Filter1, const String &Filter2) {
+					return ::CompareString(
+						LOCALE_USER_DEFAULT,
+						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
+						Filter1.data(), (int)Filter1.length(),
+						Filter2.data(), (int)Filter2.length()) == CSTR_LESS_THAN;
 				});
 		}
-		for (size_t i=0;i<FilterList.size();i++) {
-			DlgComboBox_AddString(m_hDlg,ID,FilterList[i].c_str());
+		for (const String &e : FilterList) {
+			DlgComboBox_AddString(m_hDlg, ID, e.c_str());
 		}
 
-		CMediaViewer &MediaViewer=GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer;
-		TCHAR szText[32+MAX_VIDEO_DECODER_NAME];
+		String Text;
 
-		::lstrcpy(szText,TEXT("é©ìÆ"));
+		Text = TEXT("Ëá™Âãï");
 		if (!DecoderName.empty()) {
-			Sel=(int)DlgComboBox_FindStringExact(m_hDlg,ID,-1,DecoderName.c_str())+1;
-		} else if (MediaViewer.IsOpen()
-				&& StreamType==MediaViewer.GetVideoStreamType()) {
-			::lstrcat(szText,TEXT(" ("));
-			MediaViewer.GetVideoDecoderName(szText+::lstrlen(szText),MAX_VIDEO_DECODER_NAME);
-			::lstrcat(szText,TEXT(")"));
+			Sel = (int)DlgComboBox_FindStringExact(m_hDlg, ID, -1, DecoderName.c_str()) + 1;
+		} else {
+			const LibISDB::ViewerFilter *pViewer =
+				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			LibISDB::String Name;
+			if (pViewer != nullptr && pViewer->IsOpen()
+					&& StreamType == pViewer->GetVideoStreamType()
+					&& pViewer->GetVideoDecoderName(&Name)) {
+				Text += TEXT(" (");
+				Text += Name;
+				Text += TEXT(")");
+			}
 		}
-		DlgComboBox_InsertString(m_hDlg,ID,0,szText);
+		DlgComboBox_InsertString(m_hDlg, ID, 0, Text.c_str());
 	}
-	DlgComboBox_SetCurSel(m_hDlg,ID,Sel);
+	DlgComboBox_SetCurSel(m_hDlg, ID, Sel);
 }
 
 
 void CVideoOptions::GetVideoDecoderSetting(
-	int ID,BYTE StreamType,TVTest::String *pDecoderName)
+	int ID, BYTE StreamType, String *pDecoderName)
 {
 	TCHAR szDecoder[MAX_VIDEO_DECODER_NAME];
-	int Sel=(int)DlgComboBox_GetCurSel(m_hDlg,ID);
-	if (Sel>0)
-		DlgComboBox_GetLBString(m_hDlg,ID,Sel,szDecoder);
+	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
+	if (Sel > 0)
+		DlgComboBox_GetLBString(m_hDlg, ID, Sel, szDecoder);
 	else
-		szDecoder[0]='\0';
-	if (::lstrcmpi(szDecoder,pDecoderName->c_str())!=0) {
-		*pDecoderName=szDecoder;
+		szDecoder[0] = '\0';
+	if (::lstrcmpi(szDecoder, pDecoderName->c_str()) != 0) {
+		*pDecoderName = szDecoder;
 		SetUpdateFlag(UPDATE_DECODER);
-		if (StreamType==GetAppClass().CoreEngine.m_DtvEngine.m_MediaViewer.GetVideoStreamType())
+		const LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		if (pViewer != nullptr && StreamType == pViewer->GetVideoStreamType())
 			SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 	}
 }
+
+
+}	// namespace TVTest

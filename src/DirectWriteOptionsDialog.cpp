@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2017 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppMain.h"
@@ -23,9 +43,10 @@ CDirectWriteOptionsDialog::CDirectWriteOptionsDialog(
 
 bool CDirectWriteOptionsDialog::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner,
-					  GetAppClass().GetResourceInstance(),
-					  MAKEINTRESOURCE(IDD_DIRECTWRITEOPTIONS))==IDOK;
+	return ShowDialog(
+		hwndOwner,
+		GetAppClass().GetResourceInstance(),
+		MAKEINTRESOURCE(IDD_DIRECTWRITEOPTIONS)) == IDOK;
 }
 
 
@@ -44,62 +65,69 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			bool fEnable;
 
 			static const LPCTSTR RenderingModeList[] = {
-				TEXT("Ž©“®"),
-				TEXT("ƒAƒ“ƒ`ƒGƒCƒŠƒAƒVƒ“ƒO‚È‚µ"),
-				TEXT("GDIŒÝŠ·(2’lŒÝŠ·)"),
-				TEXT("GDIŒÝŠ·"),
-				TEXT("…•½ƒAƒ“ƒ`ƒGƒCƒŠƒAƒVƒ“ƒO"),
-				TEXT("…•½/‚’¼ƒAƒ“ƒ`ƒGƒCƒŠƒAƒVƒ“ƒO"),
-				TEXT("ƒAƒEƒgƒ‰ƒCƒ“"),
+				TEXT("è‡ªå‹•"),
+				TEXT("ã‚¢ãƒ³ãƒã‚¨ã‚¤ãƒªã‚¢ã‚·ãƒ³ã‚°ãªã—"),
+				TEXT("GDIäº’æ›(2å€¤äº’æ›)"),
+				TEXT("GDIäº’æ›"),
+				TEXT("æ°´å¹³ã‚¢ãƒ³ãƒã‚¨ã‚¤ãƒªã‚¢ã‚·ãƒ³ã‚°"),
+				TEXT("æ°´å¹³/åž‚ç›´ã‚¢ãƒ³ãƒã‚¨ã‚¤ãƒªã‚¢ã‚·ãƒ³ã‚°"),
+				TEXT("ã‚¢ã‚¦ãƒˆãƒ©ã‚¤ãƒ³"),
 			};
-			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_RENDERING_MODE) != 0;
+			fEnable = !!(m_pParams->Mask & CDirectWriteRenderer::RenderingParams::ParamFlag::RenderingMode);
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE_ENABLE, fEnable);
 			EnableDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE, fEnable);
-			SetComboBoxList(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
-							RenderingModeList, lengthof(RenderingModeList));
-			DlgComboBox_SetCurSel(hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
-								  m_pParams->RenderingMode);
+			SetComboBoxList(
+				hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
+				RenderingModeList, lengthof(RenderingModeList));
+			DlgComboBox_SetCurSel(
+				hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE,
+				m_pParams->RenderingMode);
 
-			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_GAMMA) != 0;
+			fEnable = !!(m_pParams->Mask & CDirectWriteRenderer::RenderingParams::ParamFlag::Gamma);
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_GAMMA_ENABLE, fEnable);
-			EnableDlgItems(hDlg,
-						   IDC_DIRECTWRITEOPTIONS_GAMMA,
-						   IDC_DIRECTWRITEOPTIONS_GAMMA_RANGE,
-						   fEnable);
+			EnableDlgItems(
+				hDlg,
+				IDC_DIRECTWRITEOPTIONS_GAMMA,
+				IDC_DIRECTWRITEOPTIONS_GAMMA_RANGE,
+				fEnable);
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_GAMMA, m_pParams->Gamma);
 
-			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_ENHANCED_CONTRAST) != 0;
+			fEnable = !!(m_pParams->Mask & CDirectWriteRenderer::RenderingParams::ParamFlag::EnhancedContrast);
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_ENABLE, fEnable);
-			EnableDlgItems(hDlg,
-						   IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST,
-						   IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_RANGE,
-						   fEnable);
+			EnableDlgItems(
+				hDlg,
+				IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST,
+				IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_RANGE,
+				fEnable);
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST, m_pParams->EnhancedContrast);
 
-			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_CLEARTYPE_LEVEL) != 0;
+			fEnable = !!(m_pParams->Mask & CDirectWriteRenderer::RenderingParams::ParamFlag::ClearTypeLevel);
 			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_ENABLE, fEnable);
-			EnableDlgItems(hDlg,
-						   IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL,
-						   IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_RANGE,
-						   fEnable);
+			EnableDlgItems(
+				hDlg,
+				IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL,
+				IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_RANGE,
+				fEnable);
 			SetItemFloatValue(IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL, m_pParams->ClearTypeLevel);
 
 			static const LPCTSTR PixelGeometryList[] = {
-				TEXT("ƒtƒ‰ƒbƒg"),
+				TEXT("ãƒ•ãƒ©ãƒƒãƒˆ"),
 				TEXT("RGB"),
 				TEXT("BGR"),
 			};
-			fEnable = (m_pParams->Mask & CDirectWriteRenderer::RenderingParams::PARAM_PIXEL_GEOMETRY) != 0;
-			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY_ENABLE,fEnable);
-			EnableDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,fEnable);
-			SetComboBoxList(hDlg,IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
-							PixelGeometryList, lengthof(PixelGeometryList));
-			DlgComboBox_SetCurSel(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
-								  m_pParams->PixelGeometry);
+			fEnable = !!(m_pParams->Mask & CDirectWriteRenderer::RenderingParams::ParamFlag::PixelGeometry);
+			DlgCheckBox_Check(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY_ENABLE, fEnable);
+			EnableDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY, fEnable);
+			SetComboBoxList(
+				hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
+				PixelGeometryList, lengthof(PixelGeometryList));
+			DlgComboBox_SetCurSel(
+				hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY,
+				m_pParams->PixelGeometry);
 
 			ShowDlgItem(hDlg, IDC_DIRECTWRITEOPTIONS_TEST, m_pRenderingTester != nullptr);
 
-			m_TextDrawClient.Initialize(CTextDrawClient::ENGINE_DIRECTWRITE, hDlg);
+			m_TextDrawClient.Initialize(CTextDrawClient::TextDrawEngine::DirectWrite, hDlg);
 		}
 		return TRUE;
 
@@ -204,18 +232,20 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			GetRenderingParams(&Params);
 			m_TextDrawClient.SetDirectWriteRenderingParams(Params);
 
-			::FillRect(pdis->hDC, &pdis->rcItem,
-					   static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
+			::FillRect(
+				pdis->hDC, &pdis->rcItem,
+				static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
 
 			m_TextDrawClient.InitializeTextDraw(&TextDraw);
 			TextDraw.Begin(pdis->hDC, pdis->rcItem);
 			TextDraw.SetFont(m_Font);
 			TextDraw.SetTextColor(RGB(0, 0, 0));
-			TextDraw.Draw(L"ABCabc123‚ ‚ŸƒAƒ@Š¿ŽšŸTæÛ\U0002a6a5",
-						  pdis->rcItem,
-						  pdis->rcItem.bottom - pdis->rcItem.top,
-						  CTextDraw::DRAW_FLAG_ALIGN_HORZ_CENTER |
-						  CTextDraw::DRAW_FLAG_ALIGN_VERT_CENTER);
+			TextDraw.Draw(
+				L"ABCabc123ã‚ãã‚¢ã‚¡æ¼¢å­—é¬±è´”\U0002a6a5",
+				pdis->rcItem,
+				pdis->rcItem.bottom - pdis->rcItem.top,
+				CTextDraw::DrawFlag::Align_HorzCenter |
+				CTextDraw::DrawFlag::Align_VertCenter);
 			TextDraw.End();
 		}
 		return TRUE;
@@ -231,17 +261,17 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 
 void CDirectWriteOptionsDialog::GetRenderingParams(CDirectWriteRenderer::RenderingParams *pParams)
 {
-	pParams->Mask = 0;
+	pParams->Mask = CDirectWriteRenderer::RenderingParams::ParamFlag::None;
 	if (DlgCheckBox_IsChecked(m_hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE_ENABLE))
-		pParams->Mask |= CDirectWriteRenderer::RenderingParams::PARAM_RENDERING_MODE;
+		pParams->Mask |= CDirectWriteRenderer::RenderingParams::ParamFlag::RenderingMode;
 	if (DlgCheckBox_IsChecked(m_hDlg, IDC_DIRECTWRITEOPTIONS_GAMMA_ENABLE))
-		pParams->Mask |= CDirectWriteRenderer::RenderingParams::PARAM_GAMMA;
+		pParams->Mask |= CDirectWriteRenderer::RenderingParams::ParamFlag::Gamma;
 	if (DlgCheckBox_IsChecked(m_hDlg, IDC_DIRECTWRITEOPTIONS_ENHANCEDCONTRAST_ENABLE))
-		pParams->Mask |= CDirectWriteRenderer::RenderingParams::PARAM_ENHANCED_CONTRAST;
+		pParams->Mask |= CDirectWriteRenderer::RenderingParams::ParamFlag::EnhancedContrast;
 	if (DlgCheckBox_IsChecked(m_hDlg, IDC_DIRECTWRITEOPTIONS_CLEARTYPELEVEL_ENABLE))
-		pParams->Mask |= CDirectWriteRenderer::RenderingParams::PARAM_CLEARTYPE_LEVEL;
+		pParams->Mask |= CDirectWriteRenderer::RenderingParams::ParamFlag::ClearTypeLevel;
 	if (DlgCheckBox_IsChecked(m_hDlg, IDC_DIRECTWRITEOPTIONS_PIXELGEOMETRY_ENABLE))
-		pParams->Mask |= CDirectWriteRenderer::RenderingParams::PARAM_PIXEL_GEOMETRY;
+		pParams->Mask |= CDirectWriteRenderer::RenderingParams::ParamFlag::PixelGeometry;
 	pParams->RenderingMode =
 		static_cast<DWRITE_RENDERING_MODE>(
 			DlgComboBox_GetCurSel(m_hDlg, IDC_DIRECTWRITEOPTIONS_RENDERINGMODE));
@@ -267,7 +297,7 @@ void CDirectWriteOptionsDialog::SetItemFloatValue(int ID, float Value)
 {
 	TCHAR szText[64];
 
-	StdUtil::snprintf(szText, lengthof(szText), TEXT("%.2f"), Value);
+	StringPrintf(szText, TEXT("%.2f"), Value);
 	::SetDlgItemText(m_hDlg, ID, szText);
 }
 
@@ -277,7 +307,7 @@ float CDirectWriteOptionsDialog::GetItemFloatValue(int ID)
 	TCHAR szText[64];
 
 	::GetDlgItemText(m_hDlg, ID, szText, lengthof(szText));
-	return static_cast<float>(std::_tcstod(szText, NULL));
+	return static_cast<float>(std::_tcstod(szText, nullptr));
 }
 
 
