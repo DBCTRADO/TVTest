@@ -1687,11 +1687,15 @@ void CChannelScan::Scan()
 							App.NetworkDefinition.GetRemoteControlKeyID(NetworkID, ServiceID);
 					}
 
+					String Name = ServiceInfo.ServiceName;
+					// ハイフンの代わりにマイナス記号(U+2212)が使われている局がある
+					StringUtility::Replace(Name, L'\u2212', L'\uff0d');
+
 					CChannelInfo *pChInfo =
 						new CChannelInfo(
 							m_ScanSpace, m_ScanChannel,
 							RemoteControlKeyID,
-							ServiceInfo.ServiceName.c_str());
+							Name.c_str());
 					pChInfo->SetNetworkID(NetworkID);
 					pChInfo->SetTransportStreamID(TransportStreamID);
 					pChInfo->SetServiceID(ServiceID);
@@ -1715,7 +1719,7 @@ void CChannelScan::Scan()
 
 					TRACE(
 						TEXT("Channel found [%2d][%2d] : %s NID 0x%04x TSID 0x%04x SID 0x%04x\n"),
-						m_ScanChannel, (int)i, ServiceInfo.ServiceName.c_str(),
+						m_ScanChannel, (int)i, Name.c_str(),
 						NetworkID, TransportStreamID, ServiceID);
 
 					m_ScanningChannelList.AddChannel(pChInfo);
