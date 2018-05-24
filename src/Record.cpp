@@ -68,7 +68,7 @@ void CRecordingSettings::SetSaveStreamFlag(LibISDB::StreamSelector::StreamFlag F
 	if (fSet)
 		m_SaveStream |= Flag;
 	else
-		m_SaveStream ^= Flag;
+		m_SaveStream &= ~Flag;
 }
 
 
