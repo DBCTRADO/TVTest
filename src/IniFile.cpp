@@ -238,8 +238,12 @@ bool CIniFile::DeleteSection(LPCWSTR pszSection)
 	if (i == m_SectionList.end())
 		return false;
 
+	if (m_pCurSection == &*i) {
+		m_pCurSection = nullptr;
+		m_Section.clear();
+	}
+
 	m_SectionList.erase(i);
-	m_pCurSection = nullptr;
 
 	return true;
 }
@@ -279,7 +283,7 @@ bool CIniFile::GetValue(LPCWSTR pszName, String *pValue)
 			|| IsStringEmpty(pszName))
 		return false;
 
-	CSectionData *pSection = GetCurSection();
+	CSectionData *pSection = m_pCurSection;
 	if (pSection == nullptr)
 		return false;
 
@@ -307,7 +311,7 @@ bool CIniFile::SetValue(LPCWSTR pszName, LPCWSTR pszValue)
 			|| IsStringEmpty(pszName))
 		return false;
 
-	CSectionData *pSection = GetCurSection();
+	CSectionData *pSection = m_pCurSection;
 	if (pSection == nullptr)
 		return false;
 
@@ -340,7 +344,7 @@ bool CIniFile::IsValueExists(LPCWSTR pszName)
 			|| IsStringEmpty(pszName))
 		return false;
 
-	CSectionData *pSection = GetCurSection();
+	CSectionData *pSection = m_pCurSection;
 	if (pSection == nullptr)
 		return false;
 
@@ -355,7 +359,7 @@ bool CIniFile::DeleteValue(LPCWSTR pszName)
 			|| IsStringEmpty(pszName))
 		return false;
 
-	CSectionData *pSection = GetCurSection();
+	CSectionData *pSection = m_pCurSection;
 	if (pSection == nullptr)
 		return false;
 
@@ -499,21 +503,6 @@ bool CIniFile::CreateSection(LPCWSTR pszName)
 	}
 
 	return true;
-}
-
-CIniFile::CSectionData *CIniFile::GetCurSection()
-{
-	if (m_Section.empty())
-		return nullptr;
-
-	if (m_pCurSection != nullptr) {
-		auto itrSection = FindSection(m_Section.c_str());
-		if (itrSection == m_SectionList.end())
-			return nullptr;
-		m_pCurSection = &*itrSection;
-	}
-
-	return m_pCurSection;
 }
 
 

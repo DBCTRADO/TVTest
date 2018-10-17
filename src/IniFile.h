@@ -90,7 +90,6 @@ namespace TVTest
 		EntryList::iterator FindValue(EntryList &Entries, LPCWSTR pszName);
 		EntryList::const_iterator FindValue(const EntryList &Entries, LPCWSTR pszName) const;
 		bool CreateSection(LPCWSTR pszName);
-		CSectionData *GetCurSection();
 
 		String m_FileName;
 		String m_Section;
