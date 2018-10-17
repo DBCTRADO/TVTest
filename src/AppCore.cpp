@@ -239,7 +239,8 @@ bool CAppCore::UpdateCurrentChannelList(const CTuningSpaceList *pList)
 			fAllChannels = false;
 			break;
 		}
-		if (pList->GetChannelList(i)->NumChannels() > 0) {
+		const CChannelList *pChannelList = pList->GetChannelList(i);
+		if (pChannelList != nullptr && pChannelList->NumChannels() > 0) {
 			if (Space >= 0)
 				fAllChannels = true;
 			else
@@ -626,8 +627,10 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 
 	// まず有効なチャンネルから探し、無ければ全てのチャンネルから探す
 	for (int i = 0; i < 2; i++) {
-		for (int Space = 0; (pChannelList = m_App.ChannelManager.GetChannelList(Space)) != nullptr; Space++) {
-			if (pCmdLine->m_TuningSpace < 0 || Space == pCmdLine->m_TuningSpace) {
+		for (int Space = 0; Space < m_App.ChannelManager.NumSpaces(); Space++) {
+			pChannelList = m_App.ChannelManager.GetChannelList(Space);
+			if (pChannelList != nullptr
+					&& (pCmdLine->m_TuningSpace < 0 || Space == pCmdLine->m_TuningSpace)) {
 				int Channel = pChannelList->Find(FindChannel, i == 0);
 				if (Channel >= 0) {
 					return SetChannel(Space, Channel);
@@ -644,8 +647,10 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 				|| pCmdLine->m_NetworkID > 0 || pCmdLine->m_TransportStreamID > 0)) {
 		FindChannel.SetServiceID(0);
 		for (int i = 0; i < 2; i++) {
-			for (int Space = 0; (pChannelList = m_App.ChannelManager.GetChannelList(Space)) != nullptr; Space++) {
-				if (pCmdLine->m_TuningSpace < 0 || Space == pCmdLine->m_TuningSpace) {
+			for (int Space = 0; Space < m_App.ChannelManager.NumSpaces(); Space++) {
+				pChannelList = m_App.ChannelManager.GetChannelList(Space);
+				if (pChannelList != nullptr
+						|| (pCmdLine->m_TuningSpace < 0 || Space == pCmdLine->m_TuningSpace)) {
 					int Channel = pChannelList->Find(FindChannel, i == 0);
 					if (Channel >= 0) {
 						return SetChannel(Space, Channel, pCmdLine->m_ServiceID);
@@ -677,11 +682,13 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID, WORD ServiceID)
 	} else {
 		for (int i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
 			pChannelList = m_App.ChannelManager.GetChannelList(i);
-			Channel = pChannelList->FindByIDs(0, TransportStreamID, ServiceID);
-			if (Channel >= 0) {
-				pChannelInfo = pChannelList->GetChannelInfo(Channel);
-				Space = i;
-				break;
+			if (pChannelList != nullptr) {
+				Channel = pChannelList->FindByIDs(0, TransportStreamID, ServiceID);
+				if (Channel >= 0) {
+					pChannelInfo = pChannelList->GetChannelInfo(Channel);
+					Space = i;
+					break;
+				}
 			}
 		}
 	}

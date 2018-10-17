@@ -1284,12 +1284,13 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 	CPopupMenu Menu(hmenu);
 	Menu.Clear();
 
+	const bool fIsTunerOpen = m_App.CoreEngine.IsTunerOpen();
 	TCHAR szText[256];
 	int Length;
 
 	// 各チューニング空間のメニューを追加する
 	// 実際のメニューの設定は WM_INITMENUPOPUP で行っている
-	if (m_App.ChannelManager.NumSpaces() > 0) {
+	if (fIsTunerOpen && m_App.ChannelManager.NumSpaces() > 0) {
 		HMENU hmenuSpace;
 		LPCTSTR pszName;
 
@@ -1312,7 +1313,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 			}
 			Menu.Append(
 				hmenuSpace, szText,
-				pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
+				pChannelList != nullptr && pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
 		}
 
 		Menu.AppendSeparator();
@@ -1330,11 +1331,11 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 		StringCopy(szText, pDriverInfo->GetFileName());
 		::PathRemoveExtension(szText);
 		Menu.AppendUnformatted(CM_DRIVER_FIRST + i, szText);
-		if (m_App.CoreEngine.IsTunerOpen()
+		if (fIsTunerOpen
 				&& IsEqualFileName(pDriverInfo->GetFileName(), m_App.CoreEngine.GetDriverFileName()))
 			CurDriver = i;
 	}
-	if (CurDriver < 0 && m_App.CoreEngine.IsTunerOpen()) {
+	if (CurDriver < 0 && fIsTunerOpen) {
 		Menu.AppendUnformatted(CM_DRIVER_FIRST + i, m_App.CoreEngine.GetDriverFileName());
 		CurDriver = i++;
 	}
@@ -1349,7 +1350,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 	Menu.AppendSeparator();
 	m_App.CommandManager.GetCommandText(CM_CLOSETUNER, szText, lengthof(szText));
 	Menu.Append(CM_CLOSETUNER, szText);
-	Menu.EnableItem(CM_CLOSETUNER, m_App.CoreEngine.IsTunerOpen());
+	Menu.EnableItem(CM_CLOSETUNER, fIsTunerOpen);
 
 	m_App.Accelerator.SetMenuAccel(hmenu);
 }
@@ -1360,41 +1361,51 @@ bool CUICore::ProcessTunerMenu(int Command)
 	if (Command < CM_SPACE_CHANNEL_FIRST || Command > CM_SPACE_CHANNEL_LAST)
 		return false;
 
+	const bool fIsTunerOpen = m_App.CoreEngine.IsTunerOpen();
+	int CommandBase = CM_SPACE_CHANNEL_FIRST;
 	const CChannelList *pChannelList;
-	int CommandBase;
 
-	CommandBase = CM_SPACE_CHANNEL_FIRST;
-	pChannelList = m_App.ChannelManager.GetAllChannelList();
-	if (pChannelList->NumChannels() > 0) {
-		if (Command - CommandBase < pChannelList->NumChannels())
-			return m_App.Core.SetChannel(-1, Command - CommandBase);
-		CommandBase += pChannelList->NumChannels();
+	if (fIsTunerOpen) {
+		pChannelList = m_App.ChannelManager.GetAllChannelList();
+		if (pChannelList->NumChannels() > 0) {
+			if (Command - CommandBase < pChannelList->NumChannels())
+				return m_App.Core.SetChannel(-1, Command - CommandBase);
+			CommandBase += pChannelList->NumChannels();
+		}
+		for (int i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
+			pChannelList = m_App.ChannelManager.GetChannelList(i);
+			if (pChannelList != nullptr) {
+				if (Command - CommandBase < pChannelList->NumChannels())
+					return m_App.Core.SetChannel(i, Command - CommandBase);
+				CommandBase += pChannelList->NumChannels();
+			}
+		}
 	}
-	for (int i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
-		pChannelList = m_App.ChannelManager.GetChannelList(i);
-		if (Command - CommandBase < pChannelList->NumChannels())
-			return m_App.Core.SetChannel(i, Command - CommandBase);
-		CommandBase += pChannelList->NumChannels();
-	}
+
 	for (int i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
 		const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(i);
 
-		if (IsEqualFileName(pDriverInfo->GetFileName(), m_App.CoreEngine.GetDriverFileName()))
+		if (fIsTunerOpen
+				&& IsEqualFileName(pDriverInfo->GetFileName(), m_App.CoreEngine.GetDriverFileName()))
 			continue;
+
 		if (pDriverInfo->IsTuningSpaceListLoaded()) {
 			const CTuningSpaceList *pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList();
 
 			for (int j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
 				pChannelList = pTuningSpaceList->GetChannelList(j);
-				if (Command - CommandBase < pChannelList->NumChannels()) {
-					if (!m_App.Core.OpenTuner(pDriverInfo->GetFileName()))
-						return false;
-					return m_App.Core.SetChannel(j, Command - CommandBase);
+				if (pChannelList != nullptr) {
+					if (Command - CommandBase < pChannelList->NumChannels()) {
+						if (!m_App.Core.OpenTuner(pDriverInfo->GetFileName()))
+							return false;
+						return m_App.Core.SetChannel(j, Command - CommandBase);
+					}
+					CommandBase += pChannelList->NumChannels();
 				}
-				CommandBase += pChannelList->NumChannels();
 			}
 		}
 	}
+
 	return false;
 }
 
@@ -1821,7 +1832,8 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 	Command += pChannelList->NumChannels();
 	for (int j = 0; j < i; j++) {
 		pChannelList = ChannelManager.GetChannelList(j);
-		Command += pChannelList->NumChannels();
+		if (pChannelList != nullptr)
+			Command += pChannelList->NumChannels();
 	}
 	CreateChannelMenu(
 		ChannelManager.GetChannelList(i),
@@ -1932,6 +1944,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 	m_hwnd = hwnd;
 
 	const CChannelManager &ChannelManager = m_UICore.m_App.ChannelManager;
+	const bool fIsTunerOpen = m_UICore.m_App.CoreEngine.IsTunerOpen();
 	HMENU hmenuSpace;
 	const CChannelList *pChannelList;
 	int Command;
@@ -1940,38 +1953,42 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 	int Length;
 
 	Command = CM_SPACE_CHANNEL_FIRST;
-	pChannelList = ChannelManager.GetAllChannelList();
-	if (ChannelManager.NumSpaces() > 1) {
-		hmenuSpace = ::CreatePopupMenu();
-		m_Menu.Append(hmenuSpace, TEXT("&A: すべて"));
-	}
-	Command += pChannelList->NumChannels();
-	for (int i = 0; i < ChannelManager.NumSpaces(); i++) {
-		pChannelList = ChannelManager.GetChannelList(i);
-		hmenuSpace = ::CreatePopupMenu();
-		Length = StringPrintf(szText, TEXT("&%d: "), i);
-		pszName = ChannelManager.GetTuningSpaceName(i);
-		if (!IsStringEmpty(pszName))
-			CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
-		else
-			StringPrintf(szText + Length, lengthof(szText) - Length, TEXT("チューニング空間%d"), i);
-		m_Menu.Append(
-			hmenuSpace, szText,
-			pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
-		Command += pChannelList->NumChannels();
-	}
 
-	if (Command > CM_SPACE_CHANNEL_FIRST)
-		m_Menu.AppendSeparator();
+	if (fIsTunerOpen) {
+		pChannelList = ChannelManager.GetAllChannelList();
+		if (ChannelManager.NumSpaces() > 1) {
+			hmenuSpace = ::CreatePopupMenu();
+			m_Menu.Append(hmenuSpace, TEXT("&A: すべて"));
+		}
+		Command += pChannelList->NumChannels();
+		for (int i = 0; i < ChannelManager.NumSpaces(); i++) {
+			pChannelList = ChannelManager.GetChannelList(i);
+			hmenuSpace = ::CreatePopupMenu();
+			Length = StringPrintf(szText, TEXT("&%d: "), i);
+			pszName = ChannelManager.GetTuningSpaceName(i);
+			if (!IsStringEmpty(pszName))
+				CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
+			else
+				StringPrintf(szText + Length, lengthof(szText) - Length, TEXT("チューニング空間%d"), i);
+			m_Menu.Append(
+				hmenuSpace, szText,
+				pChannelList != nullptr && pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
+			Command += pChannelList->NumChannels();
+		}
+
+		if (Command > CM_SPACE_CHANNEL_FIRST)
+			m_Menu.AppendSeparator();
+	}
 
 	CDriverManager &DriverManager = m_UICore.m_App.DriverManager;
 
 	for (int i = 0; i < DriverManager.NumDrivers(); i++) {
 		CDriverInfo *pDriverInfo = DriverManager.GetDriverInfo(i);
 
-		if (IsEqualFileName(
-					pDriverInfo->GetFileName(),
-					m_UICore.m_App.CoreEngine.GetDriverFileName())) {
+		if (fIsTunerOpen
+				&& IsEqualFileName(
+						pDriverInfo->GetFileName(),
+						m_UICore.m_App.CoreEngine.GetDriverFileName())) {
 			continue;
 		}
 		TCHAR szFileName[MAX_PATH];
@@ -1985,6 +2002,8 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 
 			for (int j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
 				pChannelList = pTuningSpaceList->GetChannelList(j);
+				if (pChannelList == nullptr)
+					continue;
 				if (pChannelList->NumEnableChannels() == 0) {
 					Command += pChannelList->NumChannels();
 					continue;
@@ -2061,10 +2080,12 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 
 	bool fChannelMenu = false;
 	int Count = m_Menu.GetItemCount();
-	int i;
-	i = m_UICore.m_App.ChannelManager.NumSpaces();
-	if (i > 1)
-		i++;
+	int i = 0;
+	if (m_UICore.m_App.CoreEngine.IsTunerOpen()) {
+		i = m_UICore.m_App.ChannelManager.NumSpaces();
+		if (i > 1)
+			i++;
+	}
 	for (i++; i < Count; i++) {
 		HMENU hmenuChannel = m_Menu.GetSubMenu(i);
 		int Items = ::GetMenuItemCount(hmenuChannel);
