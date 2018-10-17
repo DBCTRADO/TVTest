@@ -399,10 +399,10 @@ bool Split(const String &Src, LPCWSTR pszDelimiter, std::vector<String> *pList)
 	String::const_iterator SrcBegin = Src.begin();
 	String::size_type Pos, Next = 0;
 	while ((Pos = Src.find(pszDelimiter, Next)) != String::npos) {
-		pList->push_back(String(SrcBegin + Next, SrcBegin + Pos));
+		pList->emplace_back(SrcBegin + Next, SrcBegin + Pos);
 		Next = Pos + DelimiterLength;
 	}
-	pList->push_back(String(SrcBegin + Next, Src.end()));
+	pList->emplace_back(SrcBegin + Next, Src.end());
 
 	return true;
 }

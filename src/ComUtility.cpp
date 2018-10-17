@@ -217,8 +217,12 @@ STDMETHODIMP CPropertyBag::Write(LPCOLESTR pszPropName, VARIANT *pVar)
 
 	auto it = m_Properties.find(String(pszPropName));
 
-	if (it == m_Properties.end())
-		it = m_Properties.insert(std::pair<String, CVariant>(String(pszPropName), CVariant())).first;
+	if (it == m_Properties.end()) {
+		it = m_Properties.emplace(
+			std::piecewise_construct,
+			std::forward_as_tuple(pszPropName),
+			std::forward_as_tuple()).first;
+	}
 	it->second = std::move(var);
 
 	return S_OK;

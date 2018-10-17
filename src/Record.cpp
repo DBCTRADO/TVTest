@@ -817,7 +817,7 @@ bool CRecordManager::GetWritePluginList(std::vector<String> *pList)
 		return false;
 	do {
 		if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-			pList->push_back(String(fd.cFileName));
+			pList->emplace_back(fd.cFileName);
 	} while (::FindNextFile(hFind, &fd));
 	::FindClose(hFind);
 

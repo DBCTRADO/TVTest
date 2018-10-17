@@ -111,7 +111,7 @@ bool CStyleManager::Set(const StyleInfo &Info)
 
 	auto itr = m_StyleMap.find(Info.Name);
 	if (itr == m_StyleMap.end()) {
-		m_StyleMap.insert(std::pair<String, StyleInfo>(Info.Name, Info));
+		m_StyleMap.emplace(Info.Name, Info);
 	} else {
 		itr->second = Info;
 	}
@@ -147,7 +147,7 @@ bool CStyleManager::Set(LPCTSTR pszName, const IntValue &Value)
 		Style.Type = ValueType::Int;
 		Style.Value.Int = Value.Value;
 		Style.Unit = Value.Unit;
-		m_StyleMap.insert(std::pair<String, StyleInfo>(Style.Name, Style));
+		m_StyleMap.emplace(Style.Name, Style);
 	} else {
 		itr->second.Type = ValueType::Int;
 		itr->second.Value.Int = Value.Value;
@@ -185,7 +185,7 @@ bool CStyleManager::Set(LPCTSTR pszName, bool fValue)
 	if (itr == m_StyleMap.end()) {
 		Style.Type = ValueType::Bool;
 		Style.Value.Bool = fValue;
-		m_StyleMap.insert(std::pair<String, StyleInfo>(Style.Name, Style));
+		m_StyleMap.emplace(Style.Name, Style);
 	} else {
 		itr->second.Type = ValueType::Bool;
 		itr->second.Value.Bool = fValue;
@@ -221,7 +221,7 @@ bool CStyleManager::Set(LPCTSTR pszName, const String &Value)
 	if (itr == m_StyleMap.end()) {
 		Style.Type = ValueType::String;
 		Style.Value.String = Value;
-		m_StyleMap.insert(std::pair<String, StyleInfo>(Style.Name, Style));
+		m_StyleMap.emplace(Style.Name, Style);
 	} else {
 		itr->second.Type = ValueType::String;
 		itr->second.Value.String = Value;

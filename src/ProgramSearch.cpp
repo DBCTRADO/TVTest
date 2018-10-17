@@ -869,7 +869,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 		}
 	}
 
-	m_KeywordHistory.push_front(String(pszKeyword));
+	m_KeywordHistory.emplace_front(pszKeyword);
 
 	if (m_KeywordHistory.size() > (size_t)m_MaxKeywordHistory) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin() + m_MaxKeywordHistory, m_KeywordHistory.end());
@@ -2288,7 +2288,7 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	//lvi.pszText = szText;
 	ListView_SetItem(hwndList, &lvi);
 
-	m_ResultMap.insert(std::pair<ULONGLONG, CSearchEventInfo*>(GetResultMapKey(pEventInfo), pEventInfo));
+	m_ResultMap.emplace(GetResultMapKey(pEventInfo), pEventInfo);
 
 	return true;
 }

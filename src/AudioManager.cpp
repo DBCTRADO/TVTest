@@ -280,8 +280,8 @@ bool CAudioManager::OnServiceUpdated()
 			ServiceAudioSelectInfo Info;
 			Info.SelectedAudio = m_SelectedAudio;
 			Info.EventID = m_CurEventID;
-			auto Result = m_ServiceAudioSelectMap.insert(
-				std::make_pair(ServiceMapKey(m_CurTransportStreamID, m_CurServiceID), Info));
+			auto Result = m_ServiceAudioSelectMap.emplace(
+				ServiceMapKey(m_CurTransportStreamID, m_CurServiceID), Info);
 			if (!Result.second)
 				Result.first->second = Info;
 		}

@@ -321,13 +321,13 @@ bool CIniFile::SetValue(LPCWSTR pszName, LPCWSTR pszValue)
 		bool fInserted = false;
 		for (auto i = pSection->Entries.rbegin(); i != pSection->Entries.rend(); i++) {
 			if (!i->Name.empty()) {
-				pSection->Entries.insert(i.base(), CEntry(pszName, pszValue));
+				pSection->Entries.emplace(i.base(), pszName, pszValue);
 				fInserted = true;
 				break;
 			}
 		}
 		if (!fInserted)
-			pSection->Entries.push_front(CEntry(pszName, pszValue));
+			pSection->Entries.emplace_front(pszName, pszValue);
 	} else {
 		if (IsStringEmpty(pszValue))
 			itrValue->Value.clear();

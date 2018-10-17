@@ -392,7 +392,7 @@ bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 					break;
 			}
 			if (i == 8 && p[i] == _T('=')) {
-				m_LogoIDMap.insert(std::pair<DWORD, WORD>(Key, (WORD)::StrToInt(&p[i + 1])));
+				m_LogoIDMap.emplace(Key, (WORD)::StrToInt(&p[i + 1]));
 			}
 		}
 	}
@@ -652,7 +652,7 @@ bool CLogoManager::SetLogoIDMap(WORD NetworkID, WORD ServiceID, WORD LogoID, boo
 		TRACE(
 			TEXT("Logo ID mapped : NID %04x / SID %04x / Logo ID %04x\n"),
 			NetworkID, ServiceID, LogoID);
-		m_LogoIDMap.insert(std::pair<DWORD, WORD>(Key, LogoID));
+		m_LogoIDMap.emplace(Key, LogoID);
 		m_fLogoIDMapUpdated = true;
 	} else if (fUpdate && i->second != LogoID) {
 		TRACE(

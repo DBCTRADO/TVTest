@@ -515,7 +515,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 			m_IconIDMap.clear();
 			for (const auto &e : ItemList)
-				m_IconIDMap.insert(std::pair<int, int>(e.Command, e.Icon));
+				m_IconIDMap.emplace(e.Command, e.Icon);
 			const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
 			for (size_t i = lengthof(ItemList); i < m_AvailItemList.size(); i++) {
 				const int ID = m_AvailItemList[i].Command;
@@ -526,7 +526,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 						if (hIcon != nullptr) {
 							int Icon = ImageList_AddIcon(m_himlIcons, hIcon);
 							::DestroyIcon(hIcon);
-							m_IconIDMap.insert(std::pair<int, int>(ID, Icon));
+							m_IconIDMap.emplace(ID, Icon);
 						}
 					}
 				} else if (ID >= CM_PLUGINCOMMAND_FIRST && ID <= CM_PLUGINCOMMAND_LAST) {
@@ -541,7 +541,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 							if (hIcon != nullptr) {
 								int Icon = ImageList_AddIcon(m_himlIcons, hIcon);
 								::DestroyIcon(hIcon);
-								m_IconIDMap.insert(std::pair<int, int>(ID, Icon));
+								m_IconIDMap.emplace(ID, Icon);
 							}
 						}
 					}

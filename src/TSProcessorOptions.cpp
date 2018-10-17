@@ -370,7 +370,7 @@ const CTSProcessorOptions::ModuleInfo *CTSProcessorOptions::GetModuleInfo(const 
 				return nullptr;
 			}
 
-			auto Result = m_ModuleInfoMap.insert(std::pair<String, ModuleInfo>(Name, Module));
+			auto Result = m_ModuleInfoMap.emplace(Name, Module);
 			return &Result.first->second;
 		}
 	}

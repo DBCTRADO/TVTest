@@ -276,7 +276,7 @@ bool CCaptionPanel::SetLanguage(BYTE Language)
 			End = Length - 1;
 			for (int i = Length - 2; Lang.CaptionList.size() < MAX_QUEUE_TEXT; i--) {
 				if (i < 0 || pszBuffer[i] == _T('\n')) {
-					Lang.CaptionList.push_front(String(pszBuffer + (i + 1), End - i));
+					Lang.CaptionList.emplace_front(pszBuffer + (i + 1), End - i);
 					if (i < 0)
 						break;
 					End = i;

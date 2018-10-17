@@ -128,7 +128,7 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					if (Settings.Read(szKey, &Value)) {
 						CVariant Var;
 						if (SUCCEEDED(Var.FromString(StringUtility::Decode(Value))))
-							pTSProcessorSettings->m_PropertyList.insert(std::pair<String, CVariant>(Name, Var));
+							pTSProcessorSettings->m_PropertyList.emplace(Name, Var);
 					}
 				}
 

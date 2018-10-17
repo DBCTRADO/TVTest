@@ -117,7 +117,7 @@ bool CEpgCaptureManager::BeginCapture(
 					break;
 			}
 			if (itr == m_ChannelList.end()) {
-				m_ChannelList.push_back(ChannelGroup());
+				m_ChannelList.emplace_back();
 				itr = m_ChannelList.end();
 				--itr;
 				itr->Space = pChInfo->GetSpace();
