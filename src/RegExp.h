@@ -53,6 +53,9 @@ namespace TVTest
 			size_t Length;
 		};
 
+		CRegExp();
+		~CRegExp();
+
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
@@ -64,8 +67,7 @@ namespace TVTest
 		bool GetEngineName(LPTSTR pszName, size_t MaxLength) const;
 
 	private:
-		struct RegExpEngineDeleter { void operator()(CRegExpEngine *p) const; };
-		std::unique_ptr<CRegExpEngine, RegExpEngineDeleter> m_Engine;
+		std::unique_ptr<CRegExpEngine> m_Engine;
 	};
 
 	TVTEST_ENUM_FLAGS(CRegExp::PatternFlag)

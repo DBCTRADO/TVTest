@@ -96,7 +96,7 @@ bool CColorPalette::SetPalette(const RGBQUAD *pPalette, int NumColors)
 	if (NumColors < 1 || NumColors > 256)
 		return false;
 	if (NumColors != m_NumColors) {
-		m_Palette.reset(new RGBQUAD[NumColors]);
+		m_Palette = std::make_unique<RGBQUAD[]>(NumColors);
 		m_NumColors = NumColors;
 	}
 	CopyMemory(m_Palette.get(), pPalette, NumColors * sizeof(RGBQUAD));

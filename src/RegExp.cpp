@@ -588,6 +588,10 @@ void CRegExpEngine_Bregonig::GetLibraryPath(LPTSTR pszPath)
 
 
 
+CRegExp::CRegExp() = default;
+CRegExp::~CRegExp() = default;
+
+
 bool CRegExp::Initialize()
 {
 	if (m_Engine)
@@ -595,7 +599,7 @@ bool CRegExp::Initialize()
 
 #ifdef TVTEST_BREGONIG_SUPPORT
 	if (CRegExpEngine_Bregonig::IsAvailable()) {
-		m_Engine.reset(new CRegExpEngine_Bregonig);
+		m_Engine = std::make_unique<CRegExpEngine_Bregonig>();
 		if (m_Engine->Initialize())
 			return true;
 		Finalize();
@@ -603,14 +607,14 @@ bool CRegExp::Initialize()
 #endif
 
 #ifdef TVTEST_VBSCRIPT_REGEXP_SUPPORT
-	m_Engine.reset(new CRegExpEngine_VBScript);
+	m_Engine = std::make_unique<CRegExpEngine_VBScript>();
 	if (m_Engine->Initialize())
 		return true;
 	Finalize();
 #endif
 
 #ifdef TVTEST_STD_REGEX_SUPPORT
-	m_Engine.reset(new CRegExpEngine_ECMAScript);
+	m_Engine = std::make_unique<CRegExpEngine_ECMAScript>();
 	if (m_Engine->Initialize())
 		return true;
 	Finalize();
@@ -678,12 +682,6 @@ bool CRegExp::GetEngineName(LPTSTR pszName, size_t MaxLength) const
 		return false;
 
 	return m_Engine->GetName(pszName, MaxLength);
-}
-
-
-void CRegExp::RegExpEngineDeleter::operator()(CRegExpEngine *p) const
-{
-	delete p;
 }
 
 

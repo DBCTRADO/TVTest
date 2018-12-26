@@ -121,8 +121,8 @@ bool CFeaturedEventsSearcher::Update()
 	CEventSearchServiceList ServiceIDList(DefaultServiceList);
 
 	const CEventSearchSettingsList &SearchSettingsList = m_Settings.GetSearchSettingsList();
-	std::vector<CEventSearcher> SearcherList;
-	SearcherList.resize(SearchSettingsList.GetEnabledCount());
+	std::vector<std::unique_ptr<CEventSearcher>> SearcherList;
+	SearcherList.reserve(SearchSettingsList.GetEnabledCount());
 
 	for (size_t i = 0; i < SearchSettingsList.GetCount(); i++) {
 		const CEventSearchSettings *pSettings = SearchSettingsList.Get(i);
@@ -132,7 +132,7 @@ bool CFeaturedEventsSearcher::Update()
 				ServiceIDList.Combine(pSettings->ServiceList);
 			}
 
-			SearcherList[i].BeginSearch(*pSettings);
+			SearcherList.emplace_back(std::make_unique<CEventSearcher>())->BeginSearch(*pSettings);
 		}
 	}
 
@@ -155,12 +155,12 @@ bool CFeaturedEventsSearcher::Update()
 					return true;
 
 				for (auto &Searcher : SearcherList) {
-					if (!Searcher.GetSearchSettings().fServiceList) {
+					if (!Searcher->GetSearchSettings().fServiceList) {
 						if (!DefaultServiceList.IsExists(*itService))
 							continue;
 					}
-					if (Searcher.Match(&Event)) {
-						m_EventList.emplace_back(new LibISDB::EventInfo(Event));
+					if (Searcher->Match(&Event)) {
+						m_EventList.emplace_back(std::make_unique<LibISDB::EventInfo>(Event));
 						break;
 					}
 				}
@@ -195,13 +195,14 @@ bool CFeaturedEventsMatcher::BeginMatching(const CFeaturedEventsSettings &Settin
 	m_DefaultServiceList = Settings.GetDefaultServiceList();
 
 	const CEventSearchSettingsList &SearchSettingsList = Settings.GetSearchSettingsList();
-	m_SearcherList.resize(SearchSettingsList.GetEnabledCount());
+	m_SearcherList.clear();
+	m_SearcherList.reserve(SearchSettingsList.GetEnabledCount());
 
 	for (size_t i = 0; i < SearchSettingsList.GetCount(); i++) {
 		const CEventSearchSettings *pSettings = SearchSettingsList.Get(i);
 
 		if (!pSettings->fDisabled) {
-			m_SearcherList[i].BeginSearch(*pSettings);
+			m_SearcherList.emplace_back(std::make_unique<CEventSearcher>())->BeginSearch(*pSettings);
 		}
 	}
 
@@ -219,14 +220,14 @@ void CFeaturedEventsMatcher::EndMatching()
 bool CFeaturedEventsMatcher::IsMatch(const LibISDB::EventInfo &EventInfo)
 {
 	for (auto &Searcher : m_SearcherList) {
-		if (!Searcher.GetSearchSettings().fServiceList) {
+		if (!Searcher->GetSearchSettings().fServiceList) {
 			if (!m_DefaultServiceList.IsExists(
 						EventInfo.NetworkID,
 						EventInfo.TransportStreamID,
 						EventInfo.ServiceID))
 				continue;
 		}
-		if (Searcher.Match(&EventInfo)) {
+		if (Searcher->Match(&EventInfo)) {
 			return true;
 		}
 	}

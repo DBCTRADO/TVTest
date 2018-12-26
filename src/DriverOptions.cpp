@@ -163,7 +163,7 @@ CDriverSettingList &CDriverSettingList::operator=(const CDriverSettingList &Src)
 		if (Src.m_SettingList.size() > 0) {
 			m_SettingList.resize(Src.m_SettingList.size());
 			for (size_t i = 0; i < Src.m_SettingList.size(); i++)
-				m_SettingList[i].reset(new CDriverSettings(*Src.m_SettingList[i]));
+				m_SettingList[i] = std::make_unique<CDriverSettings>(*Src.m_SettingList[i]);
 		}
 	}
 	return *this;

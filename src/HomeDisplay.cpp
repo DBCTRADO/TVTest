@@ -536,7 +536,7 @@ bool CFavoritesCategory::Create()
 
 		bool ChannelItem(CFavoriteFolder &Folder, CFavoriteChannel &Channel) override
 		{
-			m_ItemList.emplace_back(new CChannelItem(Channel));
+			m_ItemList.emplace_back(std::make_unique<CChannelItem>(Channel));
 			return true;
 		}
 
@@ -628,7 +628,7 @@ bool CRecentChannelsCategory::Create()
 	if (NumChannels > m_MaxChannels)
 		NumChannels = m_MaxChannels;
 	for (int i = 0; i < NumChannels; i++) {
-		m_ItemList.emplace_back(new CChannelItem(RecentChannelList.GetChannelInfo(i)));
+		m_ItemList.emplace_back(std::make_unique<CChannelItem>(RecentChannelList.GetChannelInfo(i)));
 	}
 
 	UpdateChannelInfo();
@@ -772,7 +772,7 @@ bool CFeaturedEventsCategory::Create()
 			pEventInfo->NetworkID, pEventInfo->TransportStreamID, pEventInfo->ServiceID);
 
 		if (Index >= 0)
-			m_ItemList.emplace_back(new CEventItem(*ServiceList.GetChannelInfo(Index), *pEventInfo));
+			m_ItemList.emplace_back(std::make_unique<CEventItem>(*ServiceList.GetChannelInfo(Index), *pEventInfo));
 	}
 
 	SortItems(Settings.GetSortType());
@@ -1448,9 +1448,9 @@ CHomeDisplay::CHomeDisplay()
 	m_HomeDisplayStyle.CategoryIconMargin = 6;
 
 	m_CategoryList.reserve(3);
-	m_CategoryList.emplace_back(new CFavoritesCategory(this));
-	m_CategoryList.emplace_back(new CRecentChannelsCategory(this));
-	m_CategoryList.emplace_back(new CFeaturedEventsCategory(this));
+	m_CategoryList.emplace_back(std::make_unique<CFavoritesCategory>(this));
+	m_CategoryList.emplace_back(std::make_unique<CRecentChannelsCategory>(this));
+	m_CategoryList.emplace_back(std::make_unique<CFeaturedEventsCategory>(this));
 }
 
 

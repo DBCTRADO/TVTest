@@ -214,7 +214,7 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-				m_DriverList.emplace_back(new CDriverInfo(wfd.cFileName));
+				m_DriverList.emplace_back(std::make_unique<CDriverInfo>(wfd.cFileName));
 			}
 		} while (::FindNextFile(hFind, &wfd));
 		::FindClose(hFind);

@@ -99,7 +99,7 @@ namespace TVTest
 
 	private:
 		CEventSearchServiceList m_DefaultServiceList;
-		std::vector<CEventSearcher> m_SearcherList;
+		std::vector<std::unique_ptr<CEventSearcher>> m_SearcherList;
 	};
 
 	class CFeaturedEventsDialog

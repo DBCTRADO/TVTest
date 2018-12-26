@@ -135,7 +135,7 @@ void CPanelForm::SetTheme(const Theme::CThemeManager *pThemeManager)
 
 bool CPanelForm::AddPage(const PageInfo &Info)
 {
-	m_WindowList.emplace_back(new CWindowInfo(Info));
+	m_WindowList.emplace_back(std::make_unique<CWindowInfo>(Info));
 	m_TabOrder.push_back((int)m_WindowList.size() - 1);
 	RegisterUIChild(Info.pPage);
 	if (m_hwnd != nullptr) {

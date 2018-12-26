@@ -385,7 +385,7 @@ CProgramGuideToolList &CProgramGuideToolList::operator=(const CProgramGuideToolL
 		if (!Src.m_ToolList.empty()) {
 			m_ToolList.resize(Src.m_ToolList.size());
 			for (size_t i = 0; i < Src.m_ToolList.size(); i++)
-				m_ToolList[i].reset(new CProgramGuideTool(*Src.m_ToolList[i]));
+				m_ToolList[i] = std::make_unique<CProgramGuideTool>(*Src.m_ToolList[i]);
 		}
 	}
 	return *this;

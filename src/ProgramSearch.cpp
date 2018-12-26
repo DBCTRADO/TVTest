@@ -417,7 +417,7 @@ CEventSearchSettingsList &CEventSearchSettingsList::operator=(const CEventSearch
 			m_List.reserve(Src.m_List.size());
 
 			for (const auto &e : Src.m_List) {
-				m_List.emplace_back(new CEventSearchSettings(*e));
+				m_List.emplace_back(std::make_unique<CEventSearchSettings>(*e));
 			}
 		}
 	}
@@ -485,7 +485,7 @@ const CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 
 bool CEventSearchSettingsList::Add(const CEventSearchSettings &Settings)
 {
-	m_List.emplace_back(new CEventSearchSettings(Settings));
+	m_List.emplace_back(std::make_unique<CEventSearchSettings>(Settings));
 	return true;
 }
 
@@ -530,7 +530,7 @@ bool CEventSearchSettingsList::Load(CSettings &Settings, LPCTSTR pszPrefix)
 			break;
 		CEventSearchSettings SearchSettings;
 		if (SearchSettings.FromString(Value.c_str())) {
-			m_List.emplace_back(new CEventSearchSettings(SearchSettings));
+			m_List.emplace_back(std::make_unique<CEventSearchSettings>(SearchSettings));
 		}
 	}
 

@@ -301,10 +301,10 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 		LogoMap::iterator itr = m_LogoMap.find(Key);
 		if (itr != m_LogoMap.end()) {
 			if (CompareLogoVersion(itr->second->GetLogoVersion(), Data.LogoVersion) < 0) {
-				itr->second.reset(new CLogoData(&Data));
+				itr->second = std::make_unique<CLogoData>(&Data);
 			}
 		} else {
-			m_LogoMap.emplace(Key, new CLogoData(&Data));
+			m_LogoMap.emplace(Key, std::make_unique<CLogoData>(&Data));
 		}
 	}
 
@@ -730,7 +730,7 @@ CLogoManager::CLogoData::CLogoData(const LibISDB::LogoDownloaderFilter::LogoData
 	, m_Time(pData->Time)
 	, m_hbm(nullptr)
 {
-	m_Data.reset(new BYTE[pData->DataSize]);
+	m_Data = std::make_unique<BYTE[]>(pData->DataSize);
 	::CopyMemory(m_Data.get(), pData->pData, pData->DataSize);
 }
 
@@ -762,7 +762,7 @@ CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src
 		m_LogoVersion = Src.m_LogoVersion;
 		m_LogoType = Src.m_LogoType;
 		m_DataSize = Src.m_DataSize;
-		m_Data.reset(new BYTE[Src.m_DataSize]);
+		m_Data = std::make_unique<BYTE[]>(Src.m_DataSize);
 		::CopyMemory(m_Data.get(), Src.m_Data.get(), Src.m_DataSize);
 		m_Time = Src.m_Time;
 	}

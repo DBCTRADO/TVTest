@@ -176,7 +176,7 @@ CChannelList &CChannelList::operator=(const CChannelList &Src)
 		if (!Src.m_ChannelList.empty()) {
 			m_ChannelList.reserve(Src.m_ChannelList.size());
 			for (const auto &e : Src.m_ChannelList) {
-				m_ChannelList.emplace_back(new CChannelInfo(*e));
+				m_ChannelList.emplace_back(std::make_unique<CChannelInfo>(*e));
 			}
 		}
 	}
@@ -221,7 +221,7 @@ bool CChannelList::InsertChannel(int Index, const CChannelInfo &Info)
 	auto itr = m_ChannelList.begin();
 	if (Index > 0)
 		std::advance(itr, Index);
-	m_ChannelList.emplace(itr, new CChannelInfo(Info));
+	m_ChannelList.emplace(itr, std::make_unique<CChannelInfo>(Info));
 
 	return true;
 }
@@ -722,7 +722,7 @@ CTuningSpaceList &CTuningSpaceList::operator=(const CTuningSpaceList &List)
 		if (List.NumSpaces() > 0) {
 			m_TuningSpaceList.resize(List.m_TuningSpaceList.size());
 			for (size_t i = 0; i < List.m_TuningSpaceList.size(); i++)
-				m_TuningSpaceList[i].reset(new CTuningSpaceInfo(*List.m_TuningSpaceList[i]));
+				m_TuningSpaceList[i] = std::make_unique<CTuningSpaceInfo>(*List.m_TuningSpaceList[i]);
 		}
 		m_AllChannelList = List.m_AllChannelList;
 	}
@@ -825,10 +825,10 @@ bool CTuningSpaceList::Reserve(int Spaces)
 		m_TuningSpaceList.resize(Spaces);
 	} else {
 		for (int i = NumSpaces(); i < Spaces; i++) {
-			CTuningSpaceInfo *pInfo = new CTuningSpaceInfo;
+			std::unique_ptr<CTuningSpaceInfo> Info = std::make_unique<CTuningSpaceInfo>();
 
-			pInfo->Create();
-			m_TuningSpaceList.emplace_back(pInfo);
+			Info->Create();
+			m_TuningSpaceList.emplace_back(std::move(Info));
 		}
 	}
 	return true;

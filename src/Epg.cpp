@@ -75,23 +75,23 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 {
 	Clear();
 
-	m_ChannelProviderList.emplace_back(new CFavoritesChannelProvider);
+	m_ChannelProviderList.emplace_back(std::make_unique<CFavoritesChannelProvider>());
 	if (pszDefaultTuner != nullptr && ::lstrcmpi(pszDefaultTuner, TEXT("favorites")) == 0)
 		m_CurChannelProvider = 0;
 
 	CAppMain &App = GetAppClass();
 
-	CProgramGuideBaseChannelProvider *pCurChannelProvider = nullptr;
+	std::unique_ptr<CProgramGuideBaseChannelProvider> CurChannelProvider;
 	String DefaultTuner;
 	if (m_CurChannelProvider < 0) {
 		if (!IsStringEmpty(pszDefaultTuner)) {
-			pCurChannelProvider = new CBonDriverChannelProvider(pszDefaultTuner);
+			CurChannelProvider = std::make_unique<CBonDriverChannelProvider>(pszDefaultTuner);
 			DefaultTuner = pszDefaultTuner;
 		} else if (pszDefaultTuner == nullptr
 				&& App.CoreEngine.IsDriverSpecified()
 				&& !App.CoreEngine.IsNetworkDriver()) {
 			DefaultTuner = App.CoreEngine.GetDriverFileName();
-			pCurChannelProvider = new CProgramGuideBaseChannelProvider(
+			CurChannelProvider = std::make_unique<CProgramGuideBaseChannelProvider>(
 				App.ChannelManager.GetTuningSpaceList(),
 				DefaultTuner.c_str());
 		}
@@ -101,30 +101,27 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 		const CDriverInfo *pDriverInfo = App.DriverManager.GetDriverInfo(i);
 
 		if (pDriverInfo != nullptr) {
-			if (pCurChannelProvider != nullptr
+			if (CurChannelProvider
 					&& IsEqualFileName(DefaultTuner.c_str(), pDriverInfo->GetFileName())) {
 				m_CurChannelProvider = (int)m_ChannelProviderList.size();
-				m_ChannelProviderList.emplace_back(pCurChannelProvider);
-				pCurChannelProvider = nullptr;
+				m_ChannelProviderList.emplace_back(std::move(CurChannelProvider));
 			} else {
 				CDriverManager::TunerSpec Spec;
 				if (!App.DriverManager.GetTunerSpec(pDriverInfo->GetFileName(), &Spec)
 						|| !(Spec.Flags &
 							(CDriverManager::TunerSpec::Flag::Network |
 							 CDriverManager::TunerSpec::Flag::File))) {
-					CBonDriverChannelProvider *pDriverChannelProvider =
-						new CBonDriverChannelProvider(pDriverInfo->GetFileName());
-
-					m_ChannelProviderList.emplace_back(pDriverChannelProvider);
+					m_ChannelProviderList.emplace_back(
+						std::make_unique<CBonDriverChannelProvider>(pDriverInfo->GetFileName()));
 				}
 			}
 		}
 	}
 
-	if (pCurChannelProvider != nullptr) {
+	if (CurChannelProvider) {
 		auto itr = m_ChannelProviderList.begin();
 		++itr;
-		m_ChannelProviderList.emplace(itr, pCurChannelProvider);
+		m_ChannelProviderList.emplace(itr, std::move(CurChannelProvider));
 		m_CurChannelProvider = 1;
 	}
 

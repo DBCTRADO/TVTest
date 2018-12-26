@@ -137,10 +137,10 @@ CControllerPlugin::CControllerPlugin(CPlugin *pPlugin, const ControllerInfo *pIn
 	int Length = m_NumButtons + 1;
 	for (int i = 0; i < m_NumButtons; i++)
 		Length += ::lstrlen(pInfo->pButtonList[i].pszName);
-	m_ButtonNameList.reset(new TCHAR[Length]);
+	m_ButtonNameList = std::make_unique<TCHAR[]>(Length);
 	LPTSTR pszName = m_ButtonNameList.get();
 
-	m_ButtonList.reset(new CController::ButtonInfo[m_NumButtons]);
+	m_ButtonList = std::make_unique<CController::ButtonInfo[]>(m_NumButtons);
 	for (int i = 0; i < m_NumButtons; i++) {
 		const ControllerButtonInfo &ButtonInfo = pInfo->pButtonList[i];
 
