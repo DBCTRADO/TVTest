@@ -307,17 +307,6 @@
 #define CM_SIDEBAR_PLACE_LAST                   (CM_SIDEBAR_PLACE_FIRST + 3)
 #define CM_SIDEBAROPTIONS                       294
 
-#define CM_CHANNEL_FIRST                        300
-#define CM_CHANNEL_LAST                         599
-#define CM_SPACE_ALL                            600
-#define CM_SPACE_FIRST                          601
-#define CM_SPACE_LAST                           649
-#define CM_SERVICE_FIRST                        650
-#define CM_SERVICE_LAST                         699
-#define CM_DRIVER_FIRST                         700
-#define CM_DRIVER_LAST                          798
-#define CM_DRIVER_BROWSE                        799
-
 #define CM_AUDIOGAIN_FIRST                      800
 #define CM_AUDIOGAIN_NONE                       (CM_AUDIOGAIN_FIRST + 0)
 #define CM_AUDIOGAIN_125                        (CM_AUDIOGAIN_FIRST + 1)
@@ -448,10 +437,24 @@
 #define CM_PLUGIN_FIRST                         3000
 #define CM_PLUGIN_LAST                          3999
 
-#define CM_SPACE_CHANNEL_FIRST                  4000
-#define CM_SPACE_CHANNEL_LAST                   7999
+#define CM_CHANNEL_FIRST                        4000
+#define CM_CHANNEL_LAST                         4999
 
-#define CM_CHANNELNO_FIRST                      8000
+#define CM_SERVICE_FIRST                        5000
+#define CM_SERVICE_LAST                         5999
+
+#define CM_SPACE_ALL                            6000
+#define CM_SPACE_FIRST                          6001
+#define CM_SPACE_LAST                           6099
+
+#define CM_DRIVER_FIRST                         6100
+#define CM_DRIVER_LAST                          6198
+#define CM_DRIVER_BROWSE                        6199
+
+#define CM_SPACE_CHANNEL_FIRST                  7000
+#define CM_SPACE_CHANNEL_LAST                   11999
+
+#define CM_CHANNELNO_FIRST                      12000
 #define CM_CHANNELNO_LAST                       (CM_CHANNELNO_FIRST + 999)
 #define CM_CHANNELNO_1                          (CM_CHANNELNO_FIRST + 0)
 #define CM_CHANNELNO_2                          (CM_CHANNELNO_FIRST + 1)
@@ -466,67 +469,67 @@
 #define CM_CHANNELNO_11                         (CM_CHANNELNO_FIRST + 10)
 #define CM_CHANNELNO_12                         (CM_CHANNELNO_FIRST + 11)
 
-#define CM_CHANNELHISTORY_FIRST                 9000
-#define CM_CHANNELHISTORY_LAST                  9098
-#define CM_CHANNELHISTORY_CLEAR                 9099
+#define CM_CHANNELHISTORY_FIRST                 13000
+#define CM_CHANNELHISTORY_LAST                  13098
+#define CM_CHANNELHISTORY_CLEAR                 13099
 
-#define CM_CHANNELNO_2DIGIT                     9100
-#define CM_CHANNELNO_3DIGIT                     9101
+#define CM_CHANNELNO_2DIGIT                     13100
+#define CM_CHANNELNO_3DIGIT                     13101
 
-#define CM_ADDTOFAVORITES                       9200
-#define CM_ORGANIZEFAVORITES                    9201
-#define CM_FAVORITESSUBMENU                     9209
-#define CM_FAVORITECHANNEL_FIRST                10000
-#define CM_FAVORITECHANNEL_LAST                 10999
+#define CM_ADDTOFAVORITES                       13200
+#define CM_ORGANIZEFAVORITES                    13201
+#define CM_FAVORITESSUBMENU                     13209
+#define CM_FAVORITECHANNEL_FIRST                14000
+#define CM_FAVORITECHANNEL_LAST                 14999
 
-#define CM_PLUGINCOMMAND_FIRST                  11000
-#define CM_PLUGINCOMMAND_LAST                   11999
+#define CM_PLUGINCOMMAND_FIRST                  15000
+#define CM_PLUGINCOMMAND_LAST                   15999
 
-#define CM_PROGRAMGUIDE_CUSTOM_FIRST            12000
-#define CM_PROGRAMGUIDE_CUSTOM_LAST             12999
+#define CM_PROGRAMGUIDE_CUSTOM_FIRST            16000
+#define CM_PROGRAMGUIDE_CUSTOM_LAST             16999
 
-#define CM_PROGRAMGUIDETOOL_FIRST               13000
-#define CM_PROGRAMGUIDETOOL_LAST                13999
+#define CM_PROGRAMGUIDETOOL_FIRST               17000
+#define CM_PROGRAMGUIDETOOL_LAST                17999
 
-#define CM_PANANDSCAN_PRESET_FIRST              14000
-#define CM_PANANDSCAN_PRESET_LAST               14999
+#define CM_PANANDSCAN_PRESET_FIRST              18000
+#define CM_PANANDSCAN_PRESET_LAST               18999
 
-#define CM_CUSTOMZOOM_FIRST                     15000
-#define CM_CUSTOMZOOM_LAST                      15009
+#define CM_CUSTOMZOOM_FIRST                     19000
+#define CM_CUSTOMZOOM_LAST                      19009
 
-#define CM_SWITCHVIDEO                          15100
-#define CM_VIDEOSTREAM_SWITCH                   15101
-#define CM_VIDEOSTREAM_FIRST                    15110
+#define CM_SWITCHVIDEO                          19100
+#define CM_VIDEOSTREAM_SWITCH                   19101
+#define CM_VIDEOSTREAM_FIRST                    19110
 #define CM_VIDEOSTREAM_LAST                     (CM_VIDEOSTREAM_FIRST + 31)
 
-#define CM_AUDIOSTREAM_FIRST                    15150
-#define CM_AUDIOSTREAM_LAST                     15169
-#define CM_AUDIO_FIRST                          15170
-#define CM_AUDIO_LAST                           15189
-#define CM_STEREOMODE_STEREO                    15190
-#define CM_STEREOMODE_LEFT                      15191
-#define CM_STEREOMODE_RIGHT                     15192
+#define CM_AUDIOSTREAM_FIRST                    19150
+#define CM_AUDIOSTREAM_LAST                     19169
+#define CM_AUDIO_FIRST                          19170
+#define CM_AUDIO_LAST                           19189
+#define CM_STEREOMODE_STEREO                    19190
+#define CM_STEREOMODE_LEFT                      19191
+#define CM_STEREOMODE_RIGHT                     19192
 
-#define CM_MULTIVIEW_SWITCH                     15200
-#define CM_MULTIVIEW_FIRST                      15210
+#define CM_MULTIVIEW_SWITCH                     19200
+#define CM_MULTIVIEW_FIRST                      19210
 #define CM_MULTIVIEW_LAST                       (CM_MULTIVIEW_FIRST + 15)
 
-#define CM_PANEL_FIRST                          15300
-#define CM_PANEL_LAST                           15399
+#define CM_PANEL_FIRST                          19300
+#define CM_PANEL_LAST                           19399
 #define CM_PANEL_INFORMATION                    (CM_PANEL_FIRST + 0)
 #define CM_PANEL_PROGRAMLIST                    (CM_PANEL_FIRST + 1)
 #define CM_PANEL_CHANNEL                        (CM_PANEL_FIRST + 2)
 #define CM_PANEL_CONTROL                        (CM_PANEL_FIRST + 3)
 #define CM_PANEL_CAPTION                        (CM_PANEL_FIRST + 4)
 
-#define CM_WHEEL_VOLUME                         15400
-#define CM_WHEEL_CHANNEL                        15401
-#define CM_WHEEL_AUDIO                          15402
-#define CM_WHEEL_ZOOM                           15403
-#define CM_WHEEL_ASPECTRATIO                    15404
-#define CM_WHEEL_AUDIODELAY                     15405
+#define CM_WHEEL_VOLUME                         19400
+#define CM_WHEEL_CHANNEL                        19401
+#define CM_WHEEL_AUDIO                          19402
+#define CM_WHEEL_ZOOM                           19403
+#define CM_WHEEL_ASPECTRATIO                    19404
+#define CM_WHEEL_AUDIODELAY                     19405
 
-#define CM_COMMAND_LAST                         15405
+#define CM_COMMAND_LAST                         19405
 
 #define IDS_MENU_ZOOM              20000
 #define IDS_MENU_ASPECTRATIO       20001
