@@ -105,31 +105,6 @@ static int CompareLogoVersion(WORD Version1, WORD Version2)
 }
 
 
-static ULONGLONG SystemTimeToUInt64(const SYSTEMTIME &Time)
-{
-	if (Time.wYear == 0)
-		return 0;
-	FILETIME ft;
-	if (!::SystemTimeToFileTime(&Time, &ft))
-		return 0;
-	return (((ULONGLONG)ft.dwHighDateTime << 32) | ft.dwLowDateTime) / FILETIME_SECOND;
-}
-
-
-static SYSTEMTIME UInt64ToSystemTime(ULONGLONG Time)
-{
-	SYSTEMTIME st = {};
-	if (Time != 0) {
-		FILETIME ft;
-		Time *= FILETIME_SECOND;
-		ft.dwLowDateTime = (DWORD)(Time >> 32);
-		ft.dwHighDateTime = (DWORD)(Time & 0xFFFFFFFFUL);
-		::FileTimeToSystemTime(&ft, &st);
-	}
-	return st;
-}
-
-
 }
 
 
@@ -235,7 +210,7 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		ImageHeader.LogoVersion = e.second->GetLogoVersion();
 		ImageHeader.LogoType = e.second->GetLogoType();
 		ImageHeader.DataSize = e.second->GetDataSize();
-		ImageHeader.Time = SystemTimeToUInt64(e.second->GetTime().ToSYSTEMTIME());
+		ImageHeader.Time = e.second->GetTime().GetLinearSeconds();
 		DWORD CRC = LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader, sizeof(ImageHeader));
 		CRC = LibISDB::CRC32MPEG2::Calc(e.second->GetData(), ImageHeader.DataSize, CRC);
 		if (File.Write(&ImageHeader, sizeof(ImageHeader)) != sizeof(ImageHeader)
@@ -309,8 +284,18 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 		Data.LogoType = ImageHeader.LogoType;
 		Data.DataSize = ImageHeader.DataSize;
 		Data.pData = Buffer;
-		if (FileHeader.Version != 0)
-			Data.Time.FromSYSTEMTIME(UInt64ToSystemTime(ImageHeader.Time));
+		if (FileHeader.Version != 0 && ImageHeader.Time != 0) {
+			// 以前のバージョンには上位32ビットと下位32ビットが入れ替わる不具合があったため、
+			// それらしき場合は正しくなるように直す
+			ULARGE_INTEGER Time;
+			Time.QuadPart = ImageHeader.Time;
+			if (Time.LowPart == 2 || Time.LowPart == 3) {
+				std::swap(Time.LowPart, Time.HighPart);
+				ImageHeader.Time = Time.QuadPart;
+			}
+
+			Data.Time.FromLinearSeconds(ImageHeader.Time);
+		}
 
 		ULONGLONG Key = GetMapKey(Data.NetworkID, Data.LogoID, Data.LogoType);
 		LogoMap::iterator itr = m_LogoMap.find(Key);
