@@ -190,7 +190,8 @@ namespace TVTest
 		CChannelMenu &operator=(const CChannelMenu &) = delete;
 
 		bool Create(
-			const CChannelList *pChannelList, int CurChannel, UINT Command,
+			const CChannelList *pChannelList, int CurChannel,
+			UINT Command, UINT LastCommand,
 			HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows = 0, int DPI = 0);
 		void Destroy();
 		int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = nullptr);

@@ -3082,7 +3082,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			}
 
 			m_App.ChannelMenu.Create(
-				&ChList, CurService, CM_SERVICE_FIRST, hmenu, m_hwnd,
+				&ChList, CurService, CM_SERVICE_FIRST, CM_SERVICE_LAST, hmenu, m_hwnd,
 				CChannelMenu::CreateFlag::ShowLogo |
 				CChannelMenu::CreateFlag::ShowEventInfo |
 				CChannelMenu::CreateFlag::CurrentServices,
@@ -5228,20 +5228,8 @@ void CMainWindow::EndChannelNoInput(bool fDetermine)
 		m_Timer.EndTimer(TIMER_ID_CHANNELNO);
 		m_App.OSDManager.ClearOSD();
 
-		if (Number > 0) {
-#if 0
-			const CChannelList *pChannelList = m_App.ChannelManager.GetCurrentChannelList();
-			if (pChannelList != nullptr) {
-				int Index = pChannelList->FindChannelNo(Number);
-				if (Index < 0 && Number <= 0xFFFF)
-					Index = pChannelList->FindServiceID((WORD)Number);
-				if (Index >= 0)
-					SendCommand(CM_CHANNEL_FIRST + Index);
-			}
-#else
+		if (Number > 0)
 			m_App.Core.SwitchChannelByNo(Number, true);
-#endif
-		}
 	}
 }
 

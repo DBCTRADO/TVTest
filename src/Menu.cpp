@@ -701,7 +701,8 @@ CChannelMenu::~CChannelMenu()
 
 
 bool CChannelMenu::Create(
-	const CChannelList *pChannelList, int CurChannel, UINT Command,
+	const CChannelList *pChannelList, int CurChannel,
+	UINT Command, UINT LastCommand,
 	HMENU hmenu, HWND hwnd, CreateFlag Flags, int MaxRows, int DPI)
 {
 	Destroy();
@@ -720,7 +721,7 @@ bool CChannelMenu::Create(
 	m_ChannelList = *pChannelList;
 	m_CurChannel = CurChannel;
 	m_FirstCommand = Command;
-	m_LastCommand = Command + m_ChannelList.NumChannels() - 1;
+	m_LastCommand = std::min(Command + m_ChannelList.NumChannels() - 1, LastCommand);
 	m_Flags = Flags;
 	m_hwnd = hwnd;
 
@@ -754,7 +755,7 @@ bool CChannelMenu::Create(
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA;
 	int PrevSpace = -1;
-	for (int i = 0, j = 0; i < m_ChannelList.NumChannels(); i++) {
+	for (int i = 0, j = 0; i < m_ChannelList.NumChannels() && m_FirstCommand + i <= m_LastCommand; i++) {
 		const CChannelInfo *pChInfo = m_ChannelList.GetChannelInfo(i);
 		if (!pChInfo->IsEnabled())
 			continue;

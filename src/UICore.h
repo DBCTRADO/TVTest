@@ -269,7 +269,8 @@ namespace TVTest
 
 		bool CreateChannelMenu(
 			const CChannelList *pChannelList, int CurChannel,
-			UINT Command, HMENU hmenu, HWND hwnd, CChannelMenu::CreateFlag Flags = CChannelMenu::CreateFlag::None);
+			UINT Command, UINT LastCommand, HMENU hmenu, HWND hwnd,
+			CChannelMenu::CreateFlag Flags = CChannelMenu::CreateFlag::None);
 		bool InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu);
 
 	// CColorSchemeOptions::CEventHandler

@@ -1246,7 +1246,7 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 	if (!m_App.CoreEngine.IsNetworkDriver()) {
 		CreateChannelMenu(
 			pList, m_App.ChannelManager.GetCurrentChannel(),
-			CM_CHANNEL_FIRST, hmenu, GetMainWindow());
+			CM_CHANNEL_FIRST, CM_CHANNEL_LAST, hmenu, GetMainWindow());
 	} else {
 		bool fControlKeyID = pList->HasRemoteControlKeyID();
 		for (int i = 0, j = 0; i < pList->NumChannels(); i++) {
@@ -1261,7 +1261,8 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 					hmenu,
 					MF_STRING | MF_ENABLED
 						| (j != 0 && j % m_App.MenuOptions.GetMaxChannelMenuRows() == 0 ? MF_MENUBREAK : 0),
-					CM_CHANNEL_FIRST + i, szText);
+					CM_CHANNEL_FIRST + i <= CM_CHANNEL_LAST ? CM_CHANNEL_FIRST + i : 0,
+					szText);
 				j++;
 			}
 		}
@@ -1326,7 +1327,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 	::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 	int CurDriver = -1;
 	int i;
-	for (i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
+	for (i = 0; i < m_App.DriverManager.NumDrivers() && CM_DRIVER_FIRST + i < CM_DRIVER_LAST; i++) {
 		const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(i);
 		StringCopy(szText, pDriverInfo->GetFileName());
 		::PathRemoveExtension(szText);
@@ -1770,7 +1771,8 @@ void CUICore::SetStatusBarTrace(bool fStatusBarTrace)
 
 bool CUICore::CreateChannelMenu(
 	const CChannelList *pChannelList, int CurChannel,
-	UINT Command, HMENU hmenu, HWND hwnd, CChannelMenu::CreateFlag Flags)
+	UINT Command, UINT LastCommand, HMENU hmenu, HWND hwnd,
+	CChannelMenu::CreateFlag Flags)
 {
 	if (pChannelList == nullptr)
 		return false;
@@ -1784,7 +1786,7 @@ bool CUICore::CreateChannelMenu(
 		MenuFlags |= CChannelMenu::CreateFlag::ShowToolTip;
 	return m_App.ChannelMenu.Create(
 		pChannelList, CurChannel,
-		Command, hmenu, hwnd, MenuFlags,
+		Command, LastCommand, hmenu, hwnd, MenuFlags,
 		fEventInfo ? 0 : m_App.MenuOptions.GetMaxChannelMenuRows(),
 		m_PopupMenuDPI);
 }
@@ -1818,7 +1820,7 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 				pChannelList,
 				ChannelManager.GetCurrentSpace() == CChannelManager::SPACE_ALL ?
 				ChannelManager.GetCurrentChannel() : -1,
-				Command, hmenu, GetMainWindow(),
+				Command, CM_SPACE_CHANNEL_LAST, hmenu, GetMainWindow(),
 				CChannelMenu::CreateFlag::SpaceBreak);
 			return true;
 		}
@@ -1839,7 +1841,7 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 		ChannelManager.GetChannelList(i),
 		ChannelManager.GetCurrentSpace() == i ?
 		ChannelManager.GetCurrentChannel() : -1,
-		Command, hmenu, GetMainWindow());
+		Command, CM_SPACE_CHANNEL_LAST, hmenu, GetMainWindow());
 
 	return true;
 }
@@ -2047,7 +2049,8 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 			}
 			m_Menu.Append(hmenuDriver, szText);
 		} else {
-			m_Menu.AppendUnformatted(CM_DRIVER_FIRST + i, szFileName);
+			if (CM_DRIVER_FIRST + i <= CM_DRIVER_LAST)
+				m_Menu.AppendUnformatted(CM_DRIVER_FIRST + i, szFileName);
 		}
 	}
 
@@ -2117,7 +2120,7 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 		if (!::GetMenuInfo(hmenu, &mi) || mi.dwMenuData >= m_PopupList.size())
 			return false;
 		const PopupInfo &Info = m_PopupList[mi.dwMenuData];
-		m_UICore.CreateChannelMenu(Info.pChannelList, -1, Info.Command, hmenu, m_hwnd);
+		m_UICore.CreateChannelMenu(Info.pChannelList, -1, Info.Command, CM_SPACE_CHANNEL_LAST, hmenu, m_hwnd);
 		return true;
 	}
 

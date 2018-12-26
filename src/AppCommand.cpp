@@ -358,7 +358,7 @@ void CAppCommand::RegisterDefaultCommands()
 void CAppCommand::RegisterDynamicCommands()
 {
 	// BonDriver
-	for (int i = 0; i < m_App.DriverManager.NumDrivers(); i++) {
+	for (int i = 0; i < m_App.DriverManager.NumDrivers() && CM_DRIVER_FIRST + i <= CM_DRIVER_LAST; i++) {
 		const CDriverInfo *pDriverInfo = m_App.DriverManager.GetDriverInfo(i);
 		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
 		TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];

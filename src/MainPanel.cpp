@@ -482,7 +482,7 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 			Index = pList->FindByIndex(
 				pChannelInfo->GetSpace(),
 				pChannelInfo->GetChannelIndex());
-		if (Index >= 0)
+		if (Index >= 0 && CM_CHANNEL_FIRST + Index <= CM_CHANNEL_LAST)
 			App.UICore.DoCommandAsync(CM_CHANNEL_FIRST + Index);
 	}
 }

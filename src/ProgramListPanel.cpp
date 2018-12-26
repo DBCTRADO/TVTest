@@ -811,7 +811,7 @@ void CProgramListPanel::ShowChannelListMenu()
 		return;
 
 	m_ChannelMenu.Create(
-		&ChannelList, CurChannel, 1, nullptr, m_hwnd,
+		&ChannelList, CurChannel, 1, ItemCount, nullptr, m_hwnd,
 		CChannelMenu::CreateFlag::ShowLogo | CChannelMenu::CreateFlag::SpaceBreak,
 		GetAppClass().MenuOptions.GetMaxChannelMenuRows());
 	if (SelectedChannel >= 0)
