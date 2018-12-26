@@ -1182,7 +1182,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 					const CChannelList *pList = ChannelManager.GetCurrentChannelList();
 					int i = pList->FindByIndex(CurSpace, CurChannel);
 					if (i >= 0)
-						UICore.DoCommand(CM_CHANNEL_FIRST + i);
+						Core.SwitchChannel(i);
 				}
 			}
 		}
