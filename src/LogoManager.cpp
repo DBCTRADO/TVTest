@@ -285,16 +285,11 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 		Data.DataSize = ImageHeader.DataSize;
 		Data.pData = Buffer;
 		if (FileHeader.Version != 0 && ImageHeader.Time != 0) {
-			// 以前のバージョンには上位32ビットと下位32ビットが入れ替わる不具合があったため、
-			// それらしき場合は正しくなるように直す
-			ULARGE_INTEGER Time;
-			Time.QuadPart = ImageHeader.Time;
-			if (Time.LowPart == 2 || Time.LowPart == 3) {
-				std::swap(Time.LowPart, Time.HighPart);
-				ImageHeader.Time = Time.QuadPart;
-			}
-
-			Data.Time.FromLinearSeconds(ImageHeader.Time);
+			// 以前のバージョンには時刻情報が壊れる不具合があったため、
+			// 値が正常な範囲かチェックする
+			// (2000年1月1日から2099年12月31日までを有効とみなしている)
+			if (ImageHeader.Time >= 12591158400ULL && ImageHeader.Time < 15746918400ULL)
+				Data.Time.FromLinearSeconds(ImageHeader.Time);
 		}
 
 		ULONGLONG Key = GetMapKey(Data.NetworkID, Data.LogoID, Data.LogoType);
