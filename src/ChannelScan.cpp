@@ -1558,7 +1558,7 @@ void CChannelScan::Scan()
 
 		SetChannelCount++;
 		App.CoreEngine.SetServiceSelectInfo(nullptr);
-		if (!pSource->SetChannel(m_ScanSpace, m_ScanChannel)) {
+		if (!pSource->SetChannelAndPlay(m_ScanSpace, m_ScanChannel)) {
 			SetChannelErrorCount++;
 			if (pSource->GetLastErrorCode().category() == std::generic_category()
 					&& (std::errc)pSource->GetLastErrorCode().value() == std::errc::timed_out) {
