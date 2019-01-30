@@ -22,6 +22,7 @@
 #include <setjmp.h>
 #include <windows.h>
 #include <tchar.h>
+#include <memory>
 #include "libjpeg/jpeglib.h"
 #include "libjpeg/jerror.h"
 #include "ImageLib.h"
@@ -36,15 +37,9 @@ namespace ImageLib
 {
 
 
-struct JPEGErrorInfo
-{
-	struct jpeg_error_mgr jerr;
-	jmp_buf jmpbuf;
-};
-
 struct JPEGDestinationInfo
 {
-	struct jpeg_destination_mgr dest;
+	jpeg_destination_mgr dest;
 	HANDLE hFile;
 	JOCTET *pBuffer;
 };
@@ -56,17 +51,14 @@ struct JPEGDestinationInfo
 
 static void JPEGErrorExit(j_common_ptr cinfo)
 {
-	JPEGErrorInfo *pjerrinfo = (JPEGErrorInfo*)cinfo->err;
-
 	(*cinfo->err->output_message)(cinfo);
-	longjmp(pjerrinfo->jmpbuf, 1);
+	throw cinfo;
 }
 
 
 static void JPEGErrorMessage(j_common_ptr cinfo)
 {
 #if 0
-	//JPEGErrorInfo *pjerrinfo = (JPEGErrorInfo*)cinfo->err;
 	char szText[JMSG_LENGTH_MAX];
 
 	(*cinfo->err->format_message)(cinfo, szText);
@@ -121,82 +113,79 @@ static void JPEGTermDestination(j_compress_ptr cinfo)
 
 bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 {
-	HANDLE hFile;
-	struct jpeg_compress_struct jcomp;
-	JPEGErrorInfo jerrinfo;
-	JPEGDestinationInfo *pDstInfo;
-	int Width, Height;
-	volatile JSAMPROW pBuff = nullptr;
-	int nBytesPerLine, y;
-	const BYTE *p;
-
-	hFile = CreateFile(
+	HANDLE hFile = CreateFile(
 		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
-	jcomp.err = jpeg_std_error(&jerrinfo.jerr);
-	jerrinfo.jerr.error_exit = JPEGErrorExit;
-	jerrinfo.jerr.output_message = JPEGErrorMessage;
-	if (setjmp(jerrinfo.jmpbuf)) {
+
+	jpeg_compress_struct jcomp;
+	jpeg_error_mgr jerr;
+
+	jcomp.err = jpeg_std_error(&jerr);
+	jerr.error_exit = JPEGErrorExit;
+	jerr.output_message = JPEGErrorMessage;
+
+	try {
+		jpeg_create_compress(&jcomp);
+		jcomp.dest = (jpeg_destination_mgr*)(jcomp.mem->alloc_small)(
+			(j_common_ptr)&jcomp, JPOOL_IMAGE, sizeof(JPEGDestinationInfo));
+		jcomp.dest->init_destination = JPEGInitDestination;
+		jcomp.dest->empty_output_buffer = JPEGEmptyOutputBuffer;
+		jcomp.dest->term_destination = JPEGTermDestination;
+
+		JPEGDestinationInfo *pDstInfo = (JPEGDestinationInfo*)jcomp.dest;
+		pDstInfo->hFile = hFile;
+
+		const int Width = pInfo->pbmi->bmiHeader.biWidth;
+		const int Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
+
+		jcomp.image_width = Width;
+		jcomp.image_height = Height;
+		jcomp.input_components = 3;
+		jcomp.in_color_space = JCS_RGB;
+		jpeg_set_defaults(&jcomp);
+		jpeg_set_quality(&jcomp, _ttoi(pInfo->pszOption), TRUE);
+		jcomp.optimize_coding = TRUE;
+		// Progressive
+		//jpeg_simple_progression(&jcomp);
+		jpeg_start_compress(&jcomp, TRUE);
+
+		if (pInfo->pszComment != nullptr) {
+			/* コメントの書き込み */
+#ifndef UNICODE
+			jpeg_write_marker(
+				&jcomp, JPEG_COM, (JOCTET*)pInfo->pszComment,
+				lstrlen(pInfo->pszComment));
+#else
+			const int Length = WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
+			std::unique_ptr<char[]> Comment(new char[Length]);
+			WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, Comment.get(), Length, nullptr, nullptr);
+			jpeg_write_marker(&jcomp, JPEG_COM, (JOCTET*)Comment.get(), Length - 1);
+#endif
+		}
+
+		std::unique_ptr<JSAMPLE[]> Buffer(new JSAMPLE[jcomp.image_width * jcomp.input_components]);
+		const int BytesPerLine = DIB_ROW_BYTES(Width, pInfo->pbmi->bmiHeader.biBitCount);
+		for (int y = 0; y < Height; y++) {
+			const BYTE *p = static_cast<const BYTE*>(pInfo->pBits) +
+				(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * BytesPerLine;
+			CopyToRGB24(
+				Buffer.get(), p, pInfo->pbmi->bmiHeader.biBitCount,
+				pInfo->pbmi->bmiColors, Width);
+			JSAMPROW pScanline = Buffer.get();
+			jpeg_write_scanlines(&jcomp, &pScanline, 1);
+		}
+
+		jpeg_finish_compress(&jcomp);
 		jpeg_destroy_compress(&jcomp);
 		CloseHandle(hFile);
-		if (pBuff != nullptr)
-			delete [] pBuff;
+	} catch (...) {
+		jpeg_destroy_compress(&jcomp);
+		CloseHandle(hFile);
 		return false;
 	}
-	jpeg_create_compress(&jcomp);
-	jcomp.dest = (struct jpeg_destination_mgr*)(jcomp.mem->alloc_small)(
-		(j_common_ptr)&jcomp, JPOOL_IMAGE, sizeof(JPEGDestinationInfo));
-	jcomp.dest->init_destination = JPEGInitDestination;
-	jcomp.dest->empty_output_buffer = JPEGEmptyOutputBuffer;
-	jcomp.dest->term_destination = JPEGTermDestination;
-	pDstInfo = (JPEGDestinationInfo*)jcomp.dest;
-	pDstInfo->hFile = hFile;
-	Width = pInfo->pbmi->bmiHeader.biWidth;
-	Height = abs(pInfo->pbmi->bmiHeader.biHeight);
-	jcomp.image_width = Width;
-	jcomp.image_height = Height;
-	jcomp.input_components = 3;
-	jcomp.in_color_space = JCS_RGB;
-	jpeg_set_defaults(&jcomp);
-	jpeg_set_quality(&jcomp, _ttoi(pInfo->pszOption), TRUE);
-	jcomp.optimize_coding = TRUE;
-	// Progressive
-	//jpeg_simple_progression(&jcomp);
-	jpeg_start_compress(&jcomp, TRUE);
-	if (pInfo->pszComment != nullptr) {
-		/* コメントの書き込み */
-#ifndef UNICODE
-		jpeg_write_marker(
-			&jcomp, JPEG_COM, (JOCTET*)pInfo->pszComment,
-			lstrlen(pInfo->pszComment));
-#else
-		int Length;
-		LPSTR pszComment;
 
-		Length = WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
-		pszComment = new char[Length];
-		WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, pszComment, Length, nullptr, nullptr);
-		jpeg_write_marker(&jcomp, JPEG_COM, (JOCTET*)pszComment, Length - 1);
-		delete [] pszComment;
-#endif
-	}
-	pBuff = new JSAMPLE[jcomp.image_width * jcomp.input_components];
-	nBytesPerLine = DIB_ROW_BYTES(Width, pInfo->pbmi->bmiHeader.biBitCount);
-	for (y = 0; y < Height; y++) {
-		p = static_cast<const BYTE*>(pInfo->pBits) +
-			(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nBytesPerLine;
-		CopyToRGB24(
-			pBuff, p, pInfo->pbmi->bmiHeader.biBitCount,
-			pInfo->pbmi->bmiColors, Width);
-		jpeg_write_scanlines(&jcomp, (JSAMPARRAY)&pBuff, 1);
-	}
-	delete [] pBuff;
-	pBuff = nullptr;
-	jpeg_finish_compress(&jcomp);
-	jpeg_destroy_compress(&jcomp);
-	CloseHandle(hFile);
 	return true;
 }
 
