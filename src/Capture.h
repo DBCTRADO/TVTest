@@ -226,27 +226,6 @@ namespace TVTest
 		void RealizeStyle() override;
 	};
 
-	/*
-	class CImageSaveThread
-	{
-		CCaptureImage *m_pImage;
-		LPTSTR m_pszFileName;
-		int m_Format;
-		LPTSTR m_pszOption;
-		LPTSTR m_pszComment;
-		CImageCodec m_ImageCodec;
-		static void SaveProc(void *pParam);
-
-	public:
-		CImageSaveThread(
-			CCaptureImage *pImage, LPCTSTR pszFileName, int Format,
-			LPCTSTR pszOption, LPCTSTR pszComment);
-		~CImageSaveThread();
-
-		bool BeginSave();
-	};
-	*/
-
 }	// namespace TVTest
 
 
