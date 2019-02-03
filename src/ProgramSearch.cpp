@@ -1868,7 +1868,7 @@ bool CProgramSearchDialog::SetColumnWidth(int Index, int Width)
 {
 	if (Index < 0 || Index >= NUM_COLUMNS)
 		return false;
-	m_ColumnWidth[Index] = std::max(Width, 0);
+	m_ColumnWidth[Index] = Width;
 	return true;
 }
 
@@ -1945,19 +1945,32 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
-			int FontSize;
+			bool fNeedFontSize = false;
+			bool fAllZero = true;
 			for (int i = 0; i < NUM_COLUMNS; i++) {
-				if (m_ColumnWidth[i] < 0) {
-					HDC hdc = ::GetDC(hwndList);
-					HFONT hfont = GetWindowFont(hwndList);
-					HFONT hfontOld = SelectFont(hdc, hfont);
-					TEXTMETRIC tm;
-					::GetTextMetrics(hdc, &tm);
-					FontSize = tm.tmHeight - tm.tmInternalLeading;
-					SelectFont(hdc, hfontOld);
-					::ReleaseDC(hwndList, hdc);
-					break;
-				}
+				if (m_ColumnWidth[i] < 0)
+					fNeedFontSize = true;
+				if (m_ColumnWidth[i] != 0)
+					fAllZero = false;
+			}
+
+			// 以前のバージョンでカラムのデフォルト幅が全て0になることがあったのを対策
+			if (fAllZero) {
+				for (int i = 0; i < NUM_COLUMNS; i++)
+					m_ColumnWidth[i] = -1;
+				fNeedFontSize = true;
+			}
+
+			int FontSize;
+			if (fNeedFontSize) {
+				HDC hdc = ::GetDC(hwndList);
+				HFONT hfont = GetWindowFont(hwndList);
+				HFONT hfontOld = SelectFont(hdc, hfont);
+				TEXTMETRIC tm;
+				::GetTextMetrics(hdc, &tm);
+				FontSize = tm.tmHeight - tm.tmInternalLeading;
+				SelectFont(hdc, hfontOld);
+				::ReleaseDC(hwndList, hdc);
 			}
 
 			LVCOLUMN lvc;
