@@ -98,9 +98,9 @@ bool CCaptureVariableStringMap::GetParameterList(ParameterGroupList *pList) cons
 	if (!CEventVariableStringMap::GetParameterList(pList))
 		return false;
 
-	pList->emplace_back();
-	pList->back().ParameterList.insert(
-		pList->back().ParameterList.end(),
+	ParameterGroup &Group = pList->emplace_back();
+	Group.ParameterList.insert(
+		Group.ParameterList.end(),
 		m_CaptureParameterList,
 		m_CaptureParameterList + lengthof(m_CaptureParameterList));
 

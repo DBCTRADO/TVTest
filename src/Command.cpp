@@ -52,8 +52,7 @@ bool CCommandManager::RegisterCommand(
 			|| (LastListingID != 0 && ((LastListingID < FirstID) || (LastListingID > LastID))))
 		return false;
 
-	m_CommandList.emplace_back();
-	CommandInfo &Info = m_CommandList.back();
+	CommandInfo &Info = m_CommandList.emplace_back();
 
 	Info.FirstID = FirstID;
 	Info.LastID = LastID;

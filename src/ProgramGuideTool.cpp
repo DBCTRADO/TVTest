@@ -111,9 +111,9 @@ bool CEpgVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 	if (!CEventVariableStringMap::GetParameterList(pList))
 		return false;
 
-	pList->emplace_back();
-	pList->back().ParameterList.insert(
-		pList->back().ParameterList.end(),
+	ParameterGroup &Group = pList->emplace_back();
+	Group.ParameterList.insert(
+		Group.ParameterList.end(),
 		m_EpgParameterList,
 		m_EpgParameterList + lengthof(m_EpgParameterList));
 

@@ -3831,8 +3831,7 @@ void CPlugin::CreateAppCommandList()
 		int ID;
 
 		while ((ID = CommandLister.Next()) != 0) {
-			m_AppCommandList.emplace_back();
-			AppCommand &Command = m_AppCommandList.back();
+			AppCommand &Command = m_AppCommandList.emplace_back();
 			Command.ID = ID;
 			Command.IDText = CommandManager.GetCommandIDText(ID);
 			TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];

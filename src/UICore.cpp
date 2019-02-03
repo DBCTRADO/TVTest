@@ -1914,9 +1914,9 @@ bool CUICore::CTitleStringMap::GetParameterList(ParameterGroupList *pList) const
 		{TEXT("rec-circle"), TEXT("録画●")},
 	};
 
-	pList->emplace_back();
-	pList->back().ParameterList.insert(
-		pList->back().ParameterList.end(),
+	ParameterGroup &Group = pList->emplace_back();
+	Group.ParameterList.insert(
+		Group.ParameterList.end(),
 		ParameterList,
 		ParameterList + lengthof(ParameterList));
 

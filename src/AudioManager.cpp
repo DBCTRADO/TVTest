@@ -422,13 +422,10 @@ void CAudioManager::MakeAudioList()
 				const AudioInfo &Info = m_EventAudioList[j];
 
 				if (Info.ComponentTag == ComponentTag) {
-					m_AudioList.push_back(Info);
-					m_AudioList.back().ID = ID;
+					m_AudioList.emplace_back(Info).ID = ID;
 					if (Info.IsDualMono()) {
-						m_AudioList.push_back(m_EventAudioList[j + 1]);
-						m_AudioList.back().ID = ID;
-						m_AudioList.push_back(m_EventAudioList[j + 2]);
-						m_AudioList.back().ID = ID;
+						m_AudioList.emplace_back(m_EventAudioList[j + 1]).ID = ID;
+						m_AudioList.emplace_back(m_EventAudioList[j + 2]).ID = ID;
 					}
 					fFound = true;
 					break;

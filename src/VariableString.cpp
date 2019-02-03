@@ -156,8 +156,7 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 	if (VarList.empty())
 		return true;
 
-	pList->emplace_back();
-	ParameterGroup &Group = pList->back();
+	ParameterGroup &Group = pList->emplace_back();
 
 	Group.ParameterList.reserve(VarList.size());
 
@@ -610,8 +609,7 @@ bool CEventVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 	for (const auto &e : GroupList) {
 		if (!(e.Flags & m_Flags)) {
-			pList->emplace_back();
-			ParameterGroup &Group = pList->back();
+			ParameterGroup &Group = pList->emplace_back();
 
 			if (e.pszText != nullptr)
 				Group.Text = e.pszText;

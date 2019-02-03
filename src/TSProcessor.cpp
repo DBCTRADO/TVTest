@@ -972,8 +972,7 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 		} else {
 			if (Size != LibISDB::TS_PACKET_SIZE)
 				return E_FAIL;
-			m_OutputPacket.emplace_back();
-			LibISDB::TSPacket &Packet = m_OutputPacket.back();
+			LibISDB::TSPacket &Packet = m_OutputPacket.emplace_back();
 			if (Packet.SetData(pData, LibISDB::TS_PACKET_SIZE) != LibISDB::TS_PACKET_SIZE) {
 				m_OutputPacket.pop_back();
 				return E_OUTOFMEMORY;
