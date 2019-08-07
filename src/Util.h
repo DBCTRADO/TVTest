@@ -160,7 +160,7 @@ namespace TVTest
 		CGlobalLock(const CGlobalLock &) = delete;
 		CGlobalLock &operator=(const CGlobalLock &) = delete;
 
-		bool Create(LPCTSTR pszName, bool fInheritHandle = false);
+		bool Create(LPCTSTR pszName, bool fInitialOwner = false);
 		bool Open(
 			LPCTSTR pszName,
 			DWORD DesiredAccess = MUTEX_ALL_ACCESS,

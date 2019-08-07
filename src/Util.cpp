@@ -1375,7 +1375,7 @@ CGlobalLock::~CGlobalLock()
 	Close();
 }
 
-bool CGlobalLock::Create(LPCTSTR pszName, bool fInheritHandle)
+bool CGlobalLock::Create(LPCTSTR pszName, bool fInitialOwner)
 {
 	if (m_hMutex != nullptr)
 		return false;
@@ -1385,10 +1385,13 @@ bool CGlobalLock::Create(LPCTSTR pszName, bool fInheritHandle)
 	if (!SecAttributes.Initialize())
 		return false;
 
-	m_hMutex = ::CreateMutex(&SecAttributes, fInheritHandle, pszName);
-	m_fOwner = false;
+	m_hMutex = ::CreateMutex(&SecAttributes, fInitialOwner, pszName);
+	if (m_hMutex == nullptr)
+		return false;
 
-	return m_hMutex != nullptr;
+	m_fOwner = fInitialOwner && ::GetLastError() != ERROR_ALREADY_EXISTS;
+
+	return true;
 }
 
 bool CGlobalLock::Open(LPCTSTR pszName, DWORD DesiredAccess, bool fInheritHandle)
