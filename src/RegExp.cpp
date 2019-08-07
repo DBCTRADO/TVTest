@@ -208,6 +208,8 @@ bool CRegExpEngine_ECMAScript::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFl
 	RegEx::flag_type RegExFlags = std::regex_constants::ECMAScript;
 	if (!!(Flags & CRegExp::PatternFlag::IgnoreCase))
 		RegExFlags |= std::regex_constants::icase;
+	if (!!(Flags & CRegExp::PatternFlag::Optimize))
+		RegExFlags |= std::regex_constants::optimize;
 
 	try {
 		m_RegEx.assign(m_Pattern, RegExFlags);

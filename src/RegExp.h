@@ -45,6 +45,7 @@ namespace TVTest
 			None        = 0x0000U,
 			IgnoreCase  = 0x0001U,
 			IgnoreWidth = 0x0002U,
+			Optimize    = 0x0004U,
 		};
 
 		struct TextRange

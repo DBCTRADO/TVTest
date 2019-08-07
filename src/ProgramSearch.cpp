@@ -574,7 +574,7 @@ bool CEventSearcher::BeginSearch(const CEventSearchSettings &Settings)
 	if (Settings.fRegExp && !Settings.Keyword.empty()) {
 		if (!m_RegExp.Initialize())
 			return false;
-		CRegExp::PatternFlag Flags = CRegExp::PatternFlag::None;
+		CRegExp::PatternFlag Flags = CRegExp::PatternFlag::Optimize;
 		if (Settings.fIgnoreCase)
 			Flags |= CRegExp::PatternFlag::IgnoreCase;
 		if (Settings.fIgnoreWidth)
