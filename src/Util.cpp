@@ -1409,9 +1409,13 @@ bool CGlobalLock::Wait(DWORD Timeout)
 {
 	if (m_hMutex == nullptr)
 		return false;
-	if (::WaitForSingleObject(m_hMutex, Timeout) == WAIT_TIMEOUT)
+
+	const DWORD Result = ::WaitForSingleObject(m_hMutex, Timeout);
+	if (Result != WAIT_OBJECT_0 && Result != WAIT_ABANDONED)
 		return false;
+
 	m_fOwner = true;
+
 	return true;
 }
 
