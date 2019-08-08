@@ -64,6 +64,7 @@ namespace TVTest
 	private:
 		bool LoadMain();
 		bool WaitThread(DWORD Timeout);
+		bool CreateLock(CInterprocessReadWriteLock *pLock) const;
 
 		static unsigned int __stdcall LoadThread(void *pParameter);
 
@@ -72,6 +73,7 @@ namespace TVTest
 		HANDLE m_hThread;
 		CEventHandler *m_pEventHandler;
 		uint64_t m_UpdateCount;
+		DWORD m_LockTimeout;
 	};
 
 	TVTEST_ENUM_FLAGS(CEpgDataStore::OpenFlag)

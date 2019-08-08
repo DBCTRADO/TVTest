@@ -170,6 +170,50 @@ namespace TVTest
 		void Release();
 	};
 
+	class CSemaphore
+	{
+	public:
+		CSemaphore();
+		~CSemaphore();
+
+		CSemaphore(const CSemaphore &) = delete;
+		CSemaphore &operator=(const CSemaphore &) = delete;
+
+		bool Create(LONG InitialCount, LONG MaxCount, LPCTSTR pszName);
+		bool Open(
+			LPCTSTR pszName,
+			DWORD DesiredAccess = SEMAPHORE_ALL_ACCESS,
+			bool fInheritHandle = false);
+		bool Wait(DWORD Timeout = INFINITE);
+		void Close();
+		LONG Release(LONG Count = 1);
+		LONG GetMaxCount() const { return m_MaxCount; }
+
+	private:
+		HANDLE m_hSemaphore;
+		LONG m_MaxCount;
+	};
+
+	class CInterprocessReadWriteLock
+	{
+	public:
+		CInterprocessReadWriteLock() = default;
+		~CInterprocessReadWriteLock() = default;
+
+		CInterprocessReadWriteLock(const CInterprocessReadWriteLock &) = delete;
+		CInterprocessReadWriteLock &operator=(const CInterprocessReadWriteLock &) = delete;
+
+		bool Create(LPCTSTR pszLockName, LPCTSTR pszSemaphoreName, LONG MaxCount);
+		bool LockRead(DWORD Timeout = INFINITE);
+		void UnlockRead();
+		bool LockWrite(DWORD Timeout = INFINITE);
+		void UnlockWrite();
+
+	private:
+		CGlobalLock m_Lock;
+		CSemaphore m_Semaphore;
+	};
+
 	class CBasicSecurityAttributes
 		: public SECURITY_ATTRIBUTES
 	{

@@ -35,6 +35,7 @@ CEpgDataStore::CEpgDataStore()
 	, m_hThread(nullptr)
 	, m_pEventHandler(nullptr)
 	, m_UpdateCount(0)
+	, m_LockTimeout(10000)
 {
 }
 
@@ -53,7 +54,8 @@ bool CEpgDataStore::Open(LibISDB::EPGDatabase *pEPGDatabase, LPCTSTR pszFileName
 		LibISDB::EPGDataFile::OpenFlag::Read |
 		LibISDB::EPGDataFile::OpenFlag::Write |
 		LibISDB::EPGDataFile::OpenFlag::ShareRead |
-		LibISDB::EPGDataFile::OpenFlag::DiscardOld;
+		LibISDB::EPGDataFile::OpenFlag::DiscardOld |
+		LibISDB::EPGDataFile::OpenFlag::Flush;
 	if (!!(Flags & OpenFlag::LoadBackground))
 		FileOpenFlags |= LibISDB::EPGDataFile::OpenFlag::PriorityIdle;
 
@@ -146,18 +148,14 @@ bool CEpgDataStore::Save()
 
 	CAppMain &App = GetAppClass();
 
-	String LockName;
-	LockName = m_EPGDataFile.GetFileName();
-	StringUtility::ToUpper(LockName);
-	StringUtility::Replace(LockName, TEXT('\\'), TEXT(':'));
-	LockName += TEXT(":Lock");
-
-	CGlobalLock GlobalLock;
-	if (GlobalLock.Create(LockName.c_str())) {
-		if (!GlobalLock.Wait(10000)) {
+	CInterprocessReadWriteLock Lock;
+	bool fLocked = false;
+	if (CreateLock(&Lock)) {
+		if (!Lock.LockWrite(m_LockTimeout)) {
 			App.AddLog(CLogItem::LogType::Error, TEXT("EPGファイルがロックされているため保存できません。"));
 			return false;
 		}
+		fLocked = true;
 	}
 
 	// ファイルが読み込んだ時から更新されている場合読み込み直す
@@ -175,7 +173,8 @@ bool CEpgDataStore::Save()
 		m_UpdateCount = m_EPGDataFile.GetUpdateCount();
 	}
 
-	GlobalLock.Release();
+	if (fLocked)
+		Lock.UnlockWrite();
 
 	return fOK;
 }
@@ -189,6 +188,16 @@ void CEpgDataStore::SetEventHandler(CEventHandler *pEventHandler)
 
 bool CEpgDataStore::LoadMain()
 {
+	CInterprocessReadWriteLock Lock;
+	bool fLocked = false;
+	if (CreateLock(&Lock)) {
+		if (!Lock.LockRead(m_LockTimeout)) {
+			GetAppClass().AddLog(CLogItem::LogType::Error, TEXT("EPGファイルがロックされているため読み込めません。"));
+			return false;
+		}
+		fLocked = true;
+	}
+
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnBeginLoading();
 
@@ -196,6 +205,9 @@ bool CEpgDataStore::LoadMain()
 
 	if (fOK)
 		m_UpdateCount = m_EPGDataFile.GetUpdateCount();
+
+	if (fLocked)
+		Lock.UnlockRead();
 
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnEndLoading(fOK);
@@ -214,6 +226,19 @@ bool CEpgDataStore::WaitThread(DWORD Timeout)
 	}
 
 	return true;
+}
+
+
+bool CEpgDataStore::CreateLock(CInterprocessReadWriteLock *pLock) const
+{
+	String LockName = m_EPGDataFile.GetFileName();
+	StringUtility::ToUpper(LockName);
+	StringUtility::Replace(LockName, TEXT('\\'), TEXT(':'));
+	String SemaphoreName = LockName;
+	LockName += TEXT(":Lock");
+	SemaphoreName += TEXT(":Semaphore");
+
+	return pLock->Create(LockName.c_str(), SemaphoreName.c_str(), 10);
 }
 
 

@@ -1437,6 +1437,139 @@ void CGlobalLock::Release()
 }
 
 
+CSemaphore::CSemaphore()
+	: m_hSemaphore(nullptr)
+	, m_MaxCount(0)
+{
+}
+
+CSemaphore::~CSemaphore()
+{
+	Close();
+}
+
+bool CSemaphore::Create(LONG InitialCount, LONG MaxCount, LPCTSTR pszName)
+{
+	if (m_hSemaphore != nullptr)
+		return false;
+
+	CBasicSecurityAttributes SecAttributes;
+
+	if (!SecAttributes.Initialize())
+		return false;
+
+	m_hSemaphore = ::CreateSemaphore(&SecAttributes, InitialCount, MaxCount, pszName);
+	if (m_hSemaphore == nullptr)
+		return false;
+
+	m_MaxCount = MaxCount;
+
+	return true;
+}
+
+bool CSemaphore::Open(LPCTSTR pszName, DWORD DesiredAccess, bool fInheritHandle)
+{
+	if (m_hSemaphore != nullptr)
+		return false;
+
+	m_hSemaphore = ::OpenSemaphore(DesiredAccess, fInheritHandle, pszName);
+
+	return m_hSemaphore != nullptr;
+}
+
+bool CSemaphore::Wait(DWORD Timeout)
+{
+	if (m_hSemaphore == nullptr)
+		return false;
+
+	if (::WaitForSingleObject(m_hSemaphore, Timeout) != WAIT_OBJECT_0)
+		return false;
+
+	return true;
+}
+
+void CSemaphore::Close()
+{
+	if (m_hSemaphore != nullptr) {
+		::CloseHandle(m_hSemaphore);
+		m_hSemaphore = nullptr;
+		m_MaxCount = 0;
+	}
+}
+
+LONG CSemaphore::Release(LONG Count)
+{
+	if (m_hSemaphore == nullptr)
+		return 0;
+
+	LONG PreviousCount;
+	if (!::ReleaseSemaphore(m_hSemaphore, Count, &PreviousCount))
+		return 0;
+
+	return PreviousCount;
+}
+
+
+bool CInterprocessReadWriteLock::Create(LPCTSTR pszLockName, LPCTSTR pszSemaphoreName, LONG MaxCount)
+{
+	if (!m_Lock.Create(pszLockName, false))
+		return false;
+	if (!m_Semaphore.Create(MaxCount, MaxCount, pszSemaphoreName)) {
+		m_Lock.Close();
+		return false;
+	}
+
+	return true;
+}
+
+bool CInterprocessReadWriteLock::LockRead(DWORD Timeout)
+{
+	const DWORD StartTime = ::GetTickCount();
+
+	if (!m_Lock.Wait(Timeout))
+		return false;
+
+	const DWORD Elapsed = ::GetTickCount() - StartTime;
+	const bool fLocked = m_Semaphore.Wait(Timeout > Elapsed ? Timeout - Elapsed : 0);
+
+	m_Lock.Release();
+
+	return fLocked;
+}
+
+void CInterprocessReadWriteLock::UnlockRead()
+{
+	m_Semaphore.Release();
+}
+
+bool CInterprocessReadWriteLock::LockWrite(DWORD Timeout)
+{
+	if (!m_Lock.Wait(Timeout))
+		return false;
+
+	const DWORD StartTime = ::GetTickCount();
+	DWORD TimeRemain = Timeout;
+
+	while (m_Semaphore.Wait(TimeRemain)) {
+		if (m_Semaphore.Release() == m_Semaphore.GetMaxCount() - 1)
+			return true;
+		const DWORD Elapsed = ::GetTickCount() - StartTime;
+		if (Elapsed >= Timeout)
+			break;
+		TimeRemain = Timeout - Elapsed;
+	}
+
+	m_Lock.Release();
+
+	return false;
+}
+
+void CInterprocessReadWriteLock::UnlockWrite()
+{
+	m_Lock.Release();
+}
+
+
 CBasicSecurityAttributes::CBasicSecurityAttributes()
 {
 	nLength = sizeof(SECURITY_ATTRIBUTES);
