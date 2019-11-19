@@ -1063,17 +1063,19 @@ bool CColorSchemeList::Load(LPCTSTR pszDirectory)
 	TCHAR szFileName[MAX_PATH];
 
 	::PathCombine(szFileName, pszDirectory, TEXT("*.httheme"));
-	hFind = ::FindFirstFile(szFileName, &wfd);
+	hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
-			CColorScheme *pColorScheme;
+			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
+				CColorScheme *pColorScheme;
 
-			::PathCombine(szFileName, pszDirectory, wfd.cFileName);
-			pColorScheme = new CColorScheme;
-			if (pColorScheme->Load(szFileName))
-				Add(pColorScheme);
-			else
-				delete pColorScheme;
+				::PathCombine(szFileName, pszDirectory, wfd.cFileName);
+				pColorScheme = new CColorScheme;
+				if (pColorScheme->Load(szFileName))
+					Add(pColorScheme);
+				else
+					delete pColorScheme;
+			}
 		} while (::FindNextFile(hFind, &wfd));
 		::FindClose(hFind);
 	}

@@ -633,13 +633,10 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 				else
 					fSave = true;
 				if (fSave) {
-					WIN32_FIND_DATA FindData;
-					HANDLE hFind = ::FindFirstFile(szIconPath, &FindData);
-					const bool fFound = hFind != INVALID_HANDLE_VALUE;
-					if (fFound)
-						::FindClose(hFind);
+					WIN32_FILE_ATTRIBUTE_DATA AttributeData;
+					const bool fFound = ::GetFileAttributesEx(szIconPath, GetFileExInfoStandard, &AttributeData) != FALSE;
 					if (!fFound
-							|| CompareFileTime(&FindData.ftLastWriteTime, &LogoInfo.UpdatedTime) < 0) {
+							|| ::CompareFileTime(&AttributeData.ftLastWriteTime, &LogoInfo.UpdatedTime) < 0) {
 						if (App.LogoManager.SaveLogoIcon(
 									NetworkID, ServiceID, LogoType,
 									::GetSystemMetrics(SM_CXSMICON),
@@ -650,17 +647,15 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 							fUseIcon = false;
 						}
 					} else if (fFound) {
-						m_ChannelIconMap[MapKey] = ChannelIconInfo(FindData.ftLastWriteTime);
+						m_ChannelIconMap[MapKey] = ChannelIconInfo(AttributeData.ftLastWriteTime);
 					}
 				}
 			} else {
 				auto it = m_ChannelIconMap.find(MapKey);
 				if (it == m_ChannelIconMap.end()) {
-					WIN32_FIND_DATA FindData;
-					HANDLE hFind = ::FindFirstFile(szIconPath, &FindData);
-					if (hFind != INVALID_HANDLE_VALUE) {
-						::FindClose(hFind);
-						m_ChannelIconMap[MapKey] = ChannelIconInfo(FindData.ftLastWriteTime);
+					WIN32_FILE_ATTRIBUTE_DATA AttributeData;
+					if (::GetFileAttributesEx(szIconPath, GetFileExInfoStandard, &AttributeData)) {
+						m_ChannelIconMap[MapKey] = ChannelIconInfo(AttributeData.ftLastWriteTime);
 					} else {
 						fUseIcon = false;
 					}

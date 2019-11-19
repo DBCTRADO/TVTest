@@ -175,11 +175,9 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 	// (複数起動して他のプロセスが更新した可能性があるため)
 	if (m_LogoFileLastWriteTime.dwLowDateTime != 0
 			|| m_LogoFileLastWriteTime.dwHighDateTime != 0) {
-		WIN32_FIND_DATA fd;
-		HANDLE hFind = ::FindFirstFile(pszFileName, &fd);
-		if (hFind != INVALID_HANDLE_VALUE) {
-			::FindClose(hFind);
-			if (::CompareFileTime(&fd.ftLastWriteTime, &m_LogoFileLastWriteTime) > 0) {
+		WIN32_FILE_ATTRIBUTE_DATA AttributeData;
+		if (::GetFileAttributesEx(pszFileName, GetFileExInfoStandard, &AttributeData)) {
+			if (::CompareFileTime(&AttributeData.ftLastWriteTime, &m_LogoFileLastWriteTime) > 0) {
 				TRACE(TEXT("CLogoManager::SaveLogoFile() : Reload file\n"));
 				LoadLogoFile(pszFileName);
 			}
@@ -320,11 +318,9 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 	// (複数起動して他のプロセスが更新した可能性があるため)
 	if (m_LogoIDMapFileLastWriteTime.dwLowDateTime != 0
 			|| m_LogoIDMapFileLastWriteTime.dwHighDateTime != 0) {
-		WIN32_FIND_DATA fd;
-		HANDLE hFind = ::FindFirstFile(pszFileName, &fd);
-		if (hFind != INVALID_HANDLE_VALUE) {
-			::FindClose(hFind);
-			if (::CompareFileTime(&fd.ftLastWriteTime, &m_LogoIDMapFileLastWriteTime) > 0) {
+		WIN32_FILE_ATTRIBUTE_DATA AttributeData;
+		if (::GetFileAttributesEx(pszFileName, GetFileExInfoStandard, &AttributeData)) {
+			if (::CompareFileTime(&AttributeData.ftLastWriteTime, &m_LogoIDMapFileLastWriteTime) > 0) {
 				TRACE(TEXT("CLogoManager::SaveLogoIDMap() : Reload file\n"));
 				LoadLogoIDMap(pszFileName);
 			}
@@ -348,11 +344,9 @@ bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 
 	m_fLogoIDMapUpdated = false;
 
-	WIN32_FIND_DATA fd;
-	HANDLE hFind = ::FindFirstFile(pszFileName, &fd);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		::FindClose(hFind);
-		m_LogoIDMapFileLastWriteTime = fd.ftLastWriteTime;
+	WIN32_FILE_ATTRIBUTE_DATA AttributeData;
+	if (::GetFileAttributesEx(pszFileName, GetFileExInfoStandard, &AttributeData)) {
+		m_LogoIDMapFileLastWriteTime = AttributeData.ftLastWriteTime;
 	}
 
 	LPTSTR pszSection = new TCHAR[32767];
@@ -659,7 +653,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 		return false;
 	::PathCombine(szFileName, szDirectory, szMask);
 	WIN32_FIND_DATA fd;
-	HANDLE hFind = ::FindFirstFile(szFileName, &fd);
+	HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return nullptr;
 	int NewerVersion = -1;

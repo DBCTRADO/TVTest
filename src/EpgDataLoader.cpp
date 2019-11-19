@@ -137,7 +137,9 @@ bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent, CEventHandler *
 
 	::GetSystemTimeAsFileTime(&ftCurrent);
 	::PathCombine(szFileMask, pszFolder, TEXT("*_epg.dat"));
-	hFind = ::FindFirstFile(szFileMask, &fd);
+	hFind = ::FindFirstFileEx(
+		szFileMask, FindExInfoBasic, &fd,
+		FindExSearchNameMatch, nullptr, FIND_FIRST_EX_LARGE_FETCH);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return false;
 

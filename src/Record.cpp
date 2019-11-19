@@ -812,7 +812,7 @@ bool CRecordManager::GetWritePluginList(std::vector<String> *pList)
 
 	GetAppClass().GetAppDirectory(szDir);
 	::PathAppend(szDir, TEXT("Write_*.dll"));
-	hFind = ::FindFirstFile(szDir, &fd);
+	hFind = ::FindFirstFileEx(szDir, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return false;
 	do {

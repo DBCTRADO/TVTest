@@ -210,7 +210,7 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 	WIN32_FIND_DATA wfd;
 
 	::PathCombine(szMask, pszDirectory, TEXT("BonDriver*.dll"));
-	hFind = ::FindFirstFile(szMask, &wfd);
+	hFind = ::FindFirstFileEx(szMask, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {

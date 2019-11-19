@@ -4495,9 +4495,12 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 	WIN32_FIND_DATA wfd;
 
 	::PathCombine(szFileName, pszDirectory, TEXT("*.tvtp"));
-	hFind = ::FindFirstFile(szFileName, &wfd);
+	hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
+			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+				continue;
+
 			if (pExcludePlugins != nullptr) {
 				bool fExclude = false;
 				for (LPCTSTR pszName : *pExcludePlugins) {
