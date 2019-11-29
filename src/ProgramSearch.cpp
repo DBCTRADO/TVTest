@@ -1757,10 +1757,12 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 
 	case WM_KEYDOWN:
 		if (wParam == VK_RETURN) {
-			::SendMessage(::GetParent(::GetParent(hwnd)), WM_COMMAND, IDC_EVENTSEARCH_SEARCH, 0);
-			return 0;
-		}
-		if (wParam == VK_DELETE) {
+			HWND hwndComboBox = ::GetParent(hwnd);
+			if (!ComboBox_GetDroppedState(hwndComboBox)) {
+				::SendMessage(::GetParent(hwndComboBox), WM_COMMAND, IDC_EVENTSEARCH_SEARCH, 0);
+				return 0;
+			}
+		} else if (wParam == VK_DELETE) {
 			int Length = ::GetWindowTextLength(hwnd);
 
 			if (Length > 0) {
@@ -1795,7 +1797,8 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 		break;
 
 	case WM_CHAR:
-		if (wParam == '\r' || wParam == '\n')
+		if ((wParam == '\r' || wParam == '\n')
+				&& !ComboBox_GetDroppedState(::GetParent(hwnd)))
 			return 0;
 		break;
 	}
