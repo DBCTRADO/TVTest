@@ -1206,8 +1206,18 @@ bool CEventSearchSettingsDialog::SetKeyword(LPCTSTR pszKeyword)
 {
 	if (m_hDlg == nullptr)
 		return false;
-	::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_KEYWORD, pszKeyword == nullptr ? TEXT("") : pszKeyword);
-	::UpdateWindow(::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD));
+
+	HWND hwndComboBox = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD);
+	if (IsStringEmpty(pszKeyword)) {
+		ComboBox_SetText(hwndComboBox, TEXT(""));
+	} else {
+		TCHAR szCurKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
+		const int Length = ComboBox_GetText(hwndComboBox, szCurKeyword, lengthof(szCurKeyword));
+		if (Length < 1 || ::lstrcmp(szCurKeyword, pszKeyword) != 0)
+			ComboBox_SetText(hwndComboBox, pszKeyword);
+	}
+	::UpdateWindow(hwndComboBox);
+
 	return true;
 }
 
@@ -1229,7 +1239,8 @@ bool CEventSearchSettingsDialog::AddToKeywordHistory(LPCTSTR pszKeyword)
 		ComboBox_DeleteString(hwndComboBox, i);
 		ComboBox_InsertString(hwndComboBox, 0, pszKeyword);
 	}
-	::SetWindowText(hwndComboBox, pszKeyword);
+
+	SetKeyword(pszKeyword);
 
 	m_Options.AddKeywordHistory(pszKeyword);
 
@@ -1759,7 +1770,7 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 		if (wParam == VK_RETURN) {
 			HWND hwndComboBox = ::GetParent(hwnd);
 			if (!ComboBox_GetDroppedState(hwndComboBox)) {
-				::SendMessage(::GetParent(hwndComboBox), WM_COMMAND, IDC_EVENTSEARCH_SEARCH, 0);
+				::PostMessage(::GetParent(hwndComboBox), WM_COMMAND, IDC_EVENTSEARCH_SEARCH, 0);
 				return 0;
 			}
 		} else if (wParam == VK_DELETE) {
