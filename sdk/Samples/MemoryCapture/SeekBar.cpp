@@ -210,14 +210,14 @@ void CSeekBar::OnMouseMove(int x, int y)
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CSeekBar *CSeekBar::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CSeekBar*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CSeekBar::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {

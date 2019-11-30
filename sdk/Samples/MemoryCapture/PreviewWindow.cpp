@@ -95,7 +95,7 @@ void CPreviewWindow::SetFitImageToWindow(bool fFit)
 }
 
 
-// ‰æ‘œ‚Ì•\¦ƒTƒCƒY‚ğæ“¾‚·‚é
+// ç”»åƒã®è¡¨ç¤ºã‚µã‚¤ã‚ºã‚’å–å¾—ã™ã‚‹
 bool CPreviewWindow::GetDisplaySize(int *pWidth, int *pHeight) const
 {
 	if (m_pImage == nullptr)
@@ -138,7 +138,7 @@ bool CPreviewWindow::GetDisplaySize(int *pWidth, int *pHeight) const
 }
 
 
-// •`‰æ
+// æç”»
 void CPreviewWindow::Draw(HDC hdc)
 {
 	RECT rcClient;
@@ -161,7 +161,7 @@ void CPreviewWindow::Draw(HDC hdc)
 
 		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 		bmi.bmiHeader.biWidth = m_pImage->GetWidth();
-		bmi.bmiHeader.biHeight = -m_pImage->GetHeight();	// ƒgƒbƒvƒ_ƒEƒ“
+		bmi.bmiHeader.biHeight = -m_pImage->GetHeight();	// ãƒˆãƒƒãƒ—ãƒ€ã‚¦ãƒ³
 		bmi.bmiHeader.biPlanes = 1;
 		bmi.bmiHeader.biBitCount = m_pImage->GetBitsPerPixel();
 
@@ -172,7 +172,7 @@ void CPreviewWindow::Draw(HDC hdc)
 						m_pImage->GetPixels(), &bmi, DIB_RGB_COLORS, SRCCOPY);
 		::SetStretchBltMode(hdc, OldStretchMode);
 
-		// —]”’‚ğ“h‚è‚Â‚Ô‚·
+		// ä½™ç™½ã‚’å¡—ã‚Šã¤ã¶ã™
 		RECT rc = rcClient;
 		if (y > 0) {
 			rc.bottom = y;
@@ -200,14 +200,14 @@ void CPreviewWindow::Draw(HDC hdc)
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CPreviewWindow *CPreviewWindow::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CPreviewWindow*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CPreviewWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {

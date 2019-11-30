@@ -1,38 +1,38 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ŠÈˆÕ”Ô‘g•\‚ğ•\¦‚·‚é
+	ç°¡æ˜“ç•ªçµ„è¡¨ã‚’è¡¨ç¤ºã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	Eƒ`ƒƒƒ“ƒlƒ‹‚ğ—ñ‹“‚·‚é
-	E”Ô‘gî•ñ‚ğæ“¾‚·‚é
-	EƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
-	E”zF‚ğæ“¾‚µA”zF‚Ì•ÏX‚É’Ç]‚·‚é
-	EDPI ‚É‰‚¶‚ÄƒXƒP[ƒŠƒ“ƒO‚·‚é
+	ãƒ»ãƒãƒ£ãƒ³ãƒãƒ«ã‚’åˆ—æŒ™ã™ã‚‹
+	ãƒ»ç•ªçµ„æƒ…å ±ã‚’å–å¾—ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»é…è‰²ã‚’å–å¾—ã—ã€é…è‰²ã®å¤‰æ›´ã«è¿½å¾“ã™ã‚‹
+	ãƒ»DPI ã«å¿œã˜ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã™ã‚‹
 */
 
 
 #include <windows.h>
 #include <tchar.h>
 #include <vector>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ƒNƒ‰ƒX‚Æ‚µ‚ÄÀ‘•
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ã‚¯ãƒ©ã‚¹ã¨ã—ã¦å®Ÿè£…
 #include "TVTestPlugin.h"
 
 
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
 #define MINI_PROGRAM_GUIDE_WINDOW_CLASS TEXT("TV Mini Program Guide Window")
 
-// ƒRƒ“ƒgƒ[ƒ‹‚Ì¯•Êq
+// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ã®è­˜åˆ¥å­
 #define IDC_TUNERLIST	100
 #define IDC_CHANNELLIST	101
 #define IDC_EVENTLIST	102
 
-// ”Ô‘g‚ ‚½‚è‚Ìs”
+// ç•ªçµ„ã‚ãŸã‚Šã®è¡Œæ•°
 #define LINES_PER_EVENT 3
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CMiniProgramGuide : public TVTest::CTVTestPlugin
 {
 	struct Position {
@@ -88,32 +88,32 @@ CMiniProgramGuide::CMiniProgramGuide()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CMiniProgramGuide::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"ƒ~ƒj”Ô‘g•\";
+	pInfo->pszPluginName  = L"ãƒŸãƒ‹ç•ªçµ„è¡¨";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"¬‚³‚¢”Ô‘g•\‚ğ•\¦‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"å°ã•ã„ç•ªçµ„è¡¨ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CMiniProgramGuide::Initialize()
 {
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CMiniProgramGuide::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚ğ”jŠü‚·‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç ´æ£„ã™ã‚‹
 	if (m_hwnd)
 		::DestroyWindow(m_hwnd);
 
@@ -121,27 +121,27 @@ bool CMiniProgramGuide::Finalize()
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CMiniProgramGuide::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
 {
 	CMiniProgramGuide *pThis=static_cast<CMiniProgramGuide*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		return pThis->Enable(lParam1 != 0);
 
 	case TVTest::EVENT_STANDBY:
-		// ‘Ò‹@ó‘Ô‚ª•Ï‰»‚µ‚½
+		// å¾…æ©ŸçŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			// ‘Ò‹@ó‘Ô‚Ì‚ÍƒEƒBƒ“ƒhƒE‚ğ‰B‚·
+			// å¾…æ©ŸçŠ¶æ…‹ã®æ™‚ã¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éš ã™
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_COLORCHANGE:
-		// F‚Ìİ’è‚ª•Ï‰»‚µ‚½
+		// è‰²ã®è¨­å®šãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_hwndEventList != NULL) {
 			pThis->GetColors();
 			::RedrawWindow(pThis->m_hwndEventList, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
@@ -149,7 +149,7 @@ LRESULT CALLBACK CMiniProgramGuide::EventCallback(UINT Event,LPARAM lParam1,LPAR
 		return TRUE;
 
 	case TVTest::EVENT_DRIVERCHANGE:
-		// BonDriver ‚ª•Ï‚í‚Á‚½
+		// BonDriver ãŒå¤‰ã‚ã£ãŸ
 		if (pThis->m_hwnd != NULL) {
 			pThis->SetTunerList();
 			pThis->SetChannelList();
@@ -162,14 +162,14 @@ LRESULT CALLBACK CMiniProgramGuide::EventCallback(UINT Event,LPARAM lParam1,LPAR
 }
 
 
-// —LŒøó‘Ô‚ª•Ï‚í‚Á‚½‚Ìˆ—
+// æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸæ™‚ã®å‡¦ç†
 bool CMiniProgramGuide::Enable(bool fEnable)
 {
 	if (fEnable) {
 		static bool fInitialized = false;
 
 		if (!fInitialized) {
-			// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 			WNDCLASS wc;
 
 			wc.style         = 0;
@@ -188,18 +188,18 @@ bool CMiniProgramGuide::Enable(bool fEnable)
 		}
 
 		if (m_hwnd == NULL) {
-			// ƒEƒBƒ“ƒhƒE‚Ìì¬
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 			const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
 			const DWORD ExStyle = WS_EX_TOOLWINDOW;
 			if (::CreateWindowEx(ExStyle,
 								 MINI_PROGRAM_GUIDE_WINDOW_CLASS,
-								 TEXT("ƒ~ƒj”Ô‘g•\"),
+								 TEXT("ãƒŸãƒ‹ç•ªçµ„è¡¨"),
 								 Style,
 								 0, 0, 320, 320,
 								 m_pApp->GetAppWindow(), NULL, g_hinstDLL, this) == NULL)
 				return false;
 
-			// ƒfƒtƒHƒ‹ƒgƒTƒCƒY‚ÌŒvZ
+			// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚µã‚¤ã‚ºã®è¨ˆç®—
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				RECT rcList;
 				::GetWindowRect(m_hwndEventList, &rcList);
@@ -216,7 +216,7 @@ bool CMiniProgramGuide::Enable(bool fEnable)
 					m_WindowPosition.Height = rc.bottom - rc.top;
 			}
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì•œŒ³
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®å¾©å…ƒ
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd, &wp);
@@ -231,7 +231,7 @@ bool CMiniProgramGuide::Enable(bool fEnable)
 
 		::ShowWindow(m_hwnd, SW_SHOWNORMAL);
 	} else {
-		// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 		if (m_hwnd)
 			::DestroyWindow(m_hwnd);
 	}
@@ -240,7 +240,7 @@ bool CMiniProgramGuide::Enable(bool fEnable)
 }
 
 
-// ƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ‚ÌƒŠƒXƒg‚ğİ’è‚·‚é
+// ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ã®ãƒªã‚¹ãƒˆã‚’è¨­å®šã™ã‚‹
 void CMiniProgramGuide::SetTunerList()
 {
 	::SendMessage(m_hwndTunerList, CB_RESETCONTENT, 0, 0);
@@ -254,7 +254,7 @@ void CMiniProgramGuide::SetTunerList()
 }
 
 
-// ƒ`ƒƒƒ“ƒlƒ‹‚ÌƒŠƒXƒg‚ğİ’è‚·‚é
+// ãƒãƒ£ãƒ³ãƒãƒ«ã®ãƒªã‚¹ãƒˆã‚’è¨­å®šã™ã‚‹
 void CMiniProgramGuide::SetChannelList()
 {
 	::SendMessage(m_hwndChannelList, CB_RESETCONTENT, 0, 0);
@@ -284,7 +284,7 @@ void CMiniProgramGuide::SetChannelList()
 }
 
 
-// ”Ô‘g‚ÌƒŠƒXƒg‚ğİ’è‚·‚é
+// ç•ªçµ„ã®ãƒªã‚¹ãƒˆã‚’è¨­å®šã™ã‚‹
 void CMiniProgramGuide::SetEventList()
 {
 	if (m_EventList.EventList != NULL)
@@ -313,7 +313,7 @@ void CMiniProgramGuide::SetEventList()
 }
 
 
-// ”zF‚ğæ“¾‚·‚é
+// é…è‰²ã‚’å–å¾—ã™ã‚‹
 void CMiniProgramGuide::GetColors()
 {
 	m_crBackColor = m_pApp->GetColor(L"ProgramGuideBack");
@@ -325,7 +325,7 @@ void CMiniProgramGuide::GetColors()
 }
 
 
-// ¡–@‚ğŒvZ‚·‚é
+// å¯¸æ³•ã‚’è¨ˆç®—ã™ã‚‹
 void CMiniProgramGuide::CalcMetrics()
 {
 	LOGFONT lf;
@@ -356,14 +356,14 @@ void CMiniProgramGuide::SetControlsFont()
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CMiniProgramGuide *CMiniProgramGuide::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CMiniProgramGuide*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
@@ -424,7 +424,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 		return 0;
 
 	case WM_DRAWITEM:
-		// ”Ô‘g‚ÌƒŠƒXƒg‚ÌƒAƒCƒeƒ€‚ğ•`‰æ
+		// ç•ªçµ„ã®ãƒªã‚¹ãƒˆã®ã‚¢ã‚¤ãƒ†ãƒ ã‚’æç”»
 		{
 			CMiniProgramGuide *pThis = GetThis(hwnd);
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
@@ -466,13 +466,19 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			RECT rc = pdis->rcItem;
 			::InflateRect(&rc, -pThis->m_ItemMargin, -pThis->m_ItemMargin);
 
+			// EPG æ—¥æ™‚ã‹ã‚‰è¡¨ç¤ºç”¨æ—¥æ™‚ã«å¤‰æ›
+			SYSTEMTIME StartTime;
+			if (!pThis->m_pApp->ConvertEpgTimeTo(
+					pEventInfo->StartTime, TVTest::CONVERT_TIME_TYPE_EPG_DISPLAY, &StartTime))
+				StartTime = pEventInfo->StartTime;
+
 			TCHAR szText[256];
 			::wsprintf(szText, TEXT("%d/%02d/%02d %02d:%02d %s"),
-					   pEventInfo->StartTime.wYear,
-					   pEventInfo->StartTime.wMonth,
-					   pEventInfo->StartTime.wDay,
-					   pEventInfo->StartTime.wHour,
-					   pEventInfo->StartTime.wMinute,
+					   StartTime.wYear,
+					   StartTime.wMonth,
+					   StartTime.wDay,
+					   StartTime.wHour,
+					   StartTime.wMinute,
 					   pEventInfo->pszEventName != NULL?
 					   pEventInfo->pszEventName : TEXT(""));
 
@@ -495,7 +501,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xFFF0) == SC_CLOSE) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
 			CMiniProgramGuide *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
@@ -527,7 +533,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 #define WM_DPICHANGED 0x02E0
 #endif
 	case WM_DPICHANGED:
-		// DPI ‚ª•Ï‚í‚Á‚½
+		// DPI ãŒå¤‰ã‚ã£ãŸ
 		{
 			CMiniProgramGuide *pThis = GetThis(hwnd);
 			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
@@ -553,7 +559,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			if (pThis->m_EventList.EventList != NULL)
 				pThis->m_pApp->FreeEpgEventList(&pThis->m_EventList);
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì‹L‰¯
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®è¨˜æ†¶
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof (WINDOWPLACEMENT);
 			if (::GetWindowPlacement(hwnd, &wp)) {
@@ -586,7 +592,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CMiniProgramGuide;

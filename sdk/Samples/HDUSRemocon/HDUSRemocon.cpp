@@ -1,12 +1,12 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	HDUS‚ÌƒŠƒ‚ƒRƒ“‚ğg‚¤
+	HDUSã®ãƒªãƒ¢ã‚³ãƒ³ã‚’ä½¿ã†
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	EƒRƒ“ƒgƒ[ƒ‰‚ğ“o˜^‚·‚é
-	EƒƒbƒZ[ƒWƒtƒbƒN‚ğ—˜—p‚·‚é
+	ãƒ»ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã‚’ç™»éŒ²ã™ã‚‹
+	ãƒ»ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒ•ãƒƒã‚¯ã‚’åˆ©ç”¨ã™ã‚‹
 */
 
 
@@ -21,69 +21,69 @@
 #pragma comment(lib,"shlwapi.lib")
 
 
-// ƒRƒ“ƒgƒ[ƒ‰–¼
+// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©å
 #define HDUS_REMOCON_NAME L"HDUS Remocon"
 
-// ƒ{ƒ^ƒ“‚ÌƒŠƒXƒg
+// ãƒœã‚¿ãƒ³ã®ãƒªã‚¹ãƒˆ
 static const struct {
 	TVTest::ControllerButtonInfo Info;
 	BYTE KeyCode;
 	BYTE Modifiers;
 } g_ButtonList[] = {
-	{{L"‰æ–Ê•\¦",		L"AspectRatio",			{ 8, 14,16,11}, {  0, 0}},	VK_F13,		MK_SHIFT},
-	{{L"“dŒ¹",			L"Close",				{32, 11,16,16}, {  0,22}},	VK_F14,		MK_SHIFT},
-	{{L"Á‰¹",			L"Mute",				{56, 14,16,11}, { 16, 0}},	VK_F15,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹1",	L"Channel1",			{ 8, 28,16,11}, { 32, 0}},	VK_F17,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹2",	L"Channel2",			{24, 28,16,11}, { 48, 0}},	VK_F18,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹3",	L"Channel3",			{40, 28,16,11}, { 64, 0}},	VK_F19,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹4",	L"Channel4",			{ 8, 43,16,11}, { 80, 0}},	VK_F20,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹5",	L"Channel5",			{24, 43,16,11}, { 96, 0}},	VK_F21,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹6",	L"Channel6",			{40, 43,16,11}, {112, 0}},	VK_F22,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹7",	L"Channel7",			{ 8, 57,16,11}, {128, 0}},	VK_F23,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹8",	L"Channel8",			{24, 57,16,11}, {144, 0}},	VK_F24,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹9",	L"Channel9",			{40, 57,16,11}, {160, 0}},	VK_F13,		MK_CONTROL},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹10",	L"Channel10",			{ 8, 71,16,11}, {176, 0}},	VK_F16,		MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹11",	L"Channel11",			{24, 71,16,11}, {192, 0}},	VK_F14,		MK_CONTROL},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹12",	L"Channel12",			{40, 71,16,11}, {208, 0}},	VK_F15,		MK_CONTROL},
-	{{L"ƒƒjƒ…[",		L"Menu",				{11, 85,28,11}, { 32,11}},	VK_F16,		MK_CONTROL},
-	{{L"‘S‰æ–Ê•\¦",	L"Fullscreen",			{41, 85,28,11}, { 60,11}},	VK_F17,		MK_CONTROL},
-	{{L"š–‹",			NULL,					{ 9,102,24,25}, {122,22}},	VK_F18,		MK_CONTROL},
-	{{L"‰¹ºØ‘Ö",		L"SwitchAudio",			{47,102,24,25}, {146,22}},	VK_F19,		MK_CONTROL},
+	{{L"ç”»é¢è¡¨ç¤º",		L"AspectRatio",			{ 8, 14,16,11}, {  0, 0}},	VK_F13,		MK_SHIFT},
+	{{L"é›»æº",			L"Close",				{32, 11,16,16}, {  0,22}},	VK_F14,		MK_SHIFT},
+	{{L"æ¶ˆéŸ³",			L"Mute",				{56, 14,16,11}, { 16, 0}},	VK_F15,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«1",	L"Channel1",			{ 8, 28,16,11}, { 32, 0}},	VK_F17,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«2",	L"Channel2",			{24, 28,16,11}, { 48, 0}},	VK_F18,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«3",	L"Channel3",			{40, 28,16,11}, { 64, 0}},	VK_F19,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«4",	L"Channel4",			{ 8, 43,16,11}, { 80, 0}},	VK_F20,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«5",	L"Channel5",			{24, 43,16,11}, { 96, 0}},	VK_F21,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«6",	L"Channel6",			{40, 43,16,11}, {112, 0}},	VK_F22,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«7",	L"Channel7",			{ 8, 57,16,11}, {128, 0}},	VK_F23,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«8",	L"Channel8",			{24, 57,16,11}, {144, 0}},	VK_F24,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«9",	L"Channel9",			{40, 57,16,11}, {160, 0}},	VK_F13,		MK_CONTROL},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«10",	L"Channel10",			{ 8, 71,16,11}, {176, 0}},	VK_F16,		MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«11",	L"Channel11",			{24, 71,16,11}, {192, 0}},	VK_F14,		MK_CONTROL},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ«12",	L"Channel12",			{40, 71,16,11}, {208, 0}},	VK_F15,		MK_CONTROL},
+	{{L"ãƒ¡ãƒ‹ãƒ¥ãƒ¼",		L"Menu",				{11, 85,28,11}, { 32,11}},	VK_F16,		MK_CONTROL},
+	{{L"å…¨ç”»é¢è¡¨ç¤º",	L"Fullscreen",			{41, 85,28,11}, { 60,11}},	VK_F17,		MK_CONTROL},
+	{{L"å­—å¹•",			NULL,					{ 9,102,24,25}, {122,22}},	VK_F18,		MK_CONTROL},
+	{{L"éŸ³å£°åˆ‡æ›¿",		L"SwitchAudio",			{47,102,24,25}, {146,22}},	VK_F19,		MK_CONTROL},
 	{{L"EPG",			L"ProgramGuide",		{ 9,140,24,25}, {170,22}},	VK_F20,		MK_CONTROL},
-	{{L"–ß‚é",			NULL,					{47,140,24,25}, {194,22}},	VK_F21,		MK_CONTROL},
-	{{L"˜^‰æ",			L"RecordStart",			{20,170,16,11}, { 88,11}},	VK_F22,		MK_CONTROL},
-	{{L"ƒƒ‚",			L"SaveImage",			{44,170,16,11}, {104,11}},	VK_F23,		MK_CONTROL},
-	{{L"’â~",			L"RecordStop",			{ 8,186,16,11}, {120,11}},	VK_F24,		MK_CONTROL},
-	{{L"Ä¶",			NULL,					{26,184,28,14}, { 16,22}},	VK_F13,		MK_CONTROL | MK_SHIFT},
-	{{L"ˆê’â~",		L"RecordPause",			{56,187,16,11}, {136,11}},	VK_F14,		MK_CONTROL | MK_SHIFT},
+	{{L"æˆ»ã‚‹",			NULL,					{47,140,24,25}, {194,22}},	VK_F21,		MK_CONTROL},
+	{{L"éŒ²ç”»",			L"RecordStart",			{20,170,16,11}, { 88,11}},	VK_F22,		MK_CONTROL},
+	{{L"ãƒ¡ãƒ¢",			L"SaveImage",			{44,170,16,11}, {104,11}},	VK_F23,		MK_CONTROL},
+	{{L"åœæ­¢",			L"RecordStop",			{ 8,186,16,11}, {120,11}},	VK_F24,		MK_CONTROL},
+	{{L"å†ç”Ÿ",			NULL,					{26,184,28,14}, { 16,22}},	VK_F13,		MK_CONTROL | MK_SHIFT},
+	{{L"ä¸€æ™‚åœæ­¢",		L"RecordPause",			{56,187,16,11}, {136,11}},	VK_F14,		MK_CONTROL | MK_SHIFT},
 	{{L"|<<",			NULL,					{ 8,201,16,11}, {152,11}},	VK_F15,		MK_CONTROL | MK_SHIFT},
 	{{L"<<",			NULL,					{24,201,16,11}, {168,11}},	VK_F16,		MK_CONTROL | MK_SHIFT},
 	{{L">>",			NULL,					{40,201,16,11}, {184,11}},	VK_F17,		MK_CONTROL | MK_SHIFT},
 	{{L">>|",			NULL,					{56,201,16,11}, {200,11}},	VK_F18,		MK_CONTROL | MK_SHIFT},
-	{{L"‚µ‚¨‚è",		L"ChannelDisplayMenu",	{24,215,16,11}, {216,11}},	VK_F19,		MK_CONTROL | MK_SHIFT},
-	{{L"ƒWƒƒƒ“ƒv",		L"ChannelMenu",			{40,215,16,11}, {232,11}},	VK_F20,		MK_CONTROL | MK_SHIFT},
-	{{L"A (Â)",		NULL,					{ 8,230,16,11}, { 44,22}},	VK_F21,		MK_CONTROL | MK_SHIFT},
-	{{L"B (Ô)",		NULL,					{24,230,16,11}, { 60,22}},	VK_F22,		MK_CONTROL | MK_SHIFT},
-	{{L"C (—Î)",		NULL,					{40,230,16,11}, { 76,22}},	VK_F23,		MK_CONTROL | MK_SHIFT},
-	{{L"D (‰©)",		NULL,					{56,230,16,11}, { 92,22}},	VK_F24,		MK_CONTROL | MK_SHIFT},
+	{{L"ã—ãŠã‚Š",		L"ChannelDisplayMenu",	{24,215,16,11}, {216,11}},	VK_F19,		MK_CONTROL | MK_SHIFT},
+	{{L"ã‚¸ãƒ£ãƒ³ãƒ—",		L"ChannelMenu",			{40,215,16,11}, {232,11}},	VK_F20,		MK_CONTROL | MK_SHIFT},
+	{{L"A (é’)",		NULL,					{ 8,230,16,11}, { 44,22}},	VK_F21,		MK_CONTROL | MK_SHIFT},
+	{{L"B (èµ¤)",		NULL,					{24,230,16,11}, { 60,22}},	VK_F22,		MK_CONTROL | MK_SHIFT},
+	{{L"C (ç·‘)",		NULL,					{40,230,16,11}, { 76,22}},	VK_F23,		MK_CONTROL | MK_SHIFT},
+	{{L"D (é»„)",		NULL,					{56,230,16,11}, { 92,22}},	VK_F24,		MK_CONTROL | MK_SHIFT},
 #if 0
-	{{L"‰¹—Ê +",		L"VolumeUp",			{56, 28,16,11}, {  0,11}},	VK_UP,		MK_SHIFT},
-	{{L"‰¹—Ê -",		L"VolumeDown",			{56, 43,16,11}, { 16,11}},	VK_DOWN,	MK_SHIFT},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹ +",	L"ChannelUp",			{57, 57,14,13}, {108,22}},	VK_UP,		MK_CONTROL},
-	{{L"ƒ`ƒƒƒ“ƒlƒ‹ -",	L"ChannelDown",			{57, 70,14,13}, {108,35}},	VK_DOWN,	MK_CONTROL},
+	{{L"éŸ³é‡ +",		L"VolumeUp",			{56, 28,16,11}, {  0,11}},	VK_UP,		MK_SHIFT},
+	{{L"éŸ³é‡ -",		L"VolumeDown",			{56, 43,16,11}, { 16,11}},	VK_DOWN,	MK_SHIFT},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ« +",	L"ChannelUp",			{57, 57,14,13}, {108,22}},	VK_UP,		MK_CONTROL},
+	{{L"ãƒãƒ£ãƒ³ãƒãƒ« -",	L"ChannelDown",			{57, 70,14,13}, {108,35}},	VK_DOWN,	MK_CONTROL},
 #endif
 };
 
 #define NUM_BUTTONS (sizeof(g_ButtonList)/sizeof(g_ButtonList[0]))
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CHDUSRemocon : public TVTest::CTVTestPlugin
 {
-	bool m_fInitialized;	// ‰Šú‰»Ï‚İ‚©?
-	HMODULE m_hLib;			// ƒtƒbƒNDLL‚Ìƒnƒ“ƒhƒ‹
-	bool m_fHook;			// ƒtƒbƒN‚µ‚Ä‚¢‚é‚©?
-	static UINT m_Message;	// ƒtƒbƒNDLL‚©‚ç‘—‚ç‚ê‚éƒƒbƒZ[ƒW
+	bool m_fInitialized;	// åˆæœŸåŒ–æ¸ˆã¿ã‹?
+	HMODULE m_hLib;			// ãƒ•ãƒƒã‚¯DLLã®ãƒãƒ³ãƒ‰ãƒ«
+	bool m_fHook;			// ãƒ•ãƒƒã‚¯ã—ã¦ã„ã‚‹ã‹?
+	static UINT m_Message;	// ãƒ•ãƒƒã‚¯DLLã‹ã‚‰é€ã‚‰ã‚Œã‚‹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 
 	bool InitializePlugin();
 	bool BeginHook();
@@ -117,30 +117,30 @@ CHDUSRemocon::CHDUSRemocon()
 
 bool CHDUSRemocon::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
-	// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"HDUSƒŠƒ‚ƒRƒ“";
+	pInfo->pszPluginName  = L"HDUSãƒªãƒ¢ã‚³ãƒ³";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"HDUS‚ÌƒŠƒ‚ƒRƒ“‚É‘Î‰‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"HDUSã®ãƒªãƒ¢ã‚³ãƒ³ã«å¯¾å¿œã—ã¾ã™ã€‚";
 	return true;
 }
 
 
 bool CHDUSRemocon::Initialize()
 {
-	// ‰Šú‰»ˆ—
+	// åˆæœŸåŒ–å‡¦ç†
 
-	// ƒ{ƒ^ƒ“‚ÌƒŠƒXƒg‚ğì¬
+	// ãƒœã‚¿ãƒ³ã®ãƒªã‚¹ãƒˆã‚’ä½œæˆ
 	TVTest::ControllerButtonInfo ButtonList[NUM_BUTTONS];
 	for (int i=0;i<NUM_BUTTONS;i++)
 		ButtonList[i]=g_ButtonList[i].Info;
 
-	// ƒRƒ“ƒgƒ[ƒ‰‚Ì“o˜^
+	// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã®ç™»éŒ²
 	TVTest::ControllerInfo Info;
 	Info.Flags             = 0;
 	Info.pszName           = HDUS_REMOCON_NAME;
-	Info.pszText           = L"HDUSƒŠƒ‚ƒRƒ“";
+	Info.pszText           = L"HDUSãƒªãƒ¢ã‚³ãƒ³";
 	Info.NumButtons        = NUM_BUTTONS;
 	Info.pButtonList       = ButtonList;
 	Info.pszIniFileName    = NULL;
@@ -150,27 +150,27 @@ bool CHDUSRemocon::Initialize()
 	Info.pTranslateMessage = TranslateMessageCallback;
 	Info.pClientData       = this;
 	if (!m_pApp->RegisterController(&Info)) {
-		m_pApp->AddLog(L"ƒRƒ“ƒgƒ[ƒ‰‚ğ“o˜^‚Å‚«‚Ü‚¹‚ñB",TVTest::LOG_TYPE_ERROR);
+		m_pApp->AddLog(L"ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã‚’ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback,this);
 
 	return true;
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚ª—LŒø‚É‚³‚ê‚½‚Ì‰Šú‰»ˆ—
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒæœ‰åŠ¹ã«ã•ã‚ŒãŸæ™‚ã®åˆæœŸåŒ–å‡¦ç†
 bool CHDUSRemocon::InitializePlugin()
 {
 	if (!m_fInitialized) {
-		// ƒƒbƒZ[ƒW‚Ì“o˜^
+		// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®ç™»éŒ²
 		m_Message=::RegisterWindowMessage(KEYHOOK_MESSAGE);
 		if (m_Message==0)
 			return false;
 
-		// Vista/7 ‚ÅŠÇ—ÒŒ ŒÀ‚ÅÀs‚³‚ê‚½—p‚Ì‘Îô
+		// Vista/7 ã§ç®¡ç†è€…æ¨©é™ã§å®Ÿè¡Œã•ã‚ŒãŸæ™‚ç”¨ã®å¯¾ç­–
 #ifndef MSGFLT_ADD
 #define MSGFLT_ADD 1
 #endif
@@ -185,7 +185,7 @@ bool CHDUSRemocon::InitializePlugin()
 		m_fInitialized=true;
 	}
 
-	// ƒƒbƒZ[ƒWƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetWindowMessageCallback(MessageCallback,this);
 
 	return true;
@@ -194,9 +194,9 @@ bool CHDUSRemocon::InitializePlugin()
 
 bool CHDUSRemocon::Finalize()
 {
-	// I—¹ˆ—
+	// çµ‚äº†å‡¦ç†
 
-	// ƒtƒbƒNI‚í‚è
+	// ãƒ•ãƒƒã‚¯çµ‚ã‚ã‚Š
 	if (m_hLib!=NULL) {
 		EndHook();
 		::FreeLibrary(m_hLib);
@@ -209,7 +209,7 @@ bool CHDUSRemocon::Finalize()
 
 bool CHDUSRemocon::BeginHook()
 {
-	// ƒtƒbƒNŠJn
+	// ãƒ•ãƒƒã‚¯é–‹å§‹
 
 	if (m_hLib==NULL) {
 		TCHAR szFileName[MAX_PATH];
@@ -238,7 +238,7 @@ bool CHDUSRemocon::BeginHook()
 
 bool CHDUSRemocon::EndHook()
 {
-	// ƒtƒbƒNI‚í‚è
+	// ãƒ•ãƒƒã‚¯çµ‚ã‚ã‚Š
 
 	if (m_fHook) {
 		EndHookFunc pEndHook;
@@ -255,7 +255,7 @@ bool CHDUSRemocon::EndHook()
 
 bool CHDUSRemocon::SetWindow(HWND hwnd)
 {
-	// ƒEƒBƒ“ƒhƒE‚ğİ’è
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¨­å®š
 
 	if (!m_fHook)
 		return false;
@@ -268,31 +268,31 @@ bool CHDUSRemocon::SetWindow(HWND hwnd)
 
 void CHDUSRemocon::OnError(LPCWSTR pszMessage)
 {
-	// ƒGƒ‰[”­¶‚ÌƒƒbƒZ[ƒW•\¦
+	// ã‚¨ãƒ©ãƒ¼ç™ºç”Ÿæ™‚ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸è¡¨ç¤º
 	m_pApp->AddLog(pszMessage,TVTest::LOG_TYPE_ERROR);
 	if (!m_pApp->GetSilentMode()) {
-		::MessageBoxW(m_pApp->GetAppWindow(),pszMessage,L"HDUSƒŠƒ‚ƒRƒ“",
+		::MessageBoxW(m_pApp->GetAppWindow(),pszMessage,L"HDUSãƒªãƒ¢ã‚³ãƒ³",
 					  MB_OK | MB_ICONEXCLAMATION);
 	}
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CHDUSRemocon::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
 {
 	CHDUSRemocon *pThis=static_cast<CHDUSRemocon*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (lParam1!=0) {
 			if (!pThis->InitializePlugin()) {
-				pThis->OnError(L"‰Šú‰»‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B");
+				pThis->OnError(L"åˆæœŸåŒ–ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚");
 				return FALSE;
 			}
 			if (!pThis->BeginHook()) {
-				pThis->OnError(L"ƒtƒbƒN‚Å‚«‚Ü‚¹‚ñB");
+				pThis->OnError(L"ãƒ•ãƒƒã‚¯ã§ãã¾ã›ã‚“ã€‚");
 				return FALSE;
 			}
 		} else {
@@ -302,7 +302,7 @@ LRESULT CALLBACK CHDUSRemocon::EventCallback(UINT Event,LPARAM lParam1,LPARAM lP
 		return TRUE;
 
 	case TVTest::EVENT_CONTROLLERFOCUS:
-		// ‚±‚ÌƒvƒƒZƒX‚ª‘€ì‚Ì‘ÎÛ‚É‚È‚Á‚½
+		// ã“ã®ãƒ—ãƒ­ã‚»ã‚¹ãŒæ“ä½œã®å¯¾è±¡ã«ãªã£ãŸ
 		pThis->SetWindow(reinterpret_cast<HWND>(lParam1));
 		return TRUE;
 	}
@@ -311,12 +311,12 @@ LRESULT CALLBACK CHDUSRemocon::EventCallback(UINT Event,LPARAM lParam1,LPARAM lP
 }
 
 
-// ƒƒbƒZ[ƒWƒR[ƒ‹ƒoƒbƒNŠÖ”
+// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 BOOL CALLBACK CHDUSRemocon::MessageCallback(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
 											LRESULT *pResult,void *pClientData)
 {
 	if (uMsg==m_Message) {
-		// ƒtƒbƒNDLL‚©‚ç‘—‚ç‚ê‚éƒƒbƒZ[ƒW
+		// ãƒ•ãƒƒã‚¯DLLã‹ã‚‰é€ã‚‰ã‚Œã‚‹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 
 		if (KEYHOOK_GET_REPEATCOUNT(lParam)>1)
 			return 0;
@@ -328,13 +328,13 @@ BOOL CALLBACK CHDUSRemocon::MessageCallback(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			Modifiers|=MK_SHIFT;
 		WORD KeyCode=(WORD)wParam;
 
-		// ‰Ÿ‚³‚ê‚½ƒ{ƒ^ƒ“‚ğ’T‚·
+		// æŠ¼ã•ã‚ŒãŸãƒœã‚¿ãƒ³ã‚’æ¢ã™
 		for (int i=0;i<NUM_BUTTONS;i++) {
 			if (g_ButtonList[i].KeyCode==KeyCode
 					&& g_ButtonList[i].Modifiers==Modifiers) {
 				CHDUSRemocon *pThis=static_cast<CHDUSRemocon*>(pClientData);
 
-				// ƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚±‚Æ‚ğ’Ê’m‚·‚é
+				// ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸã“ã¨ã‚’é€šçŸ¥ã™ã‚‹
 				pThis->m_pApp->OnControllerButtonDown(HDUS_REMOCON_NAME,i);
 				break;
 			}
@@ -346,8 +346,8 @@ BOOL CALLBACK CHDUSRemocon::MessageCallback(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 }
 
 
-// ƒƒbƒZ[ƒW‚Ì•ÏŠ·ƒR[ƒ‹ƒoƒbƒN
-// Shift+ª ‚È‚Ç‚ÍƒtƒbƒN‚·‚é‚Æ–â‘è‚ ‚é‚Ì‚Å‚±‚±‚Åˆ—‚µ‚Ä‚¢‚Ü‚·
+// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®å¤‰æ›ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
+// Shift+â†‘ ãªã©ã¯ãƒ•ãƒƒã‚¯ã™ã‚‹ã¨å•é¡Œã‚ã‚‹ã®ã§ã“ã“ã§å‡¦ç†ã—ã¦ã„ã¾ã™
 BOOL CALLBACK CHDUSRemocon::TranslateMessageCallback(HWND hwnd,MSG *pMessage,void *pClientData)
 {
 	if (pMessage->message==WM_KEYDOWN
@@ -355,7 +355,7 @@ BOOL CALLBACK CHDUSRemocon::TranslateMessageCallback(HWND hwnd,MSG *pMessage,voi
 		bool fShift=::GetKeyState(VK_SHIFT)<0;
 		bool fCtrl=::GetKeyState(VK_CONTROL)<0;
 
-		// ‚Ç‚¿‚ç‚©ˆê•û‚ª‰Ÿ‚³‚ê‚Ä‚¢‚éê‡‚Ì‚İˆ—‚·‚é
+		// ã©ã¡ã‚‰ã‹ä¸€æ–¹ãŒæŠ¼ã•ã‚Œã¦ã„ã‚‹å ´åˆã®ã¿å‡¦ç†ã™ã‚‹
 		if (fShift!=fCtrl) {
 			CHDUSRemocon *pThis=static_cast<CHDUSRemocon*>(pClientData);
 
@@ -372,7 +372,7 @@ BOOL CALLBACK CHDUSRemocon::TranslateMessageCallback(HWND hwnd,MSG *pMessage,voi
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CHDUSRemocon;

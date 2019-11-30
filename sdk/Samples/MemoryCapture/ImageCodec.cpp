@@ -42,7 +42,7 @@ CImageCodec::~CImageCodec()
 }
 
 
-// ‰æ‘œ‚ğƒtƒ@ƒCƒ‹‚É•Û‘¶‚·‚é
+// ç”»åƒã‚’ãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã™ã‚‹
 bool CImageCodec::SaveImageToFile(
 	const CImage *pImage, LPCWSTR pszFileName, FormatType Format)
 {
@@ -126,7 +126,7 @@ LPCWSTR CImageCodec::GetFormatExtensions(FormatType Format) const
 }
 
 
-// TVTest_Image.dll ‚ğ“Ç‚İ‚Ş
+// TVTest_Image.dll ã‚’èª­ã¿è¾¼ã‚€
 bool CImageCodec::LoadModule()
 {
 	if (m_hLib == nullptr) {

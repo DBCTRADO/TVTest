@@ -250,7 +250,7 @@ void CToolbar::SetHotItem(int Item)
 }
 
 
-// ƒc[ƒ‹ƒ`ƒbƒv‚ğİ’è‚·‚é
+// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã‚’è¨­å®šã™ã‚‹
 void CToolbar::SetTooltips()
 {
 	TOOLINFO ti = {};
@@ -269,7 +269,7 @@ void CToolbar::SetTooltips()
 }
 
 
-// ƒc[ƒ‹ƒ`ƒbƒv‚Ì”ÍˆÍ‚ğXV‚·‚é
+// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã®ç¯„å›²ã‚’æ›´æ–°ã™ã‚‹
 void CToolbar::UpdateTooltips()
 {
 	TOOLINFO ti = {};
@@ -285,14 +285,14 @@ void CToolbar::UpdateTooltips()
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CToolbar *CToolbar::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CToolbar*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CToolbar::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {

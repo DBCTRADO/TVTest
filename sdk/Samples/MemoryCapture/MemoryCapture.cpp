@@ -1,19 +1,19 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹ (TVTest ver.0.9.0 ˆÈ~)
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ« (TVTest ver.0.9.0 ä»¥é™)
 
-	‰f‘œƒXƒgƒŠ[ƒ€‚ğ•Û‘¶‚µ‚Ä‰æ‘œ‚ğƒLƒƒƒvƒ`ƒƒ‚·‚é
+	æ˜ åƒã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚’ä¿å­˜ã—ã¦ç”»åƒã‚’ã‚­ãƒ£ãƒ—ãƒãƒ£ã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	EƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
-	E‰f‘œƒXƒgƒŠ[ƒ€‚ğæ“¾‚·‚é
-	ETVTest DTV Video Decoder ‚ğg‚Á‚Ä‰f‘œ‚ğƒfƒR[ƒh‚·‚é
-	ETVTest_Image.dll ‚ğg‚Á‚Ä‰æ‘œ‚ğ•Û‘¶‚·‚é
-	ETVTest ‚Ìİ’è‚ğæ“¾‚·‚é
-	E•Ï”•¶š—ñ‚ğ“WŠJ‚·‚é
-	Eƒe[ƒ}‚ğg‚Á‚Ä€–Ú‚ğ•`‰æ‚·‚é
-	EƒEƒBƒ“ƒhƒE‚Ì DPI ‚É‰‚¶‚ÄƒXƒP[ƒŠƒ“ƒO‚·‚é
-	Eİ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»æ˜ åƒã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚’å–å¾—ã™ã‚‹
+	ãƒ»TVTest DTV Video Decoder ã‚’ä½¿ã£ã¦æ˜ åƒã‚’ãƒ‡ã‚³ãƒ¼ãƒ‰ã™ã‚‹
+	ãƒ»TVTest_Image.dll ã‚’ä½¿ã£ã¦ç”»åƒã‚’ä¿å­˜ã™ã‚‹
+	ãƒ»TVTest ã®è¨­å®šã‚’å–å¾—ã™ã‚‹
+	ãƒ»å¤‰æ•°æ–‡å­—åˆ—ã‚’å±•é–‹ã™ã‚‹
+	ãƒ»ãƒ†ãƒ¼ãƒã‚’ä½¿ã£ã¦é …ç›®ã‚’æç”»ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã® DPI ã«å¿œã˜ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã™ã‚‹
+	ãƒ»è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
 */
 
 
@@ -27,7 +27,7 @@
 #include <string>
 #include <new>
 #include <strsafe.h>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ƒNƒ‰ƒX‚Æ‚µ‚ÄÀ‘•
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ã‚¯ãƒ©ã‚¹ã¨ã—ã¦å®Ÿè£…
 #include "TVTestPlugin.h"
 #include "VideoDecoder.h"
 #include "ImageCodec.h"
@@ -39,10 +39,10 @@
 #pragma comment(lib, "shlwapi.lib")
 
 
-#define TITLE_TEXT TEXT("ƒƒ‚ƒŠ[ƒLƒƒƒvƒ`ƒƒ[")
+#define TITLE_TEXT TEXT("ãƒ¡ãƒ¢ãƒªãƒ¼ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒ¼")
 
 
-// ”r‘¼§Œä—pƒNƒ‰ƒX
+// æ’ä»–åˆ¶å¾¡ç”¨ã‚¯ãƒ©ã‚¹
 class CLocalLock
 {
 public:
@@ -66,7 +66,7 @@ private:
 };
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CMemoryCapture
 	: public TVTest::CTVTestPlugin
 	, protected CVideoDecoder::CFrameCapture
@@ -245,13 +245,13 @@ private:
 };
 
 
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
 const LPCTSTR CMemoryCapture::m_WindowClassName = TEXT("TVTest Memory Capture Window");
 
-// ƒLƒƒƒvƒ`ƒƒƒTƒCƒY‚ÌƒŠƒXƒg
+// ã‚­ãƒ£ãƒ—ãƒãƒ£ã‚µã‚¤ã‚ºã®ãƒªã‚¹ãƒˆ
 const CMemoryCapture::CaptureSizeInfo CMemoryCapture::m_CaptureSizeList[] =
 {
-	// ”{—¦
+	// å€ç‡
 	{CaptureSizeType_Rate, {1, 4}},
 	{CaptureSizeType_Rate, {1, 3}},
 	{CaptureSizeType_Rate, {1, 2}},
@@ -276,7 +276,7 @@ const CMemoryCapture::CaptureSizeInfo CMemoryCapture::m_CaptureSizeList[] =
 	{CaptureSizeType_Size, {1440, 1080}},
 };
 
-// •\¦”{—¦‚ÌƒŠƒXƒg
+// è¡¨ç¤ºå€ç‡ã®ãƒªã‚¹ãƒˆ
 const CMemoryCapture::CaptureSizeInfo CMemoryCapture::m_ZoomRateList[] =
 {
 	{CaptureSizeType_Rate, {1, 4}},
@@ -323,34 +323,34 @@ CMemoryCapture::CMemoryCapture()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CMemoryCapture::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
-	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS;	// İ’èƒ_ƒCƒAƒƒO‚ ‚è
-	pInfo->pszPluginName  = L"ƒƒ‚ƒŠ[ƒLƒƒƒvƒ`ƒƒ[";
+	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS;	// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚ã‚Š
+	pInfo->pszPluginName  = L"ãƒ¡ãƒ¢ãƒªãƒ¼ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒ¼";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"‰æ‘œ‚ğƒLƒƒƒvƒ`ƒƒ‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ç”»åƒã‚’ã‚­ãƒ£ãƒ—ãƒãƒ£ã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CMemoryCapture::Initialize()
 {
-	// ƒAƒCƒRƒ“‚ğ“o˜^
+	// ã‚¢ã‚¤ã‚³ãƒ³ã‚’ç™»éŒ²
 	m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON));
 
-	// ƒRƒ}ƒ“ƒh‚ğ“o˜^
-	RegisterCommand(COMMAND_CAPTURE, L"Capture", L"æ‚è‚İ", L"‰æ‘œ‚Ìæ‚è‚İ‚ğs‚¢‚Ü‚·B", IDB_CAPTURE);
-	RegisterCommand(COMMAND_CAPTURE_ADD, L"CaptureAdd", L"’Ç‰Áæ‚è‚İ", L"‰æ‘œ‚ğ’Ç‰Á‚Åæ‚è‚İ‚Ü‚·B", IDB_CAPTURE_ADD);
-	RegisterCommand(COMMAND_SAVE, L"Save", L"•Û‘¶", L"Œ»İ‚Ì‰æ‘œ‚ğ•Û‘¶‚µ‚Ü‚·B");
-	RegisterCommand(COMMAND_COPY, L"Copy", L"ƒRƒs[", L"Œ»İ‚Ì‰æ‘œ‚ğƒRƒs[‚µ‚Ü‚·B");
+	// ã‚³ãƒãƒ³ãƒ‰ã‚’ç™»éŒ²
+	RegisterCommand(COMMAND_CAPTURE, L"Capture", L"å–ã‚Šè¾¼ã¿", L"ç”»åƒã®å–ã‚Šè¾¼ã¿ã‚’è¡Œã„ã¾ã™ã€‚", IDB_CAPTURE);
+	RegisterCommand(COMMAND_CAPTURE_ADD, L"CaptureAdd", L"è¿½åŠ å–ã‚Šè¾¼ã¿", L"ç”»åƒã‚’è¿½åŠ ã§å–ã‚Šè¾¼ã¿ã¾ã™ã€‚", IDB_CAPTURE_ADD);
+	RegisterCommand(COMMAND_SAVE, L"Save", L"ä¿å­˜", L"ç¾åœ¨ã®ç”»åƒã‚’ä¿å­˜ã—ã¾ã™ã€‚");
+	RegisterCommand(COMMAND_COPY, L"Copy", L"ã‚³ãƒ”ãƒ¼", L"ç¾åœ¨ã®ç”»åƒã‚’ã‚³ãƒ”ãƒ¼ã—ã¾ã™ã€‚");
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
-	// İ’è‚ğ“Ç‚İ‚Ş
+	// è¨­å®šã‚’èª­ã¿è¾¼ã‚€
 	LoadSettings();
 	LoadAppSettings();
 
@@ -365,10 +365,10 @@ bool CMemoryCapture::Initialize()
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CMemoryCapture::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
@@ -376,7 +376,7 @@ bool CMemoryCapture::Finalize()
 
 	m_Decoder.Finalize();
 
-	// İ’è‚ğ•Û‘¶
+	// è¨­å®šã‚’ä¿å­˜
 	if (m_fInitialized)
 		SaveSettings();
 
@@ -384,12 +384,12 @@ bool CMemoryCapture::Finalize()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒø/–³Œø‚ÌØ‚è‘Ö‚¦
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹/ç„¡åŠ¹ã®åˆ‡ã‚Šæ›¿ãˆ
 bool CMemoryCapture::EnablePlugin(bool fEnable)
 {
 	if (fEnable) {
 		if (!m_fInitialized) {
-			// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 			WNDCLASSEX wc = {};
 
 			wc.cbSize = sizeof(WNDCLASSEX);
@@ -412,7 +412,7 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 			CSeekBar::Initialize(g_hinstDLL);
 			CToolbar::Initialize(g_hinstDLL);
 
-			// ƒc[ƒ‹ƒo[‚Ìƒ{ƒ^ƒ“‚ğİ’è
+			// ãƒ„ãƒ¼ãƒ«ãƒãƒ¼ã®ãƒœã‚¿ãƒ³ã‚’è¨­å®š
 			static const CToolbar::ItemInfo ToolbarItemList[] =
 			{
 				{CM_CAPTURE,             0, 0},
@@ -436,15 +436,15 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 			static const DWORD Style = WS_OVERLAPPEDWINDOW;
 			static const DWORD ExStyle = 0;
 
-			// ƒvƒ‰ƒCƒ}ƒŠƒ‚ƒjƒ^‚Ì DPI ‚ğæ“¾
+			// ãƒ—ãƒ©ã‚¤ãƒãƒªãƒ¢ãƒ‹ã‚¿ã® DPI ã‚’å–å¾—
 			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
 			if (m_DPI == 0)
 				m_DPI = 96;
 
-			// ƒfƒtƒHƒ‹ƒg‚ÌƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğæ“¾
+			// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’å–å¾—
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				int Width = 640, Height = 360;
-				// DPIİ’è‚É‡‚í‚¹‚ÄƒXƒP[ƒŠƒ“ƒO
+				// DPIè¨­å®šã«åˆã‚ã›ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°
 				if (m_DPI != 96) {
 					Width = ::MulDiv(Width, m_DPI, 96);
 					Height = ::MulDiv(Height, m_DPI, 96);
@@ -457,14 +457,14 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 					m_WindowPosition.Height = rc.bottom - rc.top;
 			}
 
-			// ƒEƒBƒ“ƒhƒE‚Ìì¬
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 			if (::CreateWindowEx(
 					ExStyle, m_WindowClassName, TITLE_TEXT, Style,
 					0, 0, m_WindowPosition.Width, m_WindowPosition.Height,
 					/*m_pApp->GetAppWindow()*/nullptr, nullptr, g_hinstDLL, this) == nullptr)
 				return false;
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì•œŒ³
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®å¾©å…ƒ
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd, &wp);
@@ -488,7 +488,7 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚ÌƒRƒ}ƒ“ƒh‚ğ“o˜^‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®ã‚³ãƒãƒ³ãƒ‰ã‚’ç™»éŒ²ã™ã‚‹
 void CMemoryCapture::RegisterCommand(
 	int ID, LPCWSTR pszText, LPCWSTR pszName, LPCWSTR pszDescription, int IconID)
 {
@@ -517,7 +517,7 @@ void CMemoryCapture::RegisterCommand(
 }
 
 
-// İ’è‚ğ•Û‘¶‚·‚é
+// è¨­å®šã‚’ä¿å­˜ã™ã‚‹
 void CMemoryCapture::SaveSettings()
 {
 	TCHAR szIniFileName[MAX_PATH];
@@ -580,7 +580,7 @@ void CMemoryCapture::SaveSettings()
 }
 
 
-// İ’è‚ğ“Ç‚İ‚Ş
+// è¨­å®šã‚’èª­ã¿è¾¼ã‚€
 void CMemoryCapture::LoadSettings()
 {
 	TCHAR szIniFileName[MAX_PATH];
@@ -657,13 +657,13 @@ void CMemoryCapture::LoadSettings()
 }
 
 
-// TVTest ‚Ìİ’è‚ğæ“¾‚·‚é
+// TVTest ã®è¨­å®šã‚’å–å¾—ã™ã‚‹
 void CMemoryCapture::LoadAppSettings()
 {
 	WCHAR szIniPath[MAX_PATH];
 
 	if (m_pApp->GetSetting(L"IniFilePath", szIniPath, _countof(szIniPath)) > 0) {
-		// •Û‘¶Œ`®
+		// ä¿å­˜å½¢å¼
 		WCHAR szFormat[8];
 		if (::GetPrivateProfileStringW(L"Settings", L"CaptureSaveFormat",
 									   L"", szFormat, _countof(szFormat), szIniPath) > 0) {
@@ -672,12 +672,12 @@ void CMemoryCapture::LoadAppSettings()
 				m_SaveFormat = Format;
 		}
 
-		// JPEG ‚Ì•i¿
+		// JPEG ã®å“è³ª
 		int Value = ::GetPrivateProfileIntW(L"Settings", L"JpegQuality", 0, szIniPath);
 		if (Value > 0 && Value <= 100)
 			m_Codec.SetJpegQuality(Value);
 
-		// PNG ‚Ìˆ³kƒŒƒxƒ‹
+		// PNG ã®åœ§ç¸®ãƒ¬ãƒ™ãƒ«
 		Value = ::GetPrivateProfileIntW(L"Settings", L"PngCompressionLevel", 0, szIniPath);
 		if (Value >= 0 && Value <= 9)
 			m_Codec.SetPngCompressionLevel(Value);
@@ -685,7 +685,7 @@ void CMemoryCapture::LoadAppSettings()
 }
 
 
-// ƒXƒgƒŠ[ƒ€•Û‘¶—pƒoƒbƒtƒ@‚ğŠm•Û‚·‚é
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ ä¿å­˜ç”¨ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿ã™ã‚‹
 bool CMemoryCapture::AllocateStreamBuffer()
 {
 	CBlockLock Lock(m_StreamLock);
@@ -705,7 +705,7 @@ bool CMemoryCapture::AllocateStreamBuffer()
 }
 
 
-// ƒXƒgƒŠ[ƒ€•Û‘¶—pƒoƒbƒtƒ@‚ğ‰ğ•ú‚·‚é
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ ä¿å­˜ç”¨ãƒãƒƒãƒ•ã‚¡ã‚’è§£æ”¾ã™ã‚‹
 void CMemoryCapture::FreeStreamBuffer()
 {
 	CBlockLock Lock(m_StreamLock);
@@ -721,20 +721,20 @@ void CMemoryCapture::FreeStreamBuffer()
 }
 
 
-// ƒXƒgƒŠ[ƒ€‚Ìó‚¯æ‚è
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ ã®å—ã‘å–ã‚Š
 void CMemoryCapture::InputStream(DWORD Format, const void *pData, SIZE_T Size)
 {
 	CBlockLock Lock(m_StreamLock);
 
 	if (m_pStreamBuffer != nullptr) {
-		// ƒtƒH[ƒ}ƒbƒg‚ª•Ï‚í‚Á‚½‚çƒoƒbƒtƒ@‚ğ‰Šú‰»‚·‚é
+		// ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãŒå¤‰ã‚ã£ãŸã‚‰ãƒãƒƒãƒ•ã‚¡ã‚’åˆæœŸåŒ–ã™ã‚‹
 		if (m_StreamFormat != Format) {
 			m_StreamFormat = Format;
 			m_StreamPos = 0;
 			m_StreamAvail = 0;
 		}
 
-		// ƒŠƒ“ƒOƒoƒbƒtƒ@‚É•Û‘¶‚·‚é
+		// ãƒªãƒ³ã‚°ãƒãƒƒãƒ•ã‚¡ã«ä¿å­˜ã™ã‚‹
 		if (Size >= m_StreamSize) {
 			::CopyMemory(m_pStreamBuffer, static_cast<const BYTE*>(pData) + (Size - m_StreamSize), Size);
 			m_StreamPos = 0;
@@ -760,20 +760,20 @@ void CMemoryCapture::InputStream(DWORD Format, const void *pData, SIZE_T Size)
 }
 
 
-// ‰æ‘œæ‚è‚İ‚ÌŠJn
+// ç”»åƒå–ã‚Šè¾¼ã¿ã®é–‹å§‹
 bool CMemoryCapture::StartCapture(bool fAdd)
 {
 	CloseDecodeThread();
 
 	if (!m_Decoder.Initialize()) {
 		::MessageBox(GetOwnerWindow(),
-					 TEXT("ƒfƒR[ƒ_[‚ğ‰Šú‰»‚Å‚«‚Ü‚¹‚ñB"),
+					 TEXT("ãƒ‡ã‚³ãƒ¼ãƒ€ãƒ¼ã‚’åˆæœŸåŒ–ã§ãã¾ã›ã‚“ã€‚"),
 					 nullptr,
 					 MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
-	// ’Ç‰Á‚Å‚È‚¢ê‡‚ÍŒ»İ‚Ì‰æ‘œ‚ğ”jŠü
+	// è¿½åŠ ã§ãªã„å ´åˆã¯ç¾åœ¨ã®ç”»åƒã‚’ç ´æ£„
 	if (!fAdd) {
 		m_Preview.SetImage(nullptr);
 		FreeImages();
@@ -781,7 +781,7 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 		SetCaption();
 	}
 
-	// ƒfƒR[ƒh—pƒoƒbƒtƒ@‚Ì—pˆÓ
+	// ãƒ‡ã‚³ãƒ¼ãƒ‰ç”¨ãƒãƒƒãƒ•ã‚¡ã®ç”¨æ„
 	{
 		CBlockLock Lock(m_StreamLock);
 
@@ -791,7 +791,7 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 		m_pDecodeBuffer = new(std::nothrow) BYTE[m_StreamAvail];
 		if (m_pDecodeBuffer == nullptr) {
 			::MessageBox(GetOwnerWindow(),
-						 TEXT("ƒƒ‚ƒŠ[‚ğŠm•Û‚Å‚«‚Ü‚¹‚ñB"),
+						 TEXT("ãƒ¡ãƒ¢ãƒªãƒ¼ã‚’ç¢ºä¿ã§ãã¾ã›ã‚“ã€‚"),
 						 nullptr,
 						 MB_OK | MB_ICONEXCLAMATION);
 			return false;
@@ -804,20 +804,20 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 			::CopyMemory(m_pDecodeBuffer + Size, m_pStreamBuffer, m_StreamAvail - Size);
 	}
 
-	// ‘O‰ñƒfƒR[ƒh‚Å‚«‚È‚©‚Á‚½ê‡
+	// å‰å›ãƒ‡ã‚³ãƒ¼ãƒ‰ã§ããªã‹ã£ãŸå ´åˆ
 	if (!m_FrameGroupList.empty() && m_FrameGroupList.back().FrameCount == 0) {
 		m_pApp->FreeVarStringContext(m_FrameGroupList.back().pVarContext);
 		m_FrameGroupList.pop_back();
 	}
 
-	// ƒtƒ@ƒCƒ‹–¼‚Ì¶¬‚Ég‚¤•Ï”‚Ìî•ñ‚ğæ“¾
+	// ãƒ•ã‚¡ã‚¤ãƒ«åã®ç”Ÿæˆã«ä½¿ã†å¤‰æ•°ã®æƒ…å ±ã‚’å–å¾—
 	FrameGroupInfo Group;
 	Group.FirstFrame = m_ImageList.size();
 	Group.FrameCount = 0;
 	Group.pVarContext = m_pApp->GetVarStringContext();
 	m_FrameGroupList.push_back(Group);
 
-	// ƒfƒR[ƒhƒXƒŒƒbƒh‚ÌŠJn
+	// ãƒ‡ã‚³ãƒ¼ãƒ‰ã‚¹ãƒ¬ãƒƒãƒ‰ã®é–‹å§‹
 	m_hDecodeThread = reinterpret_cast<HANDLE>(
 		::_beginthreadex(nullptr, 0, DecodeThread, this, 0, nullptr));
 
@@ -825,7 +825,7 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 }
 
 
-// ƒfƒR[ƒhƒXƒŒƒbƒh‚ğ•Â‚¶‚é
+// ãƒ‡ã‚³ãƒ¼ãƒ‰ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’é–‰ã˜ã‚‹
 void CMemoryCapture::CloseDecodeThread()
 {
 	if (m_hDecodeThread != nullptr) {
@@ -842,7 +842,7 @@ void CMemoryCapture::CloseDecodeThread()
 }
 
 
-// ‰æ‘œ‚ğ‰ğ•ú‚·‚é
+// ç”»åƒã‚’è§£æ”¾ã™ã‚‹
 void CMemoryCapture::FreeImages()
 {
 	for (auto it = m_ImageList.begin(); it != m_ImageList.end(); ++it)
@@ -855,7 +855,7 @@ void CMemoryCapture::FreeImages()
 }
 
 
-// w’èƒtƒŒ[ƒ€‚Ì‰æ‘œ‚ğæ“¾‚·‚é
+// æŒ‡å®šãƒ•ãƒ¬ãƒ¼ãƒ ã®ç”»åƒã‚’å–å¾—ã™ã‚‹
 const CImage *CMemoryCapture::GetFrameImage(int Frame)
 {
 	CBlockLock Lock(m_ImageLock);
@@ -866,7 +866,7 @@ const CImage *CMemoryCapture::GetFrameImage(int Frame)
 }
 
 
-// Œ»İ‚ÌƒtƒŒ[ƒ€‚ğİ’è‚·‚é
+// ç¾åœ¨ã®ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’è¨­å®šã™ã‚‹
 void CMemoryCapture::SetCurFrame(int Frame)
 {
 	CBlockLock Lock(m_ImageLock);
@@ -880,7 +880,7 @@ void CMemoryCapture::SetCurFrame(int Frame)
 }
 
 
-// ƒtƒŒ[ƒ€‚ÌƒOƒ‹[ƒv‚Ìî•ñ‚ğæ“¾‚·‚é
+// ãƒ•ãƒ¬ãƒ¼ãƒ ã®ã‚°ãƒ«ãƒ¼ãƒ—ã®æƒ…å ±ã‚’å–å¾—ã™ã‚‹
 const CMemoryCapture::FrameGroupInfo *CMemoryCapture::GetFrameGroupInfo(int Frame) const
 {
 	for (auto it = m_FrameGroupList.begin(); it != m_FrameGroupList.end(); ++it) {
@@ -891,7 +891,7 @@ const CMemoryCapture::FrameGroupInfo *CMemoryCapture::GetFrameGroupInfo(int Fram
 }
 
 
-// ‰æ‘œ‚ğ•Û‘¶‚·‚é
+// ç”»åƒã‚’ä¿å­˜ã™ã‚‹
 bool CMemoryCapture::SaveImageToFile(
 	const CImage *pImage, LPCWSTR pszFileName, CImageCodec::FormatType Format)
 {
@@ -920,7 +920,7 @@ bool CMemoryCapture::SaveImageToFile(
 }
 
 
-// ‰æ‘œ‚ğƒNƒŠƒbƒvƒ{[ƒh‚ÉƒRƒs[‚·‚é
+// ç”»åƒã‚’ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹
 bool CMemoryCapture::CopyImageToClipboard(const CImage *pImage) const
 {
 	if (pImage == nullptr)
@@ -987,7 +987,7 @@ bool CMemoryCapture::CopyImageToClipboard(const CImage *pImage) const
 }
 
 
-// ƒLƒƒƒvƒ`ƒƒ‰æ‘œ‚ÌƒTƒCƒY‚ğæ“¾‚·‚é
+// ã‚­ãƒ£ãƒ—ãƒãƒ£ç”»åƒã®ã‚µã‚¤ã‚ºã‚’å–å¾—ã™ã‚‹
 void CMemoryCapture::GetCaptureImageSize(const CImage *pImage, int *pWidth, int *pHeight) const
 {
 	int Width, Height;
@@ -1007,7 +1007,7 @@ void CMemoryCapture::GetCaptureImageSize(const CImage *pImage, int *pWidth, int 
 }
 
 
-// ƒLƒƒƒvƒVƒ‡ƒ“‚ğİ’è‚·‚é
+// ã‚­ãƒ£ãƒ—ã‚·ãƒ§ãƒ³ã‚’è¨­å®šã™ã‚‹
 void CMemoryCapture::SetCaption()
 {
 	if (m_hwnd != nullptr) {
@@ -1035,7 +1035,7 @@ void CMemoryCapture::SetCaption()
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğ’²®‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’èª¿æ•´ã™ã‚‹
 void CMemoryCapture::AdjustWindowSize()
 {
 	if (m_hwnd == nullptr || ::IsZoomed(m_hwnd))
@@ -1056,7 +1056,7 @@ void CMemoryCapture::AdjustWindowSize()
 	Width = rc.right - rc.left;
 	Height = rc.bottom - rc.top;
 
-	// ƒ‚ƒjƒ^‚©‚ç‚Í‚İo‚³‚È‚¢‚æ‚¤‚É‚·‚é
+	// ãƒ¢ãƒ‹ã‚¿ã‹ã‚‰ã¯ã¿å‡ºã•ãªã„ã‚ˆã†ã«ã™ã‚‹
 	HMONITOR hMonitor = ::MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONEAREST);
 	MONITORINFO mi;
 	mi.cbSize = sizeof(MONITORINFO);
@@ -1079,7 +1079,7 @@ void CMemoryCapture::AdjustWindowSize()
 }
 
 
-// ƒEƒBƒ“ƒhƒE‚É’Ê’mƒƒbƒZ[ƒW‚ğ‘—‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«é€šçŸ¥ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ã‚‹
 void CMemoryCapture::PostNotifyMessage(UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	CBlockLock Lock(m_WindowLock);
@@ -1089,7 +1089,7 @@ void CMemoryCapture::PostNotifyMessage(UINT Message, WPARAM wParam, LPARAM lPara
 }
 
 
-// ƒc[ƒ‹ƒo[‚Ì‰æ‘œ‚ğİ’è‚·‚é
+// ãƒ„ãƒ¼ãƒ«ãƒãƒ¼ã®ç”»åƒã‚’è¨­å®šã™ã‚‹
 void CMemoryCapture::SetToolbarImage()
 {
 	int ID, Width, Height;
@@ -1109,7 +1109,7 @@ void CMemoryCapture::SetToolbarImage()
 }
 
 
-// ƒtƒŒ[ƒ€‘—‚èŠJn
+// ãƒ•ãƒ¬ãƒ¼ãƒ é€ã‚Šé–‹å§‹
 void CMemoryCapture::StartSeeking(int Command)
 {
 	StopSeeking();
@@ -1124,7 +1124,7 @@ void CMemoryCapture::StartSeeking(int Command)
 }
 
 
-// ƒtƒŒ[ƒ€‘—‚èI—¹
+// ãƒ•ãƒ¬ãƒ¼ãƒ é€ã‚Šçµ‚äº†
 void CMemoryCapture::StopSeeking()
 {
 	m_SeekCommand = 0;
@@ -1133,16 +1133,16 @@ void CMemoryCapture::StopSeeking()
 }
 
 
-// •Û‘¶æƒtƒHƒ‹ƒ_‚ğæ“¾‚·‚é
+// ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ã‚’å–å¾—ã™ã‚‹
 bool CMemoryCapture::GetSaveFolder(LPWSTR pszFolder)
 {
-	// İ’è‚ğæ“¾‚·‚é
+	// è¨­å®šã‚’å–å¾—ã™ã‚‹
 	if (m_pApp->GetSetting(L"CaptureFolder", pszFolder, MAX_PATH) < 1) {
-		::MessageBox(GetOwnerWindow(), TEXT("•Û‘¶æƒtƒHƒ‹ƒ_‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(GetOwnerWindow(), TEXT("ä¿å­˜å…ˆãƒ•ã‚©ãƒ«ãƒ€ã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
-	// ‘Š‘ÎƒpƒX‚Ìê‡â‘ÎƒpƒX‚É•ÏŠ·‚·‚é
+	// ç›¸å¯¾ãƒ‘ã‚¹ã®å ´åˆçµ¶å¯¾ãƒ‘ã‚¹ã«å¤‰æ›ã™ã‚‹
 	if (::PathIsRelativeW(pszFolder)) {
 		WCHAR szBaseFolder[MAX_PATH];
 		DWORD Length = ::GetModuleFileNameW(nullptr, szBaseFolder, _countof(szBaseFolder));
@@ -1150,7 +1150,7 @@ bool CMemoryCapture::GetSaveFolder(LPWSTR pszFolder)
 				|| !::PathRemoveFileSpecW(szBaseFolder)
 				|| !::PathAppendW(szBaseFolder, pszFolder)
 				|| !::PathCanonicalizeW(pszFolder, szBaseFolder)) {
-			::MessageBox(GetOwnerWindow(), TEXT("‘Š‘ÎƒpƒX‚ğ•ÏŠ·‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+			::MessageBox(GetOwnerWindow(), TEXT("ç›¸å¯¾ãƒ‘ã‚¹ã‚’å¤‰æ›ã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 	}
@@ -1159,19 +1159,19 @@ bool CMemoryCapture::GetSaveFolder(LPWSTR pszFolder)
 }
 
 
-// •Û‘¶ƒtƒ@ƒCƒ‹–¼‚ğæ“¾‚·‚é
+// ä¿å­˜ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾—ã™ã‚‹
 bool CMemoryCapture::GetSaveFileName(
 	LPWSTR pszFileName, LPCWSTR pszFolder,
 	const CImage *pImage, const FrameGroupInfo *pGroup, int *pSequentialNumber)
 {
-	// İ’è‚ğæ“¾‚·‚é
+	// è¨­å®šã‚’å–å¾—ã™ã‚‹
 	WCHAR szFileName[1024];
 	if (m_pApp->GetSetting(L"CaptureFileName", szFileName, _countof(szFileName)) < 1) {
-		::MessageBox(GetOwnerWindow(), TEXT("•Û‘¶ƒtƒ@ƒCƒ‹–¼‚ğæ“¾‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(GetOwnerWindow(), TEXT("ä¿å­˜ãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾—ã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
-	// ƒtƒ@ƒCƒ‹–¼’†‚Ì•Ï”‚ğ“WŠJ‚·‚é
+	// ãƒ•ã‚¡ã‚¤ãƒ«åä¸­ã®å¤‰æ•°ã‚’å±•é–‹ã™ã‚‹
 
 	struct VarMapParam
 	{
@@ -1214,32 +1214,32 @@ bool CMemoryCapture::GetSaveFileName(
 	Info.pszResult = nullptr;
 
 	if (!m_pApp->FormatVarString(&Info)) {
-		::MessageBox(GetOwnerWindow(), TEXT("•Û‘¶ƒtƒ@ƒCƒ‹–¼‚ğ¶¬‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(GetOwnerWindow(), TEXT("ä¿å­˜ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ç”Ÿæˆã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
 	if (::lstrlenW(pszFolder) + 1 + ::lstrlenW(Info.pszResult) + 4 >= MAX_PATH) {
-		::MessageBox(GetOwnerWindow(), TEXT("ƒpƒX‚ª’·‚·‚¬‚Ü‚·B"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(GetOwnerWindow(), TEXT("ãƒ‘ã‚¹ãŒé•·ã™ãã¾ã™ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 	WCHAR szPath[MAX_PATH];
 	::PathCombineW(szPath, pszFolder, Info.pszResult);
 	::StringCchCatW(szPath, _countof(szPath), m_Codec.GetFormatExtensions(m_SaveFormat));
 
-	// ƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚È‚¯‚ê‚Îì¬‚·‚é
-	// ƒtƒ@ƒCƒ‹–¼‚ÉƒtƒHƒ‹ƒ_ŠK‘w‚ªŠÜ‚Ü‚ê‚Ä‚¢‚éê‡‚à‚ ‚é("%event-name%\\%date%-%time%" ‚È‚Ç)
+	// ãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ãªã‘ã‚Œã°ä½œæˆã™ã‚‹
+	// ãƒ•ã‚¡ã‚¤ãƒ«åã«ãƒ•ã‚©ãƒ«ãƒ€éšå±¤ãŒå«ã¾ã‚Œã¦ã„ã‚‹å ´åˆã‚‚ã‚ã‚‹("%event-name%\\%date%-%time%" ãªã©)
 	WCHAR szFolder[MAX_PATH];
 	::StringCchCopyW(szFolder, _countof(szFolder), szPath);
 	::PathRemoveFileSpecW(szFolder);
 	if (!::PathIsDirectoryW(szFolder)) {
 		int Result = ::SHCreateDirectory(nullptr, szFolder);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
-			::MessageBox(GetOwnerWindow(), TEXT("ƒtƒHƒ‹ƒ_‚ğì¬‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+			::MessageBox(GetOwnerWindow(), TEXT("ãƒ•ã‚©ãƒ«ãƒ€ã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 	}
 
-	// ƒtƒ@ƒCƒ‹‚ªŠù‚É‘¶İ‚·‚éê‡‚Í˜A”Ô‚ğ•t‰Á‚·‚é
+	// ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ—¢ã«å­˜åœ¨ã™ã‚‹å ´åˆã¯é€£ç•ªã‚’ä»˜åŠ ã™ã‚‹
 	if (pSequentialNumber != nullptr || ::PathFileExistsW(szPath)) {
 		bool fOK = false;
 		for (int i = ((pSequentialNumber != nullptr) ? (*pSequentialNumber + 1) : 1); i < 1000; i++) {
@@ -1249,7 +1249,7 @@ bool CMemoryCapture::GetSaveFileName(
 			if (FAILED(::StringCchCatW(szPath, _countof(szPath), szNum))
 					|| FAILED(::StringCchCatW(szPath, _countof(szPath),
 											  m_Codec.GetFormatExtensions(m_SaveFormat)))) {
-				::MessageBox(GetOwnerWindow(), TEXT("ƒpƒX‚ª’·‚·‚¬‚Ü‚·B"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+				::MessageBox(GetOwnerWindow(), TEXT("ãƒ‘ã‚¹ãŒé•·ã™ãã¾ã™ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 				return false;
 			}
 			if (!::PathFileExistsW(szPath)) {
@@ -1260,7 +1260,7 @@ bool CMemoryCapture::GetSaveFileName(
 			}
 		}
 		if (!fOK) {
-			::MessageBox(GetOwnerWindow(), TEXT("ƒ†ƒj[ƒN‚Èƒtƒ@ƒCƒ‹–¼‚ğ¶¬‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+			::MessageBox(GetOwnerWindow(), TEXT("ãƒ¦ãƒ‹ãƒ¼ã‚¯ãªãƒ•ã‚¡ã‚¤ãƒ«åã‚’ç”Ÿæˆã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 	}
@@ -1271,7 +1271,7 @@ bool CMemoryCapture::GetSaveFileName(
 }
 
 
-// Œ»İ‚Ì‰æ‘œ‚ğ•Û‘¶‚·‚é
+// ç¾åœ¨ã®ç”»åƒã‚’ä¿å­˜ã™ã‚‹
 bool CMemoryCapture::SaveCurrent()
 {
 	const CImage *pImage = GetCurImage();
@@ -1288,7 +1288,7 @@ bool CMemoryCapture::SaveCurrent()
 		return false;
 
 	if (!SaveImageToFile(pImage, szFileName, m_SaveFormat)) {
-		::MessageBox(GetOwnerWindow(), TEXT("•Û‘¶‚ª‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(GetOwnerWindow(), TEXT("ä¿å­˜ãŒã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
@@ -1296,7 +1296,7 @@ bool CMemoryCapture::SaveCurrent()
 }
 
 
-// –¼‘O‚ğ•t‚¯‚Ä•Û‘¶
+// åå‰ã‚’ä»˜ã‘ã¦ä¿å­˜
 bool CMemoryCapture::SaveAs()
 {
 	if (GetCurImage() == nullptr)
@@ -1308,9 +1308,9 @@ bool CMemoryCapture::SaveAs()
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = m_hwnd;
 	ofn.lpstrFilter =
-		TEXT("BMP ƒtƒ@ƒCƒ‹ (*.bmp)\0*.bmp\0")
-		TEXT("JPEG ƒtƒ@ƒCƒ‹ (*.jpg;*.jpeg;*.jpe)\0*.jpg;*.jpeg;*.jpe\0")
-		TEXT("PNG ƒtƒ@ƒCƒ‹ (*.png)\0*.png\0");
+		TEXT("BMP ãƒ•ã‚¡ã‚¤ãƒ« (*.bmp)\0*.bmp\0")
+		TEXT("JPEG ãƒ•ã‚¡ã‚¤ãƒ« (*.jpg;*.jpeg;*.jpe)\0*.jpg;*.jpeg;*.jpe\0")
+		TEXT("PNG ãƒ•ã‚¡ã‚¤ãƒ« (*.png)\0*.png\0");
 	ofn.nFilterIndex = (int)(m_LastSaveFormat + 1);
 	if (!m_LastSaveFileName.empty())
 		::lstrcpyn(szFileName, m_LastSaveFileName.c_str(), _countof(szFileName));
@@ -1330,7 +1330,7 @@ bool CMemoryCapture::SaveAs()
 	m_LastSaveFormat = Format;
 	m_LastSaveFileName = ::PathFindFileName(szFileName);
 
-	// Šg’£q‚ğ•t‰Á‚·‚é
+	// æ‹¡å¼µå­ã‚’ä»˜åŠ ã™ã‚‹
 	LPCTSTR pExtensions = m_Codec.GetFormatExtensions(Format);
 	if (pExtensions != nullptr) {
 		LPCTSTR pszExtension = ::PathFindExtension(szFileName);
@@ -1352,7 +1352,7 @@ bool CMemoryCapture::SaveAs()
 
 	bool fResult = SaveImageToFile(GetCurImage(), szFileName, Format);
 	if (!fResult)
-		::MessageBox(GetOwnerWindow(), TEXT("•Û‘¶‚ª‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(GetOwnerWindow(), TEXT("ä¿å­˜ãŒã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 
 	::PathRemoveFileSpec(szFileName);
 	m_LastSaveFolder = szFileName;
@@ -1361,7 +1361,7 @@ bool CMemoryCapture::SaveAs()
 }
 
 
-// ‚·‚×‚Ä•Û‘¶
+// ã™ã¹ã¦ä¿å­˜
 bool CMemoryCapture::SaveAll()
 {
 	WCHAR szFolder[MAX_PATH];
@@ -1387,7 +1387,7 @@ bool CMemoryCapture::SaveAll()
 			return false;
 
 		if (!SaveImageToFile(pImage, szFileName, m_SaveFormat)) {
-			::MessageBox(GetOwnerWindow(), TEXT("•Û‘¶‚ª‚Å‚«‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+			::MessageBox(GetOwnerWindow(), TEXT("ä¿å­˜ãŒã§ãã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 
@@ -1398,7 +1398,7 @@ bool CMemoryCapture::SaveAll()
 }
 
 
-// ƒEƒBƒ“ƒhƒEì¬‚Ìˆ—
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½œæˆæ™‚ã®å‡¦ç†
 void CMemoryCapture::OnWindowCreate()
 {
 	m_ImageLock.Lock();
@@ -1435,7 +1435,7 @@ void CMemoryCapture::OnWindowCreate()
 }
 
 
-// ƒEƒBƒ“ƒhƒE”jŠü‚Ìˆ—
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ç ´æ£„æ™‚ã®å‡¦ç†
 void CMemoryCapture::OnWindowDestroy()
 {
 	CloseDecodeThread();
@@ -1444,7 +1444,7 @@ void CMemoryCapture::OnWindowDestroy()
 	if (!m_fAccumulateAlways)
 		FreeStreamBuffer();
 
-	// ƒEƒBƒ“ƒhƒEˆÊ’u•Û‘¶
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ä¿å­˜
 	WINDOWPLACEMENT wp;
 	wp.length = sizeof(WINDOWPLACEMENT);
 	if (::GetWindowPlacement(m_hwnd, &wp)) {
@@ -1456,32 +1456,32 @@ void CMemoryCapture::OnWindowDestroy()
 }
 
 
-// ƒRƒ}ƒ“ƒh‚Ìˆ—
+// ã‚³ãƒãƒ³ãƒ‰ã®å‡¦ç†
 void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 {
 	switch (Command) {
 	case CM_CAPTURE:
-		// æ‚è‚İ
+		// å–ã‚Šè¾¼ã¿
 		StartCapture(false);
 		return;
 
 	case CM_CAPTURE_ADD:
-		// ’Ç‰Áæ‚è‚İ
+		// è¿½åŠ å–ã‚Šè¾¼ã¿
 		StartCapture(true);
 		return;
 
 	case CM_SAVE:
-		// •Û‘¶
+		// ä¿å­˜
 		SaveCurrent();
 		return;
 
 	case CM_SAVE_AS:
-		// –¼‘O‚ğ•t‚¯‚Ä•Û‘¶
+		// åå‰ã‚’ä»˜ã‘ã¦ä¿å­˜
 		SaveAs();
 		return;
 
 	case CM_SAVE_ALL:
-		// ‚·‚×‚Ä•Û‘¶
+		// ã™ã¹ã¦ä¿å­˜
 		{
 			HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 			SaveAll();
@@ -1490,27 +1490,27 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 		return;
 
 	case CM_COPY:
-		// ƒNƒŠƒbƒvƒ{[ƒh‚ÉƒRƒs[
+		// ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ã‚³ãƒ”ãƒ¼
 		CopyImageToClipboard(GetCurImage());
 		return;
 
 	case CM_PREV_FRAME:
-		// ‘O‚ÌƒtƒŒ[ƒ€
+		// å‰ã®ãƒ•ãƒ¬ãƒ¼ãƒ 
 		SetCurFrame(m_CurFrame - 1);
 		return;
 
 	case CM_NEXT_FRAME:
-		// Ÿ‚ÌƒtƒŒ[ƒ€
+		// æ¬¡ã®ãƒ•ãƒ¬ãƒ¼ãƒ 
 		SetCurFrame(m_CurFrame + 1);
 		return;
 
 	case CM_FIRST_FRAME:
-		// Å‰‚ÌƒtƒŒ[ƒ€
+		// æœ€åˆã®ãƒ•ãƒ¬ãƒ¼ãƒ 
 		SetCurFrame(0);
 		return;
 
 	case CM_LAST_FRAME:
-		// ÅŒã‚ÌƒtƒŒ[ƒ€
+		// æœ€å¾Œã®ãƒ•ãƒ¬ãƒ¼ãƒ 
 		{
 			CBlockLock Lock(m_ImageLock);
 			SetCurFrame((int)m_ImageList.size() - 1);
@@ -1518,12 +1518,12 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 		return;
 
 	case CM_SKIP_BACKWARD_FRAME:
-		// ƒtƒŒ[ƒ€‚ğŒã•û‚ÉƒXƒLƒbƒv
+		// ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’å¾Œæ–¹ã«ã‚¹ã‚­ãƒƒãƒ—
 		SetCurFrame(max(m_CurFrame - m_SkipFrames, 0));
 		return;
 
 	case CM_SKIP_FORWARD_FRAME:
-		// ƒtƒŒ[ƒ€‚ğ‘O•û‚ÉƒXƒLƒbƒv
+		// ãƒ•ãƒ¬ãƒ¼ãƒ ã‚’å‰æ–¹ã«ã‚¹ã‚­ãƒƒãƒ—
 		{
 			CBlockLock Lock(m_ImageLock);
 			SetCurFrame(min(m_CurFrame + m_SkipFrames, (int)m_ImageList.size() - 1));
@@ -1531,12 +1531,12 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 		return;
 
 	case CM_FIT_IMAGE_TO_WINDOW:
-		// •\¦”{—¦‚ğƒEƒBƒ“ƒhƒE‚É‡‚í‚¹‚é
+		// è¡¨ç¤ºå€ç‡ã‚’ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«åˆã‚ã›ã‚‹
 		m_Preview.SetFitImageToWindow(!m_Preview.GetFitImageToWindow());
 		return;
 
 	case CM_FIT_WINDOW_TO_IMAGE:
-		// ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğ‰æ‘œ‚É‡‚í‚¹‚é
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’ç”»åƒã«åˆã‚ã›ã‚‹
 		m_fFitWindowToImage = !m_fFitWindowToImage;
 		if (m_fFitWindowToImage && !m_Preview.GetFitImageToWindow())
 			AdjustWindowSize();
@@ -1559,7 +1559,7 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 		return;
 
 	default:
-		// ƒLƒƒƒvƒ`ƒƒ[ƒTƒCƒY
+		// ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒ¼ã‚µã‚¤ã‚º
 		if (Command >= CM_CAPTURE_SIZE_FIRST && Command <= CM_CAPTURE_SIZE_LAST) {
 			std::size_t Index = Command - CM_CAPTURE_SIZE_FIRST;
 
@@ -1568,19 +1568,19 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 			return;
 		}
 
-		// ÄƒTƒ“ƒvƒŠƒ“ƒO
+		// å†ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
 		if (Command >= CM_RESAMPLE_FIRST && Command <= CM_RESAMPLE_LAST) {
 			m_Resample = (CImage::ResampleType)(Command - CM_RESAMPLE_FIRST);
 			return;
 		}
 
-		// ƒCƒ“ƒ^[ƒŒ[ƒX‰ğœ
+		// ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ¬ãƒ¼ã‚¹è§£é™¤
 		if (Command >= CM_DEINTERLACE_FIRST && Command <= CM_DEINTERLACE_LAST) {
 			m_Deinterlace = (CVideoDecoder::DeinterlaceMethod)(Command - CM_DEINTERLACE_FIRST);
 			return;
 		}
 
-		// •\¦”{—¦
+		// è¡¨ç¤ºå€ç‡
 		if (Command >= CM_ZOOM_FIRST && Command <= CM_ZOOM_LAST) {
 			int Index = Command - CM_ZOOM_FIRST;
 
@@ -1596,7 +1596,7 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚ÌƒRƒ}ƒ“ƒh‚ğÀs‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®ã‚³ãƒãƒ³ãƒ‰ã‚’å®Ÿè¡Œã™ã‚‹
 bool CMemoryCapture::OnPluginCommand(int Command)
 {
 	switch (Command) {
@@ -1630,7 +1630,7 @@ bool CMemoryCapture::OnPluginCommand(int Command)
 }
 
 
-// ƒRƒ“ƒeƒLƒXƒgƒƒjƒ…[‚ğ•\¦‚·‚é
+// ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’è¡¨ç¤ºã™ã‚‹
 void CMemoryCapture::ShowContextMenu(int x, int y)
 {
 	HMENU hmenu = ::LoadMenu(g_hinstDLL, MAKEINTRESOURCE(IDM_CONTEXT_MENU));
@@ -1644,7 +1644,7 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 	::CheckMenuItem(hmenuPopup, CM_FIT_WINDOW_TO_IMAGE,
 					MF_BYCOMMAND | (m_fFitWindowToImage ? MF_CHECKED : MF_UNCHECKED));
 
-	// •\¦”{—¦
+	// è¡¨ç¤ºå€ç‡
 	int Zoom = 0;
 	if (m_Preview.GetFitImageToWindow()) {
 		Zoom = CM_FIT_IMAGE_TO_WINDOW;
@@ -1661,9 +1661,9 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 	if (Zoom != 0)
 		::CheckMenuRadioItem(hmenuPopup, CM_FIT_IMAGE_TO_WINDOW, CM_ZOOM_LAST, Zoom, MF_BYCOMMAND);
 
-	// ƒLƒƒƒvƒ`ƒƒ[ƒTƒCƒY
+	// ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒ¼ã‚µã‚¤ã‚º
 	HMENU hmenuSize = ::GetSubMenu(hmenuPopup, 9);
-	::DeleteMenu(hmenuSize, 0, MF_BYPOSITION);	// ƒ_ƒ~[‚ğíœ
+	::DeleteMenu(hmenuSize, 0, MF_BYPOSITION);	// ãƒ€ãƒŸãƒ¼ã‚’å‰Šé™¤
 	int CurSize = -1;
 	for (std::size_t i = 0; i < _countof(m_CaptureSizeList); i++) {
 		TCHAR szText[64];
@@ -1691,7 +1691,7 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 }
 
 
-// İ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
 bool CMemoryCapture::SettingsDialog(HWND hwndOwner)
 {
 	TVTest::ShowDialogInfo Info;
@@ -1707,7 +1707,7 @@ bool CMemoryCapture::SettingsDialog(HWND hwndOwner)
 }
 
 
-// ƒtƒŒ[ƒ€‚ªƒfƒR[ƒh‚³‚ê‚½
+// ãƒ•ãƒ¬ãƒ¼ãƒ ãŒãƒ‡ã‚³ãƒ¼ãƒ‰ã•ã‚ŒãŸ
 bool CMemoryCapture::OnFrame(const CVideoDecoder::FrameInfo &Frame)
 {
 	CImage *pImage = new CImage;
@@ -1741,8 +1741,8 @@ bool CMemoryCapture::OnFrame(const CVideoDecoder::FrameInfo &Frame)
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CMemoryCapture::EventCallback(
 	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
@@ -1750,33 +1750,33 @@ LRESULT CALLBACK CMemoryCapture::EventCallback(
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		return pThis->EnablePlugin(lParam1 != 0);
 
 	case TVTest::EVENT_PLUGINSETTINGS:
-		// ƒvƒ‰ƒOƒCƒ“‚Ìİ’è‚ğs‚¤
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®è¨­å®šã‚’è¡Œã†
 		return pThis->SettingsDialog(reinterpret_cast<HWND>(lParam1));
 
 	case TVTest::EVENT_STANDBY:
-		// ‘Ò‹@ó‘Ô‚ª•Ï‰»‚µ‚½
+		// å¾…æ©ŸçŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			// ‘Ò‹@ó‘Ô‚Ì‚ÍƒEƒBƒ“ƒhƒE‚ğ‰B‚·
+			// å¾…æ©ŸçŠ¶æ…‹ã®æ™‚ã¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éš ã™
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_COMMAND:
-		// ƒRƒ}ƒ“ƒh‚ª‘I‘ğ‚³‚ê‚½
+		// ã‚³ãƒãƒ³ãƒ‰ãŒé¸æŠã•ã‚ŒãŸ
 		return pThis->OnPluginCommand((int)lParam1);
 
 	case TVTest::EVENT_COLORCHANGE:
-		// ”zF‚ª•Ï‚í‚Á‚½
+		// é…è‰²ãŒå¤‰ã‚ã£ãŸ
 		if (pThis->m_hwnd != nullptr)
 			::RedrawWindow(pThis->m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN);
 		return TRUE;
 
 	case TVTest::EVENT_SETTINGSCHANGE:
-		// İ’è‚ª•ÏX‚³‚ê‚½
+		// è¨­å®šãŒå¤‰æ›´ã•ã‚ŒãŸ
 		pThis->LoadAppSettings();
 		return TRUE;
 	}
@@ -1785,7 +1785,7 @@ LRESULT CALLBACK CMemoryCapture::EventCallback(
 }
 
 
-// ‰f‘œƒXƒgƒŠ[ƒ€‚ÌƒR[ƒ‹ƒoƒbƒNŠÖ”
+// æ˜ åƒã‚¹ãƒˆãƒªãƒ¼ãƒ ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 LRESULT CALLBACK CMemoryCapture::VideoStreamCallback(
 	DWORD Format, const void *pData, SIZE_T Size, void *pClientData)
 {
@@ -1795,7 +1795,7 @@ LRESULT CALLBACK CMemoryCapture::VideoStreamCallback(
 }
 
 
-// ‰f‘œƒfƒR[ƒhƒXƒŒƒbƒh
+// æ˜ åƒãƒ‡ã‚³ãƒ¼ãƒ‰ã‚¹ãƒ¬ãƒƒãƒ‰
 unsigned int __stdcall CMemoryCapture::DecodeThread(void *pParameter)
 {
 	CMemoryCapture *pThis = static_cast<CMemoryCapture*>(pParameter);
@@ -1831,14 +1831,14 @@ unsigned int __stdcall CMemoryCapture::DecodeThread(void *pParameter)
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CMemoryCapture *CMemoryCapture::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CMemoryCapture*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -1882,7 +1882,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xFFF0) == SC_CLOSE) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
 			CMemoryCapture *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
@@ -1891,7 +1891,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		break;
 
 	case WM_KEYDOWN:
-		// ƒL[‘€ì
+		// ã‚­ãƒ¼æ“ä½œ
 		{
 			CMemoryCapture *pThis = GetThis(hwnd);
 
@@ -1944,7 +1944,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		return 0;
 
 	case WM_MOUSEWHEEL:
-		// ƒ}ƒEƒXƒzƒC[ƒ‹
+		// ãƒã‚¦ã‚¹ãƒ›ã‚¤ãƒ¼ãƒ«
 		{
 			CMemoryCapture *pThis = GetThis(hwnd);
 			const int Delta = GET_WHEEL_DELTA_WPARAM(wParam);
@@ -1972,13 +1972,13 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		return 0;
 
 	case WM_CONTEXTMENU:
-		// ƒRƒ“ƒeƒLƒXƒgƒƒjƒ…[
+		// ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆãƒ¡ãƒ‹ãƒ¥ãƒ¼
 		{
 			CMemoryCapture *pThis = GetThis(hwnd);
 			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
 			if (pt.x == -1 && pt.y == -1) {
-				// ƒL[ƒ{[ƒh‘€ì
+				// ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰æ“ä½œ
 				pt.x = 0;
 				pt.y = 0;
 				::ClientToScreen(hwnd, &pt);
@@ -2017,14 +2017,14 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		return 0;
 
 	case WM_GETDLGCODE:
-		// ƒJ[ƒ\ƒ‹ƒL[‚ğ—˜—p‚·‚é
+		// ã‚«ãƒ¼ã‚½ãƒ«ã‚­ãƒ¼ã‚’åˆ©ç”¨ã™ã‚‹
 		return DLGC_WANTARROWS;
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
 #endif
 	case WM_DPICHANGED:
-		// DPI ‚ª•Ï‚í‚Á‚½
+		// DPI ãŒå¤‰ã‚ã£ãŸ
 		{
 			CMemoryCapture *pThis = GetThis(hwnd);
 			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
@@ -2048,12 +2048,12 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		break;
 
 	case WM_APP_DECODE_START:
-		// ƒfƒR[ƒhŠJn‚Ì’Ê’m
-		::SetWindowText(hwnd, TITLE_TEXT TEXT(" - ƒfƒR[ƒh’†..."));
+		// ãƒ‡ã‚³ãƒ¼ãƒ‰é–‹å§‹ã®é€šçŸ¥
+		::SetWindowText(hwnd, TITLE_TEXT TEXT(" - ãƒ‡ã‚³ãƒ¼ãƒ‰ä¸­..."));
 		return 0;
 
 	case WM_APP_DECODE_END:
-		// ƒfƒR[ƒhI—¹‚Ì’Ê’m
+		// ãƒ‡ã‚³ãƒ¼ãƒ‰çµ‚äº†ã®é€šçŸ¥
 		{
 			CMemoryCapture *pThis = GetThis(hwnd);
 			const int FrameOffset = (int)wParam, FrameCount = (int)lParam;
@@ -2071,7 +2071,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		return 0;
 
 	case WM_APP_FRAME_DECODED:
-		// ƒtƒŒ[ƒ€‚ªƒfƒR[ƒh‚³‚ê‚½
+		// ãƒ•ãƒ¬ãƒ¼ãƒ ãŒãƒ‡ã‚³ãƒ¼ãƒ‰ã•ã‚ŒãŸ
 		{
 			CMemoryCapture *pThis = GetThis(hwnd);
 			const int Frame = (int)wParam;
@@ -2104,7 +2104,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 }
 
 
-// İ’èƒ_ƒCƒAƒƒOƒvƒƒV[ƒWƒƒ
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 	HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
@@ -2129,7 +2129,7 @@ INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 				unsigned int Size = ::GetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE, NULL, FALSE);
 				TCHAR szText[16];
 
-				// 1MB‚ ‚½‚è15ƒtƒŒ[ƒ€‚Æ‚µ‚Äƒƒ‚ƒŠg—p—Ê‚ğŒvZ
+				// 1MBã‚ãŸã‚Š15ãƒ•ãƒ¬ãƒ¼ãƒ ã¨ã—ã¦ãƒ¡ãƒ¢ãƒªä½¿ç”¨é‡ã‚’è¨ˆç®—
 				::StringCchPrintf(szText, _countof(szText), TEXT("%u MB"),
 								  (Size * (15 * ((1440 * 1080) * 3))) / (1024 * 1024));
 				::SetDlgItemText(hDlg, IDC_SETTINGS_ESTIMATE_MEMORY_USAGE, szText);
@@ -2178,7 +2178,7 @@ INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CMemoryCapture;

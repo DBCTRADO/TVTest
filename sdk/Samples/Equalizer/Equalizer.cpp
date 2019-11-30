@@ -1,14 +1,14 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ŠÈˆÕƒCƒRƒ‰ƒCƒU[
+	ç°¡æ˜“ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	E‰¹ºƒTƒ“ƒvƒ‹‚ğæ“¾E‰ü•Ï‚·‚é
-	EƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
-	E”zF‚ğæ“¾‚µA”zF‚Ì•ÏX‚É’Ç]‚·‚é
-	EDPI ‚É‰‚¶‚ÄƒXƒP[ƒŠƒ“ƒO‚·‚é
+	ãƒ»éŸ³å£°ã‚µãƒ³ãƒ—ãƒ«ã‚’å–å¾—ãƒ»æ”¹å¤‰ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»é…è‰²ã‚’å–å¾—ã—ã€é…è‰²ã®å¤‰æ›´ã«è¿½å¾“ã™ã‚‹
+	ãƒ»DPI ã«å¿œã˜ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã™ã‚‹
 */
 
 
@@ -23,7 +23,7 @@
 #if defined(_MSC_VER) && defined(_M_X64)
 #include <emmintrin.h>
 #endif
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ƒNƒ‰ƒX‚Æ‚µ‚ÄÀ‘•
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ã‚¯ãƒ©ã‚¹ã¨ã—ã¦å®Ÿè£…
 #include "TVTestPlugin.h"
 #include "resource.h"
 
@@ -50,12 +50,12 @@ static inline int RoundToInt(double Value)
 }
 
 
-// ƒoƒ“ƒhƒpƒXƒtƒBƒ‹ƒ^ƒNƒ‰ƒX
+// ãƒãƒ³ãƒ‰ãƒ‘ã‚¹ãƒ•ã‚£ãƒ«ã‚¿ã‚¯ãƒ©ã‚¹
 class CBandPass
 {
 	enum {
-		MAX_CHANNELS	= 6,	// Å‘åƒ`ƒƒƒ“ƒlƒ‹”(5.1ch)
-		MAX_FREQUENCY	= 16	// Å‘åü”g”•ªŠ„”
+		MAX_CHANNELS	= 6,	// æœ€å¤§ãƒãƒ£ãƒ³ãƒãƒ«æ•°(5.1ch)
+		MAX_FREQUENCY	= 16	// æœ€å¤§å‘¨æ³¢æ•°åˆ†å‰²æ•°
 	};
 
 	double m_Coef[MAX_FREQUENCY * MAX_CHANNELS];
@@ -170,7 +170,7 @@ void CBandPass::ProcessSamples(short *pData, DWORD Samples, int Channels)
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CEqualizer : public TVTest::CTVTestPlugin
 {
 public:
@@ -180,9 +180,9 @@ public:
 	virtual bool Finalize();
 
 private:
-	// ƒRƒ}ƒ“ƒh
+	// ã‚³ãƒãƒ³ãƒ‰
 	enum {
-		COMMAND_SHOW	= 1,	// •\¦/”ñ•\¦
+		COMMAND_SHOW	= 1,	// è¡¨ç¤º/éè¡¨ç¤º
 		COMMAND_ONOFF	= 2		// On/Off
 	};
 
@@ -191,7 +191,7 @@ private:
 		NUM_CUSTOM_PRESETS = 10
 	};
 
-	// Še•”‚ÌƒTƒCƒY(DIP’PˆÊ)
+	// å„éƒ¨ã®ã‚µã‚¤ã‚º(DIPå˜ä½)
 	enum {
 		SLIDER_WIDTH			= 16,
 		SLIDER_HEIGHT			= 80,
@@ -336,41 +336,41 @@ CEqualizer::CEqualizer()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CEqualizer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"ƒCƒRƒ‰ƒCƒU[";
+	pInfo->pszPluginName  = L"ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ŠÈˆÕƒCƒRƒ‰ƒCƒU[";
+	pInfo->pszDescription = L"ç°¡æ˜“ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CEqualizer::Initialize()
 {
-	// INIƒtƒ@ƒCƒ‹–¼‚Ìæ“¾
+	// INIãƒ•ã‚¡ã‚¤ãƒ«åã®å–å¾—
 	::GetModuleFileName(g_hinstDLL, m_szIniFileName, MAX_PATH);
 	::PathRenameExtension(m_szIniFileName, TEXT(".ini"));
 
-	// ƒCƒRƒ‰ƒCƒU[‰Šú‰»
+	// ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼åˆæœŸåŒ–
 	m_BandPass.Initialize(m_FreqTable, NUM_FREQUENCY - 1, 48000);
 
-	// ƒRƒ}ƒ“ƒh‚ğ“o˜^
+	// ã‚³ãƒãƒ³ãƒ‰ã‚’ç™»éŒ²
 	TVTest::HostInfo Host;
 	if (m_pApp->GetHostInfo(&Host)
 			&& Host.SupportedPluginVersion >= TVTEST_PLUGIN_VERSION_(0,0,14)) {
-		// ƒAƒCƒRƒ“•t‚«ƒRƒ}ƒ“ƒh“o˜^
+		// ã‚¢ã‚¤ã‚³ãƒ³ä»˜ãã‚³ãƒãƒ³ãƒ‰ç™»éŒ²
 		TVTest::PluginCommandInfo CommandInfo;
 		CommandInfo.Size           = sizeof(CommandInfo);
 		CommandInfo.Flags          = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE;
 		CommandInfo.State          = 0;
 		CommandInfo.ID             = COMMAND_SHOW;
 		CommandInfo.pszText        = L"Show";
-		CommandInfo.pszName        = L"ƒCƒRƒ‰ƒCƒU[ •\¦/”ñ•\¦";
-		CommandInfo.pszDescription = L"ƒCƒRƒ‰ƒCƒU[‚Ì•\¦/”ñ•\¦‚ğØ‚è‘Ö‚¦‚Ü‚·B";
+		CommandInfo.pszName        = L"ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ è¡¨ç¤º/éè¡¨ç¤º";
+		CommandInfo.pszDescription = L"ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ã®è¡¨ç¤º/éè¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚";
 		CommandInfo.hbmIcon        =
 			(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_SHOW),
 								 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
@@ -378,19 +378,19 @@ bool CEqualizer::Initialize()
 		::DeleteObject(CommandInfo.hbmIcon);
 		CommandInfo.ID             = COMMAND_ONOFF;
 		CommandInfo.pszText        = L"Enable";
-		CommandInfo.pszName        = L"ƒCƒRƒ‰ƒCƒU[ “ü/Ø";
-		CommandInfo.pszDescription = L"ƒCƒRƒ‰ƒCƒU[‚Ì—LŒø/–³Œø‚ğØ‚è‘Ö‚¦‚Ü‚·B";
+		CommandInfo.pszName        = L"ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ å…¥/åˆ‡";
+		CommandInfo.pszDescription = L"ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ã®æœ‰åŠ¹/ç„¡åŠ¹ã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚";
 		CommandInfo.hbmIcon        =
 			(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ONOFF),
 								 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 		m_pApp->RegisterPluginCommand(&CommandInfo);
 		::DeleteObject(CommandInfo.hbmIcon);
 	} else {
-		// ‹Œƒo[ƒWƒ‡ƒ“—pƒRƒ}ƒ“ƒh“o˜^
-		m_pApp->RegisterCommand(COMMAND_ONOFF, L"Enable", L"ƒCƒRƒ‰ƒCƒU[ “ü/Ø");
+		// æ—§ãƒãƒ¼ã‚¸ãƒ§ãƒ³ç”¨ã‚³ãƒãƒ³ãƒ‰ç™»éŒ²
+		m_pApp->RegisterCommand(COMMAND_ONOFF, L"Enable", L"ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ å…¥/åˆ‡");
 	}
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	int Enabled = ::GetPrivateProfileInt(TEXT("Settings"), TEXT("Enable"), -1, m_szIniFileName);
@@ -405,10 +405,10 @@ bool CEqualizer::Initialize()
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CEqualizer::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
@@ -474,7 +474,7 @@ bool CEqualizer::WritePreset(LPCTSTR pszSection, LPCTSTR pszKeyName, const Equal
 }
 
 
-// İ’è“Ç‚İ‚İ
+// è¨­å®šèª­ã¿è¾¼ã¿
 void CEqualizer::LoadSettings()
 {
 	if (!m_fSettingsLoaded) {
@@ -508,7 +508,7 @@ BOOL WritePrivateProfileInt(LPCTSTR pszAppName, LPCTSTR pszKeyName, int Value, L
 	return WritePrivateProfileString(pszAppName, pszKeyName, szValue, pszFileName);
 }
 
-// İ’è•Û‘¶
+// è¨­å®šä¿å­˜
 void CEqualizer::SaveSettings() const
 {
 	::WritePrivateProfileInt(TEXT("Settings"), TEXT("Enable"), m_fEnabled, m_szIniFileName);
@@ -525,14 +525,14 @@ void CEqualizer::SaveSettings() const
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ğØ‚è‘Ö‚¦
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ã‚’åˆ‡ã‚Šæ›¿ãˆ
 bool CEqualizer::EnablePlugin(bool fEnable)
 {
 	if (fEnable) {
-		// ƒvƒ‰ƒOƒCƒ“‚ª—LŒø‚É‚³‚ê‚½‚Ì‚ÅƒEƒBƒ“ƒhƒE‚ğì¬‚·‚é
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒæœ‰åŠ¹ã«ã•ã‚ŒãŸã®ã§ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆã™ã‚‹
 		if (m_hwnd == nullptr) {
 			if (!m_fShowed) {
-				// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+				// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 				WNDCLASS wc;
 				wc.style = 0;
 				wc.lpfnWndProc = WndProc;
@@ -550,7 +550,7 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 
 			LoadSettings();
 
-			// ƒvƒ‰ƒCƒ}ƒŠƒ‚ƒjƒ^‚Ì DPI ‚ğæ“¾
+			// ãƒ—ãƒ©ã‚¤ãƒãƒªãƒ¢ãƒ‹ã‚¿ã® DPI ã‚’å–å¾—
 			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
 			if (m_DPI == 0)
 				m_DPI = 96;
@@ -570,7 +570,7 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 
 			m_fShowed = true;
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì•œŒ³
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®å¾©å…ƒ
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd, &wp);
@@ -586,7 +586,7 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 		}
 		::UpdateWindow(m_hwnd);
 	} else {
-		// ƒvƒ‰ƒOƒCƒ“‚ª–³Œø‚É‚³‚ê‚½‚Ì‚ÅƒEƒBƒ“ƒhƒE‚ğ”jŠü‚·‚é
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒç„¡åŠ¹ã«ã•ã‚ŒãŸã®ã§ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç ´æ£„ã™ã‚‹
 		if (m_hwnd != nullptr)
 			::DestroyWindow(m_hwnd);
 	}
@@ -598,17 +598,17 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 }
 
 
-// ƒCƒRƒ‰ƒCƒU[‚ÌOn/OffØ‚è‘Ö‚¦
+// ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ã®On/Offåˆ‡ã‚Šæ›¿ãˆ
 void CEqualizer::EnableEqualizer(bool fEnable)
 {
 	if (m_fEnabled != fEnable) {
 		if (fEnable) {
 			m_BandPass.Reset();
 			ApplySettings();
-			// ‰¹ºƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^
+			// éŸ³å£°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ç™»éŒ²
 			m_pApp->SetAudioCallback(AudioCallback, this);
 		} else {
-			// ‰¹ºƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^‰ğœ
+			// éŸ³å£°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ç™»éŒ²è§£é™¤
 			m_pApp->SetAudioCallback(nullptr);
 		}
 
@@ -623,7 +623,7 @@ void CEqualizer::EnableEqualizer(bool fEnable)
 }
 
 
-// ƒCƒRƒ‰ƒCƒU[‚Ìİ’è‚ğ‰Šú‰»
+// ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ã®è¨­å®šã‚’åˆæœŸåŒ–
 void CEqualizer::ResetSettings()
 {
 	m_CurSettings.PreAmplifier = 0;
@@ -632,7 +632,7 @@ void CEqualizer::ResetSettings()
 }
 
 
-// ƒCƒRƒ‰ƒCƒU[‚Ìİ’è‚ğ“K—p
+// ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ã®è¨­å®šã‚’é©ç”¨
 void CEqualizer::ApplySettings()
 {
 	m_BandPass.SetPreAmplifier((double)(m_CurSettings.PreAmplifier + 10) * 0.1);
@@ -641,7 +641,7 @@ void CEqualizer::ApplySettings()
 }
 
 
-// Še•”‚ÌƒTƒCƒY‚ğŒvZ‚·‚é
+// å„éƒ¨ã®ã‚µã‚¤ã‚ºã‚’è¨ˆç®—ã™ã‚‹
 void CEqualizer::CalcMetrics()
 {
 	m_SliderWidth = SLIDER_WIDTH;
@@ -657,7 +657,7 @@ void CEqualizer::CalcMetrics()
 	m_ButtonMargin = BUTTON_MARGIN;
 	m_LineWidth = LINE_WIDTH;
 
-	// DPI‚É‰‚¶‚ÄƒXƒP[ƒŠƒ“ƒO
+	// DPIã«å¿œã˜ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°
 	if (m_DPI != 96) {
 		ScaleDPI(&m_SliderWidth);
 		ScaleDPI(&m_SliderHeight);
@@ -678,10 +678,10 @@ void CEqualizer::CalcMetrics()
 }
 
 
-// DPI ˆË‘¶‚ÌƒŠƒ\[ƒX‚ğì¬‚·‚é
+// DPI ä¾å­˜ã®ãƒªã‚½ãƒ¼ã‚¹ã‚’ä½œæˆã™ã‚‹
 void CEqualizer::CreateDPIDependingResources()
 {
-	// ƒtƒHƒ“ƒg‚ğæ“¾
+	// ãƒ•ã‚©ãƒ³ãƒˆã‚’å–å¾—
 	LOGFONT lf;
 	m_pApp->GetFont(L"StatusBarFont", &lf, m_DPI);
 	lf.lfHeight = -m_TextHeight;
@@ -692,7 +692,7 @@ void CEqualizer::CreateDPIDependingResources()
 }
 
 
-// ƒXƒ‰ƒCƒ_‚Ì‹éŒ`‚ğæ“¾
+// ã‚¹ãƒ©ã‚¤ãƒ€ã®çŸ©å½¢ã‚’å–å¾—
 void CEqualizer::GetSliderRect(int Index, RECT *pRect, bool fBar) const
 {
 	int x;
@@ -710,7 +710,7 @@ void CEqualizer::GetSliderRect(int Index, RECT *pRect, bool fBar) const
 }
 
 
-// ƒJ[ƒ\ƒ‹ˆÊ’u‚©‚çƒXƒ‰ƒCƒ_‚ÌˆÊ’u‚ğ‹‚ß‚é
+// ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ã‹ã‚‰ã‚¹ãƒ©ã‚¤ãƒ€ã®ä½ç½®ã‚’æ±‚ã‚ã‚‹
 int CEqualizer::MapSliderPos(int y) const
 {
 	const int BarHeight = m_SliderHeight - m_SliderPadding * 2;
@@ -723,7 +723,7 @@ int CEqualizer::MapSliderPos(int y) const
 }
 
 
-// ƒXƒ‰ƒCƒ_‚ÌˆÊ’u‚©‚ç•`‰æˆÊ’u‚ğ‹‚ß‚é
+// ã‚¹ãƒ©ã‚¤ãƒ€ã®ä½ç½®ã‹ã‚‰æç”»ä½ç½®ã‚’æ±‚ã‚ã‚‹
 int CEqualizer::CalcSliderPos(int Pos) const
 {
 	return m_WindowMargin + m_SliderHeight - m_SliderPadding -
@@ -731,7 +731,7 @@ int CEqualizer::CalcSliderPos(int Pos) const
 }
 
 
-// ƒ{ƒ^ƒ“‚ÌˆÊ’u‚ğæ“¾
+// ãƒœã‚¿ãƒ³ã®ä½ç½®ã‚’å–å¾—
 void CEqualizer::GetButtonRect(int Button, RECT *pRect) const
 {
 	pRect->left = m_WindowMargin + (m_ButtonWidth + m_ButtonMargin) * Button;
@@ -741,7 +741,7 @@ void CEqualizer::GetButtonRect(int Button, RECT *pRect) const
 }
 
 
-// ”zF‚ğæ“¾
+// é…è‰²ã‚’å–å¾—
 void CEqualizer::GetColor()
 {
 	m_crBackColor = m_pApp->GetColor(L"PanelBack");
@@ -749,18 +749,18 @@ void CEqualizer::GetColor()
 }
 
 
-// ƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½
+// ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸ
 void CEqualizer::OnButtonPush(int Button)
 {
 	switch (Button) {
 	case BUTTON_ENABLE:
-		// On/OffØ‚è‘Ö‚¦
+		// On/Offåˆ‡ã‚Šæ›¿ãˆ
 		EnableEqualizer(!m_fEnabled);
 		::UpdateWindow(m_hwnd);
 		break;
 
 	case BUTTON_RESET:
-		// ƒŠƒZƒbƒg
+		// ãƒªã‚»ãƒƒãƒˆ
 		ResetSettings();
 		ApplySettings();
 		::InvalidateRect(m_hwnd, nullptr, FALSE);
@@ -769,7 +769,7 @@ void CEqualizer::OnButtonPush(int Button)
 
 	case BUTTON_LOAD:
 	case BUTTON_SAVE:
-		// ƒvƒŠƒZƒbƒg‚Ì“Ç‚İ‚İ/•Û‘¶
+		// ãƒ—ãƒªã‚»ãƒƒãƒˆã®èª­ã¿è¾¼ã¿/ä¿å­˜
 		{
 			HMENU hmenu = ::CreatePopupMenu();
 
@@ -819,7 +819,7 @@ void CEqualizer::OnButtonPush(int Button)
 }
 
 
-// ‰æ–Ê•`‰æ
+// ç”»é¢æç”»
 void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 {
 	HBRUSH hbr, hbrOld;
@@ -854,7 +854,7 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 	TEXTMETRIC tm;
 	::GetTextMetrics(hdc, &tm);
 
-	// ƒvƒŠƒAƒ“ƒv
+	// ãƒ—ãƒªã‚¢ãƒ³ãƒ—
 	rc.left = m_WindowMargin;
 	rc.top = m_WindowMargin;
 	rc.right = rc.left + m_SliderWidth;
@@ -873,7 +873,7 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 	rcText.top -= min(tm.tmInternalLeading, m_SliderTextMargin);
 	::DrawText(hdc, TEXT("Pre"), -1, &rcText, DT_CENTER | DT_SINGLELINE);
 
-	// –Ú·
+	// ç›®ç››
 	rc.left = rc.right + m_SliderMargin;
 	rc.right = rc.left + m_SliderWidth;
 	for (int i = -10; i <= 10; i += 5) {
@@ -882,7 +882,7 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 		::LineTo(hdc, rc.right - m_SliderPadding, y);
 	}
 
-	// Šeü”g”
+	// å„å‘¨æ³¢æ•°
 	int Freq = 3125;
 	for (int i = 0; i < NUM_FREQUENCY; i++) {
 		rc.left = rc.right + m_SliderMargin;
@@ -903,7 +903,7 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 		Freq *= 2;
 	}
 
-	// ƒ{ƒ^ƒ“‚Ì•`‰æ
+	// ãƒœã‚¿ãƒ³ã®æç”»
 	static const LPCTSTR pszButtonText[NUM_BUTTONS] = {
 		TEXT("On/Off"), TEXT("Flat"), TEXT("Load"), TEXT("Save")
 	};
@@ -928,27 +928,27 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CEqualizer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
 	CEqualizer *pThis = static_cast<CEqualizer*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		return pThis->EnablePlugin(lParam1 != 0);
 
 	case TVTest::EVENT_STANDBY:
-		// ‘Ò‹@ó‘Ô‚ª•Ï‰»‚µ‚½
+		// å¾…æ©ŸçŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			// ‘Ò‹@ó‘Ô‚Ì‚ÍƒEƒBƒ“ƒhƒE‚ğ‰B‚·
+			// å¾…æ©ŸçŠ¶æ…‹ã®æ™‚ã¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éš ã™
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_COMMAND:
-		// ƒRƒ}ƒ“ƒh‚ª‘I‘ğ‚³‚ê‚½
+		// ã‚³ãƒãƒ³ãƒ‰ãŒé¸æŠã•ã‚ŒãŸ
 		switch ((int)lParam1) {
 		case COMMAND_SHOW:
 			pThis->m_pApp->EnablePlugin(!pThis->m_pApp->IsPluginEnabled());
@@ -961,9 +961,9 @@ LRESULT CALLBACK CEqualizer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lP
 		return FALSE;
 
 	case TVTest::EVENT_COLORCHANGE:
-		// F‚Ìİ’è‚ª•Ï‰»‚µ‚½
+		// è‰²ã®è¨­å®šãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_hwnd != nullptr) {
-			// V‚µ‚¢”zF‚ğ“K—p‚·‚é
+			// æ–°ã—ã„é…è‰²ã‚’é©ç”¨ã™ã‚‹
 			pThis->GetColor();
 			::RedrawWindow(pThis->m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
@@ -974,26 +974,26 @@ LRESULT CALLBACK CEqualizer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lP
 }
 
 
-// ‰¹ºƒR[ƒ‹ƒoƒbƒNŠÖ”
+// éŸ³å£°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 LRESULT CALLBACK CEqualizer::AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData)
 {
 	CEqualizer *pThis = static_cast<CEqualizer*>(pClientData);
 
-	// ƒCƒRƒ‰ƒCƒU[ˆ—
+	// ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼å‡¦ç†
 	pThis->m_BandPass.ProcessSamples(pData, Samples, Channels);
 
 	return 0;
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthisƒ|ƒCƒ“ƒ^‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisãƒã‚¤ãƒ³ã‚¿ã‚’å–å¾—ã™ã‚‹
 CEqualizer *CEqualizer::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CEqualizer*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -1008,7 +1008,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			pThis->CreateDPIDependingResources();
 
-			// ƒEƒBƒ“ƒhƒE‚ğÅ‰‚É•\¦‚µ‚½‚ÉƒCƒRƒ‰ƒCƒU[‚ğ—LŒø‰»‚·‚é
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’æœ€åˆã«è¡¨ç¤ºã—ãŸæ™‚ã«ã‚¤ã‚³ãƒ©ã‚¤ã‚¶ãƒ¼ã‚’æœ‰åŠ¹åŒ–ã™ã‚‹
 			if (!pThis->m_fEnabled && pThis->m_fEnableDefault)
 				pThis->EnableEqualizer(true);
 		}
@@ -1037,7 +1037,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				for (int i = -1; i < NUM_FREQUENCY; i++) {
 					pThis->GetSliderRect(i, &rc);
 					if (::PtInRect(&rc, pt)) {
-						// ƒXƒ‰ƒCƒ_
+						// ã‚¹ãƒ©ã‚¤ãƒ€
 						int Pos = pThis->MapSliderPos(pt.y);
 
 						if (i < 0)
@@ -1060,7 +1060,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				for (int i = 0; i < NUM_BUTTONS; i++) {
 					pThis->GetButtonRect(i, &rc);
 					if (::PtInRect(&rc, pt)) {
-						// ƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½
+						// ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸ
 						pThis->OnButtonPush(i);
 						break;
 					}
@@ -1071,13 +1071,13 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_LBUTTONUP:
 		if (::GetCapture() == hwnd)
-			// ƒXƒ‰ƒCƒ_‚Ìƒhƒ‰ƒbƒOI—¹
+			// ã‚¹ãƒ©ã‚¤ãƒ€ã®ãƒ‰ãƒ©ãƒƒã‚°çµ‚äº†
 			::ReleaseCapture();
 		return 0;
 
 	case WM_MOUSEMOVE:
 		if (::GetCapture() == hwnd) {
-			// ƒXƒ‰ƒCƒ_‚Ìƒhƒ‰ƒbƒO
+			// ã‚¹ãƒ©ã‚¤ãƒ€ã®ãƒ‰ãƒ©ãƒƒã‚°
 			CEqualizer *pThis = GetThis(hwnd);
 			int Pos = pThis->MapSliderPos(GET_Y_LPARAM(lParam));
 
@@ -1100,7 +1100,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_SETCURSOR:
 		if (LOWORD(lParam) == HTCLIENT) {
-			// ƒJ[ƒ\ƒ‹İ’è
+			// ã‚«ãƒ¼ã‚½ãƒ«è¨­å®š
 			CEqualizer *pThis = GetThis(hwnd);
 			DWORD Pos = ::GetMessagePos();
 			POINT pt;
@@ -1128,8 +1128,8 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xFFF0) == SC_CLOSE) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
-			// (Ÿè‚É•Â‚¶‚é‚ÆTVTest‚Æ‚Ì®‡«‚ªæ‚ê‚È‚­‚È‚é‚½‚ß)
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
+			// (å‹æ‰‹ã«é–‰ã˜ã‚‹ã¨TVTestã¨ã®æ•´åˆæ€§ãŒå–ã‚Œãªããªã‚‹ãŸã‚)
 			CEqualizer *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
@@ -1141,7 +1141,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 #define WM_DPICHANGED 0x02E0
 #endif
 	case WM_DPICHANGED:
-		// DPI ‚ª•Ï‚í‚Á‚½
+		// DPI ãŒå¤‰ã‚ã£ãŸ
 		{
 			CEqualizer *pThis = GetThis(hwnd);
 			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
@@ -1164,10 +1164,10 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		{
 			CEqualizer *pThis = GetThis(hwnd);
 
-			// Œãn––
+			// å¾Œå§‹æœ«
 			::DeleteObject(pThis->m_hfont);
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u•Û‘¶
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ä¿å­˜
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof (WINDOWPLACEMENT);
 			if (::GetWindowPlacement(hwnd, &wp)) {
@@ -1186,7 +1186,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CEqualizer;

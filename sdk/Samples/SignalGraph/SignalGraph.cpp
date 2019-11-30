@@ -1,12 +1,12 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	M†ƒŒƒxƒ‹‚ÆƒrƒbƒgƒŒ[ƒg‚ğƒOƒ‰ƒt•\¦‚·‚é
+	ä¿¡å·ãƒ¬ãƒ™ãƒ«ã¨ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆã‚’ã‚°ãƒ©ãƒ•è¡¨ç¤ºã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	EM†ƒŒƒxƒ‹‚ÆƒrƒbƒgƒŒ[ƒg‚ğæ“¾‚·‚é
-	EƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+	ãƒ»ä¿¡å·ãƒ¬ãƒ™ãƒ«ã¨ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆã‚’å–å¾—ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
 */
 
 
@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <deque>
 #include <strsafe.h>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ƒNƒ‰ƒX‚Æ‚µ‚ÄÀ‘•
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ã‚¯ãƒ©ã‚¹ã¨ã—ã¦å®Ÿè£…
 #include "TVTestPlugin.h"
 #include "resource.h"
 
@@ -26,12 +26,12 @@
 #pragma comment(lib, "shlwapi.lib")
 
 
-// ƒOƒ‰ƒt‚Ì‘å‚«‚³
+// ã‚°ãƒ©ãƒ•ã®å¤§ãã•
 #define GRAPH_WIDTH		300
 #define GRAPH_HEIGHT	200
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CSignalGraph : public TVTest::CTVTestPlugin
 {
 public:
@@ -100,7 +100,7 @@ private:
 };
 
 
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
 const LPCTSTR CSignalGraph::WINDOW_CLASS_NAME = TEXT("TVTest Signal Graph Window");
 
 
@@ -124,39 +124,39 @@ CSignalGraph::CSignalGraph()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CSignalGraph::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
 	pInfo->pszPluginName  = L"Signal Graph";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"M†ƒŒƒxƒ‹‚ÆƒrƒbƒgƒŒ[ƒg‚ğƒOƒ‰ƒt•\¦‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ä¿¡å·ãƒ¬ãƒ™ãƒ«ã¨ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆã‚’ã‚°ãƒ©ãƒ•è¡¨ç¤ºã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CSignalGraph::Initialize()
 {
-	// ƒAƒCƒRƒ“‚ğ“o˜^
+	// ã‚¢ã‚¤ã‚³ãƒ³ã‚’ç™»éŒ²
 	m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON));
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CSignalGraph::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
-	// İ’è‚ğ•Û‘¶
+	// è¨­å®šã‚’ä¿å­˜
 	if (m_fInitialized) {
 		TCHAR szIniFileName[MAX_PATH];
 
@@ -183,11 +183,11 @@ bool CSignalGraph::Finalize()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒø/–³Œø‚ÌØ‚è‘Ö‚¦
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹/ç„¡åŠ¹ã®åˆ‡ã‚Šæ›¿ãˆ
 bool CSignalGraph::EnablePlugin(bool fEnable)
 {
 	if (fEnable) {
-		// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 		if (!m_fInitialized) {
 			WNDCLASS wc;
 
@@ -204,7 +204,7 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 			if (::RegisterClass(&wc) == 0)
 				return false;
 
-			// İ’è‚Ì“Ç‚İ‚İ
+			// è¨­å®šã®èª­ã¿è¾¼ã¿
 			TCHAR szIniFileName[MAX_PATH];
 			::GetModuleFileName(g_hinstDLL, szIniFileName, _countof(szIniFileName));
 			::PathRenameExtension(szIniFileName, TEXT(".ini"));
@@ -224,15 +224,15 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
 			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
 
-			// ƒvƒ‰ƒCƒ}ƒŠƒ‚ƒjƒ^‚Ì DPI ‚ğæ“¾
+			// ãƒ—ãƒ©ã‚¤ãƒãƒªãƒ¢ãƒ‹ã‚¿ã® DPI ã‚’å–å¾—
 			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
 			if (m_DPI == 0)
 				m_DPI = 96;
 
-			// ƒfƒtƒHƒ‹ƒg‚ÌƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğæ“¾
+			// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’å–å¾—
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				int Width = GRAPH_WIDTH, Height = GRAPH_HEIGHT;
-				// DPIİ’è‚É‡‚í‚¹‚ÄƒXƒP[ƒŠƒ“ƒO
+				// DPIè¨­å®šã«åˆã‚ã›ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°
 				if (m_DPI != 96) {
 					Width = ::MulDiv(Width, m_DPI, 96);
 					Height = ::MulDiv(Height, m_DPI, 96);
@@ -245,14 +245,14 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 					m_WindowPosition.Height = rc.bottom - rc.top;
 			}
 
-			// ƒEƒBƒ“ƒhƒE‚Ìì¬
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 			if (::CreateWindowEx(
 					ExStyle, WINDOW_CLASS_NAME, TEXT("Signal Graph"), Style,
 					0, 0, m_WindowPosition.Width, m_WindowPosition.Height,
 					m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this) == nullptr)
 				return false;
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì•œŒ³
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®å¾©å…ƒ
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd, &wp);
@@ -277,14 +277,14 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 }
 
 
-// ƒOƒ‰ƒt‚ğ•`‰æ
+// ã‚°ãƒ©ãƒ•ã‚’æç”»
 void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 {
 	Graphics.Clear(m_BackColor);
 
 	const float PenScale = (float)Height / (float)GRAPH_HEIGHT;
 
-	// ƒOƒŠƒbƒh‚ğ•`‰æ
+	// ã‚°ãƒªãƒƒãƒ‰ã‚’æç”»
 	if (m_pGridPen == nullptr)
 		m_pGridPen = new Gdiplus::Pen(m_GridColor, PenScale);
 	else
@@ -301,7 +301,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 	const float YScale = (float)(Height - 1);
 	int i, x;
 
-	// ƒrƒbƒgƒŒ[ƒg‚ğ•`‰æ
+	// ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆã‚’æç”»
 	if (GRAPH_WIDTH > ListSize) {
 		x = GRAPH_WIDTH - ListSize;
 		i = 0;
@@ -342,7 +342,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 	}
 	Graphics.DrawLines(m_pBitRatePen, &pPoints[1], NumPoints + 1);
 
-	// M†ƒŒƒxƒ‹‚ğ•`‰æ
+	// ä¿¡å·ãƒ¬ãƒ™ãƒ«ã‚’æç”»
 	if (GRAPH_WIDTH > ListSize) {
 		x = GRAPH_WIDTH - ListSize;
 		i = 0;
@@ -371,7 +371,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 
 	delete [] pPoints;
 
-	// ƒrƒbƒgƒŒ[ƒg‚ÆM†ƒŒƒxƒ‹‚Ì•¶š—ñ‚ğ•`‰æ
+	// ãƒ“ãƒƒãƒˆãƒ¬ãƒ¼ãƒˆã¨ä¿¡å·ãƒ¬ãƒ™ãƒ«ã®æ–‡å­—åˆ—ã‚’æç”»
 	const Gdiplus::REAL FontHeight = m_pFont->GetHeight(96.0f);
 	const Gdiplus::REAL TextMargin = (Gdiplus::REAL)std::floor(FontHeight / 8.0f);
 	Gdiplus::PointF Pos(TextMargin, TextMargin);
@@ -387,7 +387,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 }
 
 
-// WM_PAINT ‚Ìˆ—
+// WM_PAINT ã®å‡¦ç†
 void CSignalGraph::OnPaint(HWND hwnd)
 {
 	PAINTSTRUCT ps;
@@ -442,7 +442,7 @@ void CSignalGraph::OnPaint(HWND hwnd)
 }
 
 
-// ƒŠƒ\[ƒX‚ğ‰ğ•ú
+// ãƒªã‚½ãƒ¼ã‚¹ã‚’è§£æ”¾
 void CSignalGraph::FreeResources()
 {
 	SafeDelete(m_pGridPen);
@@ -455,7 +455,7 @@ void CSignalGraph::FreeResources()
 }
 
 
-// M†ƒŒƒxƒ‹‚ÌƒXƒP[ƒ‹‚ğ’²®
+// ä¿¡å·ãƒ¬ãƒ™ãƒ«ã®ã‚¹ã‚±ãƒ¼ãƒ«ã‚’èª¿æ•´
 void CSignalGraph::AdjustSignalLevelScale()
 {
 	double MaxLevel = 0.0;
@@ -472,31 +472,31 @@ void CSignalGraph::AdjustSignalLevelScale()
 }
 
 
-// DPI ‚ÉˆË‘¶‚µ‚½ƒŠƒ\[ƒX‚ğì¬‚·‚é
+// DPI ã«ä¾å­˜ã—ãŸãƒªã‚½ãƒ¼ã‚¹ã‚’ä½œæˆã™ã‚‹
 void CSignalGraph::CreateDPIDependingResources()
 {
-	// ƒtƒHƒ“ƒg‚ğæ“¾
+	// ãƒ•ã‚©ãƒ³ãƒˆã‚’å–å¾—
 	m_pApp->GetFont(L"StatusBarFont", &m_Font, m_DPI);
 
 	SafeDelete(m_pFont);
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
 	CSignalGraph *pThis = static_cast<CSignalGraph*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		return pThis->EnablePlugin(lParam1 != 0);
 
 	case TVTest::EVENT_STANDBY:
-		// ‘Ò‹@ó‘Ô‚ª•Ï‰»‚µ‚½
+		// å¾…æ©ŸçŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			// ‘Ò‹@ó‘Ô‚Ì‚ÍƒEƒBƒ“ƒhƒE‚ğ‰B‚·
+			// å¾…æ©ŸçŠ¶æ…‹ã®æ™‚ã¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éš ã™
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
@@ -506,14 +506,14 @@ LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM 
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CSignalGraph *CSignalGraph::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CSignalGraph*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -532,7 +532,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 			pThis->m_List.clear();
 			pThis->m_List.push_back(SignalInfo());
 
-			// XV—pƒ^ƒCƒ}‚Ìİ’è
+			// æ›´æ–°ç”¨ã‚¿ã‚¤ãƒã®è¨­å®š
 			::SetTimer(hwnd, 1, 1000, nullptr);
 		}
 		return 0;
@@ -549,7 +549,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 		{
 			CSignalGraph *pThis = GetThis(hwnd);
 
-			// î•ñæ“¾&•\¦XV
+			// æƒ…å ±å–å¾—&è¡¨ç¤ºæ›´æ–°
 			TVTest::StatusInfo Status;
 			pThis->m_pApp->GetStatus(&Status);
 			if (Status.SignalLevel < 0.0f)
@@ -567,7 +567,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xFFF0) == SC_CLOSE) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
 			CSignalGraph *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
@@ -579,7 +579,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 #define WM_DPICHANGED 0x02E0
 #endif
 	case WM_DPICHANGED:
-		// DPI ‚ª•Ï‚í‚Á‚½
+		// DPI ãŒå¤‰ã‚ã£ãŸ
 		{
 			CSignalGraph *pThis = GetThis(hwnd);
 			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
@@ -603,7 +603,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 			pThis->FreeResources();
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u•Û‘¶
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ä¿å­˜
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof (WINDOWPLACEMENT);
 			if (::GetWindowPlacement(hwnd, &wp)) {
@@ -624,7 +624,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CSignalGraph;

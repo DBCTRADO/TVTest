@@ -55,33 +55,33 @@ LRESULT KeyHookProc(HHOOK hHook,HWND hwnd,int nCode,WPARAM wParam,LPARAM lParam)
 			{VK_F16,	MK_SHIFT},				// Ch 10
 			{VK_F14,	MK_CONTROL},			// Ch 11
 			{VK_F15,	MK_CONTROL},			// Ch 12
-			{VK_F13,	MK_SHIFT},				// ‰æ–Ê•\¦
-			{VK_F14,	MK_SHIFT},				// “dŒ¹
-			{VK_F15,	MK_SHIFT},				// Á‰¹
-			{VK_F16,	MK_CONTROL},			// ƒƒjƒ…[
-			{VK_F17,	MK_CONTROL},			// ‘S‰æ–Ê•\¦
-			{VK_F18,	MK_CONTROL},			// š–‹
-			{VK_F19,	MK_CONTROL},			// ‰¹ºØ‘Ö
+			{VK_F13,	MK_SHIFT},				// ç”»é¢è¡¨ç¤º
+			{VK_F14,	MK_SHIFT},				// é›»æº
+			{VK_F15,	MK_SHIFT},				// æ¶ˆéŸ³
+			{VK_F16,	MK_CONTROL},			// ãƒ¡ãƒ‹ãƒ¥ãƒ¼
+			{VK_F17,	MK_CONTROL},			// å…¨ç”»é¢è¡¨ç¤º
+			{VK_F18,	MK_CONTROL},			// å­—å¹•
+			{VK_F19,	MK_CONTROL},			// éŸ³å£°åˆ‡æ›¿
 			{VK_F20,	MK_CONTROL},			// EPG
-			{VK_F21,	MK_CONTROL},			// –ß‚é
-			{VK_F22,	MK_CONTROL},			// ˜^‰æ
-			{VK_F23,	MK_CONTROL},			// ƒƒ‚
-			{VK_F24,	MK_CONTROL},			// ’â~
-			{VK_F13,	MK_CONTROL | MK_SHIFT},	// Ä¶
-			{VK_F14,	MK_CONTROL | MK_SHIFT},	// ˆê’â~
+			{VK_F21,	MK_CONTROL},			// æˆ»ã‚‹
+			{VK_F22,	MK_CONTROL},			// éŒ²ç”»
+			{VK_F23,	MK_CONTROL},			// ãƒ¡ãƒ¢
+			{VK_F24,	MK_CONTROL},			// åœæ­¢
+			{VK_F13,	MK_CONTROL | MK_SHIFT},	// å†ç”Ÿ
+			{VK_F14,	MK_CONTROL | MK_SHIFT},	// ä¸€æ™‚åœæ­¢
 			{VK_F15,	MK_CONTROL | MK_SHIFT},	// |<<
 			{VK_F16,	MK_CONTROL | MK_SHIFT},	// <<
 			{VK_F17,	MK_CONTROL | MK_SHIFT},	// >>
 			{VK_F18,	MK_CONTROL | MK_SHIFT},	// >>|
-			{VK_F19,	MK_CONTROL | MK_SHIFT},	// ‚µ‚¨‚è
-			{VK_F20,	MK_CONTROL | MK_SHIFT},	// ƒWƒƒƒ“ƒv
+			{VK_F19,	MK_CONTROL | MK_SHIFT},	// ã—ãŠã‚Š
+			{VK_F20,	MK_CONTROL | MK_SHIFT},	// ã‚¸ãƒ£ãƒ³ãƒ—
 			{VK_F21,	MK_CONTROL | MK_SHIFT},	// A
 			{VK_F22,	MK_CONTROL | MK_SHIFT},	// B
 			{VK_F23,	MK_CONTROL | MK_SHIFT},	// C
 			{VK_F24,	MK_CONTROL | MK_SHIFT},	// D
 #if 0
-			{VK_UP,		MK_SHIFT},				// ‰¹—Ê up
-			{VK_DOWN,	MK_SHIFT},				// ‰¹—Ê down
+			{VK_UP,		MK_SHIFT},				// éŸ³é‡ up
+			{VK_DOWN,	MK_SHIFT},				// éŸ³é‡ down
 			{VK_UP,		MK_CONTROL},			// Ch up
 			{VK_DOWN,	MK_CONTROL},			// Ch down
 #endif
@@ -105,7 +105,7 @@ LRESULT KeyHookProc(HHOOK hHook,HWND hwnd,int nCode,WPARAM wParam,LPARAM lParam)
 					if (KeyList[i].KeyCode==wParam
 							&& KeyList[i].Modifier==Modifier) {
 						PostMessage(hwnd,Message,wParam,
-							// ƒL[ƒŠƒs[ƒg‰ñ”‚ªí‚É1‚É‚È‚Á‚Ä‚¢‚é
+							// ã‚­ãƒ¼ãƒªãƒ”ãƒ¼ãƒˆå›æ•°ãŒå¸¸ã«1ã«ãªã£ã¦ã„ã‚‹
 							//(lParam&KEYHOOK_LPARAM_REPEATCOUNT) |
 							((lParam&0x40000000)!=0?2:1) |
 							(fCtrlPress?KEYHOOK_LPARAM_CONTROL:0) |

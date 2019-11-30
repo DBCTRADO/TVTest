@@ -4,7 +4,7 @@
 #include <vector>
 
 
-// ツールバークラス
+// 繝�繝ｼ繝ｫ繝舌�ｼ繧ｯ繝ｩ繧ｹ
 class CToolbar
 {
 public:

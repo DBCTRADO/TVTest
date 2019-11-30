@@ -1,16 +1,16 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ƒ`ƒ…[ƒi[/ƒ`ƒƒƒ“ƒlƒ‹‚ğ‘I‘ğ‚·‚éƒpƒlƒ‹‚ğ•\¦‚·‚é
+	ãƒãƒ¥ãƒ¼ãƒŠãƒ¼/ãƒãƒ£ãƒ³ãƒãƒ«ã‚’é¸æŠã™ã‚‹ãƒ‘ãƒãƒ«ã‚’è¡¨ç¤ºã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	Eƒpƒlƒ‹‚É€–Ú‚ğ’Ç‰Á‚·‚é
-	Eƒ`ƒ…[ƒi[‚Æƒ`ƒƒƒ“ƒlƒ‹‚ğ—ñ‹“‚·‚é
-	E‹ÇƒƒS‚ğæ“¾‚·‚é
-	E”Ô‘g‚Ìî•ñ‚ğæ“¾‚·‚é
-	Eƒe[ƒ}‚ğg‚Á‚Ä€–Ú‚ğ•`‰æ‚·‚é
-	EƒEƒBƒ“ƒhƒE‚Ì DPI ‚É‰‚¶‚ÄƒXƒP[ƒŠƒ“ƒO‚·‚é
+	ãƒ»ãƒ‘ãƒãƒ«ã«é …ç›®ã‚’è¿½åŠ ã™ã‚‹
+	ãƒ»ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ã¨ãƒãƒ£ãƒ³ãƒãƒ«ã‚’åˆ—æŒ™ã™ã‚‹
+	ãƒ»å±€ãƒ­ã‚´ã‚’å–å¾—ã™ã‚‹
+	ãƒ»ç•ªçµ„ã®æƒ…å ±ã‚’å–å¾—ã™ã‚‹
+	ãƒ»ãƒ†ãƒ¼ãƒã‚’ä½¿ã£ã¦é …ç›®ã‚’æç”»ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã® DPI ã«å¿œã˜ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã™ã‚‹
 */
 
 
@@ -41,7 +41,7 @@ static void OffsetFileTime(FILETIME *pTime, LONGLONG Offset)
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CTunerPanel : public TVTest::CTVTestPlugin
 {
 public:
@@ -216,22 +216,22 @@ CTunerPanel::CTunerPanel()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CTunerPanel::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"ƒ`ƒ…[ƒi[ƒpƒlƒ‹";
+	pInfo->pszPluginName  = L"ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ãƒ‘ãƒãƒ«";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ƒ`ƒ…[ƒi[/ƒ`ƒƒƒ“ƒlƒ‹‚ğ‘I‘ğ‚·‚éƒpƒlƒ‹‚ğ•\¦‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ãƒãƒ¥ãƒ¼ãƒŠãƒ¼/ãƒãƒ£ãƒ³ãƒãƒ«ã‚’é¸æŠã™ã‚‹ãƒ‘ãƒãƒ«ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CTunerPanel::Initialize()
 {
-	// ƒpƒlƒ‹€–Ú‚ğ“o˜^‚·‚é
+	// ãƒ‘ãƒãƒ«é …ç›®ã‚’ç™»éŒ²ã™ã‚‹
 	TVTest::PanelItemInfo PanelInfo;
 
 	PanelInfo.Size = sizeof(TVTest::PanelItemInfo);
@@ -239,18 +239,18 @@ bool CTunerPanel::Initialize()
 	PanelInfo.Style = TVTest::PANEL_ITEM_STYLE_NEEDFOCUS;
 	PanelInfo.ID = PANEL_ID;
 	PanelInfo.pszIDText = L"Tuner";
-	PanelInfo.pszTitle = L"ƒ`ƒ…[ƒi[";
+	PanelInfo.pszTitle = L"ãƒãƒ¥ãƒ¼ãƒŠãƒ¼";
 	PanelInfo.hbmIcon = (HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON),
 											 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
 	bool fResult = m_pApp->RegisterPanelItem(&PanelInfo);
 	::DeleteObject(PanelInfo.hbmIcon);
 	if (!fResult) {
-		m_pApp->AddLog(L"ƒpƒlƒ‹€–Ú‚ğ“o˜^‚Å‚«‚Ü‚¹‚ñB", TVTest::LOG_TYPE_ERROR);
+		m_pApp->AddLog(L"ãƒ‘ãƒãƒ«é …ç›®ã‚’ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚", TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
-	// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚ğ“o˜^‚·‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã‚’ç™»éŒ²ã™ã‚‹
 	WNDCLASS wc;
 
 	wc.style = CS_HREDRAW;
@@ -266,11 +266,11 @@ bool CTunerPanel::Initialize()
 	if (::RegisterClass(&wc) == 0)
 		return false;
 
-	// İ’èƒtƒ@ƒCƒ‹–¼‚ğæ“¾‚·‚é
+	// è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«åã‚’å–å¾—ã™ã‚‹
 	::GetModuleFileNameW(g_hinstDLL, m_szIniFileName, _countof(m_szIniFileName));
 	::PathRenameExtensionW(m_szIniFileName, L".ini");
 
-	// İ’è‚ğ“Ç‚İ‚Ş
+	// è¨­å®šã‚’èª­ã¿è¾¼ã‚€
 	int ViewMode = ::GetPrivateProfileIntW(L"Settings", L"ViewMode", (int)m_ViewMode, m_szIniFileName);
 	if (ViewMode >= VIEW_MODE_FIRST && ViewMode <= VIEW_MODE_LAST)
 		m_ViewMode = (ViewModeType)ViewMode;
@@ -288,21 +288,21 @@ bool CTunerPanel::Initialize()
 		m_ExpandedTunerList.push_back(std::wstring(szTuner));
 	}
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CTunerPanel::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 	if (m_hwnd != NULL)
 		::DestroyWindow(m_hwnd);
 
-	// İ’è‚ğ•Û‘¶‚·‚é
+	// è¨­å®šã‚’ä¿å­˜ã™ã‚‹
 	struct IntString {
 		IntString(int Value) { ::wsprintfW(m_szBuffer, L"%d", Value); }
 		operator LPCWSTR() const { return m_szBuffer; }
@@ -327,8 +327,8 @@ bool CTunerPanel::Finalize()
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CTunerPanel::EventCallback(
 	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
@@ -336,9 +336,9 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (!pThis->m_fEnableByPlugin) {
-			// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚É‡‚í‚¹‚Äƒpƒlƒ‹‚Ì—LŒøó‘Ô‚ğİ’è‚·‚é
+			// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ã«åˆã‚ã›ã¦ãƒ‘ãƒãƒ«ã®æœ‰åŠ¹çŠ¶æ…‹ã‚’è¨­å®šã™ã‚‹
 			if (lParam1 != 0) {
 				pThis->SetPanelItemState(
 					TVTest::PANEL_ITEM_STATE_ENABLED |
@@ -354,19 +354,19 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 		return TRUE;
 
 	case TVTest::EVENT_DRIVERCHANGE:
-		// ƒ`ƒ…[ƒi[‚ª•ÏX‚³‚ê‚½
+		// ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ãŒå¤‰æ›´ã•ã‚ŒãŸ
 	case TVTest::EVENT_CHANNELCHANGE:
-		// ƒ`ƒƒƒ“ƒlƒ‹‚ª•ÏX‚³‚ê‚½
+		// ãƒãƒ£ãƒ³ãƒãƒ«ãŒå¤‰æ›´ã•ã‚ŒãŸ
 	case TVTest::EVENT_SERVICECHANGE:
-		// ƒT[ƒrƒX‚ª•ÏX‚³‚ê‚½
+		// ã‚µãƒ¼ãƒ“ã‚¹ãŒå¤‰æ›´ã•ã‚ŒãŸ
 	case TVTest::EVENT_COLORCHANGE:
-		// F‚Ìİ’è‚ª•Ï‰»‚µ‚½
+		// è‰²ã®è¨­å®šãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_hwnd != NULL)
 			::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
 		return TRUE;
 
 	case TVTest::EVENT_SETTINGSCHANGE:
-		// İ’è‚ª•ÏX‚³‚ê‚½
+		// è¨­å®šãŒå¤‰æ›´ã•ã‚ŒãŸ
 		if (pThis->m_hwnd != NULL) {
 			pThis->InitializePanel();
 			pThis->UpdateContent();
@@ -374,14 +374,14 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 		return TRUE;
 
 	case TVTest::EVENT_PANELITEM_NOTIFY:
-		// ƒpƒlƒ‹€–Ú‚Ì’Ê’m
+		// ãƒ‘ãƒãƒ«é …ç›®ã®é€šçŸ¥
 		{
 			TVTest::PanelItemEventInfo *pInfo =
 				reinterpret_cast<TVTest::PanelItemEventInfo*>(lParam1);
 
 			switch (pInfo->Event) {
 			case TVTest::PANEL_ITEM_EVENT_CREATE:
-				// ƒpƒlƒ‹€–Ú‚ğì¬‚·‚é
+				// ãƒ‘ãƒãƒ«é …ç›®ã‚’ä½œæˆã™ã‚‹
 				{
 					TVTest::PanelItemCreateEventInfo *pCreateInfo =
 						reinterpret_cast<TVTest::PanelItemCreateEventInfo*>(lParam1);
@@ -400,7 +400,7 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 
 					pCreateInfo->hwndItem = hwnd;
 
-					// ƒpƒlƒ‹‚Ì—LŒøó‘Ô‚É‡‚í‚¹‚Äƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ğİ’è‚·‚é
+					// ãƒ‘ãƒãƒ«ã®æœ‰åŠ¹çŠ¶æ…‹ã«åˆã‚ã›ã¦ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ã‚’è¨­å®šã™ã‚‹
 					pThis->m_fEnableByPlugin = true;
 					pThis->m_pApp->EnablePlugin(pThis->IsPanelItemEnabled());
 					pThis->m_fEnableByPlugin = false;
@@ -408,24 +408,24 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 				return TRUE;
 
 			case TVTest::PANEL_ITEM_EVENT_ACTIVATE:
-				// ƒpƒlƒ‹€–Ú‚ªƒAƒNƒeƒBƒu‚É‚È‚é
+				// ãƒ‘ãƒãƒ«é …ç›®ãŒã‚¢ã‚¯ãƒ†ã‚£ãƒ–ã«ãªã‚‹
 				if (pThis->m_TunerList.empty())
 					pThis->UpdateContent();
 				return TRUE;
 
 			case TVTest::PANEL_ITEM_EVENT_ENABLE:
 			case TVTest::PANEL_ITEM_EVENT_DISABLE:
-				// ƒpƒlƒ‹€–Ú‚ª—LŒø‚É‚È‚é/–³Œø‚É‚È‚é
-				// ƒpƒlƒ‹‚Ì—LŒøó‘Ô‚É‡‚í‚¹‚Äƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ğİ’è‚·‚é
+				// ãƒ‘ãƒãƒ«é …ç›®ãŒæœ‰åŠ¹ã«ãªã‚‹/ç„¡åŠ¹ã«ãªã‚‹
+				// ãƒ‘ãƒãƒ«ã®æœ‰åŠ¹çŠ¶æ…‹ã«åˆã‚ã›ã¦ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ã‚’è¨­å®šã™ã‚‹
 				pThis->m_fEnableByPlugin = true;
 				pThis->m_pApp->EnablePlugin(pInfo->Event == TVTest::PANEL_ITEM_EVENT_ENABLE);
 				pThis->m_fEnableByPlugin = false;
 				return TRUE;
 
 			case TVTest::PANEL_ITEM_EVENT_STYLECHANGED:
-				// ƒXƒ^ƒCƒ‹‚ª•Ï‚í‚Á‚½(DPI ‚Ì•ÏX‚È‚Ç)
+				// ã‚¹ã‚¿ã‚¤ãƒ«ãŒå¤‰ã‚ã£ãŸ(DPI ã®å¤‰æ›´ãªã©)
 			case TVTest::PANEL_ITEM_EVENT_FONTCHANGED:
-				// ƒtƒHƒ“ƒg‚ª•Ï‚í‚Á‚½
+				// ãƒ•ã‚©ãƒ³ãƒˆãŒå¤‰ã‚ã£ãŸ
 				{
 					const int OldDPI = pThis->m_DPI;
 					pThis->m_DPI = pThis->m_pApp->GetDPIFromWindow(pThis->m_hwnd);
@@ -447,7 +447,7 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 }
 
 
-// “à—e‚ğXV‚·‚é
+// å†…å®¹ã‚’æ›´æ–°ã™ã‚‹
 void CTunerPanel::UpdateContent()
 {
 	GetTunerList();
@@ -456,7 +456,7 @@ void CTunerPanel::UpdateContent()
 }
 
 
-// ƒ`ƒ…[ƒi[/ƒ`ƒƒƒ“ƒlƒ‹‚ÌƒŠƒXƒg‚ğæ“¾‚·‚é
+// ãƒãƒ¥ãƒ¼ãƒŠãƒ¼/ãƒãƒ£ãƒ³ãƒãƒ«ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹
 void CTunerPanel::GetTunerList()
 {
 	UpdateExpandedTunerList();
@@ -504,10 +504,10 @@ void CTunerPanel::GetTunerList()
 						Channel.TransportStreamID = DriverChannel.TransportStreamID;
 						Channel.ServiceID = DriverChannel.ServiceID;
 
-						// ‹ÇƒƒS‚ğæ“¾‚·‚é
+						// å±€ãƒ­ã‚´ã‚’å–å¾—ã™ã‚‹
 						UINT AvailLogos = m_pApp->GetAvailableLogoType(Channel.NetworkID, Channel.ServiceID);
 						if (AvailLogos != 0) {
-							static const BYTE LogoPriority[6] = {3, 5, 4, 2, 0, 1};	// ‘å‚«‚¢‡‚É—Dæ
+							static const BYTE LogoPriority[6] = {3, 5, 4, 2, 0, 1};	// å¤§ãã„é †ã«å„ªå…ˆ
 							for (BYTE LogoIndex = 0; LogoIndex <= 5; LogoIndex++) {
 								BYTE LogoType = LogoPriority[LogoIndex];
 								if (AvailLogos & (1U << LogoType)) {
@@ -530,7 +530,7 @@ void CTunerPanel::GetTunerList()
 }
 
 
-// “WŠJ‚³‚ê‚Ä‚¢‚éƒ`ƒ…[ƒi[‚ÌƒŠƒXƒg‚ğXV
+// å±•é–‹ã•ã‚Œã¦ã„ã‚‹ãƒãƒ¥ãƒ¼ãƒŠãƒ¼ã®ãƒªã‚¹ãƒˆã‚’æ›´æ–°
 void CTunerPanel::UpdateExpandedTunerList()
 {
 	if (!m_TunerList.empty()) {
@@ -544,7 +544,7 @@ void CTunerPanel::UpdateExpandedTunerList()
 }
 
 
-// ƒpƒlƒ‹€–Ú‚Ìó‘Ô‚ğİ’è‚·‚é
+// ãƒ‘ãƒãƒ«é …ç›®ã®çŠ¶æ…‹ã‚’è¨­å®šã™ã‚‹
 void CTunerPanel::SetPanelItemState(DWORD Mask, DWORD State)
 {
 	TVTest::PanelItemSetInfo Info;
@@ -559,7 +559,7 @@ void CTunerPanel::SetPanelItemState(DWORD Mask, DWORD State)
 }
 
 
-// ƒpƒlƒ‹€–Ú‚ª—LŒø‚Å‚ ‚é‚©æ“¾‚·‚é
+// ãƒ‘ãƒãƒ«é …ç›®ãŒæœ‰åŠ¹ã§ã‚ã‚‹ã‹å–å¾—ã™ã‚‹
 bool CTunerPanel::IsPanelItemEnabled() const
 {
 	TVTest::PanelItemGetInfo Info;
@@ -573,7 +573,7 @@ bool CTunerPanel::IsPanelItemEnabled() const
 }
 
 
-// ƒƒbƒZ[ƒWƒnƒ“ƒhƒ‰
+// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒãƒ³ãƒ‰ãƒ©
 LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -618,12 +618,12 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &Info)) {
 				switch (Info.Part) {
 				case PART_TUNER:
-					// ƒ`ƒ…[ƒi[
+					// ãƒãƒ¥ãƒ¼ãƒŠãƒ¼
 					m_pApp->SetDriverName(m_TunerList[Info.Tuner].Name.c_str());
 					break;
 
 				case PART_CHANNEL:
-					// ƒ`ƒƒƒ“ƒlƒ‹
+					// ãƒãƒ£ãƒ³ãƒãƒ«
 					{
 						const ChannelInfo &Channel =
 							m_TunerList[Info.Tuner].TuningSpaceList[Info.Space].ChannelList[Info.Channel];
@@ -642,7 +642,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					break;
 
 				case PART_CHEVRON:
-					// ƒVƒFƒuƒƒ“
+					// ã‚·ã‚§ãƒ–ãƒ­ãƒ³
 					{
 						TunerInfo &Tuner = m_TunerList[Info.Tuner];
 						if (Tuner.fExpandable) {
@@ -771,7 +771,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		switch (reinterpret_cast<NMHDR*>(lParam)->code) {
 		case TTN_GETDISPINFO:
 			{
-				// ƒc[ƒ‹ƒ`ƒbƒv‚ÌƒeƒLƒXƒg‚ğİ’è‚·‚é
+				// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã®ãƒ†ã‚­ã‚¹ãƒˆã‚’è¨­å®šã™ã‚‹
 				NMTTDISPINFO *pttdi = reinterpret_cast<NMTTDISPINFO*>(lParam);
 				const ChannelInfo *pChannel = reinterpret_cast<const ChannelInfo*>(pttdi->lParam);
 
@@ -783,7 +783,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					pChannel->RemoteControlKeyID,
 					pChannel->Name.c_str());
 
-				// Œ»İ‚Ì”Ô‘g‚Ìî•ñ‚ğæ“¾‚·‚é
+				// ç¾åœ¨ã®ç•ªçµ„ã®æƒ…å ±ã‚’å–å¾—ã™ã‚‹
 				TVTest::EpgEventQueryInfo EventQuery;
 				EventQuery.NetworkID = pChannel->NetworkID;
 				EventQuery.TransportStreamID = pChannel->TransportStreamID;
@@ -791,25 +791,25 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				EventQuery.Type = TVTest::EPG_EVENT_QUERY_TIME;
 				EventQuery.Flags = 0;
 				::GetSystemTimeAsFileTime(&EventQuery.Time);
-				OffsetFileTime(&EventQuery.Time, 120LL * 1000LL * 10000LL);	// 2•ªæ
+				OffsetFileTime(&EventQuery.Time, 120LL * 1000LL * 10000LL);	// 2åˆ†å…ˆ
 				TVTest::EpgEventInfo *pEventInfo = m_pApp->GetEpgEventInfo(&EventQuery);
 				if (pEventInfo != NULL) {
 					RECT rc;
 					::GetClientRect(hwnd, &rc);
 					::SendMessage(m_hwndToolTips, TTM_SETMAXTIPWIDTH, 0, rc.right);
 
-					// EPG “ú‚©‚ç•\¦—p“ú‚É•ÏŠ·
+					// EPG æ—¥æ™‚ã‹ã‚‰è¡¨ç¤ºç”¨æ—¥æ™‚ã«å¤‰æ›
 					SYSTEMTIME StartTime;
 					if (!m_pApp->ConvertEpgTimeTo(
 							pEventInfo->StartTime, TVTest::CONVERT_TIME_TYPE_EPG_DISPLAY, &StartTime))
 						StartTime = pEventInfo->StartTime;
 
-					// ŠJn
+					// é–‹å§‹æ™‚åˆ»
 					Length += ::wnsprintfW(
 						m_szToolTipBuffer + Length, _countof(m_szToolTipBuffer) - Length,
-						L"\r\n%d:%02d`", StartTime.wHour, StartTime.wMinute);
+						L"\r\n%d:%02dï½", StartTime.wHour, StartTime.wMinute);
 
-					//  I—¹
+					//  çµ‚äº†æ™‚åˆ»
 					if (pEventInfo->Duration != 0) {
 						FILETIME ft;
 						SYSTEMTIME st;
@@ -821,7 +821,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 							L"%d:%02d", st.wHour, st.wMinute);
 					}
 
-					// ”Ô‘g–¼
+					// ç•ªçµ„å
 					if (pEventInfo->pszEventName != NULL) {
 						::wnsprintfW(
 							m_szToolTipBuffer + Length, _countof(m_szToolTipBuffer) - Length,
@@ -856,7 +856,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 }
 
 
-// ƒRƒ}ƒ“ƒh‚Ìˆ—
+// ã‚³ãƒãƒ³ãƒ‰ã®å‡¦ç†
 void CTunerPanel::OnCommand(int ID)
 {
 	switch (ID) {
@@ -895,7 +895,7 @@ void CTunerPanel::OnCommand(int ID)
 }
 
 
-// ƒpƒlƒ‹‚Ì‰Šú‰»
+// ãƒ‘ãƒãƒ«ã®åˆæœŸåŒ–
 void CTunerPanel::InitializePanel()
 {
 	LOGFONT lf;
@@ -965,7 +965,7 @@ void CTunerPanel::InitializePanel()
 }
 
 
-// ƒŠƒXƒg‚ğ•`‰æ‚·‚é
+// ãƒªã‚¹ãƒˆã‚’æç”»ã™ã‚‹
 void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 {
 	HGDIOBJ hOldFont = ::SelectObject(hdc, m_hFont);
@@ -1141,7 +1141,7 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 }
 
 
-// ƒŠƒXƒg‘S‘Ì‚Ì‚‚³‚ğæ“¾‚·‚é
+// ãƒªã‚¹ãƒˆå…¨ä½“ã®é«˜ã•ã‚’å–å¾—ã™ã‚‹
 int CTunerPanel::CalcVertExtent() const
 {
 	int Extent = (int)m_TunerList.size() * m_TunerItemHeight;
@@ -1162,7 +1162,7 @@ int CTunerPanel::CalcVertExtent() const
 }
 
 
-// ƒ`ƒƒƒ“ƒlƒ‹€–Ú‚ÌƒJƒ‰ƒ€”‚ğæ“¾‚·‚é
+// ãƒãƒ£ãƒ³ãƒãƒ«é …ç›®ã®ã‚«ãƒ©ãƒ æ•°ã‚’å–å¾—ã™ã‚‹
 int CTunerPanel::GetColumnCount() const
 {
 	if (m_ViewMode == VIEW_MODE_LOGO) {
@@ -1177,7 +1177,7 @@ int CTunerPanel::GetColumnCount() const
 }
 
 
-// ƒƒS‚Ì‘å‚«‚³‚ğæ“¾‚·‚é
+// ãƒ­ã‚´ã®å¤§ãã•ã‚’å–å¾—ã™ã‚‹
 SIZE CTunerPanel::GetLogoSize(LogoSizeType Type) const
 {
 	SIZE Size;
@@ -1189,7 +1189,7 @@ SIZE CTunerPanel::GetLogoSize(LogoSizeType Type) const
 }
 
 
-// ƒ`ƒƒƒ“ƒlƒ‹€–Ú‚Ì‘å‚«‚³‚ğXV‚·‚é
+// ãƒãƒ£ãƒ³ãƒãƒ«é …ç›®ã®å¤§ãã•ã‚’æ›´æ–°ã™ã‚‹
 void CTunerPanel::UpdateItemSize()
 {
 	if (m_ViewMode == VIEW_MODE_LIST) {
@@ -1209,7 +1209,7 @@ void CTunerPanel::UpdateItemSize()
 }
 
 
-// ƒXƒNƒ[ƒ‹”ÍˆÍ/ˆÊ’u‚ğXV‚·‚é
+// ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ç¯„å›²/ä½ç½®ã‚’æ›´æ–°ã™ã‚‹
 void CTunerPanel::UpdateScroll()
 {
 	int VertExtent = CalcVertExtent();
@@ -1244,7 +1244,7 @@ void CTunerPanel::UpdateScroll()
 }
 
 
-// ƒXƒNƒ[ƒ‹ˆÊ’u‚ğİ’è‚·‚é
+// ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«ä½ç½®ã‚’è¨­å®šã™ã‚‹
 void CTunerPanel::SetScrollPos(int Pos)
 {
 	RECT rc;
@@ -1282,7 +1282,7 @@ void CTunerPanel::SetScrollPos(int Pos)
 }
 
 
-// €–Ú‚ÌˆÊ’u‚ğæ“¾‚·‚é
+// é …ç›®ã®ä½ç½®ã‚’å–å¾—ã™ã‚‹
 bool CTunerPanel::GetItemRect(int Tuner, int Space, int Channel, RECT *pRect) const
 {
 	RECT rc;
@@ -1325,7 +1325,7 @@ bool CTunerPanel::GetItemRect(int Tuner, int Space, int Channel, RECT *pRect) co
 }
 
 
-// ƒ`ƒƒƒ“ƒlƒ‹€–Ú‚ÌˆÊ’u‚ğŒvZ‚·‚é
+// ãƒãƒ£ãƒ³ãƒãƒ«é …ç›®ã®ä½ç½®ã‚’è¨ˆç®—ã™ã‚‹
 void CTunerPanel::CalcChannelItemRect(int Channel, RECT *pRect) const
 {
 	pRect->top += (Channel / m_ColumnCount) * m_ItemHeight;
@@ -1335,14 +1335,14 @@ void CTunerPanel::CalcChannelItemRect(int Channel, RECT *pRect) const
 }
 
 
-// ƒ`ƒƒƒ“ƒlƒ‹€–Ú‚Ìs”‚ğæ“¾‚·‚é
+// ãƒãƒ£ãƒ³ãƒãƒ«é …ç›®ã®è¡Œæ•°ã‚’å–å¾—ã™ã‚‹
 int CTunerPanel::CalcChannelItemRows(int Channels) const
 {
 	return (Channels + (m_ColumnCount - 1)) / m_ColumnCount;
 }
 
 
-// w’èˆÊ’u‚Ì€–Ú‚ğæ“¾‚·‚é
+// æŒ‡å®šä½ç½®ã®é …ç›®ã‚’å–å¾—ã™ã‚‹
 bool CTunerPanel::HitTest(int x, int y, HitTestInfo *pInfo) const
 {
 	pInfo->Part = PART_NONE;
@@ -1402,7 +1402,7 @@ bool CTunerPanel::HitTest(int x, int y, HitTestInfo *pInfo) const
 }
 
 
-// ƒc[ƒ‹ƒ`ƒbƒv‚ğXV‚·‚é
+// ãƒ„ãƒ¼ãƒ«ãƒãƒƒãƒ—ã‚’æ›´æ–°ã™ã‚‹
 void CTunerPanel::UpdateToolTips()
 {
 	if (m_hwndToolTips == NULL)
@@ -1457,7 +1457,7 @@ void CTunerPanel::UpdateToolTips()
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CTunerPanel::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	CTunerPanel *pThis;
@@ -1486,7 +1486,7 @@ LRESULT CALLBACK CTunerPanel::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CTunerPanel;

@@ -1,6 +1,9 @@
 #include <windows.h>
 #include "resource.h"
 
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(65001)
+
 
 IDB_ICON BITMAP "Icon.bmp"
 
@@ -8,15 +11,15 @@ IDM_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "ÉçÉSÇ∆É`ÉÉÉìÉlÉãñºï\é¶(&L)",CM_VIEW_LIST
-		MENUITEM "ÉçÉSï\é¶(&I)",CM_VIEW_LOGO
+		MENUITEM "„É≠„Ç¥„Å®„ÉÅ„É£„É≥„Éç„É´ÂêçË°®Á§∫(&L)",CM_VIEW_LIST
+		MENUITEM "„É≠„Ç¥Ë°®Á§∫(&I)",CM_VIEW_LOGO
 		MENUITEM SEPARATOR
-		POPUP "ÉçÉSï\é¶ÇÃëÂÇ´Ç≥(&S)"
+		POPUP "„É≠„Ç¥Ë°®Á§∫„ÅÆÂ§ß„Åç„Åï(&S)"
 		BEGIN
-			MENUITEM "è¨(&S)",CM_LOGOSIZE_SMALL
-			MENUITEM "íÜ(&M)",CM_LOGOSIZE_MEDIUM
-			MENUITEM "ëÂ(&L)",CM_LOGOSIZE_LARGE
-			MENUITEM "ì¡ëÂ(&X)",CM_LOGOSIZE_EXTRALARGE
+			MENUITEM "Â∞è(&S)",CM_LOGOSIZE_SMALL
+			MENUITEM "‰∏≠(&M)",CM_LOGOSIZE_MEDIUM
+			MENUITEM "Â§ß(&L)",CM_LOGOSIZE_LARGE
+			MENUITEM "ÁâπÂ§ß(&X)",CM_LOGOSIZE_EXTRALARGE
 		END
 	END
 END

@@ -1,4 +1,6 @@
 #include "resource.h"
 
+#pragma code_page(65001)
+
 
 IDB_ICON BITMAP "SignalGraph.bmp"

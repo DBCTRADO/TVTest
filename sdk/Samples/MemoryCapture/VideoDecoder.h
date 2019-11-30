@@ -4,12 +4,12 @@
 #include "ITVTestVideoDecoder.h"
 
 
-// ‰f‘œƒfƒR[ƒ_[ƒNƒ‰ƒX
+// æ˜ åƒãƒ‡ã‚³ãƒ¼ãƒ€ãƒ¼ã‚¯ãƒ©ã‚¹
 class CVideoDecoder
 	: protected ITVTestVideoDecoderFrameCapture
 {
 public:
-	// ƒCƒ“ƒ^[ƒŒ[ƒX‰ğœ•û–@(TVTVIDEODEC_DeinterlaceMethod ‚Æ“¯‚¶)
+	// ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ¬ãƒ¼ã‚¹è§£é™¤æ–¹æ³•(TVTVIDEODEC_DeinterlaceMethod ã¨åŒã˜)
 	enum DeinterlaceMethod
 	{
 		Deinterlace_Weave,
@@ -20,7 +20,7 @@ public:
 		Deinterlace_Yadif_Bob
 	};
 
-	// ƒtƒŒ[ƒ€‚Ìƒtƒ‰ƒO(TVTVIDEODEC_FRAME_* ‚Æ“¯‚¶)
+	// ãƒ•ãƒ¬ãƒ¼ãƒ ã®ãƒ•ãƒ©ã‚°(TVTVIDEODEC_FRAME_* ã¨åŒã˜)
 	enum {
 		FrameFlag_TopFieldFirst    = 0x00000001,
 		FrameFlag_RepeatFirstField = 0x00000002,

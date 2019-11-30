@@ -1,7 +1,7 @@
 #pragma once
 
 
-// シークバークラス
+// 繧ｷ繝ｼ繧ｯ繝舌�ｼ繧ｯ繝ｩ繧ｹ
 class CSeekBar
 {
 public:

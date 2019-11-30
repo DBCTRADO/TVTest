@@ -57,7 +57,7 @@ CImage::~CImage()
 }
 
 
-// ‰æ‘œ‚Ìì¬
+// ç”»åƒã®ä½œæˆ
 bool CImage::Create(int Width, int Height, int BitsPerPixel, int AspectRatioX, int AspectRatioY)
 {
 	Free();
@@ -83,7 +83,7 @@ bool CImage::Create(int Width, int Height, int BitsPerPixel, int AspectRatioX, i
 }
 
 
-// ‰æ‘œ‚Ì‰ğ•ú
+// ç”»åƒã®è§£æ”¾
 void CImage::Free()
 {
 	if (m_pPixels != nullptr) {
@@ -101,7 +101,7 @@ void CImage::Free()
 }
 
 
-// ƒAƒXƒyƒNƒg”ä‚ğ”½‰f‚³‚¹‚½•‚ğæ“¾
+// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’åæ˜ ã•ã›ãŸå¹…ã‚’å–å¾—
 int CImage::GetDisplayWidth() const
 {
 	if (m_AspectRatioX <= 1 || m_AspectRatioY <= 1)
@@ -148,7 +148,7 @@ bool CImage::ExtractRow24(int y, BYTE *pDest) const
 }
 
 
-// ‰æ‘œ‚Ì•¡»
+// ç”»åƒã®è¤‡è£½
 CImage *CImage::Clone() const
 {
 	if (m_pPixels == nullptr)
@@ -169,7 +169,7 @@ CImage *CImage::Clone() const
 }
 
 
-// ‰æ‘œ‚ÌƒŠƒTƒCƒY
+// ç”»åƒã®ãƒªã‚µã‚¤ã‚º
 CImage *CImage::Resize(int Width, int Height, ResampleType Resample) const
 {
 	if (m_pPixels == nullptr)
@@ -221,7 +221,7 @@ CImage *CImage::Resize(int Width, int Height, ResampleType Resample) const
 }
 
 
-// Å‹ß–T–@
+// æœ€è¿‘å‚æ³•
 bool CImage::NearestNeighbor(CImage *pImage) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -252,7 +252,7 @@ bool CImage::NearestNeighbor(CImage *pImage) const
 }
 
 
-// üŒ`•âŠÔ–@
+// ç·šå½¢è£œé–“æ³•
 bool CImage::Bilinear(CImage *pImage) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -317,7 +317,7 @@ bool CImage::Bilinear(CImage *pImage) const
 }
 
 
-// •½‹Ï‰æ‘f–@
+// å¹³å‡ç”»ç´ æ³•
 bool CImage::Averaging(CImage *pImage) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -391,7 +391,7 @@ bool CImage::Averaging(CImage *pImage) const
 }
 
 
-// ”Ä—pÄƒTƒ“ƒvƒŠƒ“ƒO
+// æ±ç”¨å†ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
 bool CImage::GenericResample(CImage *pImage, KernelFunc pKernelFunc, double KernelSize) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)

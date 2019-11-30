@@ -1,5 +1,7 @@
 #include "resource.h"
 
+#pragma code_page(65001)
+
 
 IDB_SHOW	BITMAP "Show.bmp"
 IDB_ONOFF	BITMAP "OnOff.bmp"

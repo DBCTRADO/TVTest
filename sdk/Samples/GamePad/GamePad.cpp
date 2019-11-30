@@ -1,12 +1,12 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ƒQ[ƒ€ƒpƒbƒh‚Å‘€ì‚Å‚«‚é‚æ‚¤‚É‚·‚é
+	ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰ã§æ“ä½œã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	EƒRƒ“ƒgƒ[ƒ‰‚ğ“o˜^‚·‚é
-	EƒEƒBƒ“ƒhƒEƒƒbƒZ[ƒW‚ğˆ—‚·‚é
+	ãƒ»ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã‚’ç™»éŒ²ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‡¦ç†ã™ã‚‹
 */
 
 
@@ -22,37 +22,37 @@
 #pragma comment(lib,"shlwapi.lib")
 
 
-// ƒRƒ“ƒgƒ[ƒ‰–¼
+// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©å
 #define CONTROLLER_NAME L"GamePad"
 
-// ƒ{ƒ^ƒ“‚ÌƒŠƒXƒg
+// ãƒœã‚¿ãƒ³ã®ãƒªã‚¹ãƒˆ
 static TVTest::ControllerButtonInfo g_ButtonList[] = {
-	{L"ª",			L"VolumeUp"},
-	{L"«",			L"VolumeDown"},
-	{L"©",			L"ChannelDown"},
-	{L"¨",			L"ChannelUp"},
-	{L"ƒ{ƒ^ƒ“1",	NULL},
-	{L"ƒ{ƒ^ƒ“2",	NULL},
-	{L"ƒ{ƒ^ƒ“3",	NULL},
-	{L"ƒ{ƒ^ƒ“4",	NULL},
-	{L"ƒ{ƒ^ƒ“5",	NULL},
-	{L"ƒ{ƒ^ƒ“6",	NULL},
-	{L"ƒ{ƒ^ƒ“7",	NULL},
-	{L"ƒ{ƒ^ƒ“8",	NULL},
-	{L"ƒ{ƒ^ƒ“9",	NULL},
-	{L"ƒ{ƒ^ƒ“10",	NULL},
-	{L"ƒ{ƒ^ƒ“11",	NULL},
-	{L"ƒ{ƒ^ƒ“12",	NULL},
-	{L"ƒ{ƒ^ƒ“13",	NULL},
-	{L"ƒ{ƒ^ƒ“14",	NULL},
-	{L"ƒ{ƒ^ƒ“15",	NULL},
-	{L"ƒ{ƒ^ƒ“16",	NULL},
+	{L"â†‘",			L"VolumeUp"},
+	{L"â†“",			L"VolumeDown"},
+	{L"â†",			L"ChannelDown"},
+	{L"â†’",			L"ChannelUp"},
+	{L"ãƒœã‚¿ãƒ³1",	NULL},
+	{L"ãƒœã‚¿ãƒ³2",	NULL},
+	{L"ãƒœã‚¿ãƒ³3",	NULL},
+	{L"ãƒœã‚¿ãƒ³4",	NULL},
+	{L"ãƒœã‚¿ãƒ³5",	NULL},
+	{L"ãƒœã‚¿ãƒ³6",	NULL},
+	{L"ãƒœã‚¿ãƒ³7",	NULL},
+	{L"ãƒœã‚¿ãƒ³8",	NULL},
+	{L"ãƒœã‚¿ãƒ³9",	NULL},
+	{L"ãƒœã‚¿ãƒ³10",	NULL},
+	{L"ãƒœã‚¿ãƒ³11",	NULL},
+	{L"ãƒœã‚¿ãƒ³12",	NULL},
+	{L"ãƒœã‚¿ãƒ³13",	NULL},
+	{L"ãƒœã‚¿ãƒ³14",	NULL},
+	{L"ãƒœã‚¿ãƒ³15",	NULL},
+	{L"ãƒœã‚¿ãƒ³16",	NULL},
 };
 
 #define NUM_BUTTONS (sizeof(g_ButtonList)/sizeof(g_ButtonList[0]))
 
 
-// ‘ÎÛƒEƒBƒ“ƒhƒE‚ğİ’è/æ“¾‚·‚éƒNƒ‰ƒX
+// å¯¾è±¡ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¨­å®š/å–å¾—ã™ã‚‹ã‚¯ãƒ©ã‚¹
 class CTargetWindow
 {
 	HANDLE m_hMap;
@@ -62,7 +62,7 @@ public:
 	CTargetWindow()
 		: m_phwnd(NULL)
 	{
-		// ‹¤—Lƒƒ‚ƒŠ‚ğì¬‚·‚é
+		// å…±æœ‰ãƒ¡ãƒ¢ãƒªã‚’ä½œæˆã™ã‚‹
 		SECURITY_DESCRIPTOR sd;
 		SECURITY_ATTRIBUTES sa;
 		::ZeroMemory(&sd,sizeof(sd));
@@ -113,7 +113,7 @@ public:
 };
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CGamePad : public TVTest::CTVTestPlugin
 {
 	struct ButtonStatus {
@@ -122,11 +122,11 @@ class CGamePad : public TVTest::CTVTestPlugin
 		DWORD RepeatCount;
 	};
 
-	CTargetWindow m_TargetWindow;	// ‘€ì‘ÎÛƒEƒBƒ“ƒhƒE
-	HANDLE m_hThread;				// ƒXƒŒƒbƒh‚Ìƒnƒ“ƒhƒ‹
-	HANDLE m_hEvent;				// ƒCƒxƒ“ƒg‚Ìƒnƒ“ƒhƒ‹
-	ButtonStatus m_ButtonStatus[NUM_BUTTONS];	// ƒ{ƒ^ƒ“‚Ìó‘Ô
-	volatile bool m_fInitDevCaps;	// ƒfƒoƒCƒXî•ñ‚Ì‰Šú‰»
+	CTargetWindow m_TargetWindow;	// æ“ä½œå¯¾è±¡ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+	HANDLE m_hThread;				// ã‚¹ãƒ¬ãƒƒãƒ‰ã®ãƒãƒ³ãƒ‰ãƒ«
+	HANDLE m_hEvent;				// ã‚¤ãƒ™ãƒ³ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
+	ButtonStatus m_ButtonStatus[NUM_BUTTONS];	// ãƒœã‚¿ãƒ³ã®çŠ¶æ…‹
+	volatile bool m_fInitDevCaps;	// ãƒ‡ãƒã‚¤ã‚¹æƒ…å ±ã®åˆæœŸåŒ–
 
 	bool Start();
 	void End();
@@ -153,30 +153,30 @@ CGamePad::CGamePad()
 
 bool CGamePad::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
-	// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"ƒQ[ƒ€ƒpƒbƒh";
+	pInfo->pszPluginName  = L"ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ƒQ[ƒ€ƒpƒbƒh‚Å‘€ì‚Å‚«‚é‚æ‚¤‚É‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰ã§æ“ä½œã§ãã‚‹ã‚ˆã†ã«ã—ã¾ã™ã€‚";
 	return true;
 }
 
 
 bool CGamePad::Initialize()
 {
-	// ‰Šú‰»ˆ—
+	// åˆæœŸåŒ–å‡¦ç†
 
-	// Ini ƒtƒ@ƒCƒ‹‚ÌƒpƒX‚ğæ“¾
+	// Ini ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹ã‚’å–å¾—
 	TCHAR szIniFileName[MAX_PATH];
 	::GetModuleFileName(g_hinstDLL,szIniFileName,MAX_PATH);
 	::PathRenameExtension(szIniFileName,TEXT(".ini"));
 
-	// ƒRƒ“ƒgƒ[ƒ‰‚Ì“o˜^
+	// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã®ç™»éŒ²
 	TVTest::ControllerInfo Info;
 	Info.Flags             = 0;
 	Info.pszName           = CONTROLLER_NAME;
-	Info.pszText           = L"ƒQ[ƒ€ƒpƒbƒh";
+	Info.pszText           = L"ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰";
 	Info.NumButtons        = NUM_BUTTONS;
 	Info.pButtonList       = g_ButtonList;
 	Info.pszIniFileName    = szIniFileName;
@@ -186,17 +186,17 @@ bool CGamePad::Initialize()
 	Info.pTranslateMessage = NULL;
 	Info.pClientData       = NULL;
 	if (!m_pApp->RegisterController(&Info)) {
-		m_pApp->AddLog(L"ƒRƒ“ƒgƒ[ƒ‰‚ğ“o˜^‚Å‚«‚Ü‚¹‚ñB",TVTest::LOG_TYPE_ERROR);
+		m_pApp->AddLog(L"ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã‚’ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
-	// ‹¤—Lƒƒ‚ƒŠ‚ÉƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚ğİ’è
+	// å…±æœ‰ãƒ¡ãƒ¢ãƒªã«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‚’è¨­å®š
 	if (!m_TargetWindow.SetWindow(m_pApp->GetAppWindow())) {
-		m_pApp->AddLog(L"‹¤—Lƒƒ‚ƒŠ‚ğì¬‚Å‚«‚Ü‚¹‚ñB",TVTest::LOG_TYPE_ERROR);
+		m_pApp->AddLog(L"å…±æœ‰ãƒ¡ãƒ¢ãƒªã‚’ä½œæˆã§ãã¾ã›ã‚“ã€‚",TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback,this);
 
 	return true;
@@ -205,7 +205,7 @@ bool CGamePad::Initialize()
 
 bool CGamePad::Finalize()
 {
-	// I—¹ˆ—
+	// çµ‚äº†å‡¦ç†
 
 	End();
 
@@ -215,7 +215,7 @@ bool CGamePad::Finalize()
 
 bool CGamePad::Start()
 {
-	// ƒXƒŒƒbƒhŠJn
+	// ã‚¹ãƒ¬ãƒƒãƒ‰é–‹å§‹
 	if (m_hThread==NULL) {
 		if (m_hEvent==NULL) {
 			m_hEvent=::CreateEvent(NULL,FALSE,FALSE,NULL);
@@ -229,7 +229,7 @@ bool CGamePad::Start()
 			return false;
 	}
 
-	// ƒƒbƒZ[ƒWƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetWindowMessageCallback(MessageCallback,this);
 
 	return true;
@@ -238,7 +238,7 @@ bool CGamePad::Start()
 
 void CGamePad::End()
 {
-	// ƒXƒŒƒbƒhI—¹
+	// ã‚¹ãƒ¬ãƒƒãƒ‰çµ‚äº†
 	if (m_hThread!=NULL) {
 		::SetEvent(m_hEvent);
 		if (::WaitForSingleObject(m_hThread,5000)==WAIT_TIMEOUT)
@@ -251,27 +251,27 @@ void CGamePad::End()
 		m_hEvent=NULL;
 	}
 
-	// ƒƒbƒZ[ƒWƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^‰ğœ
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²è§£é™¤
 	m_pApp->SetWindowMessageCallback(NULL);
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CGamePad::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
 {
 	CGamePad *pThis=static_cast<CGamePad*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (lParam1!=0) {
 			if (!pThis->Start()) {
-				pThis->m_pApp->AddLog(L"‰Šú‰»‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B",TVTest::LOG_TYPE_ERROR);
+				pThis->m_pApp->AddLog(L"åˆæœŸåŒ–ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚",TVTest::LOG_TYPE_ERROR);
 				if (!pThis->m_pApp->GetSilentMode()) {
 					::MessageBoxW(pThis->m_pApp->GetAppWindow(),
-								  L"‰Šú‰»‚ÅƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½B",
-								  L"ƒQ[ƒ€ƒpƒbƒh",
+								  L"åˆæœŸåŒ–ã§ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸã€‚",
+								  L"ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰",
 								  MB_OK | MB_ICONEXCLAMATION);
 				}
 				return FALSE;
@@ -282,7 +282,7 @@ LRESULT CALLBACK CGamePad::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam
 		return TRUE;
 
 	case TVTest::EVENT_CONTROLLERFOCUS:
-		// ‚±‚ÌƒvƒƒZƒX‚ª‘€ì‚Ì‘ÎÛ‚É‚È‚Á‚½
+		// ã“ã®ãƒ—ãƒ­ã‚»ã‚¹ãŒæ“ä½œã®å¯¾è±¡ã«ãªã£ãŸ
 		pThis->m_TargetWindow.SetWindow(reinterpret_cast<HWND>(lParam1));
 		return TRUE;
 	}
@@ -291,26 +291,26 @@ LRESULT CALLBACK CGamePad::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam
 }
 
 
-// ƒƒbƒZ[ƒWƒR[ƒ‹ƒoƒbƒNŠÖ”
+// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 BOOL CALLBACK CGamePad::MessageCallback(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
 										LRESULT *pResult,void *pClientData)
 {
-	// ƒfƒoƒCƒX‚Ìó‘Ô‚ª•Ï‚í‚Á‚½‚çÄ‰Šú‰»
+	// ãƒ‡ãƒã‚¤ã‚¹ã®çŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸã‚‰å†åˆæœŸåŒ–
 	if (uMsg==WM_DEVICECHANGE && wParam==DBT_DEVNODES_CHANGED)
 		static_cast<CGamePad*>(pClientData)->m_fInitDevCaps=true;
 	return FALSE;
 }
 
 
-// ƒ{ƒ^ƒ“‚Ìó‘Ô‚ğæ“¾‚·‚éƒXƒŒƒbƒh
+// ãƒœã‚¿ãƒ³ã®çŠ¶æ…‹ã‚’å–å¾—ã™ã‚‹ã‚¹ãƒ¬ãƒƒãƒ‰
 DWORD WINAPI CGamePad::ThreadProc(LPVOID pParameter)
 {
 	CGamePad *pThis=static_cast<CGamePad*>(pParameter);
 
-	// ƒXƒŒƒbƒh‚Ì—Dæ“x‚ğ‰º‚°‚Ä‚¨‚­
+	// ã‚¹ãƒ¬ãƒƒãƒ‰ã®å„ªå…ˆåº¦ã‚’ä¸‹ã’ã¦ãŠã
 	::SetThreadPriority(::GetCurrentThread(),THREAD_PRIORITY_IDLE);
 
-	// ƒfƒoƒCƒX‚Ì”‚ğæ“¾
+	// ãƒ‡ãƒã‚¤ã‚¹ã®æ•°ã‚’å–å¾—
 	const UINT NumDevices=::joyGetNumDevs();
 	if (NumDevices==0)
 		return 0;
@@ -322,7 +322,7 @@ DWORD WINAPI CGamePad::ThreadProc(LPVOID pParameter)
 	JoystickInfo *pJoystickList=new JoystickInfo[NumDevices];
 	pThis->m_fInitDevCaps=true;
 
-	// ƒXƒe[ƒ^ƒX‰Šú‰»
+	// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹åˆæœŸåŒ–
 	for (int i=0;i<NUM_BUTTONS;i++)
 		pThis->m_ButtonStatus[i].fPressed=false;
 
@@ -330,13 +330,13 @@ DWORD WINAPI CGamePad::ThreadProc(LPVOID pParameter)
 	jix.dwSize=sizeof(jix);
 	jix.dwFlags=JOY_RETURNBUTTONS | JOY_RETURNX | JOY_RETURNY | JOY_RETURNPOV;
 
-	// ƒ{ƒ^ƒ“‚Ìó‘Ô‚ğƒ|[ƒŠƒ“ƒO
+	// ãƒœã‚¿ãƒ³ã®çŠ¶æ…‹ã‚’ãƒãƒ¼ãƒªãƒ³ã‚°
 	while (::WaitForSingleObject(pThis->m_hEvent,100)==WAIT_TIMEOUT) {
-		// ‚±‚ÌƒEƒBƒ“ƒhƒE‚ª‘ÎÛ‚©?
+		// ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒå¯¾è±¡ã‹?
 		if (pThis->m_TargetWindow.GetWindow()!=pThis->m_pApp->GetAppWindow())
 			continue;
 
-		// ŠeƒfƒoƒCƒX‚Ìî•ñ‚ğæ“¾‚·‚é
+		// å„ãƒ‡ãƒã‚¤ã‚¹ã®æƒ…å ±ã‚’å–å¾—ã™ã‚‹
 		if (pThis->m_fInitDevCaps) {
 			for (UINT i=0;i<NumDevices;i++) {
 				pJoystickList[i].fEnable=
@@ -429,7 +429,7 @@ DWORD WINAPI CGamePad::ThreadProc(LPVOID pParameter)
 						Status.fPressed=false;
 					}
 				}
-				// ‚±‚Ì break ‚ğÁ‚¹‚ÎÚ‘±‚³‚ê‚Ä‚¢‚é‘S‚Ä‚ÌƒQ[ƒ€ƒpƒbƒh‚Ì‘€ì‚ğó‚¯•t‚¯‚é
+				// ã“ã® break ã‚’æ¶ˆã›ã°æ¥ç¶šã•ã‚Œã¦ã„ã‚‹å…¨ã¦ã®ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰ã®æ“ä½œã‚’å—ã‘ä»˜ã‘ã‚‹
 				break;
 			}
 		}
@@ -443,7 +443,7 @@ DWORD WINAPI CGamePad::ThreadProc(LPVOID pParameter)
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CGamePad;

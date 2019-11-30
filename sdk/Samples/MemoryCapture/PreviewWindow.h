@@ -4,7 +4,7 @@
 #include "Image.h"
 
 
-// プレビューウィンドウクラス
+// 繝励Ξ繝薙Η繝ｼ繧ｦ繧｣繝ｳ繝峨え繧ｯ繝ｩ繧ｹ
 class CPreviewWindow
 {
 public:

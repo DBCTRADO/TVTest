@@ -4,7 +4,7 @@
 #include "Image.h"
 
 
-// 画像コーデッククラス
+// 逕ｻ蜒上さ繝ｼ繝�繝�繧ｯ繧ｯ繝ｩ繧ｹ
 class CImageCodec
 {
 public:

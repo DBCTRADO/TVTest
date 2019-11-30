@@ -2,7 +2,7 @@
 #include "resource.h"
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-#pragma code_page(932)
+#pragma code_page(65001)
 
 
 IDI_MAIN        ICON   "Resources\\MemoryCapture.ico"
@@ -17,28 +17,28 @@ IDM_CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "��荞��(&P)", CM_CAPTURE
-		MENUITEM "�ǉ���荞��(&T)", CM_CAPTURE_ADD
+		MENUITEM "取り込み(&P)", CM_CAPTURE
+		MENUITEM "追加取り込み(&T)", CM_CAPTURE_ADD
 		MENUITEM SEPARATOR
-		MENUITEM "�ۑ�(&S)", CM_SAVE
-		MENUITEM "���O��t���ĕۑ�(&A)...", CM_SAVE_AS
-		MENUITEM "���ׂĕۑ�(&L)", CM_SAVE_ALL
+		MENUITEM "保存(&S)", CM_SAVE
+		MENUITEM "名前を付けて保存(&A)...", CM_SAVE_AS
+		MENUITEM "すべて保存(&L)", CM_SAVE_ALL
 		MENUITEM SEPARATOR
-		MENUITEM "�R�s�[(&C)", CM_COPY
+		MENUITEM "コピー(&C)", CM_COPY
 		MENUITEM SEPARATOR
-		POPUP "�L���v�`���[�T�C�Y(&I)"
+		POPUP "キャプチャーサイズ(&I)"
 		BEGIN
 			MENUITEM SEPARATOR	// Dummy
 		END
-		POPUP "�ăT���v�����O(&R)"
+		POPUP "再サンプリング(&R)"
 		BEGIN
-			MENUITEM "�ŋߖT�@(&N)", CM_RESAMPLE_NEAREST
-			MENUITEM "���`��Ԗ@(&B)", CM_RESAMPLE_BILINEAR
-			MENUITEM "���ω�f�@(&A)", CM_RESAMPLE_AVERAGING
+			MENUITEM "最近傍法(&N)", CM_RESAMPLE_NEAREST
+			MENUITEM "線形補間法(&B)", CM_RESAMPLE_BILINEAR
+			MENUITEM "平均画素法(&A)", CM_RESAMPLE_AVERAGING
 			MENUITEM "Lanczos2(&2)", CM_RESAMPLE_LANCZOS2
 			MENUITEM "Lanczos3(&3)", CM_RESAMPLE_LANCZOS3
 		END
-		POPUP "�C���^�[���[�X����(&D)"
+		POPUP "インターレース解除(&D)"
 		BEGIN
 			MENUITEM "Weave(&W)", CM_DEINTERLACE_WEAVE
 			MENUITEM "Blend(&B)", CM_DEINTERLACE_BLEND
@@ -48,9 +48,9 @@ BEGIN
 			MENUITEM "Yadif Bob(&A)", CM_DEINTERLACE_YADIF_BOB
 		END
 		MENUITEM SEPARATOR
-		POPUP "�\���{��(&Z)"
+		POPUP "表示倍率(&Z)"
 		BEGIN
-			MENUITEM "�E�B���h�E�ɍ��킹��(&F)", CM_FIT_IMAGE_TO_WINDOW
+			MENUITEM "ウィンドウに合わせる(&F)", CM_FIT_IMAGE_TO_WINDOW
 			MENUITEM "25%", CM_ZOOM_25
 			MENUITEM "33%", CM_ZOOM_33
 			MENUITEM "50%", CM_ZOOM_50
@@ -60,43 +60,43 @@ BEGIN
 			MENUITEM "150%", CM_ZOOM_150
 			MENUITEM "200%", CM_ZOOM_200
 		END
-		MENUITEM "�E�B���h�E�T�C�Y���摜�ɍ��킹��(&W)", CM_FIT_WINDOW_TO_IMAGE
+		MENUITEM "ウィンドウサイズを画像に合わせる(&W)", CM_FIT_WINDOW_TO_IMAGE
 		MENUITEM SEPARATOR
-		MENUITEM "�ݒ�(&E)...", CM_SETTINGS
+		MENUITEM "設定(&E)...", CM_SETTINGS
 	END
 END
 
 STRINGTABLE
 BEGIN
-	CM_CAPTURE,             "��荞��"
-	CM_CAPTURE_ADD,         "�ǉ���荞��"
-	CM_SAVE,                "�ۑ�"
-	CM_COPY,                "�R�s�["
-	CM_PREV_FRAME,          "�O�̃t���[��"
-	CM_NEXT_FRAME,          "���̃t���[��"
-	CM_FIRST_FRAME,         "�ŏ��̃t���[��"
-	CM_LAST_FRAME,          "�Ō�̃t���[��"
-	CM_SKIP_BACKWARD_FRAME, "�O���ɃX�L�b�v"
-	CM_SKIP_FORWARD_FRAME,  "����ɃX�L�b�v"
+	CM_CAPTURE,             "取り込み"
+	CM_CAPTURE_ADD,         "追加取り込み"
+	CM_SAVE,                "保存"
+	CM_COPY,                "コピー"
+	CM_PREV_FRAME,          "前のフレーム"
+	CM_NEXT_FRAME,          "次のフレーム"
+	CM_FIRST_FRAME,         "最初のフレーム"
+	CM_LAST_FRAME,          "最後のフレーム"
+	CM_SKIP_BACKWARD_FRAME, "前方にスキップ"
+	CM_SKIP_FORWARD_FRAME,  "後方にスキップ"
 END
 
 IDD_SETTINGS DIALOG 0, 0, 192, 90
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "�������[�L���v�`���[�ݒ�"
-FONT 9,"�l�r �o�S�V�b�N"
+CAPTION "メモリーキャプチャー設定"
+FONT 9,"ＭＳ Ｐゴシック"
 BEGIN
 	DEFPUSHBUTTON "OK", IDOK, 84, 68, 48, 14
-	PUSHBUTTON "�L�����Z��",IDCANCEL, 136, 68, 48, 14
+	PUSHBUTTON "キャンセル",IDCANCEL, 136, 68, 48, 14
 
-	LTEXT "�f���������[�T�C�Y(&M):",-1,8,10,80,8
+	LTEXT "映像メモリーサイズ(&M):",-1,8,10,80,8
 	EDITTEXT IDC_SETTINGS_MEMORY_SIZE, 92, 8, 32, 12, ES_NUMBER | ES_AUTOHSCROLL
-	LTEXT "MB (1�`40)", -1, 126, 10, 40, 8
+	LTEXT "MB (1～40)", -1, 126, 10, 40, 8
 
-	LTEXT "�摜�������[����g�p��:", -1, 8, 24, 80, 8
+	LTEXT "画像メモリー推定使用量:", -1, 8, 24, 80, 8
 	LTEXT "", IDC_SETTINGS_ESTIMATE_MEMORY_USAGE, 92, 24, 32, 8
 
-	AUTOCHECKBOX "�E�B���h�E��\�����Ă��Ȃ������f�[�^�𗭂߂�(&A)", IDC_SETTINGS_ACCUMULATE_ALWAYS, 8, 36, 168, 9
+	AUTOCHECKBOX "ウィンドウを表示していない時もデータを溜める(&A)", IDC_SETTINGS_ACCUMULATE_ALWAYS, 8, 36, 168, 9
 
-	LTEXT "�X�L�b�v����Ŕ�΂��t���[����(&S):", -1, 8, 50, 120, 8
+	LTEXT "スキップ操作で飛ばすフレーム数(&S):", -1, 8, 50, 120, 8
 	EDITTEXT IDC_SETTINGS_SKIP_FRAMES, 132, 48, 32, 12, ES_NUMBER | ES_AUTOHSCROLL
 END

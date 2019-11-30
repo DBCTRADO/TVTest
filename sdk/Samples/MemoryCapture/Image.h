@@ -4,16 +4,16 @@
 #include <cstddef>
 
 
-// ‰æ‘œƒNƒ‰ƒX
+// ç”»åƒã‚¯ãƒ©ã‚¹
 class CImage
 {
 public:
-	// ÄƒTƒ“ƒvƒŠƒ“ƒO‚Ìí—Ş
+	// å†ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã®ç¨®é¡
 	enum ResampleType
 	{
-		Resample_NearestNeighbor, // Å‹ß–T–@
-		Resample_Bilinear,        // üŒ`•âŠÔ–@
-		Resample_Averaging,       // •½‹Ï‰æ‘f–@
+		Resample_NearestNeighbor, // æœ€è¿‘å‚æ³•
+		Resample_Bilinear,        // ç·šå½¢è£œé–“æ³•
+		Resample_Averaging,       // å¹³å‡ç”»ç´ æ³•
 		Resample_Lanczos2,        // Lanczos2
 		Resample_Lanczos3         // Lanczos3
 	};

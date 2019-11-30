@@ -1,12 +1,12 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	w’èğŒ‚ÅƒXƒŠ[ƒv‚·‚é
+	æŒ‡å®šæ¡ä»¶ã§ã‚¹ãƒªãƒ¼ãƒ—ã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	Eƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
-	ETVTest ‚ğI—¹‚³‚¹‚é
+	ãƒ»ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»TVTest ã‚’çµ‚äº†ã•ã›ã‚‹
 */
 
 
@@ -24,13 +24,13 @@
 #pragma comment(lib,"powrprof.lib")
 
 
-// FILETIME ‚Ì’PˆÊ
+// FILETIME ã®å˜ä½
 static const LONGLONG FILETIME_MS   = 10000LL;
 static const LONGLONG FILETIME_SEC  = 1000LL * FILETIME_MS;
 static const LONGLONG FILETIME_MIN  = 60LL * FILETIME_SEC;
 static const LONGLONG FILETIME_HOUR = 60LL * FILETIME_MIN;
 
-// FILETIME ‚ÌŠÔ·‚ğ‹‚ß‚é
+// FILETIME ã®æ™‚é–“å·®ã‚’æ±‚ã‚ã‚‹
 static LONGLONG DiffFileTime(const FILETIME &ft1, const FILETIME &ft2)
 {
 	LARGE_INTEGER li1, li2;
@@ -43,7 +43,7 @@ static LONGLONG DiffFileTime(const FILETIME &ft1, const FILETIME &ft2)
 	return li1.QuadPart - li2.QuadPart;
 }
 
-// SYSTEMTIME ‚ÌŠÔ·‚ğ‹‚ß‚é(ms’PˆÊ)
+// SYSTEMTIME ã®æ™‚é–“å·®ã‚’æ±‚ã‚ã‚‹(mså˜ä½)
 static LONGLONG DiffSystemTime(const SYSTEMTIME &st1, const SYSTEMTIME &st2)
 {
 	FILETIME ft1, ft2;
@@ -55,27 +55,27 @@ static LONGLONG DiffSystemTime(const SYSTEMTIME &st1, const SYSTEMTIME &st2)
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
 #define SLEEPTIMER_WINDOW_CLASS TEXT("TVTest SleepTimer Window")
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CSleepTimer : public TVTest::CTVTestPlugin
 {
-	// ƒXƒŠ[ƒvğŒ
+	// ã‚¹ãƒªãƒ¼ãƒ—æ¡ä»¶
 	enum SleepCondition {
-		CONDITION_DURATION,	// ŠÔŒo‰ß
-		CONDITION_DATETIME,	// w’è
-		CONDITION_EVENTEND	// ”Ô‘gI—¹
+		CONDITION_DURATION,	// æ™‚é–“çµŒé
+		CONDITION_DATETIME,	// æŒ‡å®šæ™‚åˆ»
+		CONDITION_EVENTEND	// ç•ªçµ„çµ‚äº†
 	};
 
-	// ƒXƒŠ[ƒv•û–@
+	// ã‚¹ãƒªãƒ¼ãƒ—æ–¹æ³•
 	enum SleepMode {
-		MODE_EXIT,			// TVTestI—¹
-		MODE_POWEROFF,		// “dŒ¹ƒIƒt
-		MODE_LOGOFF,		// ƒƒOƒIƒt
-		MODE_SUSPEND,		// ƒTƒXƒyƒ“ƒh
-		MODE_HIBERNATE		// ƒnƒCƒoƒl[ƒg
+		MODE_EXIT,			// TVTestçµ‚äº†
+		MODE_POWEROFF,		// é›»æºã‚ªãƒ•
+		MODE_LOGOFF,		// ãƒ­ã‚°ã‚ªãƒ•
+		MODE_SUSPEND,		// ã‚µã‚¹ãƒšãƒ³ãƒ‰
+		MODE_HIBERNATE		// ãƒã‚¤ãƒãƒãƒ¼ãƒˆ
 	};
 
 	enum {
@@ -85,23 +85,23 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 
 	static const int DEFAULT_POS = INT_MIN;
 
-	bool m_fInitialized;				// ‰Šú‰»Ï‚İ‚©?
-	TCHAR m_szIniFileName[MAX_PATH];	// INIƒtƒ@ƒCƒ‹‚ÌƒpƒX
-	SleepCondition m_Condition;			// ƒXƒŠ[ƒv‚·‚éğŒ
-	DWORD m_SleepDuration;				// ƒXƒŠ[ƒv‚Ü‚Å‚ÌŠÔ(•b’PˆÊ)
-	SYSTEMTIME m_SleepDateTime;			// ƒXƒŠ[ƒv‚·‚é
-	WORD m_EventID;						// Œ»İ‚Ì”Ô‘g‚Ì event_id
-	SleepMode m_Mode;					// ƒXƒŠ[ƒv‚Ì“®ì
-	bool m_fForce;						// ‹­§
-	bool m_fMonitorOff;					// ƒ‚ƒjƒ^‚ğOFF‚É‚·‚é
-	bool m_fIgnoreRecStatus;			// ˜^‰æ’†‚Å‚àƒXƒŠ[ƒv‚·‚é
-	bool m_fConfirm;					// Šm”F‚ğæ‚é
-	int m_ConfirmTimeout;				// Šm”F‚Ìƒ^ƒCƒ€ƒAƒEƒgŠÔ(•b’PˆÊ)
-	bool m_fShowSettings;				// ƒvƒ‰ƒOƒCƒ“—LŒø‚Éİ’è•\¦
-	POINT m_SettingsDialogPos;			// İ’èƒ_ƒCƒAƒƒO‚ÌˆÊ’u
-	HWND m_hwnd;						// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
-	bool m_fEnabled;					// ƒvƒ‰ƒOƒCƒ“‚ª—LŒø‚©?
-	int m_ConfirmTimerCount;			// Šm”F‚Ìƒ^ƒCƒ}[
+	bool m_fInitialized;				// åˆæœŸåŒ–æ¸ˆã¿ã‹?
+	TCHAR m_szIniFileName[MAX_PATH];	// INIãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹
+	SleepCondition m_Condition;			// ã‚¹ãƒªãƒ¼ãƒ—ã™ã‚‹æ¡ä»¶
+	DWORD m_SleepDuration;				// ã‚¹ãƒªãƒ¼ãƒ—ã¾ã§ã®æ™‚é–“(ç§’å˜ä½)
+	SYSTEMTIME m_SleepDateTime;			// ã‚¹ãƒªãƒ¼ãƒ—ã™ã‚‹æ™‚åˆ»
+	WORD m_EventID;						// ç¾åœ¨ã®ç•ªçµ„ã® event_id
+	SleepMode m_Mode;					// ã‚¹ãƒªãƒ¼ãƒ—æ™‚ã®å‹•ä½œ
+	bool m_fForce;						// å¼·åˆ¶
+	bool m_fMonitorOff;					// ãƒ¢ãƒ‹ã‚¿ã‚’OFFã«ã™ã‚‹
+	bool m_fIgnoreRecStatus;			// éŒ²ç”»ä¸­ã§ã‚‚ã‚¹ãƒªãƒ¼ãƒ—ã™ã‚‹
+	bool m_fConfirm;					// ç¢ºèªã‚’å–ã‚‹
+	int m_ConfirmTimeout;				// ç¢ºèªã®ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆæ™‚é–“(ç§’å˜ä½)
+	bool m_fShowSettings;				// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³æœ‰åŠ¹æ™‚ã«è¨­å®šè¡¨ç¤º
+	POINT m_SettingsDialogPos;			// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®ä½ç½®
+	HWND m_hwnd;						// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
+	bool m_fEnabled;					// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒæœ‰åŠ¹ã‹?
+	int m_ConfirmTimerCount;			// ç¢ºèªã®ã‚¿ã‚¤ãƒãƒ¼
 
 	static const LPCTSTR m_ModeTextList[];
 
@@ -128,11 +128,11 @@ public:
 
 
 const LPCTSTR CSleepTimer::m_ModeTextList[] = {
-	TEXT("TVTest ‚ğI—¹"),
-	TEXT("“dŒ¹ƒIƒt"),
-	TEXT("ƒƒOƒIƒt"),
-	TEXT("ƒTƒXƒyƒ“ƒh"),
-	TEXT("ƒnƒCƒoƒl[ƒg"),
+	TEXT("TVTest ã‚’çµ‚äº†"),
+	TEXT("é›»æºã‚ªãƒ•"),
+	TEXT("ãƒ­ã‚°ã‚ªãƒ•"),
+	TEXT("ã‚µã‚¹ãƒšãƒ³ãƒ‰"),
+	TEXT("ãƒã‚¤ãƒãƒãƒ¼ãƒˆ"),
 };
 
 
@@ -158,38 +158,38 @@ CSleepTimer::CSleepTimer()
 
 bool CSleepTimer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
-	// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
-	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS		// İ’è‚ ‚è
-	                      | TVTest::PLUGIN_FLAG_DISABLEONSTART;	// ‹N“®‚Íí‚É–³Œø
-	pInfo->pszPluginName  = L"ƒXƒŠ[ƒvƒ^ƒCƒ}[";
+	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS		// è¨­å®šã‚ã‚Š
+	                      | TVTest::PLUGIN_FLAG_DISABLEONSTART;	// èµ·å‹•æ™‚ã¯å¸¸ã«ç„¡åŠ¹
+	pInfo->pszPluginName  = L"ã‚¹ãƒªãƒ¼ãƒ—ã‚¿ã‚¤ãƒãƒ¼";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"w’èğŒ‚ÅI—¹‚³‚¹‚Ü‚·B";
+	pInfo->pszDescription = L"æŒ‡å®šæ¡ä»¶ã§çµ‚äº†ã•ã›ã¾ã™ã€‚";
 	return true;
 }
 
 
 bool CSleepTimer::Initialize()
 {
-	// ‰Šú‰»ˆ—
+	// åˆæœŸåŒ–å‡¦ç†
 
-	// ƒAƒCƒRƒ“‚ğ“o˜^
+	// ã‚¢ã‚¤ã‚³ãƒ³ã‚’ç™»éŒ²
 	m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON));
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚ª—LŒø‚É‚³‚ê‚½‚Ì‰Šú‰»ˆ—
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒæœ‰åŠ¹ã«ã•ã‚ŒãŸæ™‚ã®åˆæœŸåŒ–å‡¦ç†
 bool CSleepTimer::InitializePlugin()
 {
 	if (m_fInitialized)
 		return true;
 
-	// İ’è‚Ì“Ç‚İ‚İ
+	// è¨­å®šã®èª­ã¿è¾¼ã¿
 	::GetModuleFileName(g_hinstDLL, m_szIniFileName, MAX_PATH);
 	::PathRenameExtension(m_szIniFileName, TEXT(".ini"));
 	m_Condition = (SleepCondition)
@@ -215,7 +215,7 @@ bool CSleepTimer::InitializePlugin()
 	m_SettingsDialogPos.y = (int)
 		::GetPrivateProfileInt(TEXT("Settings"), TEXT("SettingsDialogY"), m_SettingsDialogPos.y, m_szIniFileName);
 
-	// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 	WNDCLASS wc;
 	wc.style = 0;
 	wc.lpfnWndProc = WndProc;
@@ -230,7 +230,7 @@ bool CSleepTimer::InitializePlugin()
 	if (::RegisterClass(&wc) == 0)
 		return false;
 
-	// ƒEƒBƒ“ƒhƒE‚Ìì¬
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 	m_hwnd = ::CreateWindowEx(
 		0, SLEEPTIMER_WINDOW_CLASS, nullptr, WS_POPUP,
 		0, 0, 0, 0, HWND_MESSAGE, nullptr, g_hinstDLL, this);
@@ -244,16 +244,16 @@ bool CSleepTimer::InitializePlugin()
 
 bool CSleepTimer::Finalize()
 {
-	// I—¹ˆ—
+	// çµ‚äº†å‡¦ç†
 
-	m_pApp->EnablePlugin(false);	// Ÿ‰ñ‹N“®‚É—LŒø‚É‚È‚ç‚È‚¢‚æ‚¤‚É
+	m_pApp->EnablePlugin(false);	// æ¬¡å›èµ·å‹•æ™‚ã«æœ‰åŠ¹ã«ãªã‚‰ãªã„ã‚ˆã†ã«
 
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 	if (m_hwnd)
 		::DestroyWindow(m_hwnd);
 
 	if (m_fInitialized) {
-		// İ’è‚Ì•Û‘¶
+		// è¨­å®šã®ä¿å­˜
 		struct IntString {
 			IntString(int Value) { ::wsprintf(m_szBuffer, TEXT("%d"), Value); }
 			operator LPCTSTR() const { return m_szBuffer; }
@@ -278,7 +278,7 @@ bool CSleepTimer::Finalize()
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒø/–³Œø‚ªØ‚è‘Ö‚í‚Á‚½‚Ìˆ—
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹/ç„¡åŠ¹ãŒåˆ‡ã‚Šæ›¿ã‚ã£ãŸæ™‚ã®å‡¦ç†
 bool CSleepTimer::OnEnablePlugin(bool fEnable)
 {
 	InitializePlugin();
@@ -299,16 +299,16 @@ bool CSleepTimer::OnEnablePlugin(bool fEnable)
 }
 
 
-// ƒXƒŠ[ƒvŠJn
+// ã‚¹ãƒªãƒ¼ãƒ—é–‹å§‹
 bool CSleepTimer::BeginSleep()
 {
-	m_pApp->AddLog(L"ƒXƒŠ[ƒv‚ğŠJn‚µ‚Ü‚·B");
+	m_pApp->AddLog(L"ã‚¹ãƒªãƒ¼ãƒ—ã‚’é–‹å§‹ã—ã¾ã™ã€‚");
 
-	m_pApp->EnablePlugin(false);	// ƒ^ƒCƒ}[‚Íˆê‰ñŒÀ‚è—LŒø
-	EndTimer();		// EventCallback‚ÅŒÄ‚Î‚ê‚é‚Í‚¸‚¾‚ªA”O‚Ì‚½‚ß
+	m_pApp->EnablePlugin(false);	// ã‚¿ã‚¤ãƒãƒ¼ã¯ä¸€å›é™ã‚Šæœ‰åŠ¹
+	EndTimer();		// EventCallbackã§å‘¼ã°ã‚Œã‚‹ã¯ãšã ãŒã€å¿µã®ãŸã‚
 
 	if (m_fConfirm) {
-		// Šm”Fƒ_ƒCƒAƒƒO‚ğ•\¦
+		// ç¢ºèªãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤º
 		TVTest::ShowDialogInfo Info;
 
 		Info.Flags = 0;
@@ -319,35 +319,35 @@ bool CSleepTimer::BeginSleep()
 		Info.hwndOwner = m_pApp->GetAppWindow();
 
 		if (m_pApp->ShowDialog(&Info) != IDOK) {
-			m_pApp->AddLog(L"ƒ†[ƒU[‚É‚æ‚Á‚ÄƒXƒŠ[ƒv‚ªƒLƒƒƒ“ƒZƒ‹‚³‚ê‚Ü‚µ‚½B");
+			m_pApp->AddLog(L"ãƒ¦ãƒ¼ã‚¶ãƒ¼ã«ã‚ˆã£ã¦ã‚¹ãƒªãƒ¼ãƒ—ãŒã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚Œã¾ã—ãŸã€‚");
 			return false;
 		}
 	}
 
 	if (!m_fIgnoreRecStatus) {
-		// ˜^‰æ’†‚ÍƒXƒŠ[ƒvÀs‚µ‚È‚¢
+		// éŒ²ç”»ä¸­ã¯ã‚¹ãƒªãƒ¼ãƒ—å®Ÿè¡Œã—ãªã„
 		TVTest::RecordStatusInfo RecStat;
 		if (!m_pApp->GetRecordStatus(&RecStat)) {
-			m_pApp->AddLog(L"˜^‰æó‘Ô‚ğæ“¾‚Å‚«‚È‚¢‚Ì‚ÅƒXƒŠ[ƒv‚ªƒLƒƒƒ“ƒZƒ‹‚³‚ê‚Ü‚µ‚½B",
+			m_pApp->AddLog(L"éŒ²ç”»çŠ¶æ…‹ã‚’å–å¾—ã§ããªã„ã®ã§ã‚¹ãƒªãƒ¼ãƒ—ãŒã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚Œã¾ã—ãŸã€‚",
 						   TVTest::LOG_TYPE_WARNING);
 			return false;
 		}
 		if (RecStat.Status != TVTest::RECORD_STATUS_NOTRECORDING) {
-			m_pApp->AddLog(L"˜^‰æ’†‚È‚Ì‚ÅƒXƒŠ[ƒv‚ªƒLƒƒƒ“ƒZƒ‹‚³‚ê‚Ü‚µ‚½B");
+			m_pApp->AddLog(L"éŒ²ç”»ä¸­ãªã®ã§ã‚¹ãƒªãƒ¼ãƒ—ãŒã‚­ãƒ£ãƒ³ã‚»ãƒ«ã•ã‚Œã¾ã—ãŸã€‚");
 			return false;
 		}
 	}
 
-	// ƒXƒŠ[ƒvÀs
+	// ã‚¹ãƒªãƒ¼ãƒ—å®Ÿè¡Œ
 	return DoSleep();
 }
 
 
-// ƒXƒŠ[ƒvÀs
+// ã‚¹ãƒªãƒ¼ãƒ—å®Ÿè¡Œ
 bool CSleepTimer::DoSleep()
 {
 	if (m_Mode!=MODE_EXIT && m_Mode!=MODE_LOGOFF) {
-		// Œ ŒÀİ’è
+		// æ¨©é™è¨­å®š
 		HANDLE hToken;
 
 		if (::OpenProcessToken(::GetCurrentProcess(),
@@ -371,7 +371,7 @@ bool CSleepTimer::DoSleep()
 		if (!m_pApp->Close(m_fForce ? TVTest::CLOSE_EXIT : 0))
 			return false;
 		if (m_fMonitorOff) {
-			// ƒ‚ƒjƒ^‚ğOFF‚É‚·‚é
+			// ãƒ¢ãƒ‹ã‚¿ã‚’OFFã«ã™ã‚‹
 			::PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, 1);
 			::Sleep(1000);
 			::PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, 2);
@@ -406,19 +406,19 @@ bool CSleepTimer::DoSleep()
 }
 
 
-// ƒ^ƒCƒ}[ŠJn
+// ã‚¿ã‚¤ãƒãƒ¼é–‹å§‹
 bool CSleepTimer::BeginTimer()
 {
 	UINT_PTR Result;
 	WCHAR szLog[256];
 
 	if (m_Condition == CONDITION_DURATION) {
-		::wsprintfW(szLog, L"%lu •bŒã‚ÉƒXƒŠ[ƒv‚µ‚Ü‚·B", (unsigned long)m_SleepDuration);
+		::wsprintfW(szLog, L"%lu ç§’å¾Œã«ã‚¹ãƒªãƒ¼ãƒ—ã—ã¾ã™ã€‚", (unsigned long)m_SleepDuration);
 		m_pApp->AddLog(szLog);
 		Result = ::SetTimer(m_hwnd, TIMER_ID_SLEEP, m_SleepDuration * 1000, nullptr);
 	} else if (m_Condition == CONDITION_DATETIME || m_Condition == CONDITION_EVENTEND) {
 		if (m_Condition == CONDITION_DATETIME) {
-			::wsprintfW(szLog, L"%d/%d/%d %02d:%02d:%02d (UTC) ‚ÉƒXƒŠ[ƒv‚µ‚Ü‚·B",
+			::wsprintfW(szLog, L"%d/%d/%d %02d:%02d:%02d (UTC) ã«ã‚¹ãƒªãƒ¼ãƒ—ã—ã¾ã™ã€‚",
 						m_SleepDateTime.wYear, m_SleepDateTime.wMonth, m_SleepDateTime.wDay,
 						m_SleepDateTime.wHour, m_SleepDateTime.wMinute, m_SleepDateTime.wSecond);
 			m_pApp->AddLog(szLog);
@@ -434,7 +434,7 @@ bool CSleepTimer::BeginTimer()
 }
 
 
-// ƒ^ƒCƒ}[’â~
+// ã‚¿ã‚¤ãƒãƒ¼åœæ­¢
 void CSleepTimer::EndTimer()
 {
 	::KillTimer(m_hwnd, TIMER_ID_SLEEP);
@@ -442,7 +442,7 @@ void CSleepTimer::EndTimer()
 }
 
 
-// İ’èƒ_ƒCƒAƒƒO‚ğ•\¦
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤º
 bool CSleepTimer::ShowSettingsDialog(HWND hwndOwner)
 {
 	TVTest::ShowDialogInfo Info;
@@ -462,19 +462,19 @@ bool CSleepTimer::ShowSettingsDialog(HWND hwndOwner)
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
 	CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		return pThis->OnEnablePlugin(lParam1 != 0);
 
 	case TVTest::EVENT_PLUGINSETTINGS:
-		// ƒvƒ‰ƒOƒCƒ“‚Ìİ’è‚ğs‚¤
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®è¨­å®šã‚’è¡Œã†
 		pThis->InitializePlugin();
 		return pThis->ShowSettingsDialog(reinterpret_cast<HWND>(lParam1));
 	}
@@ -483,15 +483,15 @@ LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event, LPARAM lParam1, LPARAM l
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
 CSleepTimer *CSleepTimer::GetThis(HWND hwnd)
 {
 	return reinterpret_cast<CSleepTimer*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
-// ’P‚Éƒ^ƒCƒ}[‚ğˆ—‚·‚é‚¾‚¯
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
+// å˜ã«ã‚¿ã‚¤ãƒãƒ¼ã‚’å‡¦ç†ã™ã‚‹ã ã‘
 LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
@@ -509,7 +509,7 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 			CSleepTimer *pThis = GetThis(hwnd);
 
 			if (wParam == TIMER_ID_SLEEP) {
-				// w’èŠÔ‚ªŒo‰ß‚µ‚½‚Ì‚ÅƒXƒŠ[ƒvŠJn
+				// æŒ‡å®šæ™‚é–“ãŒçµŒéã—ãŸã®ã§ã‚¹ãƒªãƒ¼ãƒ—é–‹å§‹
 				pThis->BeginSleep();
 			} else if (wParam == TIMER_ID_QUERY) {
 				if (pThis->m_Condition == CONDITION_DATETIME) {
@@ -517,14 +517,14 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 					::GetSystemTime(&st);
 					if (DiffSystemTime(st, pThis->m_SleepDateTime) >= 0) {
-						// w’è‚ª—ˆ‚½‚Ì‚ÅƒXƒŠ[ƒvŠJn
+						// æŒ‡å®šæ™‚åˆ»ãŒæ¥ãŸã®ã§ã‚¹ãƒªãƒ¼ãƒ—é–‹å§‹
 						pThis->BeginSleep();
 					}
 				} else if (pThis->m_Condition == CONDITION_EVENTEND) {
 					TVTest::ProgramInfo Info = {};
 					WCHAR szEventName[128];
 
-					// Œ»İ‚Ì”Ô‘g‚Ìî•ñ‚ğæ“¾
+					// ç¾åœ¨ã®ç•ªçµ„ã®æƒ…å ±ã‚’å–å¾—
 					Info.pszEventName = szEventName;
 					Info.MaxEventName = _countof(szEventName);
 					if (pThis->m_pApp->GetCurrentProgramInfo(&Info)) {
@@ -532,7 +532,7 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 							bool fSet = false;
 
 							if (Info.Duration == 0) {
-								// I—¹–¢’è
+								// çµ‚äº†æ™‚åˆ»æœªå®š
 								fSet = true;
 							} else {
 								FILETIME ft;
@@ -540,24 +540,24 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 								LARGE_INTEGER li;
 								li.LowPart = ft.dwLowDateTime;
 								li.HighPart = ft.dwHighDateTime;
-								li.QuadPart -= 9LL * FILETIME_HOUR;				// EPG“ú(UTC+9) -> UTC
-								li.QuadPart += Info.Duration * FILETIME_SEC;	// I—¹
+								li.QuadPart -= 9LL * FILETIME_HOUR;				// EPGæ—¥æ™‚(UTC+9) -> UTC
+								li.QuadPart += Info.Duration * FILETIME_SEC;	// çµ‚äº†æ™‚åˆ»
 								ft.dwLowDateTime = li.LowPart;
 								ft.dwHighDateTime = li.HighPart;
 								FILETIME CurrentTime;
 								::GetSystemTimeAsFileTime(&CurrentTime);
-								// ”Ô‘gI—¹‚ª2•ªˆÈ“à‚Ìê‡‚ÍAŸ‚Ì”Ô‘g‚ğ‘ÎÛ‚É‚·‚é
+								// ç•ªçµ„çµ‚äº†ãŒ2åˆ†ä»¥å†…ã®å ´åˆã¯ã€æ¬¡ã®ç•ªçµ„ã‚’å¯¾è±¡ã«ã™ã‚‹
 								if (DiffFileTime(ft, CurrentTime) > 2LL * FILETIME_MIN)
 									fSet = true;
 							}
 
 							if (fSet) {
 								pThis->m_EventID = Info.EventID;
-								pThis->m_pApp->AddLog(L"‚±‚Ì”Ô‘g‚ªI—¹‚µ‚½‚çƒXƒŠ[ƒv‚µ‚Ü‚·B");
+								pThis->m_pApp->AddLog(L"ã“ã®ç•ªçµ„ãŒçµ‚äº†ã—ãŸã‚‰ã‚¹ãƒªãƒ¼ãƒ—ã—ã¾ã™ã€‚");
 								pThis->m_pApp->AddLog(szEventName);
 							}
 						} else if (pThis->m_EventID != Info.EventID) {
-							// ”Ô‘g‚ª•Ï‚í‚Á‚½‚Ì‚ÅƒXƒŠ[ƒvŠJn
+							// ç•ªçµ„ãŒå¤‰ã‚ã£ãŸã®ã§ã‚¹ãƒªãƒ¼ãƒ—é–‹å§‹
 							pThis->BeginSleep();
 						}
 					}
@@ -582,7 +582,7 @@ static void EnableDlgItems(HWND hDlg, int FirstID, int LastID, BOOL fEnable)
 		EnableDlgItem(hDlg, i, fEnable);
 }
 
-// İ’èƒ_ƒCƒAƒƒOƒvƒƒV[ƒWƒƒ
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
 	switch (uMsg) {
@@ -662,7 +662,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 				} else if (::IsDlgButtonChecked(hDlg, IDC_SETTINGS_CONDITION_EVENTEND)) {
 					Condition = CONDITION_EVENTEND;
 				} else {
-					::MessageBox(hDlg, TEXT("ƒXƒŠ[ƒv‚·‚éğŒ‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+					::MessageBox(hDlg, TEXT("ã‚¹ãƒªãƒ¼ãƒ—ã™ã‚‹æ¡ä»¶ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 					return TRUE;
 				}
 
@@ -672,11 +672,11 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 					(ULONGLONG)::GetDlgItemInt(hDlg, IDC_SETTINGS_DURATION_SECONDS, nullptr, FALSE);
 				if (Condition == CONDITION_DURATION) {
 					if (Duration * 1000 > USER_TIMER_MAXIMUM) {
-						::MessageBox(hDlg, TEXT("ƒXƒŠ[ƒv‚Ü‚Å‚ÌŠÔ‚ª’·‚·‚¬‚Ü‚·B"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(hDlg, TEXT("ã‚¹ãƒªãƒ¼ãƒ—ã¾ã§ã®æ™‚é–“ãŒé•·ã™ãã¾ã™ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 					if (Duration == 0) {
-						::MessageBox(hDlg, TEXT("ŠÔ‚Ìw’è‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(hDlg, TEXT("æ™‚é–“ã®æŒ‡å®šãŒæ­£ã—ãã‚ã‚Šã¾ã›ã‚“ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 				}
@@ -685,7 +685,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 				DWORD Result = DateTime_GetSystemtime(::GetDlgItem(hDlg, IDC_SETTINGS_DATETIME), &DateTime);
 				if (Condition == CONDITION_DATETIME) {
 					if (Result != GDT_VALID) {
-						::MessageBox(hDlg, TEXT("‚ğw’è‚µ‚Ä‚­‚¾‚³‚¢B"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(hDlg, TEXT("æ™‚åˆ»ã‚’æŒ‡å®šã—ã¦ãã ã•ã„ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 					SYSTEMTIME UTCTime;
@@ -694,7 +694,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 					SYSTEMTIME CurTime;
 					::GetSystemTime(&CurTime);
 					if (DiffSystemTime(DateTime, CurTime) <= 0) {
-						::MessageBox(hDlg, TEXT("w’è‚³‚ê‚½‚ğŠù‚É‰ß‚¬‚Ä‚¢‚Ü‚·B"), nullptr, MB_OK | MB_ICONEXCLAMATION);
+						::MessageBox(hDlg, TEXT("æŒ‡å®šã•ã‚ŒãŸæ™‚åˆ»ã‚’æ—¢ã«éãã¦ã„ã¾ã™ã€‚"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 						return TRUE;
 					}
 				}
@@ -718,7 +718,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 				pThis->m_fShowSettings =
 					::IsDlgButtonChecked(hDlg, IDC_SETTINGS_SHOWSETTINGS) == BST_CHECKED;
 
-				// ƒ^ƒCƒ}[İ’è
+				// ã‚¿ã‚¤ãƒãƒ¼è¨­å®š
 				if (pThis->m_fEnabled)
 					pThis->BeginTimer();
 			}
@@ -742,7 +742,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 }
 
 
-// Šm”Fƒ_ƒCƒAƒƒOƒvƒƒV[ƒWƒƒ
+// ç¢ºèªãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
 	switch (uMsg) {
@@ -751,7 +751,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
 
 			TCHAR szText[64];
-			::wsprintf(szText, TEXT("%s‚µ‚Ü‚·‚©H"), m_ModeTextList[pThis->m_Mode]);
+			::wsprintf(szText, TEXT("%sã—ã¾ã™ã‹ï¼Ÿ"), m_ModeTextList[pThis->m_Mode]);
 			::SetDlgItemText(hDlg, IDC_CONFIRM_MODE, szText);
 
 			if (pThis->m_ConfirmTimeout > 0) {
@@ -759,7 +759,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				pThis->m_ConfirmTimerCount = 0;
 				::SetTimer(hDlg, 1, 1000, nullptr);
 			} else {
-				::SetDlgItemText(hDlg, IDC_CONFIRM_TIMEOUT, TEXT("‡"));
+				::SetDlgItemText(hDlg, IDC_CONFIRM_TIMEOUT, TEXT("âˆ"));
 			}
 		}
 		return TRUE;
@@ -793,7 +793,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
 	return new CSleepTimer;

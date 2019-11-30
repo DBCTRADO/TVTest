@@ -1,12 +1,12 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ˆê’èŠÔ‚²‚Æ‚ÉƒLƒƒƒvƒ`ƒƒ‚ğs‚¤
+	ä¸€å®šæ™‚é–“ã”ã¨ã«ã‚­ãƒ£ãƒ—ãƒãƒ£ã‚’è¡Œã†
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	EƒLƒƒƒvƒ`ƒƒ‰æ‘œ‚ğ•Û‘¶‚·‚é
-	Eİ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
+	ãƒ»ã‚­ãƒ£ãƒ—ãƒãƒ£ç”»åƒã‚’ä¿å­˜ã™ã‚‹
+	ãƒ»è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
 */
 
 
@@ -20,7 +20,7 @@
 #define SNAPSHOT_WINDOW_CLASS TEXT("Auto Snap Shot Window")
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CAutoSnapShot : public TVTest::CTVTestPlugin
 {
 	DWORD m_Interval;
@@ -40,7 +40,7 @@ public:
 
 CAutoSnapShot::CAutoSnapShot()
 {
-	m_Interval=10;	// ƒLƒƒƒvƒ`ƒƒŠÔŠu(•b’PˆÊ)
+	m_Interval=10;	// ã‚­ãƒ£ãƒ—ãƒãƒ£é–“éš”(ç§’å˜ä½)
 	m_hwnd=NULL;
 	m_fEnabled=false;
 }
@@ -48,19 +48,19 @@ CAutoSnapShot::CAutoSnapShot()
 
 bool CAutoSnapShot::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
-	// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS;
 	pInfo->pszPluginName  = L"Auto Snap Shot";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ˆê’èŠÔ‚²‚Æ‚ÉƒLƒƒƒvƒ`ƒƒ‚·‚é";
+	pInfo->pszDescription = L"ä¸€å®šæ™‚é–“ã”ã¨ã«ã‚­ãƒ£ãƒ—ãƒãƒ£ã™ã‚‹";
 	return true;
 }
 
 
 bool CAutoSnapShot::Initialize()
 {
-	// ‰Šú‰»ˆ—
+	// åˆæœŸåŒ–å‡¦ç†
 
 	WNDCLASS wc;
 
@@ -83,7 +83,7 @@ bool CAutoSnapShot::Initialize()
 	if (m_hwnd==NULL)
 		return false;
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback,this);
 
 	return true;
@@ -92,7 +92,7 @@ bool CAutoSnapShot::Initialize()
 
 bool CAutoSnapShot::Finalize()
 {
-	// I—¹ˆ—
+	// çµ‚äº†å‡¦ç†
 
 	::DestroyWindow(m_hwnd);
 
@@ -100,15 +100,15 @@ bool CAutoSnapShot::Finalize()
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CAutoSnapShot::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
 {
 	CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		pThis->m_fEnabled=lParam1!=0;
 		if (pThis->m_fEnabled)
 			::SetTimer(pThis->m_hwnd,1,pThis->m_Interval*1000,NULL);
@@ -117,7 +117,7 @@ LRESULT CALLBACK CAutoSnapShot::EventCallback(UINT Event,LPARAM lParam1,LPARAM l
 		return TRUE;
 
 	case TVTest::EVENT_PLUGINSETTINGS:
-		// ƒvƒ‰ƒOƒCƒ“‚Ìİ’è‚ğs‚¤
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®è¨­å®šã‚’è¡Œã†
 		{
 			TVTest::ShowDialogInfo Info;
 
@@ -158,7 +158,7 @@ LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 		{
 			CAutoSnapShot *pThis=GetThis(hwnd);
 
-			// ƒLƒƒƒvƒ`ƒƒÀs
+			// ã‚­ãƒ£ãƒ—ãƒãƒ£å®Ÿè¡Œ
 			pThis->m_pApp->SaveImage();
 		}
 		return 0;
@@ -168,7 +168,7 @@ LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 			CAutoSnapShot *pThis=GetThis(hwnd);
 
 			if (pThis->m_fEnabled)
-				::KillTimer(hwnd,1);	// •Ê‚É‚µ‚È‚­‚Ä‚à‚¢‚¢‚¯‚Ç...
+				::KillTimer(hwnd,1);	// åˆ¥ã«ã—ãªãã¦ã‚‚ã„ã„ã‘ã©...
 		}
 		return 0;
 	}
@@ -177,7 +177,7 @@ LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 }
 
 
-// İ’èƒ_ƒCƒAƒƒOƒvƒƒV[ƒWƒƒ
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
 {
 	switch (uMsg) {
