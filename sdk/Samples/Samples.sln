@@ -1,6 +1,7 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.0
+MinimumVisualStudioVersion = 15.0.27130.0
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoSnapShot", "AutoSnapShot\AutoSnapShot.vcxproj", "{178CA9B3-D4E4-46AC-89F1-96E163B2E369}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PacketCounter", "PacketCounter\PacketCounter.vcxproj", "{BCDA86B2-7DE3-4F8F-B54B-91EFD4154E36}"
