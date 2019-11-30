@@ -1,65 +1,65 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="../default.css" type="text/css">
-	<title>�^��</title>
+	<title>録画</title>
 </head>
 <body>
-<h1>�^��</h1>
+<h1>録画</h1>
 
-<h2>�ۑ���t�H���_</h2>
-<p class="descript">�^�悵���t�@�C���̕ۑ���̃t�H���_���w�肵�܂��B<br>
-�v���O�����̂���t�H���_����Ƃ������΃p�X���w��ł��܂��B</p>
+<h2>保存先フォルダ</h2>
+<p class="descript">録画したファイルの保存先のフォルダを指定します。<br>
+プログラムのあるフォルダを基準とした相対パスも指定できます。</p>
 
-<h2>�t�@�C����</h2>
-<p class="descript">�^�悵���t�@�C���̃t�@�C�������w�肵�܂��B<br>
-�t�@�C�����̒��� % �ň͂܂ꂽ���ʎq�͓��Y�̍��ڂɒu������܂��B<br>
-�E�� [��] �{�^���������ƁA�g�p�ł��鎯�ʎq�̈ꗗ����I�����đ}���ł��܂��B<br>
-�ԑg�Ɋւ������(%event-name% �Ȃ�)�́A���̔ԑg���ꕪ�ȓ��Ɏn�܂�ꍇ�͎��̔ԑg�̂��̂ɐݒ肳��܂��B<br>
-%event-title% �́A�ԑg��(%event-name%)���� [��] �Ȃ� [] �Ɉ͂܂ꂽ���̂���菜�������̂ł��B<br>
-�T�u�t�H���_���w�肷�邱�Ƃ��ł��A�Ⴆ�� %channel-name%\%event-name%.ts �̂悤�ɂ���΁A�`�����l�����̃T�u�t�H���_�ɕۑ�����܂��B</p>
+<h2>ファイル名</h2>
+<p class="descript">録画したファイルのファイル名を指定します。<br>
+ファイル名の中で % で囲まれた識別子は当該の項目に置換されます。<br>
+右の [▼] ボタンを押すと、使用できる識別子の一覧から選択して挿入できます。<br>
+番組に関するもの(%event-name% など)は、次の番組が一分以内に始まる場合は次の番組のものに設定されます。<br>
+%event-title% は、番組名(%event-name%)から [二] など [] に囲まれたものを取り除いたものです。<br>
+サブフォルダを指定することもでき、例えば %channel-name%\%event-name%.ts のようにすれば、チャンネル名のサブフォルダに保存されます。</p>
 
-<h2>�^�撆�̃`�����l���ύX�͊m�F�����</h2>
-<p class="descript">�^�撆�Ƀ`�����l����ύX���悤�Ƃ����ꍇ�A�m�F���b�Z�[�W��\������悤�ɂ��܂��B</p>
+<h2>録画中のチャンネル変更は確認を取る</h2>
+<p class="descript">録画中にチャンネルを変更しようとした場合、確認メッセージを表示するようにします。</p>
 
-<h2>�^�撆�̏I���͊m�F�����</h2>
-<p class="descript">�^�撆�ɏI�����悤�Ƃ����ꍇ�A�m�F���b�Z�[�W��\������悤�ɂ��܂��B</p>
+<h2>録画中の終了は確認を取る</h2>
+<p class="descript">録画中に終了しようとした場合、確認メッセージを表示するようにします。</p>
 
-<h2>�^���~�͊m�F�����</h2>
-<p class="descript">�^����~�����悤�Ƃ����ꍇ�A�m�F���b�Z�[�W��\������悤�ɂ��܂��B</p>
+<h2>録画停止は確認を取る</h2>
+<p class="descript">録画を停止させようとした場合、確認メッセージを表示するようにします。</p>
 
-<h2>�󂫃f�B�X�N�e�ʂ����Ȃ��ꍇ�ɒ��ӕ\�����s��</h2>
-<p class="descript">�^�掞�ɁA�t�@�C���̕ۑ���̋󂫗e�ʂ��w�肳�ꂽ�e�ʈȉ��ɂȂ����ꍇ�ɁA���ӕ\�����s���悤�ɂ��܂��B</p>
+<h2>空きディスク容量が少ない場合に注意表示を行う</h2>
+<p class="descript">録画時に、ファイルの保存先の空き容量が指定された容量以下になった場合に、注意表示を行うようにします。</p>
 
-<h2>�X�e�[�^�X�o�[�ł̘^��J�n�̓���</h2>
-<p class="descript">�X�e�[�^�X�o�[�̍��ڂ��N���b�N���Ę^��J�n����ꍇ�̓����I�����܂��B</p>
+<h2>ステータスバーでの録画開始の動作</h2>
+<p class="descript">ステータスバーの項目をクリックして録画開始する場合の動作を選択します。</p>
 
-<h2>���݂̃T�[�r�X�̂ݕۑ�����</h2>
-<p class="descript">�^�掞�ɁA���ݑI������Ă���T�[�r�X�̂ݕۑ�����悤�ɂ��܂��B<br>
-�ڍ׎w��ł̘^����s���ꍇ�́A������̐ݒ肪�D�悳��܂��B<br>
-���̃I�v�V�������g�p�����ꍇ�́APID �� 0000h-002Fh / EMM / �Ώ�PMT�A�܂��Ώ� PMT �Ɋ܂܂�� PCR / ECM / ES ���ۑ�����܂��B<br>
-���̃I�v�V�������g�p���Ę^�悷��ꍇ�A�^�撆�ɃT�[�r�X�̕ύX���s���Ɛ���ɍĐ��ł��Ȃ��Ȃ�\��������܂��B<br>
-���̐ݒ��ύX����ƁA�����̂ڂ�^��̃o�b�t�@������������܂��B</p>
+<h2>現在のサービスのみ保存する</h2>
+<p class="descript">録画時に、現在選択されているサービスのみ保存するようにします。<br>
+詳細指定での録画を行う場合は、そちらの設定が優先されます。<br>
+このオプションを使用した場合は、PID が 0000h-002Fh / EMM / 対象PMT、また対象 PMT に含まれる PCR / ECM / ES が保存されます。<br>
+このオプションを使用して録画する場合、録画中にサービスの変更を行うと正常に再生できなくなる可能性があります。<br>
+この設定を変更すると、さかのぼり録画のバッファが初期化されます。</p>
 
-<h2>�����f�[�^��ۑ�����</h2>
-<p class="descript">�����f�[�^(Stream type 06h)��ۑ����܂��B<br>
-���̐ݒ��ύX����ƁA�����̂ڂ�^��̃o�b�t�@������������܂��B</p>
+<h2>字幕データを保存する</h2>
+<p class="descript">字幕データ(Stream type 06h)を保存します。<br>
+この設定を変更すると、さかのぼり録画のバッファが初期化されます。</p>
 
-<h2>�f�[�^������ۑ�����</h2>
-<p class="descript">�f�[�^�J���[�Z��(Stream type 0Dh)��ۑ����܂��B<br>
-���̐ݒ��ύX����ƁA�����̂ڂ�^��̃o�b�t�@������������܂��B</p>
+<h2>データ放送を保存する</h2>
+<p class="descript">データカルーセル(Stream type 0Dh)を保存します。<br>
+この設定を変更すると、さかのぼり録画のバッファが初期化されます。</p>
 
-<h2>�����̂ڂ�^��̃������T�C�Y</h2>
-<p class="descript">�����̂ڂ�^����s���ꍇ�Ɋm�ۂ���ő僁�����T�C�Y�� MiB �P�ʂŎw�肵�܂��B<br>
-�����̂ڂ�^����s���ۂɁA�����Őݒ肳�ꂽ�T�C�Y�������ߋ��̃f�[�^��^��ł��܂��B�n�f�W�̏ꍇ�A��b�ł��悻2MB���x�ł��B<br>
-�����̂ڂ�^���L���ɂ��Ă��Ȃ����ɂ̓������̊m�ۂ͂���܂���B</p>
+<h2>さかのぼり録画のメモリサイズ</h2>
+<p class="descript">さかのぼり録画を行う場合に確保する最大メモリサイズを MiB 単位で指定します。<br>
+さかのぼり録画を行う際に、ここで設定されたサイズ分だけ過去のデータを録画できます。地デジの場合、一秒でおよそ2MB程度です。<br>
+さかのぼり録画を有効にしていない時にはメモリの確保はされません。</p>
 
-<h2>�t�@�C�������o���P��</h2>
-<p class="descript">�t�@�C���ɏ����o���o�b�t�@�̃T�C�Y�� KiB �P�ʂŎw�肵�܂��B</p>
+<h2>ファイル書き出し単位</h2>
+<p class="descript">ファイルに書き出すバッファのサイズを KiB 単位で指定します。</p>
 
-<h2>�����o���҂��̃T�C�Y����</h2>
-<p class="descript">�^��Ƀf�B�X�N�̏������݂��ǂ����Ȃ��ꍇ�������ɗ��߂��܂����A�����Ŏw�肳�ꂽ����T�C�Y�𒴂����ꍇ�A���������̃f�[�^���j������܂��B</p>
+<h2>書き出し待ちのサイズ制限</h2>
+<p class="descript">録画にディスクの書き込みが追いつかない場合メモリに溜められますが、ここで指定された上限サイズを超えた場合、超えた分のデータが破棄されます。</p>
 
 </body>
 </html>

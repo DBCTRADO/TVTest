@@ -1,64 +1,64 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="../default.css" type="text/css">
-	<title>�Đ�</title>
+	<title>再生</title>
 </head>
 <body>
-<h1>�Đ�</h1>
+<h1>再生</h1>
 
-<h2>������Ԃ�����N�����ɕ�������</h2>
-<p class="descript">�I�����ɏ�����Ԃ������ꍇ�A����N������������ԂɂȂ�悤�ɂ��܂��B</p>
+<h2>消音状態を次回起動時に復元する</h2>
+<p class="descript">終了時に消音状態だった場合、次回起動時も消音状態になるようにします。</p>
 
-<h2>�Đ��I�t�̏�Ԃ𕜌�����</h2>
-<p class="descript">�Đ��I�t�̏�ԂŏI�������ꍇ�A����N�������Đ��I�t�̏�ԂŋN������悤�ɂ��܂�</p>
+<h2>再生オフの状態を復元する</h2>
+<p class="descript">再生オフの状態で終了した場合、次回起動時も再生オフの状態で起動するようにします</p>
 
-<h2>�����Z�O���[�h�̏�Ԃ�����N�����ɕ�������</h2>
-<p class="descript">�����Z�O���[�h�ŏI�������ꍇ�A����N�����������Z�O���[�h�ɂȂ�悤�ɂ��܂��B</p>
+<h2>ワンセグモードの状態を次回起動時に復元する</h2>
+<p class="descript">ワンセグモードで終了した場合、次回起動時もワンセグモードになるようにします。</p>
 
-<h2>�^�C�}�̕���\���ŏ��ɐݒ肷��</h2>
-<p class="descript">�Đ����Ƀ^�C�}�̕���\���ŏ��ɐݒ肷��悤�ɂ��܂��B<br>
-���ɗ��R���Ȃ���΃`�F�b�N���Ă������Ƃ������߂��܂��B</p>
+<h2>タイマの分解能を最小に設定する</h2>
+<p class="descript">再生中にタイマの分解能を最小に設定するようにします。<br>
+特に理由がなければチェックしておくことをお勧めします。</p>
 
-<h2>�����T���v���̃X�g���[�����Ԃ𒲐�����</h2>
-<p class="descript">�����T���v���̃X�g���[�����Ԃ��A�ł��邾���A������悤�ɒ������܂��B<br>
-����т�v�c�v�c�ƃm�C�Y���������肷��ꍇ�Ƀ`�F�b�N����Ɖ��P����\��������܂��B<br>
-���̃I�v�V������ύX�����ۂ́A��񃊃Z�b�g���Ȃ��Ɛ���ɍĐ�����Ȃ����Ƃ�����܂��B</p>
+<h2>音声サンプルのストリーム時間を調整する</h2>
+<p class="descript">音声サンプルのストリーム時間を、できるだけ連続するように調整します。<br>
+音飛びやプツプツとノイズが入ったりする場合にチェックすると改善する可能性があります。<br>
+このオプションを変更した際は、一回リセットしないと正常に再生されないことがあります。</p>
 
-<h2>�f���Ɖ�����PTS�𓯊�����</h2>
-<p class="descript">PTS ���g���ĉf���Ɖ����𓯊������܂��B<br>
-��Ɉꕔ�̃`�����l��(�����Z�O�� BS �̓���@�l������)�ł̂������̑΍�ł��B</p>
+<h2>映像と音声のPTSを同期する</h2>
+<p class="descript">PTS を使って映像と音声を同期させます。<br>
+主に一部のチャンネル(ワンセグや BS の特殊法人放送局)でのかくつきの対策です。</p>
 
-<h2>���������_���̃N���b�N���g��Ȃ�</h2>
-<p class="descript">�Đ����ɉ��������_���̃N���b�N���g��Ȃ��悤�ɂ��܂��B<br>
-�ʏ�͎w�肵�܂��񂪁A�������r�؂��Ȃǂ̖�肪�o��ꍇ�Ɏw�肷��Ɖ��P���邱�Ƃ�����܂��B</p>
+<h2>音声レンダラのクロックを使わない</h2>
+<p class="descript">再生時に音声レンダラのクロックを使わないようにします。<br>
+通常は指定しませんが、音声が途切れるなどの問題が出る場合に指定すると改善することがあります。</p>
 
-<h2>�o�b�t�@�����O</h2>
+<h2>バッファリング</h2>
 <div class="group">
-	<h2>�ő�o�b�t�@�T�C�Y</h2>
-	<p class="descript">�o�b�t�@�̍ő�e�ʂ��p�P�b�g(188�o�C�g)�P�ʂŎw�肵�܂��B<br>
-	���ȉ߂���ƁA�o�b�t�@�����肸�ɓr�؂�r�؂�ɂȂ�Ȃǂ̖�肪�N����܂��B<br>
-	<a href="../statusbar.html">�X�e�[�^�X�o�[</a>�̃o�b�t�@�����O���ڂɁA�ݒ肳�ꂽ�ő�T�C�Y�ɑ΂��Č��݉�%�g�p����Ă��邩���\������܂��B</p>
+	<h2>最大バッファサイズ</h2>
+	<p class="descript">バッファの最大容量をパケット(188バイト)単位で指定します。<br>
+	少な過ぎると、バッファが足りずに途切れ途切れになるなどの問題が起こります。<br>
+	<a href="../statusbar.html">ステータスバー</a>のバッファリング項目に、設定された最大サイズに対して現在何%使用されているかが表示されます。</p>
 
-	<h2>�f�[�^�����܂��Ă���Đ����J�n����</h2>
-	<p class="descript">�w�肳�ꂽ�����܂Ńo�b�t�@�Ƀf�[�^�����܂��Ă���A�Đ����J�n����悤�ɂ��܂��B<br>
-	�ʏ�͎w�肵�܂��񂪁A�l�b�g���[�N�z���̍Đ��ȂǂŃo�b�t�@�A���_�[�t���[����������ꍇ�Ɏw�肵�܂��B<br>
-	�L��/������<a href="../statusbar.html">�X�e�[�^�X�o�[</a>�̃o�b�t�@�����O���ڂ̉E�N���b�N���j���[������s���܂��B</p>
+	<h2>データが溜まってから再生を開始する</h2>
+	<p class="descript">指定された割合までバッファにデータが溜まってから、再生を開始するようにします。<br>
+	通常は指定しませんが、ネットワーク越しの再生などでバッファアンダーフローが発生する場合に指定します。<br>
+	有効/無効は<a href="../statusbar.html">ステータスバー</a>のバッファリング項目の右クリックメニューからも行えます。</p>
 </div>
 
-<h2>�����Z�O</h2>
+<h2>ワンセグ</h2>
 <div class="group">
-	<h2>�t���[�����[�g�̒������s��</h2>
-	<p class="descript">�����Z�O�̍Đ����ɁA�t���[�����[�g�̒����������s���܂��B<br>
-	�����Z�O�ł��������N����ꍇ�A���P���邱�Ƃ�����܂��B<br>
-	Microsoft DTV-DVD Video Decoder �̎g�p���͏�ɖ����ɂȂ�܂��B</p>
+	<h2>フレームレートの調整を行う</h2>
+	<p class="descript">ワンセグの再生時に、フレームレートの調整処理を行います。<br>
+	ワンセグでかくつきが起こる場合、改善することがあります。<br>
+	Microsoft DTV-DVD Video Decoder の使用時は常に無効になります。</p>
 </div>
 
-<h2>�X�g���[���X���b�h�̗D��x</h2>
-<p class="descript">�X�g���[���X���b�h(�X�g���[���̎擾��^��Ȃǂ��s���X���b�h)�̗D��x��I�����܂��B<br>
-�D��x����������ƍĐ����^�悪�D�悳��邱�ƂɂȂ�܂��B<br>
-���ɗ��R���Ȃ���� [�ʏ�] �ł����Ǝv���܂��B</p>
+<h2>ストリームスレッドの優先度</h2>
+<p class="descript">ストリームスレッド(ストリームの取得や録画などを行うスレッド)の優先度を選択します。<br>
+優先度を高くすると再生より録画が優先されることになります。<br>
+特に理由がなければ [通常] でいいと思います。</p>
 
 </body>
 </html>

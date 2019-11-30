@@ -1,101 +1,101 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="default.css" type="text/css">
-	<title>�R�}���h���C��</title>
+	<title>コマンドライン</title>
 </head>
 <body>
 
-<h1>�R�}���h���C��</h1>
+<h1>コマンドライン</h1>
 
 <p>
-�ȉ��̃R�}���h���C���I�v�V�������g�p�ł��܂��B
+以下のコマンドラインオプションが使用できます。
 </p>
 <p>
-������������̂͂ǂ���ł��B/ �̑���� - �ł��B
+※複数あるものはどちらでも可。/ の代わりに - でも可。
 </p>
 
 <table class="info">
-<tr><th colspan="2">������</th></tr>
-<tr><td>/ini</td><td>INI �t�@�C�����̎w�� (e.g. /ini TVTest2.ini)</td></tr>
-<tr><td>/init</td><td><a href="initialsettings.html">�����ݒ�_�C�A���O</a>��\������</td></tr>
-<tr><td>/inikey</td><td>INI �t�@�C���̐ݒ�l���㏑������<br>
-[�Z�N�V����]���O=�l �̌`���Ŏw�肵�܂��B�Z�N�V�������ȗ������ [Settings] ���w�肳�ꂽ�Ƃ݂Ȃ���܂��B<br>
+<tr><th colspan="2">動作一般</th></tr>
+<tr><td>/ini</td><td>INI ファイル名の指定 (e.g. /ini TVTest2.ini)</td></tr>
+<tr><td>/init</td><td><a href="initialsettings.html">初期設定ダイアログ</a>を表示する</td></tr>
+<tr><td>/inikey</td><td>INI ファイルの設定値を上書きする<br>
+[セクション]名前=値 の形式で指定します。セクションを省略すると [Settings] が指定されたとみなされます。<br>
 (e.g. /inikey [Settings]AlwaysOnTop=yes)<br>
 (e.g. /inikey "Mpeg2Decoder=Hoge MPEG-2 Decoder")</td></tr>
-<tr><td>/log</td><td>�I�����Ƀ��O��ۑ�����</td></tr>
-<tr><td>/silent</td><td>�G���[���Ƀ_�C�A���O��\�����Ȃ�</td></tr>
-<tr><td>/s</td><td>TVTest �����ɋN�����Ă���ꍇ�A�����N�����Ȃ�</td></tr>
-<tr><td>/standby</td><td>�ҋ@��ԂŋN������</td></tr>
-<tr><td>/nd</td><td>TS�v���Z�b�T�[�𖳌��ɂ���</td></tr>
-<tr><td>/plugindir</td><td>�v���O�C���̓ǂݍ��݌��t�H���_ (e.g. /plugindir Plugins2)</td></tr>
-<tr><td>/noplugin</td><td>�v���O�C����ǂݍ��܂Ȃ�</td></tr>
-<tr><td>/plugin-</td><td>�w�肳�ꂽ�v���O�C����ǂݍ��܂Ȃ� (e.g. /plugin- Equalizer.tvtp)</td></tr>
-<tr><td>/home</td><td>�z�[����ʂ�\������</td></tr>
-<tr><td>/chdisplay</td><td>�`�����l���I����ʂ�\������</td></tr>
-<tr><th colspan="2">�`���[�i�[/�`�����l��</th></tr>
-<tr><td>/d</td><td>BonDriver �̎w�� (e.g. /d BonDriver.dll)</td></tr>
-<tr><td>/nodriver</td><td>BonDriver ��ǂݍ��܂Ȃ�</td></tr>
-<tr><td>/ch</td><td>�`�����l���̎w��(�����`�����l���ԍ�) (e.g. /ch 13)</td></tr>
-<tr><td>/rch</td><td>�`�����l���̎w��(�����R���`�����l���ԍ�) (e.g. /rch 3)</td></tr>
-<tr><td>/chspace</td><td>�`���[�j���O��Ԃ̎w��(BonDriver �ł̃C���f�b�N�X) (e.g. /chspace 1)</td></tr>
-<tr><td>/sid</td><td>�T�[�r�XID�̎w�� (e.g. /sid 1024)</td></tr>
-<tr><td>/nid</td><td>�l�b�g���[�NID�̎w�� (e.g. /nid 32736)</td></tr>
-<tr><td>/tsid</td><td>�g�����X�|�[�g�X�g���[��ID�̎w�� (e.g. /tsid 32736)</td></tr>
-<tr><td>/nr</td><td>�l�b�g���[�N�����R�����g�p����</td></tr>
-<tr><td>/port /p</td><td>BonDriver_UDP/TCP �̃|�[�g�ԍ� (e.g. /port 1234)</td></tr>
-<tr><td>/1seg</td><td>�����Z�O���[�h�ɂ���</td></tr>
-<tr><th colspan="2">�E�B���h�E</th></tr>
-<tr><td>/fullscreen /f</td><td>�S��ʕ\��</td></tr>
-<tr><td>/min</td><td>�ŏ�����ԂŋN������</td></tr>
-<tr><td>/max</td><td>�ő剻��ԂŋN������</td></tr>
-<tr><td>/tray</td><td>�^�X�N�g���C�Ɋi�[������ԂŋN������</td></tr>
-<tr><td>/posx</td><td>�E�B���h�E�̍��ʒu�̎w�� (e.g. /posx 100)</td></tr>
-<tr><td>/posy</td><td>�E�B���h�E�̏�ʒu�̎w�� (e.g. /posy 80)</td></tr>
-<tr><td>/width</td><td>�E�B���h�E�̕��̎w�� (e.g. /width 1920)</td></tr>
-<tr><td>/height</td><td>�E�B���h�E�̍����̎w�� (e.g. /height 480)</td></tr>
-<tr><th colspan="2">�Đ�</th></tr>
-<tr><td>/noview</td><td>�N������ʕ\���I�t</td></tr>
-<tr><td>/nodshow</td><td>�N������ DirectShow �����������Ȃ�<br>
-���������ɘ^��̂ݍs���ꍇ�Ɏw�肷��ƁA�������g�p�ʂ��Ȃ��茸��܂��B<br>
-���j���[��[�Đ��I�t]�̃`�F�b�N���O���΁A�r�����王�����邱�Ƃ��\�ł��B</td></tr>
-<tr><td>/volume</td><td>���ʂ��w�肷��(0����100�܂�) (e.g. /volume 50)</td></tr>
-<tr><td>/mute</td><td>�����ɂ���</td></tr>
-<tr><td>/mpeg2</td><td>MPEG-2 �̍Đ���L���ɂ���</td></tr>
-<tr><td>/h264</td><td>H.264 �̍Đ���L���ɂ���</td></tr>
-<tr><td>/h265</td><td>H.265 �̍Đ���L���ɂ���</td></tr>
-<tr><th colspan="2">�^��</th></tr>
-<tr><td>/rec</td><td>�N�����^��J�n</td></tr>
-<tr><td>/reccurservice</td><td>���݂̃T�[�r�X�̂ݘ^�悷��</td></tr>
-<tr><td>/recstarttime</td><td>�^��J�n����<br>
-�N/��/��-��:��:�b �̌`���Ŏw�肵�܂��B<br>
-���t�̂݁A�܂��͎����݂̂��w�肷�邱�Ƃ��ł��܂��B<br>
-�N�A���A�b�͏ȗ��ł��܂��B���Ԃ�24�ȏ�̒l���w��ł��܂��B<br>
+<tr><td>/log</td><td>終了時にログを保存する</td></tr>
+<tr><td>/silent</td><td>エラー時にダイアログを表示しない</td></tr>
+<tr><td>/s</td><td>TVTest が既に起動している場合、複数起動しない</td></tr>
+<tr><td>/standby</td><td>待機状態で起動する</td></tr>
+<tr><td>/nd</td><td>TSプロセッサーを無効にする</td></tr>
+<tr><td>/plugindir</td><td>プラグインの読み込み元フォルダ (e.g. /plugindir Plugins2)</td></tr>
+<tr><td>/noplugin</td><td>プラグインを読み込まない</td></tr>
+<tr><td>/plugin-</td><td>指定されたプラグインを読み込まない (e.g. /plugin- Equalizer.tvtp)</td></tr>
+<tr><td>/home</td><td>ホーム画面を表示する</td></tr>
+<tr><td>/chdisplay</td><td>チャンネル選択画面を表示する</td></tr>
+<tr><th colspan="2">チューナー/チャンネル</th></tr>
+<tr><td>/d</td><td>BonDriver の指定 (e.g. /d BonDriver.dll)</td></tr>
+<tr><td>/nodriver</td><td>BonDriver を読み込まない</td></tr>
+<tr><td>/ch</td><td>チャンネルの指定(物理チャンネル番号) (e.g. /ch 13)</td></tr>
+<tr><td>/rch</td><td>チャンネルの指定(リモコンチャンネル番号) (e.g. /rch 3)</td></tr>
+<tr><td>/chspace</td><td>チューニング空間の指定(BonDriver でのインデックス) (e.g. /chspace 1)</td></tr>
+<tr><td>/sid</td><td>サービスIDの指定 (e.g. /sid 1024)</td></tr>
+<tr><td>/nid</td><td>ネットワークIDの指定 (e.g. /nid 32736)</td></tr>
+<tr><td>/tsid</td><td>トランスポートストリームIDの指定 (e.g. /tsid 32736)</td></tr>
+<tr><td>/nr</td><td>ネットワークリモコンを使用する</td></tr>
+<tr><td>/port /p</td><td>BonDriver_UDP/TCP のポート番号 (e.g. /port 1234)</td></tr>
+<tr><td>/1seg</td><td>ワンセグモードにする</td></tr>
+<tr><th colspan="2">ウィンドウ</th></tr>
+<tr><td>/fullscreen /f</td><td>全画面表示</td></tr>
+<tr><td>/min</td><td>最小化状態で起動する</td></tr>
+<tr><td>/max</td><td>最大化状態で起動する</td></tr>
+<tr><td>/tray</td><td>タスクトレイに格納した状態で起動する</td></tr>
+<tr><td>/posx</td><td>ウィンドウの左位置の指定 (e.g. /posx 100)</td></tr>
+<tr><td>/posy</td><td>ウィンドウの上位置の指定 (e.g. /posy 80)</td></tr>
+<tr><td>/width</td><td>ウィンドウの幅の指定 (e.g. /width 1920)</td></tr>
+<tr><td>/height</td><td>ウィンドウの高さの指定 (e.g. /height 480)</td></tr>
+<tr><th colspan="2">再生</th></tr>
+<tr><td>/noview</td><td>起動時画面表示オフ</td></tr>
+<tr><td>/nodshow</td><td>起動時に DirectShow を初期化しない<br>
+視聴せずに録画のみ行う場合に指定すると、メモリ使用量がなかり減ります。<br>
+メニューの[再生オフ]のチェックを外せば、途中から視聴することも可能です。</td></tr>
+<tr><td>/volume</td><td>音量を指定する(0から100まで) (e.g. /volume 50)</td></tr>
+<tr><td>/mute</td><td>消音にする</td></tr>
+<tr><td>/mpeg2</td><td>MPEG-2 の再生を有効にする</td></tr>
+<tr><td>/h264</td><td>H.264 の再生を有効にする</td></tr>
+<tr><td>/h265</td><td>H.265 の再生を有効にする</td></tr>
+<tr><th colspan="2">録画</th></tr>
+<tr><td>/rec</td><td>起動時録画開始</td></tr>
+<tr><td>/reccurservice</td><td>現在のサービスのみ録画する</td></tr>
+<tr><td>/recstarttime</td><td>録画開始日時<br>
+年/月/日-時:分:秒 の形式で指定します。<br>
+日付のみ、または時刻のみを指定することもできます。<br>
+年、月、秒は省略できます。時間は24以上の値を指定できます。<br>
 (e.g. /recstarttime 2011/2/1-3:30:00)<br>
 (e.g. /recstarttime 25:30)</td></tr>
-<tr><td>/recdelay</td><td>�^��J�n�܂ł̎���(�b�P��) (e.g. /recdelay 60)<br>
-h/m/s �� ����/��/�b ���w�肷�邱�Ƃ��\�ł��B�ڍׂ� /recduration �̐������Q�Ƃ��Ă��������B</td></tr>
-<tr><td>/recduration</td><td>�^�掞��(�b�P��) (e.g. /recduration 1800)<br>
-�����̌�� h/m/s ������Ƃ��ꂼ�� ����/��/�b �̎w��ɂȂ�܂��B<br>
-���̍ە����w�肷�邱�Ƃ��ł��܂����A�r���ŃX�y�[�X�Ȃǂ͓��ꂸ�ɘA�����ċL�q���Ă��������B<br>
+<tr><td>/recdelay</td><td>録画開始までの時間(秒単位) (e.g. /recdelay 60)<br>
+h/m/s で 時間/分/秒 を指定することも可能です。詳細は /recduration の説明を参照してください。</td></tr>
+<tr><td>/recduration</td><td>録画時間(秒単位) (e.g. /recduration 1800)<br>
+数字の後に h/m/s があるとそれぞれ 時間/分/秒 の指定になります。<br>
+その際複数指定することもできますが、途中でスペースなどは入れずに連続して記述してください。<br>
 (e.g. /recduration 30m) (e.g. /recduration 1h20m30s)</td></tr>
-<tr><td>/recexit</td><td>�^��I�����Ƀv���O�������I��</td></tr>
-<tr><td>/recfile</td><td>�^��t�@�C���� (e.g. /recfile "C:\ReocrdFiles\Record.ts")</td></tr>
-<tr><td>/recstop</td><td>�^���~</td></tr>
+<tr><td>/recexit</td><td>録画終了時にプログラムを終了</td></tr>
+<tr><td>/recfile</td><td>録画ファイル名 (e.g. /recfile "C:\ReocrdFiles\Record.ts")</td></tr>
+<tr><td>/recstop</td><td>録画停止</td></tr>
 <tr><th colspan="2">EPG</th></tr>
-<tr><td>/noepg</td><td>EPG ���̎擾���s��Ȃ�<br>
-�ԑg�\�Ȃǂ͕\���ł��Ȃ��Ȃ�܂��B</td></tr>
-<tr><td>/epg</td><td>EPG �ԑg�\��\������</td></tr>
-<tr><td>/epgonly</td><td>EPG �ԑg�\�̂ݕ\������<br>
-�ԑg�\�����ƏI�����܂�(������^����s���Ă���ꍇ������)�B</td></tr>
-<tr><td>/epgtuner</td><td>EPG �ԑg�\�̃f�t�H���g�� BonDriver �̎w�� (e.g. /epgtuner BonDriver_Hoge.dll)<br>
-favorites �ɂ���Ƃ��C�ɓ���`�����l���̔ԑg�\</td></tr>
-<tr><td>/epgspace</td><td>EPG �ԑg�\�̃f�t�H���g�`���[�j���O��Ԃ̎w�� (e.g. /epgspace 1)</td></tr>
+<tr><td>/noepg</td><td>EPG 情報の取得を行わない<br>
+番組表などは表示できなくなります。</td></tr>
+<tr><td>/epg</td><td>EPG 番組表を表示する</td></tr>
+<tr><td>/epgonly</td><td>EPG 番組表のみ表示する<br>
+番組表を閉じると終了します(視聴や録画を行っている場合を除く)。</td></tr>
+<tr><td>/epgtuner</td><td>EPG 番組表のデフォルトの BonDriver の指定 (e.g. /epgtuner BonDriver_Hoge.dll)<br>
+favorites にするとお気に入りチャンネルの番組表</td></tr>
+<tr><td>/epgspace</td><td>EPG 番組表のデフォルトチューニング空間の指定 (e.g. /epgspace 1)</td></tr>
 </table>
 
-<h2>���܂�</h2>
-<p class="descript">udp://@:1234 �̂悤�ȃ|�[�g�w����L���ł�(�Ȃ��������w�肷��Ǝv���Ă���l�������̂�)�B</p>
+<h2>おまけ</h2>
+<p class="descript">udp://@:1234 のようなポート指定も有効です(なぜかこう指定すると思っている人が多いので)。</p>
 
 </body>
 </html>

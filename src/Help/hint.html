@@ -1,91 +1,91 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="default.css" type="text/css">
-	<title>FAQ (�悭���鎿��)</title>
+	<title>FAQ (よくある質問)</title>
 </head>
 <body>
 
-<h1>FAQ (�悭���鎿��)</h1>
+<h1>FAQ (よくある質問)</h1>
 
-<h2>���������o�ĉf�����o�Ȃ�</h2>
-<p class="descript">�f���̍Đ��ɂ� MPEG-2 �̃f�R�[�_�E�t�B���^���K�v�ł��B<br>
-�܂��A�f�R�[�_�ɂ���Ă͓��삵�Ȃ����̂�����܂��̂Œ��ӂ��Ă��������B<br>
-���삪�m�F����Ă���f�R�[�_�ɂ��ẮA�u<a href="appendix/decoder.html">�f�R�[�_�ƃ����_��</a>�v�̃y�[�W���Q�Ƃ��Ă��������B<br>
-�f�R�[�_�������Ă���̂ɉf�����o�Ȃ��ꍇ�́A�����_����ς��Ă݂Ă��������B<br>
-�f�R�[�_�ƃ����_���͊��ˑ����������A�g�ݍ��킹�̑���������̂ŐF�X�Ǝ����Ă݂Ă��������B</p>
+<h2>音声だけ出て映像が出ない</h2>
+<p class="descript">映像の再生には MPEG-2 のデコーダ・フィルタが必要です。<br>
+また、デコーダによっては動作しないものもありますので注意してください。<br>
+動作が確認されているデコーダについては、「<a href="appendix/decoder.html">デコーダとレンダラ</a>」のページを参照してください。<br>
+デコーダが入っているのに映像が出ない場合は、レンダラを変えてみてください。<br>
+デコーダとレンダラは環境依存性が強く、組み合わせの相性もあるので色々と試してみてください。</p>
 
-<h2>�f���ɎȁX������/�f�����g�ł�</h2>
-<p class="descript">�����̓C���^�[���[�X�����ōs���Ă��邽�߂ɁA�C���^�[���[�X����������K�v������܂��B<br>
-�f�R�[�_�ɂ���Ă̓v���p�e�B�ɃC���^�[���[�X�����̐ݒ肪����܂��̂ŁA�E�N���b�N���j���[���� [�t�B���^�̃v���p�e�B] -&gt; [�f���f�R�[�_] �Őݒ肵�܂��B<br>
-ATI �̃f�R�[�_�� Catalyst Control Center (CCC) �Őݒ�ł��܂��B<br>
-�f�R�[�_�Őݒ�ł��Ȃ��ꍇ�A�����_���� VMR9 �� EVR �ɂ��Ă݂�Ƃ����ł��傤�B</p>
+<h2>映像に縞々が入る/映像が波打つ</h2>
+<p class="descript">放送はインターレース方式で行われているために、インターレースを解除する必要があります。<br>
+デコーダによってはプロパティにインターレース解除の設定がありますので、右クリックメニューから [フィルタのプロパティ] -&gt; [映像デコーダ] で設定します。<br>
+ATI のデコーダは Catalyst Control Center (CCC) で設定できます。<br>
+デコーダで設定できない場合、レンダラを VMR9 や EVR にしてみるといいでしょう。</p>
 
-<h2>�^�悵���ԑg���Đ�����ƈႤ�ԑg���Đ������</h2>
-<p class="descript">�f�W�^�������ł́A��̃X�g���[���ŕ����̔ԑg�𓯎��ɕ������邱�Ƃ��ł��܂��B<br>
-���̂��߁A�Đ����ɈӐ}���Ȃ��ԑg���Đ�����Ă��܂����Ƃ�����܂��B<br>
-<a href="options/record.html">�^��̐ݒ�</a>�Łu���݂̃T�[�r�X�̂ݕۑ�����v�̃`�F�b�N�����邩�ATsSplitter�ŕ�������Ȃǂ��Ă��������B</p>
+<h2>録画した番組を再生すると違う番組が再生される</h2>
+<p class="descript">デジタル放送では、一つのストリームで複数の番組を同時に放送することができます。<br>
+そのため、再生時に意図しない番組が再生されてしまうことがあります。<br>
+<a href="options/record.html">録画の設定</a>で「現在のサービスのみ保存する」のチェックを入れるか、TsSplitterで分離するなどしてください。</p>
 
-<h2>�^�悵���ԑg���Đ�����Ɖ���(�f��)���o�Ȃ�/�r���ŏo�Ȃ��Ȃ�</h2>
-<p class="descript">�����ł͉�����f���̌`�����؂�ւ�邱�Ƃ�����܂����A�Đ��\�t�g���Ή����Ă��Ȃ��Ɖ����o�Ȃ��Ȃ�����f�����o�Ȃ��Ȃ����肵�܂�(�����̃v���C���[���Ή����Ă��Ȃ��̂�����ł�)�B<br>
-�Đ��\�t�g��ς��邩�A������f���̐؂�ւ��_�Ńt�@�C�����J�b�g����Ȃǂ��Ă��������B<br>
-BonDriver_File+TVTestPlugin �� TvtPlay �Ƃ������v���O�C�����g�p���āATVTest �Ńt�@�C���̍Đ����s�����Ƃ��ł��܂��B</p>
+<h2>録画した番組を再生すると音声(映像)が出ない/途中で出なくなる</h2>
+<p class="descript">放送では音声や映像の形式が切り替わることがありますが、再生ソフトが対応していないと音が出なくなったり映像が出なくなったりします(多くのプレイヤーが対応していないのが現状です)。<br>
+再生ソフトを変えるか、音声や映像の切り替わり点でファイルをカットするなどしてください。<br>
+BonDriver_File+TVTestPlugin や TvtPlay といったプラグインを使用して、TVTest でファイルの再生を行うこともできます。</p>
 
-<h2>�uBonDriver�̏��������ł��܂���v�ƕ\�������</h2>
-<p class="descript">BonDriver ����G���[���Ԃ��Ă������߂ł��B<br>
-��̓I�ɂǂ̂悤�ȃG���[���N�������̂����A�Ăяo�����̃v���O��������m����@�͂���܂���B<br>
-�f�o�C�X���F������Ă��Ȃ������Ɏg�p���̏ꍇ�������Ǝv���܂��B</p>
+<h2>「BonDriverの初期化ができません」と表示される</h2>
+<p class="descript">BonDriver からエラーが返ってきたためです。<br>
+具体的にどのようなエラーが起こったのかを、呼び出し元のプログラムから知る方法はありません。<br>
+デバイスが認識されていないか既に使用中の場合が多いと思われます。</p>
 
-<h2>���ʂ��ő�ɂ��Ă�����������</h2>
-<p class="descript">�E�N���b�N���j���[���� [����] -&gt; [���ʑ���] ��I�����Ă��������B<br>
-Vista �ȍ~�̏ꍇ�͉��ʃ~�L�T�� TVTest �̉��ʂ��グ�Ă��������B</p>
+<h2>音量を最大にしても音が小さい</h2>
+<p class="descript">右クリックメニューから [音量] -&gt; [音量増幅] を選択してください。<br>
+Vista 以降の場合は音量ミキサで TVTest の音量を上げてください。</p>
 
-<h2>�������E�����ꂷ��</h2>
-<p class="descript">�f�����������ꍇ�A�ȉ��������Ă݂Ă��������B</p>
+<h2>かくつく・音ずれする</h2>
+<p class="descript">映像がかくつく場合、以下を試してみてください。</p>
 <ul>
-	<li><a href="options.html">�ݒ�</a>�� [<a href="options/osd.html">OSD</a>] �� [�f���ƍ�������] �̃`�F�b�N���O���B</li>
-	<li>Radeon �̏ꍇ�ACatalyst Control Center (CCC) �� [Avivo �r�f�I] -&gt; [���ׂĂ̐ݒ�] �ɂ��� [�����I�ɂȂ߂炩�ȃr�f�I�Đ������s����] �̃`�F�b�N���O���B</li>
+	<li><a href="options.html">設定</a>の [<a href="options/osd.html">OSD</a>] で [映像と合成する] のチェックを外す。</li>
+	<li>Radeon の場合、Catalyst Control Center (CCC) で [Avivo ビデオ] -&gt; [すべての設定] にある [強制的になめらかなビデオ再生を実行する] のチェックを外す。</li>
 </ul>
-<p class="descript"><a href="options.html">�ݒ�</a>�� [<a href="options/playback.html">�Đ�</a>] �Ŋe��ݒ��ύX����Ɖ��P����ꍇ������܂��B<br>
-�ꎞ�I�ɂ��������Ȃ����ꍇ�A�E�N���b�N���j���[���� [���Z�b�g] -&gt; [�r���[�A���Z�b�g] �� [���Z�b�g] �Œ��邱�Ƃ�����܂��B</p>
+<p class="descript"><a href="options.html">設定</a>の [<a href="options/playback.html">再生</a>] で各種設定を変更すると改善する場合もあります。<br>
+一時的におかしくなった場合、右クリックメニューから [リセット] -&gt; [ビューアリセット] か [リセット] で直ることがあります。</p>
 
-<h2>�}���`�f�B�X�v���C���ŃZ�J���_�����j�^�ŉf��Ȃ�/�s���I������</h2>
-<p class="descript">�����_���� VMR-9 �� EVR �ɂ��Ă݂�A�܂��f�R�[�_��ς��Ă݂Ă��������B<br>
-�ꍇ�ɂ���Ă� DxVA ��؂����背�W�X�g���������������肷��K�v������܂��B</p>
+<h2>マルチディスプレイ環境でセカンダリモニタで映らない/不正終了する</h2>
+<p class="descript">レンダラを VMR-9 や EVR にしてみる、またデコーダを変えてみてください。<br>
+場合によっては DxVA を切ったりレジストリを書き換えたりする必要があります。</p>
 
-<h2>�f���������`�ɕ\�������</h2>
-<p class="descript">CyberLink �̃f�R�[�_�ƃf�t�H���g�����_���̑g�ݍ��킹�ŁA1080x1080(4:3) �̉f����\������ƋN����悤�ł��B<br>
-�����_�����f�t�H���g�ȊO�ɂ��Ă݂Ă��������B</p>
+<h2>映像が正方形に表示される</h2>
+<p class="descript">CyberLink のデコーダとデフォルトレンダラの組み合わせで、1080x1080(4:3) の映像を表示すると起こるようです。<br>
+レンダラをデフォルト以外にしてみてください。</p>
 
-<h2>16:9 �̉f�����T�C�h�J�b�g�����</h2>
-<p class="descript">�Ȃ��� 16:9 �̉f���Ȃ̂ɁAMPEG-2 �̃w�b�_�ɃT�C�h�J�b�g���ĕ\������Ƃ�����񂪐ݒ肳��Ă��邱�Ƃ����邽�߂ł��B<br>
-ver.0.6.0 ����\���ł���̈悪����΃T�C�h�J�b�g���Ȃ��d�l�ɂȂ�܂������A4:3 �Ƃ��Ĉ����邽�߂ɕ\���{���̕ύX����S��ʕ\�����ɖ�肪�o�܂��B<br>
-�蓮�Ŕ䗦���w�肷�邩<a href="options.html">�ݒ�</a>��<a href="options/view.html">�\��</a>�� [�g���w�b�_�̃f�B�X�v���C�T�C�Y�𖳎�����] ���`�F�b�N���Ă��������B</p>
+<h2>16:9 の映像がサイドカットされる</h2>
+<p class="descript">なぜか 16:9 の映像なのに、MPEG-2 のヘッダにサイドカットして表示するという情報が設定されていることがあるためです。<br>
+ver.0.6.0 から表示できる領域があればサイドカットしない仕様になりましたが、4:3 として扱われるために表示倍率の変更時や全画面表示時に問題が出ます。<br>
+手動で比率を指定するか<a href="options.html">設定</a>の<a href="options/view.html">表示</a>で [拡張ヘッダのディスプレイサイズを無視する] をチェックしてください。</p>
 
-<h2>�L���v�`���ň�u�~�܂�</h2>
-<p class="descript">�����_���� VMR9 Renderless ���g�p���Ă��������B<br>
-�܂��A�����Ƃ����L���v�`�����������ꍇ�� TSMemory ���g�p���Ă��������B</p>
+<h2>キャプチャで一瞬止まる</h2>
+<p class="descript">レンダラに VMR9 Renderless を使用してください。<br>
+また、ちゃんとしたキャプチャをしたい場合は TSMemory を使用してください。</p>
 
-<h2>�N�����ɃA���`�E�B���X�\�t�g����������</h2>
-<p class="descript">�A�N�e�B�u�łȂ����������R�����g����悤�ɂ��邽�߂ɃL�[�{�[�h�t�b�N���g�p���Ă��܂����A����̓L�[���K�[���ɂ��g���邽�߂ɃA���`�E�B���X�\�t�g���������Ă��܂����Ƃ�����܂��B<br>
-�����R�����g�p���Ȃ��̂ł���� HDUSRemocon.tvtp �� HDUSRemocon_KeyHook.dll ���폜���Ă���肠��܂���B<br>
-�����R�����g�p����ꍇ�A�A���`�E�B���X�\�t�g�ŏ��O�ݒ肷�邩�A<a href="options/controller.html">�����R���̐ݒ�</a>�ŃA�N�e�B�u���̂ݗL���ɂ��Ă��������B</p>
+<h2>起動時にアンチウィルスソフトが反応する</h2>
+<p class="descript">アクティブでない時もリモコンを使えるようにするためにキーボードフックを使用していますが、これはキーロガー等にも使われるためにアンチウィルスソフトが反応してしまうことがあります。<br>
+リモコンを使用しないのであれば HDUSRemocon.tvtp と HDUSRemocon_KeyHook.dll を削除しても問題ありません。<br>
+リモコンを使用する場合、アンチウィルスソフトで除外設定するか、<a href="options/controller.html">リモコンの設定</a>でアクティブ時のみ有効にしてください。</p>
 
-<h2>�E�B���h�E�̃T�C�Y���ύX�ł��Ȃ�/�E�B���h�E�̋�������������</h2>
-<p class="descript">TVTest �ł̓E�B���h�E�̃X�i�b�v�����Ȃǂ��s���Ă���֌W�ŁA�҂������������l�̋@�\��񋟂���v���O�����Ƒ����������ł��B<br>
-TVTest.exe �����O�w�肵�Ă��������B</p>
+<h2>ウィンドウのサイズが変更できない/ウィンドウの挙動がおかしい</h2>
+<p class="descript">TVTest ではウィンドウのスナップ処理などを行っている関係で、ぴたすちお等同様の機能を提供するプログラムと相性が悪いです。<br>
+TVTest.exe を除外指定してください。</p>
 
-<h2>�������g�p�ʂ�����</h2>
-<p class="descript">���������g���Ă���̂� DirectShow �̕���(��� MPEG-2 �f�R�[�_)�ł��̂ŁA���ɂ͂ǂ����悤������܂���B<br>
-MPEG-2 �f�R�[�_�� DxVA ���g�p����ƃ������g�p�ʂ�������̂ŁA(�g�p�ʂ����炷���Ƃ�D�悷��ꍇ)�I�t�ɂ��邩�ADxVA ���g�p���Ȃ��f�R�[�_�ɂ��Ă݂Ă��������B<br>
-�^��̂ݍs���ꍇ�́A<a href="commandline.html">�R�}���h���C���I�v�V����</a>�� /nodshow ���w�肷��ƁA�������g�p�ʂ����Ȃ菭�Ȃ��Ȃ�܂��B</p>
+<h2>メモリ使用量が多い</h2>
+<p class="descript">メモリを使っているのは DirectShow の部分(主に MPEG-2 デコーダ)ですので、私にはどうしようもありません。<br>
+MPEG-2 デコーダで DxVA を使用するとメモリ使用量が増えるので、(使用量を減らすことを優先する場合)オフにするか、DxVA を使用しないデコーダにしてみてください。<br>
+録画のみ行う場合は、<a href="commandline.html">コマンドラインオプション</a>で /nodshow を指定すると、メモリ使用量がかなり少なくなります。</p>
 
-<h2>�u���[�X�N���[�����o��</h2>
-<p class="descript">Windows XP �ȍ~�Ńu���[�X�N���[�����o��̂́A�قƂ�ǂ̏ꍇ�n�[�h���h���C�o�̖��ł��B</p>
+<h2>ブルースクリーンが出る</h2>
+<p class="descript">Windows XP 以降でブルースクリーンが出るのは、ほとんどの場合ハードかドライバの問題です。</p>
 
-<h2>�N������x�ɃZ�L�����e�B�x���̃_�C�A���O���\�������</h2>
-<p class="descript">TVTest.exe ���E�N���b�N -&gt; [�v���p�e�B] -&gt; [�u���b�N�̉���]</p>
+<h2>起動する度にセキュリティ警告のダイアログが表示される</h2>
+<p class="descript">TVTest.exe を右クリック -&gt; [プロパティ] -&gt; [ブロックの解除]</p>
 
 </body>
 </html>

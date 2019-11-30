@@ -1,39 +1,39 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="../default.css" type="text/css">
-	<title>�X�^�C���t�@�C��</title>
+	<title>スタイルファイル</title>
 </head>
 <body>
 
-<h1>�X�^�C���t�@�C��</h1>
+<h1>スタイルファイル</h1>
 
 <p>
-�X�^�C���t�@�C���́A�e���̑傫���Ȃǂ�ݒ肷��t�@�C���ł��B<br>
-�f�t�H���g�̃t�@�C������ TVTest.style.ini �ł��B
+スタイルファイルは、各部の大きさなどを設定するファイルです。<br>
+デフォルトのファイル名は TVTest.style.ini です。
 </p>
 
-<h2>�ݒ荀��</h2>
+<h2>設定項目</h2>
 <p class="descript">
-�ݒ�ł��鍀�ڂ͑������݂��܂����A���̒��œ���Ȃ��́A�L�p�Ȃ��̂�������܂��B
+設定できる項目は多数存在しますが、その中で特殊なもの、有用なものを説明します。
 </p>
 <div class="group">
 <table class="info">
-<tr><th>�ݒ薼</th><th>����</th></tr>
-<tr><td>program-guide.header.shadow.height</td><td>EPG �ԑg�\�̏㕔�̉e�̍����ł��B0�ɂ���Ɖe���Ȃ��Ȃ�܂�</td></tr>
-<tr><td>program-guide.event.line-spacing</td><td>EPG �ԑg�\�̍s�Ԃł��B</td></tr>
-<tr><td>osd.text-size-ratio</td><td>OSD �\���̕����̑傫�����A��ʂ̕��̉�����1�ɂ��邩�w�肵�܂��B</td></tr>
-<tr><td>osd.composite-text-size-ratio</td><td>OSD �\�����f���ƍ�������ꍇ�̕����̑傫�����A��ʂ̕��̉�����1�ɂ��邩�w�肵�܂��B</td></tr>
-<tr><td>channel-osd.logo.effect</td><td>�`�����l���ύX���ɕ\�������ǃ��S�̕\�����ʂ�ݒ肵�܂��B<br>"gloss" �Ńe�J�����ʁA�� "" �Ō��ʂȂ��ɂȂ�܂��B</td></tr>
-<tr><td>channel-osd.animation</td><td>�`�����l���ύX���� OSD ���A�j���[�V����������ꍇ�� true�A�����Ȃ��ꍇ�� false ���w�肵�܂��B</td></tr>
-<tr><td>display.text-size-ratio.horz<br>display.text-size-ratio.vert</td><td>�z�[��/�`�����l���I����ʂ̕����T�C�Y����ʂɍ��킹��ꍇ�̕����̑傫�����A��ʂ̕��ƍ����̉�����1�ɂ��邩�Őݒ肵�܂��B<br>
-���ƍ����̂������������̃T�C�Y�����ۂɔ��f����܂��B</td></tr>
-<tr><td>display.text-size-scale-base</td><td>�z�[��/�`�����l���I����ʂ̕����̑傫������ʂ̑傫�����狁�߂�ۂ̃X�P�[���𒲐����܂��B<br>
-���l��傫������قǉ�ʃT�C�Y���傫���ꍇ�̕����T�C�Y�������߂ɂȂ�܂��B<br>
-0�ɂ���Ɖ�ʃT�C�Y�ƕ����T�C�Y����Ⴕ�܂��B</td></tr>
-<tr><td>display.text-size-min</td><td>�z�[��/�`�����l���I����ʂ̕����̑傫���̍ŏ��T�C�Y��ݒ肵�܂��B</td></tr>
-<tr><td>display.text-size-max</td><td>�z�[��/�`�����l���I����ʂ̕����̑傫���̍ő�T�C�Y��ݒ肵�܂��B</td></tr>
+<tr><th>設定名</th><th>説明</th></tr>
+<tr><td>program-guide.header.shadow.height</td><td>EPG 番組表の上部の影の高さです。0にすると影がなくなります</td></tr>
+<tr><td>program-guide.event.line-spacing</td><td>EPG 番組表の行間です。</td></tr>
+<tr><td>osd.text-size-ratio</td><td>OSD 表示の文字の大きさを、画面の幅の何分の1にするか指定します。</td></tr>
+<tr><td>osd.composite-text-size-ratio</td><td>OSD 表示を映像と合成する場合の文字の大きさを、画面の幅の何分の1にするか指定します。</td></tr>
+<tr><td>channel-osd.logo.effect</td><td>チャンネル変更時に表示される局ロゴの表示効果を設定します。<br>"gloss" でテカリ効果、空 "" で効果なしになります。</td></tr>
+<tr><td>channel-osd.animation</td><td>チャンネル変更時の OSD をアニメーションさせる場合は true、させない場合は false を指定します。</td></tr>
+<tr><td>display.text-size-ratio.horz<br>display.text-size-ratio.vert</td><td>ホーム/チャンネル選択画面の文字サイズを画面に合わせる場合の文字の大きさを、画面の幅と高さの何分の1にするかで設定します。<br>
+幅と高さのうち小さい方のサイズが実際に反映されます。</td></tr>
+<tr><td>display.text-size-scale-base</td><td>ホーム/チャンネル選択画面の文字の大きさを画面の大きさから求める際のスケールを調整します。<br>
+数値を大きくするほど画面サイズが大きい場合の文字サイズが小さめになります。<br>
+0にすると画面サイズと文字サイズが比例します。</td></tr>
+<tr><td>display.text-size-min</td><td>ホーム/チャンネル選択画面の文字の大きさの最小サイズを設定します。</td></tr>
+<tr><td>display.text-size-max</td><td>ホーム/チャンネル選択画面の文字の大きさの最大サイズを設定します。</td></tr>
 </table>
 </div>
 
