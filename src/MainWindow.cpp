@@ -6510,9 +6510,9 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 		}
 	} else if (pInfo->Command >= CM_PLUGINCOMMAND_FIRST
 			&& pInfo->Command <= CM_PLUGINCOMMAND_LAST) {
+		String CommandID = m_pMainWindow->m_App.CommandManager.GetCommandIDText(pInfo->Command);
 		LPCTSTR pszCommand;
-		CPlugin *pPlugin = m_pMainWindow->m_App.PluginManager.GetPluginByPluginCommand(
-			m_pMainWindow->m_App.CommandManager.GetCommandIDText(pInfo->Command).c_str(), &pszCommand);
+		CPlugin *pPlugin = m_pMainWindow->m_App.PluginManager.GetPluginByPluginCommand(CommandID.c_str(), &pszCommand);
 
 		if (pPlugin != nullptr) {
 			CPlugin::CPluginCommandInfo *pCommandInfo =

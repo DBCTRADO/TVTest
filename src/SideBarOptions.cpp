@@ -530,9 +530,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 						}
 					}
 				} else if (ID >= CM_PLUGINCOMMAND_FIRST && ID <= CM_PLUGINCOMMAND_LAST) {
+					String CommandID = pCommandManager->GetCommandIDText(ID);
 					LPCTSTR pszCommand;
-					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByPluginCommand(
-						pCommandManager->GetCommandIDText(ID).c_str(), &pszCommand);
+					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByPluginCommand(CommandID.c_str(), &pszCommand);
 					if (pPlugin != nullptr) {
 						CPlugin::CPluginCommandInfo *pCommandInfo =
 							pPlugin->GetPluginCommandInfo(pszCommand);
