@@ -1,539 +1,539 @@
+﻿
+
+    デジタル放送汎用視聴プログラム実装研究資料
+
+                                            デジタル放送総合技術研究開発機構
 
 
-    �f�W�^�������ėp�����v���O����������������
+◆ はじめに
 
-                                            �f�W�^�����������Z�p�����J���@�\
+  デジタル放送汎用視聴プログラム実装研究資料(略称 TVTest)は、パーソナルコンピュー
+  タ上において、デジタル放送の視聴を行うプログラムの実装を研究する目的で頒布され
+  る研究資料です。
 
+  この資料は MPEG-2 TS を扱うための基本的な機能を実装しています。
+  CAS 処理は実装されていないため、一般のテレビ放送を視聴することはできません。
 
-�� �͂��߂�
-
-  �f�W�^�������ėp�����v���O����������������(���� TVTest)�́A�p�[�\�i���R���s���[
-  �^��ɂ����āA�f�W�^�������̎������s���v���O�����̎�������������ړI�ŔЕz����
-  �錤�������ł��B
-
-  ���̎����� MPEG-2 TS ���������߂̊�{�I�ȋ@�\���������Ă��܂��B
-  CAS �����͎�������Ă��Ȃ����߁A��ʂ̃e���r�������������邱�Ƃ͂ł��܂���B
-
-  ���g�p�O�ɂ��̃h�L�������g�ɖڂ�ʂ��Ă��������B
-  ���ɉ�����肪�N�����ꍇ�́A�f���ȂǂŎ��₷��O�Ɂu�� �q���g�v�̕������Q��
-  ���Ă��������B
+  ご使用前にこのドキュメントに目を通してください。
+  特に何か問題が起きた場合は、掲示板などで質問する前に「◆ ヒント」の部分を参照
+  してください。
 
 
-�� ������
+◆ 試験環境
 
-  �EWindows 7 / 8.1 / 10
-
-
-�� �d�l
-
-  �Ή��R���e�i
-
-  �EMPEG-2 TS (Transport Stream)
-
-  �Ή��f���`��
-
-  �EMPEG-2 Video (ITU-T Rec. H.262 | ISO/IEC 13818-2)
-  �EH.264 / AVC (ITU-T Rec. H.264 | ISO/IEC 14496-10)
-  �EH.265 / HEVC (ITU-T Rec. H.265 | ISO/IEC 23008-2)
-
-  �Ή������`��
-
-  �EAAC (ISO/IEC 13818-7 Audio with ADTS transport syntax)
-  �EMPEG-1/2 Audio Layer I/II/III (ISO/IEC 11172-3)
-  �EAC-3 (ATSC A/52)
+  ・Windows 7 / 8.1 / 10
 
 
-�� �r���h
+◆ 仕様
 
-  �܂��\�[�X�t�@�C���� GitHub ����_�E�����[�h���邩�A�܂��� clone ���s���܂��B
-  clone ����ꍇ�A�T�u���W���[�����܂ނ��߂� --recursive ���w�肵�܂��B
+  対応コンテナ
+
+  ・MPEG-2 TS (Transport Stream)
+
+  対応映像形式
+
+  ・MPEG-2 Video (ITU-T Rec. H.262 | ISO/IEC 13818-2)
+  ・H.264 / AVC (ITU-T Rec. H.264 | ISO/IEC 14496-10)
+  ・H.265 / HEVC (ITU-T Rec. H.265 | ISO/IEC 23008-2)
+
+  対応音声形式
+
+  ・AAC (ISO/IEC 13818-7 Audio with ADTS transport syntax)
+  ・MPEG-1/2 Audio Layer I/II/III (ISO/IEC 11172-3)
+  ・AC-3 (ATSC A/52)
+
+
+◆ ビルド
+
+  まずソースファイルを GitHub からダウンロードするか、または clone を行います。
+  clone する場合、サブモジュールを含むために --recursive を指定します。
 
     git clone --recursive https://github.com/DBCTRADO/TVTest.git
 
-  GitHub ���� Zip �t�@�C�����_�E�����[�h����ꍇ�A�T�u���W���[���͊܂܂�Ȃ��̂�
-  src/LibISDB �t�H���_�� LibISDB �̃t�@�C����W�J����K�v������܂��B
-  ���̏ꍇ�A�T�u���W���[���̎Q�Ɛ�Ƃ��Ďw�肳��Ă���R�~�b�g�ȊO�̃\�[�X�c���[
-  �𗘗p�����ꍇ�A�r���h�ł��Ȃ��A�������͐���ɓ��삵�Ȃ��\��������܂��B
-
-  Visual Studio 2017 Update 5 �̃v���W�F�N�g�t�@�C�����t�����Ă��܂��B
-  C++17 �̋@�\�𗘗p���Ă��邽�߁A2017 Update 5 ���O�� Visual Studio �ł̓r��
-  �h�ł��܂���B
-  TVTest �̃r���h�ɂ͈ȉ��� SDK/���C�u�������K�v�ɂȂ�܂��B
-
-  �EMicrosoft Windows SDK v10 �ȏ�
-  �ELibISDB      https://github.com/DBCTRADO/LibISDB
-  �EFAAD2        http://www.audiocoding.com/faad2.html
-  �Elibmad       http://www.underbit.com/products/mad/
-  �Eliba52       http://liba52.sourceforge.net/
-  �Elibjpeg (*)  http://www.ijg.org/
-  �Elibpng (*)   http://libpng.org/
-  �Ezlib (*)     http://zlib.net/
-
-  (*) TVTest_Image.dll �̃r���h�ɕK�v
-
-  �K�v�ȃ��C�u������ TVTest / LibISDB �̃��|�W�g���Ɋ܂܂�Ă��܂��B
-
-  src �t�H���_���Ɉȉ��̃\�����[�V����������܂��̂ŁA�r���h�������Ώۂɍ��킹��
-  ���p���Ă��������B
-
-  �ETVTest.sln        TVTest.exe �̃\�����[�V����
-  �ETVTest_Image.sln  TVTest_Image.dll �̃\�����[�V����
-  �ETVTest_All.sln    TVTest.exe �� TVTest_Image.dll �����̃\�����[�V����
-
-  TVTest ����� LibISDB ���r���h���Ă����K�v������܂��B
-  src/LibISDB/Projects/LibISDB.sln ���J���āA�\�����[�V�����̃r���h���s���Ă���
-  �����B
-  ���̍ہATVTest �ƃ\�����[�V�����\��/�v���b�g�t�H�[���𓝈ꂷ��K�v������܂���
-  �Œ��ӂ��Ă��������B
+  GitHub から Zip ファイルをダウンロードする場合、サブモジュールは含まれないので
+  src/LibISDB フォルダに LibISDB のファイルを展開する必要があります。
+  その場合、サブモジュールの参照先として指定されているコミット以外のソースツリー
+  を利用した場合、ビルドできない、もしくは正常に動作しない可能性があります。
+
+  Visual Studio 2017 Update 5 のプロジェクトファイルが付属しています。
+  C++17 の機能を利用しているため、2017 Update 5 より前の Visual Studio ではビル
+  ドできません。
+  TVTest のビルドには以下の SDK/ライブラリが必要になります。
+
+  ・Microsoft Windows SDK v10 以上
+  ・LibISDB      https://github.com/DBCTRADO/LibISDB
+  ・FAAD2        http://www.audiocoding.com/faad2.html
+  ・libmad       http://www.underbit.com/products/mad/
+  ・liba52       http://liba52.sourceforge.net/
+  ・libjpeg (*)  http://www.ijg.org/
+  ・libpng (*)   http://libpng.org/
+  ・zlib (*)     http://zlib.net/
+
+  (*) TVTest_Image.dll のビルドに必要
+
+  必要なライブラリは TVTest / LibISDB のリポジトリに含まれています。
+
+  src フォルダ内に以下のソリューションがありますので、ビルドしたい対象に合わせて
+  利用してください。
+
+  ・TVTest.sln        TVTest.exe のソリューション
+  ・TVTest_Image.sln  TVTest_Image.dll のソリューション
+  ・TVTest_All.sln    TVTest.exe と TVTest_Image.dll 両方のソリューション
+
+  TVTest より先に LibISDB をビルドしておく必要があります。
+  src/LibISDB/Projects/LibISDB.sln を開いて、ソリューションのビルドを行ってくだ
+  さい。
+  その際、TVTest とソリューション構成/プラットフォームを統一する必要がありますの
+  で注意してください。
 
-  �v���O�C���� Visual Studio 2010 �ȍ~�Ńr���h�ł��܂��B
-  sdk\Samples ���� Samples.sln (VS 2010 �p) �� Samples.VS2013.sln (VS 2013/2015
-  �p) ���J���ăr���h���Ă��������B
+  プラグインは Visual Studio 2010 以降でビルドできます。
+  sdk\Samples 内の Samples.sln (VS 2010 用) か Samples.VS2013.sln (VS 2013/2015
+  用) を開いてビルドしてください。
 
-  �Ȃ��A�f�R�[�_�ɂ���ẮA(���炭���o�[�X�G���W�j�A�����O�΍��)�f�o�b�O���s��
-  �ɐڑ��ł��Ȃ�������s���I��������ꂽ�肵�܂��B
+  なお、デコーダによっては、(恐らくリバースエンジニアリング対策で)デバッグ実行時
+  に接続できなかったり不正終了させられたりします。
 
 
-�� �t�@�C���\��
+◆ ファイル構成
 
-  TVTest ���s���ɂ́A�ȉ��̂悤�Ƀt�@�C����z�u���܂��B
-  �t�H���_���ɐݒ�Ȃǂ�ۑ����܂��̂ŁA�ǂݏ����̃A�N�Z�X�����̂���ꏊ�ɂ��Ă�
-  ������(Program Files ���͔�������������ł�)�B
-
-  �ETVTest.exe          �{��
-  �ETVTest.style.ini    �X�^�C���ݒ�t�@�C��
-  �ETVTest.search.ini   �����ݒ�t�@�C��
-  �ETVTest.tuner.ini    �`���[�i�[�d�l��`�t�@�C��
-  �ETVTest.chm          �w���v�t�@�C��
-  �ETVTest_Image.dll    �摜�ۑ��p DLL
-  �ETVTest_Logo.bmp     ���S�摜
-  �EDRCSMap.ini         DRCS �ݒ�t�@�C��
-                        (DRCSMap.sample.ini ���Q�l�ɁA�K�v�ł���Δz�u����)
-  �EPlugins\*.tvtp      �v���O�C���t�H���_
-                        (�v���O�C���t�@�C�� *.tvtp ��z�u����)
-  �EThemes\*.httheme    �e�[�}�ݒ�t�H���_
-                        (�e�[�}�t�@�C�� *.httheme ��z�u����)
-
-  (�Œ�� TVTest.exe �� TVTest_Image.dll ������Γ���͂��܂�)
-
-  �{�̂ƃv���O�C�����r���h������AGit Bash �� package.sh �����s����΁A�K�v�ȃt�@
-  �C�����W�߂��A�[�J�C�u���쐬���邱�Ƃ��ł��܂��B
-  package.sh �̎��s�ɂ́A7-Zip (http://www.7-zip.org/) ���C���X�g�[������Ă���
-  �K�v������܂��B
+  TVTest 実行時には、以下のようにファイルを配置します。
+  フォルダ内に設定などを保存しますので、読み書きのアクセス権限のある場所にしてく
+  ださい(Program Files 内は避けた方が無難です)。
+
+  ・TVTest.exe          本体
+  ・TVTest.style.ini    スタイル設定ファイル
+  ・TVTest.search.ini   検索設定ファイル
+  ・TVTest.tuner.ini    チューナー仕様定義ファイル
+  ・TVTest.chm          ヘルプファイル
+  ・TVTest_Image.dll    画像保存用 DLL
+  ・TVTest_Logo.bmp     ロゴ画像
+  ・DRCSMap.ini         DRCS 設定ファイル
+                        (DRCSMap.sample.ini を参考に、必要であれば配置する)
+  ・Plugins\*.tvtp      プラグインフォルダ
+                        (プラグインファイル *.tvtp を配置する)
+  ・Themes\*.httheme    テーマ設定フォルダ
+                        (テーマファイル *.httheme を配置する)
+
+  (最低限 TVTest.exe と TVTest_Image.dll があれば動作はします)
+
+  本体とプラグインをビルドした後、Git Bash で package.sh を実行すれば、必要なファ
+  イルを集めたアーカイブを作成することができます。
+  package.sh の実行には、7-Zip (http://www.7-zip.org/) がインストールされている
+  必要があります。
 
-  TVTest.exe �����s����ƁA�{�̂̂���t�H���_�Ɉȉ��̃t�@�C�����쐬����܂��B
+  TVTest.exe を実行すると、本体のあるフォルダに以下のファイルが作成されます。
 
-  �ETVTest.ini          �ݒ�t�@�C��
-  �ETVTest.tvfavorites  ���C�ɓ���`�����l��
-  �EEpgData             EPG �f�[�^(*)
-  �ELogoData            �ǃ��S�f�[�^(*)
-  �ELogoData.ini        �ǃ��S�̏��(*)
-   (*) �ݒ�ɂ��Ⴄ�t�H���_�ɍ쐬������A�쐬���Ȃ��悤�ɂ��邱�Ƃ��\�ł��B
+  ・TVTest.ini          設定ファイル
+  ・TVTest.tvfavorites  お気に入りチャンネル
+  ・EpgData             EPG データ(*)
+  ・LogoData            局ロゴデータ(*)
+  ・LogoData.ini        局ロゴの情報(*)
+   (*) 設定により違うフォルダに作成したり、作成しないようにすることも可能です。
 
-  ver.0.9.0 ���O�̃o�[�W�����Ŏg���Ă��� TVTest.ch.ini �͎g�p����Ȃ��Ȃ��
-  �����B
+  ver.0.9.0 より前のバージョンで使われていた TVTest.ch.ini は使用されなくなりま
+  した。
 
 
-�� ��������
+◆ 試験準備
 
-  TVTest �Ŏ����������s���ɂ͕ʓr�f���f�R�[�_ (MPEG-2 / H.264 / H.265) ���K�v��
-  ���B
-  (Windows Vista/7 �ł� Microsoft �̃f�R�[�_���f�t�H���g�œ����Ă��܂��B
-   Windows 8 �ł� Microsoft �̃f�R�[�_�ł� MPEG-2 �̃f�R�[�h�@�\���L���I�v�V����
-   �ƂȂ��Ă��܂�)
-  �ȉ��̃f�R�[�_�Ŏ������s���邱�Ƃ��m�F����Ă��܂��B
+  TVTest で視聴試験を行うには別途映像デコーダ (MPEG-2 / H.264 / H.265) が必要で
+  す。
+  (Windows Vista/7 では Microsoft のデコーダがデフォルトで入っています。
+   Windows 8 では Microsoft のデコーダでの MPEG-2 のデコード機能が有料オプション
+   となっています)
+  以下のデコーダで試験が行えることが確認されています。
 
-    �ETVTest DTV Video Decoder
-    �EMicrosoft MPEG-2 Video Decoder / Microsoft DTV-DVD Video Decoder
-    �EMPV Decoder Filter / MPC - MPEG-2 Video Decoder / Mpeg2Dec Filter
-    �EATI MPEG Video Decoder / AMD Video Decoder
-    �ELAV Video Decoder
-    �Effdshow Video Decoder
-    �EDScaler Mpeg2 Video Decoder
+    ・TVTest DTV Video Decoder
+    ・Microsoft MPEG-2 Video Decoder / Microsoft DTV-DVD Video Decoder
+    ・MPV Decoder Filter / MPC - MPEG-2 Video Decoder / Mpeg2Dec Filter
+    ・ATI MPEG Video Decoder / AMD Video Decoder
+    ・LAV Video Decoder
+    ・ffdshow Video Decoder
+    ・DScaler Mpeg2 Video Decoder
 
-  TVTest �Ŏ��ۂɎ����������s���ɂ́ABonDriver ���K�v�ł��B
-  �g�p����`���[�i�[�ɑΉ����� BonDriver �� TVTest.exe �Ɠ����t�H���_�ɓ���܂��B
+  TVTest で実際に視聴試験を行うには、BonDriver が必要です。
+  使用するチューナーに対応した BonDriver を TVTest.exe と同じフォルダに入れます。
 
-  ����N�����ɏ����ݒ�_�C�A���O���\������܂��̂ŁA�e���ڂ�ݒ肵�Ă��������B
+  初回起動時に初期設定ダイアログが表示されますので、各項目を設定してください。
 
-  ���ɁA�`�����l���X�L���������s���Ď����\�ȃ`�����l�����������܂�(�`�����l��
-  �X�L�������s��Ȃ��Ă��g�p���邱�Ƃ͉\�ł�)�B
-  ����N�����Ƀ`�����l���X�L�������s�����ǂ�����q�˂��܂��̂ŁA������ [�͂�]
-  ��I�����邩�A�E�N���b�N���j���[�� [�ݒ�] �ŕ\�������ݒ�_�C�A���O����A
-  [�`�����l���X�L����] ��I�����܂��B
-  [�X�L�����J�n] �{�^���������ƃ`�����l���X�L�������n�܂�܂��B�X�L�����ɂ͐���
-  �|����܂��B
-  �[��ȂǂŒ�g���Ă���ǂ͌��o�ł��܂���̂Œ��ӂ��Ă��������B
+  次に、チャンネルスキャンを実行して視聴可能なチャンネルを検索します(チャンネル
+  スキャンを行わなくても使用することは可能です)。
+  初回起動時にチャンネルスキャンを行うかどうかを尋ねられますので、そこで [はい]
+  を選択するか、右クリックメニューの [設定] で表示される設定ダイアログから、
+  [チャンネルスキャン] を選択します。
+  [スキャン開始] ボタンを押すとチャンネルスキャンが始まります。スキャンには数分
+  掛かります。
+  深夜などで停波している局は検出できませんので注意してください。
 
-  �g�p���Ă���`���[�i�[�������̃`���[�j���O��ԂɑΉ����Ă���ꍇ�́A�`���[�j��
-  �O��Ԃ��ƂɃX�L�������s���K�v������܂��B
-  BS/CS �����̏ꍇ�̓v���Z�b�g�t�@�C��������΃v���Z�b�g���ǂݍ��܂�܂����ACS
-  �̓`�����l���̕ύX���p�ɂɂ��邽�߃X�L�������邱�Ƃ����E�߂��܂��B
+  使用しているチューナーが複数のチューニング空間に対応している場合は、チューニン
+  グ空間ごとにスキャンを行う必要があります。
+  BS/CS 放送の場合はプリセットファイルがあればプリセットが読み込まれますが、CS
+  はチャンネルの変更が頻繁にあるためスキャンすることをお薦めします。
 
 
-�� �X�V
+◆ 更新
 
-  �t�@�C����S�ď㏑�����܂��B
-  �{�̈ȊO���X�V���ꂽ�t�@�C���͏㏑�����Ă��������B
+  ファイルを全て上書きします。
+  本体以外も更新されたファイルは上書きしてください。
 
 
-�� �����I��
+◆ 試験終了
 
-  �t�@�C�����폜���܂��B
-  ���W�X�g���⑼�̃t�H���_�ɐݒ�̕ۑ��Ȃǂ͂��܂���B
+  ファイルを削除します。
+  レジストリや他のフォルダに設定の保存などはしません。
 
 
-�� �g����
+◆ 使い方
 
-  ���̕��ɂ���X�e�[�^�X�o�[���N���b�N����ƐF�X�ł��܂��B
-  �f�t�H���g�ł͍����珇�Ɉȉ��̂悤�ɂȂ��Ă��܂��B
+  下の方にあるステータスバーをクリックすると色々できます。
+  デフォルトでは左から順に以下のようになっています。
 
-                 ���N���b�N              �E�N���b�N
+                 左クリック              右クリック
 
-  �`���[�i�[    �`���[�i�[�I��          �`���[�i�[/�`�����l���I��
-  �`�����l��    �`�����l���I��          �T�[�r�X�I��
-  �f���̑傫��  �\���{���I��            �A�X�y�N�g��I��
-  ����          ���ʂ̕ύX              ����
-  ����          �����ؑ�                �����ؑփ��j���[
-  �^��          �^��J�n/��~           �^�惁�j���[
-  �L���v�`��    �L���v�`�����s          �L���v�`�����j���[
-  �G���[        �G���[�J�E���g���Z�b�g  ���j���[
-  �M�����x��    �Ȃ�                    �Ȃ�
+  チューナー    チューナー選択          チューナー/チャンネル選択
+  チャンネル    チャンネル選択          サービス選択
+  映像の大きさ  表示倍率選択            アスペクト比選択
+  音量          音量の変更              消音
+  音声          音声切替                音声切替メニュー
+  録画          録画開始/停止           録画メニュー
+  キャプチャ    キャプチャ実行          キャプチャメニュー
+  エラー        エラーカウントリセット  メニュー
+  信号レベル    なし                    なし
 
-  �����̕����� #1: �̂悤�ɕ\������Ă���ꍇ�A�����̉���������܂��̂ŉ������
-  ��ւ��邱�Ƃ��ł��܂��B
-  �܂��A[��] �� (��) �ƕ\������Ă���ꍇ����E��������؂�ւ����܂��B
+  音声の部分が #1: のように表示されている場合、複数の音声がありますので音声を切
+  り替えることができます。
+  また、[二] や (主) と表示されている場合も主・副音声を切り替えられます。
 
-  �G���[�̕����� D ���h���b�v(�A�����G���[)�p�P�b�g���AE �����̑��G���[�p�P�b�g
-  ���AS ���Í������ꂽ�p�P�b�g���ł��B
-  ���̑��ɁA���݂̎�����\�����鎞�v�A�������̔ԑg���A�o�b�t�@�̎g�p�������\��
-  �ł��܂��B
-  �o�b�t�@�̎g�p�����́AR �� BonDriver �̃o�b�t�@�c��u���b�N��(�u���b�N�̃T�C�Y
-  �̓h���C�o�ɂ���ĈقȂ�)�AB �� TVTest �̃o�b�t�@�g�p���ł��B
+  エラーの部分は D がドロップ(連続性エラー)パケット数、E がその他エラーパケット
+  数、S が暗号化されたパケット数です。
+  その他に、現在の時刻を表示する時計、視聴中の番組情報、バッファの使用割合が表示
+  できます。
+  バッファの使用割合は、R が BonDriver のバッファ残りブロック数(ブロックのサイズ
+  はドライバによって異なる)、B が TVTest のバッファ使用率です。
 
-  �X�e�[�^�X�o�[�̃`�����l��/����/�����̊e���ڂɃt�H�[�J�X�������ԂŃz�C�[����
-  �g�p����ƁA���̍��ڂɍ��킹����������܂��B
-
-  �X�e�[�^�X�o�[�̍��ڂ̏����A�\��/��\���A�傫���͐ݒ�ŕύX���邱�Ƃ��ł��܂��B
-
-  ��ʂ��E�N���b�N����ƕ��ʂɃ��j���[���o�܂��B
-  �܂��A��ʂ��_�u���N���b�N����ƑS��ʕ\���ɂȂ�܂��B
-
-  ��ʂ̍���(�f�t�H���g�̏ꍇ)�ɃJ�[�\���������Ă����ƃT�C�h�o�[���\������A�A�C
-  �R������@�\�����s�ł��܂��B
-
-  �E�B���h�E�� Shift �L�[�������Ȃ��烊�T�C�Y����ƁA�E�B���h�E�T�C�Y����ʂ̃A
-  �X�y�N�g��ɍ��킹�Ē�������܂��B
-  �܂��A�ݒ�� Shift �L�[���������ɃA�X�y�N�g��ɍ��킹��悤�ɂ��邱�Ƃ��ł���
-  ���B
-
-  �g�����ɂ��Ă��ڂ����̓w���v���Q�Ƃ��Ă��������B
-
-
-�� EPG �ԑg�\�̎g����
-
-  �E�N���b�N���j���[���� [EPG�ԑg�\] ��I�����邩�A�����R���� [EPG] �{�^��������
-  �ƁAEPG �ԑg�\���\������܂��B
-
-  �ԑg�\�ŉE�N���b�N�������j���[���� [�ԑg�\�̎擾�J�n] ��I������ƁA�e�`�����l
-  ���̔ԑg�\���擾���܂��B
-  EPG ���̎擾�͎��������s���Ă��܂��̂ŁA���Ɏ��������`�����l���̔ԑg�\�͍ŏ�
-  ����\������܂��B�܂��A���j���[���� [�ŐV�̏��ɍX�V] ��I������ƁA��������
-  �s�����ԑg���̎擾�𔽉f�����邱�Ƃ��ł��܂��B
-
-  �ԑg�\�̈�ԏ�̃`�����l�������N���b�N����ƁA���̃`�����l���ɐ؂�ւ����܂��B
-  �܂��A�E�ɂ��� >> ���N���b�N����ƁA���̃`�����l���̈�T�ԕ��̔ԑg�\���ɂȂ��
-  ���B
-
-
-�� �q���g
-
-  �E���������o�ĉf�����o�Ȃ�
-    �f���̍Đ��ɂ� MPEG-2 �̃f�R�[�_�E�t�B���^���K�v�ł��B
-    �܂��A�f�R�[�_�ɂ���Ă͓��삵�Ȃ����̂�����܂��̂Œ��ӂ��Ă��������B
-    ����m�F����Ă���f�R�[�_�́A�u�� ���������v�̐߂��Q�Ƃ��Ă��������B
-    �f�R�[�_�������Ă���̂ɉf�����o�Ȃ��ꍇ�́A�����_����ς��Ă݂Ă��������B
-    �f�R�[�_�ƃ����_���͊��ˑ����������A�g�ݍ��킹�̑���������̂ŐF�X�Ǝ�����
-    �݂Ă��������B
-
-  �E�f���ɎȁX������/�f�����g�ł�
-    �����̓C���^�[���[�X�����ōs���Ă��邽�߂ɁA�C���^�[���[�X����������K�v��
-    ����܂��B
-    �f�R�[�_�ɂ���Ă̓v���p�e�B�ɃC���^�[���[�X�����̐ݒ肪����܂��̂ŁA�E�N
-    ���b�N���j���[���� [�t�B���^�̃v���p�e�B] -> [�f���f�R�[�_] �Őݒ肵�܂��B
-    ATI �̃f�R�[�_�� Catalyst Control Center (CCC) �Őݒ�ł��܂��B
-    �܂��A�����_����ς���Ɖ��P����ꍇ������܂��B
-
-  �E�^�悵���ԑg���Đ�����ƈႤ�ԑg���Đ������
-    �f�W�^�������ł́A��̃X�g���[���ŕ����̔ԑg�𓯎��ɕ������邱�Ƃ��ł��܂��B
-    ���̂��߁A�Đ����ɈӐ}���Ȃ��ԑg���Đ�����Ă��܂����Ƃ�����܂��B
-    �^��̐ݒ�Łu���݂̃T�[�r�X�̂ݘ^�悷��v�̃`�F�b�N�����邩�ATsSplitter
-    �ŕ�������Ȃǂ��Ă��������B
-
-  �E�^�悵���ԑg���Đ�����Ɖ���(�f��)���o�Ȃ�/�r���ŏo�Ȃ��Ȃ�
-    �����ł͉�����f���̌`�����؂�ւ�邱�Ƃ�����܂����A�Đ��\�t�g���Ή����Ă�
-    �Ȃ��Ɖ����o�Ȃ��Ȃ�����f�����o�Ȃ��Ȃ����肵�܂��B
-    (�����̃v���C���[���Ή����Ă��Ȃ��̂�����ł�)
-    �Đ��\�t�g��ς��邩�A������f���̐؂�ւ��_�Ńt�@�C�����J�b�g����Ȃǂ���
-    ���������B
-    BonDriver_File+TVTestPlugin �� TvtPlay �Ƃ������v���O�C�����g�p���āATVTest
-    �Ńt�@�C���̍Đ����s�����Ƃ��ł��܂��B
-
-  �E�uBonDriver�̏��������ł��܂���v�ƕ\�������
-    BonDriver ����G���[���Ԃ��Ă������߂ł��B
-    ��̓I�ɂǂ̂悤�ȃG���[���N�������̂����A�Ăяo�����̃v���O��������m����@
-    �͂���܂���B
-    �f�o�C�X���F������Ă��Ȃ������Ɏg�p���̏ꍇ�������Ǝv���܂��B
-
-  �E���ʂ��ő�ɂ��Ă�����������
-    �E�N���b�N���j���[���� [����] -> [���ʑ���] ��I�����Ă��������B
-    Vista �ȍ~�̏ꍇ�͉��ʃ~�L�T�� TVTest �̉��ʂ��グ�Ă��������B
-
-  �E�������E�����ꂷ��
-    �f�����������ꍇ�A�ȉ��������Ă݂Ă��������B
-    �E�ݒ�� [OSD] �� [�f���ƍ�������] �̃`�F�b�N���O���B
-    �ERadeon �̏ꍇ�ACatalyst Control Center �� [Avivo �r�f�I] -> [���ׂĂ̐ݒ�]
-      �ɂ��� [�����I�ɂȂ߂炩�ȃr�f�I�Đ������s����] �̃`�F�b�N���O���B
-    �ݒ�_�C�A���O�� [�Đ�] �Ŋe��ݒ��ύX����Ɖ��P����ꍇ������܂��B
-    �ꎞ�I�ɂ��������Ȃ����ꍇ�A�E�N���b�N���j���[���� [���Z�b�g] -> [�r���[�A��
-    �Z�b�g] �� [���Z�b�g] �Œ��邱�Ƃ�����܂��B
-
-  �E�}���`�f�B�X�v���C���ŃZ�J���_�����j�^�ŉf��Ȃ�/�s���I������
-    �����_���� VMR-9 �� EVR �ɂ��Ă݂�A�܂��f�R�[�_��ς��Ă݂Ă��������B
-    �ꍇ�ɂ���Ă� DxVA ��؂����背�W�X�g���������������肷��K�v������܂��B
-
-  �E�f���������`�ɕ\�������
-    CyberLink �̃f�R�[�_�ƃf�t�H���g�����_���̑g�ݍ��킹�ŁA1080x1080(4:3) �̉f
-    ����\������ƋN����悤�ł��B
-    �����_�����f�t�H���g�ȊO�ɂ��Ă݂Ă��������B
-
-  �E16:9 �̉f�����T�C�h�J�b�g�����
-    �Ȃ��� 16:9 �̉f���Ȃ̂ɁAMPEG-2 �̃w�b�_�ɃT�C�h�J�b�g���ĕ\������Ƃ�����
-    �񂪐ݒ肳��Ă��邱�Ƃ����邽�߂ł��B
-    ver.0.6.0 ����\���ł���̈悪����΃T�C�h�J�b�g���Ȃ��d�l�ɂȂ�܂������A
-    4:3 �Ƃ��Ĉ����邽�߂ɕ\���{���̕ύX����S��ʕ\�����ɖ�肪�o�܂��B
-    �蓮�Ŕ䗦���w�肷�邩�ݒ�̕\���� [�g���w�b�_�̃f�B�X�v���C�T�C�Y�𖳎�����]
-    ���`�F�b�N���Ă��������B
-
-  �E�L���v�`���ň�u�~�܂�
-    �����_���� VMR9 Renderless ���g�p���Ă��������B
-    �܂��A�����Ƃ����L���v�`�����������ꍇ�� TSMemory ���g�p���Ă��������B
-
-  �E�N�����ɃA���`�E�B���X�\�t�g����������
-    �A�N�e�B�u�łȂ����������R�����g����悤�ɂ��邽�߂ɃL�[�{�[�h�t�b�N���g�p��
-    �Ă��܂����A����̓L�[���K�[���ɂ��g���邽�߂ɃA���`�E�B���X�\�t�g��������
-    �Ă��܂����Ƃ�����܂��B
-    �����R�����g�p���Ȃ��̂ł���� HDUSRemocon.tvtp �� HDUSRemocon_KeyHook.dll
-    ���폜���Ă���肠��܂���B
-    �����R�����g�p����ꍇ�A�A���`�E�B���X�\�t�g�ŏ��O�ݒ肷�邩�A�ݒ�ŃA�N�e�B
-    �u���̂ݗL���ɂ��Ă��������B
-
-  �E�E�B���h�E�̃T�C�Y���ύX�ł��Ȃ�/�E�B���h�E�̋�������������
-    TVTest �ł̓E�B���h�E�̃X�i�b�v�����Ȃǂ��s���Ă���֌W�ŁA�҂������������l
-    �̋@�\��񋟂���v���O�����Ƒ����������ł��B
-    TVTest.exe �����O�w�肵�Ă��������B
-
-  �E�������g�p�ʂ�����
-    ���������g���Ă���̂� DirectShow �̕���(��� MPEG-2 �f�R�[�_)�ł��̂ŁA����
-    �͂ǂ����悤������܂���B
-    MPEG-2 �f�R�[�_�� DxVA ���g�p����ƃ������g�p�ʂ�������̂ŁA(�g�p�ʂ����炷
-    ���Ƃ�D�悷��ꍇ)�I�t�ɂ��邩�ADxVA ���g�p���Ȃ��f�R�[�_�ɂ��Ă݂Ă��������B
-    �^��̂ݍs���ꍇ�́A�R�}���h���C���I�v�V������ /nodshow ���w�肷��ƁA������
-    �g�p�ʂ����Ȃ菭�Ȃ��Ȃ�܂��B
-
-  �E�u���[�X�N���[�����o��
-    Windows XP �ȍ~�Ńu���[�X�N���[�����o��̂́A�قƂ�ǂ̏ꍇ�n�[�h���h���C�o
-    �̖��ł��B
-
-
-�� �f�t�H���g�̃L�[�{�[�h����
-
-  F1�`F12 or 1�`9/0  �`�����l���I��
-  ����               �`�����l��-+
-  ����               ����+-
-  Alt+Enter          �S��ʕ\��
-  R                  �^��
-  S                  �����ؑ�
-  A                  �A�X�y�N�g��ؑ�
-  I                  ���E�B���h�E�\��
-  E                  EPG �ԑg�\�\��
-  T                  ��ɍőO�ʂɕ\��
-  C                  ��ʃR�s�[
-
-
-�� S/PDIF �p�X�X���[�ɂ���
-
-  S/PDIF �p�X�X���[�o�͂��s���ꍇ�A�p�\�R���̃T�E���h�f�o�C�X�� AAC �̃p�X�X���[
-  �o�͂ɑΉ����Ă���K�v������܂��B
-  �p�X�X���[�o�͂��s�������ꍇ�A�ݒ�� [�Đ�] > [S/PDIF�p�X�X���[] �Ŏw�肵�Ă�
-  �������B�܂��A���j���[�� [�����ؑ�] ��X�e�[�^�X�o�[�̉����̍��ڂ̉E�N���b�N��
-  �j���[����A�ꎞ�I�Ƀp�X�X���[�̗L��/������؂�ւ��邱�Ƃ��ł��܂��B
-
-  �������܂������Ȃ��ꍇ�͈ȉ��̓_���m�F���Ă݂Ă��������B
-
-  �E�ݒ�� [�Đ�] > [�����t�B���^] ���u�Ȃ��v�ɂ���B 
-  �E�ݒ�� [�Đ�] > [�����f�o�C�X] �� S/PDIF �̃f�o�C�X���w�肵�Ă݂�B
-  �E�R���g���[���p�l���̃T�E���h�̐ݒ�ŁA�o�̓f�o�C�X�̊���� S/PDIF �̃f�o�C�X
-    ���w�肵�Ă݂�B
-  �E�R���g���[���p�l���̃T�E���h�̐ݒ�ŁA�o�̓f�o�C�X�̃v���p�e�B�ɂ��� [�T�|�[
-    �g����Ă���`��] �́uDolby Digital�v�Ƀ`�F�b�N������B
-
-  �������f���A�����m�����̏ꍇ�A�f���A�����m�����ɑΉ����Ă��Ȃ��A���v�ł͎剹��
-  �ƕ����������E���畷�����܂��B
-
-
-�� ���̑�
-
-  ���ŏ�������Ȃ��������ڂ�񋓂��܂��B
-
-  �E�����ǃ��S�̎擾�ɂ���
-    ���S�͑召3��ނ��v6��ނ̑傫���̂��̂����M����Ă��܂��B
-    ���S�̃f�[�^�͑��o�p�x���Ⴂ�̂ŁA�������Ă����炢�̊Ԃɂ��擾���ꂽ�A�Ƃ�
-    ���`�ɂȂ�Ǝv���܂��B
-    �擾����Ă��郍�S�̓v���O�C���́u�ǃ��S�̈ꗗ�v�Ō��邱�Ƃ��ł��܂��B
-    �n�f�W�̏ꍇ�A���S�͂��ꂼ��̃`�����l���ő��o����Ă��܂��B�e��ނ��΂�΂�
-    �ɑ����Ă��܂��̂ŁA�S�Ă̎�ނ̃��S���擾����ɂ͐��\���|���邱�Ƃ������
-    ���B
-    BS/CS �̏ꍇ�ANHK BS1 �ȂǂƓ����X�g���[���ɂ���G���W�j�A�����O�T�[�r�X�őS
-    �ǂ̃��S�����o����Ă��܂��̂ŁABS1 ��I�ǂ���Ύ擾�ł��܂��B
-    20���Ɉ�񂮂炢���M����Ă��܂����A����S�ǂ̃��S�����M������ł͂���܂�
-    ��B�܂��A�����ɂ���đS�R���S�𑗐M���Ă��Ȃ����Ƃ�����܂��B
-    �Ȃ��A�ǃ��S�̈ꗗ�v���O�C����\�����Ă����ƁA���S���擾�ł�����\��������
-    �ŕ�����₷���Ǝv���܂��B
-    (�`�����l���p�l���̕\���́A�����ɂ͍X�V����܂���)
-
-  �E��O�������̒���
-    �v���O�����ŗ�O(�s���ȏ���)�����������ꍇ�A�������Ď��s���邩�m�F����_�C�A
-    ���O���\������܂�(�������A�R�}���h���C���� /silent ���w�肳��Ă�ꍇ�͕\��
-    ����܂���)�B
-    ���̏ꍇ�A�Ď��s���Ă��܂������_�C�A���O���o�Ă���Ǝv���܂����A���̏ꍇ��
-    �I�������邵������܂���B
-    �܂��ATVTest.exe.exception.log �t�@�C���ɗ�O�̓��e���ۑ�����܂��B
-
-  �EEVR �g�p���̒���
-    EVR �g�p���ɃL���v�`�����s���ƁA�摜�����ۂɕ\������Ă���傫���Ŏ擾�����
-    ���B�摜�̑傫�����u�\������Ă���傫���v�ɂ��Ă��Ȃ��ƁA�掿�������Ȃ�܂��B
-
-  �E�uTOT�Ŏ������킹�v�̒���
-    ���̋@�\�́A���j���[����I���������Ɉ�񂾂��������킹���s���܂��B
-    �����̓o�b�t�@�����O�ɂ��덷���o�܂��̂ŁA�X�e�[�^�X�o�[�� R �̕����̐���
-    �����Ȃ����Ɏ��s�������������ł��B�������ATVTest �ł̃o�b�t�@�����O�̉e����
-    �󂯂܂���B
-    �l�b�g���[�N�n�� BonDriver �� Spinel ���g�p���Ă���ꍇ�͌덷���傫���Ȃ��
-    �\��������܂��B
-    Vista �ȍ~�ł͎����̕ύX�ɊǗ��Ҍ������K�v�ł��B
-    (�����̋@�\�͔����Ȃ̂ō폜���邩���m��܂���)
-
-
-�� �R�}���h���C���I�v�V����
-
-  ������������̂͂ǂ���ł��B/ �̑���� - �ł��B
-
-  �y�����ʁz
-
-  /ini            INI �t�@�C�����̎w�� (e.g. /ini TVTest2.ini)
-  /init           �����ݒ�_�C�A���O��\������
-  /inikey         INI �t�@�C���̐ݒ�l���㏑������
-                  [�Z�N�V����]���O=�l �̌`���Ŏw�肵�܂��B
-                  �Z�N�V�������ȗ������ [Settings] ���w�肳�ꂽ�Ƃ݂Ȃ���܂��B
+  ステータスバーのチャンネル/音量/音声の各項目にフォーカスがある状態でホイールを
+  使用すると、その項目に合わせた動作をします。
+
+  ステータスバーの項目の順序、表示/非表示、大きさは設定で変更することができます。
+
+  画面を右クリックすると普通にメニューが出ます。
+  また、画面をダブルクリックすると全画面表示になります。
+
+  画面の左側(デフォルトの場合)にカーソルを持っていくとサイドバーが表示され、アイ
+  コンから機能を実行できます。
+
+  ウィンドウを Shift キーを押しながらリサイズすると、ウィンドウサイズが画面のア
+  スペクト比に合わせて調整されます。
+  また、設定で Shift キーを押さずにアスペクト比に合わせるようにすることもできま
+  す。
+
+  使い方についてより詳しくはヘルプを参照してください。
+
+
+◆ EPG 番組表の使い方
+
+  右クリックメニューから [EPG番組表] を選択するか、リモコンの [EPG] ボタンを押す
+  と、EPG 番組表が表示されます。
+
+  番組表で右クリックしたメニューから [番組表の取得開始] を選択すると、各チャンネ
+  ルの番組表を取得します。
+  EPG 情報の取得は視聴中も行っていますので、既に視聴したチャンネルの番組表は最初
+  から表示されます。また、メニューから [最新の情報に更新] を選択すると、視聴中に
+  行った番組情報の取得を反映させることができます。
+
+  番組表の一番上のチャンネル名をクリックすると、そのチャンネルに切り替えられます。
+  また、右にある >> をクリックすると、そのチャンネルの一週間分の番組表示になりま
+  す。
+
+
+◆ ヒント
+
+  ・音声だけ出て映像が出ない
+    映像の再生には MPEG-2 のデコーダ・フィルタが必要です。
+    また、デコーダによっては動作しないものもありますので注意してください。
+    動作確認されているデコーダは、「◆ 試験準備」の節を参照してください。
+    デコーダが入っているのに映像が出ない場合は、レンダラを変えてみてください。
+    デコーダとレンダラは環境依存性が強く、組み合わせの相性もあるので色々と試して
+    みてください。
+
+  ・映像に縞々が入る/映像が波打つ
+    放送はインターレース方式で行われているために、インターレースを解除する必要が
+    あります。
+    デコーダによってはプロパティにインターレース解除の設定がありますので、右ク
+    リックメニューから [フィルタのプロパティ] -> [映像デコーダ] で設定します。
+    ATI のデコーダは Catalyst Control Center (CCC) で設定できます。
+    また、レンダラを変えると改善する場合もあります。
+
+  ・録画した番組を再生すると違う番組が再生される
+    デジタル放送では、一つのストリームで複数の番組を同時に放送することができます。
+    そのため、再生時に意図しない番組が再生されてしまうことがあります。
+    録画の設定で「現在のサービスのみ録画する」のチェックを入れるか、TsSplitter
+    で分離するなどしてください。
+
+  ・録画した番組を再生すると音声(映像)が出ない/途中で出なくなる
+    放送では音声や映像の形式が切り替わることがありますが、再生ソフトが対応してい
+    ないと音が出なくなったり映像が出なくなったりします。
+    (多くのプレイヤーが対応していないのが現状です)
+    再生ソフトを変えるか、音声や映像の切り替わり点でファイルをカットするなどして
+    ください。
+    BonDriver_File+TVTestPlugin や TvtPlay といったプラグインを使用して、TVTest
+    でファイルの再生を行うこともできます。
+
+  ・「BonDriverの初期化ができません」と表示される
+    BonDriver からエラーが返ってきたためです。
+    具体的にどのようなエラーが起こったのかを、呼び出し元のプログラムから知る方法
+    はありません。
+    デバイスが認識されていないか既に使用中の場合が多いと思われます。
+
+  ・音量を最大にしても音が小さい
+    右クリックメニューから [音量] -> [音量増幅] を選択してください。
+    Vista 以降の場合は音量ミキサで TVTest の音量を上げてください。
+
+  ・かくつく・音ずれする
+    映像がかくつく場合、以下を試してみてください。
+    ・設定の [OSD] で [映像と合成する] のチェックを外す。
+    ・Radeon の場合、Catalyst Control Center で [Avivo ビデオ] -> [すべての設定]
+      にある [強制的になめらかなビデオ再生を実行する] のチェックを外す。
+    設定ダイアログの [再生] で各種設定を変更すると改善する場合もあります。
+    一時的におかしくなった場合、右クリックメニューから [リセット] -> [ビューアリ
+    セット] か [リセット] で直ることがあります。
+
+  ・マルチディスプレイ環境でセカンダリモニタで映らない/不正終了する
+    レンダラを VMR-9 や EVR にしてみる、またデコーダを変えてみてください。
+    場合によっては DxVA を切ったりレジストリを書き換えたりする必要があります。
+
+  ・映像が正方形に表示される
+    CyberLink のデコーダとデフォルトレンダラの組み合わせで、1080x1080(4:3) の映
+    像を表示すると起こるようです。
+    レンダラをデフォルト以外にしてみてください。
+
+  ・16:9 の映像がサイドカットされる
+    なぜか 16:9 の映像なのに、MPEG-2 のヘッダにサイドカットして表示するという情
+    報が設定されていることがあるためです。
+    ver.0.6.0 から表示できる領域があればサイドカットしない仕様になりましたが、
+    4:3 として扱われるために表示倍率の変更時や全画面表示時に問題が出ます。
+    手動で比率を指定するか設定の表示で [拡張ヘッダのディスプレイサイズを無視する]
+    をチェックしてください。
+
+  ・キャプチャで一瞬止まる
+    レンダラに VMR9 Renderless を使用してください。
+    また、ちゃんとしたキャプチャをしたい場合は TSMemory を使用してください。
+
+  ・起動時にアンチウィルスソフトが反応する
+    アクティブでない時もリモコンを使えるようにするためにキーボードフックを使用し
+    ていますが、これはキーロガー等にも使われるためにアンチウィルスソフトが反応し
+    てしまうことがあります。
+    リモコンを使用しないのであれば HDUSRemocon.tvtp と HDUSRemocon_KeyHook.dll
+    を削除しても問題ありません。
+    リモコンを使用する場合、アンチウィルスソフトで除外設定するか、設定でアクティ
+    ブ時のみ有効にしてください。
+
+  ・ウィンドウのサイズが変更できない/ウィンドウの挙動がおかしい
+    TVTest ではウィンドウのスナップ処理などを行っている関係で、ぴたすちお等同様
+    の機能を提供するプログラムと相性が悪いです。
+    TVTest.exe を除外指定してください。
+
+  ・メモリ使用量が多い
+    メモリを使っているのは DirectShow の部分(主に MPEG-2 デコーダ)ですので、私に
+    はどうしようもありません。
+    MPEG-2 デコーダで DxVA を使用するとメモリ使用量が増えるので、(使用量を減らす
+    ことを優先する場合)オフにするか、DxVA を使用しないデコーダにしてみてください。
+    録画のみ行う場合は、コマンドラインオプションで /nodshow を指定すると、メモリ
+    使用量がかなり少なくなります。
+
+  ・ブルースクリーンが出る
+    Windows XP 以降でブルースクリーンが出るのは、ほとんどの場合ハードかドライバ
+    の問題です。
+
+
+◆ デフォルトのキーボード操作
+
+  F1～F12 or 1～9/0  チャンネル選択
+  ←→               チャンネル-+
+  ↑↓               音量+-
+  Alt+Enter          全画面表示
+  R                  録画
+  S                  音声切替
+  A                  アスペクト比切替
+  I                  情報ウィンドウ表示
+  E                  EPG 番組表表示
+  T                  常に最前面に表示
+  C                  画面コピー
+
+
+◆ S/PDIF パススルーについて
+
+  S/PDIF パススルー出力を行う場合、パソコンのサウンドデバイスが AAC のパススルー
+  出力に対応している必要があります。
+  パススルー出力を行いたい場合、設定の [再生] > [S/PDIFパススルー] で指定してく
+  ださい。また、メニューの [音声切替] やステータスバーの音声の項目の右クリックメ
+  ニューから、一時的にパススルーの有効/無効を切り替えることができます。
+
+  もしうまくいかない場合は以下の点を確認してみてください。
+
+  ・設定の [再生] > [音声フィルタ] を「なし」にする。 
+  ・設定の [再生] > [音声デバイス] に S/PDIF のデバイスを指定してみる。
+  ・コントロールパネルのサウンドの設定で、出力デバイスの既定に S/PDIF のデバイス
+    を指定してみる。
+  ・コントロールパネルのサウンドの設定で、出力デバイスのプロパティにある [サポー
+    トされている形式] の「Dolby Digital」にチェックを入れる。
+
+  音声がデュアルモノラルの場合、デュアルモノラルに対応していないアンプでは主音声
+  と副音声が左右から聞こえます。
+
+
+◆ その他
+
+  他で書ききれなかった項目を列挙します。
+
+  ・放送局ロゴの取得について
+    ロゴは大小3種類ずつ計6種類の大きさのものが送信されています。
+    ロゴのデータは送出頻度が低いので、視聴していたらいつの間にか取得された、とい
+    う形になると思います。
+    取得されているロゴはプラグインの「局ロゴの一覧」で見ることができます。
+    地デジの場合、ロゴはそれぞれのチャンネルで送出されています。各種類がばらばら
+    に送られていますので、全ての種類のロゴを取得するには数十分掛かることがありま
+    す。
+    BS/CS の場合、NHK BS1 などと同じストリームにあるエンジニアリングサービスで全
+    局のロゴが送出されていますので、BS1 を選局すれば取得できます。
+    20分に一回ぐらい送信されてきますが、毎回全局のロゴが送信される訳ではありませ
+    ん。また、時期によって全然ロゴを送信していないこともあります。
+    なお、局ロゴの一覧プラグインを表示しておくと、ロゴが取得できたら表示されるの
+    で分かりやすいと思います。
+    (チャンネルパネルの表示は、すぐには更新されません)
+
+  ・例外発生時の注意
+    プログラムで例外(不正な処理)が発生した場合、処理を再試行するか確認するダイア
+    ログが表示されます(ただし、コマンドラインで /silent が指定されてる場合は表示
+    されません)。
+    大抵の場合、再試行してもまた同じダイアログが出てくると思いますが、その場合は
+    終了させるしかありません。
+    また、TVTest.exe.exception.log ファイルに例外の内容が保存されます。
+
+  ・EVR 使用時の注意
+    EVR 使用時にキャプチャを行うと、画像が実際に表示されている大きさで取得されま
+    す。画像の大きさを「表示されている大きさ」にしていないと、画質が悪くなります。
+
+  ・「TOTで時刻合わせ」の注意
+    この機能は、メニューから選択した時に一回だけ時刻合わせを行います。
+    時刻はバッファリングによる誤差が出ますので、ステータスバーの R の部分の数字
+    が少ない時に実行した方がいいです。ただし、TVTest でのバッファリングの影響は
+    受けません。
+    ネットワーク系の BonDriver や Spinel を使用している場合は誤差が大きくなる可
+    能性があります。
+    Vista 以降では時刻の変更に管理者権限が必要です。
+    (※この機能は微妙なので削除するかも知れません)
+
+
+◆ コマンドラインオプション
+
+  ※複数あるものはどちらでも可。/ の代わりに - でも可。
+
+  【動作一般】
+
+  /ini            INI ファイル名の指定 (e.g. /ini TVTest2.ini)
+  /init           初期設定ダイアログを表示する
+  /inikey         INI ファイルの設定値を上書きする
+                  [セクション]名前=値 の形式で指定します。
+                  セクションを省略すると [Settings] が指定されたとみなされます。
                   (e.g. /inikey [Settings]AlwaysOnTop=yes)
                   (e.g. /inikey "Mpeg2Decoder=Hoge MPEG-2 Decoder")
-  /log            �I�����Ƀ��O��ۑ�����
-  /s              TVTest �����ɋN�����Ă���ꍇ�A�����N�����Ȃ�
-  /silent         �G���[���Ƀ_�C�A���O��\�����Ȃ�
-  /standby        �ҋ@��ԂŋN������
-  /nd             TS�v���Z�b�T�[�𖳌��ɂ���
-  /plugindir      �v���O�C���̓ǂݍ��݌��t�H���_ (e.g. /plugindir Plugins2)
-  /noplugin       �v���O�C����ǂݍ��܂Ȃ�
-  /plugin-        �w�肳�ꂽ�v���O�C����ǂݍ��܂Ȃ�
+  /log            終了時にログを保存する
+  /s              TVTest が既に起動している場合、複数起動しない
+  /silent         エラー時にダイアログを表示しない
+  /standby        待機状態で起動する
+  /nd             TSプロセッサーを無効にする
+  /plugindir      プラグインの読み込み元フォルダ (e.g. /plugindir Plugins2)
+  /noplugin       プラグインを読み込まない
+  /plugin-        指定されたプラグインを読み込まない
                   (e.g. /plugin- Equalizer.tvtp)
-  /home           �z�[����ʂ�\������
-  /chdisplay      �`�����l���I����ʂ�\������
+  /home           ホーム画面を表示する
+  /chdisplay      チャンネル選択画面を表示する
 
-  �y�`���[�i�[�z
+  【チューナー】
 
-  /d              BonDriver �̎w�� (e.g. /d BonDriver.dll)
-  /nodriver       BonDriver ��ǂݍ��܂Ȃ�
-  /ch             �`�����l���̎w��(�����`�����l���ԍ�) (e.g. /ch 13)
-  /rch            �`�����l���̎w��(�����R���`�����l���ԍ�) (e.g. /rch 3)
-  /chspace        �`���[�j���O��Ԃ̎w��(BonDriver �ł̃C���f�b�N�X)
+  /d              BonDriver の指定 (e.g. /d BonDriver.dll)
+  /nodriver       BonDriver を読み込まない
+  /ch             チャンネルの指定(物理チャンネル番号) (e.g. /ch 13)
+  /rch            チャンネルの指定(リモコンチャンネル番号) (e.g. /rch 3)
+  /chspace        チューニング空間の指定(BonDriver でのインデックス)
                   (e.g. /chspace 1)
-  /sid            �T�[�r�XID�̎w�� (e.g. /sid 1024)
-  /nid            �l�b�g���[�NID�̎w�� (e.g. /nid 32736)
-  /tsid           �g�����X�|�[�g�X�g���[��ID�̎w�� (e.g. /tsid 32736)
-  /nr             �l�b�g���[�N�����R�����g�p����
-  /port /p        BonDriver_UDP/TCP �̃|�[�g�ԍ� (e.g. /port 1234)
-  /1seg           �����Z�O���[�h�ɂ���
+  /sid            サービスIDの指定 (e.g. /sid 1024)
+  /nid            ネットワークIDの指定 (e.g. /nid 32736)
+  /tsid           トランスポートストリームIDの指定 (e.g. /tsid 32736)
+  /nr             ネットワークリモコンを使用する
+  /port /p        BonDriver_UDP/TCP のポート番号 (e.g. /port 1234)
+  /1seg           ワンセグモードにする
 
-  �y�E�B���h�E�z
+  【ウィンドウ】
 
-  /fullscreen /f  �S��ʕ\��
-  /min            �ŏ�����ԂŋN������
-  /max            �ő剻��ԂŋN������
-  /tray           �^�X�N�g���C�Ɋi�[������ԂŋN������
-  /posx           �E�B���h�E�̍��ʒu�̎w�� (e.g. /posx 100)
-  /posy           �E�B���h�E�̏�ʒu�̎w�� (e.g. /posy 80)
-  /width          �E�B���h�E�̕��̎w�� (e.g. /width 1920)
-  /height         �E�B���h�E�̍����̎w�� (e.g. /height 480)
+  /fullscreen /f  全画面表示
+  /min            最小化状態で起動する
+  /max            最大化状態で起動する
+  /tray           タスクトレイに格納した状態で起動する
+  /posx           ウィンドウの左位置の指定 (e.g. /posx 100)
+  /posy           ウィンドウの上位置の指定 (e.g. /posy 80)
+  /width          ウィンドウの幅の指定 (e.g. /width 1920)
+  /height         ウィンドウの高さの指定 (e.g. /height 480)
 
-  �y�Đ��z
+  【再生】
 
-  /noview         �N�����Đ��I�t
-  /nodshow        �N������ DirectShow �����������Ȃ�
-                  (/noview ���ÖٓI�Ɏw�肳��܂�)
-                  ���������ɘ^��̂ݍs���ꍇ�Ɏw�肷��ƁA�������g�p�ʂ����Ȃ�
-                  ����܂�
-                  ���j���[��[�Đ��I�t]�̃`�F�b�N���O���΁A�r�����王�����邱��
-                  ���\�ł�
-  /volume         ���ʂ��w�肷��(0����100�܂�) (e.g. /volume 50)
-  /mute           �����ɂ���
-  /mpeg2          MPEG-2 �̍Đ���L���ɂ���
-  /h264           H.264 �̍Đ���L���ɂ���
-  /h265           H.265 �̍Đ���L���ɂ���
+  /noview         起動時再生オフ
+  /nodshow        起動時に DirectShow を初期化しない
+                  (/noview も暗黙的に指定されます)
+                  視聴せずに録画のみ行う場合に指定すると、メモリ使用量がかなり
+                  減ります
+                  メニューの[再生オフ]のチェックを外せば、途中から視聴すること
+                  も可能です
+  /volume         音量を指定する(0から100まで) (e.g. /volume 50)
+  /mute           消音にする
+  /mpeg2          MPEG-2 の再生を有効にする
+  /h264           H.264 の再生を有効にする
+  /h265           H.265 の再生を有効にする
 
-  �y�^��z
+  【録画】
 
-  /rec            �N�����^��J�n
-  /reccurservice  (*1)���݂̃T�[�r�X�̂ݘ^�悷��
-  /recstarttime   (*1)�^��J�n����
-                  �N/��/��-��:��:�b �̌`���Ŏw�肵�܂��B
-                  ���t�̂݁A�܂��͎����݂̂��w�肷�邱�Ƃ��ł��܂��B
-                  �N�A���A�b�͏ȗ��ł��܂��B���Ԃ�24�ȏ�̒l���w��ł��܂��B
+  /rec            起動時録画開始
+  /reccurservice  (*1)現在のサービスのみ録画する
+  /recstarttime   (*1)録画開始日時
+                  年/月/日-時:分:秒 の形式で指定します。
+                  日付のみ、または時刻のみを指定することもできます。
+                  年、月、秒は省略できます。時間は24以上の値を指定できます。
                   (e.g. /recstarttime 2011/2/1-3:30:00)
                   (e.g. /recstarttime 25:30)
-  /recdelay       (*1)�^��J�n�܂ł̎���(�b�P��) (e.g. /recdelay 60)
-                  h/m/s �� ����/��/�b ���w�肷�邱�Ƃ��\�ł��B
-                  �ڍׂ� /recduration �̐������Q�Ƃ��Ă��������B
-                  /recstarttime �ƈꏏ�Ɏw�肳�ꂽ�ꍇ�A/recstarttime �Ŏw�肳
-                  �ꂽ��������w�莞�Ԃ��炵�܂��B
-  /recduration    (*1)�^�掞��(�b�P��) (e.g. /recduration 1800)
-                  �����̌�� h/m/s ������Ƃ��ꂼ�� ����/��/�b �̎w��ɂȂ�܂��B
-                  ���̍ە����w�肷�邱�Ƃ��ł��܂����A�r���ŃX�y�[�X�Ȃǂ͓���
-                  ���ɘA�����ċL�q���Ă��������B
+  /recdelay       (*1)録画開始までの時間(秒単位) (e.g. /recdelay 60)
+                  h/m/s で 時間/分/秒 を指定することも可能です。
+                  詳細は /recduration の説明を参照してください。
+                  /recstarttime と一緒に指定された場合、/recstarttime で指定さ
+                  れた日時から指定時間ずらします。
+  /recduration    (*1)録画時間(秒単位) (e.g. /recduration 1800)
+                  数字の後に h/m/s があるとそれぞれ 時間/分/秒 の指定になります。
+                  その際複数指定することもできますが、途中でスペースなどは入れ
+                  ずに連続して記述してください。
                   (e.g. /recduration 30m) (e.g. /recduration 1h20m30s)
-  /recexit        �^��I�����Ƀv���O�������I��
-  /recfile        (*1)�^��t�@�C���� (e.g. /recfile "C:\ReocrdFiles\Record.ts")
-  /recstop        �^���~
+  /recexit        録画終了時にプログラムを終了
+  /recfile        (*1)録画ファイル名 (e.g. /recfile "C:\ReocrdFiles\Record.ts")
+  /recstop        録画停止
 
-  (*1) /rec ���w�肳��Ă��Ȃ��ꍇ�͖�������܂�
+  (*1) /rec が指定されていない場合は無視されます
 
-  �yEPG�z
+  【EPG】
 
-  /noepg          EPG ���̎擾���s��Ȃ�
-  /epg            EPG �ԑg�\��\������
-  /epgonly        EPG �ԑg�\�̂ݕ\������
-                  �ԑg�\�����ƏI�����܂�(������^����s���Ă���ꍇ������)�B
-  /epgtuner       EPG �ԑg�\�̃f�t�H���g�� BonDriver �̎w��
+  /noepg          EPG 情報の取得を行わない
+  /epg            EPG 番組表を表示する
+  /epgonly        EPG 番組表のみ表示する
+                  番組表を閉じると終了します(視聴や録画を行っている場合を除く)。
+  /epgtuner       EPG 番組表のデフォルトの BonDriver の指定
                   (e.g. /epgtuner BonDriver_Hoge.dll)
-                  favorites �ɂ���Ƃ��C�ɓ���`�����l���̔ԑg�\
-  /epgspace       EPG �ԑg�\�̃f�t�H���g�`���[�j���O��Ԃ̎w�� (e.g. /epgspace 1)
+                  favorites にするとお気に入りチャンネルの番組表
+  /epgspace       EPG 番組表のデフォルトチューニング空間の指定 (e.g. /epgspace 1)
 
 
-�� ���C�Z���X
+◆ ライセンス
 
-  �E���̃v���O������ GPL v2 �ł��B
-  �E���̃v���O�����̎g�p�y�юg�p�s�\�ɂ���Đ����������Ȃ鑹�Q���⏞���܂���B
-  �E���̃v���O�����͈ȉ��̃��C�u�������g�p���Ă��܂��B
+  ・このプログラムは GPL v2 です。
+  ・このプログラムの使用及び使用不能によって生じたいかなる損害も補償しません。
+  ・このプログラムは以下のライブラリを使用しています。
 
     FAAD2
       Code from FAAD2 is copyright (c) Nero AG, www.nero.com
@@ -558,10 +558,10 @@
       Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
 
 
-�� �ӎ�
+◆ 謝辞
 
-  �I���W�i���� BonTest �̍�҂ł��� �g���c�[�����̐l ���ƁA�����ł̍�҂ł���
-  Meru-co ���Ɋ��ӂ��܂��B
+  オリジナルの BonTest の作者である 拡張ツール中の人 氏と、改造版の作者である
+  Meru-co 氏に感謝します。
 
-  �v���O�C��������Ă������A�v�]��s��񍐂����Ă������͑�ϗL���ł��B
-  ���ӂ��܂��B
+  プラグインを作ってくれる方、要望や不具合報告をしてくれる方は大変有り難いです。
+  感謝します。
