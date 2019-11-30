@@ -844,7 +844,7 @@ bool CAppCore::GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const
 }
 
 
-bool CAppCore::GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const
+bool CAppCore::GetCurrentStreamChannelInfo(CChannelInfo *pInfo, bool fName) const
 {
 	if (pInfo == nullptr)
 		return false;
@@ -865,13 +865,18 @@ bool CAppCore::GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const
 		ChInfo.SetTransportStreamID(IDInfo.TransportStreamID);
 		ChInfo.SetServiceID(IDInfo.ServiceID);
 		*pInfo = ChInfo;
+		if (fName) {
+			TCHAR szService[MAX_CHANNEL_NAME];
+			if (GetCurrentServiceName(szService, lengthof(szService), false))
+				pInfo->SetName(szService);
+		}
 	}
 
 	return true;
 }
 
 
-bool CAppCore::GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseChannelName)
+bool CAppCore::GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseChannelName) const
 {
 	if (pszName == nullptr || MaxLength < 1)
 		return false;

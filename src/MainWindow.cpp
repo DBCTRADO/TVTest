@@ -1365,6 +1365,15 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					// BonDriverが開かれたときのデフォルトチャンネル
 					m_App.Core.FollowChannelChange(TransportStreamID, ServiceID);
 				}
+
+				// チャンネルスキャンがされていない場合、番組表パネルに現在のサービスの情報が表示されるようにする
+				if (pChInfo->GetServiceID() == 0) {
+					CChannelInfo Channel;
+					if (m_App.Core.GetCurrentStreamChannelInfo(&Channel, true) && Channel.GetServiceID() != 0) {
+						m_App.Panel.ProgramListPanel.SetCurrentChannel(&Channel);
+						m_App.Panel.ProgramListPanel.SelectChannel(&Channel, !m_App.EpgOptions.IsEpgDataLoading());
+					}
+				}
 			} else if (pInfo->m_fServiceListEmpty && pInfo->m_fStreamChanged
 					&& !m_App.Core.IsChannelScanning()
 					&& !m_App.EpgCaptureManager.IsCapturing()) {
@@ -3637,9 +3646,19 @@ void CMainWindow::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 	m_ProgramListUpdateTimerCount = 0;
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
 	m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
-	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(true);
-	m_App.Panel.ProgramListPanel.SetCurrentChannel(pCurChannel);
-	m_App.Panel.ProgramListPanel.SelectChannel(pCurChannel, !fEpgLoading);
+
+	const CChannelInfo *pProgramListChannel = nullptr;
+	CChannelInfo Channel;
+	if (pCurChannel != nullptr && pCurChannel->GetServiceID() != 0) {
+		pProgramListChannel = pCurChannel;
+	} else {
+		if (m_App.Core.GetCurrentStreamChannelInfo(&Channel, true) && Channel.GetServiceID() != 0)
+			pProgramListChannel = &Channel;
+	}
+	m_App.Panel.ProgramListPanel.ShowRetrievingMessage(pProgramListChannel != nullptr);
+	m_App.Panel.ProgramListPanel.SetCurrentChannel(pProgramListChannel);
+	m_App.Panel.ProgramListPanel.SelectChannel(pProgramListChannel, !fEpgLoading);
+
 	if (fSpaceChanged) {
 		if (IsPanelVisible() && m_App.Panel.Form.GetCurPageID() == PANEL_ID_CHANNEL) {
 			m_App.Panel.ChannelPanel.SetChannelList(

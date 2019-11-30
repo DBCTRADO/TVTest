@@ -98,8 +98,8 @@ namespace TVTest
 		bool SetServiceByID(WORD ServiceID, SetServiceFlag Flags = SetServiceFlag::None);
 		bool SetServiceByIndex(int Service, SetServiceFlag Flags = SetServiceFlag::None);
 		bool GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const;
-		bool GetCurrentStreamChannelInfo(CChannelInfo *pInfo) const;
-		bool GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseChannelName = true);
+		bool GetCurrentStreamChannelInfo(CChannelInfo *pInfo, bool fName = false) const;
+		bool GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseChannelName = true) const;
 
 		bool OpenTuner(LPCTSTR pszFileName);
 		bool OpenTuner();

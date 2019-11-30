@@ -789,7 +789,8 @@ void CProgramListPanel::ShowChannelListMenu()
 	for (int i = 0; i < pChannelList->NumChannels(); i++) {
 		const CChannelInfo *pChannelInfo = pChannelList->GetChannelInfo(i);
 
-		if (pChannelInfo->IsEnabled()) {
+		if (pChannelInfo->IsEnabled()
+				&& pChannelInfo->GetServiceID() > 0) {
 			ChannelList.AddChannel(*pChannelInfo);
 
 			if (CurChannel < 0
