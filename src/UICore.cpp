@@ -257,7 +257,7 @@ bool CUICore::EnableViewer(bool fEnable)
 HWND CUICore::GetViewerWindow() const
 {
 	if (m_pSkin == nullptr)
-		return false;
+		return nullptr;
 	return m_pSkin->GetViewerWindow();
 }
 

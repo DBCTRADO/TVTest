@@ -1269,7 +1269,7 @@ bool CPopupMenu::CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID, UINT Fl
 HMENU CPopupMenu::GetSubMenu(int Pos) const
 {
 	if (m_hmenu == nullptr)
-		return false;
+		return nullptr;
 	return ::GetSubMenu(GetPopupHandle(), Pos);
 }
 

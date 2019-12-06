@@ -970,7 +970,7 @@ const CChannelInfo *CProgramGuideBaseChannelProvider::GetChannelInfo(size_t Grou
 
 	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo((int)Group);
 	if (pSpaceInfo == nullptr)
-		return false;
+		return nullptr;
 
 	return pSpaceInfo->GetChannelInfo((int)Channel);
 }

@@ -161,7 +161,7 @@ bool CSharedMemory::IsOpened() const
 void *CSharedMemory::Map(DWORD DesiredAccess, ULONGLONG Offset, size_t Size)
 {
 	if (m_hFileMapping == nullptr)
-		return false;
+		return nullptr;
 
 	return ::MapViewOfFile(
 		m_hFileMapping, DesiredAccess,

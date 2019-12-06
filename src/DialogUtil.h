@@ -37,10 +37,10 @@ namespace TVTest
 	inline bool DlgEdit_SetUInt(HWND hDlg, int ID, unsigned int Value) {
 		return ::SetDlgItemInt(hDlg, ID, Value, FALSE) != FALSE;
 	}
-	inline int DlgEdit_GetInt(HWND hDlg, int ID, BOOL *pResult = false) {
+	inline int DlgEdit_GetInt(HWND hDlg, int ID, BOOL *pResult = nullptr) {
 		return static_cast<INT>(::GetDlgItemInt(hDlg, ID, pResult, TRUE));
 	}
-	inline unsigned int DlgEdit_GetUInt(HWND hDlg, int ID, BOOL *pResult = false) {
+	inline unsigned int DlgEdit_GetUInt(HWND hDlg, int ID, BOOL *pResult = nullptr) {
 		return ::GetDlgItemInt(hDlg, ID, pResult, FALSE);
 	}
 	inline void DlgEdit_LimitText(HWND hDlg, int ID, WPARAM Limit) {

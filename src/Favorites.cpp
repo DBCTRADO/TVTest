@@ -209,7 +209,7 @@ bool CFavoriteFolder::MoveItem(size_t From, size_t To)
 CFavoriteFolder *CFavoriteFolder::FindSubFolder(LPCTSTR pszName)
 {
 	if (pszName == nullptr)
-		return false;
+		return nullptr;
 
 	for (const auto &e : m_Children) {
 		if (e->GetType() == ItemType::Folder) {
