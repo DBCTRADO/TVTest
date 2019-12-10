@@ -1079,8 +1079,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		MainWindow.EnablePlayback(
 			fEnablePlayback
 			&& !CmdLineOptions.m_fNoView
-			&& !CmdLineOptions.m_fNoDirectShow
-			&& !CmdLineOptions.m_fMinimize);
+			&& !CmdLineOptions.m_fNoDirectShow);
 	}
 
 	if (CoreEngine.IsNetworkDriver()) {
