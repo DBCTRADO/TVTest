@@ -1367,7 +1367,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 
 				// チャンネルスキャンがされていない場合、番組表パネルに現在のサービスの情報が表示されるようにする
-				if (pChInfo->GetServiceID() == 0) {
+				if (pChInfo == nullptr || pChInfo->GetServiceID() == 0) {
 					CChannelInfo Channel;
 					if (m_App.Core.GetCurrentStreamChannelInfo(&Channel, true) && Channel.GetServiceID() != 0) {
 						m_App.Panel.ProgramListPanel.SetCurrentChannel(&Channel);
