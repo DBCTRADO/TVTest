@@ -646,11 +646,11 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 	TCHAR szDirectory[MAX_PATH], szFileName[MAX_PATH], szMask[32];
 
 	if (!GetAbsolutePath(m_LogoDirectory.c_str(), szDirectory, lengthof(szDirectory)))
-		return false;
+		return nullptr;
 	// 最もバージョンが新しいロゴを探す
 	StringPrintf(szMask, TEXT("%04X_%03X_\?\?\?_%02X"), NetworkID, LogoID, LogoType);
 	if (::lstrlen(szDirectory) + 1 + ::lstrlen(szMask) >= lengthof(szFileName))
-		return false;
+		return nullptr;
 	::PathCombine(szFileName, szDirectory, szMask);
 	WIN32_FIND_DATA fd;
 	HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);

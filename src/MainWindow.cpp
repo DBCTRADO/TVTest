@@ -4767,7 +4767,7 @@ void CMainWindow::HookChildWindow(HWND hwnd)
 		TRACE(TEXT("Hook window %p \"%s\"\n"), hwnd, szClass);
 #endif
 		WNDPROC pOldWndProc = SubclassWindow(hwnd, ChildHookProc);
-		::SetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp), pOldWndProc);
+		::SetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp), reinterpret_cast<HANDLE>(pOldWndProc));
 		::SetProp(hwnd, CHILD_PROP_THIS, this);
 	}
 }
@@ -4775,7 +4775,7 @@ void CMainWindow::HookChildWindow(HWND hwnd)
 
 LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	WNDPROC pOldWndProc = static_cast<WNDPROC>(::GetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp)));
+	WNDPROC pOldWndProc = reinterpret_cast<WNDPROC>(::GetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp)));
 
 	if (pOldWndProc == nullptr)
 		return ::DefWindowProc(hwnd, uMsg, wParam, lParam);

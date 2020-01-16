@@ -435,9 +435,7 @@ bool CCanvas::FillRect(CBrush *pBrush, const RECT &Rect)
 			&& pBrush != nullptr && pBrush->m_Brush) {
 		return m_Graphics->FillRectangle(
 			pBrush->m_Brush.get(),
-			Rect.left, Rect.top,
-			Rect.right - Rect.left,
-			Rect.bottom - Rect.top) == Gdiplus::Ok;
+			GdiplusRect(Rect)) == Gdiplus::Ok;
 	}
 	return false;
 }

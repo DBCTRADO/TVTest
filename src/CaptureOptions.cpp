@@ -232,8 +232,8 @@ bool CCaptureOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("JpegQuality"), m_JPEGQuality);
 	Settings.Write(TEXT("PngCompressionLevel"), m_PNGCompressionLevel);
 	Settings.Write(TEXT("CaptureSizeType"), m_CaptureSizeType);
-	Settings.Write(TEXT("CaptureWidth"), m_SizeList[m_CaptureSize].cx);
-	Settings.Write(TEXT("CaptureHeight"), m_SizeList[m_CaptureSize].cy);
+	Settings.Write(TEXT("CaptureWidth"), static_cast<int>(m_SizeList[m_CaptureSize].cx));
+	Settings.Write(TEXT("CaptureHeight"), static_cast<int>(m_SizeList[m_CaptureSize].cy));
 	Settings.Write(TEXT("CaptureRatioNum"), m_PercentageList[m_CapturePercentage].Num);
 	Settings.Write(TEXT("CaptureRatioDenom"), m_PercentageList[m_CapturePercentage].Denom);
 	return true;

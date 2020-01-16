@@ -338,7 +338,7 @@ bool CSplitter::ReplacePane(int Index, CContainer *pContainer)
 CContainer *CSplitter::GetPane(int Index) const
 {
 	if (Index < 0 || Index > 1)
-		return false;
+		return nullptr;
 	return m_PaneList[Index].pContainer;
 }
 

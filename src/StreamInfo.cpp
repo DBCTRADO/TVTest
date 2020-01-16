@@ -1124,10 +1124,10 @@ void CStreamInfo::SaveSettings(CSettings &Settings) const
 	if (IsPositionSet()) {
 		RECT rc;
 		GetPosition(&rc);
-		Settings.Write(TEXT("StreamInfoLeft"), rc.left);
-		Settings.Write(TEXT("StreamInfoTop"), rc.top);
-		Settings.Write(TEXT("StreamInfoWidth"), rc.right - rc.left);
-		Settings.Write(TEXT("StreamInfoHeight"), rc.bottom - rc.top);
+		Settings.Write(TEXT("StreamInfoLeft"), static_cast<int>(rc.left));
+		Settings.Write(TEXT("StreamInfoTop"), static_cast<int>(rc.top));
+		Settings.Write(TEXT("StreamInfoWidth"), static_cast<int>(rc.right - rc.left));
+		Settings.Write(TEXT("StreamInfoHeight"), static_cast<int>(rc.bottom - rc.top));
 	}
 
 	Settings.Write(TEXT("StreamInfo.ActivePage"), m_CurrentPage);
