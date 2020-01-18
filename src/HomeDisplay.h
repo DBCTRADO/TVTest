@@ -89,7 +89,7 @@ namespace TVTest
 				HDC hdc, const StyleInfo & Style, const RECT & ContentRect, const RECT & PaintRect,
 				Theme::CThemeDraw & ThemeDraw) const = 0;
 			virtual bool GetCurItemRect(RECT * pRect) const = 0;
-			virtual bool SetFocus(bool fFocus) {}
+			virtual bool SetFocus(bool fFocus) = 0;
 			virtual bool IsFocused() const = 0;
 			virtual bool OnDecide() { return false; }
 			virtual void OnWindowCreate() {}

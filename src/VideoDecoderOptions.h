@@ -41,7 +41,7 @@ namespace TVTest
 		bool WriteSettings(CSettings &Settings) override;
 		bool ApplyVideoDecoderSettings();
 		void SetVideoDecoderSettings(const VideoDecoderSettings &Settings) { m_VideoDecoderSettings = Settings; }
-		const VideoDecoderSettings &GetVideoDecoderSettings() const { m_VideoDecoderSettings; }
+		const VideoDecoderSettings &GetVideoDecoderSettings() const { return m_VideoDecoderSettings; }
 
 	private:
 		VideoDecoderSettings m_VideoDecoderSettings;
