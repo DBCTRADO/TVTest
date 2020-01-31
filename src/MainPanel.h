@@ -39,12 +39,13 @@ namespace TVTest
 	{
 	public:
 		CPanelFrame Frame;
-		CPanelForm Form;
 		CInformationPanel InfoPanel;
 		CProgramListPanel ProgramListPanel;
 		CChannelPanel ChannelPanel;
 		CCaptionPanel CaptionPanel;
 		CControlPanel ControlPanel;
+		// CPanelFormのデストラクタからパネル項目に通知が送られるので、宣言の順序に注意
+		CPanelForm Form;
 		bool fShowPanelWindow;
 
 		CMainPanel();
