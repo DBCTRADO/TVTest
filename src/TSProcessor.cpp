@@ -306,7 +306,7 @@ bool CTSProcessor::ShowPropertyPage(HWND hwndOwner, HINSTANCE hinst)
 				pSpecifyPropPages2->Release();
 			} else {
 				IUnknown *pObject;
-				hr = m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&pObject));
+				hr = m_pTSProcessor->QueryInterface(IID_IUnknown, reinterpret_cast<void**>(&pObject));
 				if (SUCCEEDED(hr)) {
 					hr = ::OleCreatePropertyFrame(
 						hwndOwner, 0, 0, L"プロパティ",
