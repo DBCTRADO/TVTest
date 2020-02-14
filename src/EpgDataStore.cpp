@@ -54,8 +54,7 @@ bool CEpgDataStore::Open(LibISDB::EPGDatabase *pEPGDatabase, LPCTSTR pszFileName
 		LibISDB::EPGDataFile::OpenFlag::Read |
 		LibISDB::EPGDataFile::OpenFlag::Write |
 		LibISDB::EPGDataFile::OpenFlag::ShareRead |
-		LibISDB::EPGDataFile::OpenFlag::DiscardOld |
-		LibISDB::EPGDataFile::OpenFlag::Flush;
+		LibISDB::EPGDataFile::OpenFlag::DiscardOld;
 	if (!!(Flags & OpenFlag::LoadBackground))
 		FileOpenFlags |= LibISDB::EPGDataFile::OpenFlag::PriorityIdle;
 
