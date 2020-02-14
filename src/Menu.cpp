@@ -1254,7 +1254,7 @@ bool CPopupMenu::CheckItem(UINT ID, bool fCheck)
 {
 	if (m_hmenu == nullptr)
 		return false;
-	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED)) >= 0;
+	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED)) != (DWORD)-1;
 }
 
 
