@@ -151,6 +151,7 @@
       <CompileAs>Default</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)$(TargetExt)</OutputFile>
@@ -180,6 +181,7 @@
       <CompileAs>Default</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)$(TargetExt)</OutputFile>
@@ -207,6 +209,7 @@
       <CompileAs>Default</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)$(TargetExt)</OutputFile>
@@ -237,6 +240,7 @@
       <CompileAs>Default</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)$(TargetExt)</OutputFile>
@@ -265,6 +269,7 @@
       <CompileAs>Default</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)$(TargetExt)</OutputFile>
@@ -295,6 +300,7 @@
       <CompileAs>Default</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
       <AdditionalOptions>/source-charset:utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName)$(TargetExt)</OutputFile>
