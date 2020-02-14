@@ -2279,7 +2279,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			CreateAppCommandList();
 
-			if (pInfo->Index < 0 || (size_t)pInfo->Index >= m_AppCommandList.size())
+			if (pInfo->Index >= m_AppCommandList.size())
 				return FALSE;
 
 			const AppCommand &Command = m_AppCommandList[pInfo->Index];
