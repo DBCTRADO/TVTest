@@ -52,7 +52,7 @@ namespace TVTest
 		static bool IsSupported();
 
 	private:
-		HANDLE m_hPaintBuffer;
+		HPAINTBUFFER m_hPaintBuffer;
 	};
 
 	class CDoubleBufferingDraw
