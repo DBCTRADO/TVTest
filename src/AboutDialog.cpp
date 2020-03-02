@@ -24,6 +24,7 @@
 #include "AboutDialog.h"
 #include "DialogUtil.h"
 #include "TVTestVersion.h"
+#include "LibISDB/LibISDB/LibISDBVersion.hpp"
 #include "resource.h"
 #include "Common/DebugDef.h"
 

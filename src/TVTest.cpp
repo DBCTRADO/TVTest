@@ -22,6 +22,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "TVTestVersion.h"
+#include "LibISDB/LibISDB/LibISDBVersion.hpp"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
