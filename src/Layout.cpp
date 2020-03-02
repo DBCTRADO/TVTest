@@ -408,7 +408,7 @@ int CSplitter::GetPaneSize(int ID)
 	int Index = IDToIndex(ID);
 
 	if (Index < 0)
-		return false;
+		return 0;
 	if (Index == 0)
 		return m_BarPos;
 	int Size;
