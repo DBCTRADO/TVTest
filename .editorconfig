@@ -1,0 +1,17 @@
+root = true
+
+[{sdk,src}/**.{c,cpp,h,hpp}]
+charset = utf-8
+end_of_line = crlf
+indent_style = tab
+
+[src/Help/**.{css,html}]
+charset = utf-8
+end_of_line = crlf
+indent_style = tab
+
+[{doc,sdk}/**.txt]
+charset = utf-8-bom
+end_of_line = crlf
+indent_style = space
+indent_size = 2
