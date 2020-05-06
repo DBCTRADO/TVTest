@@ -70,7 +70,6 @@ const CMainWindow::DirectShowFilterPropertyInfo CMainWindow::m_DirectShowFilterP
 	{LibISDB::ViewerFilter::PropertyFilterType::MPEG2Demultiplexer, CM_DEMULTIPLEXERPROPERTY},
 };
 
-ATOM CMainWindow::m_atomChildOldWndProcProp = 0;
 CMainWindow *CMainWindow::m_pThis = nullptr;
 
 
@@ -185,10 +184,6 @@ CMainWindow::CMainWindow(CAppMain &App)
 CMainWindow::~CMainWindow()
 {
 	Destroy();
-	if (m_atomChildOldWndProcProp != 0) {
-		::GlobalDeleteAtom(m_atomChildOldWndProcProp);
-		m_atomChildOldWndProcProp = 0;
-	}
 }
 
 
@@ -4741,115 +4736,103 @@ void CMainWindow::HookWindows(HWND hwnd)
 }
 
 
-const LPCTSTR CHILD_PROP_THIS = APP_NAME TEXT("ChildThis");
-
 void CMainWindow::HookChildWindow(HWND hwnd)
 {
 	if (hwnd == nullptr)
 		return;
 
-	if (m_atomChildOldWndProcProp == 0) {
-		m_atomChildOldWndProcProp = ::GlobalAddAtom(APP_NAME TEXT("ChildOldWndProc"));
-		if (m_atomChildOldWndProcProp == 0)
-			return;
-	}
+	// this のアドレスを ID として使う
+	const UINT_PTR SubclassID = reinterpret_cast<UINT_PTR>(this);
 
-	if (::GetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp)) == nullptr) {
+	// 既にサブクラス化されているか確認
+	DWORD_PTR RefData;
+	if (::GetWindowSubclass(hwnd, ChildSubclassProc, SubclassID, &RefData) && RefData == SubclassID)
+		return;
+
 #ifdef _DEBUG
+	{
 		TCHAR szClass[256];
 		::GetClassName(hwnd, szClass, lengthof(szClass));
 		TRACE(TEXT("Hook window %p \"%s\"\n"), hwnd, szClass);
-#endif
-		WNDPROC pOldWndProc = SubclassWindow(hwnd, ChildHookProc);
-		::SetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp), reinterpret_cast<HANDLE>(pOldWndProc));
-		::SetProp(hwnd, CHILD_PROP_THIS, this);
 	}
+#endif
+	::SetWindowSubclass(hwnd, ChildSubclassProc, SubclassID, reinterpret_cast<DWORD_PTR>(this));
 }
 
 
-LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK CMainWindow::ChildSubclassProc(
+	HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
-	WNDPROC pOldWndProc = reinterpret_cast<WNDPROC>(::GetProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp)));
-
-	if (pOldWndProc == nullptr)
-		return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
+	CMainWindow *pThis = reinterpret_cast<CMainWindow*>(dwRefData);
 
 	switch (uMsg) {
 	case WM_NCHITTEST:
-		{
-			CMainWindow *pThis = static_cast<CMainWindow*>(::GetProp(hwnd, CHILD_PROP_THIS));
+		if (pThis->m_fCustomFrame && !::IsZoomed(pThis->m_hwnd)
+				&& ::GetAncestor(hwnd, GA_ROOT) == pThis->m_hwnd) {
+			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+			RECT rc;
 
-			if (pThis != nullptr && pThis->m_fCustomFrame && !::IsZoomed(pThis->m_hwnd)
-					&& ::GetAncestor(hwnd, GA_ROOT) == pThis->m_hwnd) {
-				POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-				RECT rc;
+			pThis->GetScreenPosition(&rc);
+			if (::PtInRect(&rc, pt)) {
+				Style::Margins FrameWidth = pThis->m_Style.ResizingMargin;
+				if (FrameWidth.Left < pThis->m_CustomFrameWidth)
+					FrameWidth.Left = pThis->m_CustomFrameWidth;
+				if (FrameWidth.Top < pThis->m_CustomFrameWidth)
+					FrameWidth.Top = pThis->m_CustomFrameWidth;
+				if (FrameWidth.Right < pThis->m_CustomFrameWidth)
+					FrameWidth.Right = pThis->m_CustomFrameWidth;
+				if (FrameWidth.Bottom < pThis->m_CustomFrameWidth)
+					FrameWidth.Bottom = pThis->m_CustomFrameWidth;
+				int CornerMarginLeft = FrameWidth.Left * 2;
+				int CornerMarginRight = FrameWidth.Right * 2;
+				RECT rcFrame = rc;
+				Style::Subtract(&rcFrame, FrameWidth);
+				int Code = HTNOWHERE;
 
-				pThis->GetScreenPosition(&rc);
-				if (::PtInRect(&rc, pt)) {
-					Style::Margins FrameWidth = pThis->m_Style.ResizingMargin;
-					if (FrameWidth.Left < pThis->m_CustomFrameWidth)
-						FrameWidth.Left = pThis->m_CustomFrameWidth;
-					if (FrameWidth.Top < pThis->m_CustomFrameWidth)
-						FrameWidth.Top = pThis->m_CustomFrameWidth;
-					if (FrameWidth.Right < pThis->m_CustomFrameWidth)
-						FrameWidth.Right = pThis->m_CustomFrameWidth;
-					if (FrameWidth.Bottom < pThis->m_CustomFrameWidth)
-						FrameWidth.Bottom = pThis->m_CustomFrameWidth;
-					int CornerMarginLeft = FrameWidth.Left * 2;
-					int CornerMarginRight = FrameWidth.Right * 2;
-					RECT rcFrame = rc;
-					Style::Subtract(&rcFrame, FrameWidth);
-					int Code = HTNOWHERE;
-
-					if (pt.y < rcFrame.top) {
-						if (pt.x < rcFrame.left + CornerMarginLeft)
-							Code = HTTOPLEFT;
-						else if (pt.x >= rcFrame.right - CornerMarginRight)
-							Code = HTTOPRIGHT;
-						else
-							Code = HTTOP;
-					} else if (pt.y >= rcFrame.bottom) {
-						if (pt.x < rcFrame.left + CornerMarginLeft)
-							Code = HTBOTTOMLEFT;
-						else if (pt.x >= rcFrame.right - CornerMarginRight)
-							Code = HTBOTTOMRIGHT;
-						else
-							Code = HTBOTTOM;
-					} else if (pt.x < rcFrame.left) {
-						Code = HTLEFT;
-					} else if (pt.x >= rcFrame.right) {
-						Code = HTRIGHT;
-					}
-					if (Code != HTNOWHERE) {
-						return Code;
-					}
+				if (pt.y < rcFrame.top) {
+					if (pt.x < rcFrame.left + CornerMarginLeft)
+						Code = HTTOPLEFT;
+					else if (pt.x >= rcFrame.right - CornerMarginRight)
+						Code = HTTOPRIGHT;
+					else
+						Code = HTTOP;
+				} else if (pt.y >= rcFrame.bottom) {
+					if (pt.x < rcFrame.left + CornerMarginLeft)
+						Code = HTBOTTOMLEFT;
+					else if (pt.x >= rcFrame.right - CornerMarginRight)
+						Code = HTBOTTOMRIGHT;
+					else
+						Code = HTBOTTOM;
+				} else if (pt.x < rcFrame.left) {
+					Code = HTLEFT;
+				} else if (pt.x >= rcFrame.right) {
+					Code = HTRIGHT;
+				}
+				if (Code != HTNOWHERE) {
+					return Code;
 				}
 			}
 		}
 		break;
 
 	case WM_NCLBUTTONDOWN:
-		{
-			CMainWindow *pThis = static_cast<CMainWindow*>(::GetProp(hwnd, CHILD_PROP_THIS));
+		if (pThis->m_fCustomFrame && ::GetAncestor(hwnd, GA_ROOT) == pThis->m_hwnd) {
+			BYTE Flag = 0;
 
-			if (pThis != nullptr && pThis->m_fCustomFrame && ::GetAncestor(hwnd, GA_ROOT) == pThis->m_hwnd) {
-				BYTE Flag = 0;
+			switch (wParam) {
+			case HTTOP:         Flag = WMSZ_TOP;         break;
+			case HTTOPLEFT:     Flag = WMSZ_TOPLEFT;     break;
+			case HTTOPRIGHT:    Flag = WMSZ_TOPRIGHT;    break;
+			case HTLEFT:        Flag = WMSZ_LEFT;        break;
+			case HTRIGHT:       Flag = WMSZ_RIGHT;       break;
+			case HTBOTTOM:      Flag = WMSZ_BOTTOM;      break;
+			case HTBOTTOMLEFT:  Flag = WMSZ_BOTTOMLEFT;  break;
+			case HTBOTTOMRIGHT: Flag = WMSZ_BOTTOMRIGHT; break;
+			}
 
-				switch (wParam) {
-				case HTTOP:         Flag = WMSZ_TOP;         break;
-				case HTTOPLEFT:     Flag = WMSZ_TOPLEFT;     break;
-				case HTTOPRIGHT:    Flag = WMSZ_TOPRIGHT;    break;
-				case HTLEFT:        Flag = WMSZ_LEFT;        break;
-				case HTRIGHT:       Flag = WMSZ_RIGHT;       break;
-				case HTBOTTOM:      Flag = WMSZ_BOTTOM;      break;
-				case HTBOTTOMLEFT:  Flag = WMSZ_BOTTOMLEFT;  break;
-				case HTBOTTOMRIGHT: Flag = WMSZ_BOTTOMRIGHT; break;
-				}
-
-				if (Flag != 0) {
-					::SendMessage(pThis->m_hwnd, WM_SYSCOMMAND, SC_SIZE | Flag, lParam);
-					return 0;
-				}
+			if (Flag != 0) {
+				::SendMessage(pThis->m_hwnd, WM_SYSCOMMAND, SC_SIZE | Flag, lParam);
+				return 0;
 			}
 		}
 		break;
@@ -4862,13 +4845,11 @@ LRESULT CALLBACK CMainWindow::ChildHookProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 			TRACE(TEXT("Unhook window %p \"%s\"\n"), hwnd, szClass);
 		}
 #endif
-		::SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(pOldWndProc));
-		::RemoveProp(hwnd, MAKEINTATOM(m_atomChildOldWndProcProp));
-		::RemoveProp(hwnd, CHILD_PROP_THIS);
+		::RemoveWindowSubclass(hwnd, ChildSubclassProc, reinterpret_cast<UINT_PTR>(pThis));
 		break;
 	}
 
-	return ::CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
+	return ::DefSubclassProc(hwnd, uMsg, wParam, lParam);
 }
 
 
