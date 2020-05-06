@@ -1000,6 +1000,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_ENTERSIZEMOVE:
 		m_fEnterSizeMove = true;
 		m_fResizePanel = false;
+
+		// リサイズ開始時のカーソル位置とウィンドウ位置を記憶
+		::GetCursorPos(&m_ptDragStartPos);
+		::GetWindowRect(hwnd, &m_rcDragStart);
 		return 0;
 
 	case WM_EXITSIZEMOVE:
@@ -1009,6 +1013,12 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			Layout::CSplitter *pSplitter = dynamic_cast<Layout::CSplitter*>(
 				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 			pSplitter->SetAdjustPane(pSplitter->GetPane(!pSplitter->IDToIndex(CONTAINER_ID_PANEL))->GetID());
+		}
+
+		if (m_fDragging) {
+			m_fDragging = false;
+			if (m_App.ViewOptions.GetHideCursor())
+				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 		}
 		return 0;
 
@@ -1063,46 +1073,54 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		}
 		return 0;
 
-	case WM_NCLBUTTONDOWN:
-		if (wParam != HTCAPTION)
-			break;
-		ForegroundWindow(hwnd);
 	case WM_LBUTTONDOWN:
-		if (!GetMaximize()
-				&& (uMsg == WM_NCLBUTTONDOWN || m_App.OperationOptions.GetDisplayDragMove())) {
-			m_fDragging = true;
-			/*
-			m_ptDragStartPos.x = GET_X_LPARAM(lParam);
-			m_ptDragStartPos.y = GET_Y_LPARAM(lParam);
-			::ClientToScreen(hwnd, &m_ptDragStartPos);
-			*/
-			::GetCursorPos(&m_ptDragStartPos);
-			::GetWindowRect(hwnd, &m_rcDragStart);
-			::SetCapture(hwnd);
+		if (m_App.OperationOptions.GetDisplayDragMove()) {
+			// 画面ドラッグによるウィンドウの移動開始
+			::ReleaseCapture();
+
+			// ドラッグ中はカーソルが消えないようにする
 			m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
 			::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+
+			m_fDragging = true;
+			::SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
 			return 0;
 		}
 		break;
 
-	case WM_NCLBUTTONUP:
-	case WM_LBUTTONUP:
-		if (::GetCapture() == hwnd)
-			::ReleaseCapture();
-		return 0;
-
-	case WM_CAPTURECHANGED:
-		if (m_fDragging) {
-			m_fDragging = false;
-			m_TitleBarManager.EndDrag();
-			if (m_App.ViewOptions.GetHideCursor())
-				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
-		}
-		return 0;
-
 	case WM_MOUSEMOVE:
 		OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
+
+	case WM_MOVING:
+		{
+			RECT *pPos = reinterpret_cast<RECT*>(lParam);
+
+			if (m_fDragging) {
+				// 画面ドラッグでウィンドウ移動中
+				POINT pt;
+				::GetCursorPos(&pt);
+
+				// カーソル位置から移動後のウィンドウ位置を求める
+				pPos->left = m_rcDragStart.left + (pt.x - m_ptDragStartPos.x);
+				pPos->top = m_rcDragStart.top + (pt.y - m_ptDragStartPos.y);
+				pPos->right = pPos->left + (m_rcDragStart.right - m_rcDragStart.left);
+				pPos->bottom = pPos->top + (m_rcDragStart.bottom - m_rcDragStart.top);
+			}
+
+			// ウィンドウと画面の端に吸着させる
+			bool fSnap = m_App.ViewOptions.GetSnapAtWindowEdge();
+			if (::GetKeyState(VK_SHIFT) < 0)
+				fSnap = !fSnap;
+			if (fSnap) {
+				SnapWindow(
+					m_hwnd, pPos,
+					m_App.ViewOptions.GetSnapAtWindowEdgeMargin(),
+					m_App.Panel.IsAttached() ? nullptr : m_App.Panel.Frame.GetHandle());
+			}
+			return TRUE;
+		}
+		break;
 
 	case WM_LBUTTONDBLCLK:
 		m_App.CommandManager.InvokeCommand(
@@ -2144,31 +2162,7 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi)
 
 void CMainWindow::OnMouseMove(int x, int y)
 {
-	if (m_fDragging) {
-		// ウィンドウ移動中
-		POINT pt;
-		RECT rc;
-
-		/*
-		pt.x = x;
-		pt.y = y;
-		::ClientToScreen(hwnd, &pt);
-		*/
-		::GetCursorPos(&pt);
-		rc.left = m_rcDragStart.left + (pt.x - m_ptDragStartPos.x);
-		rc.top = m_rcDragStart.top + (pt.y - m_ptDragStartPos.y);
-		rc.right = rc.left + (m_rcDragStart.right - m_rcDragStart.left);
-		rc.bottom = rc.top + (m_rcDragStart.bottom - m_rcDragStart.top);
-		bool fSnap = m_App.ViewOptions.GetSnapAtWindowEdge();
-		if (::GetKeyState(VK_SHIFT) < 0)
-			fSnap = !fSnap;
-		if (fSnap)
-			SnapWindow(
-				m_hwnd, &rc,
-				m_App.ViewOptions.GetSnapAtWindowEdgeMargin(),
-				m_App.Panel.IsAttached() ? nullptr : m_App.Panel.Frame.GetHandle());
-		SetPosition(&rc);
-	} else if (!m_pCore->GetFullscreen()) {
+	if (!m_pCore->GetFullscreen()) {
 		const POINT pt = {x, y};
 
 		if (m_CursorTracker.GetLastCursorPos() == pt) {
