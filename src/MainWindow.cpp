@@ -999,6 +999,10 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// リサイズ開始時のカーソル位置とウィンドウ位置を記憶
 		::GetCursorPos(&m_ptDragStartPos);
 		::GetWindowRect(hwnd, &m_rcDragStart);
+
+		// ドラッグ中はカーソルが消えないようにする
+		m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
+		::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
 		return 0;
 
 	case WM_EXITSIZEMOVE:
@@ -1015,6 +1019,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (m_App.ViewOptions.GetHideCursor())
 				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 		}
+		m_TitleBarManager.EndDrag();
 		return 0;
 
 	case WM_WINDOWPOSCHANGING:
@@ -1070,15 +1075,12 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_LBUTTONDOWN:
 		if (m_App.OperationOptions.GetDisplayDragMove()) {
-			// 画面ドラッグによるウィンドウの移動開始
-			::ReleaseCapture();
-
-			// ドラッグ中はカーソルが消えないようにする
-			m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
-			::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-
+			// 画面ドラッグによるウィンドウの移動
 			m_fDragging = true;
-			::SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+			m_ptDragStartPos.x = GET_X_LPARAM(lParam);
+			m_ptDragStartPos.y = GET_Y_LPARAM(lParam);
+			::ClientToScreen(hwnd, &m_ptDragStartPos);
+			::SetCapture(hwnd);
 			return 0;
 		}
 		break;
@@ -1091,17 +1093,14 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			RECT *pPos = reinterpret_cast<RECT*>(lParam);
 
-			if (m_fDragging) {
-				// 画面ドラッグでウィンドウ移動中
-				POINT pt;
-				::GetCursorPos(&pt);
+			POINT pt;
+			::GetCursorPos(&pt);
 
-				// カーソル位置から移動後のウィンドウ位置を求める
-				pPos->left = m_rcDragStart.left + (pt.x - m_ptDragStartPos.x);
-				pPos->top = m_rcDragStart.top + (pt.y - m_ptDragStartPos.y);
-				pPos->right = pPos->left + (m_rcDragStart.right - m_rcDragStart.left);
-				pPos->bottom = pPos->top + (m_rcDragStart.bottom - m_rcDragStart.top);
-			}
+			// カーソル位置から移動後のウィンドウ位置を求める
+			pPos->left = m_rcDragStart.left + (pt.x - m_ptDragStartPos.x);
+			pPos->top = m_rcDragStart.top + (pt.y - m_ptDragStartPos.y);
+			pPos->right = pPos->left + (m_rcDragStart.right - m_rcDragStart.left);
+			pPos->bottom = pPos->top + (m_rcDragStart.bottom - m_rcDragStart.top);
 
 			// ウィンドウと画面の端に吸着させる
 			bool fSnap = m_App.ViewOptions.GetSnapAtWindowEdge();
@@ -2157,7 +2156,14 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi)
 
 void CMainWindow::OnMouseMove(int x, int y)
 {
-	if (!m_pCore->GetFullscreen()) {
+	if (m_fDragging) {
+		POINT pt = {x, y};
+		::ScreenToClient(m_hwnd, &pt);
+		if (pt.x != m_ptDragStartPos.x || pt.y != m_ptDragStartPos.y) {
+			::ReleaseCapture();
+			::SendMessage(m_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(pt.x, pt.y));
+		}
+	} else if (!m_pCore->GetFullscreen()) {
 		const POINT pt = {x, y};
 
 		if (m_CursorTracker.GetLastCursorPos() == pt) {
