@@ -131,6 +131,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fShowCursor(true)
 	, m_fNoHideCursor(false)
 
+	, m_fLButtonDown(false)
 	, m_fDragging(false)
 	, m_fEnterSizeMove(false)
 	, m_fResizePanel(false)
@@ -1000,12 +1001,17 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		::GetCursorPos(&m_ptDragStartPos);
 		::GetWindowRect(hwnd, &m_rcDragStart);
 
-		// ドラッグ中はカーソルが消えないようにする
-		m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
-		::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+		if (m_fDragging) {
+			// ドラッグ中はカーソルが消えないようにする
+			m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
+			//::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+			ShowCursor(true);
+		}
 		return 0;
 
 	case WM_EXITSIZEMOVE:
+		m_fEnterSizeMove = false;
+
 		if (m_fResizePanel) {
 			m_fResizePanel = false;
 
@@ -1019,6 +1025,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (m_App.ViewOptions.GetHideCursor())
 				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 		}
+		m_fLButtonDown = false;
+
 		m_TitleBarManager.EndDrag();
 		return 0;
 
@@ -1076,14 +1084,22 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_LBUTTONDOWN:
 		if (m_App.OperationOptions.GetDisplayDragMove()) {
 			// 画面ドラッグによるウィンドウの移動
-			m_fDragging = true;
+
 			m_ptDragStartPos.x = GET_X_LPARAM(lParam);
 			m_ptDragStartPos.y = GET_Y_LPARAM(lParam);
 			::ClientToScreen(hwnd, &m_ptDragStartPos);
+
+			m_fLButtonDown = true;
 			::SetCapture(hwnd);
 			return 0;
 		}
 		break;
+
+	case WM_LBUTTONUP:
+		m_fLButtonDown = false;
+		if (::GetCapture() == hwnd)
+			::ReleaseCapture();
+		return 0;
 
 	case WM_MOUSEMOVE:
 		OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -2156,10 +2172,11 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi)
 
 void CMainWindow::OnMouseMove(int x, int y)
 {
-	if (m_fDragging) {
+	if (m_fLButtonDown) {
 		POINT pt = {x, y};
-		::ScreenToClient(m_hwnd, &pt);
+		::ClientToScreen(m_hwnd, &pt);
 		if (pt.x != m_ptDragStartPos.x || pt.y != m_ptDragStartPos.y) {
+			m_fDragging = true;
 			::ReleaseCapture();
 			::SendMessage(m_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(pt.x, pt.y));
 		}
@@ -5669,7 +5686,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 	if (pViewer != nullptr)
 		pViewer->SetViewStretchMode(m_App.VideoOptions.GetFullscreenStretchMode());
 
-	m_fShowCursor = true;
+	m_fShowCursor = false;
 	m_fMenu = false;
 	m_fShowStatusView = false;
 	m_fShowTitleBar = false;
