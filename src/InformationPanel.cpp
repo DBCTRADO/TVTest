@@ -906,8 +906,8 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 			POINT pt;
 			int Command;
 
-			::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 1, TEXT("コピー(&C)"));
-			::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 2, TEXT("すべて選択(&A)"));
+			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("コピー(&C)"));
+			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 2, TEXT("すべて選択(&A)"));
 
 			::GetCursorPos(&pt);
 			Command = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);

@@ -209,7 +209,7 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				POINT pt;
 
 				hmenu = ::CreatePopupMenu();
-				::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, IDC_ERROR_COPY, TEXT("コピー(&C)"));
+				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_ERROR_COPY, TEXT("コピー(&C)"));
 				::GetCursorPos(&pt);
 				::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
 				::DestroyMenu(hmenu);

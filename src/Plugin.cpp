@@ -4663,13 +4663,13 @@ bool CPluginManager::SetMenu(HMENU hmenu) const
 		for (const auto &Plugin : m_PluginList) {
 			if (!Plugin->IsNoEnabledDisabled()) {
 				::AppendMenu(
-					hmenu, MFT_STRING | MFS_ENABLED |
-					(Plugin->IsEnabled() ? MFS_CHECKED : MFS_UNCHECKED),
+					hmenu, MF_STRING | MF_ENABLED |
+					(Plugin->IsEnabled() ? MF_CHECKED : MF_UNCHECKED),
 					Plugin->GetCommand(), Plugin->GetPluginName());
 			}
 		}
 	} else {
-		::AppendMenu(hmenu, MFT_STRING | MFS_GRAYED, 0, TEXT("なし"));
+		::AppendMenu(hmenu, MF_STRING | MF_GRAYED, 0, TEXT("なし"));
 	}
 	return true;
 }

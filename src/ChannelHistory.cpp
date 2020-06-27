@@ -171,12 +171,12 @@ bool CRecentChannelList::SetMenu(HMENU hmenu, bool fClear) const
 		CopyToMenuText(
 			pChannelInfo->GetName(),
 			szText + Length, lengthof(szText) - Length);
-		::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, CM_CHANNELHISTORY_FIRST + i, szText);
+		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CM_CHANNELHISTORY_FIRST + i, szText);
 	}
 
 	if (fClear && NumChannels() > 0) {
-		::AppendMenu(hmenu, MFT_SEPARATOR, 0, nullptr);
-		::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, CM_CHANNELHISTORY_CLEAR, TEXT("履歴をクリア"));
+		::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
+		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CM_CHANNELHISTORY_CLEAR, TEXT("履歴をクリア"));
 	}
 
 	return true;

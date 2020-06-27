@@ -120,7 +120,7 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
 				if (hItem != nullptr) {
 					HMENU hmenu = ::CreatePopupMenu();
-					::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 1, TEXT("コピー(&C)"));
+					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("コピー(&C)"));
 					POINT pt;
 					::GetCursorPos(&pt);
 					switch (::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr)) {

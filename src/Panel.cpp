@@ -476,9 +476,9 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					&& m_pEventHandler != nullptr) {
 				HMENU hmenu = ::CreatePopupMenu();
 
-				::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 1, TEXT("閉じる(&C)"));
+				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("閉じる(&C)"));
 				if (m_fEnableFloating)
-					::AppendMenu(hmenu, MFT_STRING | MFS_ENABLED, 2, TEXT("切り離す(&F)"));
+					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 2, TEXT("切り離す(&F)"));
 				m_pEventHandler->OnMenuPopup(hmenu);
 				::ClientToScreen(hwnd, &pt);
 				int Command = ::TrackPopupMenu(
@@ -843,8 +843,8 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			m_fDragMoving = false;
 			HMENU hmenu = GetSystemMenu(hwnd, FALSE);
-			InsertMenu(hmenu, 0, MF_BYPOSITION | MFT_STRING | MFS_ENABLED, SC_DOCKING, TEXT("ドッキング(&D)"));
-			InsertMenu(hmenu, 1, MF_BYPOSITION | MFT_SEPARATOR, 0, nullptr);
+			InsertMenu(hmenu, 0, MF_BYPOSITION | MF_STRING | MF_ENABLED, SC_DOCKING, TEXT("ドッキング(&D)"));
+			InsertMenu(hmenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
 		}
 		return 0;
 

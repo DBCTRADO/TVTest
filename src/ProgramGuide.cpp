@@ -4525,12 +4525,12 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		if (ProviderCount > 0) {
 			if (ProviderCount > MAX_CHANNEL_PROVIDER_MENU_ITEMS)
 				ProviderCount = MAX_CHANNEL_PROVIDER_MENU_ITEMS;
-			::AppendMenu(hmenuChannelGroup, MFT_SEPARATOR, 0, nullptr);
+			::AppendMenu(hmenuChannelGroup, MF_SEPARATOR, 0, nullptr);
 			for (int i = 0; i < ProviderCount; i++) {
 				if (EnumChannelProvider(i, szText, lengthof(szText))) {
 					CopyToMenuText(szText, szMenu, lengthof(szMenu));
 					::AppendMenu(
-						hmenuChannelGroup, MFT_STRING | MFS_ENABLED,
+						hmenuChannelGroup, MF_STRING | MF_ENABLED,
 						CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST + i, szMenu);
 				}
 			}
@@ -4844,9 +4844,9 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 
 bool CProgramGuide::CEventInfoPopupHandler::OnMenuPopup(HMENU hmenu)
 {
-	::AppendMenu(hmenu, MFT_SEPARATOR, 0, nullptr);
+	::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 	::AppendMenu(
-		hmenu, MFT_STRING | (CEventInfoPopup::CEventHandler::m_pPopup->IsSelected() ? MFS_ENABLED : MFS_GRAYED),
+		hmenu, MF_STRING | (CEventInfoPopup::CEventHandler::m_pPopup->IsSelected() ? MF_ENABLED : MF_GRAYED),
 		COMMAND_FIRST, TEXT("選択文字列を検索(&S)"));
 	return true;
 }
