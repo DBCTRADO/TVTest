@@ -61,15 +61,17 @@
   TVTest のビルドには以下の SDK/ライブラリが必要になります。
 
   ・Microsoft Windows SDK v10 以上
-  ・LibISDB      https://github.com/DBCTRADO/LibISDB
-  ・FAAD2        http://www.audiocoding.com/faad2.html
-  ・libmad       http://www.underbit.com/products/mad/
-  ・liba52       http://liba52.sourceforge.net/
-  ・libjpeg (*)  http://www.ijg.org/
-  ・libpng (*)   http://libpng.org/
-  ・zlib (*)     http://zlib.net/
+  ・LibISDB                  https://github.com/DBCTRADO/LibISDB
+  ・Fraunhofer FDK AAC (*1)  https://github.com/mstorsjo/fdk-aac
+  ・FAAD2 (*1)               http://www.audiocoding.com/faad2.html
+  ・libmad                   http://www.underbit.com/products/mad/
+  ・liba52                   http://liba52.sourceforge.net/
+  ・libjpeg (*2)             http://www.ijg.org/
+  ・libpng (*2)              http://libpng.org/
+  ・zlib (*2)                http://zlib.net/
 
-  (*) TVTest_Image.dll のビルドに必要
+  (*1) ビルド時にいずれかを選択
+  (*2) TVTest_Image.dll のビルドに必要
 
   必要なライブラリは TVTest / LibISDB のリポジトリに含まれています。
 
@@ -534,6 +536,10 @@
   ・このプログラムは GPL v2 です。
   ・このプログラムの使用及び使用不能によって生じたいかなる損害も補償しません。
   ・このプログラムは以下のライブラリを使用しています。
+
+    Fraunhofer FDK AAC
+      © Copyright  1995 - 2018 Fraunhofer-Gesellschaft zur Förderung der angewandten
+      Forschung e.V. All rights reserved.
 
     FAAD2
       Code from FAAD2 is copyright (c) Nero AG, www.nero.com
