@@ -1801,7 +1801,7 @@ bool CUxTheme::IsOpen() const
 
 bool CUxTheme::IsActive()
 {
-	return ::IsThemeActive() != FALSE;
+	return ::IsAppThemed() != FALSE;
 }
 
 bool CUxTheme::DrawBackground(HDC hdc, int PartID, int StateID, const RECT *pRect)
