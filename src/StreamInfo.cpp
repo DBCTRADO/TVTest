@@ -501,8 +501,7 @@ void CStreamInfoPage::SetService()
 					TreeView_InsertItem(hwndTree, &tvis);
 				}
 			}
-		}
-		else {
+		} else {
 			LibISDB::AnalyzerFilter::CableDeliverySystemList CableList;
 			if (pAnalyzer->GetCableDeliverySystemList(&CableList)) {
 				tvis.hParent = TVI_ROOT;
