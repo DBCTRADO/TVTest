@@ -501,6 +501,46 @@ void CStreamInfoPage::SetService()
 					TreeView_InsertItem(hwndTree, &tvis);
 				}
 			}
+		} else {
+			LibISDB::AnalyzerFilter::CableDeliverySystemList CableList;
+			if (pAnalyzer->GetCableDeliverySystemList(&CableList)) {
+				tvis.hParent = TVI_ROOT;
+				tvis.hInsertAfter = TVI_LAST;
+				tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
+				tvis.item.state = 0;
+				tvis.item.stateMask = ~0U;
+				tvis.item.pszText = const_cast<LPTSTR>(TEXT("有線分配システム"));
+				tvis.item.cChildren = !CableList.empty() ? 1 : 0;
+				hItem = TreeView_InsertItem(hwndTree, &tvis);
+				if (hItem != nullptr) {
+					for (int i = 0; i < (int)CableList.size(); i++) {
+						const LibISDB::AnalyzerFilter::CableDeliverySystemInfo& Info = CableList[i];
+
+						StringPrintf(
+							szText,
+							TEXT("TS%d : TSID 0x%04x (%d) / 周波数 %ld.%04ld MHz / %s / 変調 %s"),
+							i + 1,
+							Info.TransportStreamID,
+							Info.TransportStreamID,
+							Info.Frequency / 10000,
+							Info.Frequency % 10000,
+							Info.FrameType == 0x01 ? TEXT("TSMF [53,15]") :
+							Info.FrameType == 0x02 ? TEXT("TSMF [53,15] 複数TS不可") :
+							Info.FrameType == 0x0f ? TEXT("単一TS") : TEXT("?"),
+							Info.Modulation == 0x01 ? TEXT("16QAM") :
+							Info.Modulation == 0x02 ? TEXT("32QAM") :
+							Info.Modulation == 0x03 ? TEXT("64QAM") :
+							Info.Modulation == 0x04 ? TEXT("128QAM") :
+							Info.Modulation == 0x05 ? TEXT("256QAM") :
+							Info.Modulation == 0x07 ? TEXT("1024QAM") : TEXT("?"));
+						tvis.hParent = hItem;
+						tvis.item.state = 0;
+						tvis.item.cChildren = 0;
+						tvis.item.pszText = szText;
+						TreeView_InsertItem(hwndTree, &tvis);
+					}
+				}
+			}
 		}
 	}
 }
