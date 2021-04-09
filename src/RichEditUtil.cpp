@@ -300,14 +300,22 @@ bool CRichEditUtil::DetectURL(
 				cr.cpMax = cr.cpMin + Length;
 				::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 #ifdef UNICODE
-				if (!!(Flags & DetectURLFlag::ToHalfWidth) && *q >= 0xFF01) {
-					LPWSTR pszURL = new WCHAR[Length + 1];
-					for (int j = 0; j < Length; j++)
-						pszURL[j] = q[j] - 0xFEE0;
-					pszURL[Length] = L'\0';
-					::SendMessage(hwndEdit, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(pszURL));
-					delete [] pszURL;
-					::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
+				if (!!(Flags & DetectURLFlag::ToHalfWidth)) {
+					LPWSTR pszURL = nullptr;
+					for (int j = 0; j < Length; j++) {
+						LPCWSTR pFound = ::StrChr(m_pszURLFullWidthChars, q[j]);
+						if (pFound != nullptr) {
+							pszURL = szText + (q - szText);
+							pszURL[j] = m_pszURLChars[pFound - m_pszURLFullWidthChars];
+						}
+					}
+					if (pszURL != nullptr) {
+						WCHAR cEnd = pszURL[Length];
+						pszURL[Length] = L'\0';
+						::SendMessage(hwndEdit, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(pszURL));
+						pszURL[Length] = cEnd;
+						::SendMessage(hwndEdit, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
+					}
 				}
 #endif
 				::SendMessage(hwndEdit, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cfLink));
