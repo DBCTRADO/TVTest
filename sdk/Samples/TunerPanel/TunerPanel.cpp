@@ -1264,12 +1264,7 @@ void CTunerPanel::SetScrollPos(int Pos)
 		int Offset = Pos - m_ScrollPos;
 
 		m_ScrollPos = Pos;
-		if (abs(Offset) < rc.bottom) {
-			::ScrollWindowEx(m_hwnd, 0, -Offset,
-							 NULL, NULL, NULL, NULL, SW_ERASE | SW_INVALIDATE);
-		} else {
-			::InvalidateRect(m_hwnd, NULL, TRUE);
-		}
+		::ScrollWindowEx(m_hwnd, 0, -Offset, NULL, NULL, NULL, NULL, SW_ERASE | SW_INVALIDATE);
 
 		SCROLLINFO si;
 		si.cbSize = sizeof (SCROLLINFO);

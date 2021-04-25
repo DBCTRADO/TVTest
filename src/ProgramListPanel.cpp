@@ -569,11 +569,7 @@ void CProgramListPanel::SetScrollPos(int Pos)
 		si.fMask = SIF_POS;
 		si.nPos = Pos;
 		::SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
-		if (abs(Offset) < Page) {
-			::ScrollWindowEx(m_hwnd, 0, -Offset, &rc, &rc, nullptr, nullptr, SW_ERASE | SW_INVALIDATE);
-		} else {
-			Invalidate(&rc);
-		}
+		::ScrollWindowEx(m_hwnd, 0, -Offset, &rc, &rc, nullptr, nullptr, SW_ERASE | SW_INVALIDATE);
 		//SetToolTip();
 	}
 }
