@@ -357,15 +357,21 @@ bool CRichEditUtil::SearchNextURL(LPCTSTR *ppszText, int *pLength)
 					&& ::CompareString(
 							LOCALE_USER_DEFAULT, NORM_IGNOREWIDTH,
 							&p[i], URLLength, Prefix.pszPrefix, URLLength) == CSTR_EQUAL) {
-				if (p[i] < 0x0080) {
-					while (i + URLLength < TextLength && ::StrChr(m_pszURLChars, p[i + URLLength]) != nullptr)
-						URLLength++;
-				} else {
-					while (i + URLLength < TextLength && ::StrChr(m_pszURLFullWidthChars, p[i + URLLength]) != nullptr)
-						URLLength++;
+				while (i + URLLength < TextLength) {
+					if (p[i + URLLength] < 0x0080) {
+						if (::StrChr(m_pszURLChars, p[i + URLLength]) == nullptr)
+							break;
+					} else {
+						if (::StrChr(m_pszURLFullWidthChars, p[i + URLLength]) == nullptr)
+							break;
+					}
+					URLLength++;
 				}
 #ifdef UNICODE
-				if (i > 0 && p[i - 1] == L'(' && p[i + URLLength - 1] == L')')
+				const WCHAR LastChar = p[i + URLLength - 1];
+				if ((i > 0 && (p[i - 1] == L'(' || p[i - 1] == L'（') && (LastChar == L')' || LastChar == L'）'))
+						|| LastChar == L'('
+						|| LastChar == L'（')
 					URLLength--;
 #endif
 				*ppszText = p + i;
