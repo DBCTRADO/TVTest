@@ -53,7 +53,7 @@ CVariant::CVariant(const VARIANT &var)
 }
 
 
-CVariant::CVariant(VARIANT &&var)
+CVariant::CVariant(VARIANT &&var) noexcept
 {
 	*static_cast<VARIANT*>(this) = var;
 	::VariantInit(&var);
@@ -76,7 +76,7 @@ CVariant &CVariant::operator=(const CVariant &var)
 }
 
 
-CVariant &CVariant::operator=(CVariant &&var)
+CVariant &CVariant::operator=(CVariant &&var) noexcept
 {
 	if (&var != this) {
 		*static_cast<VARIANT*>(this) = var;
@@ -97,7 +97,7 @@ CVariant &CVariant::operator=(const VARIANT &var)
 }
 
 
-CVariant &CVariant::operator=(VARIANT &&var)
+CVariant &CVariant::operator=(VARIANT &&var) noexcept
 {
 	if (&var != this) {
 		*static_cast<VARIANT*>(this) = var;

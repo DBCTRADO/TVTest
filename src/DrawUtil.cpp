@@ -1108,7 +1108,7 @@ CMonoColorBitmap::CMonoColorBitmap(const CMonoColorBitmap &Src)
 	*this = Src;
 }
 
-CMonoColorBitmap::CMonoColorBitmap(CMonoColorBitmap &&Src)
+CMonoColorBitmap::CMonoColorBitmap(CMonoColorBitmap &&Src) noexcept
 	: m_hbm(nullptr)
 	, m_hbmPremultiplied(nullptr)
 {
@@ -1136,7 +1136,7 @@ CMonoColorBitmap &CMonoColorBitmap::operator=(const CMonoColorBitmap &Src)
 	return *this;
 }
 
-CMonoColorBitmap &CMonoColorBitmap::operator=(CMonoColorBitmap &&Src)
+CMonoColorBitmap &CMonoColorBitmap::operator=(CMonoColorBitmap &&Src) noexcept
 {
 	if (&Src != this) {
 		Destroy();
@@ -1234,7 +1234,7 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 	return true;
 }
 
-void CMonoColorBitmap::Destroy()
+void CMonoColorBitmap::Destroy() noexcept
 {
 	if (m_hbmPremultiplied != nullptr) {
 		if (m_hbmPremultiplied != m_hbm)

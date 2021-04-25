@@ -199,16 +199,16 @@ namespace TVTest
 		public:
 			CMonoColorBitmap();
 			CMonoColorBitmap(const CMonoColorBitmap &Src);
-			CMonoColorBitmap(CMonoColorBitmap &&Src);
+			CMonoColorBitmap(CMonoColorBitmap &&Src) noexcept;
 			~CMonoColorBitmap();
 
 			CMonoColorBitmap &operator=(const CMonoColorBitmap &Src);
-			CMonoColorBitmap &operator=(CMonoColorBitmap &&Src);
+			CMonoColorBitmap &operator=(CMonoColorBitmap &&Src) noexcept;
 
 			bool Load(HINSTANCE hinst, LPCTSTR pszName);
 			bool Load(HINSTANCE hinst, int ID) { return Load(hinst, MAKEINTRESOURCE(ID)); }
 			bool Create(HBITMAP hbm);
-			void Destroy();
+			void Destroy() noexcept;
 			HBITMAP GetHandle() const { return m_hbm; }
 			bool IsCreated() const { return m_hbm != nullptr; }
 			bool Draw(

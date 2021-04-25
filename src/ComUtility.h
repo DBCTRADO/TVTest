@@ -65,12 +65,12 @@ namespace TVTest
 		CVariant();
 		CVariant(const CVariant &var);
 		CVariant(const VARIANT &var);
-		CVariant(VARIANT &&var);
+		CVariant(VARIANT &&var) noexcept;
 		~CVariant();
 		CVariant &operator=(const CVariant &var);
-		CVariant &operator=(CVariant &&var);
+		CVariant &operator=(CVariant &&var) noexcept;
 		CVariant &operator=(const VARIANT &var);
-		CVariant &operator=(VARIANT &&var);
+		CVariant &operator=(VARIANT &&var) noexcept;
 		HRESULT Assign(const VARIANT &var);
 		void Clear();
 		HRESULT ChangeType(VARTYPE Type);
