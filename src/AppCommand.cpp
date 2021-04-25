@@ -804,13 +804,17 @@ bool CAppCommand::CaptureCopySave(CCommandManager::InvokeParameters &Params)
 	}
 
 	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer = pViewer->GetVideoRendererType();
 	const std::uint8_t *pDib = Image.get();
 	const BITMAPINFOHEADER *pbmih = reinterpret_cast<const BITMAPINFOHEADER*>(pDib);
-	int OrigWidth = pbmih->biWidth;
-	int OrigHeight = std::abs(pbmih->biHeight);
+	const int OrigWidth = pbmih->biWidth;
+	const int OrigHeight = std::abs(pbmih->biHeight);
 	RECT rc;
 
-	if (pViewer->GetSourceRect(&rc)) {
+	// EVR は表示されている画像がそのまま取得される
+	if (VideoRenderer != LibISDB::DirectShow::VideoRenderer::RendererType::EVR
+			&& VideoRenderer != LibISDB::DirectShow::VideoRenderer::RendererType::EVRCustomPresenter
+			&& pViewer->GetSourceRect(&rc)) {
 		int VideoWidth, VideoHeight;
 
 		if (pViewer->GetOriginalVideoSize(&VideoWidth, &VideoHeight)
