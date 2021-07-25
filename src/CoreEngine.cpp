@@ -21,8 +21,6 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "CoreEngine.h"
-#include <intrin.h>
-#pragma intrinsic(_InterlockedOr)
 #include "Common/DebugDef.h"
 
 
@@ -61,7 +59,7 @@ CCoreEngine::CCoreEngine()
 	, m_TimerResolution(0)
 	, m_fNoEpg(false)
 
-	, m_AsyncStatusUpdatedFlags(StatusFlag::None)
+	, m_AsyncStatusUpdatedFlags(0)
 {
 }
 
@@ -668,10 +666,7 @@ CCoreEngine::StatusFlag CCoreEngine::UpdateAsyncStatus()
 		}
 	}
 
-	if (m_AsyncStatusUpdatedFlags != StatusFlag::None) {
-		static_assert(sizeof(m_AsyncStatusUpdatedFlags) == sizeof(LONG));
-		Updated |= static_cast<StatusFlag>(::InterlockedExchange(reinterpret_cast<LONG*>(&m_AsyncStatusUpdatedFlags), 0));
-	}
+	Updated |= static_cast<StatusFlag>(m_AsyncStatusUpdatedFlags.exchange(0));
 
 	return Updated;
 }
@@ -679,8 +674,7 @@ CCoreEngine::StatusFlag CCoreEngine::UpdateAsyncStatus()
 
 void CCoreEngine::SetAsyncStatusUpdatedFlag(StatusFlag Status)
 {
-	static_assert(sizeof(StatusFlag) == sizeof(long));
-	_InterlockedOr(reinterpret_cast<long*>(&m_AsyncStatusUpdatedFlags), static_cast<long>(Status));
+	m_AsyncStatusUpdatedFlags.fetch_or(static_cast<std::underlying_type_t<StatusFlag>>(Status));
 }
 
 

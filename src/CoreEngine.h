@@ -33,6 +33,7 @@
 #include "LibISDB/LibISDB/Filters/CaptionFilter.hpp"
 #include "LibISDB/LibISDB/Windows/Filters/BonDriverSourceFilter.hpp"
 #include "TSProcessor.h"
+#include <atomic>
 
 
 namespace TVTest
@@ -266,7 +267,7 @@ namespace TVTest
 		UINT m_TimerResolution;
 		bool m_fNoEpg;
 
-		StatusFlag m_AsyncStatusUpdatedFlags;
+		std::atomic<std::underlying_type_t<StatusFlag>> m_AsyncStatusUpdatedFlags;
 
 		void ConnectFilter(
 			TSProcessorConnectionList *pList,
