@@ -749,7 +749,7 @@ bool CChannelScan::SetPreset(bool fAuto)
 					TEXT("プリセットを使用せずに、スキャンを行うことをお勧めします。\n")
 					TEXT("プリセットを読み込みますか？"),
 					TEXT("プリセット読み込み"),
-					MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDYES)
+					MB_YESNO | MB_DEFBUTTON2 | MB_ICONINFORMATION) != IDYES)
 			return false;
 	}
 
@@ -960,7 +960,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 								Formatter.Append(TEXT("\n検出されなかったチャンネルを残しますか？"));
 								if (::MessageBox(
 											hDlg, Formatter.GetString(), TEXT("問い合わせ"),
-											MB_YESNO | MB_ICONQUESTION) == IDYES) {
+											MB_YESNO | MB_ICONINFORMATION) == IDYES) {
 									bool fServiceType = true;
 									for (int i = 0; i < pChannelList->NumChannels(); i++) {
 										if (pChannelList->GetChannelInfo(i)->GetServiceType() == 0) {
@@ -1211,7 +1211,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 										Formatter.AppendFormat(TEXT("・%s\n"), pszName);
 									}
 								}
-								if (::MessageBox(hDlg, Formatter.GetString(), TEXT("チャンネルスキャン"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+								if (::MessageBox(hDlg, Formatter.GetString(), TEXT("チャンネルスキャン"), MB_YESNO | MB_ICONINFORMATION) == IDYES) {
 									for (int i = 1; i <= 9; i++) {
 										if ((Exists & (1U << i)) != 0) {
 											::PathRenameExtension(szFileName, CHANNEL_FILE_EXTENSION);

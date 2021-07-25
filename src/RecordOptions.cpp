@@ -237,7 +237,7 @@ bool CRecordOptions::ConfirmChannelChange(HWND hwndOwner) const
 		if (::MessageBox(
 					hwndOwner, TEXT("録画中です。チャンネル変更しますか?"),
 					TEXT("チャンネル変更の確認"),
-					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDOK)
+					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONEXCLAMATION) != IDOK)
 			return false;
 	}
 	return true;
@@ -253,7 +253,7 @@ bool CRecordOptions::ConfirmServiceChange(HWND hwndOwner, const CRecordManager *
 					TEXT("サービスの変更をすると正常に再生できなくなるかも知れません。\r\n")
 					TEXT("サービスを変更しますか?"),
 					TEXT("変更の確認"),
-					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDOK)
+					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONEXCLAMATION) != IDOK)
 			return false;
 	}
 	return true;
@@ -266,7 +266,7 @@ bool CRecordOptions::ConfirmStop(HWND hwndOwner) const
 		if (::MessageBox(
 					hwndOwner,
 					TEXT("録画を停止しますか?"), TEXT("停止の確認"),
-					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDOK)
+					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONINFORMATION) != IDOK)
 			return false;
 	}
 	return true;
@@ -279,7 +279,7 @@ bool CRecordOptions::ConfirmStatusBarStop(HWND hwndOwner) const
 		if (::MessageBox(
 					hwndOwner,
 					TEXT("録画を停止しますか?"), TEXT("停止の確認"),
-					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDOK)
+					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONINFORMATION) != IDOK)
 			return false;
 	}
 	return true;
@@ -293,7 +293,7 @@ bool CRecordOptions::ConfirmExit(HWND hwndOwner, const CRecordManager *pRecordMa
 					hwndOwner,
 					TEXT("現在録画中です。\r\n終了してもいいですか?"),
 					TEXT("終了の確認"),
-					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDOK)
+					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONEXCLAMATION) != IDOK)
 			return false;
 	}
 	if (pRecordManager->IsReserved()) {
@@ -303,7 +303,7 @@ bool CRecordOptions::ConfirmExit(HWND hwndOwner, const CRecordManager *pRecordMa
 					TEXT("終了すると録画は行われません。\r\n")
 					TEXT("終了してもいいですか?"),
 					TEXT("終了の確認"),
-					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONQUESTION) != IDOK)
+					MB_OKCANCEL | MB_DEFBUTTON2 | MB_ICONEXCLAMATION) != IDOK)
 			return false;
 	}
 	return true;

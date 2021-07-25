@@ -1163,7 +1163,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 						TEXT("最初にチャンネルスキャンを行うことをおすすめします。\r\n")
 						TEXT("今すぐチャンネルスキャンを行いますか?"),
 						TEXT("チャンネルスキャンの確認"),
-						MB_YESNO | MB_ICONQUESTION) == IDYES) {
+						MB_YESNO | MB_ICONINFORMATION) == IDYES) {
 				ShowOptionDialog(MainWindow.GetHandle(), COptionDialog::PAGE_CHANNELSCAN);
 			}
 		} else if (CmdLineOptions.IsChannelSpecified()) {
@@ -1335,7 +1335,7 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 		StringPrintf(szMessage, pszMessage, szPath);
 		if (::MessageBox(
 					hwnd, szMessage, TEXT("フォルダ作成の確認"),
-					MB_YESNO | MB_ICONQUESTION) != IDYES)
+					MB_YESNO | MB_ICONINFORMATION) != IDYES)
 			return CreateDirectoryResult::Cancelled;
 
 		int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);

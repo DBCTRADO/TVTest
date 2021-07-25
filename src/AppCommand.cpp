@@ -1013,7 +1013,7 @@ bool CAppCommand::Record(CCommandManager::InvokeParameters &Params)
 						TEXT("録画を開始すると既存の設定が破棄されます。\n")
 						TEXT("録画を開始してもいいですか?"),
 						TEXT("録画開始の確認"),
-						MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2) != IDOK) {
+						MB_OKCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON2) != IDOK) {
 				return true;
 			}
 		}
@@ -1110,7 +1110,7 @@ bool CAppCommand::StartTimeShiftRecording(CCommandManager::InvokeParameters &Par
 						TEXT("録画を開始すると既存の設定が破棄されます。\n")
 						TEXT("録画を開始してもいいですか?"),
 						TEXT("録画開始の確認"),
-						MB_OKCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2) != IDOK) {
+						MB_OKCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON2) != IDOK) {
 				return true;
 			}
 		}

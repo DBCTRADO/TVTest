@@ -583,7 +583,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					break;
 				if (::MessageBox(
 							hDlg, TEXT("選択されたテーマを削除しますか?"), TEXT("削除の確認"),
-							MB_OKCANCEL | MB_ICONQUESTION) != IDOK)
+							MB_OKCANCEL | MB_ICONEXCLAMATION) != IDOK)
 					break;
 				if (!::DeleteFile(pColorScheme->GetFileName())) {
 					::MessageBox(hDlg, TEXT("ファイルを削除できません。"), nullptr, MB_OK | MB_ICONEXCLAMATION);

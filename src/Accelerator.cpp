@@ -893,7 +893,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							szText,
 							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
-						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONQUESTION) != IDYES)
+						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
 						SetAccelItem(
 							i, 0, 0, false,
@@ -938,7 +938,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							szText,
 							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
-						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONQUESTION) != IDYES)
+						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
 						LPARAM Param = m_ListView.GetItemParam(i);
 						SetAccelItem(i, GET_ACCEL_MOD(Param), GET_ACCEL_KEY(Param), GET_ACCEL_GLOBAL(Param), 0);
