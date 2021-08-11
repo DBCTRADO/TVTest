@@ -128,7 +128,8 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 	OpenSettings.VideoRenderer = m_App.VideoOptions.GetVideoRendererType();
 	OpenSettings.VideoStreamType = VideoStreamType;
 	OpenSettings.pszVideoDecoder = pszVideoDecoder;
-	OpenSettings.pszAudioDevice = m_App.AudioOptions.GetAudioDeviceName();
+	OpenSettings.AudioDevice.FriendlyName = m_App.AudioOptions.GetAudioDeviceName();
+	OpenSettings.AudioDevice.MonikerName = m_App.AudioOptions.GetAudioDeviceMoniker();
 	if (m_App.AudioOptions.GetAudioFilterName() != nullptr)
 		OpenSettings.AudioFilterList.emplace_back(m_App.AudioOptions.GetAudioFilterName());
 

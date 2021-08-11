@@ -22,7 +22,6 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "AudioOptions.h"
-#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/DirectShowUtilities.hpp"
 #include "DialogUtil.h"
 #include "EpgUtil.h"
 #include "resource.h"
@@ -113,7 +112,8 @@ CAudioOptions::~CAudioOptions()
 
 bool CAudioOptions::ReadSettings(CSettings &Settings)
 {
-	Settings.Read(TEXT("AudioDevice"), &m_AudioDeviceName);
+	Settings.Read(TEXT("AudioDevice"), &m_AudioDevice.FriendlyName);
+	Settings.Read(TEXT("AudioDeviceMoniker"), &m_AudioDevice.MonikerName);
 	Settings.Read(TEXT("AudioFilter"), &m_AudioFilterName);
 	int SpdifMode;
 	if (Settings.Read(TEXT("SpdifMode"), &SpdifMode))
@@ -175,7 +175,8 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 
 bool CAudioOptions::WriteSettings(CSettings &Settings)
 {
-	Settings.Write(TEXT("AudioDevice"), m_AudioDeviceName);
+	Settings.Write(TEXT("AudioDevice"), m_AudioDevice.FriendlyName);
+	Settings.Write(TEXT("AudioDeviceMoniker"), m_AudioDevice.MonikerName);
 	Settings.Write(TEXT("AudioFilter"), m_AudioFilterName);
 	Settings.Write(TEXT("SpdifMode"), (int)m_SPDIFOptions.Mode);
 	Settings.Write(TEXT("SpdifChannels"), m_SPDIFOptions.PassthroughChannels);
@@ -277,13 +278,33 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			int Sel = 0;
 			DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIODEVICE, TEXT("デフォルト"));
 			LibISDB::DirectShow::DeviceEnumerator DevEnum;
-			if (DevEnum.EnumDevice(CLSID_AudioRendererCategory)) {
-				for (int i = 0; i < DevEnum.GetDeviceCount(); i++) {
-					LPCTSTR pszName = DevEnum.GetDeviceFriendlyName(i);
-					DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIODEVICE, pszName);
-					if (Sel == 0 && !m_AudioDeviceName.empty()
-							&& StringUtility::CompareNoCase(m_AudioDeviceName, pszName) == 0)
-						Sel = i + 1;
+			if (DevEnum.EnumDevice(CLSID_AudioRendererCategory)
+					&& DevEnum.GetFilterList(&m_AudioDeviceList)) {
+				std::stable_sort(
+					m_AudioDeviceList.begin(), m_AudioDeviceList.end(),
+					[](const FilterInfo &Filter1, const FilterInfo &Filter2) {
+						return ::lstrcmp(Filter1.FriendlyName.c_str(), Filter2.FriendlyName.c_str()) < 0;
+					});
+
+				for (const FilterInfo &Filter : m_AudioDeviceList) {
+					DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIODEVICE, Filter.FriendlyName.c_str());
+				}
+
+				if (!m_AudioDevice.MonikerName.empty()) {
+					for (int i = 0; i < DevEnum.GetDeviceCount(); i++) {
+						if (StringUtility::CompareNoCase(m_AudioDevice.MonikerName, m_AudioDeviceList[i].MonikerName) == 0) {
+							Sel = i + 1;
+							break;
+						}
+					}
+				}
+				if (Sel == 0 && !m_AudioDevice.FriendlyName.empty()) {
+					for (int i = 0; i < DevEnum.GetDeviceCount(); i++) {
+						if (StringUtility::CompareNoCase(m_AudioDevice.FriendlyName, m_AudioDeviceList[i].FriendlyName) == 0) {
+							Sel = i + 1;
+							break;
+						}
+					}
 				}
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_AUDIODEVICE, Sel);
@@ -470,12 +491,16 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		switch (((LPNMHDR)lParam)->code) {
 		case PSN_APPLY:
 			{
-				String AudioDevice;
+				FilterInfo AudioDevice;
 				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIODEVICE);
-				if (Sel > 0)
-					GetDlgComboBoxItemString(hDlg, IDC_OPTIONS_AUDIODEVICE, Sel, &AudioDevice);
-				if (StringUtility::CompareNoCase(m_AudioDeviceName, AudioDevice) != 0) {
-					m_AudioDeviceName = std::move(AudioDevice);
+				if (Sel > 0 && (unsigned int)Sel <= m_AudioDeviceList.size())
+					AudioDevice = m_AudioDeviceList[Sel - 1];
+				if (StringUtility::CompareNoCase(m_AudioDevice.FriendlyName, AudioDevice.FriendlyName) != 0
+						|| (m_AudioDevice.MonikerName.empty() && Sel >= 2
+							&& StringUtility::CompareNoCase(AudioDevice.MonikerName, m_AudioDeviceList[Sel - 2].MonikerName) == 0)
+						|| (!m_AudioDevice.MonikerName.empty()
+							&& StringUtility::CompareNoCase(m_AudioDevice.MonikerName, AudioDevice.MonikerName) != 0)) {
+					m_AudioDevice = std::move(AudioDevice);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
 
@@ -526,6 +551,10 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			break;
 		}
 		break;
+
+	case WM_DESTROY:
+		m_AudioDeviceList.clear();
+		return TRUE;
 	}
 
 	return FALSE;

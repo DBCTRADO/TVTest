@@ -24,6 +24,7 @@
 
 #include "Options.h"
 #include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
+#include "LibISDB/LibISDB/Windows/Viewer/DirectShow/DirectShowUtilities.hpp"
 #include <vector>
 
 
@@ -59,7 +60,8 @@ namespace TVTest
 
 	// CAudioOptions
 		bool ApplyMediaViewerOptions();
-		LPCTSTR GetAudioDeviceName() const { return StringUtility::GetCStrOrNull(m_AudioDeviceName); }
+		const String & GetAudioDeviceName() const { return m_AudioDevice.FriendlyName; }
+		const String & GetAudioDeviceMoniker() const { return m_AudioDevice.MonikerName; }
 		LPCTSTR GetAudioFilterName() const { return StringUtility::GetCStrOrNull(m_AudioFilterName); }
 		const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &GetSpdifOptions() const { return m_SPDIFOptions; }
 		bool SetSpdifOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options);
@@ -88,7 +90,9 @@ namespace TVTest
 		static const DWORD m_AudioLanguageList[];
 		static const DWORD LANGUAGE_FLAG_SUB = 0x01000000;
 
-		String m_AudioDeviceName;
+		using FilterInfo = LibISDB::DirectShow::FilterInfo;
+
+		FilterInfo m_AudioDevice;
 		String m_AudioFilterName;
 
 		LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions m_SPDIFOptions;
@@ -100,6 +104,8 @@ namespace TVTest
 		bool m_fEnableLanguagePriority;
 		AudioLanguageList m_LanguagePriority;
 		bool m_fResetAudioDelayOnChannelChange;
+
+		std::vector<FilterInfo> m_AudioDeviceList;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
