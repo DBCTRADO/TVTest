@@ -30,9 +30,6 @@ namespace TVTest
 {
 
 
-typedef IBonDriver *(*CreateBonDriverFunc)();
-
-
 CDriverInfo::CDriverInfo(LPCTSTR pszFileName)
 	: m_FileName(pszFileName)
 	, m_fChannelFileLoaded(false)
@@ -113,35 +110,29 @@ bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 				m_DriverSpaceList = *App.ChannelManager.GetDriverTuningSpaceList();
 				m_fDriverSpaceLoaded = true;
 			}
-		} else if ((hLib = ::LoadLibrary(FilePath.c_str())) != nullptr) {
-			CreateBonDriverFunc pCreate =
-				reinterpret_cast<CreateBonDriverFunc>(::GetProcAddress(hLib, "CreateBonDriver"));
-			IBonDriver *pBonDriver;
+		} else {
+			LibISDB::BonDriver Driver;
 
-			if (pCreate != nullptr && (pBonDriver = pCreate()) != nullptr) {
-				IBonDriver2 *pBonDriver2 = dynamic_cast<IBonDriver2*>(pBonDriver);
-
-				if (pBonDriver2 != nullptr) {
+			if (Driver.Load(FilePath) && Driver.CreateIBonDriver()) {
+				if (Driver.IsIBonDriver2()) {
 					int NumSpaces;
 
-					for (NumSpaces = 0; pBonDriver2->EnumTuningSpace(NumSpaces) != nullptr; NumSpaces++);
+					for (NumSpaces = 0; Driver.EnumTuningSpace(NumSpaces) != nullptr; NumSpaces++);
 					m_DriverSpaceList.Reserve(NumSpaces);
-					StringUtility::Assign(m_TunerName, pBonDriver2->GetTunerName());
+					StringUtility::Assign(m_TunerName, Driver.GetTunerName());
 					for (int i = 0; i < NumSpaces; i++) {
 						CTuningSpaceInfo *pTuningSpaceInfo = m_DriverSpaceList.GetTuningSpaceInfo(i);
-						LPCTSTR pszName = pBonDriver2->EnumTuningSpace(i);
+						LPCTSTR pszName = Driver.EnumTuningSpace(i);
 
 						pTuningSpaceInfo->SetName(pszName);
 						CChannelList *pChannelList = pTuningSpaceInfo->GetChannelList();
-						for (int j = 0; (pszName = pBonDriver2->EnumChannelName(i, j)) != nullptr; j++) {
+						for (int j = 0; (pszName = Driver.EnumChannelName(i, j)) != nullptr; j++) {
 							pChannelList->AddChannel(CChannelInfo(i, j, j + 1, pszName));
 						}
 					}
 					m_fDriverSpaceLoaded = true;
 				}
-				pBonDriver->Release();
 			}
-			::FreeLibrary(hLib);
 		}
 		for (int i = 0; i < m_TuningSpaceList.NumSpaces(); i++) {
 			if (m_TuningSpaceList.GetTuningSpaceName(i) == nullptr)
