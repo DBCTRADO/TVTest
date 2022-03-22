@@ -111,6 +111,7 @@ namespace TVTest
 		int m_TextWidth;
 		Style::Margins m_ItemMargin;
 		Style::Size m_CheckSize;
+		CUxTheme m_CheckTheme;
 		int m_DropInsertPos;
 		UINT m_DragTimerID;
 		bool m_fDragResize;
@@ -136,6 +137,7 @@ namespace TVTest
 		bool GetItemPreviewRect(HWND hwndList, int Index, RECT *pRect);
 		bool IsCursorResize(HWND hwndList, int x, int y);
 		void MakeItemList(StatusItemInfoList *pList) const;
+		void OpenTheme();
 	};
 
 }	// namespace TVTest

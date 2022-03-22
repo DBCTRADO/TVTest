@@ -410,6 +410,8 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			EnableDlgItems(
 				hDlg, IDC_STATUSOPTIONS_OPACITY_LABEL, IDC_STATUSOPTIONS_OPACITY_UNIT,
 				m_fShowPopup && Util::OS::IsWindows8OrLater());
+
+			OpenTheme();
 		}
 		return TRUE;
 
@@ -447,9 +449,15 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					rc.top = pdis->rcItem.top + m_ItemMargin.Top;
 					rc.right = rc.left + m_CheckSize.Width;
 					rc.bottom = pdis->rcItem.bottom - m_ItemMargin.Bottom;
-					::DrawFrameControl(
-						pdis->hDC, &rc, DFC_BUTTON,
-						DFCS_BUTTONCHECK | (pItemInfo->fVisible ? DFCS_CHECKED : 0));
+					if (m_CheckTheme.IsOpen()) {
+						m_CheckTheme.DrawBackground(
+							pdis->hDC, BP_CHECKBOX,
+							pItemInfo->fVisible ? CBS_CHECKEDNORMAL : CBS_UNCHECKEDNORMAL, &rc);
+					} else {
+						::DrawFrameControl(
+							pdis->hDC, &rc, DFC_BUTTON,
+							DFCS_BUTTONCHECK | (pItemInfo->fVisible ? DFCS_CHECKED : 0));
+					}
 					rc.left = pdis->rcItem.left + m_ItemMargin.Horz() + m_CheckSize.Width;
 					rc.top = pdis->rcItem.top + m_ItemMargin.Top;
 					rc.right = rc.left + m_TextWidth;
@@ -608,6 +616,15 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			break;
 		}
 		break;
+
+	case WM_THEMECHANGED:
+		m_CheckTheme.Close();
+		OpenTheme();
+		return TRUE;
+
+	case WM_DESTROY:
+		m_CheckTheme.Close();
+		return TRUE;
 	}
 
 	return FALSE;
@@ -810,6 +827,13 @@ void CStatusOptions::MakeItemList(StatusItemInfoList *pList) const
 			}
 		}
 	}
+}
+
+
+void CStatusOptions::OpenTheme()
+{
+	if (m_CheckTheme.IsActive())
+		m_CheckTheme.Open(::GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST), VSCLASS_BUTTON, m_CurrentDPI);
 }
 
 
