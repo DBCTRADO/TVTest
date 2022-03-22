@@ -1265,7 +1265,7 @@ void CEventSearchSettingsDialog::CheckButton(int ID, bool fCheck)
 void CEventSearchSettingsDialog::SetFocus(int ID)
 {
 	if (m_hDlg != nullptr)
-		::SetFocus(::GetDlgItem(m_hDlg, ID));
+		SetDlgItemFocus(m_hDlg, ID);
 }
 
 
@@ -1517,7 +1517,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 				if (::GetWindowText(hwndComboBox, szName, lengthof(szName)) < 1) {
 					::MessageBox(hDlg, TEXT("名前を入力してください。"), TEXT("設定の保存"), MB_OK | MB_ICONEXCLAMATION);
-					::SetFocus(hwndComboBox);
+					SetDlgItemFocus(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
 					return TRUE;
 				}
 

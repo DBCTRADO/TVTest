@@ -134,7 +134,7 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				::GetDlgItemText(hDlg, IDC_CHANNELPROP_NAME, szName, lengthof(szName));
 				if (szName[0] == '\0') {
 					::MessageBox(hDlg, TEXT("名前を入力してください。"), TEXT("お願い"), MB_OK | MB_ICONINFORMATION);
-					::SetFocus(::GetDlgItem(hDlg, IDC_CHANNELPROP_NAME));
+					SetDlgItemFocus(hDlg, IDC_CHANNELPROP_NAME);
 					return TRUE;
 				}
 				if (::lstrcmp(m_pChannelInfo->GetName(), szName) != 0) {

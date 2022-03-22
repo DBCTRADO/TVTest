@@ -84,7 +84,7 @@ int GetDlgItemTextLength(HWND hDlg, int ID)
 
 void SetDlgItemFocus(HWND hDlg, int ID)
 {
-	SetFocus(GetDlgItem(hDlg, ID));
+	SendMessage(hDlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(hDlg, ID)), TRUE);
 }
 
 

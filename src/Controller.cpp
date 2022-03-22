@@ -647,7 +647,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 							LVIS_FOCUSED | LVIS_SELECTED,
 							LVIS_FOCUSED | LVIS_SELECTED);
 						ListView_EnsureVisible(hwndList, i, FALSE);
-						::SetFocus(hwndList);
+						SetDlgItemFocus(hDlg, IDC_CONTROLLER_ASSIGN);
 						break;
 					}
 				}
