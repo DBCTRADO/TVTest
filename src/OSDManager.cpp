@@ -244,9 +244,9 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		RECT rcSrc;
 
 		if (pViewer->GetSourceRect(&rcSrc)) {
-			int FontSize = ((rcSrc.right - rcSrc.left) - m_Style.VolumeMargin.Horz()) / (VolumeSteps * 2);
-			if (FontSize < m_Style.VolumeTextSizeMin)
-				FontSize = m_Style.VolumeTextSizeMin;
+			const int FontSize = std::clamp<int>(
+				((rcSrc.right - rcSrc.left) - m_Style.VolumeMargin.Horz()) / (VolumeSteps * 2),
+				m_Style.VolumeTextSizeMin, m_Style.VolumeTextSizeMax);
 			LOGFONT lf;
 			HFONT hfont;
 
@@ -271,9 +271,9 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 			::DeleteObject(hfont);
 		}
 	} else {
-		int FontSize = ((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) - m_Style.VolumeMargin.Horz()) / (VolumeSteps * 2);
-		if (FontSize < m_Style.VolumeTextSizeMin)
-			FontSize = m_Style.VolumeTextSizeMin;
+		const int FontSize = std::clamp<int>(
+			((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) - m_Style.VolumeMargin.Horz()) / (VolumeSteps * 2),
+			m_Style.VolumeTextSizeMin, m_Style.VolumeTextSizeMax);
 		LOGFONT lf;
 
 		lf = *m_pOptions->GetOSDFont();
@@ -322,7 +322,9 @@ bool COSDManager::CompositeText(
 		return false;
 
 	LOGFONT lf = *m_pOptions->GetOSDFont();
-	int FontSize = std::max((rcSrc.right - rcSrc.left) / m_Style.CompositeTextSizeRatio, 12L);
+	const int FontSize = std::clamp<int>(
+		(rcSrc.right - rcSrc.left) / m_Style.CompositeTextSizeRatio,
+		m_Style.CompositeTextSizeMin, m_Style.CompositeTextSizeMax);
 	lf.lfHeight = -FontSize;
 	lf.lfWidth = 0;
 	lf.lfQuality = NONANTIALIASED_QUALITY;
@@ -366,7 +368,9 @@ bool COSDManager::CreateTextOSD(LPCTSTR pszText, const OSDClientInfo &ClientInfo
 	if (!m_OSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow()))
 		return false;
 
-	const int FontSize = std::max((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio, 12L);
+	const int FontSize = std::clamp<int>(
+		(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) / m_Style.TextSizeRatio,
+		m_Style.TextSizeMin, m_Style.TextSizeMax);
 	const int TextMargin = FontSize / 2;
 	LOGFONT lf = *m_pOptions->GetOSDFont();
 	lf.lfHeight = -FontSize;
@@ -427,12 +431,17 @@ void COSDManager::NormalizeStyle(
 COSDManager::OSDStyle::OSDStyle()
 	: Margin(8)
 	, TextSizeRatio(28)
+	, TextSizeMin(12)
+	, TextSizeMax(100)
 	, CompositeTextSizeRatio(24)
+	, CompositeTextSizeMin(12)
+	, CompositeTextSizeMax(100)
 	, LogoSize(64, 36)
 	, LogoEffect(TEXT("gloss"))
 	, fChannelAnimation(true)
 	, VolumeMargin(16)
 	, VolumeTextSizeMin(10)
+	, VolumeTextSizeMax(50)
 {
 }
 
@@ -445,13 +454,18 @@ void COSDManager::OSDStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 	pStyleManager->Get(TEXT("osd.margin"), &Margin);
 	if (pStyleManager->Get(TEXT("osd.text-size-ratio"), &Value) && Value.Value > 0)
 		TextSizeRatio = Value;
+	pStyleManager->Get(TEXT("osd.text-size-min"), &TextSizeMin);
+	pStyleManager->Get(TEXT("osd.text-size-max"), &TextSizeMax);
 	if (pStyleManager->Get(TEXT("osd.composite-text-size-ratio"), &Value) && Value.Value > 0)
 		CompositeTextSizeRatio = Value;
+	pStyleManager->Get(TEXT("osd.composite-text-size-min"), &CompositeTextSizeMin);
+	pStyleManager->Get(TEXT("osd.composite-text-size-max"), &CompositeTextSizeMax);
 	pStyleManager->Get(TEXT("channel-osd.logo"), &LogoSize);
 	pStyleManager->Get(TEXT("channel-osd.logo.effect"), &LogoEffect);
 	pStyleManager->Get(TEXT("channel-osd.animation"), &fChannelAnimation);
 	pStyleManager->Get(TEXT("volume-osd.margin"), &VolumeMargin);
 	pStyleManager->Get(TEXT("volume-osd.text-size-min"), &VolumeTextSizeMin);
+	pStyleManager->Get(TEXT("volume-osd.text-size-max"), &VolumeTextSizeMax);
 }
 
 
@@ -459,10 +473,15 @@ void COSDManager::OSDStyle::NormalizeStyle(
 	const Style::CStyleManager *pStyleManager,
 	const Style::CStyleScaling *pStyleScaling)
 {
+	pStyleScaling->ToPixels(&TextSizeMin);
+	pStyleScaling->ToPixels(&TextSizeMax);
+	pStyleScaling->ToPixels(&CompositeTextSizeMin);
+	pStyleScaling->ToPixels(&CompositeTextSizeMax);
 	pStyleScaling->ToPixels(&Margin);
 	pStyleScaling->ToPixels(&LogoSize);
 	pStyleScaling->ToPixels(&VolumeMargin);
 	pStyleScaling->ToPixels(&VolumeTextSizeMin);
+	pStyleScaling->ToPixels(&VolumeTextSizeMax);
 }
 
 

@@ -78,12 +78,17 @@ namespace TVTest
 		{
 			Style::Margins Margin;
 			Style::IntValue TextSizeRatio;
+			Style::IntValue TextSizeMin;
+			Style::IntValue TextSizeMax;
 			Style::IntValue CompositeTextSizeRatio;
+			Style::IntValue CompositeTextSizeMin;
+			Style::IntValue CompositeTextSizeMax;
 			Style::Size LogoSize;
 			String LogoEffect;
 			bool fChannelAnimation;
 			Style::Margins VolumeMargin;
 			Style::IntValue VolumeTextSizeMin;
+			Style::IntValue VolumeTextSizeMax;
 
 			OSDStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
