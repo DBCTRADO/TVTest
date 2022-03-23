@@ -365,7 +365,7 @@ bool CRecordTask::GetStatistics(LibISDB::RecorderFilter::RecordingStatistics *pS
 {
 	if (pStats == nullptr)
 		return false;
-	if (!m_RecordingTask) {
+	if (!m_RecordingTask || m_State == State::Stop) {
 		*pStats = m_Statistics;
 		return true;
 	}
