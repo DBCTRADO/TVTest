@@ -1470,6 +1470,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// 映像stream_typeが変わった
 		TRACE(TEXT("WM_APP_VIDEOSTREAMTYPECHANGED\n"));
 		if (m_fEnablePlayback
+				&& !m_Resume.ViewerSuspendFlags
 				&& !IsMessageInQueue(hwnd, WM_APP_VIDEOSTREAMTYPECHANGED)) {
 			BYTE StreamType = static_cast<BYTE>(wParam);
 
@@ -5147,7 +5148,8 @@ bool CMainWindow::InitStandby()
 bool CMainWindow::InitMinimize()
 {
 	if (!m_App.CmdLineOptions.m_fNoDirectShow && !m_App.CmdLineOptions.m_fNoView
-			&& (!m_App.PlaybackOptions.GetRestorePlayStatus() || m_App.GetEnablePlaybackOnStart())) {
+			&& (!m_App.PlaybackOptions.GetRestorePlayStatus() || m_App.GetEnablePlaybackOnStart())
+			&& m_App.ViewOptions.GetDisablePreviewWhenMinimized()) {
 		m_Resume.fEnableViewer = true;
 		m_Resume.ViewerSuspendFlags = ResumeInfo::ViewerSuspendFlag::Minimize;
 	}
