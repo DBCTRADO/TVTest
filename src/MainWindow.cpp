@@ -131,7 +131,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fShowCursor(true)
 	, m_fNoHideCursor(false)
 
-	, m_fLButtonDown(false)
+	, m_fDragMoveTrigger(false)
 	, m_fCaptionLButtonDown(false)
 	, m_fDragging(false)
 	, m_fEnterSizeMove(false)
@@ -1061,14 +1061,14 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			m_ptDragStartPos.y = GET_Y_LPARAM(lParam);
 			::ClientToScreen(hwnd, &m_ptDragStartPos);
 
-			m_fLButtonDown = true;
+			m_fDragMoveTrigger = true;
 			::SetCapture(hwnd);
 			return 0;
 		}
 		break;
 
 	case WM_LBUTTONUP:
-		m_fLButtonDown = false;
+		m_fDragMoveTrigger = false;
 		if (::GetCapture() == hwnd)
 			::ReleaseCapture();
 		return 0;
@@ -1088,6 +1088,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_CAPTURECHANGED:
+		m_fDragMoveTrigger = false;
 		if (m_fCaptionLButtonDown) {
 			m_fCaptionLButtonDown = false;
 			OnExitSizeMove();
@@ -2176,7 +2177,7 @@ void CMainWindow::OnExitSizeMove()
 			m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
 	}
 
-	m_fLButtonDown = false;
+	m_fDragMoveTrigger = false;
 	m_fCaptionLButtonDown = false;
 
 	m_TitleBarManager.EndDrag();
@@ -2211,10 +2212,11 @@ bool CMainWindow::OnMoving(RECT *pPos)
 
 void CMainWindow::OnMouseMove(int x, int y)
 {
-	if (m_fLButtonDown) {
+	if (m_fDragMoveTrigger) {
 		POINT pt = {x, y};
 		::ClientToScreen(m_hwnd, &pt);
 		if (pt.x != m_ptDragStartPos.x || pt.y != m_ptDragStartPos.y) {
+			m_fDragMoveTrigger = false;
 			m_fDragging = true;
 			::ReleaseCapture();
 			::SendMessage(m_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(pt.x, pt.y));

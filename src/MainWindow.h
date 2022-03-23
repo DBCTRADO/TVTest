@@ -539,7 +539,7 @@ namespace TVTest
 		bool m_fNoHideCursor;
 		CCursorTracker m_CursorTracker;
 
-		bool m_fLButtonDown;
+		bool m_fDragMoveTrigger;
 		bool m_fCaptionLButtonDown;
 		bool m_fDragging;
 		POINT m_ptDragStartPos;
