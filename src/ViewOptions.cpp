@@ -64,6 +64,7 @@ CViewOptions::CViewOptions()
 	: m_fAdjustAspectResizing(false)
 	, m_fSnapAtWindowEdge(false)
 	, m_SnapAtWindowEdgeMargin(8)
+	, m_fSupportAeroSnap(true)
 	, m_fNearCornerResizeOrigin(false)
 	, m_fZoomKeepAspectRatio(false)
 	, m_PanScanAdjustWindowMode(AdjustWindowMode::Width)
@@ -109,6 +110,7 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 
 	Settings.Read(TEXT("AdjustAspectResizing"), &m_fAdjustAspectResizing);
 	Settings.Read(TEXT("SnapToWindowEdge"), &m_fSnapAtWindowEdge);
+	Settings.Read(TEXT("SupportAeroSnap"), &m_fSupportAeroSnap);
 	Settings.Read(TEXT("NearCornerResizeOrigin"), &m_fNearCornerResizeOrigin);
 	Settings.Read(TEXT("ZoomKeepAspectRatio"), &m_fZoomKeepAspectRatio);
 	if (Settings.Read(TEXT("PanScanAdjustWindow"), &Value)
@@ -149,6 +151,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("AdjustAspectResizing"), m_fAdjustAspectResizing);
 	Settings.Write(TEXT("SnapToWindowEdge"), m_fSnapAtWindowEdge);
+	Settings.Write(TEXT("SupportAeroSnap"), m_fSupportAeroSnap);
 	Settings.Write(TEXT("NearCornerResizeOrigin"), m_fNearCornerResizeOrigin);
 	Settings.Write(TEXT("ZoomKeepAspectRatio"), m_fZoomKeepAspectRatio);
 	Settings.Write(TEXT("PanScanAdjustWindow"), (int)m_PanScanAdjustWindowMode);
@@ -194,6 +197,9 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			DlgCheckBox_Check(
 				hDlg, IDC_OPTIONS_SNAPATWINDOWEDGE,
 				m_fSnapAtWindowEdge);
+			DlgCheckBox_Check(
+				hDlg, IDC_OPTIONS_SUPPORTAEROSNAP,
+				m_fSupportAeroSnap);
 			DlgCheckBox_Check(
 				hDlg, IDC_OPTIONS_ADJUSTASPECTRESIZING,
 				m_fAdjustAspectResizing);
@@ -345,6 +351,8 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				m_fSnapAtWindowEdge =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SNAPATWINDOWEDGE);
+				m_fSupportAeroSnap =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SUPPORTAEROSNAP);
 				m_fAdjustAspectResizing =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ADJUSTASPECTRESIZING);
 				m_fNearCornerResizeOrigin =

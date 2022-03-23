@@ -540,6 +540,7 @@ namespace TVTest
 		CCursorTracker m_CursorTracker;
 
 		bool m_fLButtonDown;
+		bool m_fCaptionLButtonDown;
 		bool m_fDragging;
 		POINT m_ptDragStartPos;
 		RECT m_rcDragStart;
@@ -658,6 +659,9 @@ namespace TVTest
 		void OnSizeChanged(UINT State, int Width, int Height);
 		bool OnSizeChanging(UINT Edge, RECT *pRect);
 		void OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi);
+		void OnEnterSizeMove();
+		void OnExitSizeMove();
+		bool OnMoving(RECT *pPos);
 		void OnMouseMove(int x, int y);
 		bool OnSetCursor(HWND hwndCursor, int HitTestCode, int MouseMessage);
 		bool OnKeyDown(WPARAM KeyCode);

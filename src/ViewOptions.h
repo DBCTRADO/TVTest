@@ -62,6 +62,7 @@ namespace TVTest
 		bool GetAdjustAspectResizing() const { return m_fAdjustAspectResizing; }
 		bool GetSnapAtWindowEdge() const { return m_fSnapAtWindowEdge; }
 		int GetSnapAtWindowEdgeMargin() const { return m_SnapAtWindowEdgeMargin; }
+		bool GetSupportAeroSnap() const { return m_fSupportAeroSnap; }
 		bool GetNearCornerResizeOrigin() const { return m_fNearCornerResizeOrigin; }
 		bool GetZoomKeepAspectRatio() const { return m_fZoomKeepAspectRatio; }
 		AdjustWindowMode GetPanScanAdjustWindowMode() const { return m_PanScanAdjustWindowMode; }
@@ -89,6 +90,7 @@ namespace TVTest
 		bool m_fAdjustAspectResizing;
 		bool m_fSnapAtWindowEdge;
 		int m_SnapAtWindowEdgeMargin;
+		bool m_fSupportAeroSnap;
 		bool m_fNearCornerResizeOrigin;
 		bool m_fZoomKeepAspectRatio;
 		AdjustWindowMode m_PanScanAdjustWindowMode;

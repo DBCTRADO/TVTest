@@ -132,6 +132,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_fNoHideCursor(false)
 
 	, m_fLButtonDown(false)
+	, m_fCaptionLButtonDown(false)
 	, m_fDragging(false)
 	, m_fEnterSizeMove(false)
 	, m_fResizePanel(false)
@@ -994,40 +995,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return 0;
 
 	case WM_ENTERSIZEMOVE:
-		m_fEnterSizeMove = true;
-		m_fResizePanel = false;
-
-		// リサイズ開始時のカーソル位置とウィンドウ位置を記憶
-		::GetCursorPos(&m_ptDragStartPos);
-		::GetWindowRect(hwnd, &m_rcDragStart);
-
-		if (m_fDragging) {
-			// ドラッグ中はカーソルが消えないようにする
-			m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
-			//::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
-			ShowCursor(true);
-		}
+		OnEnterSizeMove();
 		return 0;
 
 	case WM_EXITSIZEMOVE:
-		m_fEnterSizeMove = false;
-
-		if (m_fResizePanel) {
-			m_fResizePanel = false;
-
-			Layout::CSplitter *pSplitter = dynamic_cast<Layout::CSplitter*>(
-				m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
-			pSplitter->SetAdjustPane(pSplitter->GetPane(!pSplitter->IDToIndex(CONTAINER_ID_PANEL))->GetID());
-		}
-
-		if (m_fDragging) {
-			m_fDragging = false;
-			if (m_App.ViewOptions.GetHideCursor())
-				m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
-		}
-		m_fLButtonDown = false;
-
-		m_TitleBarManager.EndDrag();
+		OnExitSizeMove();
 		return 0;
 
 	case WM_WINDOWPOSCHANGING:
@@ -1101,36 +1073,33 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			::ReleaseCapture();
 		return 0;
 
+	case WM_NCLBUTTONDOWN:
+		if (wParam == HTCAPTION && !m_App.ViewOptions.GetSupportAeroSnap()) {
+			// Aero Snap 非対応時は自前で移動処理を行う
+
+			ForegroundWindow(hwnd);
+
+			m_fCaptionLButtonDown = true;
+			m_fDragging = true;
+			::SetCapture(hwnd);
+			OnEnterSizeMove();
+			return 0;
+		}
+		break;
+
+	case WM_CAPTURECHANGED:
+		if (m_fCaptionLButtonDown) {
+			m_fCaptionLButtonDown = false;
+			OnExitSizeMove();
+		}
+		return 0;
+
 	case WM_MOUSEMOVE:
 		OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 
 	case WM_MOVING:
-		{
-			RECT *pPos = reinterpret_cast<RECT*>(lParam);
-
-			POINT pt;
-			::GetCursorPos(&pt);
-
-			// カーソル位置から移動後のウィンドウ位置を求める
-			pPos->left = m_rcDragStart.left + (pt.x - m_ptDragStartPos.x);
-			pPos->top = m_rcDragStart.top + (pt.y - m_ptDragStartPos.y);
-			pPos->right = pPos->left + (m_rcDragStart.right - m_rcDragStart.left);
-			pPos->bottom = pPos->top + (m_rcDragStart.bottom - m_rcDragStart.top);
-
-			// ウィンドウと画面の端に吸着させる
-			bool fSnap = m_App.ViewOptions.GetSnapAtWindowEdge();
-			if (::GetKeyState(VK_SHIFT) < 0)
-				fSnap = !fSnap;
-			if (fSnap) {
-				SnapWindow(
-					m_hwnd, pPos,
-					m_App.ViewOptions.GetSnapAtWindowEdgeMargin(),
-					m_App.Panel.IsAttached() ? nullptr : m_App.Panel.Frame.GetHandle());
-			}
-			return TRUE;
-		}
-		break;
+		return OnMoving(reinterpret_cast<RECT*>(lParam));
 
 	case WM_LBUTTONDBLCLK:
 		m_App.CommandManager.InvokeCommand(
@@ -2170,6 +2139,75 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi)
 }
 
 
+void CMainWindow::OnEnterSizeMove()
+{
+	m_fEnterSizeMove = true;
+	m_fResizePanel = false;
+
+	// リサイズ開始時のカーソル位置とウィンドウ位置を記憶
+	::GetCursorPos(&m_ptDragStartPos);
+	::GetWindowRect(m_hwnd, &m_rcDragStart);
+
+	if (m_fDragging) {
+		// ドラッグ中はカーソルが消えないようにする
+		m_Timer.EndTimer(TIMER_ID_HIDECURSOR);
+		//::SetCursor(::LoadCursor(nullptr, IDC_ARROW));
+		ShowCursor(true);
+	}
+}
+
+
+void CMainWindow::OnExitSizeMove()
+{
+	m_fEnterSizeMove = false;
+
+	if (m_fResizePanel) {
+		m_fResizePanel = false;
+
+		Layout::CSplitter *pSplitter = dynamic_cast<Layout::CSplitter*>(
+			m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
+		pSplitter->SetAdjustPane(pSplitter->GetPane(!pSplitter->IDToIndex(CONTAINER_ID_PANEL))->GetID());
+	}
+
+	if (m_fDragging) {
+		m_fDragging = false;
+		if (m_App.ViewOptions.GetHideCursor())
+			m_Timer.BeginTimer(TIMER_ID_HIDECURSOR, HIDE_CURSOR_DELAY);
+	}
+
+	m_fLButtonDown = false;
+	m_fCaptionLButtonDown = false;
+
+	m_TitleBarManager.EndDrag();
+}
+
+
+bool CMainWindow::OnMoving(RECT *pPos)
+{
+	POINT pt;
+	::GetCursorPos(&pt);
+
+	// カーソル位置から移動後のウィンドウ位置を求める
+	pPos->left = m_rcDragStart.left + (pt.x - m_ptDragStartPos.x);
+	pPos->top = m_rcDragStart.top + (pt.y - m_ptDragStartPos.y);
+	pPos->right = pPos->left + (m_rcDragStart.right - m_rcDragStart.left);
+	pPos->bottom = pPos->top + (m_rcDragStart.bottom - m_rcDragStart.top);
+
+	// ウィンドウと画面の端に吸着させる
+	bool fSnap = m_App.ViewOptions.GetSnapAtWindowEdge();
+	if (::GetKeyState(VK_SHIFT) < 0)
+		fSnap = !fSnap;
+	if (fSnap) {
+		SnapWindow(
+			m_hwnd, pPos,
+			m_App.ViewOptions.GetSnapAtWindowEdgeMargin(),
+			m_App.Panel.IsAttached() ? nullptr : m_App.Panel.Frame.GetHandle());
+	}
+
+	return true;
+}
+
+
 void CMainWindow::OnMouseMove(int x, int y)
 {
 	if (m_fLButtonDown) {
@@ -2180,6 +2218,11 @@ void CMainWindow::OnMouseMove(int x, int y)
 			::ReleaseCapture();
 			::SendMessage(m_hwnd, WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(pt.x, pt.y));
 		}
+	} else if (m_fCaptionLButtonDown) {
+		RECT rc;
+		::GetWindowRect(m_hwnd, &rc);
+		if (OnMoving(&rc))
+			SetPosition(&rc);
 	} else if (!m_pCore->GetFullscreen()) {
 		const POINT pt = {x, y};
 
