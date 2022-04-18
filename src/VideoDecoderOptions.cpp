@@ -51,6 +51,8 @@ bool CVideoDecoderOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("Saturation"), &m_VideoDecoderSettings.Saturation);
 	Settings.Read(TEXT("NumThreads"), &m_VideoDecoderSettings.NumThreads);
 	Settings.Read(TEXT("EnableDXVA2"), &m_VideoDecoderSettings.bEnableDXVA2);
+	Settings.Read(TEXT("EnableD3D11"), &m_VideoDecoderSettings.bEnableD3D11);
+	Settings.Read(TEXT("NumQueueFrames"), &m_VideoDecoderSettings.NumQueueFrames);
 
 	return true;
 }
@@ -69,6 +71,10 @@ bool CVideoDecoderOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("Saturation"), m_VideoDecoderSettings.Saturation);
 	Settings.Write(TEXT("NumThreads"), m_VideoDecoderSettings.NumThreads);
 	Settings.Write(TEXT("EnableDXVA2"), m_VideoDecoderSettings.bEnableDXVA2);
+	Settings.Write(TEXT("EnableD3D11"), m_VideoDecoderSettings.bEnableD3D11);
+#if 0 // 設定UI未実装
+	Settings.Write(TEXT("NumQueueFrames"), m_VideoDecoderSettings.NumQueueFrames);
+#endif
 
 	return true;
 }
