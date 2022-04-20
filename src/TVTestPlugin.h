@@ -1,5 +1,5 @@
 /*
-	TVTest プラグインヘッダ ver.0.0.14
+	TVTest プラグインヘッダ ver.0.0.15-pre
 
 	このファイルは再配布・改変など自由に行って構いません。
 	ただし、改変した場合はオリジナルと違う旨を記載して頂けると、混乱がなくてい
@@ -88,6 +88,12 @@
 
 /*
 	更新履歴
+
+	ver.0.0.15 (TVTest ver.0.10.0 or later)
+	・以下のメッセージを追加した
+	  ・MESSAGE_GETDARKTHEMESTATUS
+	  ・MESSAGE_ISDARKTHEMECOLOR
+	  ・MESSAGE_SETWINDOWDARKTHEME
 
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
 	・以下のメッセージを追加した
@@ -265,7 +271,7 @@ namespace TVTest {
 #define TVTEST_PLUGIN_VERSION_(major, minor, rev) \
 	(((major) << 24) | ((minor) << 12) | (rev))
 #ifndef TVTEST_PLUGIN_VERSION
-#define TVTEST_PLUGIN_VERSION TVTEST_PLUGIN_VERSION_(0, 0, 14)
+#define TVTEST_PLUGIN_VERSION TVTEST_PLUGIN_VERSION_(0, 0, 15)
 #endif
 
 // エクスポート関数定義用
@@ -478,6 +484,11 @@ enum {
 	MESSAGE_FREEVARSTRINGCONTEXT,        // 変数文字列のコンテキストを解放
 	MESSAGE_FORMATVARSTRING,             // 変数文字列を使って文字列をフォーマット
 	MESSAGE_REGISTERVARIABLE,            // 変数を登録
+#endif
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	MESSAGE_GETDARKTHEMESTATUS,          // ダークテーマの状態を取得
+	MESSAGE_ISDARKTHEMECOLOR,            // ダークテーマの色かを取得
+	MESSAGE_SETWINDOWDARKTHEME,          // ウィンドウをダークテーマにする
 #endif
 	MESSAGE_TRAILER
 };
@@ -3387,6 +3398,45 @@ inline bool MsgRegisterVariable(PluginParam *pParam, const RegisterVariableInfo 
 
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 14)
 
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+
+// ダークテーマの状態フラグ
+enum {
+	DARK_THEME_STATUS_APP_SUPPORTED   = 0x00000001U, // アプリケーションがダークテーマに対応している(未実装)
+	DARK_THEME_STATUS_APP_DARK        = 0x00000002U, // アプリケーションがダークテーマ(未実装)
+	DARK_THEME_STATUS_PANEL_SUPPORTED = 0x00000004U  // パネルがダークテーマに対応している
+};
+
+// ダークテーマの状態を取得
+inline DWORD MsgGetDarkThemeStatus(PluginParam *pParam)
+{
+	return (DWORD)(*pParam->Callback)(pParam, MESSAGE_GETDARKTHEMESTATUS, 0, 0);
+}
+
+// ダークテーマの色かを取得
+// 指定された色がダークテーマの色であるかを取得します。
+// 一般に MsgGetColor で取得した色に対して使用します。
+inline bool MsgIsDarkThemeColor(PluginParam *pParam, COLORREF Color)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_ISDARKTHEMECOLOR, Color, 0) != FALSE;
+}
+
+// ウィンドウをダークテーマにする
+// ウィンドウのスクロールバーなどがダークテーマになります。
+/*
+	// パネルのウィンドウをダークテーマにする
+	void SetPanelWindowDarkTheme(PluginParam *pParam, HWND hwnd)
+	{
+		if (MsgGetDarkThemeStatus(pParam) & DARK_THEME_STATUS_PANEL_SUPPORTED)
+			MsgSetWindowDarkTheme(pParam, hwnd, MsgIsDarkThemeColor(pParam, MsgGetColor(pParam, L"PanelBack")));
+	}
+*/
+inline bool MsgSetWindowDarkTheme(PluginParam *pParam, HWND hwnd, bool fDark)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_SETWINDOWDARKTHEME, (LPARAM)hwnd, fDark) != FALSE;
+}
+
+#endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
 	TVTest アプリケーションクラス
@@ -4225,6 +4275,23 @@ public:
 	{
 		pInfo->Size = sizeof(RegisterVariableInfo);
 		return MsgRegisterVariable(m_pParam, pInfo);
+	}
+#endif
+
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	DWORD GetDarkThemeStatus()
+	{
+		return MsgGetDarkThemeStatus(m_pParam);
+	}
+
+	bool IsDarkThemeColor(COLORREF Color)
+	{
+		return MsgIsDarkThemeColor(m_pParam, Color);
+	}
+
+	bool SetWindowDarkTheme(HWND hwnd, bool fDark)
+	{
+		return MsgSetWindowDarkTheme(m_pParam, hwnd, fDark);
 	}
 #endif
 };

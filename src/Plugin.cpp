@@ -31,6 +31,7 @@
 #include "Controller.h"
 #include "TSProcessor.h"
 #include "TVTestVersion.h"
+#include "DarkMode.h"
 #include "LibISDB/LibISDB/Base/ARIBString.hpp"
 #include "resource.h"
 #include <algorithm>
@@ -2968,6 +2969,20 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			App.AppEventManager.OnVariableChanged();
 		}
 		return TRUE;
+
+	case MESSAGE_GETDARKTHEMESTATUS:
+		{
+			DWORD Status = 0;
+			if (IsDarkThemeSupported())
+				Status |= DARK_THEME_STATUS_PANEL_SUPPORTED;
+			return Status;
+		}
+
+	case MESSAGE_ISDARKTHEMECOLOR:
+		return IsDarkThemeColor(static_cast<COLORREF>(lParam1));
+
+	case MESSAGE_SETWINDOWDARKTHEME:
+		return SetWindowDarkTheme(reinterpret_cast<HWND>(lParam1), lParam2 != 0);
 
 #ifdef _DEBUG
 	default:
