@@ -197,6 +197,7 @@ private:
 	int CalcChannelItemRows(int Channels) const;
 	bool HitTest(int x, int y, HitTestInfo *pInfo) const;
 	void UpdateToolTips();
+	void UpdateWindowTheme();
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -359,10 +360,16 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 		// チャンネルが変更された
 	case TVTest::EVENT_SERVICECHANGE:
 		// サービスが変更された
-	case TVTest::EVENT_COLORCHANGE:
-		// 色の設定が変化した
 		if (pThis->m_hwnd != NULL)
 			::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
+		return TRUE;
+
+	case TVTest::EVENT_COLORCHANGE:
+		// 色の設定が変化した
+		if (pThis->m_hwnd != NULL) {
+			pThis->UpdateWindowTheme();
+			::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
+		}
 		return TRUE;
 
 	case TVTest::EVENT_SETTINGSCHANGE:
@@ -591,6 +598,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			m_DPI = m_pApp->GetDPIFromWindow(hwnd);
 			m_ScrollPos = 0;
 			InitializePanel();
+			UpdateWindowTheme();
 		}
 		return 0;
 
@@ -1448,7 +1456,17 @@ void CTunerPanel::UpdateToolTips()
 
 		rc.top = rc.bottom;
 	}
+}
 
+
+// ウィンドウのテーマを更新する
+void CTunerPanel::UpdateWindowTheme()
+{
+	if (m_pApp->GetDarkThemeStatus() & TVTest::DARK_THEME_STATUS_PANEL_SUPPORTED) {
+		const bool fDark = m_pApp->IsDarkThemeColor(m_pApp->GetColor(L"PanelBack"));
+		m_pApp->SetWindowDarkTheme(m_hwnd, fDark);
+		m_pApp->SetWindowDarkTheme(m_hwndToolTips, fDark);
+	}
 }
 
 
