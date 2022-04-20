@@ -24,6 +24,7 @@
 #include "EpgUtil.h"
 #include "AppMain.h"
 #include "Settings.h"
+#include "DarkMode.h"
 #include "Common/DebugDef.h"
 
 
@@ -1004,6 +1005,12 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			m_hwndChannelScroll = ::CreateWindowEx(
 				0, TEXT("SCROLLBAR"), TEXT(""),
 				WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
+
+			if (IsDarkThemeSupported()) {
+				SetWindowDarkTheme(m_hwndTunerScroll, IsDarkThemeStyle(m_TunerAreaBackStyle));
+				SetWindowDarkTheme(m_hwndChannelScroll, IsDarkThemeStyle(m_ChannelAreaBackStyle));
+			}
+
 			m_TunerScrollPos = 0;
 			m_ChannelScrollPos = 0;
 			m_CurTuner = -1;

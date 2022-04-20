@@ -31,6 +31,7 @@
 #include "FeaturedEvents.h"
 #include "DriverManager.h"
 #include "TextDraw.h"
+#include "DarkMode.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -1756,6 +1757,10 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		m_hwndScroll = ::CreateWindowEx(
 			0, TEXT("SCROLLBAR"), TEXT(""),
 			WS_CHILD | SBS_VERT, 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
+
+		if (IsDarkThemeSupported())
+			SetWindowDarkTheme(m_hwndScroll, IsDarkThemeStyle(m_HomeDisplayStyle.ContentBackStyle));
+
 		m_ScrollPos = 0;
 		m_fHitCloseButton = false;
 		m_CursorPart = PartType::Margin;
