@@ -523,6 +523,7 @@
     <ClCompile Include="ChannelInput.cpp" />
     <ClCompile Include="ColorSchemeOptions.cpp" />
     <ClCompile Include="ComUtility.cpp" />
+    <ClCompile Include="DarkMode.cpp" />
     <ClCompile Include="DirectWrite.cpp" />
     <ClCompile Include="DirectWriteOptionsDialog.cpp" />
     <ClCompile Include="DPIUtil.cpp" />
@@ -667,6 +668,7 @@
     <ClInclude Include="ChannelInput.h" />
     <ClInclude Include="ColorSchemeOptions.h" />
     <ClInclude Include="ComUtility.h" />
+    <ClInclude Include="DarkMode.h" />
     <ClInclude Include="DirectWrite.h" />
     <ClInclude Include="DirectWriteOptionsDialog.h" />
     <ClInclude Include="DPIUtil.h" />

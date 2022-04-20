@@ -383,10 +383,6 @@ namespace TVTest
 		CItem *m_ItemList[NUM_ITEMS];
 		InformationPanelStyle m_Style;
 		InformationPanelTheme m_Theme;
-		COLORREF m_crBackColor;
-		COLORREF m_crTextColor;
-		COLORREF m_crProgramInfoBackColor;
-		COLORREF m_crProgramInfoTextColor;
 		DrawUtil::CBrush m_BackBrush;
 		DrawUtil::CBrush m_ProgramInfoBackBrush;
 		Style::Font m_StyleFont;

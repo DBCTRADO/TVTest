@@ -432,6 +432,9 @@
     <ClCompile Include="AppCommand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DarkMode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Accelerator.h">
@@ -864,6 +867,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AppCommand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DarkMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

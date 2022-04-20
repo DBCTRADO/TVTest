@@ -23,6 +23,7 @@
 #include "AppMain.h"
 #include "ChannelPanel.h"
 #include "DrawUtil.h"
+#include "DarkMode.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -459,8 +460,15 @@ void CChannelPanel::SetEventHandler(CEventHandler *pEventHandler)
 bool CChannelPanel::SetChannelPanelTheme(const ChannelPanelTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != nullptr)
+
+	if (m_hwnd != nullptr) {
+		if (IsDarkThemeSupported()) {
+			SetWindowDarkTheme(m_hwnd, IsDarkThemeColor(m_Theme.MarginColor));
+		}
+
 		Invalidate();
+	}
+
 	return true;
 }
 
@@ -678,6 +686,10 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			m_OldDPI = 0;
 
 			InitializeUI();
+
+			if (IsDarkThemeSupported()) {
+				SetWindowDarkTheme(hwnd, IsDarkThemeColor(m_Theme.MarginColor));
+			}
 
 			if (m_fDetailToolTip)
 				m_EventInfoPopupManager.Initialize(hwnd, &m_EventInfoPopupHandler);

@@ -24,6 +24,7 @@
 #include "CaptionPanel.h"
 #include "EpgUtil.h"
 #include "Settings.h"
+#include "DarkMode.h"
 #include "resource.h"
 #include <utility>
 #include "Common/DebugDef.h"
@@ -155,6 +156,11 @@ void CCaptionPanel::SetColor(COLORREF BackColor, COLORREF TextColor)
 	m_BackBrush.Destroy();
 	if (m_hwnd != nullptr) {
 		m_BackBrush.Create(BackColor);
+
+		if (IsDarkThemeSupported()) {
+			SetWindowDarkTheme(m_hwndEdit, IsDarkThemeColor(m_BackColor));
+		}
+
 		::InvalidateRect(m_hwndEdit, nullptr, TRUE);
 	}
 }
@@ -464,6 +470,10 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			Edit_LimitText(m_hwndEdit, 8 * 1024 * 1024);
 			SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 			m_EditSubclass.SetSubclass(m_hwndEdit);
+
+			if (IsDarkThemeSupported()) {
+				SetWindowDarkTheme(m_hwndEdit, IsDarkThemeColor(m_BackColor));
+			}
 
 			for (auto &e : m_LanguageList) {
 				e.fClearLast = true;

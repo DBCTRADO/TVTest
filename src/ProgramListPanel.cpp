@@ -25,6 +25,7 @@
 #include "LogoManager.h"
 #include "DrawUtil.h"
 #include "TextDraw.h"
+#include "DarkMode.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -597,8 +598,15 @@ void CProgramListPanel::SetScrollBar()
 bool CProgramListPanel::SetProgramListPanelTheme(const ProgramListPanelTheme &Theme)
 {
 	m_Theme = Theme;
-	if (m_hwnd != nullptr)
+
+	if (m_hwnd != nullptr) {
+		if (IsDarkThemeSupported()) {
+			SetWindowDarkTheme(m_hwnd, IsDarkThemeColor(m_Theme.MarginColor));
+		}
+
 		Invalidate();
+	}
+
 	return true;
 }
 
@@ -886,6 +894,10 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			m_OldDPI = 0;
 
 			InitializeUI();
+
+			if (IsDarkThemeSupported()) {
+				SetWindowDarkTheme(hwnd, IsDarkThemeColor(m_Theme.MarginColor));
+			}
 
 			m_EpgIcons.Load();
 			/*

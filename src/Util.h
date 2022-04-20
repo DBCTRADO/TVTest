@@ -269,6 +269,7 @@ namespace TVTest
 			bool IsWindows10OrLater();
 			bool IsWindows10AnniversaryUpdateOrLater();
 			bool IsWindows10CreatorsUpdateOrLater();
+			bool IsWindows10RS5OrLater();
 
 		}	// namespace OS
 

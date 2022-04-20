@@ -24,6 +24,7 @@
 #include "InformationPanel.h"
 #include "EpgUtil.h"
 #include "EventInfoUtil.h"
+#include "DarkMode.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -152,6 +153,10 @@ void CInformationPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 		Invalidate();
 
 		if (m_hwndProgramInfo != nullptr) {
+			if (IsDarkThemeSupported()) {
+				SetWindowDarkTheme(m_hwndProgramInfo, IsDarkThemeStyle(m_Theme.ProgramInfoStyle.Back));
+			}
+
 			if (m_fUseRichEdit) {
 				::SendMessage(
 					m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
@@ -393,6 +398,11 @@ bool CInformationPanel::CreateProgramInfoEdit()
 			return false;
 		m_ProgramInfoSubclass.SetSubclass(m_hwndProgramInfo);
 	}
+
+	if (IsDarkThemeSupported()) {
+		SetWindowDarkTheme(m_hwndProgramInfo, IsDarkThemeStyle(m_Theme.ProgramInfoStyle.Back));
+	}
+
 	SetWindowFont(m_hwndProgramInfo, m_Font.GetHandle(), FALSE);
 	UpdateProgramInfoText();
 

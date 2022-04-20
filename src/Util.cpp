@@ -1735,6 +1735,11 @@ bool IsWindows10CreatorsUpdateOrLater()
 	return CheckOSVersionLater(10, 0, 15063);
 }
 
+bool IsWindows10RS5OrLater()
+{
+	return CheckOSVersionLater(10, 0, 17763);
+}
+
 
 }	// namespace OS
 
