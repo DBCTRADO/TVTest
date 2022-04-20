@@ -63,7 +63,7 @@
   ・Microsoft Windows SDK v10 以上
   ・LibISDB                  https://github.com/DBCTRADO/LibISDB
   ・Fraunhofer FDK AAC (*1)  https://github.com/mstorsjo/fdk-aac
-  ・FAAD2 (*1)               http://www.audiocoding.com/faad2.html
+  ・FAAD2 (*1)               https://github.com/knik0/faad2
   ・libmad                   http://www.underbit.com/products/mad/
   ・liba52                   http://liba52.sourceforge.net/
   ・libjpeg (*2)             http://www.ijg.org/
