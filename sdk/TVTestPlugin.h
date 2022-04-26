@@ -91,9 +91,13 @@
 
 	ver.0.0.15 (TVTest ver.0.10.0 or later)
 	・以下のメッセージを追加した
-	  ・MESSAGE_GETDARKTHEMESTATUS
-	  ・MESSAGE_ISDARKTHEMECOLOR
-	  ・MESSAGE_SETWINDOWDARKTHEME
+	  ・MESSAGE_GETDARKMODESTATUS
+	  ・MESSAGE_ISDARKMODECOLOR
+	  ・MESSAGE_SETWINDOWDARKMODE
+	・以下のイベントを追加した
+	  ・EVENT_DARKMODECHANGED
+	  ・EVENT_MAINWINDOWDARKMODECHANGED
+	  ・EVENT_PROGRAMGUIDEDARKMODECHANGED
 
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
 	・以下のメッセージを追加した
@@ -486,9 +490,9 @@ enum {
 	MESSAGE_REGISTERVARIABLE,            // 変数を登録
 #endif
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
-	MESSAGE_GETDARKTHEMESTATUS,          // ダークテーマの状態を取得
-	MESSAGE_ISDARKTHEMECOLOR,            // ダークテーマの色かを取得
-	MESSAGE_SETWINDOWDARKTHEME,          // ウィンドウをダークテーマにする
+	MESSAGE_GETDARKMODESTATUS,           // ダークモードの状態を取得
+	MESSAGE_ISDARKMODECOLOR,             // ダークモードの色かを取得
+	MESSAGE_SETWINDOWDARKMODE,           // ウィンドウをダークモードにする
 #endif
 	MESSAGE_TRAILER
 };
@@ -559,6 +563,11 @@ enum {
 	EVENT_FAVORITESCHANGED,                    // お気に入りチャンネルが変更された
 	EVENT_1SEGMODECHANGED,                     // ワンセグモードが変わった
 	EVENT_GETVARIABLE,                         // 変数の取得
+#endif
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	EVENT_DARKMODECHANGED,                     // ダークモード状態が変わった
+	EVENT_MAINWINDOWDARKMODECHANGED,           // メインウィンドウのダークモード状態が変わった
+	EVENT_PROGRAMGUIDEDARKMODECHANGED,         // 番組表のダークモード状態が変わった
 #endif
 	EVENT_TRAILER
 };
@@ -3400,40 +3409,43 @@ inline bool MsgRegisterVariable(PluginParam *pParam, const RegisterVariableInfo 
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
-// ダークテーマの状態フラグ
+// ダークモードの状態フラグ
 enum {
-	DARK_THEME_STATUS_APP_SUPPORTED   = 0x00000001U, // アプリケーションがダークテーマに対応している(未実装)
-	DARK_THEME_STATUS_APP_DARK        = 0x00000002U, // アプリケーションがダークテーマ(未実装)
-	DARK_THEME_STATUS_PANEL_SUPPORTED = 0x00000004U  // パネルがダークテーマに対応している
+	DARK_MODE_STATUS_APP_SUPPORTED     = 0x00000001U, // アプリケーションがダークモードに対応している
+	DARK_MODE_STATUS_MENU_DARK         = 0x00000002U, // メニューがダークモード
+	DARK_MODE_STATUS_PANEL_SUPPORTED   = 0x00000004U, // パネルがダークモードに対応している
+	DARK_MODE_STATUS_MAINWINDOW_DARK   = 0x00000008U, // メインウィンドウがダークモード
+	DARK_MODE_STATUS_PROGRAMGUIDE_DARK = 0x00000010U  // 番組表がダークモード
 };
 
-// ダークテーマの状態を取得
-inline DWORD MsgGetDarkThemeStatus(PluginParam *pParam)
+// ダークモードの状態を取得
+// ダークモードの状態フラグ DARK_MODE_STATUS_* の組み合わせが返ります。
+inline DWORD MsgGetDarkModeStatus(PluginParam *pParam)
 {
-	return (DWORD)(*pParam->Callback)(pParam, MESSAGE_GETDARKTHEMESTATUS, 0, 0);
+	return (DWORD)(*pParam->Callback)(pParam, MESSAGE_GETDARKMODESTATUS, 0, 0);
 }
 
-// ダークテーマの色かを取得
-// 指定された色がダークテーマの色であるかを取得します。
+// ダークモードの色かを取得
+// 指定された色がダークモードの色であるかを取得します。
 // 一般に MsgGetColor で取得した色に対して使用します。
-inline bool MsgIsDarkThemeColor(PluginParam *pParam, COLORREF Color)
+inline bool MsgIsDarkModeColor(PluginParam *pParam, COLORREF Color)
 {
-	return (*pParam->Callback)(pParam, MESSAGE_ISDARKTHEMECOLOR, Color, 0) != FALSE;
+	return (*pParam->Callback)(pParam, MESSAGE_ISDARKMODECOLOR, Color, 0) != FALSE;
 }
 
-// ウィンドウをダークテーマにする
-// ウィンドウのスクロールバーなどがダークテーマになります。
+// ウィンドウをダークモードにする
+// ウィンドウのスクロールバーなどがダークモードになります。
 /*
-	// パネルのウィンドウをダークテーマにする
-	void SetPanelWindowDarkTheme(PluginParam *pParam, HWND hwnd)
+	// パネルのウィンドウをダークモードにする
+	void SetPanelWindowDarkMode(PluginParam *pParam, HWND hwnd)
 	{
-		if (MsgGetDarkThemeStatus(pParam) & DARK_THEME_STATUS_PANEL_SUPPORTED)
-			MsgSetWindowDarkTheme(pParam, hwnd, MsgIsDarkThemeColor(pParam, MsgGetColor(pParam, L"PanelBack")));
+		if (MsgGetDarkModeStatus(pParam) & DARK_MODE_STATUS_PANEL_SUPPORTED)
+			MsgSetWindowDarkMode(pParam, hwnd, MsgIsDarkModeColor(pParam, MsgGetColor(pParam, L"PanelBack")));
 	}
 */
-inline bool MsgSetWindowDarkTheme(PluginParam *pParam, HWND hwnd, bool fDark)
+inline bool MsgSetWindowDarkMode(PluginParam *pParam, HWND hwnd, bool fDark)
 {
-	return (*pParam->Callback)(pParam, MESSAGE_SETWINDOWDARKTHEME, (LPARAM)hwnd, fDark) != FALSE;
+	return (*pParam->Callback)(pParam, MESSAGE_SETWINDOWDARKMODE, (LPARAM)hwnd, fDark) != FALSE;
 }
 
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
@@ -4279,19 +4291,19 @@ public:
 #endif
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
-	DWORD GetDarkThemeStatus()
+	DWORD GetDarkModeStatus()
 	{
-		return MsgGetDarkThemeStatus(m_pParam);
+		return MsgGetDarkModeStatus(m_pParam);
 	}
 
-	bool IsDarkThemeColor(COLORREF Color)
+	bool IsDarkModeColor(COLORREF Color)
 	{
-		return MsgIsDarkThemeColor(m_pParam, Color);
+		return MsgIsDarkModeColor(m_pParam, Color);
 	}
 
-	bool SetWindowDarkTheme(HWND hwnd, bool fDark)
+	bool SetWindowDarkMode(HWND hwnd, bool fDark)
 	{
-		return MsgSetWindowDarkTheme(m_pParam, hwnd, fDark);
+		return MsgSetWindowDarkMode(m_pParam, hwnd, fDark);
 	}
 #endif
 };
@@ -4476,6 +4488,14 @@ protected:
 	// 変数を取得
 	virtual bool OnGetVariable(GetVariableInfo *pInfo) { return false; }
 #endif
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	// ダークモードの状態が変わった
+	virtual void OnDarkModeChanged(bool fDarkMode) {}
+	// メインウィンドウのダークモードの状態が変わった
+	virtual void OnMainWindowDarkModeChanged(bool fDarkMode) {}
+	// 番組表のダークモードの状態が変わった
+	virtual void OnProgramGuideDarkModeChanged(bool fDarkMode) {}
+#endif
 
 public:
 	virtual ~CTVTestEventHandler() {}
@@ -4575,6 +4595,17 @@ public:
 			return 0;
 		case EVENT_GETVARIABLE:
 			return OnGetVariable((GetVariableInfo*)lParam1);
+#endif
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+		case EVENT_DARKMODECHANGED:
+			OnDarkModeChanged(lParam1 != 0);
+			return 0;
+		case EVENT_MAINWINDOWDARKMODECHANGED:
+			OnMainWindowDarkModeChanged(lParam1 != 0);
+			return 0;
+		case EVENT_PROGRAMGUIDEDARKMODECHANGED:
+			OnProgramGuideDarkModeChanged(lParam1 != 0);
+			return 0;
 #endif
 		}
 		return 0;

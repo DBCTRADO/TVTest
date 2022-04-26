@@ -1462,10 +1462,10 @@ void CTunerPanel::UpdateToolTips()
 // ウィンドウのテーマを更新する
 void CTunerPanel::UpdateWindowTheme()
 {
-	if (m_pApp->GetDarkThemeStatus() & TVTest::DARK_THEME_STATUS_PANEL_SUPPORTED) {
-		const bool fDark = m_pApp->IsDarkThemeColor(m_pApp->GetColor(L"PanelBack"));
-		m_pApp->SetWindowDarkTheme(m_hwnd, fDark);
-		m_pApp->SetWindowDarkTheme(m_hwndToolTips, fDark);
+	if (m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_PANEL_SUPPORTED) {
+		const bool fDark = m_pApp->IsDarkModeColor(m_pApp->GetColor(L"PanelBack"));
+		m_pApp->SetWindowDarkMode(m_hwnd, fDark);
+		m_pApp->SetWindowDarkMode(m_hwndToolTips, fDark);
 	}
 }
 
