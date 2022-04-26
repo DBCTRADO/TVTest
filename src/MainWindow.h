@@ -138,6 +138,7 @@ namespace TVTest
 		bool IsFullscreenPanelVisible() const { return m_Fullscreen.IsPanelVisible(); }
 		void OnPanelFloating(bool fFloating);
 		void OnPanelDocking(CPanelFrame::DockingPlace Place);
+		bool IsDarkMode() const { return m_fDarkMode; }
 
 		bool EnablePlayback(bool fEnable);
 		bool IsPlaybackEnabled() const { return m_fEnablePlayback; }
@@ -207,6 +208,7 @@ namespace TVTest
 			Style::Margins ScreenMargin;
 			Style::Margins FullscreenMargin;
 			Style::Margins ResizingMargin;
+			bool fAllowDarkMode;
 
 			MainWindowStyle();
 
@@ -480,6 +482,8 @@ namespace TVTest
 
 		MainWindowStyle m_Style;
 		MainWindowTheme m_Theme;
+		bool m_fAllowDarkMode;
+		bool m_fDarkMode;
 		bool m_fShowStatusBar;
 		bool m_fShowTitleBar;
 		bool m_fCustomTitleBar;
@@ -596,6 +600,7 @@ namespace TVTest
 
 		static const DirectShowFilterPropertyInfo m_DirectShowFilterPropertyList[];
 		static CMainWindow *m_pThis;
+		static HHOOK m_hHook;
 
 	// CUISkin
 		HWND GetMainWindow() const override { return m_hwnd; }
@@ -703,6 +708,10 @@ namespace TVTest
 
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK ChildSubclassProc(
+			HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+		static LRESULT CALLBACK HookProc(int nCode, WPARAM wParam, LPARAM lParam);
+		static LRESULT CALLBACK MenuSubclassProc(
 			HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	};

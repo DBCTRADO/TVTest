@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -772,6 +772,7 @@ namespace TVTest
 			Style::IntValue ToolbarHorzGap;
 			Style::IntValue ToolbarVertGap;
 			bool fExtendFrame;
+			bool fAllowDarkMode;
 
 			FrameStyle();
 
@@ -908,11 +909,14 @@ namespace TVTest
 
 	// CProgramGuideFrame
 		bool Show();
+		bool IsDarkMode() const { return m_fDarkMode; }
 
 	private:
 		Style::CStyleScaling m_StyleScaling;
 		CAeroGlass m_AeroGlass;
 		bool m_fAero;
+		bool m_fAllowDarkMode;
+		bool m_fDarkMode;
 		CUxTheme m_UxTheme;
 		bool m_fAlwaysOnTop;
 		bool m_fCreated;

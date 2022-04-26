@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -2970,18 +2970,28 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		}
 		return TRUE;
 
-	case MESSAGE_GETDARKTHEMESTATUS:
+	case MESSAGE_GETDARKMODESTATUS:
 		{
+			const CAppMain &App = GetAppClass();
 			DWORD Status = 0;
+			if (IsDarkAppModeSupported()) {
+				Status |= DARK_MODE_STATUS_APP_SUPPORTED;
+				if (App.StyleManager.IsUseDarkMenu())
+					Status |= DARK_MODE_STATUS_MENU_DARK;
+			}
 			if (IsDarkThemeSupported())
-				Status |= DARK_THEME_STATUS_PANEL_SUPPORTED;
+				Status |= DARK_MODE_STATUS_PANEL_SUPPORTED;
+			if (App.MainWindow.IsDarkMode())
+				Status |= DARK_MODE_STATUS_MAINWINDOW_DARK;
+			if (App.Epg.ProgramGuideFrame.IsDarkMode())
+				Status |= DARK_MODE_STATUS_PROGRAMGUIDE_DARK;
 			return Status;
 		}
 
-	case MESSAGE_ISDARKTHEMECOLOR:
+	case MESSAGE_ISDARKMODECOLOR:
 		return IsDarkThemeColor(static_cast<COLORREF>(lParam1));
 
-	case MESSAGE_SETWINDOWDARKTHEME:
+	case MESSAGE_SETWINDOWDARKMODE:
 		return SetWindowDarkTheme(reinterpret_cast<HWND>(lParam1), lParam2 != 0);
 
 #ifdef _DEBUG
@@ -5039,6 +5049,24 @@ void CPluginManager::OnStartupDone()
 void CPluginManager::OnFavoritesChanged()
 {
 	SendEvent(EVENT_FAVORITESCHANGED);
+}
+
+
+void CPluginManager::OnDarkModeChanged(bool fDarkMode)
+{
+	SendEvent(EVENT_DARKMODECHANGED, fDarkMode);
+}
+
+
+void CPluginManager::OnMainWindowDarkModeChanged(bool fDarkMode)
+{
+	SendEvent(EVENT_MAINWINDOWDARKMODECHANGED, fDarkMode);
+}
+
+
+void CPluginManager::OnProgramGuideDarkModeChanged(bool fDarkMode)
+{
+	SendEvent(EVENT_PROGRAMGUIDEDARKMODECHANGED, fDarkMode);
 }
 
 

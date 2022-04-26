@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -261,6 +261,24 @@ void CAppEventManager::OnFavoritesChanged()
 void CAppEventManager::OnVariableChanged()
 {
 	CALL_HANDLERS(OnVariableChanged());
+}
+
+
+void CAppEventManager::OnDarkModeChanged(bool fDarkMode)
+{
+	CALL_HANDLERS(OnDarkModeChanged(fDarkMode));
+}
+
+
+void CAppEventManager::OnMainWindowDarkModeChanged(bool fDarkMode)
+{
+	CALL_HANDLERS(OnMainWindowDarkModeChanged(fDarkMode));
+}
+
+
+void CAppEventManager::OnProgramGuideDarkModeChanged(bool fDarkMode)
+{
+	CALL_HANDLERS(OnProgramGuideDarkModeChanged(fDarkMode));
 }
 
 

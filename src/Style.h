@@ -185,6 +185,7 @@ namespace TVTest
 			int GetSystemDPI() const;
 			int GetForcedDPI() const;
 			bool IsHandleDPIChanged() const;
+			bool IsUseDarkMenu() const;
 
 			static bool AssignFontSizeFromLogFont(Font *pFont);
 			static bool ParseValue(LPCTSTR pszText, IntValue *pValue);
@@ -201,6 +202,7 @@ namespace TVTest
 			int m_ForcedResolutionY;
 			bool m_fScaleFont;
 			bool m_fHandleDPIChanged;
+			bool m_fUseDarkMenu;
 
 			static UnitType ParseUnit(LPCTSTR pszUnit);
 		};

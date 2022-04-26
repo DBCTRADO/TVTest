@@ -22,6 +22,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "AppUtil.h"
+#include "DarkMode.h"
 #include "InitialSettings.h"
 #include "TVTestVersion.h"
 #include "resource.h"
@@ -818,6 +819,24 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	}
 	DriverOptions.Initialize(&DriverManager);
 
+	// スタイル設定の読み込み
+	{
+		TCHAR szStyleFileName[MAX_PATH];
+		if (!CmdLineOptions.m_StyleFileName.empty()) {
+			GetAbsolutePath(CmdLineOptions.m_StyleFileName.c_str(), szStyleFileName);
+		} else {
+			::GetModuleFileName(nullptr, szStyleFileName, lengthof(szStyleFileName));
+			::PathRenameExtension(szStyleFileName, TEXT(".style.ini"));
+		}
+		if (::PathFileExists(szStyleFileName)) {
+			AddLog(TEXT("スタイル設定を \"%s\" から読み込みます..."), szStyleFileName);
+			StyleManager.Load(szStyleFileName);
+		}
+	}
+
+	if (StyleManager.IsUseDarkMenu())
+		SetAppAllowDarkMode(true);
+
 	// 初期設定ダイアログを表示するか
 	m_fInitialSettings =
 		CmdLineOptions.m_fInitialSettings
@@ -847,21 +866,6 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		DriverFileName = CmdLineOptions.m_DriverName;
 	} else if (!CmdLineOptions.m_fNoDriver) {
 		GeneralOptions.GetFirstDriverName(&DriverFileName);
-	}
-
-	// スタイル設定の読み込み
-	{
-		TCHAR szStyleFileName[MAX_PATH];
-		if (!CmdLineOptions.m_StyleFileName.empty()) {
-			GetAbsolutePath(CmdLineOptions.m_StyleFileName.c_str(), szStyleFileName);
-		} else {
-			::GetModuleFileName(nullptr, szStyleFileName, lengthof(szStyleFileName));
-			::PathRenameExtension(szStyleFileName, TEXT(".style.ini"));
-		}
-		if (::PathFileExists(szStyleFileName)) {
-			AddLog(TEXT("スタイル設定を \"%s\" から読み込みます..."), szStyleFileName);
-			StyleManager.Load(szStyleFileName);
-		}
 	}
 
 	// 各ウィンドウの初期化

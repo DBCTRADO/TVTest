@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 #include "EpgChannelSettings.h"
 #include "ProgramGuideToolbarOptions.h"
 #include "DPIUtil.h"
+#include "DarkMode.h"
 #include "LibISDB/LibISDB/Utilities/Sort.hpp"
 #include "resource.h"
 #include "Common/DebugDef.h"
@@ -1183,8 +1184,13 @@ void CProgramGuide::SetTheme(const Theme::CThemeManager *pThemeManager)
 
 	m_EpgTheme.SetTheme(pThemeManager);
 
-	if (m_hwnd != nullptr)
+	if (m_hwnd != nullptr) {
+		if (IsDarkThemeSupported()) {
+			SetWindowDarkTheme(m_hwnd, IsDarkThemeColor(m_Theme.ColorList[COLOR_BACK]));
+		}
+
 		Invalidate();
+	}
 }
 
 
@@ -3851,6 +3857,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			m_TextDrawClient.SetMaxFontCache(2);
 
 			InitializeUI();
+
+			if (IsDarkThemeSupported()) {
+				SetWindowDarkTheme(hwnd, IsDarkThemeColor(m_Theme.ColorList[COLOR_BACK]));
+			}
 
 			if (m_hDragCursor1 == nullptr)
 				m_hDragCursor1 = ::LoadCursor(m_hinst, MAKEINTRESOURCE(IDC_GRAB1));
@@ -6968,6 +6978,7 @@ CProgramGuideFrameBase::FrameStyle::FrameStyle()
 	, ToolbarHorzGap(3)
 	, ToolbarVertGap(4)
 	, fExtendFrame(true)
+	, fAllowDarkMode(true)
 {
 }
 
@@ -6979,6 +6990,7 @@ void CProgramGuideFrameBase::FrameStyle::SetStyle(const Style::CStyleManager *pS
 	pStyleManager->Get(TEXT("program-guide.tool-bar.horz-gap"), &ToolbarHorzGap);
 	pStyleManager->Get(TEXT("program-guide.tool-bar.vert-gap"), &ToolbarVertGap);
 	pStyleManager->Get(TEXT("program-guide.extend-frame"), &fExtendFrame);
+	pStyleManager->Get(TEXT("program-guide.allow-dark-mode"), &fAllowDarkMode);
 }
 
 
@@ -7266,6 +7278,8 @@ bool CProgramGuideFrame::Initialize(HINSTANCE hinst)
 CProgramGuideFrame::CProgramGuideFrame(CProgramGuide *pProgramGuide, CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide, pSettings)
 	, m_fAero(false)
+	, m_fAllowDarkMode(false)
+	, m_fDarkMode(false)
 	, m_fAlwaysOnTop(false)
 	, m_fCreated(false)
 {
@@ -7350,7 +7364,18 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	case WM_CREATE:
 		InitializeUI();
 		OnWindowCreate(hwnd, m_pStyleScaling, true);
-		SetAeroGlass();
+
+		if (m_FrameStyle.fAllowDarkMode && SetWindowAllowDarkMode(hwnd, true)) {
+			m_fAllowDarkMode = true;
+			if (TVTest::IsDarkMode()) {
+				if (SetWindowFrameDarkMode(hwnd, true))
+					m_fDarkMode = true;
+			}
+		}
+		if (!m_fDarkMode) {
+			SetAeroGlass();
+		}
+
 		m_fCreated = true;
 		return 0;
 
@@ -7430,6 +7455,20 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 		m_UxTheme.Close();
 		break;
 
+	case WM_SETTINGCHANGE:
+		if (m_fAllowDarkMode) {
+			if (IsDarkModeSettingChanged(hwnd, uMsg, wParam, lParam)) {
+				const bool fDarkMode = TVTest::IsDarkMode();
+				if (m_fDarkMode != fDarkMode) {
+					if (SetWindowFrameDarkMode(hwnd, fDarkMode)) {
+						m_fDarkMode = fDarkMode;
+						GetAppClass().AppEventManager.OnProgramGuideDarkModeChanged(fDarkMode);
+					}
+				}
+			}
+		}
+		break;
+
 	case WM_DESTROY:
 		m_UxTheme.Close();
 		break;
@@ -7447,14 +7486,18 @@ void CProgramGuideFrame::RealizeStyle()
 
 void CProgramGuideFrame::SetAeroGlass()
 {
+	const bool fAeroOld = m_fAero;
 	m_fAero = false;
-	if (m_hwnd != nullptr && m_FrameStyle.fExtendFrame) {
+	if (m_hwnd != nullptr && !m_fDarkMode && m_FrameStyle.fExtendFrame) {
 		RECT rc = {0, 0, 0, 0}, rcPos;
 
 		m_pProgramGuide->GetPosition(&rcPos);
 		rc.top = rcPos.top;
 		if (m_AeroGlass.ApplyAeroGlass(m_hwnd, &rc))
 			m_fAero = true;
+	} else if (m_hwnd != nullptr && fAeroOld) {
+		RECT rc = {0, 0, 0, 0};
+		m_AeroGlass.ApplyAeroGlass(m_hwnd, &rc);
 	}
 }
 
@@ -7467,7 +7510,9 @@ void CProgramGuideFrame::DrawBackground(HDC hdc, bool fActive)
 	m_pProgramGuide->GetPosition(&rcGuide);
 	rc.bottom = rcGuide.top;
 
-	if (m_UxTheme.IsActive()
+	if (m_fDarkMode) {
+		DrawUtil::Fill(hdc, &rc, RGB(43, 43, 43));
+	} else if (m_UxTheme.IsActive()
 			&& (m_UxTheme.IsOpen()
 				|| m_UxTheme.Open(m_hwnd, L"Window", m_pStyleScaling->GetDPI()))) {
 		COLORREF Color;

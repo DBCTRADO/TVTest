@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -87,6 +87,9 @@ namespace TVTest
 		virtual void OnStartupDone() {}
 		virtual void OnFavoritesChanged() {}
 		virtual void OnVariableChanged() {}
+		virtual void OnDarkModeChanged(bool fDarkMode) {}
+		virtual void OnMainWindowDarkModeChanged(bool fDarkMode) {}
+		virtual void OnProgramGuideDarkModeChanged(bool fDarkMode) {}
 	};
 
 	class CAppEventManager
@@ -130,6 +133,9 @@ namespace TVTest
 		void OnStartupDone();
 		void OnFavoritesChanged();
 		void OnVariableChanged();
+		void OnDarkModeChanged(bool fDarkMode);
+		void OnMainWindowDarkModeChanged(bool fDarkMode);
+		void OnProgramGuideDarkModeChanged(bool fDarkMode);
 
 	private:
 		std::vector<CAppEventHandler*> m_HandlerList;

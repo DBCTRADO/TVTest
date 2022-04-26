@@ -29,6 +29,7 @@
 #include "PseudoOSD.h"
 #include "EventInfoPopup.h"
 #include "ToolTip.h"
+#include "DarkMode.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -71,6 +72,7 @@ const CMainWindow::DirectShowFilterPropertyInfo CMainWindow::m_DirectShowFilterP
 };
 
 CMainWindow *CMainWindow::m_pThis = nullptr;
+HHOOK CMainWindow::m_hHook = nullptr;
 
 
 bool CMainWindow::Initialize(HINSTANCE hinst)
@@ -104,6 +106,8 @@ CMainWindow::CMainWindow(CAppMain &App)
 	, m_Fullscreen(*this)
 	, m_CommandEventListener(this)
 
+	, m_fAllowDarkMode(false)
+	, m_fDarkMode(false)
 	, m_fShowStatusBar(true)
 	, m_fShowTitleBar(true)
 	, m_fCustomTitleBar(true)
@@ -1328,6 +1332,23 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		m_App.OSDOptions.OnDwmCompositionChanged();
 		return 0;
 
+	case WM_SETTINGCHANGE:
+		if (m_fAllowDarkMode) {
+			if (IsDarkModeSettingChanged(hwnd, uMsg, wParam, lParam)) {
+				const bool fDarkMode = TVTest::IsDarkMode();
+
+				m_App.AppEventManager.OnDarkModeChanged(fDarkMode);
+
+				if (m_fDarkMode != fDarkMode) {
+					if (SetWindowFrameDarkMode(hwnd, fDarkMode)) {
+						m_fDarkMode = fDarkMode;
+						m_App.AppEventManager.OnMainWindowDarkModeChanged(fDarkMode);
+					}
+				}
+			}
+		}
+		return 0;
+
 	case CAppMain::WM_INTERPROCESS:
 		return m_App.ReceiveInterprocessMessage(hwnd, wParam, lParam);
 
@@ -1667,6 +1688,14 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 {
 	InitializeUI();
 
+	if (m_Style.fAllowDarkMode && SetWindowAllowDarkMode(m_hwnd, true)) {
+		m_fAllowDarkMode = true;
+		if (TVTest::IsDarkMode()) {
+			if (SetWindowFrameDarkMode(m_hwnd, true))
+				m_fDarkMode = true;
+		}
+	}
+
 	if ((pcs->style & WS_MINIMIZE) != 0)
 		m_WindowState = WindowState::Minimized;
 	else if ((pcs->style & WS_MAXIMIZE) != 0)
@@ -1890,6 +1919,9 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	m_App.EpgCaptureManager.SetEventHandler(&m_EpgCaptureEventHandler);
 
+	if (GetStyleManager()->IsUseDarkMenu() && IsDarkAppModeSupported())
+		m_hHook = ::SetWindowsHookEx(WH_CALLWNDPROC, HookProc, nullptr, ::GetCurrentThreadId());
+
 	m_Timer.InitializeTimer(m_hwnd);
 	m_Timer.BeginTimer(TIMER_ID_UPDATE, UPDATE_TIMER_INTERVAL);
 
@@ -1930,6 +1962,11 @@ void CMainWindow::OnDestroy()
 	m_pCore->PreventDisplaySave(false);
 
 	m_App.EpgCaptureManager.SetEventHandler(nullptr);
+
+	if (m_hHook != nullptr) {
+		::UnhookWindowsHookEx(m_hHook);
+		m_hHook = nullptr;
+	}
 
 	m_App.Finalize();
 
@@ -5405,6 +5442,112 @@ CSideBar &CMainWindow::GetSideBar()
 }
 
 
+/*
+	メニューがオーナー描画か複数列の場合、テーマが無効で描画されてしまうため、
+	サブクラス化して枠と背景を独自に描画する。
+	現在のところ複数列のメニューは同時にオーナー描画であるため問題ないが、
+	複数列でオーナー描画でないメニューが存在するならば追加の対応が必要になる。
+*/
+LRESULT CALLBACK CMainWindow::HookProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	if (nCode == HC_ACTION) {
+		const CWPSTRUCT *pcwp = reinterpret_cast<const CWPSTRUCT *>(lParam);
+		if (pcwp->message == WM_CREATE) {
+			if (TVTest::IsDarkMode()) {
+				TCHAR szClass[32];
+				if (::GetClassName(pcwp->hwnd, szClass, lengthof(szClass)) == 6
+						&& ::lstrcmp(szClass, TEXT("#32768")) == 0) {
+					::SetWindowSubclass(pcwp->hwnd, MenuSubclassProc, 1, reinterpret_cast<DWORD_PTR>(m_pThis));
+				}
+			}
+		}
+	}
+
+	return ::CallNextHookEx(m_hHook, nCode, wParam, lParam);
+}
+
+
+static bool IsMenuNeedCustomErase(HMENU hmenu)
+{
+	const int ItemCount = ::GetMenuItemCount(hmenu);
+
+	MENUITEMINFO mii;
+	mii.cbSize = sizeof(MENUITEMINFO);
+	mii.fMask = MIIM_FTYPE;
+
+	for (int i = 0; i < ItemCount; i++) {
+		if (::GetMenuItemInfo(hmenu, i, TRUE, &mii)
+				&& (mii.fType & (MFT_OWNERDRAW | MFT_MENUBREAK)) != 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+LRESULT CALLBACK CMainWindow::MenuSubclassProc(
+	HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	//CMainWindow *pThis = reinterpret_cast<CMainWindow*>(dwRefData);
+
+	switch (uMsg) {
+	case WM_PRINT:
+		// メニューの描画は WM_PAINT / WM_NCPAINT ではなく WM_PRINT で行われる模様。
+		{
+			HMENU hmenu = reinterpret_cast<HMENU>(::SendMessage(hwnd, MN_GETHMENU, 0, 0));
+			if (hmenu == nullptr || !IsMenuNeedCustomErase(hmenu))
+				break;
+
+			::DefSubclassProc(hwnd, uMsg, wParam, lParam);
+
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			HPEN hpen = ::CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
+			HBRUSH hbr = ::CreateSolidBrush(RGB(43, 43, 43));
+			HGDIOBJ hOldPen = ::SelectObject(hdc, hpen);
+			HGDIOBJ hOldBrush = ::SelectObject(hdc, hbr);
+
+			RECT rcClient, rcWindow;
+			::GetClientRect(hwnd, &rcClient);
+			MapWindowRect(hwnd, nullptr, &rcClient);
+			::GetWindowRect(hwnd, &rcWindow);
+			::OffsetRect(&rcClient, -rcWindow.left, -rcWindow.top);
+			::OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
+			::ExcludeClipRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
+
+			::Rectangle(hdc, rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom);
+
+			::SelectObject(hdc, hOldPen);
+			::SelectObject(hdc, hOldBrush);
+			::DeleteObject(hpen);
+			::DeleteObject(hbr);
+
+			::ReleaseDC(hwnd, hdc);
+		}
+		return 0;
+
+	case WM_ERASEBKGND:
+		// セパレータの背景や、複数列のメニューの余白部分は WM_ERASEBKGND で塗り潰される。
+		{
+			HMENU hmenu = reinterpret_cast<HMENU>(::SendMessage(hwnd, MN_GETHMENU, 0, 0));
+			if (hmenu == nullptr || !IsMenuNeedCustomErase(hmenu))
+				break;
+
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			RECT rc;
+			::GetClientRect(hwnd, &rc);
+			DrawUtil::Fill(hdc, &rc, RGB(43, 43, 43));
+		}
+		return 1;
+
+	case WM_DESTROY:
+		::RemoveWindowSubclass(hwnd, MenuSubclassProc, 1);
+		break;
+	}
+
+	return ::DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}
+
+
 
 
 bool CMainWindow::CFullscreen::Initialize(HINSTANCE hinst)
@@ -6212,6 +6355,7 @@ bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuSelected(int Command)
 CMainWindow::MainWindowStyle::MainWindowStyle()
 	: ScreenMargin(0, 0, 0, 0)
 	, FullscreenMargin(0, 0, 0, 0)
+	, fAllowDarkMode(true)
 {
 	int SizingBorderX = 0, SizingBorderY;
 
@@ -6233,6 +6377,7 @@ void CMainWindow::MainWindowStyle::SetStyle(const Style::CStyleManager *pStyleMa
 	pStyleManager->Get(TEXT("screen.margin"), &ScreenMargin);
 	pStyleManager->Get(TEXT("fullscreen.margin"), &FullscreenMargin);
 	pStyleManager->Get(TEXT("main-window.resizing-margin"), &ResizingMargin);
+	pStyleManager->Get(TEXT("main-window.allow-dark-mode"), &fAllowDarkMode);
 }
 
 void CMainWindow::MainWindowStyle::NormalizeStyle(

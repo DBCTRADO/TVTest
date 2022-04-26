@@ -39,6 +39,13 @@ namespace TVTest
 		return IsDarkThemeStyle(Style.Fill);
 	}
 	bool SetWindowDarkTheme(HWND hwnd, bool fDark);
+	bool IsDarkAppModeSupported();
+	bool SetAppAllowDarkMode(bool fAllow);
+	bool SetWindowAllowDarkMode(HWND hwnd, bool fAllow);
+	bool SetWindowFrameDarkMode(HWND hwnd, bool fDarkMode);
+	bool IsDarkMode();
+	bool IsHighContrast();
+	bool IsDarkModeSettingChanged(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
 }	// namespace TVTest
 

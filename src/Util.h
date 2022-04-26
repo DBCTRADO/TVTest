@@ -237,15 +237,42 @@ namespace TVTest
 			return reinterpret_cast<T*>(::GetProcAddress(hLib, pszFunc));
 		}
 
+		template<typename T> T *GetLibraryFunction(HMODULE hLib, int Oridnal)
+		{
+			return reinterpret_cast<T*>(::GetProcAddress(hLib, MAKEINTRESOURCEA(Oridnal)));
+		}
+
+		template<typename T> T *GetLibraryFunction(HMODULE hLib, LPCSTR pszFunc, int Ordinal)
+		{
+			T *pFunc = GetLibraryFunction<T>(hLib, pszFunc);
+			if (pFunc == nullptr)
+				pFunc = GetLibraryFunction<T>(hLib, Ordinal);
+			return pFunc;
+		}
+
 		template<typename T> T *GetModuleFunction(LPCTSTR pszModule, LPCSTR pszFunc)
 		{
-			return reinterpret_cast<T*>(::GetProcAddress(::GetModuleHandle(pszModule), pszFunc));
+			return GetLibraryFunction<T>(::GetModuleHandle(pszModule), pszFunc);
+		}
+
+		template<typename T> T *GetModuleFunction(LPCTSTR pszModule, int Ordinal)
+		{
+			return GetLibraryFunction<T>(::GetModuleHandle(pszModule), Ordinal);
+		}
+
+		template<typename T> T *GetModuleFunction(LPCTSTR pszModule, LPCSTR pszFunc, int Ordinal)
+		{
+			return GetLibraryFunction<T>(::GetModuleHandle(pszModule), pszFunc, Ordinal);
 		}
 
 #define GET_LIBRARY_FUNCTION(hLib,Func) \
 	Util::GetLibraryFunction<decltype(Func)>(hLib,#Func)
+#define GET_LIBRARY_FUNCTION_ORDINAL(hLib,Func,Ordinal) \
+	Util::GetLibraryFunction<decltype(Func)>(hLib,#Func,Ordinal)
 #define GET_MODULE_FUNCTION(pszModule,Func) \
 	Util::GetModuleFunction<decltype(Func)>(pszModule,#Func)
+#define GET_MODULE_FUNCTION_ORDINAL(pszModule,Func,Ordinal) \
+	Util::GetModuleFunction<decltype(Func)>(pszModule,#Func,Ordinal)
 
 		HMODULE LoadSystemLibrary(LPCTSTR pszName);
 
@@ -270,6 +297,8 @@ namespace TVTest
 			bool IsWindows10AnniversaryUpdateOrLater();
 			bool IsWindows10CreatorsUpdateOrLater();
 			bool IsWindows10RS5OrLater();
+			bool IsWindows10_19H1OrLater();
+			bool IsWindows10_20H1OrLater();
 
 		}	// namespace OS
 

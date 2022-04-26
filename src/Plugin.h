@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -413,6 +413,9 @@ namespace TVTest
 		void OnClose() override;
 		void OnStartupDone() override;
 		void OnFavoritesChanged() override;
+		void OnDarkModeChanged(bool fDarkMode) override;
+		void OnMainWindowDarkModeChanged(bool fDarkMode) override;
+		void OnProgramGuideDarkModeChanged(bool fDarkMode) override;
 
 	public:
 		CPluginManager();
