@@ -98,6 +98,7 @@
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
 	  ・EVENT_PROGRAMGUIDEDARKMODECHANGED
+	・チャンネル選択のフラグに CHANNEL_SELECT_FLAG_ALLOWDISABLED を追加した
 
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
 	・以下のメッセージを追加した
@@ -2938,7 +2939,10 @@ struct ChannelSelectInfo
 
 // チャンネル選択のフラグ
 enum {
-	CHANNEL_SELECT_FLAG_STRICTSERVICE = 0x0001U  // ServiceID の指定を厳密に扱う
+	CHANNEL_SELECT_FLAG_STRICTSERVICE   = 0x0001U // ServiceID の指定を厳密に扱う
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	, CHANNEL_SELECT_FLAG_ALLOWDISABLED = 0x0002U // 無効に設定されているチャンネルも選択する
+#endif
 };
 
 // チャンネルを選択する

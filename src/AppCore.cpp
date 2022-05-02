@@ -455,6 +455,8 @@ bool CAppCore::SetChannelByIndex(int Space, int Channel, int ServiceID)
 
 bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelInfo, SelectChannelFlag Flags)
 {
+	const bool fEnabledOnly = !(Flags & SelectChannelFlag::AllowDisabled);
+
 	if (!!(Flags & SelectChannelFlag::UseCurrentTuner)
 			&& m_App.CoreEngine.IsTunerOpen()) {
 		int Space = m_App.ChannelManager.GetCurrentSpace();
@@ -463,14 +465,16 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 				Space,
 				ChannelInfo.GetNetworkID(),
 				ChannelInfo.GetTransportStreamID(),
-				ChannelInfo.GetServiceID());
+				ChannelInfo.GetServiceID(),
+				fEnabledOnly);
 			if (Index < 0 && Space != CChannelManager::SPACE_ALL) {
 				for (Space = 0; Space < m_App.ChannelManager.NumSpaces(); Space++) {
 					Index = m_App.ChannelManager.FindChannelByIDs(
 						Space,
 						ChannelInfo.GetNetworkID(),
 						ChannelInfo.GetTransportStreamID(),
-						ChannelInfo.GetServiceID());
+						ChannelInfo.GetServiceID(),
+						fEnabledOnly);
 					if (Index >= 0)
 						break;
 				}
@@ -501,14 +505,16 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 			Channel = pChannelList->FindByIndex(
 				ChannelInfo.GetSpace(),
 				ChannelInfo.GetChannelIndex(),
-				ChannelInfo.GetServiceID());
+				ChannelInfo.GetServiceID(),
+				fEnabledOnly);
 		} else if (ChannelInfo.GetServiceID() > 0
 				&& (ChannelInfo.GetNetworkID() > 0
 					|| ChannelInfo.GetTransportStreamID() > 0)) {
 			Channel = pChannelList->FindByIDs(
 				ChannelInfo.GetNetworkID(),
 				ChannelInfo.GetTransportStreamID(),
-				ChannelInfo.GetServiceID());
+				ChannelInfo.GetServiceID(),
+				fEnabledOnly);
 		}
 		if (Channel >= 0)
 			Space = m_App.ChannelManager.GetCurrentSpace();
@@ -526,7 +532,8 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 			Channel = pChannelList->FindByIndex(
 				ChannelInfo.GetSpace(),
 				ChannelInfo.GetChannelIndex(),
-				ChannelInfo.GetServiceID());
+				ChannelInfo.GetServiceID(),
+				fEnabledOnly);
 		}
 		if (Channel < 0) {
 			if (ChannelInfo.GetServiceID() > 0
@@ -535,7 +542,8 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 				Channel = pChannelList->FindByIDs(
 					ChannelInfo.GetNetworkID(),
 					ChannelInfo.GetTransportStreamID(),
-					ChannelInfo.GetServiceID());
+					ChannelInfo.GetServiceID(),
+					fEnabledOnly);
 			}
 			if (Channel < 0)
 				return false;

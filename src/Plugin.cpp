@@ -3571,6 +3571,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 				Flags |= CAppCore::SelectChannelFlag::UseCurrentTuner;
 			if ((pInfo->Flags & CHANNEL_SELECT_FLAG_STRICTSERVICE) != 0)
 				Flags |= CAppCore::SelectChannelFlag::StrictService;
+			if ((pInfo->Flags & CHANNEL_SELECT_FLAG_ALLOWDISABLED) != 0)
+				Flags |= CAppCore::SelectChannelFlag::AllowDisabled;
 
 			return GetAppClass().Core.SelectChannel(pInfo->pszTuner, Channel, Flags);
 		}

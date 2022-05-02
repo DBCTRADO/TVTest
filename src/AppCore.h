@@ -61,6 +61,7 @@ namespace TVTest
 			None            = 0x0000U,
 			UseCurrentTuner = 0x0001U,
 			StrictService   = 0x0002U,
+			AllowDisabled   = 0x0004U,
 		};
 
 		enum class SetServiceFlag : unsigned int {
