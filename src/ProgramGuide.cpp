@@ -5209,6 +5209,12 @@ public:
 		m_Width = m_pStatus->CalcItemPixelSize(m_DefaultWidth);
 		m_ActualWidth = m_Width;
 	}
+
+protected:
+	bool IsDarkMenu() const
+	{
+		return GetAppClass().StyleManager.IsUseDarkMenu() && IsDarkAppModeSupported() && IsDarkMode();
+	}
 };
 
 class CProgramGuideTunerStatusItem
@@ -5254,6 +5260,7 @@ public:
 			pt.x = rc.left;
 			pt.y = rc.bottom;
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
+			m_Menu.SetDarkMode(IsDarkMenu());
 			m_Menu.Show(
 				GetParent(
 					m_pStatus->GetHandle()), m_pProgramGuide->GetHandle(), &pt,
@@ -5393,6 +5400,7 @@ public:
 			pt.x = rc.left;
 			pt.y = rc.bottom;
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
+			m_Menu.SetDarkMode(IsDarkMenu());
 			m_Menu.Show(
 				GetParent(m_pStatus->GetHandle()), m_pProgramGuide->GetHandle(), &pt,
 				CurItem, 0, m_pStyleScaling->GetDPI());

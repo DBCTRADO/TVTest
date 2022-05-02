@@ -341,6 +341,7 @@ namespace TVTest
 		bool Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, int CurItem = -1, UINT Flags = 0, int DPI = 0);
 		bool Hide();
 		bool GetPosition(RECT *pRect);
+		void SetDarkMode(bool fDark) { m_fDarkMode = fDark; }
 
 	private:
 		std::vector<std::unique_ptr<CItem>> m_ItemList;
@@ -356,6 +357,7 @@ namespace TVTest
 		int m_MaxRows;
 		int m_HotItem;
 		bool m_fTrackMouseEvent;
+		bool m_fDarkMode;
 
 		bool GetItemRect(int Index, RECT *pRect) const;
 		int HitTest(int x, int y) const;

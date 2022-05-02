@@ -1518,6 +1518,7 @@ bool CDropDownMenu::Initialize(HINSTANCE hinst)
 CDropDownMenu::CDropDownMenu()
 	: m_hwnd(nullptr)
 	, m_hwndMessage(nullptr)
+	, m_fDarkMode(false)
 {
 }
 
@@ -1799,6 +1800,9 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 			pThis->m_hwnd = hwnd;
 			pThis->m_fTrackMouseEvent = false;
+
+			if (pThis->m_fDarkMode)
+				::SetWindowTheme(hwnd, L"DarkMode", nullptr);
 
 			pThis->m_MenuPainter.Initialize(hwnd, GetWindowDPI(hwnd));
 			pThis->m_MenuPainter.GetItemMargins(&pThis->m_ItemMargin);
