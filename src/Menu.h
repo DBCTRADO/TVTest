@@ -118,6 +118,7 @@ namespace TVTest
 		void DrawBackground(HDC hdc, const RECT &Rect);
 		void DrawBorder(HDC hdc, const RECT &Rect);
 		void DrawSeparator(HDC hdc, const RECT &Rect);
+		bool IsThemed() const;
 	};
 
 	class CChannelMenuLogo

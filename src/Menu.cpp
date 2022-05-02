@@ -511,6 +511,12 @@ int CMenuPainter::ItemStateToID(UINT State) const
 }
 
 
+bool CMenuPainter::IsThemed() const
+{
+	return m_UxTheme.IsOpen();
+}
+
+
 
 
 CChannelMenuLogo::CChannelMenuLogo()

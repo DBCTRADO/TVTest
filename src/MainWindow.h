@@ -479,6 +479,7 @@ namespace TVTest
 		CNotificationBar m_NotificationBar;
 		CCommandEventListener m_CommandEventListener;
 		CWindowTimerManager m_Timer;
+		std::map<HWND, CMenuPainter> m_MenuPainter;
 
 		MainWindowStyle m_Style;
 		MainWindowTheme m_Theme;

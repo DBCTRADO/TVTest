@@ -5454,10 +5454,16 @@ LRESULT CALLBACK CMainWindow::HookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		const CWPSTRUCT *pcwp = reinterpret_cast<const CWPSTRUCT *>(lParam);
 		if (pcwp->message == WM_CREATE) {
 			if (TVTest::IsDarkMode()) {
+				HWND hwnd = pcwp->hwnd;
 				TCHAR szClass[32];
-				if (::GetClassName(pcwp->hwnd, szClass, lengthof(szClass)) == 6
+				if (::GetClassName(hwnd, szClass, lengthof(szClass)) == 6
 						&& ::lstrcmp(szClass, TEXT("#32768")) == 0) {
-					::SetWindowSubclass(pcwp->hwnd, MenuSubclassProc, 1, reinterpret_cast<DWORD_PTR>(m_pThis));
+					::SetWindowTheme(hwnd, L"DarkMode", nullptr);
+					m_pThis->m_MenuPainter.emplace(
+						std::piecewise_construct,
+						std::forward_as_tuple(hwnd),
+						std::forward_as_tuple()).first->second.Initialize(hwnd, GetWindowDPI(hwnd));
+					::SetWindowSubclass(hwnd, MenuSubclassProc, 1, reinterpret_cast<DWORD_PTR>(m_pThis));
 				}
 			}
 		}
@@ -5488,7 +5494,7 @@ static bool IsMenuNeedCustomErase(HMENU hmenu)
 LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 	HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
-	//CMainWindow *pThis = reinterpret_cast<CMainWindow*>(dwRefData);
+	CMainWindow *pThis = reinterpret_cast<CMainWindow*>(dwRefData);
 
 	switch (uMsg) {
 	case WM_PRINT:
@@ -5501,10 +5507,6 @@ LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 			::DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
 			HDC hdc = reinterpret_cast<HDC>(wParam);
-			HPEN hpen = ::CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
-			HBRUSH hbr = ::CreateSolidBrush(RGB(43, 43, 43));
-			HGDIOBJ hOldPen = ::SelectObject(hdc, hpen);
-			HGDIOBJ hOldBrush = ::SelectObject(hdc, hbr);
 
 			RECT rcClient, rcWindow;
 			::GetClientRect(hwnd, &rcClient);
@@ -5514,14 +5516,22 @@ LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 			::OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
 			::ExcludeClipRect(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
 
-			::Rectangle(hdc, rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom);
+			auto it = pThis->m_MenuPainter.find(hwnd);
+			if (it != pThis->m_MenuPainter.end() && it->second.IsThemed()) {
+				it->second.DrawBorder(hdc, rcWindow);
+			} else {
+				HPEN hpen = ::CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
+				HBRUSH hbr = ::CreateSolidBrush(RGB(43, 43, 43));
+				HGDIOBJ hOldPen = ::SelectObject(hdc, hpen);
+				HGDIOBJ hOldBrush = ::SelectObject(hdc, hbr);
 
-			::SelectObject(hdc, hOldPen);
-			::SelectObject(hdc, hOldBrush);
-			::DeleteObject(hpen);
-			::DeleteObject(hbr);
+				::Rectangle(hdc, rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom);
 
-			::ReleaseDC(hwnd, hdc);
+				::SelectObject(hdc, hOldPen);
+				::SelectObject(hdc, hOldBrush);
+				::DeleteObject(hpen);
+				::DeleteObject(hbr);
+			}
 		}
 		return 0;
 
@@ -5535,11 +5545,18 @@ LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 			RECT rc;
 			::GetClientRect(hwnd, &rc);
-			DrawUtil::Fill(hdc, &rc, RGB(43, 43, 43));
+
+			auto it = pThis->m_MenuPainter.find(hwnd);
+			if (it != pThis->m_MenuPainter.end() && it->second.IsThemed()) {
+				it->second.DrawBackground(hdc, rc);
+			} else {
+				DrawUtil::Fill(hdc, &rc, RGB(43, 43, 43));
+			}
 		}
 		return 1;
 
 	case WM_DESTROY:
+		pThis->m_MenuPainter.erase(hwnd);
 		::RemoveWindowSubclass(hwnd, MenuSubclassProc, 1);
 		break;
 	}
