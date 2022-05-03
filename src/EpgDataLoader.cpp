@@ -1,6 +1,6 @@
 /*
   TVTest
-  Copyright(c) 2008-2020 DBCTRADO
+  Copyright(c) 2008-2022 DBCTRADO
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -96,13 +96,86 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return false;
 	}
+
 	m_EPGDatabaseFilter.Reset();
 	m_EPGDatabase.SetNoPastEvents(false);
+
 	for (RemainSize = ReadSize; RemainSize >= 188; RemainSize -= Size) {
 		Size = std::min(RemainSize, BUFFER_SIZE);
 		if (!::ReadFile(hFile, pBuffer, Size, &Read, nullptr))
 			break;
-		BYTE *p = pBuffer, *pEnd = pBuffer + Read / 188 * 188;
+
+		BYTE *pEnd = pBuffer + Read / 188 * 188;
+
+		// 最初に TOT を渡すようにする
+		if (RemainSize == ReadSize) {
+			// TOT 取得フィルタ
+			class TOTFilter
+				: public LibISDB::SingleIOFilter
+			{
+			public:
+				TOTFilter()
+				{
+					Reset();
+				}
+
+			// ObjectBase
+				const LibISDB::CharType * GetObjectName() const noexcept override { return LIBISDB_STR("TOTFilter"); }
+
+			// FilterBase
+				void Reset() override
+				{
+					BlockLock Lock(m_FilterLock);
+
+					m_PIDMapManager.UnmapAllTargets();
+					m_PIDMapManager.MapTarget(LibISDB::PID_TOT, LibISDB::PSITableBase::CreateWithHandler<LibISDB::TOTTable>(&TOTFilter::OnTOTSection, this));
+				}
+
+			// SingleIOFilter
+				bool ProcessData(LibISDB::DataStream *pData) override
+				{
+					if (pData->Is<LibISDB::TSPacket>())
+						m_PIDMapManager.StorePacketStream(pData);
+					return true;
+				}
+
+			// TOTFilter
+				const LibISDB::DateTime & GetTOTTime() const noexcept { return m_DateTime; }
+
+			private:
+				void OnTOTSection(const LibISDB::PSITableBase *pTable, const LibISDB::PSISection *pSection)
+				{
+					const LibISDB::TOTTable *pTOTTable = dynamic_cast<const LibISDB::TOTTable *>(pTable);
+					if (pTOTTable != nullptr)
+						pTOTTable->GetDateTime(&m_DateTime);
+				}
+
+				LibISDB::PIDMapManager m_PIDMapManager;
+				LibISDB::DateTime m_DateTime;
+			};
+
+			TOTFilter TOT;
+
+			BYTE *p = pBuffer;
+			while (p < pEnd) {
+				const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
+				if (PID == 0x0014) {
+					Packet.SetData(p, 188);
+					if (Packet.ParsePacket() == LibISDB::TSPacket::ParseResult::OK) {
+						LibISDB::SingleDataStream<LibISDB::TSPacket> Stream(&Packet);
+						TOT.ReceiveData(&Stream);
+						const LibISDB::DateTime &Time = TOT.GetTOTTime();
+						// 日付をまたいで遡らないようにする
+						if (Time.IsValid() && (Time.Hour > 0 || Time.Minute > 0 || Time.Second >= 5))
+							m_EPGDatabaseFilter.ReceiveData(&Stream);
+						break;
+					}
+				}
+				p += 188;
+			}
+		}
+
+		BYTE *p = pBuffer;
 		while (p < pEnd) {
 			const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
 			// H-EIT / TOT / M-EIT / L-EIT
@@ -115,9 +188,11 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 			}
 			p += 188;
 		}
+
 		if (Read < Size)
 			break;
 	}
+
 	delete [] pBuffer;
 	::CloseHandle(hFile);
 	TRACE(TEXT("EPG data loaded %s\n"), pszFileName);
