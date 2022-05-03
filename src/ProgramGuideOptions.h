@@ -74,6 +74,7 @@ namespace TVTest
 		Style::Font m_CurSettingFont;
 		bool m_fUseDirectWrite;
 		CDirectWriteRenderer::RenderingParams m_DirectWriteRenderingParams;
+		bool m_fUseARIBSymbol;
 		UINT m_VisibleEventIcons;
 		CProgramGuideToolList m_ToolList;
 		int m_WheelScrollLines;

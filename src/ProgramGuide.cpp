@@ -76,9 +76,9 @@ class CEventItem
 	int m_ItemLines;
 	bool m_fSelected;
 
-	int GetTitleText(LPTSTR pszText, int MaxLength) const;
+	int GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const;
 	int GetTimeText(LPTSTR pszText, int MaxLength) const;
-	String GetEventText() const;
+	String GetEventText(bool fUseARIBSymbol) const;
 
 public:
 	CEventItem(const LibISDB::EventInfo *pInfo);
@@ -93,10 +93,10 @@ public:
 	int GetGenre(int Level = 0) const;
 	bool SetCommonEvent(const LibISDB::EventInfo *pEvent);
 	int GetTitleLines() const { return m_TitleLines; }
-	void CalcTitleLines(CTextDraw &TextDraw, int Width);
+	void CalcTitleLines(CTextDraw &TextDraw, int Width, bool fUseARIBSymbol);
 	void ResetTitleLines() { m_TitleLines = 0; }
-	void DrawTitle(CTextDraw &TextDraw, const RECT &Rect, int LineHeight) const;
-	void DrawText(CTextDraw &TextDraw, const RECT &Rect, int LineHeight, CTextDraw::DrawFlag TextDrawFlags) const;
+	void DrawTitle(CTextDraw &TextDraw, const RECT &Rect, int LineHeight, bool fUseARIBSymbol) const;
+	void DrawText(CTextDraw &TextDraw, const RECT &Rect, int LineHeight, CTextDraw::DrawFlag TextDrawFlags, bool fUseARIBSymbol) const;
 	void GetTimeSize(CTextDraw &TextDraw, SIZE *pSize) const;
 	int GetItemPos() const { return m_ItemPos; }
 	void SetItemPos(int Pos) { m_ItemPos = Pos; }
@@ -203,19 +203,24 @@ bool CEventItem::SetCommonEvent(const LibISDB::EventInfo *pEvent)
 }
 
 
-int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength) const
+int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const
 {
 	int Length;
 
 	Length = GetTimeText(pszText, MaxLength);
-	if (m_pEventInfo != nullptr) {
+	if (m_pEventInfo != nullptr && Length + 2 < MaxLength) {
 		const LibISDB::String *pEventName;
 		if (m_pEventInfo->EventName.empty() && m_pCommonEventInfo != nullptr)
 			pEventName = &m_pCommonEventInfo->EventName;
 		else
 			pEventName = &m_pEventInfo->EventName;
-		if (!pEventName->empty())
-			Length += StringPrintf(pszText + Length, MaxLength - Length, TEXT(" %s"), pEventName->c_str());
+		if (!pEventName->empty()) {
+			pszText[Length++] = TEXT(' ');
+			if (fUseARIBSymbol)
+				Length += (int)EpgUtil::MapARIBSymbol(pEventName->c_str(), pszText + Length, MaxLength - Length);
+			else
+				Length += StringPrintf(pszText + Length, MaxLength - Length, TEXT("%s"), pEventName->c_str());
+		}
 	}
 	return Length;
 }
@@ -227,7 +232,7 @@ int CEventItem::GetTimeText(LPTSTR pszText, int MaxLength) const
 }
 
 
-String CEventItem::GetEventText() const
+String CEventItem::GetEventText(bool fUseARIBSymbol) const
 {
 	if (m_pEventInfo == nullptr)
 		return String();
@@ -238,35 +243,35 @@ String CEventItem::GetEventText() const
 					&& !m_pCommonEventInfo->EventText.empty())
 				|| (m_pEventInfo->ExtendedText.empty()
 					&& !m_pCommonEventInfo->ExtendedText.empty())))
-		return EpgUtil::GetEventDisplayText(*m_pCommonEventInfo);
+		return EpgUtil::GetEventDisplayText(*m_pCommonEventInfo, fUseARIBSymbol);
 #endif
 
-	return EpgUtil::GetEventDisplayText(*m_pEventInfo);
+	return EpgUtil::GetEventDisplayText(*m_pEventInfo, fUseARIBSymbol);
 }
 
 
-void CEventItem::CalcTitleLines(CTextDraw &TextDraw, int Width)
+void CEventItem::CalcTitleLines(CTextDraw &TextDraw, int Width, bool fUseARIBSymbol)
 {
 	if (m_TitleLines == 0) {
 		TCHAR szText[MAX_TITLE_LENGTH];
-		GetTitleText(szText, lengthof(szText));
+		GetTitleText(szText, lengthof(szText), fUseARIBSymbol);
 		m_TitleLines = TextDraw.CalcLineCount(szText, Width);
 	}
 }
 
 
-void CEventItem::DrawTitle(CTextDraw &TextDraw, const RECT &Rect, int LineHeight) const
+void CEventItem::DrawTitle(CTextDraw &TextDraw, const RECT &Rect, int LineHeight, bool fUseARIBSymbol) const
 {
 	TCHAR szText[MAX_TITLE_LENGTH];
 
-	GetTitleText(szText, lengthof(szText));
+	GetTitleText(szText, lengthof(szText), fUseARIBSymbol);
 	TextDraw.Draw(szText, Rect, LineHeight/*, CTextDraw::DRAW_FLAG_JUSTIFY_MULTI_LINE*/);
 }
 
 
-void CEventItem::DrawText(CTextDraw &TextDraw, const RECT &Rect, int LineHeight, CTextDraw::DrawFlag TextDrawFlags) const
+void CEventItem::DrawText(CTextDraw &TextDraw, const RECT &Rect, int LineHeight, CTextDraw::DrawFlag TextDrawFlags, bool fUseARIBSymbol) const
 {
-	String Text = GetEventText();
+	String Text = GetEventText(fUseARIBSymbol);
 	if (!Text.empty())
 		TextDraw.Draw(Text.c_str(), Rect, LineHeight, TextDrawFlags);
 }
@@ -1071,6 +1076,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_hDragCursor1(nullptr)
 	, m_hDragCursor2(nullptr)
 	, m_VisibleEventIcons(((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
+	, m_fUseARIBSymbol(false)
 	, m_fBarShadow(false)
 	, m_EventInfoPopupManager(&m_EventInfoPopup)
 	, m_EventInfoPopupHandler(this)
@@ -1543,7 +1549,7 @@ void CProgramGuide::DrawEventBackground(
 
 	RECT rcTitle, rcText;
 	TextDraw.SetFont(m_TitleFont.GetHandle());
-	pItem->CalcTitleLines(TextDraw, Rect.right - Rect.left);
+	pItem->CalcTitleLines(TextDraw, Rect.right - Rect.left, m_fUseARIBSymbol);
 	rcTitle = Rect;
 	rcTitle.bottom = std::min(Rect.bottom, Rect.top + pItem->GetTitleLines() * LineHeight);
 	rcText.left = Rect.left + m_TextLeftMargin;
@@ -1652,7 +1658,7 @@ void CProgramGuide::DrawEventText(
 	rcTitle.top += m_Style.EventLeading;
 	TextDraw.SetFont(m_TitleFont.GetHandle());
 	TextDraw.SetTextColor(TitleColor);
-	pItem->DrawTitle(TextDraw, rcTitle, LineHeight);
+	pItem->DrawTitle(TextDraw, rcTitle, LineHeight, m_fUseARIBSymbol);
 
 	if (rcText.bottom > rcTitle.bottom) {
 		RECT rc = rcText;
@@ -1663,7 +1669,8 @@ void CProgramGuide::DrawEventText(
 			TextDraw, rc, LineHeight,
 			m_Style.fEventJustify ?
 				CTextDraw::DrawFlag::JustifyMultiLine :
-				CTextDraw::DrawFlag::None);
+				CTextDraw::DrawFlag::None,
+			m_fUseARIBSymbol);
 	}
 }
 
@@ -3481,6 +3488,16 @@ bool CProgramGuide::SetFilter(unsigned int Filter)
 		}
 	}
 	return true;
+}
+
+
+void CProgramGuide::SetUseARIBSymbol(bool fUseARIBSymbol)
+{
+	if (m_fUseARIBSymbol != fUseARIBSymbol) {
+		m_fUseARIBSymbol = fUseARIBSymbol;
+		if (m_hwnd != nullptr)
+			OnFontChanged();
+	}
 }
 
 

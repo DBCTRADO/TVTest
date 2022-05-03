@@ -379,7 +379,7 @@ bool GetEventGenre(
 }
 
 
-String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
+String GetEventDisplayText(const LibISDB::EventInfo &EventInfo, bool fUseARIBSymbol)
 {
 	if (!EventInfo.EventText.empty()) {
 		LPCTSTR p = EventInfo.EventText.c_str();
@@ -388,7 +388,11 @@ String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
 				p++;
 				continue;
 			}
-			return String(p);
+
+			if (fUseARIBSymbol)
+				return MapARIBSymbol(p);
+			else
+				return String(p);
 		}
 	}
 
@@ -410,10 +414,131 @@ String GetEventDisplayText(const LibISDB::EventInfo &EventInfo)
 			Text += TEXT("\r\n");
 		}
 
-		return Text;
+		if (fUseARIBSymbol)
+			return MapARIBSymbol(Text);
+		else
+			return Text;
 	}
 
 	return String();
+}
+
+
+/*
+	[字] のような表記を ARIB 外字に変換する。とりあえず一部の文字のみ。
+	LibISDB の ARIBString.cpp で実装すべきか？
+*/
+size_t MapARIBSymbol(LPCWSTR pszSource, LPWSTR pszDest, size_t DestLength)
+{
+	if (pszSource == nullptr || pszDest == nullptr || DestLength == 0)
+		return 0;
+
+	struct ARIBSymbolMap {
+		LPCWSTR pszString;
+		LPCWSTR pszSymbol;
+	};
+
+	static const ARIBSymbolMap MapList[] = {
+		{L"[HV]",       L"\U0001f14a"},
+		{L"[SD]",       L"\U0001f14c"},
+		{L"[Ｐ]",       L"\U0001f13f"},
+		{L"[Ｗ]",       L"\U0001f146"},
+		{L"[MV]",       L"\U0001f14b"},
+		{L"[手]",       L"\U0001f210"},
+		{L"[字]",       L"\U0001f211"},
+		{L"[双]",       L"\U0001f212"},
+		{L"[デ]",       L"\U0001f213"},
+		{L"[Ｓ]",       L"\U0001f142"},
+		{L"[二]",       L"\U0001f214"},
+		{L"[多]",       L"\U0001f215"},
+		{L"[解]",       L"\U0001f216"},
+		{L"[SS]",       L"\U0001f14d"},
+		{L"[Ｂ]",       L"\U0001f131"},
+		{L"[Ｎ]",       L"\U0001f13d"},
+		{L"[天]",       L"\U0001f217"},
+		{L"[交]",       L"\U0001f218"},
+		{L"[映]",       L"\U0001f219"},
+		{L"[無]",       L"\U0001f21a"},
+		{L"[料]",       L"\U0001f21b"},
+		{L"[年齢制限]", L"\u26bf"},
+		{L"[前]",       L"\U0001f21c"},
+		{L"[後]",       L"\U0001f21d"},
+		{L"[再]",       L"\U0001f21e"},
+		{L"[新]",       L"\U0001f21f"},
+		{L"[初]",       L"\U0001f220"},
+		{L"[終]",       L"\U0001f221"},
+		{L"[生]",       L"\U0001f222"},
+		{L"[販]",       L"\U0001f223"},
+		{L"[声]",       L"\U0001f224"},
+		{L"[吹]",       L"\U0001f225"},
+		{L"[PPV]",      L"\U0001f14e"},
+		{L"(秘)",       L"\u3299"},
+	};
+
+	LPCWSTR p = pszSource;
+	size_t DestPos = 0;
+
+	while (*p != L'\0' && DestPos + 1 < DestLength) {
+		bool fMapped = false;
+
+		for (const ARIBSymbolMap &Map : MapList) {
+			size_t i;
+			for (i = 0; p[i] != L'\0' && p[i] == Map.pszString[i]; i++);
+			if (Map.pszString[i] == L'\0') {
+				const size_t Length = Map.pszSymbol[1] != L'\0' ? 2 : 1;
+				if (DestLength - DestPos <= Length)
+					goto End;
+				for (size_t j = 0; j < Length; j++)
+					pszDest[DestPos++] = Map.pszSymbol[j];
+				p += i;
+				fMapped = true;
+			}
+		}
+
+		if (!fMapped)
+			pszDest[DestPos++] = *p++;
+	}
+
+End:
+	pszDest[DestPos] = L'\0';
+
+	return DestPos;
+}
+
+
+size_t MapARIBSymbol(LPCWSTR pszSource, String *pDest)
+{
+	if (pDest == nullptr)
+		return 0;
+
+	if (pszSource == nullptr) {
+		pDest->clear();
+		return 0;
+	}
+
+	pDest->resize(::lstrlenW(pszSource) + 1);
+	const size_t Length = MapARIBSymbol(pszSource, pDest->data(), pDest->length());
+	pDest->resize(Length);
+	return Length;
+}
+
+
+String MapARIBSymbol(LPCWSTR pszSource)
+{
+	String Text;
+	MapARIBSymbol(pszSource, &Text);
+	return Text;
+}
+
+
+String MapARIBSymbol(const String &Source)
+{
+	String Dest;
+
+	Dest.resize(Source.length() + 1);
+	const size_t Length = MapARIBSymbol(Source.c_str(), Dest.data(), Dest.length());
+	Dest.resize(Length);
+	return Dest;
 }
 
 }

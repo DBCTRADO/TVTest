@@ -241,7 +241,7 @@ INT_PTR CDirectWriteOptionsDialog::DlgProc(
 			TextDraw.SetFont(m_Font);
 			TextDraw.SetTextColor(RGB(0, 0, 0));
 			TextDraw.Draw(
-				L"ABCabc123あぁアァ漢字鬱贔\U0002a6a5",
+				L"ABCabc123あぁアァ漢字鬱贔\U0002a6a5\U0001f211\U0001f216",
 				pdis->rcItem,
 				pdis->rcItem.bottom - pdis->rcItem.top,
 				CTextDraw::DrawFlag::Align_HorzCenter |

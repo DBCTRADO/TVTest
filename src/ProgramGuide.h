@@ -417,6 +417,8 @@ namespace TVTest
 		bool SetDragScroll(bool fDragScroll);
 		bool SetFilter(unsigned int Filter);
 		unsigned int GetFilter() const { return m_Filter; }
+		void SetUseARIBSymbol(bool fUseARIBSymbol);
+		bool GetUseARIBSymbol() const { return m_fUseARIBSymbol; }
 		void SetVisibleEventIcons(UINT VisibleIcons);
 		UINT GetVisibleEventIcons() const { return m_VisibleEventIcons; }
 		bool GetKeepTimePos() const { return m_fKeepTimePos; }
@@ -521,6 +523,7 @@ namespace TVTest
 		Theme::IconList m_Chevron;
 		CEpgIcons m_EpgIcons;
 		UINT m_VisibleEventIcons;
+		bool m_fUseARIBSymbol;
 		bool m_fBarShadow;
 		CEventInfoPopup m_EventInfoPopup;
 		CEventInfoPopupManager m_EventInfoPopupManager;

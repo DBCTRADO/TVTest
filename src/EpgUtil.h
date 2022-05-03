@@ -81,7 +81,12 @@ namespace TVTest
 			const LibISDB::EventInfo::ContentNibbleInfo &ContentNibble,
 			int *pLevel1, int *pLevel2 = nullptr);
 
-		String GetEventDisplayText(const LibISDB::EventInfo &EventInfo);
+		String GetEventDisplayText(const LibISDB::EventInfo &EventInfo, bool fUseARIBSymbol = false);
+
+		size_t MapARIBSymbol(LPCWSTR pszSource, LPWSTR pszDest, size_t DestLength);
+		size_t MapARIBSymbol(LPCWSTR pszSource, String *pDest);
+		String MapARIBSymbol(LPCWSTR pszSource);
+		String MapARIBSymbol(const String &Source);
 
 	}
 

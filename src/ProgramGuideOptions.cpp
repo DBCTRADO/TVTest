@@ -53,6 +53,7 @@ CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide, CPlugin
 	, m_ItemWidth(pProgramGuide->GetItemWidth())
 	, m_LinesPerHour(pProgramGuide->GetLinesPerHour())
 	, m_fUseDirectWrite(false)
+	, m_fUseARIBSymbol(false)
 	, m_VisibleEventIcons(m_pProgramGuide->GetVisibleEventIcons())
 	, m_WheelScrollLines(pProgramGuide->GetWheelScrollLines())
 {
@@ -145,6 +146,9 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("DirectWriteRenderingMode"), &Value))
 			m_DirectWriteRenderingParams.RenderingMode = static_cast<DWRITE_RENDERING_MODE>(Value);
 		m_pProgramGuide->SetDirectWriteRenderingParams(m_DirectWriteRenderingParams);
+
+		Settings.Read(TEXT("UseARIBSymbol"), &m_fUseARIBSymbol);
+		m_pProgramGuide->SetUseARIBSymbol(m_fUseARIBSymbol);
 
 		bool fDragScroll;
 		if (Settings.Read(TEXT("DragScroll"), &fDragScroll))
@@ -353,6 +357,8 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			TEXT("DirectWriteRenderingMode"),
 			static_cast<int>(m_DirectWriteRenderingParams.RenderingMode));
 
+		Settings.Write(TEXT("UseARIBSymbol"), m_fUseARIBSymbol);
+
 		Settings.Write(TEXT("DragScroll"), m_pProgramGuide->GetDragScroll());
 		Settings.Write(TEXT("ShowToolTip"), m_pProgramGuide->GetShowToolTip());
 		Settings.Write(TEXT("Filter"), m_pProgramGuide->GetFilter());
@@ -526,6 +532,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				hDlg,
 				IDC_PROGRAMGUIDEOPTIONS_DIRECTWRITEOPTIONS,
 				m_fUseDirectWrite);
+
+			DlgCheckBox_Check(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEARIBSYMBOL, m_fUseARIBSymbol);
 
 			m_Tooltip.Create(hDlg);
 			m_Tooltip.SetFont(GetWindowFont(hDlg));
@@ -981,6 +989,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 						m_fUseDirectWrite ?
 							CTextDrawClient::TextDrawEngine::DirectWrite :
 							CTextDrawClient::TextDrawEngine::GDI);
+				}
+
+				bool fUseARIBSymbol =
+					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEARIBSYMBOL);
+				if (m_fUseARIBSymbol != fUseARIBSymbol) {
+					m_fUseARIBSymbol = fUseARIBSymbol;
+					m_pProgramGuide->SetUseARIBSymbol(m_fUseARIBSymbol);
 				}
 
 				UINT VisibleEventIcons = 0;

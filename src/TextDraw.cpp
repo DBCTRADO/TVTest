@@ -489,6 +489,12 @@ int CTextDrawEngine_GDI::GetFitCharCount(LPCWSTR pText, int Length, int Width)
 	if (m_hdc == nullptr)
 		return 0;
 
+	/*
+		GetCharacterPlacement はフォントにグリフが無く他のフォントで代替される場合に正しく計算されない模様。
+		GetTextExtentExPoint は常に文字列全体の幅が計算されるため効率が悪いが…。
+	*/
+#if 0
+
 	GCP_RESULTSW Results = {sizeof(GCP_RESULTSW)};
 
 	Results.nGlyphs = Length;
@@ -497,6 +503,18 @@ int CTextDrawEngine_GDI::GetFitCharCount(LPCWSTR pText, int Length, int Width)
 		return 0;
 
 	return Results.nMaxFit;
+
+#else
+
+	int Fit;
+	SIZE Size;
+
+	if (!::GetTextExtentExPoint(m_hdc, pText, Length, Width, &Fit, nullptr, &Size))
+		return 0;
+
+	return Fit;
+
+#endif
 }
 
 
