@@ -113,6 +113,8 @@ namespace TVTest
 		bool GetUseEpgColorScheme() const { return m_fUseEpgColorScheme; }
 		void SetShowFeaturedMark(bool fShowFeaturedMark);
 		bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
+		void SetUseARIBSymbol(bool fUseARIBSymbol);
+		bool GetShowARIBSymbol() const { return m_fUseARIBSymbol; }
 
 	private:
 		struct ProgramListPanelStyle
@@ -155,6 +157,7 @@ namespace TVTest
 		bool m_fMouseOverEventInfo;
 		bool m_fUseEpgColorScheme;
 		bool m_fShowFeaturedMark;
+		bool m_fUseARIBSymbol;
 		CEpgIcons m_EpgIcons;
 		UINT m_VisibleEventIcons;
 		int m_ChannelHeight;

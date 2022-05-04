@@ -129,6 +129,8 @@ namespace TVTest
 		bool GetShowProgressBar() const { return m_fShowProgressBar; }
 		void SetProgressBarStyle(ProgressBarStyle Style);
 		ProgressBarStyle GetProgressBarStyle() const { return m_ProgressBarStyle; }
+		void SetUseARIBSymbol(bool fUseARIBSymbol);
+		bool GetUseARIBSymbol() const { return m_fUseARIBSymbol; }
 		bool QueryUpdateProgress();
 		void UpdateProgress();
 		void SetLogoManager(CLogoManager *pLogoManager);
@@ -160,7 +162,7 @@ namespace TVTest
 			WORD GetServiceID() const { return m_ChannelInfo.GetServiceID(); }
 			int FormatEventText(LPTSTR pszText, int MaxLength, int Index) const;
 			void DrawChannelName(HDC hdc, const RECT *pRect, const Style::Margins &LogoMargins);
-			void DrawEventName(int Index, CTextDraw &TextDraw, const RECT &Rect, int LineHeight);
+			void DrawEventName(int Index, CTextDraw &TextDraw, const RECT &Rect, int LineHeight, bool fUseARIBSymbol);
 			int GetOriginalChannelIndex() const { return m_OriginalChannelIndex; }
 			HBITMAP GetLogo() const { return m_hbmLogo; }
 			void SetLogo(HBITMAP hbm) { m_hbmLogo = hbm; }
@@ -202,6 +204,7 @@ namespace TVTest
 		bool m_fShowGenreColor;
 		bool m_fShowFeaturedMark;
 		bool m_fShowProgressBar;
+		bool m_fUseARIBSymbol;
 		ProgressBarStyle m_ProgressBarStyle;
 		DrawUtil::COffscreen m_Offscreen;
 		Theme::IconList m_Chevron;

@@ -996,6 +996,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				if (m_fUseARIBSymbol != fUseARIBSymbol) {
 					m_fUseARIBSymbol = fUseARIBSymbol;
 					m_pProgramGuide->SetUseARIBSymbol(m_fUseARIBSymbol);
+					m_UpdateFlags |= UPDATE_ARIBSYMBOL;
 				}
 
 				UINT VisibleEventIcons = 0;

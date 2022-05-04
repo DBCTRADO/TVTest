@@ -255,6 +255,7 @@ void CMainWindow::CreatePanel()
 
 	m_App.Panel.ProgramListPanel.SetEPGDatabase(&m_App.EPGDatabase);
 	m_App.Panel.ProgramListPanel.SetVisibleEventIcons(m_App.ProgramGuideOptions.GetVisibleEventIcons());
+	m_App.Panel.ProgramListPanel.SetUseARIBSymbol(m_App.ProgramGuideOptions.GetUseARIBSymbol());
 	m_App.Panel.ProgramListPanel.Create(m_App.Panel.Form.GetHandle(), WS_CHILD | WS_VSCROLL);
 	PageInfo.pPage = &m_App.Panel.ProgramListPanel;
 	PageInfo.pszTitle = TEXT("番組表");
@@ -264,6 +265,7 @@ void CMainWindow::CreatePanel()
 
 	m_App.Panel.ChannelPanel.SetEPGDatabase(&m_App.EPGDatabase);
 	m_App.Panel.ChannelPanel.SetLogoManager(&m_App.LogoManager);
+	m_App.Panel.ChannelPanel.SetUseARIBSymbol(m_App.ProgramGuideOptions.GetUseARIBSymbol());
 	m_App.Panel.ChannelPanel.Create(m_App.Panel.Form.GetHandle(), WS_CHILD | WS_VSCROLL);
 	PageInfo.pPage = &m_App.Panel.ChannelPanel;
 	PageInfo.pszTitle = TEXT("チャンネル");

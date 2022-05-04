@@ -1308,6 +1308,11 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner, int StartPage)
 
 	if ((ProgramGuideOptions.GetUpdateFlags() & CProgramGuideOptions::UPDATE_EVENTICONS) != 0)
 		Panel.ProgramListPanel.SetVisibleEventIcons(ProgramGuideOptions.GetVisibleEventIcons());
+	if ((ProgramGuideOptions.GetUpdateFlags() & CProgramGuideOptions::UPDATE_ARIBSYMBOL) != 0) {
+		Panel.ProgramListPanel.SetUseARIBSymbol(ProgramGuideOptions.GetUseARIBSymbol());
+		Panel.ChannelPanel.SetUseARIBSymbol(ProgramGuideOptions.GetUseARIBSymbol());
+	}
+
 	TaskTrayManager.SetMinimizeToTray(ViewOptions.GetMinimizeToTray());
 
 	SaveSettings(SaveSettingsFlag::Options);

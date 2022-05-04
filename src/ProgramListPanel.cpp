@@ -44,10 +44,10 @@ public:
 	int GetTitleLines() const { return m_NameLines; }
 	int GetTextLines() const { return m_TextLines; }
 	int GetLines() const { return m_NameLines + m_TextLines; }
-	int CalcTitleLines(CTextDraw &DrawText, int Width);
-	int CalcTextLines(CTextDraw &DrawText, int Width);
-	void DrawTitle(CTextDraw &DrawText, const RECT &Rect, int LineHeight);
-	void DrawText(CTextDraw &DrawText, const RECT &Rect, int LineHeight);
+	int CalcTitleLines(CTextDraw &DrawText, int Width, bool fUseARIBSymbol);
+	int CalcTextLines(CTextDraw &DrawText, int Width, bool fUseARIBSymbol);
+	void DrawTitle(CTextDraw &DrawText, const RECT &Rect, int LineHeight, bool fUseARIBSymbol);
+	void DrawText(CTextDraw &DrawText, const RECT &Rect, int LineHeight, bool fUseARIBSymbol);
 	SIZE GetTimeSize(HDC hdc) const;
 	bool IsChanged(const CProgramItemInfo *pItem) const;
 
@@ -61,9 +61,9 @@ private:
 	int m_NameLines;
 	int m_TextLines;
 
-	String GetEventText() const;
-	void GetEventTitleText(LPTSTR pszText, int MaxLength) const;
-	void GetEventTimeText(LPTSTR pszText, int MaxLength) const;
+	String GetEventText(bool fUseARIBSymbol) const;
+	void GetEventTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const;
+	int GetEventTimeText(LPTSTR pszText, int MaxLength) const;
 };
 
 
@@ -76,19 +76,19 @@ CProgramItemInfo::CProgramItemInfo(const LibISDB::EventInfo &EventInfo)
 }
 
 
-int CProgramItemInfo::CalcTitleLines(CTextDraw &DrawText, int Width)
+int CProgramItemInfo::CalcTitleLines(CTextDraw &DrawText, int Width, bool fUseARIBSymbol)
 {
 	TCHAR szText[MAX_EVENT_TITLE];
 
-	GetEventTitleText(szText, lengthof(szText));
+	GetEventTitleText(szText, lengthof(szText), fUseARIBSymbol);
 	m_NameLines = DrawText.CalcLineCount(szText, Width);
 	return m_NameLines;
 }
 
 
-int CProgramItemInfo::CalcTextLines(CTextDraw &DrawText, int Width)
+int CProgramItemInfo::CalcTextLines(CTextDraw &DrawText, int Width, bool fUseARIBSymbol)
 {
-	String Text = GetEventText();
+	String Text = GetEventText(fUseARIBSymbol);
 
 	if (!Text.empty())
 		m_TextLines = DrawText.CalcLineCount(Text.c_str(), Width);
@@ -98,18 +98,18 @@ int CProgramItemInfo::CalcTextLines(CTextDraw &DrawText, int Width)
 }
 
 
-void CProgramItemInfo::DrawTitle(CTextDraw &DrawText, const RECT &Rect, int LineHeight)
+void CProgramItemInfo::DrawTitle(CTextDraw &DrawText, const RECT &Rect, int LineHeight, bool fUseARIBSymbol)
 {
 	TCHAR szText[MAX_EVENT_TITLE];
 
-	GetEventTitleText(szText, lengthof(szText));
+	GetEventTitleText(szText, lengthof(szText), fUseARIBSymbol);
 	DrawText.Draw(szText, Rect, LineHeight);
 }
 
 
-void CProgramItemInfo::DrawText(CTextDraw &DrawText, const RECT &Rect, int LineHeight)
+void CProgramItemInfo::DrawText(CTextDraw &DrawText, const RECT &Rect, int LineHeight, bool fUseARIBSymbol)
 {
-	String Text = GetEventText();
+	String Text = GetEventText(fUseARIBSymbol);
 	if (!Text.empty()) {
 		DrawText.Draw(Text.c_str(), Rect, LineHeight);
 	}
@@ -121,8 +121,8 @@ SIZE CProgramItemInfo::GetTimeSize(HDC hdc) const
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 	SIZE sz;
 
-	GetEventTimeText(szTime, lengthof(szTime));
-	::GetTextExtentPoint32(hdc, szTime, ::lstrlen(szTime), &sz);
+	const int Length = GetEventTimeText(szTime, lengthof(szTime));
+	::GetTextExtentPoint32(hdc, szTime, Length, &sz);
 	return sz;
 }
 
@@ -135,26 +135,30 @@ bool CProgramItemInfo::IsChanged(const CProgramItemInfo *pItem) const
 }
 
 
-String CProgramItemInfo::GetEventText() const
+String CProgramItemInfo::GetEventText(bool fUseARIBSymbol) const
 {
-	return EpgUtil::GetEventDisplayText(m_EventInfo);
+	return EpgUtil::GetEventDisplayText(m_EventInfo, fUseARIBSymbol);
 }
 
 
-void CProgramItemInfo::GetEventTitleText(LPTSTR pszText, int MaxLength) const
+void CProgramItemInfo::GetEventTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const
 {
-	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
+	int Length = GetEventTimeText(pszText, MaxLength);
 
-	GetEventTimeText(szTime, lengthof(szTime));
-	StringPrintf(
-		pszText, MaxLength, TEXT("%s %s"),
-		szTime, m_EventInfo.EventName.c_str());
+	if (Length + 2 < MaxLength) {
+		pszText[Length++] = TEXT(' ');
+
+		if (fUseARIBSymbol)
+			EpgUtil::MapARIBSymbol(m_EventInfo.EventName.c_str(), pszText + Length, MaxLength - Length);
+		else
+			StringPrintf(pszText + Length, MaxLength - Length, TEXT("%s"), m_EventInfo.EventName.c_str());
+	}
 }
 
 
-void CProgramItemInfo::GetEventTimeText(LPTSTR pszText, int MaxLength) const
+int CProgramItemInfo::GetEventTimeText(LPTSTR pszText, int MaxLength) const
 {
-	EpgUtil::FormatEventTime(
+	return EpgUtil::FormatEventTime(
 		m_EventInfo, pszText, MaxLength,
 		EpgUtil::FormatEventTimeFlag::Hour2Digits);
 }
@@ -235,6 +239,7 @@ CProgramListPanel::CProgramListPanel()
 	, m_fMouseOverEventInfo(true)
 	, m_fUseEpgColorScheme(false)
 	, m_fShowFeaturedMark(true)
+	, m_fUseARIBSymbol(false)
 	, m_VisibleEventIcons(((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
 	, m_ChannelHeight(0)
 	, m_CurEventID(-1)
@@ -534,9 +539,9 @@ void CProgramListPanel::CalcDimensions()
 		CProgramItemInfo *pItem = m_ItemList.GetItem(i);
 
 		DrawUtil::SelectObject(hdc, m_TitleFont);
-		m_TotalLines += pItem->CalcTitleLines(DrawText, rc.right);
+		m_TotalLines += pItem->CalcTitleLines(DrawText, rc.right, m_fUseARIBSymbol);
 		DrawUtil::SelectObject(hdc, m_Font);
-		m_TotalLines += pItem->CalcTextLines(DrawText, rc.right - GetTextLeftMargin());
+		m_TotalLines += pItem->CalcTextLines(DrawText, rc.right - GetTextLeftMargin(), m_fUseARIBSymbol);
 	}
 	::SelectObject(hdc, hfontOld);
 	DrawText.End();
@@ -690,6 +695,19 @@ void CProgramListPanel::SetShowFeaturedMark(bool fShowFeaturedMark)
 		if (m_hwnd != nullptr) {
 			if (m_fShowFeaturedMark)
 				m_FeaturedEventsMatcher.BeginMatching(GetAppClass().FeaturedEvents.GetSettings());
+			Invalidate();
+		}
+	}
+}
+
+
+void CProgramListPanel::SetUseARIBSymbol(bool fUseARIBSymbol)
+{
+	if (m_fUseARIBSymbol != fUseARIBSymbol) {
+		m_fUseARIBSymbol = fUseARIBSymbol;
+		if (m_hwnd != nullptr) {
+			CalcDimensions();
+			SetScrollBar();
 			Invalidate();
 		}
 	}
@@ -1342,7 +1360,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 					ThemeDraw.Draw(m_Theme.FeaturedMarkStyle, rcMark);
 				}
 
-				pItem->DrawTitle(DrawText, rcTitle, LineHeight);
+				pItem->DrawTitle(DrawText, rcTitle, LineHeight, m_fUseARIBSymbol);
 			}
 
 			rc.top = rc.bottom;
@@ -1359,7 +1377,7 @@ void CProgramListPanel::Draw(HDC hdc, const RECT *prcPaint)
 				}
 				DrawUtil::SelectObject(hdc, m_Font);
 				rc.left = GetTextLeftMargin();
-				pItem->DrawText(DrawText, rc, LineHeight);
+				pItem->DrawText(DrawText, rc, LineHeight, m_fUseARIBSymbol);
 
 				const unsigned int ShowIcons =
 					CEpgIcons::GetEventIcons(&pItem->GetEventInfo()) & m_VisibleEventIcons;
