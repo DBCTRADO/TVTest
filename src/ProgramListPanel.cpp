@@ -799,8 +799,8 @@ void CProgramListPanel::SetHotItem(int Item)
 
 void CProgramListPanel::ShowChannelListMenu()
 {
-	const CChannelList *pChannelList =
-		GetAppClass().ChannelManager.GetCurrentChannelList();
+	CAppMain &App = GetAppClass();
+	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
 	if (pChannelList == nullptr)
 		return;
 
@@ -833,6 +833,10 @@ void CProgramListPanel::ShowChannelListMenu()
 	if (ItemCount == 0)
 		return;
 
+	const bool fDarkMenu = App.MainWindow.IsDarkMenu();
+	if (fDarkMenu)
+		::SetWindowTheme(m_hwnd, L"DarkMode", nullptr);
+
 	m_ChannelMenu.Create(
 		&ChannelList, CurChannel, 1, ItemCount, nullptr, m_hwnd,
 		CChannelMenu::CreateFlag::ShowLogo | CChannelMenu::CreateFlag::SpaceBreak,
@@ -849,6 +853,9 @@ void CProgramListPanel::ShowChannelListMenu()
 		TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_VERTICAL,
 		rc.left, rc.bottom, &rc);
 	m_ChannelMenu.Destroy();
+
+	if (fDarkMenu)
+		::SetWindowTheme(m_hwnd, nullptr, nullptr);
 
 	if (Result > 0) {
 		const CChannelInfo *pChannelInfo = ChannelList.GetChannelInfo(Result - 1);

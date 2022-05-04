@@ -139,6 +139,7 @@ namespace TVTest
 		void OnPanelFloating(bool fFloating);
 		void OnPanelDocking(CPanelFrame::DockingPlace Place);
 		bool IsDarkMode() const { return m_fDarkMode; }
+		bool IsDarkMenu() const;
 
 		bool EnablePlayback(bool fEnable);
 		bool IsPlaybackEnabled() const { return m_fEnablePlayback; }

@@ -976,6 +976,12 @@ void CMainWindow::OnPanelDocking(CPanelFrame::DockingPlace Place)
 }
 
 
+bool CMainWindow::IsDarkMenu() const
+{
+	return GetStyleManager()->IsUseDarkMenu() && IsDarkAppModeSupported() && TVTest::IsDarkMode();
+}
+
+
 LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
