@@ -241,6 +241,14 @@ int CRichEditUtil::GetMaxLineWidth(HWND hwndEdit)
 }
 
 
+void CRichEditUtil::DisableAutoFont(HWND hwndEdit)
+{
+	LPARAM Options = ::SendMessage(hwndEdit, EM_GETLANGOPTIONS, 0, 0);
+	Options &= ~(IMF_AUTOFONT | IMF_DUALFONT);
+	::SendMessage(hwndEdit, EM_SETLANGOPTIONS, 0, Options);
+}
+
+
 bool CRichEditUtil::DetectURL(
 	HWND hwndEdit, const CHARFORMAT *pcf, int FirstLine, int LastLine,
 	DetectURLFlag Flags, CharRangeList *pCharRangeList)

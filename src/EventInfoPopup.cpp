@@ -574,6 +574,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			0, m_RichEditUtil.GetWindowClassName(), TEXT(""),
 			WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_NOHIDESEL,
 			0, 0, 0, 0, hwnd, (HMENU)1, m_hinst, nullptr);
+		CRichEditUtil::DisableAutoFont(m_hwndEdit);
 		SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 		::SendMessage(m_hwndEdit, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		::SendMessage(m_hwndEdit, EM_SETBKGNDCOLOR, 0, m_BackColor);

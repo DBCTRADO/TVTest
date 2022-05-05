@@ -55,6 +55,7 @@ namespace TVTest
 		static bool IsSelected(HWND hwndEdit);
 		static String GetSelectedText(HWND hwndEdit);
 		static int GetMaxLineWidth(HWND hwndEdit);
+		static void DisableAutoFont(HWND hwndEdit);
 		enum class DetectURLFlag : unsigned int {
 			None        = 0x0000U,
 			NoLink      = 0x0001U,

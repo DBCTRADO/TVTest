@@ -81,6 +81,8 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			const HWND hwndEdit = ::GetDlgItem(hDlg, IDC_ERROR_MESSAGE);
 			CHARFORMAT cf, cfBold;
 
+			CRichEditUtil::DisableAutoFont(hwndEdit);
+
 			NONCLIENTMETRICS ncm;
 #if WINVER<0x0600
 			ncm.cbSize = sizeof(ncm);

@@ -383,6 +383,7 @@ bool CInformationPanel::CreateProgramInfoEdit()
 			0, 0, 0, 0, m_hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_PROGRAMINFO)), m_hinst, nullptr);
 		if (m_hwndProgramInfo == nullptr)
 			return false;
+		CRichEditUtil::DisableAutoFont(m_hwndProgramInfo);
 		::SendMessage(m_hwndProgramInfo, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		::SendMessage(
 			m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,

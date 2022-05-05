@@ -2013,6 +2013,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			hdc = ::GetDC(hDlg);
 			CRichEditUtil::LogFontToCharFormat(hdc, &lf, &m_InfoTextFormat);
 			::ReleaseDC(hDlg, hdc);
+			CRichEditUtil::DisableAutoFont(::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
 			::SendDlgItemMessage(hDlg, IDC_PROGRAMSEARCH_INFO, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		}
 
