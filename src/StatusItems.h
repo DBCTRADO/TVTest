@@ -263,7 +263,6 @@ namespace TVTest
 		bool m_fEnablePopupInfo;
 		CEventInfoPopup m_EventInfoPopup;
 		String m_Text;
-		CEpgTheme m_EpgTheme;
 		Theme::BackgroundStyle m_ProgressBackStyle;
 		Theme::BackgroundStyle m_ProgressElapsedStyle;
 		bool m_fValidProgress;

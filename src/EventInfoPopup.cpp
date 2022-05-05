@@ -22,8 +22,8 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "EventInfoPopup.h"
-#include "EpgUtil.h"
 #include "Aero.h"
+#include "DarkMode.h"
 #include "Common/DebugDef.h"
 
 
@@ -62,6 +62,7 @@ CEventInfoPopup::CEventInfoPopup()
 	: m_hwndEdit(nullptr)
 	, m_BackColor(::GetSysColor(COLOR_WINDOW))
 	, m_TextColor(::GetSysColor(COLOR_WINDOWTEXT))
+	, m_EventTitleColor(m_TextColor)
 	, m_TitleBackColor(RGB(228, 228, 240))
 	, m_TitleTextColor(RGB(80, 80, 80))
 	, m_TitleHeight(0)
@@ -78,6 +79,7 @@ CEventInfoPopup::CEventInfoPopup()
 #endif
 		)
 	, m_fMenuShowing(false)
+	, m_fCursorOverLink(false)
 {
 	m_WindowPosition.Width = 320;
 	m_WindowPosition.Height = 320;
@@ -109,6 +111,12 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 
 	m_EventInfo = *pEventInfo;
 
+	UpdateEventInfo();
+}
+
+
+void CEventInfoPopup::UpdateEventInfo()
+{
 	LOGFONT lf;
 	CHARFORMAT cf;
 	HDC hdc = ::GetDC(m_hwndEdit);
@@ -126,7 +134,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 	{
 		TCHAR szBuf[EpgUtil::MAX_EVENT_TIME_LENGTH];
 		if (EpgUtil::FormatEventTime(
-					*pEventInfo, szBuf, lengthof(szBuf),
+					m_EventInfo, szBuf, lengthof(szBuf),
 					EpgUtil::FormatEventTimeFlag::Date | EpgUtil::FormatEventTimeFlag::Year) > 0) {
 			Formatter.Append(szBuf);
 			Formatter.Append(TEXT("\r\n"));
@@ -143,6 +151,7 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 		CHARFORMAT cfBold = cf;
 		cfBold.dwMask |= CFM_BOLD;
 		cfBold.dwEffects |= CFE_BOLD;
+		cfBold.crTextColor = m_EventTitleColor;
 		CRichEditUtil::AppendText(m_hwndEdit, Formatter.GetString(), &cfBold);
 		Formatter.Clear();
 	}
@@ -218,18 +227,26 @@ void CEventInfoPopup::SetEventInfo(const LibISDB::EventInfo *pEventInfo)
 
 	CRichEditUtil::AppendText(
 		m_hwndEdit, SkipLeadingWhitespace(Formatter.GetString()), &cf);
-	CRichEditUtil::DetectURL(m_hwndEdit, &cf);
+	CRichEditUtil::DetectURL(
+		m_hwndEdit, &cf, 0, -1,
+		CRichEditUtil::DetectURLFlag::NoLink | CRichEditUtil::DetectURLFlag::ToHalfWidth,
+		&m_LinkList);
+	m_fCursorOverLink = false;
 
 	POINT pt = {0, 0};
 	::SendMessage(m_hwndEdit, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
 	::SendMessage(m_hwndEdit, WM_SETREDRAW, TRUE, 0);
 	::InvalidateRect(m_hwndEdit, nullptr, TRUE);
 
+	m_TitleBackColor = m_EpgTheme.GetGenreColor(m_EventInfo),
+	m_TitleTextColor = m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME);
+
 	CalcTitleHeight();
 	RECT rc;
 	GetClientRect(&rc);
 	::MoveWindow(m_hwndEdit, 0, m_TitleHeight, rc.right, std::max(rc.bottom - m_TitleHeight, 0L), TRUE);
 	Invalidate();
+	::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
 }
 
 
@@ -400,28 +417,22 @@ bool CEventInfoPopup::SetSize(int Width, int Height)
 }
 
 
-void CEventInfoPopup::SetColor(COLORREF BackColor, COLORREF TextColor)
+void CEventInfoPopup::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
-	m_BackColor = BackColor;
-	m_TextColor = TextColor;
+	m_EpgTheme.SetTheme(pThemeManager);
+
+	m_BackColor = pThemeManager->GetColor(CColorScheme::COLOR_EVENTINFOPOPUP_BACK);
+	m_TextColor = pThemeManager->GetColor(CColorScheme::COLOR_EVENTINFOPOPUP_TEXT);
+	m_EventTitleColor = pThemeManager->GetColor(CColorScheme::COLOR_EVENTINFOPOPUP_EVENTTITLE);
+
 	if (m_hwnd != nullptr) {
 		::SendMessage(m_hwndEdit, EM_SETBKGNDCOLOR, 0, m_BackColor);
+		if (::GetWindowTextLength(m_hwndEdit) > 0)
+			UpdateEventInfo();
 		//::InvalidateRect(m_hwndEdit, nullptr, TRUE);
-	}
-}
 
-
-void CEventInfoPopup::SetTitleColor(COLORREF BackColor, COLORREF TextColor)
-{
-	m_TitleBackColor = BackColor;
-	m_TitleTextColor = TextColor;
-	if (m_hwnd != nullptr) {
-		RECT rc;
-
-		GetClientRect(&rc);
-		rc.bottom = m_TitleHeight;
-		::InvalidateRect(m_hwnd, &rc, TRUE);
-		::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+		if (IsDarkThemeSupported())
+			SetWindowDarkTheme(m_hwndEdit, IsDarkThemeColor(m_BackColor));
 	}
 }
 
@@ -566,6 +577,9 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		SetWindowFont(m_hwndEdit, m_Font.GetHandle(), FALSE);
 		::SendMessage(m_hwndEdit, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		::SendMessage(m_hwndEdit, EM_SETBKGNDCOLOR, 0, m_BackColor);
+
+		if (IsDarkThemeSupported())
+			SetWindowDarkTheme(m_hwndEdit, IsDarkThemeColor(m_BackColor));
 
 		SetNcRendering();
 		return 0;
@@ -765,67 +779,59 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		OnDPIChanged(hwnd, wParam, lParam);
 		break;
 
+	case WM_SETCURSOR:
+		if (reinterpret_cast<HWND>(wParam) == m_hwndEdit
+				&& LOWORD(lParam) == HTCLIENT
+				&& m_fCursorOverLink) {
+			::SetCursor(GetLinkCursor());
+			return TRUE;
+		}
+		break;
+
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg == WM_RBUTTONUP) {
-				enum {
-					COMMAND_COPY = 1,
-					COMMAND_SELECTALL,
-					COMMAND_COPYEVENTNAME,
-					COMMAND_SEARCH
-				};
-				HMENU hmenu = ::CreatePopupMenu();
+			{
+				MSGFILTER *pMsgFilter = reinterpret_cast<MSGFILTER*>(lParam);
 
-				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("コピー(&C)"));
-				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
-				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPYEVENTNAME, TEXT("番組名をコピー(&E)"));
-				if (m_pEventHandler != nullptr)
-					m_pEventHandler->OnMenuPopup(hmenu);
-				if (CRichEditUtil::IsSelected(m_hwndEdit)) {
-					const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
-					if (KeywordSearch.GetSearchEngineCount() > 0) {
-						::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
-						KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH, CEventHandler::COMMAND_FIRST - COMMAND_SEARCH);
-					}
-				}
-
-				POINT pt;
-				::GetCursorPos(&pt);
-				int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
-				::DestroyMenu(hmenu);
-
-				switch (Command) {
-				case COMMAND_COPY:
-					if (::SendMessage(m_hwndEdit, EM_SELECTIONTYPE, 0, 0) == SEL_EMPTY) {
-						CRichEditUtil::CopyAllText(m_hwndEdit);
-					} else {
-						::SendMessage(m_hwndEdit, WM_COPY, 0, 0);
-					}
+				switch (pMsgFilter->msg) {
+				case WM_RBUTTONDOWN:
+					ShowContextMenu();
 					break;
 
-				case COMMAND_SELECTALL:
-					CRichEditUtil::SelectAll(m_hwndEdit);
+				case WM_LBUTTONDOWN:
+					m_ClickPos.x = GET_X_LPARAM(pMsgFilter->lParam);
+					m_ClickPos.y = GET_Y_LPARAM(pMsgFilter->lParam);
 					break;
 
-				case COMMAND_COPYEVENTNAME:
-					CopyTextToClipboard(hwnd, m_EventInfo.EventName.c_str());
-					break;
+				case WM_MOUSEMOVE:
+					m_ClickPos.x = -1;
+					m_ClickPos.y = -1;
+					{
+						const POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
 
-				default:
-					if (Command >= CEventHandler::COMMAND_FIRST) {
-						m_pEventHandler->OnMenuSelected(Command);
-					} else if (Command >= COMMAND_SEARCH) {
-						String Keyword(CRichEditUtil::GetSelectedText(m_hwndEdit));
-						if (!Keyword.empty()) {
-							GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, Keyword.c_str());
+						if (CRichEditUtil::LinkHitTest(m_hwndEdit, pt, m_LinkList) >= 0) {
+							m_fCursorOverLink = true;
+							::SetCursor(GetLinkCursor());
+						} else {
+							m_fCursorOverLink = false;
 						}
+					}
+					break;
+
+				case WM_LBUTTONUP:
+					{
+						const POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
+
+						if (m_ClickPos.x == pt.x && m_ClickPos.y == pt.y)
+							CRichEditUtil::HandleLinkClick(m_hwndEdit, pt, m_LinkList);
 					}
 					break;
 				}
 			}
 			return 0;
 
+#if 0
 		case EN_LINK:
 			{
 				ENLINK *penl = reinterpret_cast<ENLINK*>(lParam);
@@ -834,6 +840,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					CRichEditUtil::HandleLinkClick(penl);
 			}
 			return 0;
+#endif
 		}
 		break;
 
@@ -887,6 +894,65 @@ void CEventInfoPopup::SetNcRendering()
 
 	if (Aero.IsEnabled())
 		Aero.EnableNcRendering(m_hwnd, false);
+}
+
+
+void CEventInfoPopup::ShowContextMenu()
+{
+	enum {
+		COMMAND_COPY = 1,
+		COMMAND_SELECTALL,
+		COMMAND_COPYEVENTNAME,
+		COMMAND_SEARCH
+	};
+	HMENU hmenu = ::CreatePopupMenu();
+
+	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("コピー(&C)"));
+	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
+	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPYEVENTNAME, TEXT("番組名をコピー(&E)"));
+	if (m_pEventHandler != nullptr)
+		m_pEventHandler->OnMenuPopup(hmenu);
+	if (CRichEditUtil::IsSelected(m_hwndEdit)) {
+		const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
+		if (KeywordSearch.GetSearchEngineCount() > 0) {
+			::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
+			KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH, CEventHandler::COMMAND_FIRST - COMMAND_SEARCH);
+		}
+	}
+
+	POINT pt;
+	::GetCursorPos(&pt);
+	int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, m_hwnd, nullptr);
+	::DestroyMenu(hmenu);
+
+	switch (Command) {
+	case COMMAND_COPY:
+		if (::SendMessage(m_hwndEdit, EM_SELECTIONTYPE, 0, 0) == SEL_EMPTY) {
+			CRichEditUtil::CopyAllText(m_hwndEdit);
+		} else {
+			::SendMessage(m_hwndEdit, WM_COPY, 0, 0);
+		}
+		break;
+
+	case COMMAND_SELECTALL:
+		CRichEditUtil::SelectAll(m_hwndEdit);
+		break;
+
+	case COMMAND_COPYEVENTNAME:
+		CopyTextToClipboard(m_hwnd, m_EventInfo.EventName.c_str());
+		break;
+
+	default:
+		if (Command >= CEventHandler::COMMAND_FIRST) {
+			m_pEventHandler->OnMenuSelected(Command);
+		} else if (Command >= COMMAND_SEARCH) {
+			String Keyword(CRichEditUtil::GetSelectedText(m_hwndEdit));
+			if (!Keyword.empty()) {
+				GetAppClass().KeywordSearch.Search(Command - COMMAND_SEARCH, Keyword.c_str());
+			}
+		}
+		break;
+	}
 }
 
 

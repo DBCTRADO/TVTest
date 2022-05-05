@@ -1189,6 +1189,7 @@ void CProgramGuide::SetTheme(const Theme::CThemeManager *pThemeManager)
 	}
 
 	m_EpgTheme.SetTheme(pThemeManager);
+	m_EventInfoPopup.SetTheme(pThemeManager);
 
 	if (m_hwnd != nullptr) {
 		if (IsDarkThemeSupported()) {
@@ -4831,10 +4832,6 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 					pEventInfo=&pCommonItem->GetEventInfo();
 			}
 			*/
-
-			pPopup->SetTitleColor(
-				m_pProgramGuide->m_EpgTheme.GetGenreColor(*pEventInfo),
-				m_pProgramGuide->m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 			const ProgramGuide::CServiceInfo *pServiceInfo = pLayout->GetServiceInfo();
 			int IconWidth, IconHeight;

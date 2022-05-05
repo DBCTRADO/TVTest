@@ -160,6 +160,7 @@ void CChannelPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 	SetChannelPanelTheme(Theme);
 
 	m_EpgTheme.SetTheme(pThemeManager);
+	m_EventInfoPopup.SetTheme(pThemeManager);
 }
 
 
@@ -1369,10 +1370,6 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 	const CChannelEventInfo *pChEventInfo = m_ChannelList[Channel].get();
 	if (!pChEventInfo->IsEventEnabled(Event))
 		return false;
-
-	pPopup->SetTitleColor(
-		m_EpgTheme.GetGenreColor(pChEventInfo->GetEventInfo(Event)),
-		m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 	HICON hIcon = nullptr;
 	if (m_pLogoManager != nullptr) {

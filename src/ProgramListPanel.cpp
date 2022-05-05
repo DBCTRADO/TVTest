@@ -319,6 +319,7 @@ void CProgramListPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 	SetProgramListPanelTheme(Theme);
 
 	m_EpgTheme.SetTheme(pThemeManager);
+	m_EventInfoPopup.SetTheme(pThemeManager);
 }
 
 
@@ -1459,10 +1460,6 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventIn
 	const CProgramItemInfo *pItem = m_pPanel->m_ItemList.GetItem(ItemIndex);
 	if (pItem == nullptr)
 		return false;
-
-	pPopup->SetTitleColor(
-		m_pPanel->m_EpgTheme.GetGenreColor(pItem->GetEventInfo()),
-		m_pPanel->m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 	int IconWidth, IconHeight;
 	pPopup->GetPreferredIconSize(&IconWidth, &IconHeight);

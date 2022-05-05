@@ -28,6 +28,7 @@
 #include "RichEditUtil.h"
 #include "GUIUtil.h"
 #include "WindowUtil.h"
+#include "EpgUtil.h"
 #include "LibISDB/LibISDB/EPG/EventInfo.hpp"
 
 
@@ -66,8 +67,7 @@ namespace TVTest
 		bool IsOwnWindow(HWND hwnd) const;
 		void GetSize(int *pWidth, int *pHeight) const;
 		bool SetSize(int Width, int Height);
-		void SetColor(COLORREF BackColor, COLORREF TextColor);
-		void SetTitleColor(COLORREF BackColor, COLORREF TextColor);
+		void SetTheme(const Theme::CThemeManager *pThemeManager);
 		bool SetFont(const Style::Font &Font);
 		void SetEventHandler(CEventHandler *pEventHandler);
 		bool IsSelected() const;
@@ -85,10 +85,12 @@ namespace TVTest
 		HWND m_hwndEdit;
 		CRichEditUtil m_RichEditUtil;
 		Style::CStyleScaling m_StyleScaling;
-		COLORREF m_BackColor;
-		COLORREF m_TextColor;
-		COLORREF m_TitleBackColor;
-		COLORREF m_TitleTextColor;
+		CEpgTheme m_EpgTheme;
+		Theme::ThemeColor m_BackColor;
+		Theme::ThemeColor m_TextColor;
+		Theme::ThemeColor m_EventTitleColor;
+		Theme::ThemeColor m_TitleBackColor;
+		Theme::ThemeColor m_TitleTextColor;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
 		DrawUtil::CFont m_TitleFont;
@@ -103,6 +105,9 @@ namespace TVTest
 		CEventHandler *m_pEventHandler;
 		bool m_fCursorInWindow;
 		bool m_fMenuShowing;
+		CRichEditUtil::CharRangeList m_LinkList;
+		POINT m_ClickPos;
+		bool m_fCursorOverLink;
 
 		static const LPCTSTR m_pszWindowClass;
 		static HINSTANCE m_hinst;
@@ -117,12 +122,14 @@ namespace TVTest
 
 		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID) override;
 		void SetEventInfo(const LibISDB::EventInfo *pEventInfo);
+		void UpdateEventInfo();
 		void FormatAudioInfo(
 			const LibISDB::EventInfo::AudioInfo *pAudioInfo,
 			LPTSTR pszText, int MaxLength) const;
 		void CalcTitleHeight();
 		void GetCloseButtonRect(RECT *pRect) const;
 		void SetNcRendering();
+		void ShowContextMenu();
 	};
 
 	class CEventInfoPopupManager

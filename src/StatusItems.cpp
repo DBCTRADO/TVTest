@@ -999,14 +999,14 @@ bool CProgramInfoStatusItem::OnMouseHover(int x, int y)
 
 void CProgramInfoStatusItem::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
-	m_EpgTheme.SetTheme(pThemeManager);
-
 	pThemeManager->GetBackgroundStyle(
 		Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS,
 		&m_ProgressBackStyle);
 	pThemeManager->GetBackgroundStyle(
 		Theme::CThemeManager::STYLE_STATUSBAR_EVENT_PROGRESS_ELAPSED,
 		&m_ProgressElapsedStyle);
+
+	m_EventInfoPopup.SetTheme(pThemeManager);
 }
 
 void CProgramInfoStatusItem::SetShowProgress(bool fShow)
@@ -1075,10 +1075,6 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
 			m_EventInfoPopup.GetSize(&Width, &Height);
 			::SetRect(&rc, pt.x, pt.y - Height, pt.x + Width, pt.y);
-
-			m_EventInfoPopup.SetTitleColor(
-				m_EpgTheme.GetGenreColor(EventInfo),
-				m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME));
 
 			int IconWidth, IconHeight;
 			m_EventInfoPopup.GetPreferredIconSize(&IconWidth, &IconHeight);
