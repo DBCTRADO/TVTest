@@ -14,6 +14,7 @@
 #include <tchar.h>
 #include <shlwapi.h>
 #include <dbt.h>
+#include <process.h>
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 #include "resource.h"
@@ -134,7 +135,7 @@ class CGamePad : public TVTest::CTVTestPlugin
 	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
 	static BOOL CALLBACK MessageCallback(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam,
 										 LRESULT *pResult,void *pClientData);
-	static DWORD WINAPI ThreadProc(LPVOID pParameter);
+	static unsigned int __stdcall ThreadProc(void *pParameter);
 
 public:
 	CGamePad();
@@ -224,7 +225,7 @@ bool CGamePad::Start()
 		} else {
 			::ResetEvent(m_hEvent);
 		}
-		m_hThread=::CreateThread(NULL,0,ThreadProc,this,0,NULL);
+		m_hThread=reinterpret_cast<HANDLE>(::_beginthreadex(NULL,0,ThreadProc,this,0,NULL));
 		if (m_hThread==NULL)
 			return false;
 	}
@@ -303,7 +304,7 @@ BOOL CALLBACK CGamePad::MessageCallback(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 
 // ボタンの状態を取得するスレッド
-DWORD WINAPI CGamePad::ThreadProc(LPVOID pParameter)
+unsigned int __stdcall CGamePad::ThreadProc(void *pParameter)
 {
 	CGamePad *pThis=static_cast<CGamePad*>(pParameter);
 
