@@ -79,7 +79,6 @@ CEventInfoPopup::CEventInfoPopup()
 #endif
 		)
 	, m_fMenuShowing(false)
-	, m_fCursorOverLink(false)
 {
 	m_WindowPosition.Width = 320;
 	m_WindowPosition.Height = 320;
@@ -130,6 +129,7 @@ void CEventInfoPopup::UpdateEventInfo()
 
 	TCHAR szText[4096];
 	CStaticStringFormatter Formatter(szText, lengthof(szText));
+	int TitleLines = 0;
 
 	{
 		TCHAR szBuf[EpgUtil::MAX_EVENT_TIME_LENGTH];
@@ -138,12 +138,14 @@ void CEventInfoPopup::UpdateEventInfo()
 					EpgUtil::FormatEventTimeFlag::Date | EpgUtil::FormatEventTimeFlag::Year) > 0) {
 			Formatter.Append(szBuf);
 			Formatter.Append(TEXT("\r\n"));
+			TitleLines++;
 		}
 	}
 
 	if (!m_EventInfo.EventName.empty()) {
 		Formatter.Append(m_EventInfo.EventName.c_str());
 		Formatter.Append(TEXT("\r\n"));
+		TitleLines++;
 	}
 
 	if (!Formatter.IsEmpty()) {
@@ -227,11 +229,7 @@ void CEventInfoPopup::UpdateEventInfo()
 
 	CRichEditUtil::AppendText(
 		m_hwndEdit, SkipLeadingWhitespace(Formatter.GetString()), &cf);
-	CRichEditUtil::DetectURL(
-		m_hwndEdit, &cf, 0, -1,
-		CRichEditUtil::DetectURLFlag::NoLink | CRichEditUtil::DetectURLFlag::ToHalfWidth,
-		&m_LinkList);
-	m_fCursorOverLink = false;
+	m_RichEditLink.DetectURL(m_hwndEdit, &cf, TitleLines + 1);
 
 	POINT pt = {0, 0};
 	::SendMessage(m_hwndEdit, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
@@ -781,12 +779,8 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		break;
 
 	case WM_SETCURSOR:
-		if (reinterpret_cast<HWND>(wParam) == m_hwndEdit
-				&& LOWORD(lParam) == HTCLIENT
-				&& m_fCursorOverLink) {
-			::SetCursor(GetLinkCursor());
+		if (m_RichEditLink.OnSetCursor(hwnd, wParam, lParam))
 			return TRUE;
-		}
 		break;
 
 	case WM_NOTIFY:
@@ -800,33 +794,8 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					ShowContextMenu();
 					break;
 
-				case WM_LBUTTONDOWN:
-					m_ClickPos.x = GET_X_LPARAM(pMsgFilter->lParam);
-					m_ClickPos.y = GET_Y_LPARAM(pMsgFilter->lParam);
-					break;
-
-				case WM_MOUSEMOVE:
-					m_ClickPos.x = -1;
-					m_ClickPos.y = -1;
-					{
-						const POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
-
-						if (CRichEditUtil::LinkHitTest(m_hwndEdit, pt, m_LinkList) >= 0) {
-							m_fCursorOverLink = true;
-							::SetCursor(GetLinkCursor());
-						} else {
-							m_fCursorOverLink = false;
-						}
-					}
-					break;
-
-				case WM_LBUTTONUP:
-					{
-						const POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
-
-						if (m_ClickPos.x == pt.x && m_ClickPos.y == pt.y)
-							CRichEditUtil::HandleLinkClick(m_hwndEdit, pt, m_LinkList);
-					}
+				default:
+					m_RichEditLink.OnMsgFilter(pMsgFilter);
 					break;
 				}
 			}

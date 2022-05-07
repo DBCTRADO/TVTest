@@ -83,7 +83,6 @@ CInformationPanel::CInformationPanel()
 	, m_hwndProgramInfo(nullptr)
 	, m_ProgramInfoSubclass(this)
 	, m_fUseRichEdit(true)
-	, m_fProgramInfoCursorOverLink(false)
 {
 	GetDefaultFont(&m_StyleFont);
 
@@ -281,8 +280,7 @@ bool CInformationPanel::ResetItem(int Item)
 	pItem->Reset();
 
 	if (Item == ITEM_PROGRAMINFO) {
-		m_ProgramInfoLinkList.clear();
-		m_fProgramInfoCursorOverLink = false;
+		m_RichEditLink.Reset();
 		if (m_hwnd != nullptr)
 			::SetWindowText(m_hwndProgramInfo, TEXT(""));
 	}
@@ -353,10 +351,7 @@ void CInformationPanel::UpdateProgramInfoText()
 				cf.crTextColor = m_Theme.ProgramInfoStyle.Fore.Fill.GetSolidColor();
 				::ReleaseDC(m_hwndProgramInfo, hdc);
 				CRichEditUtil::AppendText(m_hwndProgramInfo, InfoText.c_str(), &cf);
-				CRichEditUtil::DetectURL(
-					m_hwndProgramInfo, &cf, 0, -1,
-					CRichEditUtil::DetectURLFlag::NoLink | CRichEditUtil::DetectURLFlag::ToHalfWidth,
-					&m_ProgramInfoLinkList);
+				m_RichEditLink.DetectURL(m_hwndProgramInfo, &cf);
 				POINT pt = {0, 0};
 				::SendMessage(m_hwndProgramInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
 			}
@@ -388,7 +383,6 @@ bool CInformationPanel::CreateProgramInfoEdit()
 		::SendMessage(
 			m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
 			(COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
-		m_fProgramInfoCursorOverLink = false;
 	} else {
 		m_hwndProgramInfo = ::CreateWindowEx(
 			0, TEXT("EDIT"), TEXT(""),
@@ -563,11 +557,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				::SetCursor(GetActionCursor());
 				return TRUE;
 			}
-		} else if ((HWND)wParam == m_hwndProgramInfo
-				&& LOWORD(lParam) == HTCLIENT
-				&& m_fUseRichEdit
-				&& m_fProgramInfoCursorOverLink) {
-			::SetCursor(GetLinkCursor());
+		} else if (m_RichEditLink.OnSetCursor(hwnd, wParam, lParam)) {
 			return TRUE;
 		}
 		break;
@@ -583,33 +573,8 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					EventInfoUtil::EventInfoContextMenu(hwnd, m_hwndProgramInfo);
 					break;
 
-				case WM_LBUTTONDOWN:
-					m_ProgramInfoClickPos.x = GET_X_LPARAM(pMsgFilter->lParam);
-					m_ProgramInfoClickPos.y = GET_Y_LPARAM(pMsgFilter->lParam);
-					break;
-
-				case WM_MOUSEMOVE:
-					m_ProgramInfoClickPos.x = -1;
-					m_ProgramInfoClickPos.y = -1;
-					{
-						POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
-
-						if (CRichEditUtil::LinkHitTest(m_hwndProgramInfo, pt, m_ProgramInfoLinkList) >= 0) {
-							m_fProgramInfoCursorOverLink = true;
-							::SetCursor(GetLinkCursor());
-						} else {
-							m_fProgramInfoCursorOverLink = false;
-						}
-					}
-					break;
-
-				case WM_LBUTTONUP:
-					{
-						POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
-
-						if (m_ProgramInfoClickPos.x == pt.x && m_ProgramInfoClickPos.y == pt.y)
-							CRichEditUtil::HandleLinkClick(m_hwndProgramInfo, pt, m_ProgramInfoLinkList);
-					}
+				default:
+					m_RichEditLink.OnMsgFilter(pMsgFilter);
 					break;
 				}
 			}
@@ -638,6 +603,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		m_Offscreen.Destroy();
 		m_IconFont.Destroy();
 		m_hwndProgramInfo = nullptr;
+		m_RichEditLink.Reset();
 		return 0;
 	}
 

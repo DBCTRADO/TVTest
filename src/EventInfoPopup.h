@@ -84,6 +84,7 @@ namespace TVTest
 		LibISDB::EventInfo m_EventInfo;
 		HWND m_hwndEdit;
 		CRichEditUtil m_RichEditUtil;
+		CRichEditLinkHandler m_RichEditLink;
 		Style::CStyleScaling m_StyleScaling;
 		CEpgTheme m_EpgTheme;
 		Theme::ThemeColor m_BackColor;
@@ -105,9 +106,6 @@ namespace TVTest
 		CEventHandler *m_pEventHandler;
 		bool m_fCursorInWindow;
 		bool m_fMenuShowing;
-		CRichEditUtil::CharRangeList m_LinkList;
-		POINT m_ClickPos;
-		bool m_fCursorOverLink;
 
 		static const LPCTSTR m_pszWindowClass;
 		static HINSTANCE m_hinst;

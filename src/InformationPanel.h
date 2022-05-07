@@ -397,9 +397,7 @@ namespace TVTest
 		CProgramInfoSubclass m_ProgramInfoSubclass;
 		CRichEditUtil m_RichEditUtil;
 		bool m_fUseRichEdit;
-		CRichEditUtil::CharRangeList m_ProgramInfoLinkList;
-		POINT m_ProgramInfoClickPos;
-		bool m_fProgramInfoCursorOverLink;
+		CRichEditLinkHandler m_RichEditLink;
 		ItemButtonNumber m_HotButton;
 
 		void UpdateProgramInfoText();
