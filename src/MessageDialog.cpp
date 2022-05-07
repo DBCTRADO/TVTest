@@ -49,7 +49,7 @@ void CMessageDialog::LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf)
 }
 
 
-INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
