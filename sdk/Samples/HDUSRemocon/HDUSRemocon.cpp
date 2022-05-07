@@ -170,17 +170,8 @@ bool CHDUSRemocon::InitializePlugin()
 		if (m_Message==0)
 			return false;
 
-		// Vista/7 で管理者権限で実行された時用の対策
-#ifndef MSGFLT_ADD
-#define MSGFLT_ADD 1
-#endif
-		typedef BOOL (WINAPI *ChangeWindowMessageFilterFunc)(UINT,DWORD);
-		HMODULE hLib=::LoadLibrary(TEXT("user32.dll"));
-		ChangeWindowMessageFilterFunc pChangeFilter=
-			(ChangeWindowMessageFilterFunc)::GetProcAddress(hLib,"ChangeWindowMessageFilter");
-		if (pChangeFilter!=NULL)
-			pChangeFilter(m_Message,MSGFLT_ADD);
-		::FreeLibrary(hLib);
+		// 管理者権限で実行された時用の対策
+		::ChangeWindowMessageFilterEx(m_pApp->GetAppWindow(),m_Message,MSGFLT_ALLOW,NULL);
 
 		m_fInitialized=true;
 	}
