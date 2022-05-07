@@ -80,6 +80,33 @@ namespace TVTest
 
 	TVTEST_ENUM_FLAGS(CRichEditUtil::DetectURLFlag)
 
+	/*
+		リッチエディットの標準のハイパーリンク機能では文字色を変更できないため、
+		自前でリンクを処理するために使用するクラス
+	*/
+	class CRichEditLinkHandler
+	{
+	public:
+		void Reset();
+		bool DetectURL(
+			HWND hwndEdit, const CHARFORMAT *pcf, int FirstLine = 0, int LastLine = -1,
+			CRichEditUtil::DetectURLFlag Flags =
+				CRichEditUtil::DetectURLFlag::NoLink |
+				CRichEditUtil::DetectURLFlag::ToHalfWidth);
+		bool OnMsgFilter(MSGFILTER *pMsgFilter);
+		bool OnSetCursor(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool IsCursorOverLink() const noexcept { return m_fCursorOverLink; }
+		void LeaveCursor();
+		void SetLinkCursor(HCURSOR hCursor) { m_hLinkCursor = hCursor; }
+
+	private:
+		CRichEditUtil::CharRangeList m_LinkList;
+		POINT m_ClickPos{-1, -1};
+		bool m_fCursorOverLink = false;
+		HWND m_hwndEdit = nullptr;
+		HCURSOR m_hLinkCursor = ::LoadCursor(nullptr, IDC_HAND);
+	};
+
 }	// namespace TVTest
 
 

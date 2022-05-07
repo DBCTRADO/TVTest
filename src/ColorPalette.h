@@ -42,6 +42,7 @@ namespace TVTest
 		int m_ItemWidth;
 		int m_ItemHeight;
 		CTooltip m_Tooltip;
+		COLORREF m_BackColor;
 
 		static HINSTANCE m_hinst;
 
@@ -71,6 +72,7 @@ namespace TVTest
 		int GetHot() const;
 		int FindColor(COLORREF Color) const;
 		bool SetTooltipFont(HFONT hfont);
+		void SetBackColor(COLORREF Color);
 		static bool Initialize(HINSTANCE hinst);
 		enum {
 			NOTIFY_SELCHANGE = 1,

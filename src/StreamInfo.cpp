@@ -35,10 +35,6 @@ namespace
 {
 
 
-const LPCTSTR STREAM_INFO_WINDOW_CLASS = APP_NAME TEXT(" Stream Info Window");
-const LPCTSTR STREAM_INFO_TITLE_TEXT = TEXT("ストリームの情報");
-
-
 class CStreamInfoPage
 	: public CResizableDialog
 {
@@ -1053,38 +1049,8 @@ int CALLBACK CPIDInfoPage::ItemCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 
 
 
-HINSTANCE CStreamInfo::m_hinst = nullptr;
-
-
-bool CStreamInfo::Initialize(HINSTANCE hinst)
-{
-	if (m_hinst == nullptr) {
-		WNDCLASS wc;
-
-		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.lpfnWndProc = WndProc;
-		wc.cbClsExtra = 0;
-		wc.cbWndExtra = 0;
-		wc.hInstance = hinst;
-		wc.hIcon = nullptr;
-		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-		wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1);
-		wc.lpszMenuName = nullptr;
-		wc.lpszClassName = STREAM_INFO_WINDOW_CLASS;
-
-		if (::RegisterClass(&wc) == 0)
-			return false;
-
-		m_hinst = hinst;
-	}
-
-	return true;
-}
-
-
 CStreamInfo::CStreamInfo()
 	: m_CurrentPage(0)
-	, m_hwndTab(nullptr)
 	, m_pEventHandler(nullptr)
 	, m_fCreateFirst(true)
 	, m_DefaultPageSize()
@@ -1107,7 +1073,7 @@ CStreamInfo::~CStreamInfo()
 }
 
 
-bool CStreamInfo::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
+bool CStreamInfo::Create(HWND hwndOwner)
 {
 	if (m_fCreateFirst) {
 		if (m_pEventHandler != nullptr)
@@ -1115,21 +1081,13 @@ bool CStreamInfo::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 		m_fCreateFirst = false;
 	}
 
-	return CreateBasicWindow(
-		hwndParent, Style, ExStyle, ID,
-		STREAM_INFO_WINDOW_CLASS, STREAM_INFO_TITLE_TEXT, m_hinst);
+	return CreateDialogWindow(hwndOwner, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_STREAMPROPERTIES));
 }
 
 
 void CStreamInfo::SetEventHandler(CEventHandler *pHandler)
 {
 	m_pEventHandler = pHandler;
-}
-
-
-bool CStreamInfo::IsPositionSet() const
-{
-	return m_WindowPosition.Width > 0;
 }
 
 
@@ -1184,27 +1142,18 @@ void CStreamInfo::SaveSettings(CSettings &Settings) const
 }
 
 
-LRESULT CStreamInfo::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
-	case WM_CREATE:
+	case WM_INITDIALOG:
 		{
-			InitializeUI();
-
-			RECT rc;
-			::GetClientRect(hwnd, &rc);
-			m_hwndTab = ::CreateWindowEx(
-				0, WC_TABCONTROL, TEXT(""),
-				WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-				0, 0, rc.right, rc.bottom,
-				hwnd, nullptr, m_hinst, nullptr);
-			::SendMessage(m_hwndTab, WM_SETFONT, reinterpret_cast<WPARAM>(m_TabFont.GetHandle()), FALSE);
+			HWND hwndTab = ::GetDlgItem(hDlg, IDC_STREAMPROPERTIES_TAB);
 
 			TCITEM tci;
 			tci.mask = TCIF_TEXT;
 			for (int i = 0; i < NUM_PAGES; i++) {
 				tci.pszText = const_cast<LPTSTR>(m_PageList[i].pszTitle);
-				TabCtrl_InsertItem(m_hwndTab, i, &tci);
+				TabCtrl_InsertItem(hwndTab, i, &tci);
 			}
 
 			SetPage(m_CurrentPage);
@@ -1212,34 +1161,40 @@ LRESULT CStreamInfo::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (!IsPositionSet()) {
 				// デフォルトのウィンドウサイズ
 				RECT rc = {0, 0, m_DefaultPageSize.cx, m_DefaultPageSize.cy};
-				TabCtrl_AdjustRect(m_hwndTab, TRUE, &rc);
-				m_pStyleScaling->AdjustWindowRect(hwnd, &rc);
+				TabCtrl_AdjustRect(hwndTab, TRUE, &rc);
+				m_pStyleScaling->AdjustWindowRect(hDlg, &rc);
 				::SetWindowPos(
-					hwnd, nullptr, 0, 0, rc.right - rc.left, rc.bottom - rc.top,
+					hDlg, nullptr, 0, 0, rc.right - rc.left, rc.bottom - rc.top,
 					SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
+			} else {
+				ApplyPosition();
 			}
-		}
-		return 0;
 
-	case WM_NCCREATE:
-		InitStyleScaling(hwnd, true);
-		break;
+			GetAppClass().UICore.RegisterModelessDialog(this);
+		}
+		return TRUE;
 
 	case WM_SIZE:
 		OnSizeChanged(LOWORD(lParam), HIWORD(lParam));
-		return 0;
+		return TRUE;
+
+	case WM_COMMAND:
+		switch (LOWORD(wParam)) {
+		case IDOK:
+		case IDCANCEL:
+			if (m_pEventHandler != nullptr)
+				m_pEventHandler->OnClose();
+			::DestroyWindow(hDlg);
+			return TRUE;
+		}
+		return TRUE;
 
 	case WM_NOTIFY:
 		switch (reinterpret_cast<NMHDR*>(lParam)->code) {
 		case TCN_SELCHANGE:
-			SetPage(TabCtrl_GetCurSel(m_hwndTab));
+			SetPage(TabCtrl_GetCurSel(::GetDlgItem(hDlg, IDC_STREAMPROPERTIES_TAB)));
 			return TRUE;
 		}
-		break;
-
-	case WM_CLOSE:
-		if ((m_pEventHandler != nullptr) && !m_pEventHandler->OnClose())
-			return 0;
 		break;
 
 	case WM_DESTROY:
@@ -1247,43 +1202,24 @@ LRESULT CStreamInfo::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			for (auto &Page : m_PageList)
 				Page.Dialog->Destroy();
 
-			m_hwndTab = nullptr;
+			GetAppClass().UICore.UnregisterModelessDialog(this);
 		}
-		break;
+		return TRUE;
 	}
 
-	return CCustomWindow::OnMessage(hwnd, uMsg, wParam, lParam);
-}
-
-
-void CStreamInfo::ApplyStyle()
-{
-	if (m_hwnd != nullptr) {
-		CreateDefaultFont(&m_TabFont);
-	}
-}
-
-
-void CStreamInfo::RealizeStyle()
-{
-	if (m_hwnd != nullptr) {
-		if (m_hwndTab != nullptr) {
-			::SendMessage(m_hwndTab, WM_SETFONT, reinterpret_cast<WPARAM>(m_TabFont.GetHandle()), FALSE);
-			SendSizeMessage();
-		}
-	}
+	return FALSE;
 }
 
 
 void CStreamInfo::OnSizeChanged(int Width, int Height)
 {
-	if (m_hwndTab != nullptr) {
-		::MoveWindow(m_hwndTab, 0, 0, Width, Height, TRUE);
+	HWND hwndTab = ::GetDlgItem(m_hDlg, IDC_STREAMPROPERTIES_TAB);
 
-		RECT rc;
-		GetPagePosition(&rc);
-		m_PageList[m_CurrentPage].Dialog->SetPosition(&rc);
-	}
+	::MoveWindow(hwndTab, 0, 0, Width, Height, TRUE);
+
+	RECT rc;
+	GetPagePosition(&rc);
+	m_PageList[m_CurrentPage].Dialog->SetPosition(&rc);
 }
 
 
@@ -1297,7 +1233,7 @@ bool CStreamInfo::CreatePage(int Page)
 	if (Info.Dialog->IsCreated())
 		return true;
 
-	if (!Info.Dialog->Create(m_hwndTab))
+	if (!Info.Dialog->Create(m_hDlg))
 		return false;
 
 	RECT rc;
@@ -1321,10 +1257,11 @@ bool CStreamInfo::SetPage(int Page)
 	GetPagePosition(&rc);
 	m_PageList[Page].Dialog->SetPosition(&rc);
 	m_PageList[Page].Dialog->SetVisible(true);
+	::BringWindowToTop(m_PageList[Page].Dialog->GetHandle());
 
 	m_CurrentPage = Page;
 
-	TabCtrl_SetCurSel(m_hwndTab, m_CurrentPage);
+	TabCtrl_SetCurSel(::GetDlgItem(m_hDlg, IDC_STREAMPROPERTIES_TAB), m_CurrentPage);
 
 	return true;
 }
@@ -1332,8 +1269,8 @@ bool CStreamInfo::SetPage(int Page)
 
 void CStreamInfo::GetPagePosition(RECT *pPosition) const
 {
-	GetClientRect(pPosition);
-	TabCtrl_AdjustRect(m_hwndTab, FALSE, pPosition);
+	GetClientRect(m_hDlg, pPosition);
+	TabCtrl_AdjustRect(::GetDlgItem(m_hDlg, IDC_STREAMPROPERTIES_TAB), FALSE, pPosition);
 }
 
 

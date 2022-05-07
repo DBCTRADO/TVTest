@@ -49,34 +49,23 @@ void CMessageDialog::LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf)
 }
 
 
-CMessageDialog *CMessageDialog::GetThis(HWND hDlg)
-{
-	return static_cast<CMessageDialog*>(::GetProp(hDlg, TEXT("This")));
-}
-
-
 INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CMessageDialog *pThis = reinterpret_cast<CMessageDialog*>(lParam);
-
-			::SetProp(hDlg, TEXT("This"), pThis);
-			pThis->m_hDlg = hDlg;
-
-			if (!pThis->m_Caption.empty())
-				::SetWindowText(hDlg, pThis->m_Caption.c_str());
+			if (!m_Caption.empty())
+				::SetWindowText(hDlg, m_Caption.c_str());
 
 			::SendDlgItemMessage(
 				hDlg, IDC_ERROR_ICON, STM_SETICON,
 				reinterpret_cast<WPARAM>(
 					::LoadIcon(
 						nullptr,
-						pThis->m_MessageType == MessageType::Info ? IDI_INFORMATION :
-						pThis->m_MessageType == MessageType::Warning ? IDI_WARNING : IDI_ERROR)),
+						m_MessageType == MessageType::Info ? IDI_INFORMATION :
+						m_MessageType == MessageType::Warning ? IDI_WARNING : IDI_ERROR)),
 				0);
-			::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_SETBKGNDCOLOR, 0, ::GetSysColor(COLOR_WINDOW));
+			::SendDlgItemMessage(hDlg, IDC_ERROR_MESSAGE, EM_SETBKGNDCOLOR, 0, GetThemeColor(COLOR_WINDOW));
 
 			const HWND hwndEdit = ::GetDlgItem(hDlg, IDC_ERROR_MESSAGE);
 			CHARFORMAT cf, cfBold;
@@ -90,21 +79,22 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			ncm.cbSize = offsetof(NONCLIENTMETRICS, iPaddedBorderWidth);
 #endif
 			::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
-			pThis->LogFontToCharFormat(&ncm.lfMessageFont, &cf);
+			LogFontToCharFormat(&ncm.lfMessageFont, &cf);
+			cf.crTextColor = GetThemeColor(COLOR_WINDOWTEXT);
 
 			cfBold = cf;
 			cfBold.dwMask |= CFM_BOLD;
 			cfBold.dwEffects |= CFE_BOLD;
-			if (!pThis->m_Title.empty()) {
-				CRichEditUtil::AppendText(hwndEdit, pThis->m_Title.c_str(), &cfBold);
+			if (!m_Title.empty()) {
+				CRichEditUtil::AppendText(hwndEdit, m_Title.c_str(), &cfBold);
 				CRichEditUtil::AppendText(hwndEdit, TEXT("\n"), &cf);
 			}
-			if (!pThis->m_Text.empty()) {
-				CRichEditUtil::AppendText(hwndEdit, pThis->m_Text.c_str(), &cf);
+			if (!m_Text.empty()) {
+				CRichEditUtil::AppendText(hwndEdit, m_Text.c_str(), &cf);
 			}
-			if (!pThis->m_SystemMessage.empty()) {
+			if (!m_SystemMessage.empty()) {
 				CRichEditUtil::AppendText(hwndEdit, TEXT("\n\nWindowsのエラーメッセージ :\n"), &cfBold);
-				CRichEditUtil::AppendText(hwndEdit, pThis->m_SystemMessage.c_str(), &cf);
+				CRichEditUtil::AppendText(hwndEdit, m_SystemMessage.c_str(), &cf);
 			}
 			const int MaxWidth = CRichEditUtil::GetMaxLineWidth(hwndEdit) + 8;
 			RECT rcEdit, rcIcon, rcDlg, rcClient, rcOK;
@@ -142,7 +132,6 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 
 	case WM_PAINT:
 		{
-			CMessageDialog *pThis = GetThis(hDlg);
 			PAINTSTRUCT ps;
 			RECT rcEdit, rc;
 
@@ -151,14 +140,14 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			MapWindowRect(nullptr, hDlg, &rcEdit);
 			::GetClientRect(hDlg, &rc);
 			rc.bottom = rcEdit.bottom;
-			::FillRect(ps.hdc, &rc, ::GetSysColorBrush(COLOR_WINDOW));
+			DrawUtil::Fill(ps.hdc, &rc, GetThemeColor(COLOR_WINDOW));
 			::EndPaint(hDlg, &ps);
 		}
 		return TRUE;
 
 	case WM_CTLCOLORSTATIC:
 		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_ERROR_ICON))
-			return reinterpret_cast<INT_PTR>(::GetSysColorBrush(COLOR_WINDOW));
+			return reinterpret_cast<INT_PTR>(m_BackBrush.GetHandle());
 		break;
 
 	case WM_NOTIFY:
@@ -243,14 +232,10 @@ INT_PTR CALLBACK CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 
 	case WM_DESTROY:
 		{
-			CMessageDialog *pThis = GetThis(hDlg);
-
-			pThis->m_Text.clear();
-			pThis->m_Title.clear();
-			pThis->m_SystemMessage.clear();
-			pThis->m_Caption.clear();
-			pThis->m_hDlg = nullptr;
-			::RemoveProp(hDlg, TEXT("This"));
+			m_Text.clear();
+			m_Title.clear();
+			m_SystemMessage.clear();
+			m_Caption.clear();
 		}
 		return TRUE;
 	}
@@ -294,10 +279,14 @@ bool CMessageDialog::Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPC
 	StringUtility::Assign(m_SystemMessage, pszSystemMessage);
 	StringUtility::Assign(m_Caption, pszCaption);
 	m_MessageType = Type;
-	return ::DialogBoxParam(
-		GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE(IDD_ERROR), hwndOwner, DlgProc,
-		reinterpret_cast<LPARAM>(this)) == IDOK;
+
+	return Show(hwndOwner) == IDOK;
+}
+
+
+bool CMessageDialog::Show(HWND hwndOwner)
+{
+	return ShowDialog(hwndOwner, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_ERROR));
 }
 
 

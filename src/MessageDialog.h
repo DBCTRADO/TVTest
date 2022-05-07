@@ -22,6 +22,7 @@
 #define TVTEST_MESSAGE_DIALOG_H
 
 
+#include "Dialog.h"
 #include "RichEditUtil.h"
 
 
@@ -29,6 +30,7 @@ namespace TVTest
 {
 
 	class CMessageDialog
+		: public CBasicDialog
 	{
 	public:
 		enum class MessageType {
@@ -51,9 +53,11 @@ namespace TVTest
 		MessageType m_MessageType;
 		HWND m_hDlg;
 
+	// CBasicDialog
+		bool Show(HWND hwndOwner) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
 		void LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf);
-		static CMessageDialog *GetThis(HWND hDlg);
-		static INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
 }	// namespace TVTest

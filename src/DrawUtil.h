@@ -82,6 +82,10 @@ namespace TVTest
 		bool ColorOverlay(HDC hdc, const RECT *pRect, COLORREF Color, BYTE Opacity = 128);
 		bool FillBorder(HDC hdc, const RECT *pBorderRect, const RECT *pEmptyRect, const RECT *pPaintRect, HBRUSH hbr);
 		bool FillBorder(HDC hdc, const RECT *pBorderRect, const RECT *pEmptyRect, const RECT *pPaintRect, COLORREF Color);
+		bool FillBorder(HDC hdc, const RECT &BorderRect, int BorderWidth, const RECT *pPaintRect, COLORREF Color);
+		inline bool FillBorder(HDC hdc, const RECT &BorderRect, int BorderWidth, COLORREF Color) {
+			return FillBorder(hdc, BorderRect, BorderWidth, nullptr, Color);
+		}
 
 		bool DrawBitmap(
 			HDC hdc, int DstX, int DstY, int DstWidth, int DstHeight,
@@ -366,6 +370,8 @@ namespace TVTest
 		bool GetSysFont(int FontID, LOGFONT *pFont);
 		bool GetInt(int PartID, int StateID, int PropID, int *pValue);
 		bool GetPartSize(HDC hdc, int PartID, int StateID, SIZE *pSize);
+		bool GetTransitionDuration(
+			int PartID, int StateIDFrom, int StateIDTo, DWORD *pDuration);
 
 		static void ScaleMargins(MARGINS *pMargins, int Num, int Denom);
 	};

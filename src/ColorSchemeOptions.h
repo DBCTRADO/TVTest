@@ -74,6 +74,7 @@ namespace TVTest
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		void OnDarkModeChanged(bool fDarkMode) override;
 
 	// CUIBase
 		void ApplyStyle() override;

@@ -377,7 +377,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 					::SetBkMode(pdis->hDC, OldBkMode);
 					::SetTextColor(pdis->hDC, OldTextColor);
 				} else {
-					::FillRect(pdis->hDC, &pdis->rcItem, reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1));
+					DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(COLOR_3DFACE));
 				}
 			}
 		}

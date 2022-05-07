@@ -437,13 +437,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 						TextColor = COLOR_HIGHLIGHTTEXT;
 						BackColor = COLOR_HIGHLIGHT;
 					}
-					::FillRect(
-						pdis->hDC, &pdis->rcItem,
-						reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(BackColor + 1)));
+					DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(BackColor));
 					OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-					crTextColor = ::GetSysColor(TextColor);
+					crTextColor = GetThemeColor(TextColor);
 					if (!pItemInfo->fVisible)
-						crTextColor = MixColor(crTextColor, ::GetSysColor(BackColor));
+						crTextColor = MixColor(crTextColor, GetThemeColor(BackColor));
 					crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
 					rc.left = pdis->rcItem.left + m_ItemMargin.Left;
 					rc.top = pdis->rcItem.top + m_ItemMargin.Top;

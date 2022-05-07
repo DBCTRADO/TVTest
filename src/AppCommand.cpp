@@ -1154,15 +1154,13 @@ bool CAppCommand::Options(CCommandManager::InvokeParameters &Params)
 
 bool CAppCommand::StreamInfo(CCommandManager::InvokeParameters &Params)
 {
-	if (!m_App.StreamInfo.GetVisible()) {
-		if (!m_App.StreamInfo.IsCreated())
-			m_App.StreamInfo.Create(m_App.UICore.GetMainWindow());
-		m_App.StreamInfo.SetVisible(true);
+	if (!m_App.StreamInfo.IsCreated()) {
+		m_App.StreamInfo.Create(m_App.UICore.GetMainWindow());
 	} else {
 		m_App.StreamInfo.Destroy();
 	}
 
-	m_App.UICore.SetCommandCheckedState(CM_STREAMINFO, m_App.StreamInfo.GetVisible());
+	m_App.UICore.SetCommandCheckedState(CM_STREAMINFO, m_App.StreamInfo.IsCreated());
 
 	return true;
 }

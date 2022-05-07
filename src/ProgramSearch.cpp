@@ -1622,6 +1622,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 		}
 		return TRUE;
 
+#if 0
 	case WM_CTLCOLORSTATIC:
 		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE_STATUS)) {
 			HDC hdc = reinterpret_cast<HDC>(wParam);
@@ -1631,6 +1632,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			return reinterpret_cast<INT_PTR>(::GetSysColorBrush(COLOR_3DFACE));
 		}
 		break;
+#endif
 
 	case WM_NOTIFY:
 		switch (((LPNMHDR)lParam)->code) {
@@ -2015,6 +2017,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			::ReleaseDC(hDlg, hdc);
 			CRichEditUtil::DisableAutoFont(::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
 			::SendDlgItemMessage(hDlg, IDC_PROGRAMSEARCH_INFO, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
+			::SendDlgItemMessage(hDlg, IDC_PROGRAMSEARCH_INFO, EM_SETBKGNDCOLOR, 0, GetThemeColor(COLOR_WINDOW));
+			m_InfoTextFormat.crTextColor = GetThemeColor(COLOR_WINDOWTEXT);
 		}
 
 		SetWindowIcon(hDlg, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDI_SEARCH));
@@ -2059,9 +2063,9 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_STATUS)) {
 			HDC hdc = reinterpret_cast<HDC>(wParam);
 
-			::SetTextColor(hdc, ::GetSysColor(COLOR_WINDOWTEXT));
-			::SetBkColor(hdc, ::GetSysColor(COLOR_WINDOW));
-			return reinterpret_cast<INT_PTR>(::GetSysColorBrush(COLOR_WINDOW));
+			::SetTextColor(hdc, GetThemeColor(COLOR_WINDOWTEXT));
+			::SetBkColor(hdc, GetThemeColor(COLOR_WINDOW));
+			return reinterpret_cast<INT_PTR>(m_BackBrush.GetHandle());
 		}
 		break;
 
@@ -2069,6 +2073,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		if ((HWND)wParam == hDlg && LOWORD(lParam) == HTCLIENT && m_fSplitterCursor) {
 			::SetCursor(::LoadCursor(nullptr, IDC_SIZENS));
 			::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
+			return TRUE;
+		} else if (m_RichEditLink.OnSetCursor(hDlg, wParam, lParam)) {
 			return TRUE;
 		}
 		break;
@@ -2151,31 +2157,10 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case LVN_ITEMCHANGED:
 			{
 				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
-				int Sel = ListView_GetNextItem(pnmlv->hdr.hwndFrom, -1, LVNI_SELECTED);
-				HWND hwndInfo = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO);
 
-				::SetWindowText(hwndInfo, TEXT(""));
-				if (Sel >= 0) {
-					LVITEM lvi;
-					TCHAR szText[256];
-					String Text;
-
-					lvi.mask = LVIF_PARAM;
-					lvi.iItem = Sel;
-					lvi.iSubItem = 0;
-					ListView_GetItem(pnmlv->hdr.hwndFrom, &lvi);
-					::SendMessage(hwndInfo, WM_SETREDRAW, FALSE, 0);
-					const CSearchEventInfo *pEventInfo = reinterpret_cast<const CSearchEventInfo*>(lvi.lParam);
-					FormatEventTimeText(pEventInfo, szText, lengthof(szText));
-					CRichEditUtil::AppendText(hwndInfo, szText, &m_InfoTextFormat);
-					FormatEventInfoText(pEventInfo, &Text);
-					CRichEditUtil::AppendText(hwndInfo, Text.c_str(), &m_InfoTextFormat);
-					HighlightKeyword();
-					CRichEditUtil::DetectURL(hwndInfo, &m_InfoTextFormat, 1);
-					POINT pt = {0, 0};
-					::SendMessage(hwndInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
-					::SendMessage(hwndInfo, WM_SETREDRAW, TRUE, 0);
-					::InvalidateRect(hwndInfo, nullptr, TRUE);
+				if (!!(pnmlv->uChanged & LVIF_STATE)
+						&& !!((pnmlv->uNewState ^ pnmlv->uOldState) & LVIS_SELECTED)) {
+					UpdateEventInfoText();
 				}
 			}
 			return TRUE;
@@ -2191,11 +2176,22 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			return TRUE;
 
 		case EN_MSGFILTER:
-			if (reinterpret_cast<MSGFILTER*>(lParam)->msg == WM_RBUTTONUP) {
-				EventInfoUtil::EventInfoContextMenu(hDlg, ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
+			{
+				MSGFILTER *pMsgFilter = reinterpret_cast<MSGFILTER*>(lParam);
+
+				switch (pMsgFilter->msg) {
+				case WM_RBUTTONUP:
+					EventInfoUtil::EventInfoContextMenu(hDlg, ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
+					break;
+
+				default:
+					m_RichEditLink.OnMsgFilter(pMsgFilter);
+					break;
+				}
 			}
 			return TRUE;
 
+#if 0
 		case EN_LINK:
 			{
 				ENLINK *penl = reinterpret_cast<ENLINK*>(lParam);
@@ -2205,6 +2201,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				}
 			}
 			return TRUE;
+#endif
 		}
 		break;
 
@@ -2226,10 +2223,20 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		m_Searcher.Finalize();
 
+		m_RichEditLink.Reset();
+
 		return TRUE;
 	}
 
 	return FALSE;
+}
+
+
+void CProgramSearchDialog::OnDarkModeChanged(bool fDarkMode)
+{
+	::SendDlgItemMessage(m_hDlg, IDC_PROGRAMSEARCH_INFO, EM_SETBKGNDCOLOR, 0, GetThemeColor(COLOR_WINDOW));
+	m_InfoTextFormat.crTextColor = GetThemeColor(COLOR_WINDOWTEXT);
+	UpdateEventInfoText();
 }
 
 
@@ -2355,6 +2362,45 @@ void CProgramSearchDialog::SortSearchResult()
 }
 
 
+void CProgramSearchDialog::UpdateEventInfoText()
+{
+	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
+	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+
+	::SetDlgItemText(m_hDlg, IDC_PROGRAMSEARCH_INFO, TEXT(""));
+	if (Sel >= 0) {
+		LVITEM lvi;
+
+		lvi.mask = LVIF_PARAM;
+		lvi.iItem = Sel;
+		lvi.iSubItem = 0;
+		ListView_GetItem(hwndList, &lvi);
+		const CSearchEventInfo *pEventInfo = reinterpret_cast<const CSearchEventInfo*>(lvi.lParam);
+		SetEventInfoText(pEventInfo);
+	}
+}
+
+
+void CProgramSearchDialog::SetEventInfoText(const LibISDB::EventInfo *pEventInfo)
+{
+	HWND hwndInfo = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO);
+	TCHAR szText[256];
+	String Text;
+
+	::SendMessage(hwndInfo, WM_SETREDRAW, FALSE, 0);
+	FormatEventTimeText(pEventInfo, szText, lengthof(szText));
+	CRichEditUtil::AppendText(hwndInfo, szText, &m_InfoTextFormat);
+	FormatEventInfoText(pEventInfo, &Text);
+	CRichEditUtil::AppendText(hwndInfo, Text.c_str(), &m_InfoTextFormat);
+	HighlightKeyword();
+	m_RichEditLink.DetectURL(hwndInfo, &m_InfoTextFormat, 1);
+	POINT pt = {0, 0};
+	::SendMessage(hwndInfo, EM_SETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&pt));
+	::SendMessage(hwndInfo, WM_SETREDRAW, TRUE, 0);
+	::InvalidateRect(hwndInfo, nullptr, TRUE);
+}
+
+
 int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const
 {
 	if (pEventInfo == nullptr) {
@@ -2432,7 +2478,7 @@ void CProgramSearchDialog::HighlightKeyword()
 	CRichEditUtil::CharFormatToCharFormat2(&m_InfoTextFormat, &cfHighlight);
 	cfHighlight.dwMask |= CFM_BOLD | CFM_BACKCOLOR;
 	cfHighlight.dwEffects |= CFE_BOLD;
-	cfHighlight.crBackColor = RGB(255, 255, 0);
+	cfHighlight.crBackColor = m_fDarkMode ? RGB(128, 128, 0) : RGB(255, 255, 0);
 	CHARRANGE cr, crOld;
 
 	::SendMessage(hwndInfo, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&crOld));

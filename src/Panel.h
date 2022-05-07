@@ -171,7 +171,7 @@ namespace TVTest
 	};
 
 	class CPanelFrame
-		: public CCustomWindow
+		: public CPopupWindow
 		, public CUIBase
 		, public CPanel::CEventHandler
 	{

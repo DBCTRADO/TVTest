@@ -41,6 +41,7 @@ CStyleManager::CStyleManager()
 	, m_fScaleFont(true)
 	, m_fHandleDPIChanged(true)
 	, m_fUseDarkMenu(true)
+	, m_fDarkDialog(true)
 {
 }
 
@@ -68,6 +69,7 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 		Settings.Read(TEXT("HandleDPIChanged"), &m_fHandleDPIChanged);
 		Settings.Read(TEXT("ScaleFont"), &m_fScaleFont);
 		Settings.Read(TEXT("UseDarkMenu"), &m_fUseDarkMenu);
+		Settings.Read(TEXT("DarkDialog"), &m_fDarkDialog);
 	}
 
 	if (Settings.SetSection(TEXT("Styles"))) {
@@ -414,6 +416,12 @@ bool CStyleManager::IsHandleDPIChanged() const
 bool CStyleManager::IsUseDarkMenu() const
 {
 	return m_fUseDarkMenu;
+}
+
+
+bool CStyleManager::IsDarkDialog() const
+{
+	return m_fDarkDialog;
 }
 
 

@@ -284,6 +284,8 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			CColorPalette::Initialize(GetWindowInstance(hDlg));
 			m_ColorPalette.Create(hDlg, WS_CHILD | WS_VISIBLE, 0, IDC_COLORSCHEME_PALETTE);
 			m_ColorPalette.SetTooltipFont(GetWindowFont(hDlg));
+			if (m_fDarkMode)
+				m_ColorPalette.SetBackColor(GetThemeColor(COLOR_3DFACE));
 			GetWindowRect(GetDlgItem(hDlg, IDC_COLORSCHEME_PALETTEPLACE), &rc);
 			MapWindowPoints(nullptr, hDlg, (LPPOINT)&rc, 2);
 			m_ColorPalette.SetPosition(&rc);
@@ -339,7 +341,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case ODA_DRAWENTIRE:
 				case ODA_SELECT:
 					if ((int)pdis->itemID < 0) {
-						::FillRect(pdis->hDC, &pdis->rcItem, reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1));
+						DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(COLOR_WINDOW));
 					} else {
 						const CColorScheme *pColorScheme = m_PresetList.GetColorScheme((int)pdis->itemData);
 						if (pColorScheme == nullptr)
@@ -408,18 +410,16 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 						if ((pdis->itemState & ODS_SELECTED) == 0) {
 							BackSysColor = COLOR_WINDOW;
-							TextColor = ::GetSysColor(COLOR_WINDOWTEXT);
+							TextColor = GetThemeColor(COLOR_WINDOWTEXT);
 						} else {
 							BackSysColor = COLOR_HIGHLIGHT;
-							TextColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
+							TextColor = GetThemeColor(COLOR_HIGHLIGHTTEXT);
 						}
-						BackColor = ::GetSysColor(BackSysColor);
+						BackColor = GetThemeColor(BackSysColor);
 						int Border = CColorScheme::GetColorBorder((int)pdis->itemID);
 						if (Border >= 0 && m_BorderList[Border] == Theme::BorderType::None)
 							TextColor = MixColor(TextColor, BackColor);
-						::FillRect(
-							pdis->hDC, &pdis->rcItem,
-							reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(BackSysColor + 1)));
+						DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(BackSysColor));
 						hbr = ::CreateSolidBrush((COLORREF)pdis->itemData);
 						hbrOld = SelectBrush(pdis->hDC, hbr);
 						hpenOld = SelectPen(pdis->hDC, ::GetStockObject(BLACK_PEN));
@@ -884,6 +884,12 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 	}
 
 	return FALSE;
+}
+
+
+void CColorSchemeOptions::OnDarkModeChanged(bool fDarkMode)
+{
+	m_ColorPalette.SetBackColor(fDarkMode ? GetThemeColor(COLOR_3DFACE) : CLR_INVALID);
 }
 
 

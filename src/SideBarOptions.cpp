@@ -502,54 +502,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DlgCheckBox_Check(hDlg, IDC_SIDEBAR_SHOWTOOLTIPS, m_fShowToolTips);
 			DlgCheckBox_Check(hDlg, IDC_SIDEBAR_SHOWCHANNELLOGO, m_fShowChannelLogo);
 
-			const COLORREF IconColor = ::GetSysColor(COLOR_WINDOWTEXT);
-			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
-			const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
-			SIZE sz;
-			HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
-			Theme::IconList Bitmap;
-			Bitmap.Create(hbmIcons, sz.cx, sz.cy, IconWidth, IconHeight);
-			::DeleteObject(hbmIcons);
-			m_himlIcons = Bitmap.CreateImageList(IconColor);
-			Bitmap.Destroy();
-
-			m_IconIDMap.clear();
-			for (const auto &e : ItemList)
-				m_IconIDMap.emplace(e.Command, e.Icon);
-			const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
-			for (size_t i = lengthof(ItemList); i < m_AvailItemList.size(); i++) {
-				const int ID = m_AvailItemList[i].Command;
-				if (ID >= CM_PLUGIN_FIRST && ID <= CM_PLUGIN_LAST) {
-					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByCommand(ID);
-					if (pPlugin != nullptr && pPlugin->GetIcon().IsCreated()) {
-						HICON hIcon = pPlugin->GetIcon().ExtractIcon(IconColor);
-						if (hIcon != nullptr) {
-							int Icon = ImageList_AddIcon(m_himlIcons, hIcon);
-							::DestroyIcon(hIcon);
-							m_IconIDMap.emplace(ID, Icon);
-						}
-					}
-				} else if (ID >= CM_PLUGINCOMMAND_FIRST && ID <= CM_PLUGINCOMMAND_LAST) {
-					String CommandID = pCommandManager->GetCommandIDText(ID);
-					LPCTSTR pszCommand;
-					CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByPluginCommand(CommandID.c_str(), &pszCommand);
-					if (pPlugin != nullptr) {
-						CPlugin::CPluginCommandInfo *pCommandInfo =
-							pPlugin->GetPluginCommandInfo(pszCommand);
-						if (pCommandInfo != nullptr && pCommandInfo->GetIcon().IsCreated()) {
-							HICON hIcon = pCommandInfo->GetIcon().ExtractIcon(IconColor);
-							if (hIcon != nullptr) {
-								int Icon = ImageList_AddIcon(m_himlIcons, hIcon);
-								::DestroyIcon(hIcon);
-								m_IconIDMap.emplace(ID, Icon);
-							}
-						}
-					}
-				}
-			}
-
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			m_himlIcons = CreateIconImageList();
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
 			RECT rc;
 			::GetClientRect(hwndList, &rc);
@@ -792,6 +747,98 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	}
 
 	return FALSE;
+}
+
+
+void CSideBarOptions::OnDarkModeChanged(bool fDarkMode)
+{
+	HIMAGELIST himlIcons = CreateIconImageList();
+	if (himlIcons != nullptr) {
+		UpdateListViewIcons(::GetDlgItem(m_hDlg, IDC_SIDEBAR_ITEMLIST), himlIcons);
+		UpdateListViewIcons(::GetDlgItem(m_hDlg, IDC_SIDEBAR_COMMANDLIST), himlIcons);
+
+		if (m_himlIcons != nullptr)
+			::ImageList_Destroy(m_himlIcons);
+		m_himlIcons = himlIcons;
+	}
+}
+
+
+HIMAGELIST CSideBarOptions::CreateIconImageList()
+{
+	const COLORREF IconColor = GetThemeColor(COLOR_WINDOWTEXT);
+	const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
+	const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
+	SIZE sz;
+	HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
+	Theme::IconList Bitmap;
+	Bitmap.Create(hbmIcons, sz.cx, sz.cy, IconWidth, IconHeight);
+	::DeleteObject(hbmIcons);
+	HIMAGELIST himlIcons = Bitmap.CreateImageList(IconColor);
+	Bitmap.Destroy();
+
+	m_IconIDMap.clear();
+	for (const auto &e : ItemList)
+		m_IconIDMap.emplace(e.Command, e.Icon);
+	const CCommandManager *pCommandManager = m_pSideBar->GetCommandManager();
+	for (size_t i = lengthof(ItemList); i < m_AvailItemList.size(); i++) {
+		const int ID = m_AvailItemList[i].Command;
+		if (ID >= CM_PLUGIN_FIRST && ID <= CM_PLUGIN_LAST) {
+			CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByCommand(ID);
+			if (pPlugin != nullptr && pPlugin->GetIcon().IsCreated()) {
+				HICON hIcon = pPlugin->GetIcon().ExtractIcon(IconColor);
+				if (hIcon != nullptr) {
+					int Icon = ImageList_AddIcon(himlIcons, hIcon);
+					::DestroyIcon(hIcon);
+					m_IconIDMap.emplace(ID, Icon);
+				}
+			}
+		} else if (ID >= CM_PLUGINCOMMAND_FIRST && ID <= CM_PLUGINCOMMAND_LAST) {
+			String CommandID = pCommandManager->GetCommandIDText(ID);
+			LPCTSTR pszCommand;
+			CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByPluginCommand(CommandID.c_str(), &pszCommand);
+			if (pPlugin != nullptr) {
+				CPlugin::CPluginCommandInfo *pCommandInfo =
+					pPlugin->GetPluginCommandInfo(pszCommand);
+				if (pCommandInfo != nullptr && pCommandInfo->GetIcon().IsCreated()) {
+					HICON hIcon = pCommandInfo->GetIcon().ExtractIcon(IconColor);
+					if (hIcon != nullptr) {
+						int Icon = ImageList_AddIcon(himlIcons, hIcon);
+						::DestroyIcon(hIcon);
+						m_IconIDMap.emplace(ID, Icon);
+					}
+				}
+			}
+		}
+	}
+
+	return himlIcons;
+}
+
+
+void CSideBarOptions::UpdateListViewIcons(HWND hwndList, HIMAGELIST himl)
+{
+	ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
+
+	const int ItemCount = ListView_GetItemCount(hwndList);
+
+	for (int i = 0; i < ItemCount; i++) {
+		LVITEM lvi;
+
+		lvi.mask = LVIF_PARAM;
+		lvi.iItem = i;
+		lvi.iSubItem = 0;
+		ListView_GetItem(hwndList, &lvi);
+		if (lvi.lParam != ITEM_SEPARATOR) {
+			lvi.mask = LVIF_IMAGE;
+			auto itr = m_IconIDMap.find(static_cast<int>(lvi.lParam));
+			if (itr != m_IconIDMap.end())
+				lvi.iImage = itr->second;
+			else
+				lvi.iImage = -1;
+			ListView_SetItem(hwndList, &lvi);
+		}
+	}
 }
 
 

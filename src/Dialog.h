@@ -23,7 +23,9 @@
 
 
 #include "UIBase.h"
+#include "DrawUtil.h"
 #include <vector>
+#include <map>
 
 
 namespace TVTest
@@ -76,6 +78,9 @@ namespace TVTest
 		bool SetPosition(int Left, int Top);
 		bool IsPositionSet() const { return m_fSetPosition; }
 		LRESULT SendMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+		HWND GetHandle() const noexcept { return m_hDlg; }
+
+		bool IsDarkMode() const noexcept { return m_fDarkMode; }
 
 	protected:
 		HWND m_hDlg;
@@ -98,6 +103,12 @@ namespace TVTest
 		bool m_fInitializing;
 		bool m_fOwnDPIScaling;
 
+		bool m_fDisableDarkMode;
+		bool m_fAllowDarkMode;
+		bool m_fDarkMode;
+		DrawUtil::CBrush m_BackBrush;
+		DrawUtil::CBrush m_FaceBrush;
+
 		static CBasicDialog *GetThis(HWND hDlg);
 		static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		int ShowDialog(HWND hwndOwner, HINSTANCE hinst, LPCTSTR pszTemplate);
@@ -109,9 +120,68 @@ namespace TVTest
 		void InitDialog();
 		virtual void OnDestroyed() {}
 
+		virtual bool IsDisableThemingControl(HWND hwnd) const { return false; }
+		virtual void OnDarkModeChanged(bool fDarkMode) {}
+		COLORREF GetThemeColor(int Type) const;
+
 	// CUIBase
 		void ApplyStyle() override;
 		void RealizeStyle() override;
+
+	private:
+		struct ControlThemeInfo {
+			CUxTheme Theme;
+			int State = -1;
+			bool fDisabled = false;
+		};
+
+		INT_PTR HandleDarkModeMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		void HandleDarkModeChanged(bool fDarkMode);
+		LRESULT HandleDarkModeCtlColor(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		bool HandleDarkModeNotifyMessage(NMHDR *pnmh);
+		LRESULT CustomDrawDarkModeButton(NMCUSTOMDRAW *pnmcd);
+		LRESULT CustomDrawDarkModeListView(NMLVCUSTOMDRAW *pnmcd);
+		LRESULT CustomDrawDarkModeTreeView(NMTVCUSTOMDRAW *pnmcd);
+		LRESULT CustomDrawDarkModeTrackBar(NMCUSTOMDRAW *pnmcd);
+		void UpdateColors(bool fDarkMode);
+		void InitializeControls(HWND hDlg, bool fDark);
+		void UpdateControlsTheme(HWND hDlg, bool fDark);
+		void UpdateControlsColors(HWND hDlg, bool fDark);
+		bool InitializeControl(HWND hwnd, bool fDark);
+		bool SetControlDarkTheme(HWND hwnd, bool fDark);
+		bool UpdateControlColors(HWND hwnd, bool fDark);
+		void DrawDarkModeStatic(HWND hwnd, HDC hdc, const RECT &PaintRect, DWORD Style);
+		void DrawDarkModeGroupBox(HWND hwnd, HDC hdc);
+		void DrawDarkModeTab(HWND hwnd, HDC hdc, const RECT &PaintRect);
+		void DrawDarkModeUpDown(HWND hwnd, HDC hdc, const RECT &PaintRect);
+		LRESULT DarkModeHeaderCustomDraw(NMCUSTOMDRAW *pnmcd);
+		ControlThemeInfo * GetThemeInfo(HWND hwnd, LPCWSTR pszClassList);
+		void DeleteTheme(HWND hwnd);
+
+		static LRESULT CALLBACK StaticSubclassProc(
+			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+		static LRESULT CALLBACK ButtonSubclassProc(
+			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+		static LRESULT CALLBACK ListViewSubclassProc(
+			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+		static LRESULT CALLBACK TabSubclassProc(
+			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+		static LRESULT CALLBACK UpDownSubclassProc(
+			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
+		static constexpr UINT_PTR SUBCLASS_ID = 1;
+
+		static const LPCTSTR PROP_NAME;
+
+		COLORREF m_TextColor;
+		COLORREF m_BackColor;
+		COLORREF m_FaceColor;
+		std::map<HWND, ControlThemeInfo> m_ControlThemeMap;
 	};
 
 	class CResizableDialog

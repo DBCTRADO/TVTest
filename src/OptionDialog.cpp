@@ -237,16 +237,15 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				if (fSelected) {
 					rc = pdis->rcItem;
 					rc.right = rc.left + m_ListMargin + m_IconWidth + m_IconTextMargin / 2;
-					::FillRect(pdis->hDC, &rc, reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1));
+					DrawUtil::Fill(pdis->hDC, &rc, GetThemeColor(COLOR_WINDOW));
 					rc.left = rc.right;
 					rc.right = pdis->rcItem.right;
 					DrawUtil::FillGradient(
 						pdis->hDC, &rc, RGB(0, 0, 0), GetTitleColor((int)pdis->itemData));
 					crText = RGB(255, 255, 255);
 				} else {
-					::FillRect(
-						pdis->hDC, &pdis->rcItem, reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1));
-					crText = ::GetSysColor(COLOR_WINDOWTEXT);
+					DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(COLOR_WINDOW));
+					crText = GetThemeColor(COLOR_WINDOWTEXT);
 				}
 
 				rc = pdis->rcItem;

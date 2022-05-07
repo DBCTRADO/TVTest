@@ -379,12 +379,14 @@ namespace TVTest
 		bool m_fSplitterCursor;
 		int m_SplitterDragPos;
 		CRichEditUtil m_RichEditUtil;
+		CRichEditLinkHandler m_RichEditLink;
 		CHARFORMAT m_InfoTextFormat;
 
 		static const int MIN_PANE_HEIGHT = 16;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		void OnDarkModeChanged(bool fDarkMode) override;
 
 	// CUIBase
 		void ApplyStyle() override;
@@ -392,6 +394,8 @@ namespace TVTest
 		bool AddSearchResult(CSearchEventInfo *pEventInfo);
 		void ClearSearchResult();
 		void SortSearchResult();
+		void UpdateEventInfoText();
+		void SetEventInfoText(const LibISDB::EventInfo *pEventInfo);
 		int FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const;
 		void FormatEventInfoText(const LibISDB::EventInfo *pEventInfo, String *pText) const;
 		void HighlightKeyword();

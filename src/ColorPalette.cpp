@@ -52,7 +52,7 @@ bool CColorPalette::Initialize(HINSTANCE hinst)
 		wc.hInstance = hinst;
 		wc.hIcon = nullptr;
 		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-		wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+		wc.hbrBackground = nullptr;
 		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = PALETTE_WINDOW_CLASS;
 		if (RegisterClass(&wc) == 0)
@@ -65,6 +65,7 @@ bool CColorPalette::Initialize(HINSTANCE hinst)
 
 CColorPalette::CColorPalette()
 	: m_NumColors(0)
+	, m_BackColor(CLR_INVALID)
 {
 }
 
@@ -173,6 +174,16 @@ bool CColorPalette::SetTooltipFont(HFONT hfont)
 }
 
 
+void CColorPalette::SetBackColor(COLORREF Color)
+{
+	if (m_BackColor != Color) {
+		m_BackColor = Color;
+		if (m_hwnd != nullptr)
+			::InvalidateRect(m_hwnd, nullptr, TRUE);
+	}
+}
+
+
 void CColorPalette::GetItemRect(int Index, RECT *pRect) const
 {
 	int x, y;
@@ -192,7 +203,9 @@ void CColorPalette::DrawSelRect(HDC hdc, int Sel, bool fSel)
 	HBRUSH hbrOld;
 	RECT rc;
 
-	hpen = CreatePen(PS_INSIDEFRAME, 2, GetSysColor(fSel ? COLOR_HIGHLIGHT : COLOR_3DFACE));
+	hpen = CreatePen(
+		PS_INSIDEFRAME, 2,
+		fSel || m_BackColor == CLR_INVALID ? GetSysColor(fSel ? COLOR_HIGHLIGHT : COLOR_3DFACE) : m_BackColor);
 	hpenOld = SelectPen(hdc, hpen);
 	hbrOld = SelectBrush(hdc, GetStockObject(NULL_BRUSH));
 	GetItemRect(Sel, &rc);
@@ -273,6 +286,12 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			RECT rc;
 
 			::BeginPaint(hwnd, &ps);
+
+			if (m_BackColor != CLR_INVALID)
+				DrawUtil::Fill(ps.hdc, &ps.rcPaint, m_BackColor);
+			else
+				::FillRect(ps.hdc, &ps.rcPaint, reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1));
+
 			for (int i = 0; i < m_NumColors; i++) {
 				x = i % 16;
 				y = i / 16;
@@ -287,8 +306,10 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						RGB(m_Palette[i].rgbRed, m_Palette[i].rgbGreen, m_Palette[i].rgbBlue));
 				}
 			}
+
 			if (m_SelColor >= 0)
 				DrawSelRect(ps.hdc, m_SelColor, true);
+
 			::EndPaint(hwnd, &ps);
 			return 0;
 		}

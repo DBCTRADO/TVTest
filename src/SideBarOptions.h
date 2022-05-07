@@ -91,8 +91,11 @@ namespace TVTest
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+		void OnDarkModeChanged(bool fDarkMode) override;
 
 		HBITMAP CreateImage(IconSizeType SizeType, SIZE *pIconSize);
+		HIMAGELIST CreateIconImageList();
+		void UpdateListViewIcons(HWND hwndList, HIMAGELIST himl);
 		void SetItemList(HWND hwndList, const int *pList, int NumItems);
 		bool IsAvailableItem(int ID) const;
 	};

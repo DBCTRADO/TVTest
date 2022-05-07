@@ -1364,7 +1364,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 			ImageList_SetBkColor(himl, TreeView_GetBkColor(hwndTree));
 			TreeView_SetImageList(hwndTree, himl, TVSIL_NORMAL);
 
-			TreeView_SetInsertMarkColor(hwndTree, ::GetSysColor(COLOR_HIGHLIGHT));
+			TreeView_SetInsertMarkColor(hwndTree, GetThemeColor(COLOR_HIGHLIGHT));
 
 			if (m_pManager->GetRootFolder().GetItemCount() > 0)
 				InsertTreeItems(hwndTree, TVI_ROOT, &m_pManager->GetRootFolder());

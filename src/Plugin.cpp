@@ -2985,6 +2985,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				Status |= DARK_MODE_STATUS_MAINWINDOW_DARK;
 			if (App.Epg.ProgramGuideFrame.IsDarkMode())
 				Status |= DARK_MODE_STATUS_PROGRAMGUIDE_DARK;
+			if (App.StyleManager.IsDarkDialog() && IsDarkThemeSupported() && IsDarkMode())
+				Status |= DARK_MODE_STATUS_DIALOG_DARK;
 			return Status;
 		}
 
@@ -2992,7 +2994,19 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		return IsDarkThemeColor(static_cast<COLORREF>(lParam1));
 
 	case MESSAGE_SETWINDOWDARKMODE:
-		return SetWindowDarkTheme(reinterpret_cast<HWND>(lParam1), lParam2 != 0);
+		{
+			HWND hwnd = reinterpret_cast<HWND>(lParam1);
+			if (hwnd == nullptr)
+				return FALSE;
+			const bool fDark = lParam2 != 0;
+
+			if (!(::GetWindowStyle(hwnd) & WS_CHILD)) {
+				if (!SetWindowFrameDarkMode(hwnd, fDark))
+					return FALSE;
+			}
+
+			return SetWindowDarkTheme(hwnd, fDark);
+		}
 
 #ifdef _DEBUG
 	default:
@@ -3695,7 +3709,12 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 				INT_PTR m_Result;
 
 			public:
-				CPluginDialog(ShowDialogInfo *pInfo) : m_Info(*pInfo) {}
+				CPluginDialog(ShowDialogInfo *pInfo)
+					: m_Info(*pInfo)
+				{
+					if (!!(m_Info.Flags & SHOW_DIALOG_FLAG_DISABLE_DARK_MODE))
+						m_fDisableDarkMode = true;
+				}
 
 				bool Show(HWND hwndOwner) override
 				{

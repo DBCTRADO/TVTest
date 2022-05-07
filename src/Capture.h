@@ -99,7 +99,7 @@ namespace TVTest
 	};
 
 	class CCaptureWindow
-		: public CCustomWindow
+		: public CPopupWindow
 		, public CUIBase
 	{
 	public:

@@ -307,7 +307,7 @@ namespace TVTest
 			CAppMain &m_App;
 
 			void OnRestoreSettings() override;
-			bool OnClose() override;
+			void OnClose() override;
 		};
 
 		class CCaptureWindowEventHandler

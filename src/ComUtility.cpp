@@ -328,6 +328,8 @@ CPropertyPageFrame::CPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages
 	, m_fTabInitialized(false)
 	, m_CurTab(-1)
 {
+	m_fDisableDarkMode = true;
+
 	m_PageList.reserve(NumPages);
 
 	for (int i = 0; i < NumPages; i++) {

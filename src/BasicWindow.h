@@ -101,11 +101,24 @@ namespace TVTest
 	protected:
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		virtual LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	public:
 		CCustomWindow();
 		virtual ~CCustomWindow();
+	};
+
+	class ABSTRACT_CLASS(CPopupWindow)
+		: public CCustomWindow
+	{
+	protected:
+		virtual LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+		virtual void OnDarkModeChanged(bool fDarkMode) {}
+
+		bool m_fAllowDarkMode = false;
+		bool m_fDarkMode = false;
 	};
 
 }	// namespace TVTest

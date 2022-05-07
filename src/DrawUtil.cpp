@@ -409,6 +409,9 @@ bool FillBorder(HDC hdc, const RECT *pBorderRect, const RECT *pEmptyRect, const 
 {
 	RECT rc;
 
+	if (pPaintRect == nullptr)
+		pPaintRect = pBorderRect;
+
 	if (pPaintRect->left < pBorderRect->right && pPaintRect->right > pBorderRect->left) {
 		rc.left = std::max(pPaintRect->left, pBorderRect->left);
 		rc.right = std::min(pPaintRect->right, pBorderRect->right);
@@ -442,6 +445,19 @@ bool FillBorder(HDC hdc, const RECT *pBorderRect, const RECT *pEmptyRect, const 
 	COLORREF OldColor = ::SetDCBrushColor(hdc, Color);
 	bool fResult = FillBorder(
 		hdc, pBorderRect, pEmptyRect, pPaintRect,
+		static_cast<HBRUSH>(::GetStockObject(DC_BRUSH)));
+	::SetDCBrushColor(hdc, OldColor);
+	return fResult;
+}
+
+
+bool FillBorder(HDC hdc, const RECT &BorderRect, int BorderWidth, const RECT *pPaintRect, COLORREF Color)
+{
+	COLORREF OldColor = ::SetDCBrushColor(hdc, Color);
+	RECT EmptyRect = BorderRect;
+	::InflateRect(&EmptyRect, -BorderWidth, -BorderWidth);
+	bool fResult = FillBorder(
+		hdc, &BorderRect, &EmptyRect, pPaintRect,
 		static_cast<HBRUSH>(::GetStockObject(DC_BRUSH)));
 	::SetDCBrushColor(hdc, OldColor);
 	return fResult;
@@ -1901,6 +1917,21 @@ void CUxTheme::ScaleMargins(MARGINS *pMargins, int Num, int Denom)
 	pMargins->cxRightWidth = ::MulDiv(pMargins->cxRightWidth, Num, Denom);
 	pMargins->cyTopHeight = ::MulDiv(pMargins->cyTopHeight, Num, Denom);
 	pMargins->cyBottomHeight = ::MulDiv(pMargins->cyBottomHeight, Num, Denom);
+}
+
+
+bool CUxTheme::GetTransitionDuration(
+	int PartID, int StateIDFrom, int StateIDTo, DWORD *pDuration)
+{
+	if (pDuration == nullptr)
+		return false;
+
+	*pDuration = 0;
+
+	if (m_hTheme == nullptr)
+		return false;
+
+	return SUCCEEDED(::GetThemeTransitionDuration(m_hTheme, PartID, StateIDFrom, StateIDTo, TMT_TRANSITIONDURATIONS, pDuration));
 }
 
 

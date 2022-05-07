@@ -587,7 +587,10 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			::GetObject(m_hbmController, sizeof(BITMAP), &bm);
 			::GetWindowRect(::GetDlgItem(hDlg, IDC_CONTROLLER_IMAGEPLACE), &rc);
 			MapWindowRect(nullptr, hDlg, &rc);
-			::FillRect(ps.hdc, &rc, static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
+			if (m_fDarkMode)
+				DrawUtil::Fill(ps.hdc, &rc, GetThemeColor(COLOR_3DFACE));
+			else
+				::FillRect(ps.hdc, &rc, static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
 			hdcMem = ::CreateCompatibleDC(ps.hdc);
 			hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem, m_hbmController));
 			::BitBlt(

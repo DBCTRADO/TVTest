@@ -21,6 +21,7 @@
 #include "stdafx.h"
 #include "TVTest.h"
 #include "BasicWindow.h"
+#include "DarkMode.h"
 #include "Common/DebugDef.h"
 
 
@@ -492,7 +493,7 @@ LRESULT CALLBACK CCustomWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 
 	if (uMsg == WM_NCCREATE) {
 		pThis = static_cast<CCustomWindow*>(OnCreate(hwnd, lParam));
-		if (!pThis->OnMessage(hwnd, uMsg, wParam, lParam)) {
+		if (!pThis->HandleMessage(hwnd, uMsg, wParam, lParam)) {
 			pThis->m_hwnd = nullptr;
 			return FALSE;
 		}
@@ -502,14 +503,14 @@ LRESULT CALLBACK CCustomWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 		if (pThis == nullptr)
 			return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 		if (uMsg == WM_CREATE) {
-			if (pThis->OnMessage(hwnd, uMsg, wParam, lParam) < 0) {
+			if (pThis->HandleMessage(hwnd, uMsg, wParam, lParam) < 0) {
 				pThis->m_hwnd = nullptr;
 				return -1;
 			}
 			return 0;
 		}
 		if (uMsg == WM_DESTROY) {
-			pThis->OnMessage(hwnd, uMsg, wParam, lParam);
+			pThis->HandleMessage(hwnd, uMsg, wParam, lParam);
 			pThis->OnDestroy();
 			return 0;
 		}
@@ -519,9 +520,50 @@ LRESULT CALLBACK CCustomWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 }
 
 
+LRESULT CCustomWindow::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	return OnMessage(hwnd, uMsg, wParam, lParam);
+}
+
+
 LRESULT CCustomWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+
+
+
+LRESULT CPopupWindow::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg) {
+	case WM_CREATE:
+		if (SetWindowAllowDarkMode(m_hwnd, true)) {
+			m_fAllowDarkMode = true;
+			if (TVTest::IsDarkMode()) {
+				if (SetWindowFrameDarkMode(m_hwnd, true))
+					m_fDarkMode = true;
+			}
+		}
+		break;
+
+	case WM_SETTINGCHANGE:
+		if (m_fAllowDarkMode) {
+			if (IsDarkModeSettingChanged(hwnd, uMsg, wParam, lParam)) {
+				const bool fDarkMode = TVTest::IsDarkMode();
+
+				if (m_fDarkMode != fDarkMode) {
+					if (SetWindowFrameDarkMode(hwnd, fDarkMode)) {
+						m_fDarkMode = fDarkMode;
+						OnDarkModeChanged(fDarkMode);
+					}
+				}
+			}
+		}
+		break;
+	}
+
+	return OnMessage(hwnd, uMsg, wParam, lParam);
 }
 
 
