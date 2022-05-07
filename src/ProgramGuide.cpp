@@ -7484,6 +7484,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 				if (m_fDarkMode != fDarkMode) {
 					if (SetWindowFrameDarkMode(hwnd, fDarkMode)) {
 						m_fDarkMode = fDarkMode;
+						SetAeroGlass();
 						GetAppClass().AppEventManager.OnProgramGuideDarkModeChanged(fDarkMode);
 					}
 				}
