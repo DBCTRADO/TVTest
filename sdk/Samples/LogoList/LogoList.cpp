@@ -10,6 +10,7 @@
 	・ウィンドウを表示する
 	・配色を取得し、配色の変更に追従する
 	・DPI に応じてスケーリングする
+	・TVTest に合わせてウィンドウをダークモードにする
 */
 
 
@@ -156,6 +157,16 @@ LRESULT CALLBACK CLogoList::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPara
 		if (pThis->m_hwndList != NULL) {
 			pThis->GetColors();
 			::RedrawWindow(pThis->m_hwndList, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+		}
+		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// メインウィンドウのダークモード状態が変わった
+		if (pThis->m_hwnd != NULL) {
+			// メインウィンドウに合わせてダークモード状態を変更する
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
 		}
 		return TRUE;
 	}
@@ -323,6 +334,9 @@ void CLogoList::GetColors()
 	if (m_hbrBack != NULL)
 		::DeleteObject(m_hbrBack);
 	m_hbrBack = ::CreateSolidBrush(m_crBackColor);
+
+	if (m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_PANEL_SUPPORTED)
+		m_pApp->SetWindowDarkMode(m_hwndList, m_pApp->IsDarkModeColor(m_crBackColor));
 }
 
 
@@ -393,6 +407,10 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 			for (size_t i = 0; i < pThis->m_ServiceList.size(); i++)
 				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i]));
+
+			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
 
 			// 更新用タイマー設定
 			::SetTimer(hwnd, TIMER_UPDATELOGO, 60 * 1000, NULL);

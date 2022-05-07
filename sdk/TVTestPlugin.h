@@ -98,6 +98,8 @@
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
 	  ・EVENT_PROGRAMGUIDEDARKMODECHANGED
+	・チャンネル選択のフラグに CHANNEL_SELECT_FLAG_ALLOWDISABLED を追加した
+	・ダイアログ表示のフラグに SHOW_DIALOG_FLAG_DISABLE_DARK_MODE を追加した
 
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
 	・以下のメッセージを追加した
@@ -2938,7 +2940,10 @@ struct ChannelSelectInfo
 
 // チャンネル選択のフラグ
 enum {
-	CHANNEL_SELECT_FLAG_STRICTSERVICE = 0x0001U  // ServiceID の指定を厳密に扱う
+	CHANNEL_SELECT_FLAG_STRICTSERVICE   = 0x0001U // ServiceID の指定を厳密に扱う
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	, CHANNEL_SELECT_FLAG_ALLOWDISABLED = 0x0002U // 無効に設定されているチャンネルも選択する
+#endif
 };
 
 // チャンネルを選択する
@@ -3154,8 +3159,11 @@ struct ShowDialogInfo
 
 // ダイアログ表示のフラグ
 enum {
-	SHOW_DIALOG_FLAG_MODELESS = 0x00000001U, // モードレス
-	SHOW_DIALOG_FLAG_POSITION = 0x00000002U  // 位置指定が有効
+	SHOW_DIALOG_FLAG_MODELESS            = 0x00000001U, // モードレス
+	SHOW_DIALOG_FLAG_POSITION            = 0x00000002U  // 位置指定が有効
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	, SHOW_DIALOG_FLAG_DISABLE_DARK_MODE = 0x00000004U  // ダークモードにしない
+#endif
 };
 
 // ダイアログを表示する
@@ -3415,7 +3423,8 @@ enum {
 	DARK_MODE_STATUS_MENU_DARK         = 0x00000002U, // メニューがダークモード
 	DARK_MODE_STATUS_PANEL_SUPPORTED   = 0x00000004U, // パネルがダークモードに対応している
 	DARK_MODE_STATUS_MAINWINDOW_DARK   = 0x00000008U, // メインウィンドウがダークモード
-	DARK_MODE_STATUS_PROGRAMGUIDE_DARK = 0x00000010U  // 番組表がダークモード
+	DARK_MODE_STATUS_PROGRAMGUIDE_DARK = 0x00000010U, // 番組表がダークモード
+	DARK_MODE_STATUS_DIALOG_DARK       = 0x00000020U  // ダイアログがダークモード
 };
 
 // ダークモードの状態を取得
@@ -3435,6 +3444,7 @@ inline bool MsgIsDarkModeColor(PluginParam *pParam, COLORREF Color)
 
 // ウィンドウをダークモードにする
 // ウィンドウのスクロールバーなどがダークモードになります。
+// トップレベルウィンドウであれば、タイトルバーがダークモードになります。
 /*
 	// パネルのウィンドウをダークモードにする
 	void SetPanelWindowDarkMode(PluginParam *pParam, HWND hwnd)

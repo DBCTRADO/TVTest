@@ -7,6 +7,7 @@
 
 	・信号レベルとビットレートを取得する
 	・ウィンドウを表示する
+	・TVTest に合わせてウィンドウをダークモードにする
 */
 
 
@@ -500,6 +501,16 @@ LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM 
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// メインウィンドウのダークモード状態が変わった
+		if (pThis->m_hwnd != nullptr) {
+			// メインウィンドウに合わせてダークモード状態を変更する
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
+		}
+		return TRUE;
 	}
 
 	return 0;
@@ -531,6 +542,10 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 			pThis->m_List.clear();
 			pThis->m_List.push_back(SignalInfo());
+
+			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
 
 			// 更新用タイマの設定
 			::SetTimer(hwnd, 1, 1000, nullptr);

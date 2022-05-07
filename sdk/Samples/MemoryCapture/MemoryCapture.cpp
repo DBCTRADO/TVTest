@@ -14,6 +14,7 @@
 	・テーマを使って項目を描画する
 	・ウィンドウの DPI に応じてスケーリングする
 	・設定ダイアログを表示する
+	・TVTest に合わせてウィンドウをダークモードにする
 */
 
 
@@ -1432,6 +1433,10 @@ void CMemoryCapture::OnWindowCreate()
 		AllocateStreamBuffer();
 		m_pApp->SetVideoStreamCallback(VideoStreamCallback, this);
 	}
+
+	// メインウィンドウがダークモードであればそれに合わせてダークモードにする
+	if (m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+		m_pApp->SetWindowDarkMode(m_hwnd, true);
 }
 
 
@@ -1778,6 +1783,16 @@ LRESULT CALLBACK CMemoryCapture::EventCallback(
 	case TVTest::EVENT_SETTINGSCHANGE:
 		// 設定が変更された
 		pThis->LoadAppSettings();
+		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// メインウィンドウのダークモード状態が変わった
+		if (pThis->m_hwnd != nullptr) {
+			// メインウィンドウに合わせてダークモード状態を変更する
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
+		}
 		return TRUE;
 	}
 

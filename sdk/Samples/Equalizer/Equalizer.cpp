@@ -9,6 +9,7 @@
 	・ウィンドウを表示する
 	・配色を取得し、配色の変更に追従する
 	・DPI に応じてスケーリングする
+	・TVTest に合わせてウィンドウをダークモードにする
 */
 
 
@@ -775,15 +776,15 @@ void CEqualizer::OnButtonPush(int Button)
 
 			for (int i = 0; i < NUM_CUSTOM_PRESETS; i++) {
 				TCHAR szText[16];
-				::wsprintf(szText, TEXT("Preset %d"), i + 1);
+				::wsprintf(szText, TEXT("Slot %d"), i + 1);
 				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, i + 1, szText);
 			}
 			if (Button == BUTTON_LOAD) {
+				::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
+				HMENU hmenuPresets = ::CreatePopupMenu();
+				::AppendMenu(hmenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hmenuPresets), TEXT("Presets"));
 				for (int i = 0; i < sizeof(m_PresetList) / sizeof(EqualizerPreset); i++) {
-					UINT Flags = MF_STRING | MF_ENABLED;
-					if (i == 0)
-						Flags |= MF_MENUBREAK;
-					::AppendMenu(hmenu, Flags, NUM_CUSTOM_PRESETS + 1 + i, m_PresetList[i].pszName);
+					::AppendMenu(hmenuPresets, MF_STRING | MF_ENABLED, NUM_CUSTOM_PRESETS + 1 + i, m_PresetList[i].pszName);
 				}
 			}
 			RECT rc;
@@ -968,6 +969,16 @@ LRESULT CALLBACK CEqualizer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lP
 			::RedrawWindow(pThis->m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
 		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// メインウィンドウのダークモード状態が変わった
+		if (pThis->m_hwnd != nullptr) {
+			// メインウィンドウに合わせてダークモード状態を変更する
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
+		}
+		return TRUE;
 	}
 
 	return 0;
@@ -1007,6 +1018,10 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			pThis->GetColor();
 
 			pThis->CreateDPIDependingResources();
+
+			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
 
 			// ウィンドウを最初に表示した時にイコライザーを有効化する
 			if (!pThis->m_fEnabled && pThis->m_fEnableDefault)

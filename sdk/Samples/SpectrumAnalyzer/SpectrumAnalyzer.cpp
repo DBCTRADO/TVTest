@@ -11,6 +11,7 @@
 
 	・音声サンプルを取得する
 	・ウィンドウを表示する
+	・TVTest に合わせてウィンドウをダークモードにする
 */
 
 
@@ -453,6 +454,16 @@ LRESULT CALLBACK CSpectrumAnalyzer::EventCallback(UINT Event, LPARAM lParam1, LP
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// メインウィンドウのダークモード状態が変わった
+		if (pThis->m_hwnd != nullptr) {
+			// メインウィンドウに合わせてダークモード状態を変更する
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
+		}
+		return TRUE;
 	}
 
 	return 0;
@@ -541,6 +552,10 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 			pThis->m_BufferUsed = 0;
 			pThis->m_BufferPos = 0;
+
+			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
 
 			// 音声コールバックを登録
 			pThis->m_pApp->SetAudioCallback(AudioCallback, pThis);

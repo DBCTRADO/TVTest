@@ -10,6 +10,7 @@
 	・ウィンドウを表示する
 	・配色を取得し、配色の変更に追従する
 	・DPI に応じてスケーリングする
+	・TVTest に合わせてウィンドウをダークモードにする
 */
 
 
@@ -154,6 +155,16 @@ LRESULT CALLBACK CMiniProgramGuide::EventCallback(UINT Event,LPARAM lParam1,LPAR
 			pThis->SetTunerList();
 			pThis->SetChannelList();
 			pThis->SetEventList();
+		}
+		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// メインウィンドウのダークモード状態が変わった
+		if (pThis->m_hwnd != NULL) {
+			// メインウィンドウに合わせてダークモード状態を変更する
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
 		}
 		return TRUE;
 	}
@@ -402,6 +413,10 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			pThis->SetTunerList();
 			pThis->SetChannelList();
 			pThis->SetEventList();
+
+			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
 		}
 		return 0;
 

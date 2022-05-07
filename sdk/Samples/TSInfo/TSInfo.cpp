@@ -237,6 +237,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
 
+#if 0 // WM_CTLCOLORDLG は Windows 11 で機能しない
 	case WM_CTLCOLORDLG:
 		// ダイアログの背景色を設定
 		{
@@ -244,6 +245,19 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
+#else
+	case WM_ERASEBKGND:
+		// ダイアログの背景を塗りつぶす
+		{
+			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			HDC hdc=reinterpret_cast<HDC>(wParam);
+			RECT rc;
+
+			::GetClientRect(hDlg,&rc);
+			::FillRect(hdc,&rc,pThis->m_hbrBack);
+			return TRUE;
+		}
+#endif
 
 	case WM_COMMAND:
 		if (LOWORD(wParam)==IDCANCEL) {
