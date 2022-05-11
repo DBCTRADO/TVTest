@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=MatteBlack
+Base=dark
 StatusBack=#333333
 StatusBack2=#111111
 StatusBackGradient=normal

@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Jellyfish
+Base=dark
 StatusBack=#555555
 StatusBack2=#222222
 StatusText=#99c1ff

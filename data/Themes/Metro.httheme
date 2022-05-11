@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Metro
+Base=dark
 StatusBack=#222222
 StatusText=#999999
 StatusBottomItemBack=#222222
@@ -97,6 +98,15 @@ ProgramGuideTime21To23Back=#66007f
 ProgramGuideTimeText=#cccccc
 ProgramGuideTimeLine=#666666
 ProgramGuideCurTimeLine=#00bcf2
+ProgramGuideDateButtonBack=#222222
+ProgramGuideDateButtonText=#999999
+ProgramGuideDateButtonCurBack=#555555
+ProgramGuideDateButtonCurText=#aaaaaa
+ProgramGuideDateButtonHotBack=#1e75bb
+ProgramGuideDateButtonHotText=#dddddd
+ProgramGuideFavoriteButtonBackStyle=solid
+ProgramGuideFavoriteButtonCurBackStyle=solid
+ProgramGuideFavoriteButtonHotBackStyle=solid
 
 [Style]
 ScreenBorder=solid
@@ -109,3 +119,12 @@ PanelTabBorder=none
 PanelCurTabBorder=none
 PanelTitleBorder=none
 ChannelPanelChannelNameBorder=solid
+ProgramGuideDateButtonBorder=none
+ProgramGuideDateButtonCurBorder=none
+ProgramGuideDateButtonHotBorder=none
+ProgramGuideTimeButtonBorder=none
+ProgramGuideTimeButtonCurBorder=none
+ProgramGuideTimeButtonHotBorder=none
+ProgramGuideFavoriteButtonBorder=none
+ProgramGuideFavoriteButtonCurBorder=none
+ProgramGuideFavoriteButtonHotBorder=none

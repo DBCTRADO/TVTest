@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Web2.0
+Base=dark
 StatusBack=#555555
 StatusBack2=#000000
 StatusBackGradient=glossy
@@ -117,3 +118,14 @@ ProgramGuideTime18To20Back=#bf0099
 ProgramGuideTime18To20Back2=#7f0066
 ProgramGuideTime21To23Back=#9900bf
 ProgramGuideTime21To23Back2=#66007f
+ProgramGuideDateButtonBack=#555555
+ProgramGuideDateButtonBack2=#000000
+ProgramGuideDateButtonBackGradient=glossy
+ProgramGuideDateButtonText=#cccccc
+ProgramGuideDateButtonCurBack=#0066ff
+ProgramGuideDateButtonCurBack2=#33ffff
+ProgramGuideDateButtonCurBackGradient=glossy
+ProgramGuideDateButtonHotBackGradient=glossy
+ProgramGuideFavoriteButtonBackGradient=glossy
+ProgramGuideFavoriteButtonCurBackGradient=glossy
+ProgramGuideFavoriteButtonHotBackGradient=glossy

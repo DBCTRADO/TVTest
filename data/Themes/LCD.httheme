@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=LCD
+Base=light
 StatusBack=#b0d8c4
 StatusBack2=#80c0a0
 StatusText=#406050

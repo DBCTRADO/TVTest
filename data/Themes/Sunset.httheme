@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Sunset
+Base=dark
 StatusBack=#444444
 StatusText=#ff8433
 StatusHighlightBack=#000000

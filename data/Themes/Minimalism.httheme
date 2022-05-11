@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Minimalism
+Base=dark
 StatusBack=#000000
 StatusText=#888888
 StatusBottomItemBack=#000000
@@ -105,6 +106,19 @@ ProgramGuideTime21To23Back=#66007f
 ProgramGuideTimeText=#cccccc
 ProgramGuideTimeLine=#666666
 ProgramGuideCurTimeLine=#ff6600
+ProgramGuideDateButtonText=#888888
+ProgramGuideDateButtonBack=#000000
+ProgramGuideDateButtonCurText=#bbbbbb
+ProgramGuideDateButtonCurBack=#222222
+ProgramGuideDateButtonCurBack2=#555555
+ProgramGuideDateButtonCurBackGradientDirection=vertical
+ProgramGuideDateButtonHotText=#bbbbbb
+ProgramGuideDateButtonHotBack=#333333
+ProgramGuideDateButtonHotBack2=#444444
+ProgramGuideDateButtonHotBackGradientDirection=vertical
+ProgramGuideFavoriteButtonBackStyle=solid
+ProgramGuideFavoriteButtonCurBackStyle=solid
+ProgramGuideFavoriteButtonHotBackStyle=solid
 
 [Style]
 ScreenBorder=solid
@@ -117,3 +131,12 @@ PanelTabBorder=none
 PanelCurTabBorder=none
 PanelTabMarginBorder=none
 PanelTitleBorder=none
+ProgramGuideDateButtonBorder=none
+ProgramGuideDateButtonCurBorder=none
+ProgramGuideDateButtonHotBorder=none
+ProgramGuideTimeButtonBorder=none
+ProgramGuideTimeButtonCurBorder=none
+ProgramGuideTimeButtonHotBorder=none
+ProgramGuideFavoriteButtonBorder=none
+ProgramGuideFavoriteButtonCurBorder=none
+ProgramGuideFavoriteButtonHotBorder=none

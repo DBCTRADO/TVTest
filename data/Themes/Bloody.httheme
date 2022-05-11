@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Bloody
+Base=dark
 StatusBack=#7f0033
 StatusBack2=#000000
 StatusText=#999999

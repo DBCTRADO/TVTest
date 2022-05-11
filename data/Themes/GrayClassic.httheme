@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=GrayClassic
+Base=dark
 StatusBack=#777777
 StatusBack2=#222222
 StatusText=#bbbbbb

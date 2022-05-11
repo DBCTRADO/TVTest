@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Deviant
+Base=light
 StatusBack=#c5d3c3
 StatusBack2=#b1c3af
 StatusText=#3b5a4a

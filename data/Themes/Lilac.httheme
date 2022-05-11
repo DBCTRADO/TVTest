@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Lilac
+Base=light
 StatusBack=#8499cc
 StatusBack2=#bcc8e4
 StatusText=#333333

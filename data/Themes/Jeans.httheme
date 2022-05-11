@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Jeans
+Base=dark
 StatusBack=#22446a
 StatusBack2=#112235
 StatusText=#ababbe

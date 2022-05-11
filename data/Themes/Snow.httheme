@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Snow
+Base=light
 StatusBack=#ffffff
 StatusBack2=#d8e0ff
 StatusText=#555555

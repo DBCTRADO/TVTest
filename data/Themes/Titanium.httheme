@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Titanium
+Base=light
 StatusBack=#aeaaa4
 StatusBack2=#cac8c4
 StatusText=#555555

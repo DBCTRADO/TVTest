@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Classic
+Base=light
 StatusBack=#dddddd
 StatusBack2=#bbbbbb
 StatusText=#333333

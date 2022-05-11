@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Platinum
+Base=light
 StatusBack=#dddddd
 StatusBack2=#bbbbbb
 StatusBackGradientDirection=vertical-mirror

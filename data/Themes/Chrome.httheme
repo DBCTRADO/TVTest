@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Chrome
+Base=light
 StatusBack=#f8fafd
 StatusBack2=#deeaf8
 StatusText=#4768a0

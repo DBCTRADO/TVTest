@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Midnight
+Base=dark
 StatusBack=#222222
 StatusBack2=#666666
 StatusText=#aaaaaa

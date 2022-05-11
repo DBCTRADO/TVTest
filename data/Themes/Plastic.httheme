@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Plastic
+Base=light
 StatusBack=#ffffff
 StatusBack2=#aaaaaa
 StatusBackGradient=glossy
