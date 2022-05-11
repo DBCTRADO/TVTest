@@ -1181,6 +1181,9 @@ void CProgramGuide::SetTheme(const Theme::CThemeManager *pThemeManager)
 	pThemeManager->GetBackgroundStyle(
 		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FEATUREDMARK,
 		&m_Theme.FeaturedMarkStyle);
+	pThemeManager->GetBackgroundStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FAVORITEBUTTON,
+		&m_Theme.FavoriteButtonStyle);
 
 	for (int i = 0; i < CProgramGuide::TIME_BAR_BACK_COLORS; i++) {
 		pThemeManager->GetFillStyle(
@@ -4365,7 +4368,7 @@ void CProgramGuide::OnCommand(int id)
 			Info.Label = szText;
 			Info.SetDefaultColors();
 
-			CProgramGuideFavoritesDialog Dialog(m_Favorites);
+			CProgramGuideFavoritesDialog Dialog(m_Favorites, m_Theme.FavoriteButtonStyle);
 			Dialog.AddNewItem(Info);
 			if (Dialog.Show(m_hwnd)) {
 				m_Favorites = Dialog.GetFavorites();
@@ -4377,7 +4380,7 @@ void CProgramGuide::OnCommand(int id)
 
 	case CM_PROGRAMGUIDE_ORGANIZEFAVORITES:
 		{
-			CProgramGuideFavoritesDialog Dialog(m_Favorites);
+			CProgramGuideFavoritesDialog Dialog(m_Favorites, m_Theme.FavoriteButtonStyle);
 
 			if (Dialog.Show(m_hwnd)) {
 				m_Favorites = Dialog.GetFavorites();
@@ -5970,6 +5973,7 @@ class CFavoritesToolbar
 public:
 	CFavoritesToolbar(CProgramGuide *pProgramGuide);
 	~CFavoritesToolbar();
+	void SetTheme(const ThemeInfo &Theme) override;
 	void OnSpaceChanged() override;
 	void OnFavoritesChanged() override;
 
@@ -5978,6 +5982,8 @@ private:
 	void OnCreate() override;
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc) override;
 	void RealizeStyle() override;
+
+	FavoriteButtonTheme m_ButtonTheme;
 };
 
 
@@ -5990,6 +5996,15 @@ CFavoritesToolbar::CFavoritesToolbar(CProgramGuide *pProgramGuide)
 CFavoritesToolbar::~CFavoritesToolbar()
 {
 	Destroy();
+}
+
+
+void CFavoritesToolbar::SetTheme(const ThemeInfo &Theme)
+{
+	m_ButtonTheme = Theme.FavoriteButton;
+
+	if (m_hwnd != nullptr)
+		::InvalidateRect(m_hwnd, nullptr, TRUE);
 }
 
 
@@ -6095,26 +6110,35 @@ void CFavoritesToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	if (pInfo != nullptr) {
 		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		Theme::BackgroundStyle Style;
-		COLORREF LightColor = pInfo->BackColor;
-		COLORREF DarkColor = MixColor(LightColor, RGB(0, 0, 0), 220);
+		const COLORREF BackColor = pInfo->BackColor;
+		const COLORREF ShadowColor = MixColor(BackColor, RGB(0, 0, 0), 220);
 
-		Style.Fill.Type = Theme::FillType::Gradient;
-		Style.Fill.Gradient.Type = Theme::GradientType::Normal;
-		Style.Fill.Gradient.Direction = Theme::GradientDirection::Vert;
-		if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0) {
-			Style.Fill.Gradient.Color1 = DarkColor;
-			Style.Fill.Gradient.Color2 = LightColor;
-		} else {
-			Style.Fill.Gradient.Color1 = LightColor;
-			Style.Fill.Gradient.Color2 = DarkColor;
-		}
 		if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED)) != 0) {
-			Style.Border.Type = Theme::BorderType::Sunken;
-			Style.Border.Color = DarkColor;
+			Style = m_ButtonTheme.CurStyle;
+		} else if ((pnmtb->nmcd.uItemState & CDIS_HOT) != 0) {
+			Style = m_ButtonTheme.HotStyle;
 		} else {
-			Style.Border.Type = Theme::BorderType::Raised;
-			Style.Border.Color = LightColor;
+			Style = m_ButtonTheme.Style;
 		}
+
+		if (Style.Fill.Type == Theme::FillType::Gradient) {
+			if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0) {
+				Style.Fill.Gradient.Color1 = ShadowColor;
+				Style.Fill.Gradient.Color2 = BackColor;
+			} else {
+				Style.Fill.Gradient.Color1 = BackColor;
+				Style.Fill.Gradient.Color2 = ShadowColor;
+			}
+		} else {
+			Style.Fill.Solid.Color = BackColor;
+		}
+
+		if (Style.Border.Type == Theme::BorderType::Sunken) {
+			Style.Border.Color = ShadowColor;
+		} else {
+			Style.Border.Color = BackColor;
+		}
+
 		ThemeDraw.Draw(Style, pnmtb->nmcd.rc);
 
 		HFONT hfont = reinterpret_cast<HFONT>(::SendMessage(m_hwnd, WM_GETFONT, 0, 0));
@@ -6152,6 +6176,7 @@ public:
 
 	CDateToolbar(CProgramGuide *pProgramGuide);
 	~CDateToolbar();
+	void SetTheme(const ThemeInfo &Theme) override;
 	void OnDateChanged() override;
 	void OnTimeRangeChanged() override;
 	bool SetButtonCount(int Count);
@@ -6161,6 +6186,7 @@ private:
 	static const DWORD ITEM_FLAG_NOW = 0x80000000;
 
 	int m_ButtonCount;
+	DateButtonTheme m_Theme;
 
 	bool SetButtons(const LibISDB::DateTime *pDateList, int Days, int FirstCommand);
 	void OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc) override;
@@ -6178,6 +6204,15 @@ CDateToolbar::CDateToolbar(CProgramGuide *pProgramGuide)
 CDateToolbar::~CDateToolbar()
 {
 	Destroy();
+}
+
+
+void CDateToolbar::SetTheme(const ThemeInfo &Theme)
+{
+	m_Theme = Theme.DateButton;
+
+	if (m_hwnd != nullptr)
+		::InvalidateRect(m_hwnd, nullptr, TRUE);
 }
 
 
@@ -6275,25 +6310,15 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 {
 	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
-	Theme::BackgroundStyle Style;
-	Style.Fill.Type = Theme::FillType::Gradient;
-	Style.Fill.Gradient.Type = Theme::GradientType::Normal;
-	Style.Fill.Gradient.Direction = Theme::GradientDirection::Vert;
-	if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0) {
-		Style.Fill.Gradient.Color1.Set(220, 220, 220);
-		Style.Fill.Gradient.Color2.Set(255, 255, 255);
-	} else {
-		Style.Fill.Gradient.Color1.Set(255, 255, 255);
-		Style.Fill.Gradient.Color2.Set(220, 220, 220);
-	}
+	Theme::Style Style;
 	if ((pnmtb->nmcd.uItemState & CDIS_CHECKED) != 0) {
-		Style.Border.Type = Theme::BorderType::Sunken;
-		Style.Border.Color.Set(220, 220, 220);
+		Style = m_Theme.CurStyle;
+	} else if ((pnmtb->nmcd.uItemState & CDIS_HOT) != 0) {
+		Style = m_Theme.HotStyle;
 	} else {
-		Style.Border.Type = Theme::BorderType::Raised;
-		Style.Border.Color.Set(255, 255, 255);
+		Style = m_Theme.Style;
 	}
-	ThemeDraw.Draw(Style, pnmtb->nmcd.rc);
+	ThemeDraw.Draw(Style.Back, pnmtb->nmcd.rc);
 
 	int DayOfWeek = (int)(pnmtb->nmcd.lItemlParam & 0xFF);
 
@@ -6301,7 +6326,11 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
 	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 	COLORREF OldTextColor =
-		::SetTextColor(hdc, DayOfWeek == 0 ? RGB(255, 32, 0) : DayOfWeek == 6 ? RGB(0, 32, 255) : RGB(0, 0, 0));
+		::SetTextColor(
+			hdc,
+			DayOfWeek == 0 ? m_Theme.SundayTextColor :
+			DayOfWeek == 6 ? m_Theme.SaturdayTextColor :
+			Style.Fore.Fill.GetSolidColor());
 
 	TCHAR szText[32];
 	if ((pnmtb->nmcd.lItemlParam & ITEM_FLAG_NOW) != 0) {
@@ -6357,7 +6386,8 @@ private:
 	};
 
 	CProgramGuideFrameSettings::TimeBarSettings m_Settings;
-	Theme::Style m_ButtonStyle[CProgramGuide::TIME_BAR_BACK_COLORS];
+	TimeButtonTheme m_TimeButtonTheme;
+	DateButtonTheme m_DateButtonTheme;
 
 	void ChangeTime();
 	bool SetButtons(const TimeInfo *pTimeList, int TimeListLength);
@@ -6380,8 +6410,8 @@ CTimeToolbar::~CTimeToolbar()
 
 void CTimeToolbar::SetTheme(const ThemeInfo &Theme)
 {
-	for (int i = 0; i < CProgramGuide::TIME_BAR_BACK_COLORS; i++)
-		m_ButtonStyle[i] = Theme.TimeStyle[i];
+	m_TimeButtonTheme = Theme.TimeButton;
+	m_DateButtonTheme = Theme.DateButton;
 
 	if (m_hwnd != nullptr)
 		::InvalidateRect(m_hwnd, nullptr, TRUE);
@@ -6562,31 +6592,33 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	int Hour;
 
 	if (fCurrent) {
-		Style.Back.Fill.Type = Theme::FillType::Gradient;
-		Style.Back.Fill.Gradient = Theme::GradientStyle(
-			Theme::GradientType::Normal,
-			Theme::GradientDirection::Vert,
-			Theme::ThemeColor(255, 255, 255),
-			Theme::ThemeColor(220, 220, 220));
-		Style.Fore.Fill.Type = Theme::FillType::Solid;
-		Style.Fore.Fill.Solid.Color.Set(0, 0, 0);
+		if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED)) != 0) {
+			Style = m_DateButtonTheme.CurStyle;
+		} else if ((pnmtb->nmcd.uItemState & CDIS_HOT) != 0) {
+			Style = m_DateButtonTheme.HotStyle;
+		} else {
+			Style = m_DateButtonTheme.Style;
+		}
 	} else {
 		Hour = LOWORD(pnmtb->nmcd.lItemlParam);
-		Style = m_ButtonStyle[Hour / 3];
+		Style = m_TimeButtonTheme.TimeStyle[Hour / 3];
 		if (Style.Back.Fill.Type == Theme::FillType::Gradient)
 			Style.Back.Fill.Gradient.Rotate(Theme::GradientStyle::RotateType::Right);
+		Style.Back.Border.Type =
+			(pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED)) != 0 ?
+				m_TimeButtonTheme.CurBorderStyle.Type :
+			(pnmtb->nmcd.uItemState & CDIS_HOT) != 0 ?
+				m_TimeButtonTheme.HotBorderStyle.Type :
+				m_TimeButtonTheme.BorderStyle.Type;
+		Style.Back.Border.Color = Style.Back.Fill.GetSolidColor();
+		if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0
+				&& Style.Back.Fill.Type == Theme::FillType::Gradient) {
+			std::swap(
+				Style.Back.Fill.Gradient.Color1,
+				Style.Back.Fill.Gradient.Color2);
+		}
 	}
-	Style.Back.Border.Type =
-		(pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_SELECTED)) != 0 ?
-		Theme::BorderType::Sunken :
-		Theme::BorderType::Raised;
-	Style.Back.Border.Color = Style.Back.Fill.GetSolidColor();
-	if ((pnmtb->nmcd.uItemState & (CDIS_CHECKED | CDIS_HOT)) != 0
-			&& Style.Back.Fill.Type == Theme::FillType::Gradient) {
-		std::swap(
-			Style.Back.Fill.Gradient.Color1,
-			Style.Back.Fill.Gradient.Color2);
-	}
+
 	ThemeDraw.Draw(Style.Back, pnmtb->nmcd.rc);
 
 	HFONT hfont = reinterpret_cast<HFONT>(::SendMessage(m_hwnd, WM_GETFONT, 0, 0));
@@ -6656,10 +6688,43 @@ void CProgramGuideFrameBase::SetTheme(const Theme::CThemeManager *pThemeManager)
 	for (int i = 0; i < CProgramGuide::TIME_BAR_BACK_COLORS; i++) {
 		pThemeManager->GetFillStyle(
 			Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBAR_0_2 + i,
-			&Theme.TimeStyle[i].Back.Fill);
-		Theme.TimeStyle[i].Fore.Fill.Type = Theme::FillType::Solid;
-		Theme.TimeStyle[i].Fore.Fill.Solid.Color = TimeTextColor;
+			&Theme.TimeButton.TimeStyle[i].Back.Fill);
+		Theme.TimeButton.TimeStyle[i].Fore.Fill.Type = Theme::FillType::Solid;
+		Theme.TimeButton.TimeStyle[i].Fore.Fill.Solid.Color = TimeTextColor;
 	}
+	pThemeManager->GetBorderStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBUTTON,
+		&Theme.TimeButton.BorderStyle);
+	pThemeManager->GetBorderStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBUTTON_CUR,
+		&Theme.TimeButton.CurBorderStyle);
+	pThemeManager->GetBorderStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_TIMEBUTTON_HOT,
+		&Theme.TimeButton.HotBorderStyle);
+
+	pThemeManager->GetStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_DATEBUTTON,
+		&Theme.DateButton.Style);
+	pThemeManager->GetStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_DATEBUTTON_CUR,
+		&Theme.DateButton.CurStyle);
+	pThemeManager->GetStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_DATEBUTTON_HOT,
+		&Theme.DateButton.HotStyle);
+	Theme.DateButton.SundayTextColor =
+		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_DATEBUTTON_SUNDAYTEXT);
+	Theme.DateButton.SaturdayTextColor =
+		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_DATEBUTTON_SATURDAYTEXT);
+
+	pThemeManager->GetBackgroundStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FAVORITEBUTTON,
+		&Theme.FavoriteButton.Style);
+	pThemeManager->GetBackgroundStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FAVORITEBUTTON_CUR,
+		&Theme.FavoriteButton.CurStyle);
+	pThemeManager->GetBackgroundStyle(
+		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FAVORITEBUTTON_HOT,
+		&Theme.FavoriteButton.HotStyle);
 
 	for (auto e : m_ToolbarList)
 		e->SetTheme(Theme);

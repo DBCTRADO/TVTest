@@ -396,6 +396,60 @@ const CThemeManager::StyleInfo CThemeManager::m_StyleList[NUM_STYLES] = {
 		CColorScheme::BORDER_PROGRAMGUIDESTATUS,
 		-1
 	},
+	{
+		TEXT("program-guide.date-button"),
+		CColorScheme::GRADIENT_PROGRAMGUIDE_DATEBUTTON_BACK,
+		CColorScheme::BORDER_PROGRAMGUIDE_DATEBUTTON,
+		CColorScheme::COLOR_PROGRAMGUIDE_DATEBUTTON_TEXT
+	},
+	{
+		TEXT("program-guide.date-button.current"),
+		CColorScheme::GRADIENT_PROGRAMGUIDE_DATEBUTTON_CURBACK,
+		CColorScheme::BORDER_PROGRAMGUIDE_DATEBUTTON_CUR,
+		CColorScheme::COLOR_PROGRAMGUIDE_DATEBUTTON_CURTEXT
+	},
+	{
+		TEXT("program-guide.date-button.hot"),
+		CColorScheme::GRADIENT_PROGRAMGUIDE_DATEBUTTON_HOTBACK,
+		CColorScheme::BORDER_PROGRAMGUIDE_DATEBUTTON_HOT,
+		CColorScheme::COLOR_PROGRAMGUIDE_DATEBUTTON_HOTTEXT
+	},
+	{
+		TEXT("program-guide.time-button"),
+		-1,
+		CColorScheme::BORDER_PROGRAMGUIDE_TIMEBUTTON,
+		-1
+	},
+	{
+		TEXT("program-guide.time-button.current"),
+		-1,
+		CColorScheme::BORDER_PROGRAMGUIDE_TIMEBUTTON_CUR,
+		-1
+	},
+	{
+		TEXT("program-guide.time-button.hot"),
+		-1,
+		CColorScheme::BORDER_PROGRAMGUIDE_TIMEBUTTON_HOT,
+		-1
+	},
+	{
+		TEXT("program-guide.favorite-button"),
+		CColorScheme::GRADIENT_PROGRAMGUIDE_FAVORITEBUTTON_BACK,
+		CColorScheme::BORDER_PROGRAMGUIDE_FAVORITEBUTTON,
+		-1
+	},
+	{
+		TEXT("program-guide.favorite-button.current"),
+		CColorScheme::GRADIENT_PROGRAMGUIDE_FAVORITEBUTTON_CURBACK,
+		CColorScheme::BORDER_PROGRAMGUIDE_FAVORITEBUTTON_CUR,
+		-1
+	},
+	{
+		TEXT("program-guide.favorite-button.hot"),
+		CColorScheme::GRADIENT_PROGRAMGUIDE_FAVORITEBUTTON_HOTBACK,
+		CColorScheme::BORDER_PROGRAMGUIDE_FAVORITEBUTTON_HOT,
+		-1
+	},
 };
 
 
@@ -447,12 +501,13 @@ bool CThemeManager::GetFillStyle(int Type, FillStyle *pStyle) const
 			pStyle->Type = FillType::Solid;
 			pStyle->Solid.Color = ThemeColor(m_pColorScheme->GetColor(GRADIENT_GET_SOLID(Info.Gradient)));
 		} else {
-			pStyle->Type = FillType::Gradient;
-			m_pColorScheme->GetGradientStyle(Info.Gradient, &pStyle->Gradient);
-			if (pStyle->Gradient.IsSolid()) {
+			m_pColorScheme->GetFillStyle(Info.Gradient, pStyle);
+#if 0
+			if (pStyle->Type == FillType::Gradient && pStyle->Gradient.IsSolid()) {
 				pStyle->Type = FillType::Solid;
 				pStyle->Solid.Color = pStyle->Gradient.Color1;
 			}
+#endif
 		}
 	} else {
 		pStyle->Type = FillType::None;

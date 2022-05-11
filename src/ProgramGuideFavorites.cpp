@@ -155,9 +155,12 @@ void CProgramGuideFavorites::FavoriteInfo::SetDefaultColors()
 
 
 
-CProgramGuideFavoritesDialog::CProgramGuideFavoritesDialog(const CProgramGuideFavorites &Favorites)
+CProgramGuideFavoritesDialog::CProgramGuideFavoritesDialog(
+	const CProgramGuideFavorites &Favorites,
+	const Theme::BackgroundStyle &ButtonTheme)
 	: m_Favorites(Favorites)
 	, m_CurItem(-1)
+	, m_ButtonTheme(ButtonTheme)
 {
 }
 
@@ -364,11 +367,23 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 				const CProgramGuideFavorites::FavoriteInfo *pInfo = GetCurItemInfo();
 
 				if (pInfo != nullptr) {
-					DrawUtil::FillGradient(
-						pdis->hDC, &pdis->rcItem,
-						pInfo->BackColor,
-						MixColor(pInfo->BackColor, RGB(0, 0, 0), 220),
-						DrawUtil::FillDirection::Vert);
+					Theme::BackgroundStyle Style = m_ButtonTheme;
+					const COLORREF ShadowColor = MixColor(pInfo->BackColor, RGB(0, 0, 0), 220);
+
+					if (Style.Fill.Type == Theme::FillType::Gradient) {
+						Style.Fill.Gradient.Color1 = pInfo->BackColor;
+						Style.Fill.Gradient.Color2 = ShadowColor;
+					} else {
+						Style.Fill.Solid.Color = pInfo->BackColor;
+					}
+					if (Style.Border.Type == Theme::BorderType::Sunken) {
+						Style.Border.Color = ShadowColor;
+					} else {
+						Style.Border.Color = pInfo->BackColor;
+					}
+					Theme::CThemeDraw ThemeDraw(BeginThemeDraw(pdis->hDC));
+					ThemeDraw.Draw(Style, &pdis->rcItem);
+
 					COLORREF OldTextColor = ::SetTextColor(pdis->hDC, pInfo->TextColor);
 					int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 					::DrawText(

@@ -484,6 +484,7 @@ namespace TVTest
 			Theme::FillStyle TimeBarMarginStyle;
 			Theme::FillStyle TimeBarBackStyle[TIME_BAR_BACK_COLORS];
 			Theme::BackgroundStyle FeaturedMarkStyle;
+			Theme::BackgroundStyle FavoriteButtonStyle;
 		};
 
 		LibISDB::EPGDatabase *m_pEPGDatabase;
@@ -712,10 +713,36 @@ namespace TVTest
 		class ABSTRACT_CLASS(CProgramGuideBar)
 		{
 		public:
+			struct DateButtonTheme
+			{
+				Theme::Style Style;
+				Theme::Style CurStyle;
+				Theme::Style HotStyle;
+				Theme::ThemeColor SundayTextColor;
+				Theme::ThemeColor SaturdayTextColor;
+			};
+
+			struct TimeButtonTheme
+			{
+				Theme::Style TimeStyle[CProgramGuide::TIME_BAR_BACK_COLORS];
+				Theme::BorderStyle BorderStyle;
+				Theme::BorderStyle CurBorderStyle;
+				Theme::BorderStyle HotBorderStyle;
+			};
+
+			struct FavoriteButtonTheme
+			{
+				Theme::BackgroundStyle Style;
+				Theme::BackgroundStyle CurStyle;
+				Theme::BackgroundStyle HotStyle;
+			};
+
 			struct ThemeInfo
 			{
 				CStatusView::StatusViewTheme StatusTheme;
-				Theme::Style TimeStyle[CProgramGuide::TIME_BAR_BACK_COLORS];
+				DateButtonTheme DateButton;
+				TimeButtonTheme TimeButton;
+				FavoriteButtonTheme FavoriteButton;
 			};
 
 			CProgramGuideBar(CProgramGuide * pProgramGuide);

@@ -244,6 +244,20 @@ namespace TVTest
 			COLOR_PROGRAMGUIDE_TIMETEXT,
 			COLOR_PROGRAMGUIDE_TIMELINE,
 			COLOR_PROGRAMGUIDE_CURTIMELINE,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_TEXT,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_SUNDAYTEXT,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_SATURDAYTEXT,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_BACK1,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_BACK2,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_BORDER,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_CURTEXT,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_CURBACK1,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_CURBACK2,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_CURBORDER,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_HOTTEXT,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_HOTBACK1,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_HOTBACK2,
+			COLOR_PROGRAMGUIDE_DATEBUTTON_HOTBORDER,
 			COLOR_PROGRAMGUIDE_CONTENT_NEWS,
 			COLOR_PROGRAMGUIDE_CONTENT_SPORTS,
 			COLOR_PROGRAMGUIDE_CONTENT_INFORMATION,
@@ -313,6 +327,12 @@ namespace TVTest
 			GRADIENT_PROGRAMGUIDETIME15TO17BACK,
 			GRADIENT_PROGRAMGUIDETIME18TO20BACK,
 			GRADIENT_PROGRAMGUIDETIME21TO23BACK,
+			GRADIENT_PROGRAMGUIDE_DATEBUTTON_BACK,
+			GRADIENT_PROGRAMGUIDE_DATEBUTTON_CURBACK,
+			GRADIENT_PROGRAMGUIDE_DATEBUTTON_HOTBACK,
+			GRADIENT_PROGRAMGUIDE_FAVORITEBUTTON_BACK,
+			GRADIENT_PROGRAMGUIDE_FAVORITEBUTTON_CURBACK,
+			GRADIENT_PROGRAMGUIDE_FAVORITEBUTTON_HOTBACK,
 			NUM_GRADIENTS
 		};
 		enum {
@@ -362,6 +382,15 @@ namespace TVTest
 			BORDER_CONTROLPANELHIGHLIGHTITEM,
 			BORDER_CONTROLPANELCHECKEDITEM,
 			BORDER_PROGRAMGUIDE_FEATUREDMARK,
+			BORDER_PROGRAMGUIDE_DATEBUTTON,
+			BORDER_PROGRAMGUIDE_DATEBUTTON_CUR,
+			BORDER_PROGRAMGUIDE_DATEBUTTON_HOT,
+			BORDER_PROGRAMGUIDE_TIMEBUTTON,
+			BORDER_PROGRAMGUIDE_TIMEBUTTON_CUR,
+			BORDER_PROGRAMGUIDE_TIMEBUTTON_HOT,
+			BORDER_PROGRAMGUIDE_FAVORITEBUTTON,
+			BORDER_PROGRAMGUIDE_FAVORITEBUTTON_CUR,
+			BORDER_PROGRAMGUIDE_FAVORITEBUTTON_HOT,
 			NUM_BORDERS
 		};
 
@@ -378,6 +407,24 @@ namespace TVTest
 			}
 		};
 
+		struct FillStyle
+		{
+			Theme::FillType Type;
+			GradientStyle Gradient;
+
+			bool operator==(const FillStyle &Op) const {
+				return Type == Op.Type && Gradient == Op.Gradient;
+			}
+			bool operator!=(const FillStyle &Op) const {
+				return !(*this == Op);
+			}
+		};
+
+		enum class BaseSchemeType {
+			Dark,
+			Light,
+		};
+
 		enum class SaveFlag : unsigned int {
 			None      = 0x0000U,
 			NoDefault = 0x0001U,	// デフォルトと同じ設定を保存しない
@@ -388,8 +435,6 @@ namespace TVTest
 		CColorScheme(const CColorScheme &ColorScheme);
 		~CColorScheme();
 
-		CColorScheme &operator=(const CColorScheme &ColorScheme);
-
 		COLORREF GetColor(int Type) const;
 		COLORREF GetColor(LPCTSTR pszText) const;
 		bool SetColor(int Type, COLORREF Color);
@@ -398,6 +443,7 @@ namespace TVTest
 		bool SetGradientStyle(int Gradient, const GradientStyle &Style);
 		bool GetGradientStyle(int Gradient, GradientStyle *pStyle) const;
 		bool GetGradientStyle(int Gradient, Theme::GradientStyle *pStyle) const;
+		bool GetFillStyle(int Gradient, Theme::FillStyle *pStyle) const;
 		Theme::BorderType GetBorderType(int Border) const;
 		bool SetBorderType(int Border, Theme::BorderType Type);
 		bool GetBorderStyle(int Border, Theme::BorderStyle *pStyle) const;
@@ -410,13 +456,15 @@ namespace TVTest
 		bool Load(LPCTSTR pszFileName);
 		bool Save(LPCTSTR pszFileName, SaveFlag Flags = SaveFlag::None) const;
 		bool SetFileName(LPCTSTR pszFileName);
+		void SetBaseScheme(BaseSchemeType BaseScheme);
+		BaseSchemeType GetBaseScheme() const { return m_BaseScheme; }
 		void SetDefault();
 		bool IsLoaded(int Type) const;
 		void SetLoaded();
 		bool CompareScheme(const CColorScheme &Scheme) const;
 
 		static LPCTSTR GetColorName(int Type);
-		static COLORREF GetDefaultColor(int Type);
+		static COLORREF GetDefaultColor(BaseSchemeType BaseScheme, int Type);
 		static Theme::GradientType GetDefaultGradientType(int Gradient);
 		static bool GetDefaultGradientStyle(int Gradient, GradientStyle *pStyle);
 		static bool IsGradientDirectionEnabled(int Gradient);
@@ -425,14 +473,16 @@ namespace TVTest
 		static int GetColorBorder(int Type);
 
 	private:
+		BaseSchemeType m_BaseScheme;
 		COLORREF m_ColorList[NUM_COLORS];
-		GradientStyle m_GradientList[NUM_GRADIENTS];
+		FillStyle m_FillList[NUM_GRADIENTS];
 		Theme::BorderType m_BorderList[NUM_BORDERS];
 		String m_Name;
 		String m_FileName;
 		struct ColorInfo
 		{
 			COLORREF DefaultColor;
+			COLORREF DefaultLightColor;
 			LPCTSTR pszText;
 			LPCTSTR pszName;
 		};

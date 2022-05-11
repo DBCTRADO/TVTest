@@ -64,7 +64,9 @@ namespace TVTest
 		: public CBasicDialog
 	{
 	public:
-		CProgramGuideFavoritesDialog(const CProgramGuideFavorites &Favorites);
+		CProgramGuideFavoritesDialog(
+			const CProgramGuideFavorites &Favorites,
+			const Theme::BackgroundStyle &ButtonTheme);
 		~CProgramGuideFavoritesDialog();
 
 	// CBasicDialog
@@ -78,6 +80,7 @@ namespace TVTest
 		CProgramGuideFavorites m_Favorites;
 		int m_CurItem;
 		bool m_fChanging;
+		Theme::BackgroundStyle m_ButtonTheme;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
