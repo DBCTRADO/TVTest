@@ -89,10 +89,11 @@ then
 fi
 
 cp -fp "${src_bin_dir}/TVTest_Image.dll" "${dst_dir}/TVTest_Image.dll"
+cp -fp "${src_bin_dir}/TVTest.chm" "${dst_dir}/TVTest.chm"
 
 cp -fp doc/* "${dst_dir}"
 
-data_files=(DRCSMap.sample.ini TVTest.chm TVTest.search.ini TVTest.style.ini TVTest.tuner.ini)
+data_files=(DRCSMap.sample.ini TVTest.search.ini TVTest.style.ini TVTest.tuner.ini)
 for data_file in ${data_files[@]}
 do
     cp -fp "data/${data_file}" "${dst_dir}/${data_file}"
