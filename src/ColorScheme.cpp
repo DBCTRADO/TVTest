@@ -539,7 +539,7 @@ Theme::GradientType CColorScheme::GetGradientType(LPCTSTR pszText) const
 		Length -= 8;
 		for (int i = 0; i < NUM_GRADIENTS; i++) {
 			if (::StrCmpNI(m_GradientInfoList[i].pszText, pszText, Length) == 0
-					&& m_GradientInfoList[Length].pszText == _T('\0'))
+					&& m_GradientInfoList[i].pszText[Length] == _T('\0'))
 				return m_FillList[i].Gradient.Type;
 		}
 	}
