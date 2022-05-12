@@ -28,7 +28,7 @@
 #include <string>
 #include <new>
 #include <strsafe.h>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "VideoDecoder.h"
 #include "ImageCodec.h"
@@ -218,9 +218,10 @@ private:
 	void StartSeeking(int Command);
 	void StopSeeking();
 	bool GetSaveFolder(LPWSTR pszFolder);
-	bool GetSaveFileName(LPWSTR pszFileName, LPCWSTR pszFolder,
-						 const CImage *pImage, const FrameGroupInfo *pGroup,
-						 int *pSequentialNumber = nullptr);
+	bool GetSaveFileName(
+		LPWSTR pszFileName, LPCWSTR pszFolder,
+		const CImage *pImage, const FrameGroupInfo *pGroup,
+		int *pSequentialNumber = nullptr);
 	bool SaveCurrent();
 	bool SaveAs();
 	bool SaveAll();
@@ -239,7 +240,7 @@ private:
 	static LRESULT CALLBACK VideoStreamCallback(
 		DWORD Format, const void *pData, SIZE_T Size, void *pClientData);
 	static unsigned int __stdcall DecodeThread(void *pParameter);
-	static CMemoryCapture *GetThis(HWND hwnd);
+	static CMemoryCapture * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK SettingsDlgProc(
 		HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
@@ -399,13 +400,15 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 			wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
 			wc.lpszClassName = m_WindowClassName;
 			wc.hIcon = static_cast<HICON>(
-				::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDI_MAIN), IMAGE_ICON,
-							::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON),
-							LR_SHARED));
+				::LoadImage(
+					g_hinstDLL, MAKEINTRESOURCE(IDI_MAIN), IMAGE_ICON,
+					::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON),
+					LR_SHARED));
 			wc.hIconSm = static_cast<HICON>(
-				::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDI_MAIN), IMAGE_ICON,
-							::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON),
-							LR_SHARED));
+				::LoadImage(
+					g_hinstDLL, MAKEINTRESOURCE(IDI_MAIN), IMAGE_ICON,
+					::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON),
+					LR_SHARED));
 			if (::RegisterClassEx(&wc) == 0)
 				return false;
 
@@ -506,8 +509,9 @@ void CMemoryCapture::RegisterCommand(
 		CommandInfo.Flags |= TVTest::PLUGIN_COMMAND_FLAG_ICONIZE;
 		CommandInfo.hbmIcon =
 			static_cast<HBITMAP>(
-				::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IconID),
-							IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
+				::LoadImage(
+					g_hinstDLL, MAKEINTRESOURCE(IconID),
+					IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 	} else {
 		CommandInfo.hbmIcon = nullptr;
 	}
@@ -532,52 +536,71 @@ void CMemoryCapture::SaveSettings()
 		TCHAR m_szBuffer[16];
 	};
 
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowLeft"),
-								IntString(m_WindowPosition.Left), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowTop"),
-								IntString(m_WindowPosition.Top), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowWidth"),
-								IntString(m_WindowPosition.Width), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowHeight"),
-								IntString(m_WindowPosition.Height), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("Resample"),
-								IntString((int)m_Resample), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("Deinterlace"),
-								IntString((int)m_Deinterlace), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("FitWindowToImage"),
-								IntString(m_fFitWindowToImage), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("AccumulateAlways"),
-								IntString(m_fAccumulateAlways), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("VideoMemorySizeInMB"),
-								IntString(m_VideoMemorySizeInMB), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("WindowLeft"),
+		IntString(m_WindowPosition.Left), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("WindowTop"),
+		IntString(m_WindowPosition.Top), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("WindowWidth"),
+		IntString(m_WindowPosition.Width), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("WindowHeight"),
+		IntString(m_WindowPosition.Height), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("Resample"),
+		IntString((int)m_Resample), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("Deinterlace"),
+		IntString((int)m_Deinterlace), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("FitWindowToImage"),
+		IntString(m_fFitWindowToImage), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("AccumulateAlways"),
+		IntString(m_fAccumulateAlways), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("VideoMemorySizeInMB"),
+		IntString(m_VideoMemorySizeInMB), szIniFileName);
 
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("CaptureSizeType"),
-								IntString((int)m_CaptureSize.Type), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("CaptureSizeType"),
+		IntString((int)m_CaptureSize.Type), szIniFileName);
 	if (m_CaptureSize.Type == CaptureSizeType_Size) {
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("CaptureWidth"),
-									IntString(m_CaptureSize.Size.Width), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("CaptureHeight"),
-									IntString(m_CaptureSize.Size.Height), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("CaptureWidth"),
+			IntString(m_CaptureSize.Size.Width), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("CaptureHeight"),
+			IntString(m_CaptureSize.Size.Height), szIniFileName);
 	} else {
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("CaptureRateNum"),
-									IntString(m_CaptureSize.Rate.Num), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("CaptureRateDenom"),
-									IntString(m_CaptureSize.Rate.Denom), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("CaptureRateNum"),
+			IntString(m_CaptureSize.Rate.Num), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("CaptureRateDenom"),
+			IntString(m_CaptureSize.Rate.Denom), szIniFileName);
 	}
 
 	int ZoomNum, ZoomDenom;
 	m_Preview.GetZoomRate(&ZoomNum, &ZoomDenom);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("ZoomNum"),
-								IntString(ZoomNum), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("ZoomDenom"),
-								IntString(ZoomDenom), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("FitImageToWindow"),
-								IntString(m_Preview.GetFitImageToWindow()), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("ZoomNum"),
+		IntString(ZoomNum), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("ZoomDenom"),
+		IntString(ZoomDenom), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("FitImageToWindow"),
+		IntString(m_Preview.GetFitImageToWindow()), szIniFileName);
 
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("LastSaveFileName"),
-								m_LastSaveFileName.c_str(), szIniFileName);
-	::WritePrivateProfileString(TEXT("Settings"), TEXT("LastSaveFolder"),
-								m_LastSaveFolder.c_str(), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("LastSaveFileName"),
+		m_LastSaveFileName.c_str(), szIniFileName);
+	::WritePrivateProfileString(
+		TEXT("Settings"), TEXT("LastSaveFolder"),
+		m_LastSaveFolder.c_str(), szIniFileName);
 }
 
 
@@ -605,14 +628,11 @@ void CMemoryCapture::LoadSettings()
 	m_Deinterlace = (CVideoDecoder::DeinterlaceMethod)
 		::GetPrivateProfileInt(TEXT("Settings"), TEXT("Deinterlace"), (int)m_Deinterlace, szIniFileName);
 	m_fFitWindowToImage =
-		::GetPrivateProfileInt(TEXT("Settings"), TEXT("FitWindowToImage"),
-							   m_fFitWindowToImage, szIniFileName) != 0;
+		::GetPrivateProfileInt(TEXT("Settings"), TEXT("FitWindowToImage"), m_fFitWindowToImage, szIniFileName) != 0;
 	m_fAccumulateAlways =
-		::GetPrivateProfileInt(TEXT("Settings"), TEXT("AccumulateAlways"),
-							   m_fAccumulateAlways, szIniFileName) != 0;
+		::GetPrivateProfileInt(TEXT("Settings"), TEXT("AccumulateAlways"), m_fAccumulateAlways, szIniFileName) != 0;
 	m_VideoMemorySizeInMB =
-		::GetPrivateProfileInt(TEXT("Settings"), TEXT("VideoMemorySizeInMB"),
-							   m_VideoMemorySizeInMB, szIniFileName);
+		::GetPrivateProfileInt(TEXT("Settings"), TEXT("VideoMemorySizeInMB"), m_VideoMemorySizeInMB, szIniFileName);
 	if (m_VideoMemorySizeInMB < 1)
 		m_VideoMemorySizeInMB = 1;
 	else if (m_VideoMemorySizeInMB > VideoMemorySizeLimitInMB)
@@ -645,15 +665,12 @@ void CMemoryCapture::LoadSettings()
 	if (ZoomNum > 0 && ZoomDenom > 0)
 		m_Preview.SetZoomRate(ZoomNum, ZoomDenom);
 	m_Preview.SetFitImageToWindow(
-		::GetPrivateProfileInt(TEXT("Settings"), TEXT("FitImageToWindow"),
-							   m_Preview.GetFitImageToWindow(), szIniFileName) != 0);
+		::GetPrivateProfileInt(TEXT("Settings"), TEXT("FitImageToWindow"), m_Preview.GetFitImageToWindow(), szIniFileName) != 0);
 
 	TCHAR szPath[MAX_PATH];
-	if (::GetPrivateProfileString(TEXT("Settings"), TEXT("LastSaveFileName"),
-								  TEXT(""), szPath, _countof(szPath), szIniFileName) > 0)
+	if (::GetPrivateProfileString(TEXT("Settings"), TEXT("LastSaveFileName"), TEXT(""), szPath, _countof(szPath), szIniFileName) > 0)
 		m_LastSaveFileName = szPath;
-	if (::GetPrivateProfileString(TEXT("Settings"), TEXT("LastSaveFolder"),
-								  TEXT(""), szPath, _countof(szPath), szIniFileName) > 0)
+	if (::GetPrivateProfileString(TEXT("Settings"), TEXT("LastSaveFolder"), TEXT(""), szPath, _countof(szPath), szIniFileName) > 0)
 		m_LastSaveFolder = szPath;
 }
 
@@ -666,8 +683,7 @@ void CMemoryCapture::LoadAppSettings()
 	if (m_pApp->GetSetting(L"IniFilePath", szIniPath, _countof(szIniPath)) > 0) {
 		// 保存形式
 		WCHAR szFormat[8];
-		if (::GetPrivateProfileStringW(L"Settings", L"CaptureSaveFormat",
-									   L"", szFormat, _countof(szFormat), szIniPath) > 0) {
+		if (::GetPrivateProfileStringW(L"Settings", L"CaptureSaveFormat", L"", szFormat, _countof(szFormat), szIniPath) > 0) {
 			CImageCodec::FormatType Format = m_Codec.ParseFormatName(szFormat);
 			if (Format != CImageCodec::Format_Invalid)
 				m_SaveFormat = Format;
@@ -767,10 +783,11 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 	CloseDecodeThread();
 
 	if (!m_Decoder.Initialize()) {
-		::MessageBox(GetOwnerWindow(),
-					 TEXT("デコーダーを初期化できません。"),
-					 nullptr,
-					 MB_OK | MB_ICONEXCLAMATION);
+		::MessageBox(
+			GetOwnerWindow(),
+			TEXT("デコーダーを初期化できません。"),
+			nullptr,
+			MB_OK | MB_ICONEXCLAMATION);
 		return false;
 	}
 
@@ -791,10 +808,11 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 
 		m_pDecodeBuffer = new(std::nothrow) BYTE[m_StreamAvail];
 		if (m_pDecodeBuffer == nullptr) {
-			::MessageBox(GetOwnerWindow(),
-						 TEXT("メモリーを確保できません。"),
-						 nullptr,
-						 MB_OK | MB_ICONEXCLAMATION);
+			::MessageBox(
+				GetOwnerWindow(),
+				TEXT("メモリーを確保できません。"),
+				nullptr,
+				MB_OK | MB_ICONEXCLAMATION);
 			return false;
 		}
 		m_DecodeSize = m_StreamAvail;
@@ -1074,9 +1092,10 @@ void CMemoryCapture::AdjustWindowSize()
 		rc.top = max(rc.bottom - Height, mi.rcWork.top);
 	}
 
-	::SetWindowPos(m_hwnd, nullptr,
-				   rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
-				   SWP_NOZORDER | SWP_NOACTIVATE);
+	::SetWindowPos(
+		m_hwnd, nullptr,
+		rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+		SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 
@@ -1248,8 +1267,7 @@ bool CMemoryCapture::GetSaveFileName(
 			::StringCchPrintfW(szNum, _countof(szNum), L"-%d", i);
 			::PathCombineW(szPath, pszFolder, Info.pszResult);
 			if (FAILED(::StringCchCatW(szPath, _countof(szPath), szNum))
-					|| FAILED(::StringCchCatW(szPath, _countof(szPath),
-											  m_Codec.GetFormatExtensions(m_SaveFormat)))) {
+					|| FAILED(::StringCchCatW(szPath, _countof(szPath), m_Codec.GetFormatExtensions(m_SaveFormat)))) {
 				::MessageBox(GetOwnerWindow(), TEXT("パスが長すぎます。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 				return false;
 			}
@@ -1590,8 +1608,7 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 			int Index = Command - CM_ZOOM_FIRST;
 
 			if (Index < _countof(m_ZoomRateList)) {
-				m_Preview.SetZoomRate(m_ZoomRateList[Index].Rate.Num,
-									  m_ZoomRateList[Index].Rate.Denom);
+				m_Preview.SetZoomRate(m_ZoomRateList[Index].Rate.Num, m_ZoomRateList[Index].Rate.Denom);
 				if (m_fFitWindowToImage)
 					AdjustWindowSize();
 			}
@@ -1646,8 +1663,7 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 	::EnableMenuItem(hmenuPopup, CM_SAVE_AS, MF_BYCOMMAND | (fImage ? MF_ENABLED : MF_GRAYED));
 	::EnableMenuItem(hmenuPopup, CM_SAVE_ALL, MF_BYCOMMAND | (fImage ? MF_ENABLED : MF_GRAYED));
 	::EnableMenuItem(hmenuPopup, CM_COPY, MF_BYCOMMAND | (fImage ? MF_ENABLED : MF_GRAYED));
-	::CheckMenuItem(hmenuPopup, CM_FIT_WINDOW_TO_IMAGE,
-					MF_BYCOMMAND | (m_fFitWindowToImage ? MF_CHECKED : MF_UNCHECKED));
+	::CheckMenuItem(hmenuPopup, CM_FIT_WINDOW_TO_IMAGE, MF_BYCOMMAND | (m_fFitWindowToImage ? MF_CHECKED : MF_UNCHECKED));
 
 	// 表示倍率
 	int Zoom = 0;
@@ -1673,11 +1689,13 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 	for (std::size_t i = 0; i < _countof(m_CaptureSizeList); i++) {
 		TCHAR szText[64];
 		if (m_CaptureSizeList[i].Type == CaptureSizeType_Size) {
-			::StringCchPrintf(szText, _countof(szText), TEXT("%d x %d"),
-							  m_CaptureSizeList[i].Size.Width, m_CaptureSizeList[i].Size.Height);
+			::StringCchPrintf(
+				szText, _countof(szText), TEXT("%d x %d"),
+				m_CaptureSizeList[i].Size.Width, m_CaptureSizeList[i].Size.Height);
 		} else {
-			::StringCchPrintf(szText, _countof(szText), TEXT("%d%%"),
-							  m_CaptureSizeList[i].Rate.Num * 100 / m_CaptureSizeList[i].Rate.Denom);
+			::StringCchPrintf(
+				szText, _countof(szText), TEXT("%d%%"),
+				m_CaptureSizeList[i].Rate.Num * 100 / m_CaptureSizeList[i].Rate.Denom);
 		}
 		::AppendMenu(hmenuSize, MF_STRING | MF_ENABLED, CM_CAPTURE_SIZE_FIRST + i, szText);
 		if (m_CaptureSizeList[i] == m_CaptureSize)
@@ -1686,10 +1704,12 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 	if (CurSize >= 0)
 		::CheckMenuRadioItem(hmenuSize, 0, _countof(m_CaptureSizeList) - 1, CurSize, MF_BYPOSITION);
 
-	::CheckMenuRadioItem(hmenuPopup, CM_RESAMPLE_FIRST, CM_RESAMPLE_LAST,
-						 CM_RESAMPLE_FIRST + (int)m_Resample, MF_BYCOMMAND);
-	::CheckMenuRadioItem(hmenuPopup, CM_DEINTERLACE_FIRST, CM_DEINTERLACE_LAST,
-						 CM_DEINTERLACE_FIRST + (int)m_Deinterlace, MF_BYCOMMAND);
+	::CheckMenuRadioItem(
+		hmenuPopup, CM_RESAMPLE_FIRST, CM_RESAMPLE_LAST,
+		CM_RESAMPLE_FIRST + (int)m_Resample, MF_BYCOMMAND);
+	::CheckMenuRadioItem(
+		hmenuPopup, CM_DEINTERLACE_FIRST, CM_DEINTERLACE_LAST,
+		CM_DEINTERLACE_FIRST + (int)m_Deinterlace, MF_BYCOMMAND);
 
 	::TrackPopupMenu(hmenuPopup, TPM_RIGHTBUTTON, x, y, 0, m_hwnd, nullptr);
 	::DestroyMenu(hmenu);
@@ -1717,8 +1737,9 @@ bool CMemoryCapture::OnFrame(const CVideoDecoder::FrameInfo &Frame)
 {
 	CImage *pImage = new CImage;
 
-	if (!pImage->Create(Frame.Width, Frame.Height, Frame.BitsPerPixel,
-						Frame.AspectRatioX, Frame.AspectRatioY)) {
+	if (!pImage->Create(
+			Frame.Width, Frame.Height, Frame.BitsPerPixel,
+			Frame.AspectRatioX, Frame.AspectRatioY)) {
 		delete pImage;
 		return false;
 	}
@@ -1751,7 +1772,7 @@ bool CMemoryCapture::OnFrame(const CVideoDecoder::FrameInfo &Frame)
 LRESULT CALLBACK CMemoryCapture::EventCallback(
 	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CMemoryCapture *pThis = static_cast<CMemoryCapture*>(pClientData);
+	CMemoryCapture *pThis = static_cast<CMemoryCapture *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -1804,7 +1825,7 @@ LRESULT CALLBACK CMemoryCapture::EventCallback(
 LRESULT CALLBACK CMemoryCapture::VideoStreamCallback(
 	DWORD Format, const void *pData, SIZE_T Size, void *pClientData)
 {
-	static_cast<CMemoryCapture*>(pClientData)->InputStream(Format, pData, Size);
+	static_cast<CMemoryCapture *>(pClientData)->InputStream(Format, pData, Size);
 
 	return 0;
 }
@@ -1813,7 +1834,7 @@ LRESULT CALLBACK CMemoryCapture::VideoStreamCallback(
 // 映像デコードスレッド
 unsigned int __stdcall CMemoryCapture::DecodeThread(void *pParameter)
 {
-	CMemoryCapture *pThis = static_cast<CMemoryCapture*>(pParameter);
+	CMemoryCapture *pThis = static_cast<CMemoryCapture *>(pParameter);
 
 	::CoInitialize(nullptr);
 
@@ -1847,9 +1868,9 @@ unsigned int __stdcall CMemoryCapture::DecodeThread(void *pParameter)
 
 
 // ウィンドウハンドルからthisを取得する
-CMemoryCapture *CMemoryCapture::GetThis(HWND hwnd)
+CMemoryCapture * CMemoryCapture::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CMemoryCapture*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CMemoryCapture *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -1860,7 +1881,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CMemoryCapture *pThis = static_cast<CMemoryCapture*>(pcs->lpCreateParams);
+			CMemoryCapture *pThis = static_cast<CMemoryCapture *>(pcs->lpCreateParams);
 
 			pThis->m_WindowLock.Lock();
 			pThis->m_hwnd = hwnd;
@@ -2128,12 +2149,9 @@ INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 		{
 			CMemoryCapture *pThis = static_cast<CMemoryCapture*>(pClientData);
 
-			::SetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE,
-							pThis->m_VideoMemorySizeInMB, FALSE);
-			::CheckDlgButton(hDlg, IDC_SETTINGS_ACCUMULATE_ALWAYS,
-							 pThis->m_fAccumulateAlways ? BST_CHECKED : BST_UNCHECKED);
-			::SetDlgItemInt(hDlg, IDC_SETTINGS_SKIP_FRAMES,
-							pThis->m_SkipFrames, TRUE);
+			::SetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE, pThis->m_VideoMemorySizeInMB, FALSE);
+			::CheckDlgButton(hDlg, IDC_SETTINGS_ACCUMULATE_ALWAYS, pThis->m_fAccumulateAlways ? BST_CHECKED : BST_UNCHECKED);
+			::SetDlgItemInt(hDlg, IDC_SETTINGS_SKIP_FRAMES, pThis->m_SkipFrames, TRUE);
 		}
 		return TRUE;
 
@@ -2141,22 +2159,23 @@ INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 		switch (LOWORD(wParam)) {
 		case IDC_SETTINGS_MEMORY_SIZE:
 			if (HIWORD(wParam) == EN_CHANGE) {
-				unsigned int Size = ::GetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE, NULL, FALSE);
+				unsigned int Size = ::GetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE, nullptr, FALSE);
 				TCHAR szText[16];
 
 				// 1MBあたり15フレームとしてメモリ使用量を計算
-				::StringCchPrintf(szText, _countof(szText), TEXT("%u MB"),
-								  (Size * (15 * ((1440 * 1080) * 3))) / (1024 * 1024));
+				::StringCchPrintf(
+					szText, _countof(szText), TEXT("%u MB"),
+					(Size * (15 * ((1440 * 1080) * 3))) / (1024 * 1024));
 				::SetDlgItemText(hDlg, IDC_SETTINGS_ESTIMATE_MEMORY_USAGE, szText);
 			}
 			return TRUE;
 
 		case IDOK:
 			{
-				CMemoryCapture *pThis = static_cast<CMemoryCapture*>(pClientData);
+				CMemoryCapture *pThis = static_cast<CMemoryCapture *>(pClientData);
 
 				unsigned int VideoMemorySizeInMB =
-					::GetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE, NULL, FALSE);
+					::GetDlgItemInt(hDlg, IDC_SETTINGS_MEMORY_SIZE, nullptr, FALSE);
 				if (VideoMemorySizeInMB < 1)
 					VideoMemorySizeInMB = 1;
 				else if (VideoMemorySizeInMB > VideoMemorySizeLimitInMB)
@@ -2178,7 +2197,7 @@ INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 				}
 
 				pThis->m_SkipFrames =
-					::GetDlgItemInt(hDlg, IDC_SETTINGS_SKIP_FRAMES, NULL, TRUE);
+					::GetDlgItemInt(hDlg, IDC_SETTINGS_SKIP_FRAMES, nullptr, TRUE);
 			}
 		case IDCANCEL:
 			::EndDialog(hDlg,LOWORD(wParam));
@@ -2194,7 +2213,7 @@ INT_PTR CALLBACK CMemoryCapture::SettingsDlgProc(
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CMemoryCapture;
 }

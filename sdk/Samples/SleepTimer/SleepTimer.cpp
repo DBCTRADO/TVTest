@@ -19,9 +19,9 @@
 #include "TVTestPlugin.h"
 #include "resource.h"
 
-#pragma comment(lib,"comctl32.lib")
-#pragma comment(lib,"shlwapi.lib")
-#pragma comment(lib,"powrprof.lib")
+#pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "powrprof.lib")
 
 
 // FILETIME の単位
@@ -64,18 +64,18 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 {
 	// スリープ条件
 	enum SleepCondition {
-		CONDITION_DURATION,	// 時間経過
-		CONDITION_DATETIME,	// 指定時刻
-		CONDITION_EVENTEND	// 番組終了
+		CONDITION_DURATION, // 時間経過
+		CONDITION_DATETIME, // 指定時刻
+		CONDITION_EVENTEND  // 番組終了
 	};
 
 	// スリープ方法
 	enum SleepMode {
-		MODE_EXIT,			// TVTest終了
-		MODE_POWEROFF,		// 電源オフ
-		MODE_LOGOFF,		// ログオフ
-		MODE_SUSPEND,		// サスペンド
-		MODE_HIBERNATE		// ハイバネート
+		MODE_EXIT,          // TVTest終了
+		MODE_POWEROFF,      // 電源オフ
+		MODE_LOGOFF,        // ログオフ
+		MODE_SUSPEND,       // サスペンド
+		MODE_HIBERNATE      // ハイバネート
 	};
 
 	enum {
@@ -85,23 +85,23 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 
 	static const int DEFAULT_POS = INT_MIN;
 
-	bool m_fInitialized;				// 初期化済みか?
-	TCHAR m_szIniFileName[MAX_PATH];	// INIファイルのパス
-	SleepCondition m_Condition;			// スリープする条件
-	DWORD m_SleepDuration;				// スリープまでの時間(秒単位)
-	SYSTEMTIME m_SleepDateTime;			// スリープする時刻
-	WORD m_EventID;						// 現在の番組の event_id
-	SleepMode m_Mode;					// スリープ時の動作
-	bool m_fForce;						// 強制
-	bool m_fMonitorOff;					// モニタをOFFにする
-	bool m_fIgnoreRecStatus;			// 録画中でもスリープする
-	bool m_fConfirm;					// 確認を取る
-	int m_ConfirmTimeout;				// 確認のタイムアウト時間(秒単位)
-	bool m_fShowSettings;				// プラグイン有効時に設定表示
-	POINT m_SettingsDialogPos;			// 設定ダイアログの位置
-	HWND m_hwnd;						// ウィンドウハンドル
-	bool m_fEnabled;					// プラグインが有効か?
-	int m_ConfirmTimerCount;			// 確認のタイマー
+	bool m_fInitialized;             // 初期化済みか?
+	TCHAR m_szIniFileName[MAX_PATH]; // INIファイルのパス
+	SleepCondition m_Condition;      // スリープする条件
+	DWORD m_SleepDuration;           // スリープまでの時間(秒単位)
+	SYSTEMTIME m_SleepDateTime;      // スリープする時刻
+	WORD m_EventID;                  // 現在の番組の event_id
+	SleepMode m_Mode;                // スリープ時の動作
+	bool m_fForce;                   // 強制
+	bool m_fMonitorOff;              // モニタをOFFにする
+	bool m_fIgnoreRecStatus;         // 録画中でもスリープする
+	bool m_fConfirm;                 // 確認を取る
+	int m_ConfirmTimeout;            // 確認のタイムアウト時間(秒単位)
+	bool m_fShowSettings;            // プラグイン有効時に設定表示
+	POINT m_SettingsDialogPos;       // 設定ダイアログの位置
+	HWND m_hwnd;                     // ウィンドウハンドル
+	bool m_fEnabled;                 // プラグインが有効か?
+	int m_ConfirmTimerCount;         // 確認のタイマー
 
 	static const LPCTSTR m_ModeTextList[];
 
@@ -114,7 +114,7 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 	bool ShowSettingsDialog(HWND hwndOwner);
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
-	static CSleepTimer *GetThis(HWND hwnd);
+	static CSleepTimer * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
 	static INT_PTR CALLBACK ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
@@ -160,8 +160,8 @@ bool CSleepTimer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	// プラグインの情報を返す
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
-	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS		// 設定あり
-	                      | TVTest::PLUGIN_FLAG_DISABLEONSTART;	// 起動時は常に無効
+	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS     // 設定あり
+	                      | TVTest::PLUGIN_FLAG_DISABLEONSTART; // 起動時は常に無効
 	pInfo->pszPluginName  = L"スリープタイマー";
 	pInfo->pszCopyright   = L"Public Domain";
 	pInfo->pszDescription = L"指定条件で終了させます。";
@@ -246,7 +246,7 @@ bool CSleepTimer::Finalize()
 {
 	// 終了処理
 
-	m_pApp->EnablePlugin(false);	// 次回起動時に有効にならないように
+	m_pApp->EnablePlugin(false); // 次回起動時に有効にならないように
 
 	// ウィンドウの破棄
 	if (m_hwnd)
@@ -304,8 +304,8 @@ bool CSleepTimer::BeginSleep()
 {
 	m_pApp->AddLog(L"スリープを開始します。");
 
-	m_pApp->EnablePlugin(false);	// タイマーは一回限り有効
-	EndTimer();		// EventCallbackで呼ばれるはずだが、念のため
+	m_pApp->EnablePlugin(false); // タイマーは一回限り有効
+	EndTimer(); // EventCallbackで呼ばれるはずだが、念のため
 
 	if (m_fConfirm) {
 		// 確認ダイアログを表示
@@ -328,8 +328,7 @@ bool CSleepTimer::BeginSleep()
 		// 録画中はスリープ実行しない
 		TVTest::RecordStatusInfo RecStat;
 		if (!m_pApp->GetRecordStatus(&RecStat)) {
-			m_pApp->AddLog(L"録画状態を取得できないのでスリープがキャンセルされました。",
-						   TVTest::LOG_TYPE_WARNING);
+			m_pApp->AddLog(L"録画状態を取得できないのでスリープがキャンセルされました。", TVTest::LOG_TYPE_WARNING);
 			return false;
 		}
 		if (RecStat.Status != TVTest::RECORD_STATUS_NOTRECORDING) {
@@ -350,8 +349,9 @@ bool CSleepTimer::DoSleep()
 		// 権限設定
 		HANDLE hToken;
 
-		if (::OpenProcessToken(::GetCurrentProcess(),
-							   TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &hToken)) {
+		if (::OpenProcessToken(
+				::GetCurrentProcess(),
+				TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES, &hToken)) {
 			LUID ld;
 			LUID_AND_ATTRIBUTES la;
 			TOKEN_PRIVILEGES tp;
@@ -418,9 +418,10 @@ bool CSleepTimer::BeginTimer()
 		Result = ::SetTimer(m_hwnd, TIMER_ID_SLEEP, m_SleepDuration * 1000, nullptr);
 	} else if (m_Condition == CONDITION_DATETIME || m_Condition == CONDITION_EVENTEND) {
 		if (m_Condition == CONDITION_DATETIME) {
-			::wsprintfW(szLog, L"%d/%d/%d %02d:%02d:%02d (UTC) にスリープします。",
-						m_SleepDateTime.wYear, m_SleepDateTime.wMonth, m_SleepDateTime.wDay,
-						m_SleepDateTime.wHour, m_SleepDateTime.wMinute, m_SleepDateTime.wSecond);
+			::wsprintfW(
+				szLog, L"%d/%d/%d %02d:%02d:%02d (UTC) にスリープします。",
+				m_SleepDateTime.wYear, m_SleepDateTime.wMonth, m_SleepDateTime.wDay,
+				m_SleepDateTime.wHour, m_SleepDateTime.wMinute, m_SleepDateTime.wSecond);
 			m_pApp->AddLog(szLog);
 		} else {
 			m_EventID = 0;
@@ -466,7 +467,7 @@ bool CSleepTimer::ShowSettingsDialog(HWND hwndOwner)
 // 何かイベントが起きると呼ばれる
 LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+	CSleepTimer *pThis = static_cast<CSleepTimer *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -484,9 +485,9 @@ LRESULT CALLBACK CSleepTimer::EventCallback(UINT Event, LPARAM lParam1, LPARAM l
 
 
 // ウィンドウハンドルからthisを取得する
-CSleepTimer *CSleepTimer::GetThis(HWND hwnd)
+CSleepTimer * CSleepTimer::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CSleepTimer*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CSleepTimer *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -498,7 +499,7 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CSleepTimer *pThis = static_cast<CSleepTimer*>(pcs->lpCreateParams);
+			CSleepTimer *pThis = static_cast<CSleepTimer *>(pcs->lpCreateParams);
 
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 		}
@@ -540,8 +541,8 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 								LARGE_INTEGER li;
 								li.LowPart = ft.dwLowDateTime;
 								li.HighPart = ft.dwHighDateTime;
-								li.QuadPart -= 9LL * FILETIME_HOUR;				// EPG日時(UTC+9) -> UTC
-								li.QuadPart += Info.Duration * FILETIME_SEC;	// 終了時刻
+								li.QuadPart -= 9LL * FILETIME_HOUR;          // EPG日時(UTC+9) -> UTC
+								li.QuadPart += Info.Duration * FILETIME_SEC; // 終了時刻
 								ft.dwLowDateTime = li.LowPart;
 								ft.dwHighDateTime = li.HighPart;
 								FILETIME CurrentTime;
@@ -567,7 +568,7 @@ LRESULT CALLBACK CSleepTimer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
@@ -588,7 +589,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+			CSleepTimer *pThis = static_cast<CSleepTimer *>(pClientData);
 
 			::CheckRadioButton(
 				hDlg, IDC_SETTINGS_CONDITION_DURATION, IDC_SETTINGS_CONDITION_EVENTEND,
@@ -652,7 +653,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 		case IDOK:
 			{
-				CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+				CSleepTimer *pThis = static_cast<CSleepTimer *>(pClientData);
 				SleepCondition Condition;
 
 				if (::IsDlgButtonChecked(hDlg, IDC_SETTINGS_CONDITION_DURATION)) {
@@ -724,7 +725,7 @@ INT_PTR CALLBACK CSleepTimer::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			}
 		case IDCANCEL:
 			{
-				CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+				CSleepTimer *pThis = static_cast<CSleepTimer *>(pClientData);
 				RECT rc;
 
 				::GetWindowRect(hDlg, &rc);
@@ -748,7 +749,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+			CSleepTimer *pThis = static_cast<CSleepTimer *>(pClientData);
 
 			TCHAR szText[64];
 			::wsprintf(szText, TEXT("%sしますか？"), m_ModeTextList[pThis->m_Mode]);
@@ -766,7 +767,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 	case WM_TIMER:
 		{
-			CSleepTimer *pThis = static_cast<CSleepTimer*>(pClientData);
+			CSleepTimer *pThis = static_cast<CSleepTimer *>(pClientData);
 
 			pThis->m_ConfirmTimerCount++;
 			if (pThis->m_ConfirmTimerCount < pThis->m_ConfirmTimeout) {
@@ -794,7 +795,7 @@ INT_PTR CALLBACK CSleepTimer::ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CSleepTimer;
 }

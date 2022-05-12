@@ -38,13 +38,15 @@ bool CVideoDecoder::Initialize()
 		if (m_hLib == nullptr) {
 			// インストールされているモジュールを探す
 			HKEY hKey;
-			if (::RegOpenKeyEx(HKEY_CLASSES_ROOT,
-							   TEXT("CLSID\\{AE0BF9FF-EBCE-4412-9EFC-C6EE86B20855}\\InprocServer32"),
-							   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+			if (::RegOpenKeyEx(
+					HKEY_CLASSES_ROOT,
+					TEXT("CLSID\\{AE0BF9FF-EBCE-4412-9EFC-C6EE86B20855}\\InprocServer32"),
+					0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
 				DWORD Type, Size = sizeof(szPath);
 				::ZeroMemory(szPath, sizeof(szPath));
-				if (::RegQueryValueEx(hKey, nullptr, nullptr, &Type,
-									  reinterpret_cast<LPBYTE>(szPath), &Size) == ERROR_SUCCESS
+				if (::RegQueryValueEx(
+							hKey, nullptr, nullptr, &Type,
+							reinterpret_cast<LPBYTE>(szPath), &Size) == ERROR_SUCCESS
 						&& Type == REG_SZ)
 					m_hLib = ::LoadLibrary(szPath);
 				::RegCloseKey(hKey);
@@ -153,13 +155,13 @@ void CVideoDecoder::SetDeinterlaceMethod(DeinterlaceMethod Deinterlace)
 
 STDMETHODIMP_(ULONG) CVideoDecoder::AddRef()
 {
-	return ::InterlockedIncrement(&m_RefCount);	// ダミー
+	return ::InterlockedIncrement(&m_RefCount); // ダミー
 }
 
 
 STDMETHODIMP_(ULONG) CVideoDecoder::Release()
 {
-	return ::InterlockedDecrement(&m_RefCount);	// ダミー
+	return ::InterlockedDecrement(&m_RefCount); // ダミー
 }
 
 

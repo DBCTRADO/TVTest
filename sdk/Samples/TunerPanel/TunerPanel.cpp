@@ -25,8 +25,8 @@
 #include "TVTestPlugin.h"
 #include "resource.h"
 
-#pragma comment(lib,"comctl32.lib")
-#pragma comment(lib,"shlwapi.lib")
+#pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 
 static void OffsetFileTime(FILETIME *pTime, LONGLONG Offset)
@@ -69,28 +69,28 @@ private:
 
 	struct Bitmap
 	{
-		Bitmap() : m_hbm(NULL) {}
+		Bitmap() : m_hbm(nullptr) {}
 		~Bitmap() { Delete(); }
-		Bitmap(const Bitmap &Src) : m_hbm(NULL) { *this = Src; }
-		Bitmap &operator=(const Bitmap &Src) {
+		Bitmap(const Bitmap &Src) : m_hbm(nullptr) { *this = Src; }
+		Bitmap & operator=(const Bitmap &Src) {
 			if (&Src != this) {
 				Delete();
-				if (Src.m_hbm != NULL)
+				if (Src.m_hbm != nullptr)
 					m_hbm = (HBITMAP)::CopyImage(Src.m_hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 			}
 			return *this;
 		}
-		Bitmap &operator=(HBITMAP hbm) {
+		Bitmap & operator=(HBITMAP hbm) {
 			Delete();
 			m_hbm = hbm;
 			return *this;
 		}
 		operator HBITMAP() const { return m_hbm; }
-		operator bool() const { return m_hbm != NULL; }
+		explicit operator bool() const { return m_hbm != nullptr; }
 		void Delete() {
-			if (m_hbm != NULL) {
+			if (m_hbm != nullptr) {
 				::DeleteObject(m_hbm);
-				m_hbm = NULL;
+				m_hbm = nullptr;
 			}
 		}
 
@@ -211,8 +211,8 @@ CTunerPanel::CTunerPanel()
 	: m_ViewMode(VIEW_MODE_LIST)
 	, m_LogoSize(LOGO_SIZE_MEDIUM)
 	, m_fEnableByPlugin(false)
-	, m_hwnd(NULL)
-	, m_hwndToolTips(NULL)
+	, m_hwnd(nullptr)
+	, m_hwndToolTips(nullptr)
 {
 }
 
@@ -241,8 +241,8 @@ bool CTunerPanel::Initialize()
 	PanelInfo.ID = PANEL_ID;
 	PanelInfo.pszIDText = L"Tuner";
 	PanelInfo.pszTitle = L"チューナー";
-	PanelInfo.hbmIcon = (HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON),
-											 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+	PanelInfo.hbmIcon = (HBITMAP)::LoadImage(
+		g_hinstDLL, MAKEINTRESOURCE(IDB_ICON), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
 	bool fResult = m_pApp->RegisterPanelItem(&PanelInfo);
 	::DeleteObject(PanelInfo.hbmIcon);
@@ -259,10 +259,10 @@ bool CTunerPanel::Initialize()
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = g_hinstDLL;
-	wc.hIcon = NULL;
-	wc.hCursor = NULL;
-	wc.hbrBackground = NULL;
-	wc.lpszMenuName = NULL;
+	wc.hIcon = nullptr;
+	wc.hCursor = nullptr;
+	wc.hbrBackground = nullptr;
+	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = WINDOW_CLASS_NAME;
 	if (::RegisterClass(&wc) == 0)
 		return false;
@@ -283,7 +283,7 @@ bool CTunerPanel::Initialize()
 		WCHAR szKey[32], szTuner[MAX_PATH];
 		::wsprintfW(szKey, L"Tuner%d", i);
 		if (::GetPrivateProfileStringW(
-				L"ExpandedTuners", szKey, NULL,
+				L"ExpandedTuners", szKey, nullptr,
 				szTuner, _countof(szTuner), m_szIniFileName) < 1)
 			break;
 		m_ExpandedTunerList.push_back(std::wstring(szTuner));
@@ -300,7 +300,7 @@ bool CTunerPanel::Initialize()
 bool CTunerPanel::Finalize()
 {
 	// ウィンドウの破棄
-	if (m_hwnd != NULL)
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
 	// 設定を保存する
@@ -333,7 +333,7 @@ bool CTunerPanel::Finalize()
 LRESULT CALLBACK CTunerPanel::EventCallback(
 	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CTunerPanel *pThis = static_cast<CTunerPanel*>(pClientData);
+	CTunerPanel *pThis = static_cast<CTunerPanel *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -360,21 +360,21 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 		// チャンネルが変更された
 	case TVTest::EVENT_SERVICECHANGE:
 		// サービスが変更された
-		if (pThis->m_hwnd != NULL)
-			::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
+		if (pThis->m_hwnd != nullptr)
+			::InvalidateRect(pThis->m_hwnd, nullptr, TRUE);
 		return TRUE;
 
 	case TVTest::EVENT_COLORCHANGE:
 		// 色の設定が変化した
-		if (pThis->m_hwnd != NULL) {
+		if (pThis->m_hwnd != nullptr) {
 			pThis->UpdateWindowTheme();
-			::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
+			::InvalidateRect(pThis->m_hwnd, nullptr, TRUE);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_SETTINGSCHANGE:
 		// 設定が変更された
-		if (pThis->m_hwnd != NULL) {
+		if (pThis->m_hwnd != nullptr) {
 			pThis->InitializePanel();
 			pThis->UpdateContent();
 		}
@@ -384,24 +384,24 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 		// パネル項目の通知
 		{
 			TVTest::PanelItemEventInfo *pInfo =
-				reinterpret_cast<TVTest::PanelItemEventInfo*>(lParam1);
+				reinterpret_cast<TVTest::PanelItemEventInfo *>(lParam1);
 
 			switch (pInfo->Event) {
 			case TVTest::PANEL_ITEM_EVENT_CREATE:
 				// パネル項目を作成する
 				{
 					TVTest::PanelItemCreateEventInfo *pCreateInfo =
-						reinterpret_cast<TVTest::PanelItemCreateEventInfo*>(lParam1);
+						reinterpret_cast<TVTest::PanelItemCreateEventInfo *>(lParam1);
 
 					HWND hwnd = ::CreateWindowEx(
-						0, WINDOW_CLASS_NAME, NULL,
+						0, WINDOW_CLASS_NAME, nullptr,
 						WS_CHILD | WS_VISIBLE | WS_VSCROLL,
 						pCreateInfo->ItemRect.left,
 						pCreateInfo->ItemRect.top,
 						pCreateInfo->ItemRect.right - pCreateInfo->ItemRect.left,
 						pCreateInfo->ItemRect.bottom - pCreateInfo->ItemRect.top,
-						pCreateInfo->hwndParent, NULL, g_hinstDLL, pThis);
-					if (hwnd == NULL) {
+						pCreateInfo->hwndParent, nullptr, g_hinstDLL, pThis);
+					if (hwnd == nullptr) {
 						return FALSE;
 					}
 
@@ -441,7 +441,7 @@ LRESULT CALLBACK CTunerPanel::EventCallback(
 					RECT rc;
 					::GetClientRect(pThis->m_hwnd, &rc);
 					::SendMessage(pThis->m_hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
-					::InvalidateRect(pThis->m_hwnd, NULL, TRUE);
+					::InvalidateRect(pThis->m_hwnd, nullptr, TRUE);
 					pThis->UpdateScroll();
 				}
 				return TRUE;
@@ -459,7 +459,7 @@ void CTunerPanel::UpdateContent()
 {
 	GetTunerList();
 	UpdateScroll();
-	::InvalidateRect(m_hwnd, NULL, TRUE);
+	::InvalidateRect(m_hwnd, nullptr, TRUE);
 }
 
 
@@ -587,9 +587,9 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_CREATE:
 		{
 			m_hwndToolTips = ::CreateWindowEx(
-				WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
+				WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr,
 				WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-				0, 0, 0, 0, hwnd, NULL, GetWindowInstance(hwnd), NULL);
+				0, 0, 0, 0, hwnd, nullptr, GetWindowInstance(hwnd), nullptr);
 			::SendMessage(m_hwndToolTips, TTM_ACTIVATE, TRUE, 0);
 			int Delay = (int)::SendMessage(m_hwndToolTips, TTM_GETDELAYTIME, TTDT_AUTOPOP, 0);
 			if (Delay < 5000)
@@ -656,7 +656,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 						if (Tuner.fExpandable) {
 							Tuner.fExpanded = !Tuner.fExpanded;
 							UpdateScroll();
-							::InvalidateRect(hwnd, NULL ,TRUE);
+							::InvalidateRect(hwnd, nullptr ,TRUE);
 						}
 					}
 					break;
@@ -684,7 +684,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd, &pt);
 
-			::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, NULL);
+			::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, nullptr);
 			::DestroyMenu(hmenu);
 		}
 		return 0;
@@ -732,7 +732,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_SETCURSOR:
 		if ((HWND)wParam == hwnd && LOWORD(lParam) == HTCLIENT) {
-			::SetCursor(::LoadCursor(NULL, m_fPointCursor ? IDC_HAND : IDC_ARROW));
+			::SetCursor(::LoadCursor(nullptr, m_fPointCursor ? IDC_HAND : IDC_ARROW));
 			return TRUE;
 		}
 		break;
@@ -748,15 +748,15 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			int Pos = si.nPos;
 
 			switch (LOWORD(wParam)) {
-			case SB_LINEUP:		Pos -= m_FontHeight;	break;
-			case SB_LINEDOWN:	Pos += m_FontHeight;	break;
-			case SB_PAGEUP:		Pos -= si.nPage;		break;
-			case SB_PAGEDOWN:	Pos += si.nPage;		break;
+			case SB_LINEUP:     Pos -= m_FontHeight;  break;
+			case SB_LINEDOWN:   Pos += m_FontHeight;  break;
+			case SB_PAGEUP:     Pos -= si.nPage;      break;
+			case SB_PAGEDOWN:   Pos += si.nPage;      break;
 			case SB_THUMBPOSITION:
-			case SB_THUMBTRACK:	Pos = HIWORD(wParam);	break;
-			case SB_TOP:		Pos = 0;				break;
-			case SB_BOTTOM:		Pos = si.nMax;			break;
-			default:	return 0;
+			case SB_THUMBTRACK: Pos = HIWORD(wParam); break;
+			case SB_TOP:        Pos = 0;              break;
+			case SB_BOTTOM:     Pos = si.nMax;        break;
+			default: return 0;
 			}
 
 			if (Pos != si.nPos)
@@ -776,12 +776,12 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return 0;
 
 	case WM_NOTIFY:
-		switch (reinterpret_cast<NMHDR*>(lParam)->code) {
+		switch (reinterpret_cast<NMHDR *>(lParam)->code) {
 		case TTN_GETDISPINFO:
 			{
 				// ツールチップのテキストを設定する
-				NMTTDISPINFO *pttdi = reinterpret_cast<NMTTDISPINFO*>(lParam);
-				const ChannelInfo *pChannel = reinterpret_cast<const ChannelInfo*>(pttdi->lParam);
+				NMTTDISPINFO *pttdi = reinterpret_cast<NMTTDISPINFO *>(lParam);
+				const ChannelInfo *pChannel = reinterpret_cast<const ChannelInfo *>(pttdi->lParam);
 
 				pttdi->lpszText = m_szToolTipBuffer;
 
@@ -799,9 +799,9 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				EventQuery.Type = TVTest::EPG_EVENT_QUERY_TIME;
 				EventQuery.Flags = 0;
 				::GetSystemTimeAsFileTime(&EventQuery.Time);
-				OffsetFileTime(&EventQuery.Time, 120LL * 1000LL * 10000LL);	// 2分先
+				OffsetFileTime(&EventQuery.Time, 120LL * 1000LL * 10000LL); // 2分先
 				TVTest::EpgEventInfo *pEventInfo = m_pApp->GetEpgEventInfo(&EventQuery);
-				if (pEventInfo != NULL) {
+				if (pEventInfo != nullptr) {
 					RECT rc;
 					::GetClientRect(hwnd, &rc);
 					::SendMessage(m_hwndToolTips, TTM_SETMAXTIPWIDTH, 0, rc.right);
@@ -830,7 +830,7 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 					}
 
 					// 番組名
-					if (pEventInfo->pszEventName != NULL) {
+					if (pEventInfo->pszEventName != nullptr) {
 						::wnsprintfW(
 							m_szToolTipBuffer + Length, _countof(m_szToolTipBuffer) - Length,
 							L" %s", pEventInfo->pszEventName);
@@ -849,9 +849,9 @@ LRESULT CTunerPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_DESTROY:
 		{
-			if (m_hFont != NULL) {
+			if (m_hFont != nullptr) {
 				::DeleteObject(m_hFont);
-				m_hFont = NULL;
+				m_hFont = nullptr;
 			}
 
 			UpdateExpandedTunerList();
@@ -877,7 +877,7 @@ void CTunerPanel::OnCommand(int ID)
 				m_ViewMode = View;
 				UpdateItemSize();
 				UpdateScroll();
-				::InvalidateRect(m_hwnd, NULL, TRUE);
+				::InvalidateRect(m_hwnd, nullptr, TRUE);
 			}
 		}
 		return;
@@ -894,7 +894,7 @@ void CTunerPanel::OnCommand(int ID)
 				if (m_ViewMode == VIEW_MODE_LOGO) {
 					UpdateItemSize();
 					UpdateScroll();
-					::InvalidateRect(m_hwnd, NULL, TRUE);
+					::InvalidateRect(m_hwnd, nullptr, TRUE);
 				}
 			}
 		}
@@ -908,7 +908,7 @@ void CTunerPanel::InitializePanel()
 {
 	LOGFONT lf;
 	m_pApp->GetFont(L"PanelFont", &lf, m_DPI);
-	if (m_hFont != NULL)
+	if (m_hFont != nullptr)
 		::DeleteObject(m_hFont);
 	m_hFont = ::CreateFontIndirect(&lf);
 
@@ -924,14 +924,18 @@ void CTunerPanel::InitializePanel()
 	m_TunerItemMargin.Top    = m_FontHeight / 3;
 	m_TunerItemMargin.Right  = 0;
 	m_TunerItemMargin.Bottom = m_FontHeight / 3;
-	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.left",
-								m_DPI, &m_TunerItemMargin.Left);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.top",
-								m_DPI, &m_TunerItemMargin.Top);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.right",
-								m_DPI, &m_TunerItemMargin.Right);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.tuner-name.margin.bottom",
-								m_DPI, &m_TunerItemMargin.Bottom);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.tuner-name.margin.left",
+		m_DPI, &m_TunerItemMargin.Left);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.tuner-name.margin.top",
+		m_DPI, &m_TunerItemMargin.Top);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.tuner-name.margin.right",
+		m_DPI, &m_TunerItemMargin.Right);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.tuner-name.margin.bottom",
+		m_DPI, &m_TunerItemMargin.Bottom);
 
 	m_TunerItemHeight = m_FontHeight + m_TunerItemMargin.Top + m_TunerItemMargin.Bottom;
 
@@ -939,14 +943,18 @@ void CTunerPanel::InitializePanel()
 	m_ChannelItemMargin.Top    = m_FontHeight / 4;
 	m_ChannelItemMargin.Right  = m_FontHeight / 4;
 	m_ChannelItemMargin.Bottom = m_FontHeight / 4;
-	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.left",
-								m_DPI, &m_ChannelItemMargin.Left);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.top",
-								m_DPI, &m_ChannelItemMargin.Top);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.right",
-								m_DPI, &m_ChannelItemMargin.Right);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.channel-name.margin.bottom",
-								m_DPI, &m_ChannelItemMargin.Bottom);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.channel-name.margin.left",
+		m_DPI, &m_ChannelItemMargin.Left);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.channel-name.margin.top",
+		m_DPI, &m_ChannelItemMargin.Top);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.channel-name.margin.right",
+		m_DPI, &m_ChannelItemMargin.Right);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.channel-name.margin.bottom",
+		m_DPI, &m_ChannelItemMargin.Bottom);
 
 	m_ChannelItemHeight = m_FontHeight + m_ChannelItemMargin.Top + m_ChannelItemMargin.Bottom;
 
@@ -957,14 +965,18 @@ void CTunerPanel::InitializePanel()
 	m_LogoMargin.Top    = m_FontHeight / 4;
 	m_LogoMargin.Right  = m_FontHeight / 4;
 	m_LogoMargin.Bottom = m_FontHeight / 4;
-	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.left",
-								m_DPI, &m_LogoMargin.Left);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.top",
-								m_DPI, &m_LogoMargin.Top);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.right",
-								m_DPI, &m_LogoMargin.Right);
-	m_pApp->GetStyleValuePixels(L"tuner-panel.logo.margin.bottom",
-								m_DPI, &m_LogoMargin.Bottom);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.logo.margin.left",
+		m_DPI, &m_LogoMargin.Left);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.logo.margin.top",
+		m_DPI, &m_LogoMargin.Top);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.logo.margin.right",
+		m_DPI, &m_LogoMargin.Right);
+	m_pApp->GetStyleValuePixels(
+		L"tuner-panel.logo.margin.bottom",
+		m_DPI, &m_LogoMargin.Bottom);
 
 	UpdateItemSize();
 
@@ -1119,8 +1131,9 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 
 					if (m_ViewMode == VIEW_MODE_LIST) {
 						WCHAR szText[256];
-						::wnsprintfW(szText, _countof(szText), L"%d: %s",
-									 Channel.RemoteControlKeyID, Channel.Name.c_str());
+						::wnsprintfW(
+							szText, _countof(szText), L"%d: %s",
+							Channel.RemoteControlKeyID, Channel.Name.c_str());
 						m_pApp->ThemeDrawText(
 							pszStyle, hdc, szText, rc,
 							DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX);
@@ -1244,7 +1257,7 @@ void CTunerPanel::UpdateScroll()
 	::SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
 
 	if (si.nPos != m_ScrollPos) {
-		::InvalidateRect(m_hwnd, NULL, TRUE);
+		::InvalidateRect(m_hwnd, nullptr, TRUE);
 		m_ScrollPos = si.nPos;
 	}
 
@@ -1272,7 +1285,7 @@ void CTunerPanel::SetScrollPos(int Pos)
 		int Offset = Pos - m_ScrollPos;
 
 		m_ScrollPos = Pos;
-		::ScrollWindowEx(m_hwnd, 0, -Offset, NULL, NULL, NULL, NULL, SW_ERASE | SW_INVALIDATE);
+		::ScrollWindowEx(m_hwnd, 0, -Offset, nullptr, nullptr, nullptr, nullptr, SW_ERASE | SW_INVALIDATE);
 
 		SCROLLINFO si;
 		si.cbSize = sizeof (SCROLLINFO);
@@ -1408,7 +1421,7 @@ bool CTunerPanel::HitTest(int x, int y, HitTestInfo *pInfo) const
 // ツールチップを更新する
 void CTunerPanel::UpdateToolTips()
 {
-	if (m_hwndToolTips == NULL)
+	if (m_hwndToolTips == nullptr)
 		return;
 
 	int NumTools = (int)::SendMessage(m_hwndToolTips, TTM_GETTOOLCOUNT, 0, 0);
@@ -1478,17 +1491,17 @@ LRESULT CALLBACK CTunerPanel::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	if (uMsg == WM_NCCREATE) {
 		LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
 
-		pThis = static_cast<CTunerPanel*>(pcs->lpCreateParams);
+		pThis = static_cast<CTunerPanel *>(pcs->lpCreateParams);
 		pThis->m_hwnd = hwnd;
 		::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 	} else {
-		pThis = reinterpret_cast<CTunerPanel*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
-		if (pThis == NULL)
+		pThis = reinterpret_cast<CTunerPanel *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+		if (pThis == nullptr)
 			return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 		if (uMsg == WM_NCDESTROY) {
 			LRESULT Result = pThis->OnMessage(hwnd, uMsg, wParam, lParam);
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));
-			pThis-> m_hwnd = NULL;
+			pThis-> m_hwnd = nullptr;
 			return Result;
 		}
 	}
@@ -1500,7 +1513,7 @@ LRESULT CALLBACK CTunerPanel::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CTunerPanel;
 }

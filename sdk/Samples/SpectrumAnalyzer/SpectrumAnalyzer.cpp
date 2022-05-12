@@ -20,7 +20,7 @@
 #include <shlwapi.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
 
@@ -110,7 +110,7 @@ private:
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static LRESULT CALLBACK AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData);
-	static CSpectrumAnalyzer *GetThis(HWND hwnd);
+	static CSpectrumAnalyzer * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	template<typename T> static inline void SafeDelete(T *&p)
@@ -202,14 +202,18 @@ bool CSpectrumAnalyzer::Finalize()
 			TCHAR m_szBuffer[16];
 		};
 
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowLeft"),
-									IntString(m_WindowPosition.Left), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowTop"),
-									IntString(m_WindowPosition.Top), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowWidth"),
-									IntString(m_WindowPosition.Width), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowHeight"),
-									IntString(m_WindowPosition.Height), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowLeft"),
+			IntString(m_WindowPosition.Left), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowTop"),
+			IntString(m_WindowPosition.Top), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowWidth"),
+			IntString(m_WindowPosition.Width), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowHeight"),
+			IntString(m_WindowPosition.Height), szIniFileName);
 	}
 
 	return true;
@@ -439,7 +443,7 @@ void CSpectrumAnalyzer::UpdateSpectrum()
 // 何かイベントが起きると呼ばれる
 LRESULT CALLBACK CSpectrumAnalyzer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer*>(pClientData);
+	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -473,7 +477,7 @@ LRESULT CALLBACK CSpectrumAnalyzer::EventCallback(UINT Event, LPARAM lParam1, LP
 // 音声コールバック関数
 LRESULT CALLBACK CSpectrumAnalyzer::AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData)
 {
-	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer*>(pClientData);
+	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer *>(pClientData);
 
 	DWORD BufferUsed = pThis->m_BufferUsed;
 	DWORD j = pThis->m_BufferPos;
@@ -501,8 +505,7 @@ LRESULT CALLBACK CSpectrumAnalyzer::AudioCallback(short *pData, DWORD Samples, i
 			}
 
 			// FFT処理実行
-			rdft(FFT_SIZE, 1, pThis->m_pFFTBuffer,
-				 pThis->m_pFFTWorkBuffer, pThis->m_pFFTSinTable);
+			rdft(FFT_SIZE, 1, pThis->m_pFFTBuffer, pThis->m_pFFTWorkBuffer, pThis->m_pFFTSinTable);
 			pThis->m_FFTLock.Unlock();
 
 			BufferUsed = 0;
@@ -516,10 +519,10 @@ LRESULT CALLBACK CSpectrumAnalyzer::AudioCallback(short *pData, DWORD Samples, i
 }
 
 
-CSpectrumAnalyzer *CSpectrumAnalyzer::GetThis(HWND hwnd)
+CSpectrumAnalyzer * CSpectrumAnalyzer::GetThis(HWND hwnd)
 {
 	// ウィンドウハンドルからthisを取得
-	return reinterpret_cast<CSpectrumAnalyzer*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CSpectrumAnalyzer *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -529,7 +532,7 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer*>(pcs->lpCreateParams);
+			CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer *>(pcs->lpCreateParams);
 
 			// ウィンドウハンドルからthisを取得できるようにする
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
@@ -599,7 +602,7 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 		// DPI が変わった
 		{
 			CSpectrumAnalyzer *pThis = GetThis(hwnd);
-			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+			const RECT *prc = reinterpret_cast<const RECT *>(lParam);
 
 			pThis->m_DPI = HIWORD(wParam);
 
@@ -652,7 +655,7 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CSpectrumAnalyzer;
 }

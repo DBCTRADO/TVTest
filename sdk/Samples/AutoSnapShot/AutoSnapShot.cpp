@@ -23,27 +23,20 @@
 // プラグインクラス
 class CAutoSnapShot : public TVTest::CTVTestPlugin
 {
-	DWORD m_Interval;
-	HWND m_hwnd;
-	bool m_fEnabled;
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static CAutoSnapShot *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
+	DWORD m_Interval = 10; // キャプチャ間隔(秒単位)
+	HWND m_hwnd = nullptr;
+	bool m_fEnabled = false;
+
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static CAutoSnapShot * GetThis(HWND hwnd);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
+
 public:
-	CAutoSnapShot();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
 };
-
-
-CAutoSnapShot::CAutoSnapShot()
-{
-	m_Interval=10;	// キャプチャ間隔(秒単位)
-	m_hwnd=NULL;
-	m_fEnabled=false;
-}
 
 
 bool CAutoSnapShot::GetPluginInfo(TVTest::PluginInfo *pInfo)
@@ -64,27 +57,27 @@ bool CAutoSnapShot::Initialize()
 
 	WNDCLASS wc;
 
-	wc.style=0;
-	wc.lpfnWndProc=WndProc;
-	wc.cbClsExtra=0;
-	wc.cbWndExtra=0;
-	wc.hInstance=g_hinstDLL;
-	wc.hIcon=NULL;
-	wc.hCursor=::LoadCursor(NULL,IDC_ARROW);
-	wc.hbrBackground=(HBRUSH)(COLOR_3DFACE+1);
-	wc.lpszMenuName=NULL;
-	wc.lpszClassName=SNAPSHOT_WINDOW_CLASS;
-	if (::RegisterClass(&wc)==0)
+	wc.style = 0;
+	wc.lpfnWndProc = WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = g_hinstDLL;
+	wc.hIcon = nullptr;
+	wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+	wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+	wc.lpszMenuName = nullptr;
+	wc.lpszClassName = SNAPSHOT_WINDOW_CLASS;
+	if (::RegisterClass(&wc) == 0)
 		return false;
 
-	m_hwnd=::CreateWindowEx(0,SNAPSHOT_WINDOW_CLASS,NULL,WS_POPUP,
-							0,0,0,0,
-							m_pApp->GetAppWindow(),NULL,g_hinstDLL,this);
-	if (m_hwnd==NULL)
+	m_hwnd = ::CreateWindowEx(
+		0, SNAPSHOT_WINDOW_CLASS, nullptr, WS_POPUP,
+		0, 0, 0, 0, m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this);
+	if (m_hwnd == nullptr)
 		return false;
 
 	// イベントコールバック関数を登録
-	m_pApp->SetEventCallback(EventCallback,this);
+	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
@@ -102,18 +95,18 @@ bool CAutoSnapShot::Finalize()
 
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
-LRESULT CALLBACK CAutoSnapShot::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+LRESULT CALLBACK CAutoSnapShot::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pClientData);
+	CAutoSnapShot *pThis = static_cast<CAutoSnapShot *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
-		pThis->m_fEnabled=lParam1!=0;
+		pThis->m_fEnabled = lParam1 != 0;
 		if (pThis->m_fEnabled)
-			::SetTimer(pThis->m_hwnd,1,pThis->m_Interval*1000,NULL);
+			::SetTimer(pThis->m_hwnd, 1, pThis->m_Interval * 1000, nullptr);
 		else
-			::KillTimer(pThis->m_hwnd,1);
+			::KillTimer(pThis->m_hwnd, 1);
 		return TRUE;
 
 	case TVTest::EVENT_PLUGINSETTINGS:
@@ -136,27 +129,27 @@ LRESULT CALLBACK CAutoSnapShot::EventCallback(UINT Event,LPARAM lParam1,LPARAM l
 }
 
 
-CAutoSnapShot *CAutoSnapShot::GetThis(HWND hwnd)
+CAutoSnapShot * CAutoSnapShot::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CAutoSnapShot*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
+	return reinterpret_cast<CAutoSnapShot *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pcs->lpCreateParams);
+			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			CAutoSnapShot *pThis = static_cast<CAutoSnapShot *>(pcs->lpCreateParams);
 
-			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
+			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 		}
 		return TRUE;
 
 	case WM_TIMER:
 		{
-			CAutoSnapShot *pThis=GetThis(hwnd);
+			CAutoSnapShot *pThis = GetThis(hwnd);
 
 			// キャプチャ実行
 			pThis->m_pApp->SaveImage();
@@ -165,27 +158,27 @@ LRESULT CALLBACK CAutoSnapShot::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM
 
 	case WM_DESTROY:
 		{
-			CAutoSnapShot *pThis=GetThis(hwnd);
+			CAutoSnapShot *pThis = GetThis(hwnd);
 
 			if (pThis->m_fEnabled)
-				::KillTimer(hwnd,1);	// 別にしなくてもいいけど...
+				::KillTimer(hwnd, 1); // 別にしなくてもいいけど...
 		}
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
 // 設定ダイアログプロシージャ
-INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
+INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pClientData);
+			CAutoSnapShot *pThis = static_cast<CAutoSnapShot *>(pClientData);
 
-			::SetDlgItemInt(hDlg,IDC_SETTINGS_INTERVAL,pThis->m_Interval,FALSE);
+			::SetDlgItemInt(hDlg, IDC_SETTINGS_INTERVAL, pThis->m_Interval, FALSE);
 		}
 		return TRUE;
 
@@ -193,14 +186,14 @@ INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 		switch (LOWORD(wParam)) {
 		case IDOK:
 			{
-				CAutoSnapShot *pThis=static_cast<CAutoSnapShot*>(pClientData);
+				CAutoSnapShot *pThis = static_cast<CAutoSnapShot *>(pClientData);
 
-				pThis->m_Interval=::GetDlgItemInt(hDlg,IDC_SETTINGS_INTERVAL,NULL,FALSE);
+				pThis->m_Interval = ::GetDlgItemInt(hDlg, IDC_SETTINGS_INTERVAL, nullptr, FALSE);
 				if (pThis->m_fEnabled)
-					::SetTimer(pThis->m_hwnd,1,pThis->m_Interval*1000,NULL);
+					::SetTimer(pThis->m_hwnd, 1, pThis->m_Interval * 1000, nullptr);
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -212,7 +205,7 @@ INT_PTR CALLBACK CAutoSnapShot::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM
 
 
 
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CAutoSnapShot;
 }

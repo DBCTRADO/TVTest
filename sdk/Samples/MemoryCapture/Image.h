@@ -33,12 +33,12 @@ public:
 	void SetFrameFlags(unsigned int Flags) { m_FrameFlags = Flags; }
 	unsigned int GetFrameFlags() const { return m_FrameFlags; }
 	const BYTE *GetPixels() const { return m_pPixels; }
-	BYTE *GetRowPixels(int y);
+	BYTE * GetRowPixels(int y);
 	const BYTE *GetRowPixels(int y) const;
 	std::size_t GetRowBytes() const { return m_RowBytes; }
 	bool ExtractRow24(int y, BYTE *pDest) const;
-	CImage *Clone() const;
-	CImage *Resize(int Width, int Height, ResampleType Resample) const;
+	CImage * Clone() const;
+	CImage * Resize(int Width, int Height, ResampleType Resample) const;
 
 private:
 	int m_Width;

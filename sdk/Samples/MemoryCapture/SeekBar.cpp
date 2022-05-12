@@ -43,13 +43,14 @@ bool CSeekBar::Create(HWND hwndParent, int ID, TVTest::CTVTestApp *pApp)
 {
 	m_pApp = pApp;
 
-	return ::CreateWindowEx(0, m_WindowClassName, TEXT(""),
-							WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-							0, 0, 0, 0,
-							hwndParent,
-							reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)),
-							m_hinst,
-							this) != nullptr;
+	return ::CreateWindowEx(
+		0, m_WindowClassName, TEXT(""),
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
+		0, 0, 0, 0,
+		hwndParent,
+		reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)),
+		m_hinst,
+		this) != nullptr;
 }
 
 
@@ -202,18 +203,19 @@ void CSeekBar::OnMouseMove(int x, int y)
 		if (Pos != m_Pos) {
 			m_Pos = Pos;
 			::InvalidateRect(m_hwnd, &rc, TRUE);
-			::SendMessage(::GetParent(m_hwnd), WM_COMMAND,
-						  MAKEWPARAM(::GetWindowLong(m_hwnd, GWL_ID), Notify_PosChanged),
-						  reinterpret_cast<LPARAM>(m_hwnd));
+			::SendMessage(
+				::GetParent(m_hwnd), WM_COMMAND,
+				MAKEWPARAM(::GetWindowLong(m_hwnd, GWL_ID), Notify_PosChanged),
+				reinterpret_cast<LPARAM>(m_hwnd));
 		}
 	}
 }
 
 
 // ウィンドウハンドルからthisを取得する
-CSeekBar *CSeekBar::GetThis(HWND hwnd)
+CSeekBar * CSeekBar::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CSeekBar*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CSeekBar *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -224,7 +226,7 @@ LRESULT CALLBACK CSeekBar::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CSeekBar *pThis = static_cast<CSeekBar*>(pcs->lpCreateParams);
+			CSeekBar *pThis = static_cast<CSeekBar *>(pcs->lpCreateParams);
 
 			pThis->m_hwnd = hwnd;
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));

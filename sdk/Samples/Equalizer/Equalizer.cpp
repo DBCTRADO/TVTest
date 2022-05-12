@@ -24,7 +24,7 @@
 #if defined(_MSC_VER) && defined(_M_X64)
 #include <emmintrin.h>
 #endif
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
 
@@ -54,10 +54,8 @@ static inline int RoundToInt(double Value)
 // バンドパスフィルタクラス
 class CBandPass
 {
-	enum {
-		MAX_CHANNELS	= 6,	// 最大チャンネル数(5.1ch)
-		MAX_FREQUENCY	= 16	// 最大周波数分割数
-	};
+	static constexpr int MAX_CHANNELS = 6;   // 最大チャンネル数(5.1ch)
+	static constexpr int MAX_FREQUENCY = 16; // 最大周波数分割数
 
 	double m_Coef[MAX_FREQUENCY * MAX_CHANNELS];
 	double m_Ener[MAX_FREQUENCY * MAX_CHANNELS];
@@ -120,7 +118,7 @@ void CBandPass::Reset()
 
 void CBandPass::SetVolume(int Index, double Volume)
 {
-	_ASSERT(Index >=0 && Index <= m_EqualizerCount);
+	_ASSERT(Index >= 0 && Index <= m_EqualizerCount);
 	::EnterCriticalSection(&m_Lock);
 	for (int i = 0; i < MAX_CHANNELS; i++)
 		m_Volume[i * MAX_FREQUENCY + Index] = Volume;
@@ -183,8 +181,8 @@ public:
 private:
 	// コマンド
 	enum {
-		COMMAND_SHOW	= 1,	// 表示/非表示
-		COMMAND_ONOFF	= 2		// On/Off
+		COMMAND_SHOW  = 1, // 表示/非表示
+		COMMAND_ONOFF = 2  // On/Off
 	};
 
 	enum {
@@ -194,18 +192,18 @@ private:
 
 	// 各部のサイズ(DIP単位)
 	enum {
-		SLIDER_WIDTH			= 16,
-		SLIDER_HEIGHT			= 80,
-		SLIDER_MARGIN			= 4,
-		SLIDER_PADDING			= 2,
-		WINDOW_MARGIN			= 8,
-		TEXT_HEIGHT				= 10,
-		SLIDER_TEXT_MARGIN		= 3,
-		SLIDER_BUTTON_MARGIN	= 4,
-		BUTTON_WIDTH			= 52,
-		BUTTON_HEIGHT			= TEXT_HEIGHT + 8,
-		BUTTON_MARGIN			= 4,
-		LINE_WIDTH				= 1
+		SLIDER_WIDTH         = 16,
+		SLIDER_HEIGHT        = 80,
+		SLIDER_MARGIN        = 4,
+		SLIDER_PADDING       = 2,
+		WINDOW_MARGIN        = 8,
+		TEXT_HEIGHT          = 10,
+		SLIDER_TEXT_MARGIN   = 3,
+		SLIDER_BUTTON_MARGIN = 4,
+		BUTTON_WIDTH         = 52,
+		BUTTON_HEIGHT        = TEXT_HEIGHT + 8,
+		BUTTON_MARGIN        = 4,
+		LINE_WIDTH           = 1
 	};
 
 	enum {
@@ -216,12 +214,14 @@ private:
 		NUM_BUTTONS
 	};
 
-	struct EqualizerSettings {
+	struct EqualizerSettings
+	{
 		int PreAmplifier;
 		int Frequency[NUM_FREQUENCY];
 	};
 
-	struct EqualizerPreset {
+	struct EqualizerPreset
+	{
 		LPCTSTR pszName;
 		EqualizerSettings Setting;
 	};
@@ -260,8 +260,8 @@ private:
 	static const EqualizerPreset m_PresetList[];
 	static const double m_FreqTable[NUM_FREQUENCY - 1];
 
-	bool ReadPreset(LPCTSTR pszSection,LPCTSTR pszKeyName, EqualizerSettings *pSettings);
-	bool WritePreset(LPCTSTR pszSection,LPCTSTR pszKeyName, const EqualizerSettings *pSettings) const;
+	bool ReadPreset(LPCTSTR pszSection, LPCTSTR pszKeyName, EqualizerSettings *pSettings);
+	bool WritePreset(LPCTSTR pszSection, LPCTSTR pszKeyName, const EqualizerSettings *pSettings) const;
 	void LoadSettings();
 	void SaveSettings() const;
 	bool EnablePlugin(bool fEnable);
@@ -276,7 +276,7 @@ private:
 	void GetButtonRect(int Button, RECT *pRect) const;
 	void GetColor();
 	void OnButtonPush(int Button);
-	void Draw(HDC hdc,const RECT &rcPaint);
+	void Draw(HDC hdc, const RECT &rcPaint);
 	void ScaleDPI(int *pValue) {
 		int Value = ::MulDiv(*pValue, m_DPI, 96);
 		if (Value < 1)
@@ -286,7 +286,7 @@ private:
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static LRESULT CALLBACK AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData);
-	static CEqualizer *GetThis(HWND hwnd);
+	static CEqualizer * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 
@@ -295,21 +295,21 @@ const LPCTSTR CEqualizer::WINDOW_CLASS_NAME = TEXT("TVTest Equalizer Window");
 
 
 const CEqualizer::EqualizerPreset CEqualizer::m_PresetList[] = {
-	{TEXT("Accoustic"),			{0,	{ 4, 4, 3, 0, 1, 1, 3, 3, 3, 1}}},
-	{TEXT("Bass Boost"),		{0,	{ 5, 4, 3, 2, 1, 0, 0, 0, 0, 0}}},
-	{TEXT("Boost"),				{0,	{ 2, 5, 7, 5, 5, 4, 5, 7, 9, 6}}},
-	{TEXT("Classical"),			{0,	{ 4, 3, 2, 2,-1,-1, 0, 1, 2, 3}}},
-	{TEXT("Dance"),				{0,	{ 3, 5, 4, 0, 1, 3, 4, 3, 3, 0}}},
-	{TEXT("Electronic"),		{0,	{ 3, 3, 1, 0,-1, 1, 0, 1, 3, 4}}},
-	{TEXT("For Poor Speakers"),	{0,	{ 4, 3, 3, 2, 1, 0,-1,-2,-2,-3}}},
-	{TEXT("Hip-Hop"),			{0,	{ 4, 3, 1, 2, 0, 0, 1, 0, 1, 2}}},
-	{TEXT("Jazz"),				{0,	{ 3, 2, 1, 1,-1,-1, 0, 1, 2, 3}}},
-	{TEXT("Pop"),				{0,	{-1, 0, 0, 1, 3, 3, 1, 0, 0,-1}}},
-	{TEXT("R&&B"),				{0,	{ 2, 5, 4, 1,-1,-1, 2, 2, 2, 3}}},
-	{TEXT("Rock"),				{0,	{ 4, 3, 2, 1, 0, 0, 0, 2, 3, 3}}},
-	{TEXT("Treble Boost"),		{0,	{ 0, 0, 0, 0, 0, 1, 2, 3, 4, 5}}},
-	{TEXT("Vocal"),				{0,	{-1,-2,-2, 1, 3, 3, 2, 1, 0,-1}}},
-	{TEXT("Voice"),				{0,	{-2, 0, 0, 0, 2, 3, 4, 3, 2, 0}}},
+	{TEXT("Accoustic"),         {0, { 4,  4,  3,  0,  1,  1,  3,  3,  3,  1}}},
+	{TEXT("Bass Boost"),        {0, { 5,  4,  3,  2,  1,  0,  0,  0,  0,  0}}},
+	{TEXT("Boost"),             {0, { 2,  5,  7,  5,  5,  4,  5,  7,  9,  6}}},
+	{TEXT("Classical"),         {0, { 4,  3,  2,  2, -1, -1,  0,  1,  2,  3}}},
+	{TEXT("Dance"),             {0, { 3,  5,  4,  0,  1,  3,  4,  3,  3,  0}}},
+	{TEXT("Electronic"),        {0, { 3,  3,  1,  0, -1,  1,  0,  1,  3,  4}}},
+	{TEXT("For Poor Speakers"), {0, { 4,  3,  3,  2,  1,  0, -1, -2, -2, -3}}},
+	{TEXT("Hip-Hop"),           {0, { 4,  3,  1,  2,  0,  0,  1,  0,  1,  2}}},
+	{TEXT("Jazz"),              {0, { 3,  2,  1,  1, -1, -1,  0,  1,  2,  3}}},
+	{TEXT("Pop"),               {0, {-1,  0,  0,  1,  3,  3,  1,  0,  0, -1}}},
+	{TEXT("R&&B"),              {0, { 2,  5,  4,  1, -1, -1,  2,  2,  2,  3}}},
+	{TEXT("Rock"),              {0, { 4,  3,  2,  1,  0,  0,  0,  2,  3,  3}}},
+	{TEXT("Treble Boost"),      {0, { 0,  0,  0,  0,  0,  1,  2,  3,  4,  5}}},
+	{TEXT("Vocal"),             {0, {-1, -2, -2,  1,  3,  3,  2,  1,  0, -1}}},
+	{TEXT("Voice"),             {0, {-2,  0,  0,  0,  2,  3,  4,  3,  2,  0}}},
 };
 
 const double CEqualizer::m_FreqTable[NUM_FREQUENCY-1] = {
@@ -362,7 +362,7 @@ bool CEqualizer::Initialize()
 	// コマンドを登録
 	TVTest::HostInfo Host;
 	if (m_pApp->GetHostInfo(&Host)
-			&& Host.SupportedPluginVersion >= TVTEST_PLUGIN_VERSION_(0,0,14)) {
+			&& Host.SupportedPluginVersion >= TVTEST_PLUGIN_VERSION_(0, 0, 14)) {
 		// アイコン付きコマンド登録
 		TVTest::PluginCommandInfo CommandInfo;
 		CommandInfo.Size           = sizeof(CommandInfo);
@@ -373,8 +373,9 @@ bool CEqualizer::Initialize()
 		CommandInfo.pszName        = L"イコライザー 表示/非表示";
 		CommandInfo.pszDescription = L"イコライザーの表示/非表示を切り替えます。";
 		CommandInfo.hbmIcon        =
-			(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_SHOW),
-								 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+			(HBITMAP)::LoadImage(
+				g_hinstDLL, MAKEINTRESOURCE(IDB_SHOW),
+				IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 		m_pApp->RegisterPluginCommand(&CommandInfo);
 		::DeleteObject(CommandInfo.hbmIcon);
 		CommandInfo.ID             = COMMAND_ONOFF;
@@ -382,8 +383,9 @@ bool CEqualizer::Initialize()
 		CommandInfo.pszName        = L"イコライザー 入/切";
 		CommandInfo.pszDescription = L"イコライザーの有効/無効を切り替えます。";
 		CommandInfo.hbmIcon        =
-			(HBITMAP)::LoadImage(g_hinstDLL, MAKEINTRESOURCE(IDB_ONOFF),
-								 IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+			(HBITMAP)::LoadImage(
+				g_hinstDLL, MAKEINTRESOURCE(IDB_ONOFF),
+				IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 		m_pApp->RegisterPluginCommand(&CommandInfo);
 		::DeleteObject(CommandInfo.hbmIcon);
 	} else {
@@ -480,11 +482,9 @@ void CEqualizer::LoadSettings()
 {
 	if (!m_fSettingsLoaded) {
 		m_WindowPosition.x =
-			::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowLeft"),
-								   m_WindowPosition.x, m_szIniFileName);
+			::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowLeft"), m_WindowPosition.x, m_szIniFileName);
 		m_WindowPosition.y =
-			::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowTop"),
-								   m_WindowPosition.y, m_szIniFileName);
+			::GetPrivateProfileInt(TEXT("Settings"), TEXT("WindowTop"), m_WindowPosition.y, m_szIniFileName);
 		ReadPreset(TEXT("Settings"), TEXT("CurSetting"), &m_CurSettings);
 
 		int Count = ::GetPrivateProfileInt(TEXT("Preset"), TEXT("Count"), 0, m_szIniFileName);
@@ -592,8 +592,7 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 			::DestroyWindow(m_hwnd);
 	}
 
-	m_pApp->SetPluginCommandState(COMMAND_SHOW,
-								  fEnable ? TVTest::PLUGIN_COMMAND_STATE_CHECKED : 0);
+	m_pApp->SetPluginCommandState(COMMAND_SHOW, fEnable ? TVTest::PLUGIN_COMMAND_STATE_CHECKED : 0);
 
 	return true;
 }
@@ -618,8 +617,7 @@ void CEqualizer::EnableEqualizer(bool fEnable)
 		if (m_hwnd != nullptr)
 			::InvalidateRect(m_hwnd, nullptr, FALSE);
 
-		m_pApp->SetPluginCommandState(COMMAND_ONOFF,
-									  fEnable ? TVTest::PLUGIN_COMMAND_STATE_CHECKED : 0);
+		m_pApp->SetPluginCommandState(COMMAND_ONOFF, fEnable ? TVTest::PLUGIN_COMMAND_STATE_CHECKED : 0);
 	}
 }
 
@@ -933,7 +931,7 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 // 何かイベントが起きると呼ばれる
 LRESULT CALLBACK CEqualizer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CEqualizer *pThis = static_cast<CEqualizer*>(pClientData);
+	CEqualizer *pThis = static_cast<CEqualizer *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -988,7 +986,7 @@ LRESULT CALLBACK CEqualizer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lP
 // 音声コールバック関数
 LRESULT CALLBACK CEqualizer::AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData)
 {
-	CEqualizer *pThis = static_cast<CEqualizer*>(pClientData);
+	CEqualizer *pThis = static_cast<CEqualizer *>(pClientData);
 
 	// イコライザー処理
 	pThis->m_BandPass.ProcessSamples(pData, Samples, Channels);
@@ -998,9 +996,9 @@ LRESULT CALLBACK CEqualizer::AudioCallback(short *pData, DWORD Samples, int Chan
 
 
 // ウィンドウハンドルからthisポインタを取得する
-CEqualizer *CEqualizer::GetThis(HWND hwnd)
+CEqualizer * CEqualizer::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CEqualizer*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CEqualizer *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -1011,7 +1009,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CEqualizer *pThis = static_cast<CEqualizer*>(pcs->lpCreateParams);
+			CEqualizer *pThis = static_cast<CEqualizer *>(pcs->lpCreateParams);
 
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
@@ -1159,7 +1157,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		// DPI が変わった
 		{
 			CEqualizer *pThis = GetThis(hwnd);
-			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+			const RECT *prc = reinterpret_cast<const RECT *>(lParam);
 
 			pThis->m_DPI = HIWORD(wParam);
 
@@ -1202,7 +1200,7 @@ LRESULT CALLBACK CEqualizer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CEqualizer;
 }

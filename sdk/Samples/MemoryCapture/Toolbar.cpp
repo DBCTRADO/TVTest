@@ -52,13 +52,14 @@ bool CToolbar::Create(HWND hwndParent, int ID, TVTest::CTVTestApp *pApp)
 {
 	m_pApp = pApp;
 
-	return ::CreateWindowEx(0, m_WindowClassName, TEXT(""),
-							WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-							0, 0, 0, 0,
-							hwndParent,
-							reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)),
-							m_hinst,
-							this) != nullptr;
+	return ::CreateWindowEx(
+		0, m_WindowClassName, TEXT(""),
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
+		0, 0, 0, 0,
+		hwndParent,
+		reinterpret_cast<HMENU>(static_cast<INT_PTR>(ID)),
+		m_hinst,
+		this) != nullptr;
 }
 
 
@@ -166,9 +167,10 @@ void CToolbar::OnLButtonDown(int x, int y)
 		m_ClickItem = Item;
 
 		if ((m_ItemList[Item].Flags & ItemFlag_NotifyPress) != 0) {
-			::SendMessage(::GetParent(m_hwnd), WM_COMMAND,
-						  MAKEWPARAM(GetWindowID(m_hwnd), Notify_ItemPressed),
-						  reinterpret_cast<LPARAM>(m_hwnd));
+			::SendMessage(
+				::GetParent(m_hwnd), WM_COMMAND,
+				MAKEWPARAM(GetWindowID(m_hwnd), Notify_ItemPressed),
+				reinterpret_cast<LPARAM>(m_hwnd));
 		}
 
 		::SetCapture(m_hwnd);
@@ -265,7 +267,7 @@ void CToolbar::SetTooltips()
 		GetItemRect(i, &ti.rect);
 		ti.lpszText = MAKEINTRESOURCE(m_ItemList[i].ID);
 		::SendMessage(m_hwndTooltips, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
-	 }
+	}
 }
 
 
@@ -281,14 +283,14 @@ void CToolbar::UpdateTooltips()
 		ti.uId = i;
 		GetItemRect(i, &ti.rect);
 		::SendMessage(m_hwndTooltips, TTM_NEWTOOLRECT, 0, reinterpret_cast<LPARAM>(&ti));
-	 }
+	}
 }
 
 
 // ウィンドウハンドルからthisを取得する
-CToolbar *CToolbar::GetThis(HWND hwnd)
+CToolbar * CToolbar::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CToolbar*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CToolbar *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -299,14 +301,15 @@ LRESULT CALLBACK CToolbar::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CToolbar *pThis = static_cast<CToolbar*>(pcs->lpCreateParams);
+			CToolbar *pThis = static_cast<CToolbar *>(pcs->lpCreateParams);
 
 			pThis->m_hwnd = hwnd;
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 
 			pThis->m_hwndTooltips =
-				::CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP,
-								 0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
+				::CreateWindowEx(
+					WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP,
+					0, 0, 0, 0, hwnd, nullptr, m_hinst, nullptr);
 			pThis->SetTooltips();
 
 			pThis->m_HotItem = -1;
@@ -347,9 +350,10 @@ LRESULT CALLBACK CToolbar::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			if (pThis->m_ClickItem >= 0 && pThis->m_ClickItem < (int)pThis->m_ItemList.size()
 					&& (pThis->m_ItemList[pThis->m_ClickItem].Flags & ItemFlag_NotifyPress) != 0) {
-				::SendMessage(::GetParent(hwnd), WM_COMMAND,
-							  MAKEWPARAM(GetWindowID(hwnd), Notify_ItemReleased),
-							  reinterpret_cast<LPARAM>(hwnd));
+				::SendMessage(
+					::GetParent(hwnd), WM_COMMAND,
+					MAKEWPARAM(GetWindowID(hwnd), Notify_ItemReleased),
+					reinterpret_cast<LPARAM>(hwnd));
 			}
 			pThis->m_ClickItem = -1;
 		}

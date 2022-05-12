@@ -68,6 +68,6 @@ private:
 	void SetTooltips();
 	void UpdateTooltips();
 
-	static CToolbar *GetThis(HWND hwnd);
+	static CToolbar * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

@@ -38,10 +38,11 @@ CPreviewWindow::CPreviewWindow()
 
 bool CPreviewWindow::Create(HWND hwndParent)
 {
-	return ::CreateWindowEx(0, m_WindowClassName, TEXT(""),
-							WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-							0, 0, 0, 0,
-							hwndParent, nullptr, m_hinst, this) != nullptr;
+	return ::CreateWindowEx(
+		0, m_WindowClassName, TEXT(""),
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
+		0, 0, 0, 0,
+		hwndParent, nullptr, m_hinst, this) != nullptr;
 }
 
 
@@ -166,10 +167,11 @@ void CPreviewWindow::Draw(HDC hdc)
 		bmi.bmiHeader.biBitCount = m_pImage->GetBitsPerPixel();
 
 		int OldStretchMode = ::SetStretchBltMode(hdc, STRETCH_HALFTONE);
-		::StretchDIBits(hdc,
-						x, y, DispWidth, DispHeight,
-						0, 0, m_pImage->GetWidth(), m_pImage->GetHeight(),
-						m_pImage->GetPixels(), &bmi, DIB_RGB_COLORS, SRCCOPY);
+		::StretchDIBits(
+			hdc,
+			x, y, DispWidth, DispHeight,
+			0, 0, m_pImage->GetWidth(), m_pImage->GetHeight(),
+			m_pImage->GetPixels(), &bmi, DIB_RGB_COLORS, SRCCOPY);
 		::SetStretchBltMode(hdc, OldStretchMode);
 
 		// 余白を塗りつぶす
@@ -201,9 +203,9 @@ void CPreviewWindow::Draw(HDC hdc)
 
 
 // ウィンドウハンドルからthisを取得する
-CPreviewWindow *CPreviewWindow::GetThis(HWND hwnd)
+CPreviewWindow * CPreviewWindow::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CPreviewWindow*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CPreviewWindow *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -214,7 +216,7 @@ LRESULT CALLBACK CPreviewWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CPreviewWindow *pThis = static_cast<CPreviewWindow*>(pcs->lpCreateParams);
+			CPreviewWindow *pThis = static_cast<CPreviewWindow *>(pcs->lpCreateParams);
 
 			pThis->m_hwnd = hwnd;
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));

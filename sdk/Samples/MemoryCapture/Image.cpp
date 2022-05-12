@@ -110,13 +110,13 @@ int CImage::GetDisplayWidth() const
 }
 
 
-BYTE *CImage::GetRowPixels(int y)
+BYTE * CImage::GetRowPixels(int y)
 {
 	return m_pPixels + y * m_RowBytes;
 }
 
 
-const BYTE *CImage::GetRowPixels(int y) const
+const BYTE * CImage::GetRowPixels(int y) const
 {
 	return m_pPixels + y * m_RowBytes;
 }
@@ -149,7 +149,7 @@ bool CImage::ExtractRow24(int y, BYTE *pDest) const
 
 
 // 画像の複製
-CImage *CImage::Clone() const
+CImage * CImage::Clone() const
 {
 	if (m_pPixels == nullptr)
 		return nullptr;
@@ -170,7 +170,7 @@ CImage *CImage::Clone() const
 
 
 // 画像のリサイズ
-CImage *CImage::Resize(int Width, int Height, ResampleType Resample) const
+CImage * CImage::Resize(int Width, int Height, ResampleType Resample) const
 {
 	if (m_pPixels == nullptr)
 		return nullptr;

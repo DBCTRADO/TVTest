@@ -30,13 +30,13 @@ class CTSInfo : public TVTest::CTVTestPlugin
 	void SetItemText(int ID,LPCTSTR pszText);
 	void UpdateItems();
 
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
 
 public:
 	CTSInfo()
-		: m_hwnd(NULL)
-		, m_hbrBack(NULL)
+		: m_hwnd(nullptr)
+		, m_hbrBack(nullptr)
 	{
 	}
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
@@ -45,7 +45,7 @@ public:
 };
 
 
-const LPCTSTR CTSInfo::PROP_NAME=TEXT("52058115-8095-444B-B472-0DE1E8AB7A44");
+const LPCTSTR CTSInfo::PROP_NAME = TEXT("52058115-8095-444B-B472-0DE1E8AB7A44");
 
 
 // プラグインの情報を返す
@@ -64,7 +64,7 @@ bool CTSInfo::GetPluginInfo(TVTest::PluginInfo *pInfo)
 bool CTSInfo::Initialize()
 {
 	// イベントコールバック関数を登録
-	m_pApp->SetEventCallback(EventCallback,this);
+	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
@@ -74,7 +74,7 @@ bool CTSInfo::Initialize()
 bool CTSInfo::Finalize()
 {
 	// ウィンドウの破棄
-	if (m_hwnd!=NULL)
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
 	return true;
@@ -83,18 +83,18 @@ bool CTSInfo::Finalize()
 
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
-LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+LRESULT CALLBACK CTSInfo::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+	CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
 		{
-			bool fEnable=lParam1!=0;
+			bool fEnable = lParam1 != 0;
 
 			if (fEnable) {
-				if (pThis->m_hwnd==NULL) {
+				if (pThis->m_hwnd == nullptr) {
 					TVTest::ShowDialogInfo Info;
 
 					Info.Flags = TVTest::SHOW_DIALOG_FLAG_MODELESS;
@@ -104,31 +104,31 @@ LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2
 					Info.pClientData = pThis;
 					Info.hwndOwner = pThis->m_pApp->GetAppWindow();
 
-					if ((HWND)pThis->m_pApp->ShowDialog(&Info) == NULL)
+					if ((HWND)pThis->m_pApp->ShowDialog(&Info) == nullptr)
 						return FALSE;
 				}
 				pThis->UpdateItems();
 			}
-			::ShowWindow(pThis->m_hwnd,fEnable?SW_SHOW:SW_HIDE);
+			::ShowWindow(pThis->m_hwnd, fEnable ? SW_SHOW : SW_HIDE);
 			if (fEnable)
-				::SetTimer(pThis->m_hwnd,1,1000,NULL);
+				::SetTimer(pThis->m_hwnd, 1, 1000, nullptr);
 			else
-				::KillTimer(pThis->m_hwnd,1);
+				::KillTimer(pThis->m_hwnd, 1);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_COLORCHANGE:
 		// 色の設定が変化した
-		if (pThis->m_hwnd!=NULL) {
-			HBRUSH hbrBack=::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
+		if (pThis->m_hwnd != nullptr) {
+			HBRUSH hbrBack = ::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
 
-			if (hbrBack!=NULL) {
-				if (pThis->m_hbrBack!=NULL)
+			if (hbrBack != nullptr) {
+				if (pThis->m_hbrBack != nullptr)
 					::DeleteObject(pThis->m_hbrBack);
-				pThis->m_hbrBack=hbrBack;
+				pThis->m_hbrBack = hbrBack;
 			}
-			pThis->m_crTextColor=pThis->m_pApp->GetColor(L"PanelText");
-			::RedrawWindow(pThis->m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+			pThis->m_crTextColor = pThis->m_pApp->GetColor(L"PanelText");
+			::RedrawWindow(pThis->m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
 		return TRUE;
 	}
@@ -138,14 +138,14 @@ LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2
 
 
 // 項目の文字列を設定する
-void CTSInfo::SetItemText(int ID,LPCTSTR pszText)
+void CTSInfo::SetItemText(int ID, LPCTSTR pszText)
 {
 	TCHAR szCurText[256];
 
 	// 選択が解除されるのとちらつき防止のために、変化があった時のみ設定する
-	::GetDlgItemText(m_hwnd,ID,szCurText,256);
-	if (::lstrcmp(szCurText,pszText)!=0)
-		::SetDlgItemText(m_hwnd,ID,pszText);
+	::GetDlgItemText(m_hwnd, ID, szCurText, 256);
+	if (::lstrcmp(szCurText, pszText) != 0)
+		::SetDlgItemText(m_hwnd, ID, pszText);
 }
 
 
@@ -153,74 +153,74 @@ void CTSInfo::SetItemText(int ID,LPCTSTR pszText)
 void CTSInfo::UpdateItems()
 {
 	TVTest::ChannelInfo ChannelInfo;
-	int CurService,NumServices;
+	int CurService, NumServices;
 	TVTest::ServiceInfo ServiceInfo;
 	TCHAR szText[256];
 
 	if (m_pApp->GetCurrentChannelInfo(&ChannelInfo)) {
 		TCHAR szSpaceName[32];
 
-		if (m_pApp->GetTuningSpaceName(ChannelInfo.Space,szSpaceName,32)==0)
-			::lstrcpy(szSpaceName,TEXT("???"));
-		::wsprintf(szText,TEXT("%d (%s)"),ChannelInfo.Space,szSpaceName);
-		SetItemText(IDC_SPACE,szText);
-		::wsprintf(szText,TEXT("%d (%s)"),ChannelInfo.Channel,ChannelInfo.szChannelName);
-		SetItemText(IDC_CHANNEL,szText);
-		::wsprintf(szText,TEXT("%#x"),ChannelInfo.NetworkID);
-		SetItemText(IDC_NETWORKID,szText);
-		SetItemText(IDC_NETWORKNAME,ChannelInfo.szNetworkName);
-		::wsprintf(szText,TEXT("%#x"),ChannelInfo.TransportStreamID);
-		SetItemText(IDC_TRANSPORTSTREAMID,szText);
-		SetItemText(IDC_TRANSPORTSTREAMNAME,ChannelInfo.szTransportStreamName);
-		if (ChannelInfo.RemoteControlKeyID!=0)
-			::wsprintf(szText,TEXT("%d"),ChannelInfo.RemoteControlKeyID);
+		if (m_pApp->GetTuningSpaceName(ChannelInfo.Space, szSpaceName, 32) == 0)
+			::lstrcpy(szSpaceName, TEXT("???"));
+		::wsprintf(szText, TEXT("%d (%s)"), ChannelInfo.Space, szSpaceName);
+		SetItemText(IDC_SPACE, szText);
+		::wsprintf(szText, TEXT("%d (%s)"), ChannelInfo.Channel, ChannelInfo.szChannelName);
+		SetItemText(IDC_CHANNEL, szText);
+		::wsprintf(szText, TEXT("%#x"), ChannelInfo.NetworkID);
+		SetItemText(IDC_NETWORKID, szText);
+		SetItemText(IDC_NETWORKNAME, ChannelInfo.szNetworkName);
+		::wsprintf(szText, TEXT("%#x"), ChannelInfo.TransportStreamID);
+		SetItemText(IDC_TRANSPORTSTREAMID, szText);
+		SetItemText(IDC_TRANSPORTSTREAMNAME, ChannelInfo.szTransportStreamName);
+		if (ChannelInfo.RemoteControlKeyID != 0)
+			::wsprintf(szText, TEXT("%d"), ChannelInfo.RemoteControlKeyID);
 		else
-			szText[0]='\0';
-		SetItemText(IDC_REMOTECONTROLKEYID,szText);
+			szText[0] = '\0';
+		SetItemText(IDC_REMOTECONTROLKEYID, szText);
 	}
 
-	CurService=m_pApp->GetService(&NumServices);
-	if (CurService>=0
-			&& m_pApp->GetServiceInfo(CurService,&ServiceInfo)) {
-		::wsprintf(szText,TEXT("%d / %d"),CurService+1,NumServices);
-		SetItemText(IDC_SERVICE,szText);
-		::wsprintf(szText,TEXT("%#x"),ServiceInfo.ServiceID);
-		SetItemText(IDC_SERVICEID,szText);
-		SetItemText(IDC_SERVICENAME,ServiceInfo.szServiceName);
-		::wsprintf(szText,TEXT("%#x"),ServiceInfo.VideoPID);
-		SetItemText(IDC_VIDEOPID,szText);
-		::wsprintf(szText,TEXT("%#x"),ServiceInfo.AudioPID[0]);
-		if (ServiceInfo.NumAudioPIDs>1) {
-			::wsprintf(szText+::lstrlen(szText),TEXT(" / %#x"),ServiceInfo.AudioPID[1]);
+	CurService = m_pApp->GetService(&NumServices);
+	if (CurService >= 0
+			&& m_pApp->GetServiceInfo(CurService, &ServiceInfo)) {
+		::wsprintf(szText, TEXT("%d / %d"), CurService + 1, NumServices);
+		SetItemText(IDC_SERVICE, szText);
+		::wsprintf(szText, TEXT("%#x"), ServiceInfo.ServiceID);
+		SetItemText(IDC_SERVICEID, szText);
+		SetItemText(IDC_SERVICENAME, ServiceInfo.szServiceName);
+		::wsprintf(szText, TEXT("%#x"), ServiceInfo.VideoPID);
+		SetItemText(IDC_VIDEOPID, szText);
+		::wsprintf(szText, TEXT("%#x"), ServiceInfo.AudioPID[0]);
+		if (ServiceInfo.NumAudioPIDs > 1) {
+			::wsprintf(szText + ::lstrlen(szText), TEXT(" / %#x"), ServiceInfo.AudioPID[1]);
 		}
-		SetItemText(IDC_AUDIOPID,szText);
-		if (ServiceInfo.SubtitlePID!=0)
-			::wsprintf(szText,TEXT("%#x"),ServiceInfo.SubtitlePID);
+		SetItemText(IDC_AUDIOPID, szText);
+		if (ServiceInfo.SubtitlePID != 0)
+			::wsprintf(szText, TEXT("%#x"), ServiceInfo.SubtitlePID);
 		else
-			::lstrcpy(szText,TEXT("<none>"));
-		SetItemText(IDC_SUBTITLEPID,szText);
+			::lstrcpy(szText, TEXT("<none>"));
+		SetItemText(IDC_SUBTITLEPID, szText);
 	}
 }
 
 
 // ダイアログプロシージャ
-INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
+INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
-			pThis->m_hwnd=hDlg;
-			pThis->m_hbrBack=::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
-			pThis->m_crTextColor=pThis->m_pApp->GetColor(L"PanelText");
+			pThis->m_hwnd = hDlg;
+			pThis->m_hbrBack = ::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
+			pThis->m_crTextColor = pThis->m_pApp->GetColor(L"PanelText");
 		}
 		return TRUE;
 
 	case WM_TIMER:
 		{
 			// 情報更新
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 			pThis->UpdateItems();
 		}
@@ -229,11 +229,11 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_CTLCOLORSTATIC:
 		// 項目の背景色を設定
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
-			HDC hdc=reinterpret_cast<HDC>(wParam);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
+			HDC hdc = reinterpret_cast<HDC>(wParam);
 
-			::SetBkMode(hdc,TRANSPARENT);
-			::SetTextColor(hdc,pThis->m_crTextColor);
+			::SetBkMode(hdc, TRANSPARENT);
+			::SetTextColor(hdc, pThis->m_crTextColor);
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
 
@@ -241,7 +241,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_CTLCOLORDLG:
 		// ダイアログの背景色を設定
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
@@ -249,20 +249,20 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 	case WM_ERASEBKGND:
 		// ダイアログの背景を塗りつぶす
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
-			HDC hdc=reinterpret_cast<HDC>(wParam);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
+			HDC hdc = reinterpret_cast<HDC>(wParam);
 			RECT rc;
 
-			::GetClientRect(hDlg,&rc);
-			::FillRect(hdc,&rc,pThis->m_hbrBack);
+			::GetClientRect(hDlg, &rc);
+			::FillRect(hdc, &rc, pThis->m_hbrBack);
 			return TRUE;
 		}
 #endif
 
 	case WM_COMMAND:
-		if (LOWORD(wParam)==IDCANCEL) {
+		if (LOWORD(wParam) == IDCANCEL) {
 			// 閉じる時はプラグインを無効にする
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 			pThis->m_pApp->EnablePlugin(false);
 			return TRUE;
@@ -271,14 +271,14 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_DESTROY:
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
-			::KillTimer(hDlg,1);
-			if (pThis->m_hbrBack!=NULL) {
+			::KillTimer(hDlg, 1);
+			if (pThis->m_hbrBack != nullptr) {
 				::DeleteObject(pThis->m_hbrBack);
-				pThis->m_hbrBack=NULL;
+				pThis->m_hbrBack = nullptr;
 			}
-			::RemoveProp(hDlg,PROP_NAME);
+			::RemoveProp(hDlg, PROP_NAME);
 		}
 		return TRUE;
 	}
@@ -290,7 +290,7 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CTSInfo;
 }

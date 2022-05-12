@@ -101,7 +101,7 @@ bool CPacketCounter::Finalize()
 LRESULT CALLBACK CPacketCounter::EventCallback(
 	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CPacketCounter *pThis = static_cast<CPacketCounter*>(pClientData);
+	CPacketCounter *pThis = static_cast<CPacketCounter *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -124,10 +124,11 @@ LRESULT CALLBACK CPacketCounter::EventCallback(
 				// プレビュー(設定ダイアログ)の項目の描画
 				::lstrcpyW(szText, L"123456");
 			}
-			pThis->m_pApp->ThemeDrawText(pInfo->pszStyle, pInfo->hdc, szText,
-										 pInfo->DrawRect,
-										 DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS,
-										 pInfo->Color);
+			pThis->m_pApp->ThemeDrawText(
+				pInfo->pszStyle, pInfo->hdc, szText,
+				pInfo->DrawRect,
+				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS,
+				pInfo->Color);
 		}
 		return TRUE;
 
@@ -152,7 +153,7 @@ LRESULT CALLBACK CPacketCounter::EventCallback(
 
 			case TVTest::STATUS_ITEM_EVENT_UPDATETIMER:
 				// 更新タイマー
-				return TRUE;	// TRUE を返すと再描画される
+				return TRUE; // TRUE を返すと再描画される
 			}
 		}
 		return FALSE;
@@ -182,11 +183,11 @@ LRESULT CALLBACK CPacketCounter::EventCallback(
 // 188バイトのパケットデータが渡される
 BOOL CALLBACK CPacketCounter::StreamCallback(BYTE *pData, void *pClientData)
 {
-	CPacketCounter *pThis = static_cast<CPacketCounter*>(pClientData);
+	CPacketCounter *pThis = static_cast<CPacketCounter *>(pClientData);
 
 	::InterlockedIncrement(&pThis->m_PacketCount);
 
-	return TRUE;	// FALSEを返すとパケットが破棄される
+	return TRUE; // FALSEを返すとパケットが破棄される
 }
 
 
@@ -207,7 +208,7 @@ void CPacketCounter::ShowItem(bool fShow)
 
 
 
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CPacketCounter;
 }

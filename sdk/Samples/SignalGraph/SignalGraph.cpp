@@ -19,7 +19,7 @@
 #include <cstddef>
 #include <deque>
 #include <strsafe.h>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
 
@@ -28,8 +28,8 @@
 
 
 // グラフの大きさ
-#define GRAPH_WIDTH		300
-#define GRAPH_HEIGHT	200
+#define GRAPH_WIDTH  300
+#define GRAPH_HEIGHT 200
 
 
 // プラグインクラス
@@ -88,7 +88,7 @@ private:
 	void CreateDPIDependingResources();
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
-	static CSignalGraph *GetThis(HWND hwnd);
+	static CSignalGraph * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	template<typename T> static inline void SafeDelete(T *&p)
@@ -170,14 +170,18 @@ bool CSignalGraph::Finalize()
 			TCHAR m_szBuffer[16];
 		};
 
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowLeft"),
-									IntString(m_WindowPosition.Left), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowTop"),
-									IntString(m_WindowPosition.Top), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowWidth"),
-									IntString(m_WindowPosition.Width), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowHeight"),
-									IntString(m_WindowPosition.Height), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowLeft"),
+			IntString(m_WindowPosition.Left), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowTop"),
+			IntString(m_WindowPosition.Top), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowWidth"),
+			IntString(m_WindowPosition.Width), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowHeight"),
+			IntString(m_WindowPosition.Height), szIniFileName);
 	}
 
 	return true;
@@ -487,7 +491,7 @@ void CSignalGraph::CreateDPIDependingResources()
 // 何かイベントが起きると呼ばれる
 LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CSignalGraph *pThis = static_cast<CSignalGraph*>(pClientData);
+	CSignalGraph *pThis = static_cast<CSignalGraph *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -518,9 +522,9 @@ LRESULT CALLBACK CSignalGraph::EventCallback(UINT Event, LPARAM lParam1, LPARAM 
 
 
 // ウィンドウハンドルからthisを取得する
-CSignalGraph *CSignalGraph::GetThis(HWND hwnd)
+CSignalGraph * CSignalGraph::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CSignalGraph*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CSignalGraph *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -531,7 +535,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CSignalGraph *pThis = static_cast<CSignalGraph*>(pcs->lpCreateParams);
+			CSignalGraph *pThis = static_cast<CSignalGraph *>(pcs->lpCreateParams);
 
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
@@ -597,7 +601,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 		// DPI が変わった
 		{
 			CSignalGraph *pThis = GetThis(hwnd);
-			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+			const RECT *prc = reinterpret_cast<const RECT *>(lParam);
 
 			pThis->m_DPI = HIWORD(wParam);
 
@@ -640,7 +644,7 @@ LRESULT CALLBACK CSignalGraph::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CSignalGraph;
 }

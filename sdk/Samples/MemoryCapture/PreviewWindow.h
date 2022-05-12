@@ -33,6 +33,6 @@ private:
 
 	void Draw(HDC hdc);
 
-	static CPreviewWindow *GetThis(HWND hwnd);
+	static CPreviewWindow * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

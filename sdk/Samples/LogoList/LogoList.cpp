@@ -17,7 +17,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <vector>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// クラスとして実装
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 
 
@@ -25,30 +25,43 @@
 #define LOGO_LIST_WINDOW_CLASS TEXT("TV Logo List Window")
 
 // 更新用タイマーの識別子
-#define TIMER_UPDATELOGO	1
+#define TIMER_UPDATELOGO 1
 
 // ロゴの大きさ
 static const struct {
 	int Width, Height;
 } LogoSizeList[] = {
-	{48, 24},	// logo_type 0
-	{36, 24},	// logo_type 1
-	{48, 27},	// logo_type 2
-	{72, 36},	// logo_type 3
-	{54, 36},	// logo_type 4
-	{64, 36},	// logo_type 5
+	{48, 24}, // logo_type 0
+	{36, 24}, // logo_type 1
+	{48, 27}, // logo_type 2
+	{72, 36}, // logo_type 3
+	{54, 36}, // logo_type 4
+	{64, 36}, // logo_type 5
 };
 
 
 // プラグインクラス
 class CLogoList : public TVTest::CTVTestPlugin
 {
-	HWND m_hwnd;
-	HWND m_hwndList;
-	struct Position {
+	struct Position
+	{
 		int Left,Top,Width,Height;
 		Position() : Left(0), Top(0), Width(0), Height(0) {}
 	};
+
+	class CServiceInfo
+	{
+	public:
+		TCHAR m_szServiceName[64];
+		WORD m_NetworkID;
+		WORD m_ServiceID;
+		HBITMAP m_hbmLogo[6];
+		CServiceInfo(const TVTest::ChannelInfo &ChInfo);
+		~CServiceInfo();
+	};
+
+	HWND m_hwnd;
+	HWND m_hwndList;
 	Position m_WindowPosition;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
@@ -60,16 +73,6 @@ class CLogoList : public TVTest::CTVTestPlugin
 	int m_ItemHeight;
 	HFONT m_hfont;
 	HBRUSH m_hbrBack;
-
-	class CServiceInfo {
-	public:
-		TCHAR m_szServiceName[64];
-		WORD m_NetworkID;
-		WORD m_ServiceID;
-		HBITMAP m_hbmLogo[6];
-		CServiceInfo(const TVTest::ChannelInfo &ChInfo);
-		~CServiceInfo();
-	};
 	std::vector<CServiceInfo*> m_ServiceList;
 
 	bool Enable(bool fEnable);
@@ -79,9 +82,9 @@ class CLogoList : public TVTest::CTVTestPlugin
 	void GetColors();
 	void CalcMetrics();
 
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static CLogoList *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static CLogoList * GetThis(HWND hwnd);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
 	CLogoList();
@@ -92,10 +95,10 @@ public:
 
 
 CLogoList::CLogoList()
-	: m_hwnd(NULL)
-	, m_hwndList(NULL)
-	, m_hfont(NULL)
-	, m_hbrBack(NULL)
+	: m_hwnd(nullptr)
+	, m_hwndList(nullptr)
+	, m_hfont(nullptr)
+	, m_hbrBack(nullptr)
 {
 }
 
@@ -135,9 +138,9 @@ bool CLogoList::Finalize()
 
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
-LRESULT CALLBACK CLogoList::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+LRESULT CALLBACK CLogoList::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CLogoList *pThis=static_cast<CLogoList*>(pClientData);
+	CLogoList *pThis = static_cast<CLogoList *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
@@ -154,15 +157,15 @@ LRESULT CALLBACK CLogoList::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPara
 
 	case TVTest::EVENT_COLORCHANGE:
 		// 色の設定が変化した
-		if (pThis->m_hwndList != NULL) {
+		if (pThis->m_hwndList != nullptr) {
 			pThis->GetColors();
-			::RedrawWindow(pThis->m_hwndList, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(pThis->m_hwndList, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
 		// メインウィンドウのダークモード状態が変わった
-		if (pThis->m_hwnd != NULL) {
+		if (pThis->m_hwnd != nullptr) {
 			// メインウィンドウに合わせてダークモード状態を変更する
 			pThis->m_pApp->SetWindowDarkMode(
 				pThis->m_hwnd,
@@ -190,24 +193,23 @@ bool CLogoList::Enable(bool fEnable)
 			wc.cbClsExtra    = 0;
 			wc.cbWndExtra    = 0;
 			wc.hInstance     = g_hinstDLL;
-			wc.hIcon         = NULL;
-			wc.hCursor       = ::LoadCursor(NULL,IDC_ARROW);
-			wc.hbrBackground = NULL;
-			wc.lpszMenuName  = NULL;
+			wc.hIcon         = nullptr;
+			wc.hCursor       = ::LoadCursor(nullptr,IDC_ARROW);
+			wc.hbrBackground = nullptr;
+			wc.lpszMenuName  = nullptr;
 			wc.lpszClassName = LOGO_LIST_WINDOW_CLASS;
 			if (::RegisterClass(&wc) == 0)
 				return false;
 			fInitialized = true;
 		}
 
-		if (m_hwnd == NULL) {
+		if (m_hwnd == nullptr) {
 			// ウィンドウの作成
 			const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
 			const DWORD ExStyle = WS_EX_TOOLWINDOW;
-			if (::CreateWindowEx(ExStyle, LOGO_LIST_WINDOW_CLASS,
-								 TEXT("局ロゴの一覧"), Style,
-								 0, 0, 320, 320,
-								 m_pApp->GetAppWindow(), NULL, g_hinstDLL, this) == NULL)
+			if (::CreateWindowEx(
+					ExStyle, LOGO_LIST_WINDOW_CLASS, TEXT("局ロゴの一覧"), Style,
+					0, 0, 320, 320, m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this) == nullptr)
 				return false;
 
 			// デフォルトサイズの計算
@@ -290,7 +292,7 @@ bool CLogoList::UpdateLogo()
 
 		UINT ExistsType = 0;
 		for (BYTE j = 0; j < 6; j++) {
-			if (pServiceInfo->m_hbmLogo[j] != NULL)
+			if (pServiceInfo->m_hbmLogo[j] != nullptr)
 				ExistsType |= 1U << j;
 		}
 		if ((ExistsType & 0x3F) != 0x3F) {
@@ -300,11 +302,11 @@ bool CLogoList::UpdateLogo()
 			if (AvailableType != ExistsType) {
 				// 新しくロゴが取得されたので更新する
 				for (BYTE j = 0; j < 6; j++) {
-					if (pServiceInfo->m_hbmLogo[j] == NULL
+					if (pServiceInfo->m_hbmLogo[j] == nullptr
 							&& (AvailableType & (1U << j)) != 0) {
 						pServiceInfo->m_hbmLogo[j] =
 							m_pApp->GetLogo(pServiceInfo->m_NetworkID, pServiceInfo->m_ServiceID, j);
-						if (pServiceInfo->m_hbmLogo[j] != NULL)
+						if (pServiceInfo->m_hbmLogo[j] != nullptr)
 							fUpdated = true;
 					}
 				}
@@ -331,7 +333,7 @@ void CLogoList::GetColors()
 	m_crBackColor = m_pApp->GetColor(L"PanelBack");
 	m_crTextColor = m_pApp->GetColor(L"PanelText");
 
-	if (m_hbrBack != NULL)
+	if (m_hbrBack != nullptr)
 		::DeleteObject(m_hbrBack);
 	m_hbrBack = ::CreateSolidBrush(m_crBackColor);
 
@@ -345,7 +347,7 @@ void CLogoList::CalcMetrics()
 {
 	LOGFONT lf;
 	m_pApp->GetFont(L"PanelFont", &lf, m_DPI);
-	if (m_hfont != NULL)
+	if (m_hfont != nullptr)
 		::DeleteObject(m_hfont);
 	m_hfont = ::CreateFontIndirect(&lf);
 
@@ -369,9 +371,9 @@ void CLogoList::CalcMetrics()
 
 
 // ウィンドウハンドルからthisを取得する
-CLogoList *CLogoList::GetThis(HWND hwnd)
+CLogoList * CLogoList::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CLogoList*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
+	return reinterpret_cast<CLogoList *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -382,7 +384,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CLogoList *pThis = static_cast<CLogoList*>(pcs->lpCreateParams);
+			CLogoList *pThis = static_cast<CLogoList *>(pcs->lpCreateParams);
 
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
@@ -393,9 +395,10 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 			pThis->CalcMetrics();
 
-			pThis->m_hwndList = ::CreateWindowEx(0, TEXT("LISTBOX"), NULL,
+			pThis->m_hwndList = ::CreateWindowEx(
+				0, TEXT("LISTBOX"), nullptr,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT,
-				0, 0, 0, 0, hwnd, NULL, g_hinstDLL, NULL);
+				0, 0, 0, 0, hwnd, nullptr, g_hinstDLL, nullptr);
 
 			pThis->GetColors();
 
@@ -413,7 +416,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
 
 			// 更新用タイマー設定
-			::SetTimer(hwnd, TIMER_UPDATELOGO, 60 * 1000, NULL);
+			::SetTimer(hwnd, TIMER_UPDATELOGO, 60 * 1000, nullptr);
 		}
 		return 0;
 
@@ -447,8 +450,9 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			rc.top = pdis->rcItem.top + pThis->m_ItemMargin;
 			rc.right = rc.left + pThis->m_ServiceNameWidth;
 			rc.bottom = pdis->rcItem.bottom - pThis->m_ItemMargin;
-			::DrawText(pdis->hDC, pService->m_szServiceName, -1, &rc,
-					   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+			::DrawText(
+				pdis->hDC, pService->m_szServiceName, -1, &rc,
+				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 			::SetTextColor(pdis->hDC, OldTextColor);
 			::SetBkMode(pdis->hDC, OldBkMode);
@@ -458,12 +462,13 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			HGDIOBJ hOldBitmap = ::GetCurrentObject(hdcMemory, OBJ_BITMAP);
 			int x = rc.right + pThis->m_LogoMargin;
 			for (int i = 0; i < 6; i++) {
-				if (pService->m_hbmLogo[i] != NULL) {
+				if (pService->m_hbmLogo[i] != nullptr) {
 					::SelectObject(hdcMemory, pService->m_hbmLogo[i]);
-					::BitBlt(pdis->hDC,
-							 x, rc.top + ((rc.bottom - rc.top) - LogoSizeList[i].Height) / 2,
-							 LogoSizeList[i].Width, LogoSizeList[i].Height,
-							 hdcMemory, 0, 0, SRCCOPY);
+					::BitBlt(
+						pdis->hDC,
+						x, rc.top + ((rc.bottom - rc.top) - LogoSizeList[i].Height) / 2,
+						LogoSizeList[i].Width, LogoSizeList[i].Height,
+						hdcMemory, 0, 0, SRCCOPY);
 				}
 				x += LogoSizeList[i].Width + pThis->m_LogoMargin;
 			}
@@ -486,7 +491,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			CLogoList *pThis = GetThis(hwnd);
 
 			if (pThis->UpdateLogo())
-				::RedrawWindow(pThis->m_hwndList, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+				::RedrawWindow(pThis->m_hwndList, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
 		return 0;
 
@@ -507,7 +512,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 		// DPI が変わった
 		{
 			CLogoList *pThis = GetThis(hwnd);
-			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+			const RECT *prc = reinterpret_cast<const RECT *>(lParam);
 
 			pThis->m_DPI = HIWORD(wParam);
 
@@ -517,11 +522,11 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
 
 			::SetWindowPos(
-				hwnd, NULL,
+				hwnd, nullptr,
 				prc->left, prc->top,
 				prc->right - prc->left, prc->bottom - prc->top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
-			::InvalidateRect(pThis->m_hwndList, NULL, TRUE);
+			::InvalidateRect(pThis->m_hwndList, nullptr, TRUE);
 		}
 		break;
 
@@ -540,17 +545,17 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			}
 
 			// リソース解放
-			if (pThis->m_hfont != NULL) {
+			if (pThis->m_hfont != nullptr) {
 				::DeleteObject(pThis->m_hfont);
-				pThis->m_hfont = NULL;
+				pThis->m_hfont = nullptr;
 			}
-			if (pThis->m_hbrBack != NULL) {
+			if (pThis->m_hbrBack != nullptr) {
 				::DeleteObject(pThis->m_hbrBack);
-				pThis->m_hbrBack = NULL;
+				pThis->m_hbrBack = nullptr;
 			}
 
-			pThis->m_hwnd = NULL;
-			pThis->m_hwndList = NULL;
+			pThis->m_hwnd = nullptr;
+			pThis->m_hwndList = nullptr;
 			pThis->ClearServiceList();
 		}
 		return 0;
@@ -568,14 +573,14 @@ CLogoList::CServiceInfo::CServiceInfo(const TVTest::ChannelInfo &ChInfo)
 	m_NetworkID = ChInfo.NetworkID;
 	m_ServiceID = ChInfo.ServiceID;
 	for (int i = 0; i < 6; i++)
-		m_hbmLogo[i] = NULL;
+		m_hbmLogo[i] = nullptr;
 }
 
 
 CLogoList::CServiceInfo::~CServiceInfo()
 {
 	for (int i = 0; i < 6; i++) {
-		if (m_hbmLogo[i] != NULL)
+		if (m_hbmLogo[i] != nullptr)
 			::DeleteObject(m_hbmLogo[i]);
 	}
 }
@@ -584,7 +589,7 @@ CLogoList::CServiceInfo::~CServiceInfo()
 
 
 // プラグインクラスのインスタンスを生成する
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CLogoList;
 }

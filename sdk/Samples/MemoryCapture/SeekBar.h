@@ -42,6 +42,6 @@ private:
 	void OnLButtonDown(int x, int y);
 	void OnMouseMove(int x, int y);
 
-	static CSeekBar *GetThis(HWND hwnd);
+	static CSeekBar * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
