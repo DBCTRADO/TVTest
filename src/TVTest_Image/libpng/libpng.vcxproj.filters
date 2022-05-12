@@ -56,10 +56,10 @@
     <ClCompile Include="pngset.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="contrib\intel\filter_sse2_intrinsics.c">
+    <ClCompile Include="intel\filter_sse2_intrinsics.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="contrib\intel\intel_init.c">
+    <ClCompile Include="intel\intel_init.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

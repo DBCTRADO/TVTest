@@ -1,10 +1,10 @@
 
 /* pngtest.c - a simple test program to test libpng
  *
- * Last changed in libpng 1.6.24 [August 4, 2016]
- * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 2018-2019 Cosmin Truta
+ * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -42,15 +42,6 @@
 #define STDERR stdout   /* For DOS */
 
 #include "png.h"
-
-/* 1.6.1 added support for the configure test harness, which uses 77 to indicate
- * a skipped test, in earlier versions we need to succeed on a skipped test, so:
- */
-#if PNG_LIBPNG_VER >= 10601 && defined(HAVE_CONFIG_H)
-#  define SKIP 77
-#else
-#  define SKIP 0
-#endif
 
 /* Known chunks that exist in pngtest.png must be supported or pngtest will fail
  * simply as a result of re-ordering them.  This may be fixed in 1.7
@@ -153,6 +144,7 @@ tIME_to_str(png_structp png_ptr, png_charp ts, png_const_timep t)
 static int verbose = 0;
 static int strict = 0;
 static int relaxed = 0;
+static int xfail = 0;
 static int unsupported_chunks = 0; /* chunk unsupported by libpng in input */
 static int error_count = 0; /* count calls to png_error */
 static int warning_count = 0; /* count calls to png_warning */
@@ -353,10 +345,10 @@ count_zero_samples(png_structp png_ptr, png_row_infop row_info, png_bytep data)
 
 #ifdef PNG_IO_STATE_SUPPORTED
 void
-pngtest_check_io_state(png_structp png_ptr, png_size_t data_length,
+pngtest_check_io_state(png_structp png_ptr, size_t data_length,
     png_uint_32 io_op);
 void
-pngtest_check_io_state(png_structp png_ptr, png_size_t data_length,
+pngtest_check_io_state(png_structp png_ptr, size_t data_length,
     png_uint_32 io_op)
 {
    png_uint_32 io_state = png_get_io_state(png_ptr);
@@ -394,12 +386,12 @@ pngtest_check_io_state(png_structp png_ptr, png_size_t data_length,
 #endif
 
 static void PNGCBAPI
-pngtest_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
+pngtest_read_data(png_structp png_ptr, png_bytep data, size_t length)
 {
-   png_size_t check = 0;
+   size_t check = 0;
    png_voidp io_ptr;
 
-   /* fread() returns 0 on error, so it is OK to store this in a png_size_t
+   /* fread() returns 0 on error, so it is OK to store this in a size_t
     * instead of an int, which is what fread() actually returns.
     */
    io_ptr = png_get_io_ptr(png_ptr);
@@ -433,9 +425,9 @@ pngtest_flush(png_structp png_ptr)
  * than changing the library.
  */
 static void PNGCBAPI
-pngtest_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
+pngtest_write_data(png_structp png_ptr, png_bytep data, size_t length)
 {
-   png_size_t check;
+   size_t check;
 
    check = fwrite(data, 1, length, (png_FILE_p)png_get_io_ptr(png_ptr));
 
@@ -457,13 +449,13 @@ pngtest_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
  */
 typedef struct
 {
-   PNG_CONST char *file_name;
+   const char *file_name;
 }  pngtest_error_parameters;
 
 static void PNGCBAPI
 pngtest_warning(png_structp png_ptr, png_const_charp message)
 {
-   PNG_CONST char *name = "UNKNOWN (ERROR!)";
+   const char *name = "UNKNOWN (ERROR!)";
    pngtest_error_parameters *test =
       (pngtest_error_parameters*)png_get_error_ptr(png_ptr);
 
@@ -472,7 +464,7 @@ pngtest_warning(png_structp png_ptr, png_const_charp message)
    if (test != NULL && test->file_name != NULL)
       name = test->file_name;
 
-   fprintf(STDERR, "%s: libpng warning: %s\n", name, message);
+   fprintf(STDERR, "\n%s: libpng warning: %s\n", name, message);
 }
 
 /* This is the default error handling function.  Note that replacements for
@@ -713,7 +705,7 @@ read_user_chunk_callback(png_struct *png_ptr, png_unknown_chunkp chunk)
     * The unknown chunk structure contains the chunk data:
     * png_byte name[5];
     * png_byte *data;
-    * png_size_t size;
+    * size_t size;
     *
     * Note that libpng has already taken care of the CRC handling.
     */
@@ -858,7 +850,7 @@ pngtest_check_text_support(png_structp png_ptr, png_textp text_ptr,
 
 /* Test one file */
 static int
-test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
+test_one_file(const char *inname, const char *outname)
 {
    static png_FILE_p fpin;
    static png_FILE_p fpout;  /* "static" prevents setjmp corruption */
@@ -945,8 +937,12 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
       fprintf(STDERR, "%s -> %s: libpng read error\n", inname, outname);
       png_free(read_ptr, row_buf);
       row_buf = NULL;
+      if (verbose != 0)
+        fprintf(STDERR, "   destroy read structs\n");
       png_destroy_read_struct(&read_ptr, &read_info_ptr, &end_info_ptr);
 #ifdef PNG_WRITE_SUPPORTED
+      if (verbose != 0)
+        fprintf(STDERR, "   destroy write structs\n");
       png_destroy_info_struct(write_ptr, &write_end_info_ptr);
       png_destroy_write_struct(&write_ptr, &write_info_ptr);
 #endif
@@ -961,11 +957,15 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
    if (setjmp(png_jmpbuf(write_ptr)))
    {
       fprintf(STDERR, "%s -> %s: libpng write error\n", inname, outname);
+      png_free(read_ptr, row_buf);
+      row_buf = NULL;
+      if (verbose != 0)
+        fprintf(STDERR, "   destroying read structs\n");
       png_destroy_read_struct(&read_ptr, &read_info_ptr, &end_info_ptr);
+      if (verbose != 0)
+        fprintf(STDERR, "   destroying write structs\n");
       png_destroy_info_struct(write_ptr, &write_end_info_ptr);
-#ifdef PNG_WRITE_SUPPORTED
       png_destroy_write_struct(&write_ptr, &write_info_ptr);
-#endif
       FCLOSE(fpin);
       FCLOSE(fpout);
       return (1);
@@ -973,15 +973,16 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
 #endif
 #endif
 
+#ifdef PNG_BENIGN_ERRORS_SUPPORTED
    if (strict != 0)
    {
       /* Treat png_benign_error() as errors on read */
       png_set_benign_errors(read_ptr, 0);
 
-#ifdef PNG_WRITE_SUPPORTED
+# ifdef PNG_WRITE_SUPPORTED
       /* Treat them as errors on write */
       png_set_benign_errors(write_ptr, 0);
-#endif
+# endif
 
       /* if strict is not set, then app warnings and errors are treated as
        * warnings in release builds, but not in unstable builds; this can be
@@ -994,10 +995,20 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
       /* Allow application (pngtest) errors and warnings to pass */
       png_set_benign_errors(read_ptr, 1);
 
-#ifdef PNG_WRITE_SUPPORTED
-      png_set_benign_errors(write_ptr, 1);
+      /* Turn off CRC checking while reading */
+      png_set_crc_action(read_ptr, PNG_CRC_QUIET_USE, PNG_CRC_QUIET_USE);
+
+#ifdef PNG_IGNORE_ADLER32
+      /* Turn off ADLER32 checking while reading */
+      png_set_option(read_ptr, PNG_IGNORE_ADLER32, PNG_OPTION_ON);
 #endif
+
+# ifdef PNG_WRITE_SUPPORTED
+      png_set_benign_errors(write_ptr, 1);
+# endif
+
    }
+#endif /* BENIGN_ERRORS */
 
    pngtest_debug("Initializing input and output streams");
 #ifdef PNG_STDIO_SUPPORTED
@@ -1190,6 +1201,22 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
       }
    }
 #endif
+#ifdef PNG_READ_eXIf_SUPPORTED
+   {
+      png_bytep exif=NULL;
+      png_uint_32 exif_length;
+
+      if (png_get_eXIf_1(read_ptr, read_info_ptr, &exif_length, &exif) != 0)
+      {
+         if (exif_length > 1)
+            fprintf(STDERR," eXIf type %c%c, %lu bytes\n",exif[0],exif[1],
+               (unsigned long)exif_length);
+# ifdef PNG_WRITE_eXIf_SUPPORTED
+         png_set_eXIf_1(write_ptr, write_info_ptr, exif_length, exif);
+# endif
+      }
+   }
+#endif
 #ifdef PNG_hIST_SUPPORTED
    {
       png_uint_16p hist;
@@ -1300,10 +1327,10 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
          {
             int i;
 
-            printf("\n");
+            fprintf(STDERR,"\n");
             for (i=0; i<num_text; i++)
             {
-               printf("   Text compression[%d]=%d\n",
+               fprintf(STDERR,"   Text compression[%d]=%d\n",
                    i, text_ptr[i].compression);
             }
          }
@@ -1395,6 +1422,15 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
    png_write_info(write_ptr, write_info_ptr);
 
    write_chunks(write_ptr, before_IDAT); /* after PLTE */
+
+   png_write_info(write_ptr, write_end_info_ptr);
+
+   write_chunks(write_ptr, after_IDAT); /* after IDAT */
+
+#ifdef PNG_COMPRESSION_COMPAT
+   /* Test the 'compatibility' setting here, if it is available. */
+   png_set_compression(write_ptr, PNG_COMPRESSION_COMPAT);
+#endif
 #endif
 
 #ifdef SINGLE_ROWBUF_ALLOC
@@ -1402,7 +1438,7 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
    row_buf = (png_bytep)png_malloc(read_ptr,
        png_get_rowbytes(read_ptr, read_info_ptr));
 
-   pngtest_debug1("\t0x%08lx", (unsigned long)row_buf);
+   pngtest_debug1("\t%p", row_buf);
 #endif /* SINGLE_ROWBUF_ALLOC */
    pngtest_debug("Writing row data");
 
@@ -1456,7 +1492,7 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
          row_buf = (png_bytep)png_malloc(read_ptr,
              png_get_rowbytes(read_ptr, read_info_ptr));
 
-         pngtest_debug2("\t0x%08lx (%lu bytes)", (unsigned long)row_buf,
+         pngtest_debug2("\t%p (%lu bytes)", row_buf,
              (unsigned long)png_get_rowbytes(read_ptr, read_info_ptr));
 
 #endif /* !SINGLE_ROWBUF_ALLOC */
@@ -1511,15 +1547,31 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
          {
             int i;
 
-            printf("\n");
+            fprintf(STDERR,"\n");
             for (i=0; i<num_text; i++)
             {
-               printf("   Text compression[%d]=%d\n",
+               fprintf(STDERR,"   Text compression[%d]=%d\n",
                    i, text_ptr[i].compression);
             }
          }
 
          png_set_text(write_ptr, write_end_info_ptr, text_ptr, num_text);
+      }
+   }
+#endif
+#ifdef PNG_READ_eXIf_SUPPORTED
+   {
+      png_bytep exif=NULL;
+      png_uint_32 exif_length;
+
+      if (png_get_eXIf_1(read_ptr, end_info_ptr, &exif_length, &exif) != 0)
+      {
+         if (exif_length > 1)
+            fprintf(STDERR," eXIf type %c%c, %lu bytes\n",exif[0],exif[1],
+               (unsigned long)exif_length);
+# ifdef PNG_WRITE_eXIf_SUPPORTED
+         png_set_eXIf_1(write_ptr, write_end_info_ptr, exif_length, exif);
+# endif
       }
    }
 #endif
@@ -1676,7 +1728,7 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
       for (;;)
       {
          static int wrote_question = 0;
-         png_size_t num_in, num_out;
+         size_t num_in, num_out;
          char inbuf[256], outbuf[256];
 
          num_in = fread(inbuf, 1, sizeof inbuf, fpin);
@@ -1759,11 +1811,11 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
 
 /* Input and output filenames */
 #ifdef RISCOS
-static PNG_CONST char *inname = "pngtest/png";
-static PNG_CONST char *outname = "pngout/png";
+static const char *inname = "pngtest/png";
+static const char *outname = "pngout/png";
 #else
-static PNG_CONST char *inname = "pngtest.png";
-static PNG_CONST char *outname = "pngout.png";
+static const char *inname = "pngtest.png";
+static const char *outname = "pngout.png";
 #endif
 
 int
@@ -1838,6 +1890,7 @@ main(int argc, char *argv[])
          inname = argv[2];
          strict++;
          relaxed = 0;
+         multiple=1;
       }
 
       else if (strcmp(argv[1], "--relaxed") == 0)
@@ -1847,6 +1900,17 @@ main(int argc, char *argv[])
          inname = argv[2];
          strict = 0;
          relaxed++;
+         multiple=1;
+      }
+      else if (strcmp(argv[1], "--xfail") == 0)
+      {
+         status_dots_requested = 0;
+         verbose = 1;
+         inname = argv[2];
+         strict = 0;
+         xfail++;
+         relaxed++;
+         multiple=1;
       }
 
       else
@@ -1904,8 +1968,13 @@ main(int argc, char *argv[])
 
          else
          {
-            fprintf(STDERR, " FAIL\n");
-            ierror += kerror;
+            if (xfail)
+              fprintf(STDERR, " XFAIL\n");
+            else
+            {
+              fprintf(STDERR, " FAIL\n");
+              ierror += kerror;
+            }
          }
 #if defined(PNG_USER_MEM_SUPPORTED) && PNG_DEBUG
          if (allocation_now != current_allocation)
@@ -1993,8 +2062,13 @@ main(int argc, char *argv[])
 #endif
             }
 
-            fprintf(STDERR, " FAIL\n");
-            ierror += kerror;
+            if (xfail)
+              fprintf(STDERR, " XFAIL\n");
+            else
+            {
+              fprintf(STDERR, " FAIL\n");
+              ierror += kerror;
+            }
          }
 #if defined(PNG_USER_MEM_SUPPORTED) && PNG_DEBUG
          if (allocation_now != current_allocation)
@@ -2076,9 +2150,9 @@ main(void)
    fprintf(STDERR,
        " test ignored because libpng was not built with read support\n");
    /* And skip this test */
-   return SKIP;
+   return PNG_LIBPNG_VER < 10600 ? 0 : 77;
 }
 #endif
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_6_24 Your_png_h_is_not_version_1_6_24;
+typedef png_libpng_version_1_6_37 Your_png_h_is_not_version_1_6_37;

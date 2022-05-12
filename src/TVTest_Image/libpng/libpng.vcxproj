@@ -246,8 +246,8 @@
     <ClCompile Include="pngwrite.c" />
     <ClCompile Include="pngwtran.c" />
     <ClCompile Include="pngwutil.c" />
-    <ClCompile Include="contrib\intel\filter_sse2_intrinsics.c" />
-    <ClCompile Include="contrib\intel\intel_init.c" />
+    <ClCompile Include="intel\filter_sse2_intrinsics.c" />
+    <ClCompile Include="intel\intel_init.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="png.h" />
