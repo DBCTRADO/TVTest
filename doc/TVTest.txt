@@ -21,7 +21,7 @@
 
 ◆ 試験環境
 
-  ・Windows 7 / 8.1 / 10
+  ・Windows 7 / 8.1 / 10 / 11
 
 
 ◆ 仕様
@@ -55,7 +55,7 @@
   その場合、サブモジュールの参照先として指定されているコミット以外のソースツリー
   を利用した場合、ビルドできない、もしくは正常に動作しない可能性があります。
 
-  Visual Studio 2017 Update 5 のプロジェクトファイルが付属しています。
+  Visual Studio 2017 のプロジェクトファイルが付属しています。
   C++17 の機能を利用しているため、2017 Update 5 より前の Visual Studio ではビル
   ドできません。
   TVTest のビルドには以下の SDK/ライブラリが必要になります。
@@ -75,22 +75,31 @@
 
   必要なライブラリは TVTest / LibISDB のリポジトリに含まれています。
 
-  src フォルダ内に以下のソリューションがありますので、ビルドしたい対象に合わせて
-  利用してください。
-
-  ・TVTest.sln        TVTest.exe のソリューション
-  ・TVTest_Image.sln  TVTest_Image.dll のソリューション
-  ・TVTest_All.sln    TVTest.exe と TVTest_Image.dll 両方のソリューション
-
-  TVTest より先に LibISDB をビルドしておく必要があります。
+  TVTest のビルドには、先に LibISDB をビルドしておく必要があります。
   src/LibISDB/Projects/LibISDB.sln を開いて、ソリューションのビルドを行ってくだ
   さい。
   その際、TVTest とソリューション構成/プラットフォームを統一する必要がありますの
   で注意してください。
 
-  プラグインは Visual Studio 2010 以降でビルドできます。
-  sdk\Samples 内の Samples.sln (VS 2010 用) か Samples.VS2013.sln (VS 2013/2015
-  用) を開いてビルドしてください。
+  ソリューションファイル src/TVTest.sln を Visual Studio で開いて、TVTest をビル
+  ドすることができます。
+  ソリューション内には以下のプロジェクトが含まれます。
+
+  ・TVTest          TVTest.exe        本体
+  ・TVTest_Image
+    ・TVTest_Image  TVTest_Image.dll  画像保存用 DLL
+    ・ImageLib      ImageLib.lib
+    ・libjpeg       libjpeg.lib
+    ・libpng        libpng.lib
+    ・zlib          zlib.lib
+  ・Help            TVTest.chm        ヘルプファイル
+
+  TVTest プロジェクトをビルドすれば、Help 以外の他プロジェクトもビルドされます。
+
+  ヘルプファイル(TVTest.chm)の作成には HTML Help Workshop をインストールするか、
+  または Visual Studio Installer で MFC をインストールします。
+
+  プラグインは sdk/Samples/Samples.sln を開いてビルドしてください。
 
   なお、デコーダによっては、(恐らくリバースエンジニアリング対策で)デバッグ実行時
   に接続できなかったり不正終了させられたりします。
@@ -552,16 +561,17 @@
       Copyright (C) 1999-2000 Aaron Holtzman
 
     libjpeg
-      Copyright (C) 1991-2014, Thomas G. Lane, Guido Vollbeding
+      Copyright (C) 1991-2022, Thomas G. Lane, Guido Vollbeding
       This software is based in part on the work of the Independent JPEG Group.
 
     libpng
-      Copyright (c) 1998-2014 Glenn Randers-Pehrson
+      Copyright (c) 2018-2019 Cosmin Truta
+      Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
       Copyright (c) 1996-1997 Andreas Dilger
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
 
     zlib
-      Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
+      Copyright (C) 1995-2022 Jean-loup Gailly and Mark Adler
 
 
 ◆ 謝辞
