@@ -280,13 +280,13 @@ bool CMessageDialog::Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPC
 	StringUtility::Assign(m_Caption, pszCaption);
 	m_MessageType = Type;
 
-	return Show(hwndOwner) == IDOK;
+	return Show(hwndOwner);
 }
 
 
 bool CMessageDialog::Show(HWND hwndOwner)
 {
-	return ShowDialog(hwndOwner, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_ERROR));
+	return ShowDialog(hwndOwner, GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDD_ERROR)) == IDOK;
 }
 
 
