@@ -134,7 +134,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)MakeHelp.bat</Command>
+      <Command>"$(ProjectDir)MakeHelp.bat"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>move /y "$(ProjectDir)$(TargetFileName)" "$(TargetPath)"</Command>
@@ -151,7 +151,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)MakeHelp.bat</Command>
+      <Command>"$(ProjectDir)MakeHelp.bat"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>move /y "$(ProjectDir)$(TargetFileName)" "$(TargetPath)"</Command>
@@ -172,7 +172,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)MakeHelp.bat</Command>
+      <Command>"$(ProjectDir)MakeHelp.bat"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>move /y "$(ProjectDir)$(TargetFileName)" "$(TargetPath)"</Command>
@@ -193,7 +193,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)MakeHelp.bat</Command>
+      <Command>"$(ProjectDir)MakeHelp.bat"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>move /y "$(ProjectDir)$(TargetFileName)" "$(TargetPath)"</Command>
@@ -214,7 +214,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)MakeHelp.bat</Command>
+      <Command>"$(ProjectDir)MakeHelp.bat"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>move /y "$(ProjectDir)$(TargetFileName)" "$(TargetPath)"</Command>
@@ -235,7 +235,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>$(ProjectDir)MakeHelp.bat</Command>
+      <Command>"$(ProjectDir)MakeHelp.bat"</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>move /y "$(ProjectDir)$(TargetFileName)" "$(TargetPath)"</Command>
