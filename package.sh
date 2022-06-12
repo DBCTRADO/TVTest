@@ -4,6 +4,8 @@
 ##  -a x86|x64
 ## CRT type
 ##  -c dynamic|static
+## Plugins
+##  -l all|useful
 ## Output directory
 ##  -o dir
 ## Platform
@@ -17,10 +19,11 @@ arch=
 target=release
 crt_type=static
 platform=
+plugins=useful
 out_dir=package
 archive=7z
 
-while getopts a:c:o:p:r:t: arg
+while getopts a:c:l:o:p:r:t: arg
 do
     case $arg in
     a)
@@ -28,6 +31,9 @@ do
         ;;
     c)
         crt_type=$OPTARG
+        ;;
+    l)
+        plugins=$OPTARG
         ;;
     o)
         out_dir=$OPTARG
@@ -108,8 +114,16 @@ fi
 
 cp -fp data/Themes/*.httheme ${dst_dir}/Themes
 
+if [ "$plugins" = all ]
+then
+    plugin_files=(AutoSnapShot.tvtp DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp MiniProgramGuide.tvtp PacketCounter.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TSInfo.tvtp TunerPanel.tvtp)
+fi
+
+if [ "$plugins" = useful ]
+then
 ## Copy only "useful" plugins
-plugin_files=(DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TunerPanel.tvtp)
+    plugin_files=(DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TunerPanel.tvtp)
+fi
 
 plugin_src_dir=sdk/Samples/${src_arch_dir}/${target}
 if [ "$crt_type" = static ]
