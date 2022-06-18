@@ -8,8 +8,6 @@
 ##  -l all|useful
 ## Output directory
 ##  -o dir
-## Platform
-##  -p xp
 ## Archive
 ##  -r 7z|bz2
 ## Target
@@ -18,12 +16,11 @@
 arch=
 target=release
 crt_type=static
-platform=
 plugins=useful
 out_dir=package
 archive=7z
 
-while getopts a:c:l:o:p:r:t: arg
+while getopts a:c:l:o:r:t: arg
 do
     case $arg in
     a)
@@ -37,9 +34,6 @@ do
         ;;
     o)
         out_dir=$OPTARG
-        ;;
-    p)
-        platform=$OPTARG
         ;;
     r)
         archive=$OPTARG
@@ -71,10 +65,6 @@ else
 fi
 
 src_bin_dir=src/${src_arch_dir}/${target}
-if [ "$platform" = xp ]
-then
-    src_bin_dir=${src_bin_dir}_XP
-fi
 if [ "$crt_type" = dynamic ]
 then
     src_bin_dir=${src_bin_dir}_MD
