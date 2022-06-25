@@ -80,7 +80,6 @@ namespace TVTest
 		CEventHandler *m_pEventHandler;
 		bool m_fCreateFirst;
 		SIZE m_DefaultPageSize;
-		Style::CStyleScaling m_StyleScaling;
 	};
 
 }	// namespace TVTest
