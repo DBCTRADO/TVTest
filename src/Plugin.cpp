@@ -628,6 +628,27 @@ static void FreeFavoriteList(FavoriteList *pList)
 }
 
 
+static bool CopyESList(const LibISDB::AnalyzerFilter::ESInfoList &SrcList, ElementaryStreamInfoList *pList)
+{
+	pList->ESCount = static_cast<WORD>(SrcList.size());
+	pList->ESList = static_cast<ElementaryStreamInfo *>(std::malloc(sizeof(ElementaryStreamInfo) * SrcList.size()));
+	if (pList->ESList == nullptr)
+		return false;
+
+	for (size_t i = 0; i < SrcList.size(); i++) {
+		const LibISDB::AnalyzerFilter::ESInfo &SrcInfo = SrcList[i];
+		ElementaryStreamInfo &Info = pList->ESList[i];
+		Info.PID = SrcInfo.PID;
+		Info.HierarchicalReferencePID = SrcInfo.HierarchicalReferencePID;
+		Info.StreamType = SrcInfo.StreamType;
+		Info.ComponentTag = SrcInfo.ComponentTag;
+		Info.QualityLevel = SrcInfo.QualityLevel;
+		Info.Reserved = 0;
+	}
+
+	return true;
+}
+
 
 
 struct VarStringContext
@@ -3008,6 +3029,67 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			return SetWindowDarkTheme(hwnd, fDark);
 		}
+
+	case MESSAGE_GETELEMENTARYSTREAMINFOLIST:
+		{
+			ElementaryStreamInfoList *pList = reinterpret_cast<ElementaryStreamInfoList *>(lParam1);
+
+			if (pList == nullptr
+					|| pList->Size != sizeof(ElementaryStreamInfoList))
+				return FALSE;
+
+			pList->ESCount = 0;
+			pList->ESList = nullptr;
+
+			if (pList->Flags != 0)
+				return FALSE;
+
+			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			if (pAnalyzer == nullptr)
+				return FALSE;
+
+			WORD ServiceID = pList->ServiceID;
+			if (ServiceID == 0) {
+				ServiceID = CoreEngine.GetServiceID();
+				if (ServiceID == LibISDB::SERVICE_ID_INVALID)
+					return FALSE;
+			}
+			LibISDB::AnalyzerFilter::ServiceInfo Info;
+			if (!pAnalyzer->GetServiceInfoByID(ServiceID, &Info))
+				return FALSE;
+
+			switch (pList->Media) {
+			case ES_MEDIA_ALL:
+				if (!CopyESList(Info.ESList, pList))
+					return FALSE;
+				break;
+
+			case ES_MEDIA_VIDEO:
+				if (!CopyESList(Info.VideoESList, pList))
+					return FALSE;
+				break;
+
+			case ES_MEDIA_AUDIO:
+				if (!CopyESList(Info.AudioESList, pList))
+					return FALSE;
+				break;
+
+			case ES_MEDIA_CAPTION:
+				if (!CopyESList(Info.CaptionESList, pList))
+					return FALSE;
+				break;
+
+			case ES_MEDIA_DATA_CARROUSEL:
+				if (!CopyESList(Info.DataCarrouselESList, pList))
+					return FALSE;
+				break;
+
+			default:
+				return FALSE;
+			}
+		}
+		return TRUE;
 
 #ifdef _DEBUG
 	default:

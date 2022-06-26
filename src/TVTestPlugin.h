@@ -94,6 +94,7 @@
 	  ・MESSAGE_GETDARKMODESTATUS
 	  ・MESSAGE_ISDARKMODECOLOR
 	  ・MESSAGE_SETWINDOWDARKMODE
+	  ・MESSAGE_GETELEMENTARYSTREAMINFOLIST
 	・以下のイベントを追加した
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
@@ -495,6 +496,7 @@ enum {
 	MESSAGE_GETDARKMODESTATUS,           // ダークモードの状態を取得
 	MESSAGE_ISDARKMODECOLOR,             // ダークモードの色かを取得
 	MESSAGE_SETWINDOWDARKMODE,           // ウィンドウをダークモードにする
+	MESSAGE_GETELEMENTARYSTREAMINFOLIST, // Elementary Stream (ES) の情報のリストを取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -758,6 +760,8 @@ enum { SERVICEINFO_SIZE_V1 = TVTEST_OFFSETOF(ServiceInfo, AudioComponentType) };
 // サービスの情報を取得する
 // 現在のチャンネルのサービスの情報を取得します。
 // 事前に ServiceInfo の Size メンバを設定しておきます。
+// このメッセージでは取得できる映像/音声/字幕ストリームの数に制限がありますので、
+// 全てのストリームの情報を取得するには MsgGetElementaryStreamInfoList を使用してください。
 inline bool MsgGetServiceInfo(PluginParam *pParam, int Index, ServiceInfo *pInfo)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_GETSERVICEINFO, Index, (LPARAM)pInfo) != 0;
@@ -3458,6 +3462,64 @@ inline bool MsgSetWindowDarkMode(PluginParam *pParam, HWND hwnd, bool fDark)
 	return (*pParam->Callback)(pParam, MESSAGE_SETWINDOWDARKMODE, (LPARAM)hwnd, fDark) != FALSE;
 }
 
+// Elementary Stream (ES) の情報
+struct ElementaryStreamInfo
+{
+	WORD PID;                      // PID
+	WORD HierarchicalReferencePID; // 階層変調の参照先 PID (参照先が無い場合は 0x1FF、階層伝送記述子が無い場合は 0xFFFF)
+	BYTE StreamType;               // ストリームの種類(stream_type)
+	BYTE ComponentTag;             // コンポーネントタグ(component_tag)
+	BYTE QualityLevel;             // 階層(0 = 低階層 / 1 = 高階層 / 0xFF = 階層伝送記述子が無い)
+	BYTE Reserved;                 // 予約領域(現在は常に0)
+};
+
+// Elementary Stream (ES) のメディアの種類
+enum ElementaryStreamMediaType {
+	ES_MEDIA_ALL,           // 全て
+	ES_MEDIA_VIDEO,         // 映像
+	ES_MEDIA_AUDIO,         // 音声
+	ES_MEDIA_CAPTION,       // 字幕
+	ES_MEDIA_DATA_CARROUSEL // データ放送
+};
+
+// Elementary Stream (ES) の情報のリスト
+struct ElementaryStreamInfoList
+{
+	DWORD Size;                      // 構造体のサイズ
+	ElementaryStreamMediaType Media; // メディアの種類
+	DWORD Flags;                     // フラグ(現在は常に0)
+	WORD ServiceID;                  // サービスID(0で現在のサービス)
+	WORD ESCount;                    // ストリームの数
+	ElementaryStreamInfo *ESList;    // ストリームの情報(ESCount 分の情報が入る)
+};
+
+// Elementary Stream (ES) の情報のリストを取得
+// ElementaryStreamInfoList 構造体の Size / Media / Flags / ServiceID メンバを設定して呼び出します。
+// ESCount メンバにストリームの数が、ESList メンバに ESCount の数分だけストリームの情報が返されます。
+// 不要になったら ESList メンバのメモリを MsgMemoryFree で解放します。
+/*
+	// 音声 ES の情報を取得する
+	ElementaryStreamInfoList List;
+	List.Size = sizeof(ElementaryStreamInfoList);
+	List.Media = ES_MEDIA_AUDIO;
+	List.Flags = 0;
+	List.ServiceID = 0;
+	if (MsgGetElementaryStreamInfoList(pParam, &List)) {
+		// ESList に ESCount の要素数分の情報が取得される
+		for (WORD i = 0; i < List.ESCount; i++) {
+			ElementaryStreamInfo &ESInfo = List.ESList[i];
+			...
+		}
+
+		// 不要になったら ESList のメモリを解放する
+		MsgMemoryFree(pParam, List.ESList);
+	}
+*/
+inline bool MsgGetElementaryStreamInfoList(PluginParam *pParam, ElementaryStreamInfoList *pList)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_GETELEMENTARYSTREAMINFOLIST, (LPARAM)pList, 0) != FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
@@ -4314,6 +4376,12 @@ public:
 	bool SetWindowDarkMode(HWND hwnd, bool fDark)
 	{
 		return MsgSetWindowDarkMode(m_pParam, hwnd, fDark);
+	}
+
+	bool GetElementaryStreamInfoList(ElementaryStreamInfoList *pList)
+	{
+		pList->Size = sizeof(ElementaryStreamInfoList);
+		return MsgGetElementaryStreamInfoList(m_pParam, pList);
 	}
 #endif
 };
