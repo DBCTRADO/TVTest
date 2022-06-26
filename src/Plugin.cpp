@@ -1300,15 +1300,16 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pServiceInfo->ServiceID = ServiceID;
 			pServiceInfo->VideoPID =
 				Info.VideoESList.empty() ? LibISDB::PID_INVALID : Info.VideoESList[0].PID;
-			pServiceInfo->NumAudioPIDs = (int)Info.AudioESList.size();
-			for (size_t i = 0; i < Info.AudioESList.size(); i++)
+			const int NumAudioPIDs = std::min((int)Info.AudioESList.size(), 4);
+			pServiceInfo->NumAudioPIDs = NumAudioPIDs;
+			for (int i = 0; i < NumAudioPIDs; i++)
 				pServiceInfo->AudioPID[i] = Info.AudioESList[i].PID;
 			StringCopy(pServiceInfo->szServiceName, Info.ServiceName.c_str());
 			if (pServiceInfo->Size == sizeof(ServiceInfo)) {
 				int ServiceIndex = pAnalyzer->GetServiceIndexByID(ServiceID);
-				for (size_t i = 0; i < Info.AudioESList.size(); i++) {
+				for (int i = 0; i < NumAudioPIDs; i++) {
 					pServiceInfo->AudioComponentType[i] =
-						pAnalyzer->GetAudioComponentType(ServiceIndex, (int)i);
+						pAnalyzer->GetAudioComponentType(ServiceIndex, i);
 				}
 				if (Info.CaptionESList.size() > 0)
 					pServiceInfo->SubtitlePID = Info.CaptionESList[0].PID;
