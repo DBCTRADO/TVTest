@@ -3466,7 +3466,7 @@ inline bool MsgSetWindowDarkMode(PluginParam *pParam, HWND hwnd, bool fDark)
 struct ElementaryStreamInfo
 {
 	WORD PID;                      // PID
-	WORD HierarchicalReferencePID; // 階層変調の参照先 PID (参照先が無い場合は 0x1FF、階層伝送記述子が無い場合は 0xFFFF)
+	WORD HierarchicalReferencePID; // 階層変調の参照先 PID (参照先が無い場合は 0x1FFF、階層伝送記述子が無い場合は 0xFFFF)
 	BYTE StreamType;               // ストリームの種類(stream_type)
 	BYTE ComponentTag;             // コンポーネントタグ(component_tag)
 	BYTE QualityLevel;             // 階層(0 = 低階層 / 1 = 高階層 / 0xFF = 階層伝送記述子が無い)
