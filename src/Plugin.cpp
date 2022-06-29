@@ -650,6 +650,22 @@ static bool CopyESList(const LibISDB::AnalyzerFilter::ESInfoList &SrcList, Eleme
 }
 
 
+static void AnalyzerServiceInfoToServiceInfo2(
+	const LibISDB::AnalyzerFilter::ServiceInfo &Info, ServiceInfo2 *pServiceInfo)
+{
+	pServiceInfo->Status = 0;
+	if (Info.FreeCAMode)
+		pServiceInfo->Status |= SERVICE_INFO2_STATUS_FREE_CA_MODE;
+	pServiceInfo->ServiceID = Info.ServiceID;
+	pServiceInfo->ServiceType = Info.ServiceType;
+	pServiceInfo->Reserved = 0;
+	pServiceInfo->PMT_PID = Info.PMTPID;
+	pServiceInfo->PCR_PID = Info.PCRPID;
+	StringCopy(pServiceInfo->szServiceName, Info.ServiceName.c_str());
+	StringCopy(pServiceInfo->szProviderName, Info.ProviderName.c_str());
+}
+
+
 
 struct VarStringContext
 {
@@ -3087,6 +3103,131 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			default:
 				return FALSE;
+			}
+		}
+		return TRUE;
+
+	case MESSAGE_GETSERVICECOUNT:
+		{
+			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			if (pAnalyzer != nullptr)
+				return pAnalyzer->GetServiceCount();
+		}
+		return 0;
+
+	case MESSAGE_GETSERVICEINFO2:
+		{
+			const int Service = static_cast<int>(lParam1);
+			ServiceInfo2 *pServiceInfo = reinterpret_cast<ServiceInfo2*>(lParam2);
+
+			if (pServiceInfo == nullptr
+					|| pServiceInfo->Size != sizeof(ServiceInfo2)
+					|| (pServiceInfo->Flags & ~(SERVICE_INFO2_FLAG_BY_ID)) != 0)
+				return FALSE;
+
+			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			if (pAnalyzer == nullptr)
+				return FALSE;
+
+			LibISDB::AnalyzerFilter::ServiceInfo Info;
+
+			if ((pServiceInfo->Flags & SERVICE_INFO2_FLAG_BY_ID) != 0) {
+				if (!pAnalyzer->GetServiceInfoByID(static_cast<uint16_t>(Service), &Info))
+					return FALSE;
+			} else {
+				if (!pAnalyzer->GetServiceInfo(Service, &Info))
+					return FALSE;
+			}
+
+			AnalyzerServiceInfoToServiceInfo2(Info, pServiceInfo);
+			// 厳密にいえば GetServiceInfo() と同期が必要
+			pServiceInfo->NetworkID = pAnalyzer->GetTransportStreamID();
+			pServiceInfo->TransportStreamID = pAnalyzer->GetNetworkID();
+		}
+		return TRUE;
+
+	case MESSAGE_GETSERVICEINFOLIST:
+		{
+			ServiceInfoList *pList = reinterpret_cast<ServiceInfoList*>(lParam1);
+
+			if (pList == nullptr
+					|| pList->Size != sizeof(ServiceInfoList)
+					|| (pList->Flags & ~(
+							SERVICE_INFO_LIST_FLAG_SELECTABLE_ONLY |
+							SERVICE_INFO_LIST_FLAG_SDT_ACTUAL)) != 0)
+				return FALSE;
+
+			pList->Reserved = 0;
+			pList->ServiceCount = 0;
+			pList->ServiceList = nullptr;
+
+			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			if (pAnalyzer == nullptr)
+				return FALSE;
+
+			// 厳密にいえば GetServiceList() 等と同期が必要
+			const uint16_t NetworkID = pAnalyzer->GetNetworkID();
+			const uint16_t TransportStreamID = pAnalyzer->GetTransportStreamID();
+
+			if ((pList->Flags & SERVICE_INFO_LIST_FLAG_SDT_ACTUAL) != 0) {
+				// 同時に指定できないフラグ
+				if ((pList->Flags & SERVICE_INFO_LIST_FLAG_SELECTABLE_ONLY) != 0)
+					return FALSE;
+
+				LibISDB::AnalyzerFilter::SDTServiceList SDTList;
+				if (!pAnalyzer->GetSDTServiceList(&SDTList) || SDTList.empty())
+					return FALSE;
+				pList->ServiceList = static_cast<ServiceInfo2*>(std::malloc(sizeof(ServiceInfo2) * SDTList.size()));
+				if (pList->ServiceList == nullptr)
+					return FALSE;
+				pList->ServiceCount = static_cast<DWORD>(SDTList.size());
+
+				for (size_t i = 0; i < SDTList.size(); i++) {
+					ServiceInfo2 &Info = pList->ServiceList[i];
+					const LibISDB::AnalyzerFilter::SDTServiceInfo &SDTInfo = SDTList[i];
+
+					Info.Size = sizeof(ServiceInfo2);
+					Info.Flags = 0;
+					Info.Status = 0;
+					if (SDTInfo.FreeCAMode)
+						Info.Status |= SERVICE_INFO2_STATUS_FREE_CA_MODE;
+					Info.NetworkID = NetworkID;
+					Info.TransportStreamID = TransportStreamID;
+					Info.ServiceID = SDTInfo.ServiceID;
+					Info.ServiceType = SDTInfo.ServiceType;
+					Info.Reserved = 0;
+					Info.PMT_PID = 0xFFFF;
+					Info.PCR_PID = 0xFFFF;
+					StringCopy(Info.szServiceName, SDTInfo.ServiceName.c_str());
+					StringCopy(Info.szProviderName, SDTInfo.ProviderName.c_str());
+				}
+			} else {
+				LibISDB::AnalyzerFilter::ServiceList List;
+
+				if ((pList->Flags & SERVICE_INFO_LIST_FLAG_SELECTABLE_ONLY) != 0) {
+					if (!CoreEngine.GetSelectableServiceList(&List) || List.empty())
+						return FALSE;
+				} else {
+					if (!pAnalyzer->GetServiceList(&List) || List.empty())
+						return FALSE;
+				}
+
+				pList->ServiceList = static_cast<ServiceInfo2*>(std::malloc(sizeof(ServiceInfo2) * List.size()));
+				if (pList->ServiceList == nullptr)
+					return FALSE;
+				pList->ServiceCount = static_cast<DWORD>(List.size());
+
+				for (size_t i = 0; i < List.size(); i++) {
+					ServiceInfo2 &Info = pList->ServiceList[i];
+					Info.Size = sizeof(ServiceInfo2);
+					Info.Flags = 0;
+					AnalyzerServiceInfoToServiceInfo2(List[i], &Info);
+					Info.NetworkID = NetworkID;
+					Info.TransportStreamID = TransportStreamID;
+				}
 			}
 		}
 		return TRUE;

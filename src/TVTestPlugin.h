@@ -95,6 +95,9 @@
 	  ・MESSAGE_ISDARKMODECOLOR
 	  ・MESSAGE_SETWINDOWDARKMODE
 	  ・MESSAGE_GETELEMENTARYSTREAMINFOLIST
+	  ・MESSAGE_GETSERVICECOUNT
+	  ・MESSAGE_GETSERVICEINFO2
+	  ・MESSAGE_GETSERVICEINFOLIST
 	・以下のイベントを追加した
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
@@ -497,6 +500,9 @@ enum {
 	MESSAGE_ISDARKMODECOLOR,             // ダークモードの色かを取得
 	MESSAGE_SETWINDOWDARKMODE,           // ウィンドウをダークモードにする
 	MESSAGE_GETELEMENTARYSTREAMINFOLIST, // Elementary Stream (ES) の情報のリストを取得
+	MESSAGE_GETSERVICECOUNT,             // 全てのサービス数を取得
+	MESSAGE_GETSERVICEINFO2,             // サービスの情報を取得
+	MESSAGE_GETSERVICEINFOLIST,          // サービスの情報のリストを取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -704,15 +710,18 @@ inline bool MsgSetChannel(PluginParam *pParam, int Space, int Channel, WORD Serv
 #endif
 
 // 現在のサービス及びサービス数を取得する
-// サービスのインデックスが返る。エラー時は-1が返ります。
-// pNumServices が nullptr でない場合は、サービスの数が返されます。
+// サービスのインデックスが返ります。エラー時は-1が返ります。
+// インデックスは試聴可能なサービスの中での順序です。
+// pNumServices が nullptr でない場合は、試聴可能なサービスの数が返されます。
+// 全てのサービスの数を取得するには MsgGetServiceCount を使用します。
 inline int MsgGetService(PluginParam *pParam, int *pNumServices = nullptr)
 {
 	return (int)(*pParam->Callback)(pParam, MESSAGE_GETSERVICE, (LPARAM)pNumServices, 0);
 }
 
 // サービスを設定する
-// fByID=false の場合はインデックス、fByID=true の場合はサービスID
+// fByID=false の場合はインデックス、fByID=true の場合はサービス ID を Service に指定します。
+// インデックスは試聴可能なサービスの中での順序です。
 inline bool MsgSetService(PluginParam *pParam, int Service, bool fByID = false)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETSERVICE, Service, fByID) != 0;
@@ -760,6 +769,8 @@ enum { SERVICEINFO_SIZE_V1 = TVTEST_OFFSETOF(ServiceInfo, AudioComponentType) };
 // サービスの情報を取得する
 // 現在のチャンネルのサービスの情報を取得します。
 // 事前に ServiceInfo の Size メンバを設定しておきます。
+// 引数 Index には試聴可能なサービスの中でのインデックスを指定します。
+// 試聴できないサービスも含めた全てのサービスの情報を取得するには MsgGetServiceInfo2 を使用してください。
 // このメッセージでは取得できる映像/音声/字幕ストリームの数に制限がありますので、
 // 全てのストリームの情報を取得するには MsgGetElementaryStreamInfoList を使用してください。
 inline bool MsgGetServiceInfo(PluginParam *pParam, int Index, ServiceInfo *pInfo)
@@ -3520,6 +3531,94 @@ inline bool MsgGetElementaryStreamInfoList(PluginParam *pParam, ElementaryStream
 	return (*pParam->Callback)(pParam, MESSAGE_GETELEMENTARYSTREAMINFOLIST, (LPARAM)pList, 0) != FALSE;
 }
 
+// 全てのサービス数を取得
+// 現在のストリームのサービス数を取得します。
+// この数は PAT に含まれる全てのサービスの数で、試聴できないサービスも含まれます。
+// 試聴できるサービスの数を取得する場合は MsgGetService を使用します。
+inline int MsgGetServiceCount(PluginParam *pParam)
+{
+	return (int)(*pParam->Callback)(pParam, MESSAGE_GETSERVICECOUNT, 0, 0);
+}
+
+// サービス情報
+struct ServiceInfo2
+{
+	DWORD Size;               // 構造体のサイズ
+	DWORD Flags;              // フラグ(SERVICE_INFO2_FLAG_*)
+	DWORD Status;             // ステータス(SERVICE_INFO2_STATUS_*)
+	WORD NetworkID;           // ネットワーク ID
+	WORD TransportStreamID;   // トランスポートストリーム ID
+	WORD ServiceID;           // サービス ID
+	BYTE ServiceType;         // サービス形式種別
+	BYTE Reserved;            // 予約(現在は常に0)
+	WORD PMT_PID;             // PMT の PID (無効な場合 0xFFFF)
+	WORD PCR_PID;             // PCR の PID (無効な場合 0xFFFF)
+	WCHAR szServiceName[32];  // サービス名
+	WCHAR szProviderName[32]; // 事業者名
+};
+
+// サービス情報のフラグ
+enum {
+	SERVICE_INFO2_FLAG_BY_ID = 0x00000001U  // サービス ID から情報を取得
+};
+
+// サービス情報のステータスフラグ
+enum {
+	SERVICE_INFO2_STATUS_FREE_CA_MODE = 0x00000001  // 有料(free_CA_mode)
+};
+
+// サービスの情報を取得する
+// 現在のストリームのサービスの情報を取得します。
+// 事前に ServiceInfo2 の Size と Flags メンバを設定しておきます。
+// Flags に SERVICE_INFO2_FLAG_BY_ID が設定されている場合、引数 Service にはサービス ID を指定します。
+// それ以外の場合、Service にはインデックスを指定します。
+inline bool MsgGetServiceInfo2(PluginParam *pParam, int Service, ServiceInfo2 *pInfo)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_GETSERVICEINFO2, Service, (LPARAM)pInfo) != 0;
+}
+
+// サービス情報のリスト
+struct ServiceInfoList
+{
+	DWORD Size;                // 構造体のサイズ
+	DWORD Flags;               // フラグ(SERVICE_INFO_LIST_FLAG_*)
+	DWORD Reserved;            // 予約(現在は常に0)
+	DWORD ServiceCount;        // サービスの数
+	ServiceInfo2 *ServiceList; // サービスの情報(ServiceCount 分の情報が入る)
+};
+
+// サービス情報のリストのフラグ
+enum {
+	SERVICE_INFO_LIST_FLAG_SELECTABLE_ONLY = 0x00000001U, // 試聴可能なサービスのみ取得
+	SERVICE_INFO_LIST_FLAG_SDT_ACTUAL      = 0x00000002U  // SDT(actual) のサービス情報を取得
+};
+
+// サービスの情報のリストを取得
+// ServiceInfoList 構造体の Size と Flags メンバを設定して呼び出します。
+// ServiceCount メンバにサービスの数が、ServiceList メンバに ServiceCount の数分だけサービスの情報が返されます。
+// 不要になったら ServiceList メンバのメモリを MsgMemoryFree で解放します。
+// Flags に SERVICE_INFO_LIST_FLAG_SDT_ACTUAL が指定されている場合、PMT_PID と PCR_PID は取得されません。
+/*
+	// 全てのサービスの情報を取得する
+	ServiceInfoList List;
+	List.Size = sizeof(ServiceInfoList);
+	List.Flags = 0;
+	if (MsgGetServiceInfoList(pParam, &List)) {
+		// SrviceList に ServiceCount の数分の情報が取得される
+		for (DWORD i = 0; i < List.ServiceCount; i++) {
+			const ServiceInfo2 &Info = List.ServiceList[i];
+			...
+		}
+
+		// 不要になったら ServiceList のメモリを解放する
+		MsgMemoryFree(List.ServiceList);
+	}
+*/
+inline bool MsgGetServiceInfoList(PluginParam *pParam, ServiceInfoList *pList)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_GETSERVICEINFOLIST, (LPARAM)pList, 0) != FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
@@ -4382,6 +4481,23 @@ public:
 	{
 		pList->Size = sizeof(ElementaryStreamInfoList);
 		return MsgGetElementaryStreamInfoList(m_pParam, pList);
+	}
+
+	int GetServiceCount()
+	{
+		return MsgGetServiceCount(m_pParam);
+	}
+
+	bool GetServiceInfo2(int Service, ServiceInfo2 *pInfo)
+	{
+		pInfo->Size = sizeof(ServiceInfo2);
+		return MsgGetServiceInfo2(m_pParam, Service, pInfo);
+	}
+
+	bool GetServiceInfoList(ServiceInfoList *pList)
+	{
+		pList->Size = sizeof(ServiceInfoList);
+		return MsgGetServiceInfoList(m_pParam, pList);
 	}
 #endif
 };
