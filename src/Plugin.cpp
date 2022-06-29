@@ -230,7 +230,8 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo, ChannelInfo *pChanne
 	StringCopy(pChannelInfo->szChannelName, pChInfo->GetName());
 	if (pChannelInfo->Size >= CHANNELINFO_SIZE_V2) {
 		pChannelInfo->PhysicalChannel = pChInfo->GetPhysicalChannel();
-		pChannelInfo->ServiceIndex = 0;	// 使用不可
+		pChannelInfo->Reserved = 0;
+		pChannelInfo->ServiceType = pChInfo->GetServiceType();
 		pChannelInfo->ServiceID = pChInfo->GetServiceID();
 		if (pChannelInfo->Size == sizeof(ChannelInfo)) {
 			pChannelInfo->Flags = 0;

@@ -661,7 +661,12 @@ struct ChannelInfo
 	WCHAR szChannelName[64];            // チャンネル名
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 1)
 	int PhysicalChannel;                // 物理チャンネル番号(あまり信用できない)。不明の場合は0
+#if TVTEST_PLUGIN_VERSION < TVTEST_PLUGIN_VERSION_(0, 0, 15)
 	WORD ServiceIndex;                  // サービスのインデックス(現在は意味を無くしているので使わない)
+#else
+	BYTE Reserved;                      // 予約領域(現在は常に0)
+	BYTE ServiceType;                   // サービス形式種別
+#endif
 	WORD ServiceID;                     // サービスID
 	// サービスはチャンネルファイルで設定されているものが取得される
 	// サービスはユーザーが切り替えられるので、実際に視聴中のサービスがこれであるとは限らない
