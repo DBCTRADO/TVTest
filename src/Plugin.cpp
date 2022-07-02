@@ -3124,7 +3124,9 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			if (pServiceInfo == nullptr
 					|| pServiceInfo->Size != sizeof(ServiceInfo2)
-					|| (pServiceInfo->Flags & ~(SERVICE_INFO2_FLAG_BY_ID)) != 0)
+					|| (pServiceInfo->Flags & ~(
+							SERVICE_INFO2_FLAG_BY_ID |
+							SERVICE_INFO2_FLAG_BY_SELECTABLE_INDEX)) != 0)
 				return FALSE;
 
 			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
@@ -3134,8 +3136,22 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			LibISDB::AnalyzerFilter::ServiceInfo Info;
 
-			if ((pServiceInfo->Flags & SERVICE_INFO2_FLAG_BY_ID) != 0) {
+			if (Service == -1) {
+				const uint16_t ServiceID = CoreEngine.GetServiceID();
+				if (ServiceID == LibISDB::SERVICE_ID_INVALID)
+					return FALSE;
+				if (!pAnalyzer->GetServiceInfoByID(ServiceID, &Info))
+					return FALSE;
+			} else if ((pServiceInfo->Flags & SERVICE_INFO2_FLAG_BY_ID) != 0) {
+				if ((pServiceInfo->Flags & SERVICE_INFO2_FLAG_BY_SELECTABLE_INDEX) != 0)
+					return FALSE;
 				if (!pAnalyzer->GetServiceInfoByID(static_cast<uint16_t>(Service), &Info))
+					return FALSE;
+			} else if ((pServiceInfo->Flags & SERVICE_INFO2_FLAG_BY_SELECTABLE_INDEX) != 0) {
+				const uint16_t ServiceID = CoreEngine.GetSelectableServiceID(Service);
+				if (ServiceID == LibISDB::SERVICE_ID_INVALID)
+					return FALSE;
+				if (!pAnalyzer->GetServiceInfoByID(ServiceID, &Info))
 					return FALSE;
 			} else {
 				if (!pAnalyzer->GetServiceInfo(Service, &Info))

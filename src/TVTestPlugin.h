@@ -3564,7 +3564,8 @@ struct ServiceInfo2
 
 // サービス情報のフラグ
 enum {
-	SERVICE_INFO2_FLAG_BY_ID = 0x00000001U  // サービス ID から情報を取得
+	SERVICE_INFO2_FLAG_BY_ID               = 0x00000001U, // サービス ID から情報を取得
+	SERVICE_INFO2_FLAG_BY_SELECTABLE_INDEX = 0x00000002U  // 試聴可能なサービスの中でのインデックスから情報を取得
 };
 
 // サービス情報のステータスフラグ
@@ -3577,6 +3578,7 @@ enum {
 // 事前に ServiceInfo2 の Size と Flags メンバを設定しておきます。
 // Flags に SERVICE_INFO2_FLAG_BY_ID が設定されている場合、引数 Service にはサービス ID を指定します。
 // それ以外の場合、Service にはインデックスを指定します。
+// Service が -1 の場合、現在選択されているサービスの情報が取得されます。
 inline bool MsgGetServiceInfo2(PluginParam *pParam, int Service, ServiceInfo2 *pInfo)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_GETSERVICEINFO2, Service, (LPARAM)pInfo) != 0;
