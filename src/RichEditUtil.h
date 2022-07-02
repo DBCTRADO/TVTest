@@ -43,7 +43,7 @@ namespace TVTest
 		bool LoadRichEditLib();
 		void UnloadRichEditLib();
 		bool IsRichEditLibLoaded() const { return m_hLib != nullptr; }
-		LPCTSTR GetWindowClassName() const { return TEXT("RichEdit20W"); }
+		LPCTSTR GetWindowClassName() const { return TEXT("RICHEDIT50W"); }
 
 		static bool LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT *pcf);
 		static bool LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT2 *pcf);

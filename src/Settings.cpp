@@ -380,6 +380,11 @@ bool CSettings::Read(LPCTSTR pszValueName, LOGFONT *pFont)
 					pFont->lfStrikeOut = (Flags & FONT_FLAG_STRIKEOUT) != 0;
 				}
 				break;
+			case 4:
+				// RichEdit 5.0はlfCharSetの値をDEFAULT_CHARSETに設定すると
+				// 意図しないフォント変更が発生するため、lfCharSetを読み出す
+				pFont->lfCharSet = ::StrToInt(q);
+				break;
 			}
 		} else if (i == 0) {
 			return false;
@@ -400,9 +405,10 @@ bool CSettings::Write(LPCTSTR pszValueName, const LOGFONT *pFont)
 		Flags |= FONT_FLAG_UNDERLINE;
 	if (pFont->lfStrikeOut)
 		Flags |= FONT_FLAG_STRIKEOUT;
+	// フォント選択画面でのlfCharSetを保存するように変更
 	StringPrintf(
-		szData, TEXT("%s,%d,%d,%u"),
-		pFont->lfFaceName, pFont->lfHeight, pFont->lfWeight, Flags);
+		szData, TEXT("%s,%d,%d,%u,%u"),
+		pFont->lfFaceName, pFont->lfHeight, pFont->lfWeight, Flags, pFont->lfCharSet);
 	return Write(pszValueName, szData);
 }
 
