@@ -98,6 +98,7 @@
 	  ・MESSAGE_GETSERVICECOUNT
 	  ・MESSAGE_GETSERVICEINFO2
 	  ・MESSAGE_GETSERVICEINFOLIST
+	  ・MESSAGE_GETAUDIOINFO
 	・以下のイベントを追加した
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
@@ -503,6 +504,7 @@ enum {
 	MESSAGE_GETSERVICECOUNT,             // 全てのサービス数を取得
 	MESSAGE_GETSERVICEINFO2,             // サービスの情報を取得
 	MESSAGE_GETSERVICEINFOLIST,          // サービスの情報のリストを取得
+	MESSAGE_GETAUDIOINFO,                // 音声の情報を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -3643,6 +3645,32 @@ inline bool MsgGetServiceInfoList(PluginParam *pParam, ServiceInfoList *pList)
 	return (*pParam->Callback)(pParam, MESSAGE_GETSERVICEINFOLIST, (LPARAM)pList, 0) != FALSE;
 }
 
+// 音声の情報
+struct AudioInfo
+{
+	DWORD Size;                // 構造体のサイズ
+	DWORD Status;              // 状態フラグ(AUDIO_INFO_STATUS_*)
+	DWORD Frequency;           // サンプリング周波数
+	BYTE OriginalChannelCount; // 元のチャンネル数
+	BYTE OutputChannelCount;   // 出力チャンネル数(出力されていなければ0)
+	WORD Reserved;             // 予約(現在は常に0)
+};
+
+// 音声情報の状態フラグ
+enum {
+	AUDIO_INFO_STATUS_DUAL_MONO  = 0x00000001U, // デュアルモノラル
+	AUDIO_INFO_STATUS_SPDIF      = 0x00000002U, // S/PDIF パススルー
+	AUDIO_INFO_STATUS_LEFT_ONLY  = 0x00000004U, // 左チャンネルのみ出力(主にデュアルモノラル時)
+	AUDIO_INFO_STATUS_RIGHT_ONLY = 0x00000008U  // 右チャンネルのみ出力(主にデュアルモノラル時)
+};
+
+// 音声の情報を取得
+// AudioInfo 構造体の Size メンバを設定して呼び出します。
+inline bool MsgGetAudioInfo(PluginParam *pParam, AudioInfo *pInfo)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_GETAUDIOINFO, (LPARAM)pInfo, 0) != FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
@@ -4685,6 +4713,13 @@ public:
 	{
 		pList->Size = sizeof(ServiceInfoList);
 		return MsgGetServiceInfoList(m_pParam, pList);
+	}
+
+	// 音声の情報を取得
+	bool GetAudioInfo(AudioInfo *pInfo)
+	{
+		pInfo->Size = sizeof(AudioInfo);
+		return MsgGetAudioInfo(m_pParam, pInfo);
 	}
 #endif
 };

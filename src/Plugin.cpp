@@ -3249,6 +3249,47 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		}
 		return TRUE;
 
+	case MESSAGE_GETAUDIOINFO:
+		{
+			AudioInfo *pInfo = reinterpret_cast<AudioInfo*>(lParam1);
+
+			if (pInfo == nullptr
+					|| pInfo->Size != sizeof(AudioInfo))
+				return FALSE;
+
+			LibISDB::ViewerFilter *pViewer =
+				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			if (pViewer == nullptr)
+				return FALSE;
+			LibISDB::ViewerFilter::AudioInfo Info;
+			if (!pViewer->GetAudioInfo(&Info))
+				return FALSE;
+
+			pInfo->Status = 0;
+			if (Info.DualMono)
+				pInfo->Status |= AUDIO_INFO_STATUS_DUAL_MONO;
+			if (pViewer->IsSPDIFPassthrough())
+				pInfo->Status |= AUDIO_INFO_STATUS_SPDIF;
+
+			if (Info.OriginalChannelCount == 2) {
+				switch (pViewer->GetStereoMode()) {
+				case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left:
+					pInfo->Status |= AUDIO_INFO_STATUS_LEFT_ONLY;
+					break;
+				case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right:
+					pInfo->Status |= AUDIO_INFO_STATUS_RIGHT_ONLY;
+					break;
+				}
+			}
+
+			pInfo->Frequency = Info.Frequency;
+			pInfo->OriginalChannelCount = Info.OriginalChannelCount;
+			pInfo->OutputChannelCount = pViewer->GetAudioOutputChannelCount();
+			if (pInfo->OutputChannelCount == LibISDB::ViewerFilter::AudioChannelCount_Invalid)
+				pInfo->OutputChannelCount = 0;
+		}
+		return TRUE;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"), Message);
