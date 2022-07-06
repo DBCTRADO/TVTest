@@ -623,7 +623,7 @@ inline void *MsgMemoryAlloc(PluginParam *pParam, DWORD Size)
 	return (void*)(*pParam->Callback)(pParam, MESSAGE_MEMORYALLOC, (LPARAM)(void*)nullptr, Size);
 }
 
-// メモリ開放
+// メモリ解放
 inline void MsgMemoryFree(PluginParam *pParam, void *pData)
 {
 	(*pParam->Callback)(pParam, MESSAGE_MEMORYALLOC, (LPARAM)pData, 0);
@@ -671,9 +671,9 @@ struct ChannelInfo
 	BYTE ServiceType;                   // サービス形式種別
 #endif
 	WORD ServiceID;                     // サービスID
-	// サービスはチャンネルファイルで設定されているものが取得される
-	// サービスはユーザーが切り替えられるので、実際に視聴中のサービスがこれであるとは限らない
-	// 実際に視聴中のサービスは MESSAGE_GETSERVICE で取得できる
+	// サービスはチャンネルファイルで設定されているものが取得されます。
+	// サービスはユーザーが切り替えられるので、実際に視聴中のサービスがこれであるとは限りません。
+	// 実際に視聴中のサービスは MESSAGE_GETSERVICEINFO または MESSAGE_GETSERVICEINFO2 で取得できます。
 #endif
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 12)
 	DWORD Flags;                        // 各種フラグ(CHANNEL_FLAG_*)
@@ -736,7 +736,7 @@ inline bool MsgSetService(PluginParam *pParam, int Service, bool fByID = false)
 }
 
 // チューニング空間名を取得する
-// チューニング空間名の長さが返ります。Indexが範囲外の場合は0が返ります。
+// チューニング空間名の長さが返ります。Index が範囲外の場合は0が返ります。
 // pszName を nullptr で呼べば長さだけを取得できます。
 // MaxLength には pszName の先に格納できる最大の要素数(終端の空文字を含む)を指定します。
 inline int MsgGetTuningSpaceName(PluginParam *pParam, int Index, LPWSTR pszName, int MaxLength)
@@ -1026,7 +1026,7 @@ struct VideoInfo
 };
 
 // 映像の情報を取得する
-// 事前に VideoInfo の Sizeメンバを設定しておきます。
+// 事前に VideoInfo の Size メンバを設定しておきます。
 inline bool MsgGetVideoInfo(PluginParam *pParam, VideoInfo *pInfo)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_GETVIDEOINFO, (LPARAM)pInfo, 0) != 0;
@@ -1125,7 +1125,7 @@ inline bool MsgSetAlwaysOnTop(PluginParam *pParam, bool fAlwaysOnTop)
 
 // 画像をキャプチャする
 // 戻り値はパック DIB データ(BITMAPINFOHEADER + ピクセルデータ)へのポインタです。
-// 不要になった場合は MsgMemoryFree で開放します。
+// 不要になった場合は MsgMemoryFree で解放します。
 // キャプチャできなかった場合は nullptr が返ります。
 inline void *MsgCaptureImage(PluginParam *pParam, DWORD Flags = 0)
 {
@@ -3255,6 +3255,7 @@ inline bool MsgConvertTime(PluginParam *pParam, ConvertTimeInfo *pInfo)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_CONVERTTIME, (LPARAM)pInfo, 0) != FALSE;
 }
+
 // EPG 日時を変換する
 inline bool MsgConvertEpgTimeTo(
 	PluginParam *pParam, const SYSTEMTIME &EpgTime, DWORD Type, SYSTEMTIME *pDstTime)
@@ -3331,6 +3332,8 @@ struct VarStringFormatInfo
 // 変数文字列を使って文字列をフォーマット
 // 変数文字列は、%event-name% などの変数が含まれた文字列です。
 // このような文字列の変数を展開した文字列を取得できます。
+// VarStringFormatInfo::pszResult に結果の文字列が返されるので、
+// 不要になったら MsgMemoryFree で解放します。
 // 変数の展開に必要な、現在の番組や日時などの情報をコンテキストと呼びます。
 // MsgGetVarStringContext で、その時点のコンテキストを取得できます。
 /*
@@ -3650,7 +3653,7 @@ struct AudioInfo
 {
 	DWORD Size;                // 構造体のサイズ
 	DWORD Status;              // 状態フラグ(AUDIO_INFO_STATUS_*)
-	DWORD Frequency;           // サンプリング周波数
+	DWORD Frequency;           // サンプリング周波数(Hz)
 	BYTE OriginalChannelCount; // 元のチャンネル数
 	BYTE OutputChannelCount;   // 出力チャンネル数(出力されていなければ0)
 	WORD Reserved;             // 予約(現在は常に0)
@@ -3985,7 +3988,7 @@ public:
 	}
 
 	// 画像をキャプチャする
-	// (不要になったデータは MemoryFree で開放)
+	// (不要になったデータは MemoryFree で解放)
 	void *CaptureImage(DWORD Flags = 0)
 	{
 		return MsgCaptureImage(m_pParam, Flags);
@@ -4192,6 +4195,7 @@ public:
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 10)
 	// ロゴを取得
+	// (不要になったら HBITMAP を DeleteObject で解放)
 	HBITMAP GetLogo(WORD NetworkID, WORD ServiceID, BYTE LogoType)
 	{
 		return MsgGetLogo(m_pParam, NetworkID, ServiceID, LogoType);
@@ -4653,6 +4657,7 @@ public:
 	}
 
 	// 変数文字列を使って文字列をフォーマット
+	// (不要になったら VarStringFormatInfo::pszResult を MemoryFree で解放)
 	bool FormatVarString(VarStringFormatInfo *pInfo)
 	{
 		pInfo->Size = sizeof(VarStringFormatInfo);
