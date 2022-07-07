@@ -4692,10 +4692,24 @@ public:
 	}
 
 	// Elementary Stream (ES) の情報のリストを取得
+	// 事前に ElementaryStreamInfoList の Media / Flags / ServiceID メンバを設定して呼び出します。
 	// (不要になったら ElementaryStreamInfoList::ESList を MemoryFree で解放)
 	bool GetElementaryStreamInfoList(ElementaryStreamInfoList *pList)
 	{
 		pList->Size = sizeof(ElementaryStreamInfoList);
+		return MsgGetElementaryStreamInfoList(m_pParam, pList);
+	}
+
+	// Elementary Stream (ES) の情報のリストを取得
+	// (不要になったら ElementaryStreamInfoList::ESList を MemoryFree で解放)
+	bool GetElementaryStreamInfoList(
+		ElementaryStreamInfoList *pList, ElementaryStreamMediaType Media,
+		WORD ServiceID = 0, DWORD Flags = 0)
+	{
+		pList->Size = sizeof(ElementaryStreamInfoList);
+		pList->Media = Media;
+		pList->Flags = Flags;
+		pList->ServiceID = ServiceID;
 		return MsgGetElementaryStreamInfoList(m_pParam, pList);
 	}
 
@@ -4706,17 +4720,36 @@ public:
 	}
 
 	// サービスの情報を取得
+	// 事前に ServiceInfo2 の Flags メンバを設定して呼び出します。
 	bool GetServiceInfo2(int Service, ServiceInfo2 *pInfo)
 	{
 		pInfo->Size = sizeof(ServiceInfo2);
 		return MsgGetServiceInfo2(m_pParam, Service, pInfo);
 	}
 
+	// サービスの情報を取得
+	bool GetServiceInfo2(int Service, ServiceInfo2 *pInfo, DWORD Flags)
+	{
+		pInfo->Size = sizeof(ServiceInfo2);
+		pInfo->Flags = Flags;
+		return MsgGetServiceInfo2(m_pParam, Service, pInfo);
+	}
+
 	// サービスの情報のリストを取得
+	// 事前に ServiceInfoList の Flags メンバを設定して呼び出します。
 	// (不要になったら ServiceInfoList::ServiceList を MemoryFree で解放)
 	bool GetServiceInfoList(ServiceInfoList *pList)
 	{
 		pList->Size = sizeof(ServiceInfoList);
+		return MsgGetServiceInfoList(m_pParam, pList);
+	}
+
+	// サービスの情報のリストを取得
+	// (不要になったら ServiceInfoList::ServiceList を MemoryFree で解放)
+	bool GetServiceInfoList(ServiceInfoList *pList, DWORD Flags)
+	{
+		pList->Size = sizeof(ServiceInfoList);
+		pList->Flags = Flags;
 		return MsgGetServiceInfoList(m_pParam, pList);
 	}
 
