@@ -83,6 +83,7 @@ CTitleBar::CTitleBar()
 	, m_ClickItem(-1)
 	, m_fMaximized(false)
 	, m_fFullscreen(false)
+	, m_fSnapLayoutsSupport(Util::OS::IsWindows11OrLater())
 	, m_pEventHandler(nullptr)
 {
 	GetSystemFont(DrawUtil::FontType::Caption, &m_StyleFont);
@@ -309,10 +310,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_SIZE:
-		if (m_HotItem >= 0) {
-			UpdateItem(m_HotItem);
-			m_HotItem = -1;
-		}
+		SetHotItem(-1);
 		UpdateTooltipsRect();
 		return 0;
 
@@ -334,37 +332,17 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (GetCapture() == hwnd) {
 				if (HotItem != m_ClickItem)
 					HotItem = -1;
-				if (HotItem != m_HotItem) {
-					int OldHotItem;
-
-					OldHotItem = m_HotItem;
-					m_HotItem = HotItem;
-					if (OldHotItem >= 0)
-						UpdateItem(OldHotItem);
-					if (m_HotItem >= 0)
-						UpdateItem(m_HotItem);
-				}
+				SetHotItem(HotItem);
 			} else {
-				if (HotItem != m_HotItem) {
-					int OldHotItem;
-
-					OldHotItem = m_HotItem;
-					m_HotItem = HotItem;
-					if (OldHotItem >= 0)
-						UpdateItem(OldHotItem);
-					if (m_HotItem >= 0)
-						UpdateItem(m_HotItem);
-				}
+				SetHotItem(HotItem);
 				m_MouseLeaveTrack.OnMouseMove();
 			}
 		}
 		return 0;
 
 	case WM_MOUSELEAVE:
-		if (m_HotItem >= 0) {
-			UpdateItem(m_HotItem);
-			m_HotItem = -1;
-		}
+		SetHotItem(-1);
+
 		if (m_MouseLeaveTrack.OnMouseLeave()) {
 			if (m_pEventHandler)
 				m_pEventHandler->OnMouseLeave();
@@ -372,10 +350,24 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_NCMOUSEMOVE:
+		if (wParam == HTMAXBUTTON) {
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+			::ScreenToClient(hwnd, &pt);
+			const int HotItem = HitTest(pt.x, pt.y);
+
+			if (HotItem != m_HotItem) {
+				SetHotItem(HotItem);
+				if (m_HotItem > 0)
+					::SetCursor(GetActionCursor());
+			}
+		}
+
 		m_MouseLeaveTrack.OnNcMouseMove();
 		return 0;
 
 	case WM_NCMOUSELEAVE:
+		SetHotItem(-1);
+
 		if (m_MouseLeaveTrack.OnNcMouseLeave()) {
 			if (m_pEventHandler)
 				m_pEventHandler->OnMouseLeave();
@@ -397,6 +389,14 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			::SetCapture(hwnd);
 		}
 		return 0;
+
+	case WM_NCLBUTTONDOWN:
+		if (wParam == HTMAXBUTTON && m_HotItem == ITEM_MAXIMIZE) {
+			m_ClickItem = ITEM_MAXIMIZE;
+			::SetCapture(hwnd);
+			return 0;
+		}
+		break;
 
 	case WM_RBUTTONUP:
 		if (m_HotItem == ITEM_LABEL) {
@@ -447,10 +447,54 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_SETCURSOR:
-		if (LOWORD(lParam) == HTCLIENT) {
-			if (m_HotItem > 0) {
-				::SetCursor(GetActionCursor());
-				return TRUE;
+		{
+			const int HitTestCode = LOWORD(lParam);
+
+			if (HitTestCode == HTCLIENT || HitTestCode == HTMAXBUTTON) {
+				if (m_HotItem > 0) {
+					::SetCursor(GetActionCursor());
+					return TRUE;
+				}
+			}
+		}
+		break;
+
+	case WM_NCHITTEST:
+		/*
+			Windows 11 のスナップレイアウトを表示させるには、最大化ボタンの位置で HTMAXBUTTON を返す必要がある。
+			https://docs.microsoft.com/ja-jp/windows/apps/desktop/modernize/apply-snap-layout-menu
+		*/
+		if (m_fSnapLayoutsSupport && !m_fFullscreen && ::GetCapture() != hwnd) {
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+			RECT rc;
+
+			::ScreenToClient(hwnd, &pt);
+			::GetClientRect(hwnd, &rc);
+			if (::PtInRect(&rc, pt)) {
+				const int Item = HitTest(pt.x, pt.y);
+
+#if 0
+				switch (Item) {
+				case ITEM_LABEL:
+					if (PtInIcon(pt.x, pt.y))
+						return HTSYSMENU;
+					return HTCAPTION;
+
+				case ITEM_MINIMIZE:
+					return HTMINBUTTON;
+
+				case ITEM_MAXIMIZE:
+					return HTMAXBUTTON;
+
+				case ITEM_CLOSE:
+					return HTCLOSE;
+				}
+#else
+				if (Item == ITEM_MAXIMIZE)
+					return HTMAXBUTTON;
+#endif
+
+				break;
 			}
 		}
 		break;
@@ -671,6 +715,19 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 	::SetTextColor(hdc, crOldTextColor);
 	::SetBkMode(hdc, OldBkMode);
 	::SelectObject(hdc, hfontOld);
+}
+
+
+void CTitleBar::SetHotItem(int Item)
+{
+	if (Item != m_HotItem) {
+		const int OldHotItem = m_HotItem;
+		m_HotItem = Item;
+		if (OldHotItem >= 0)
+			UpdateItem(OldHotItem);
+		if (m_HotItem >= 0)
+			UpdateItem(m_HotItem);
+	}
 }
 
 

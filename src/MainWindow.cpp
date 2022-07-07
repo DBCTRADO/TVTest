@@ -180,7 +180,7 @@ CMainWindow::CMainWindow(CAppMain &App)
 
 	m_ThinFrameWidth = std::max(::MulDiv(1, DPI, 96), 1);
 
-	if (Util::OS::IsWindows10()) {
+	if (Util::OS::IsWindows10OrLater()) {
 		m_fCustomFrame = true;
 		m_CustomFrameWidth = m_ThinFrameWidth;
 	}

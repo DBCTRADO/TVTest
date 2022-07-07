@@ -1692,7 +1692,7 @@ bool IsWindows8_1()
 
 bool IsWindows10()
 {
-	return CheckOSVersion(10, 0);
+	return VerifyOSVersion(10, VER_EQUAL, 0, VER_EQUAL, 22000, VER_LESS);
 }
 
 bool IsWindowsXPOrLater()
@@ -1748,6 +1748,17 @@ bool IsWindows10_19H1OrLater()
 bool IsWindows10_20H1OrLater()
 {
 	return CheckOSVersionLater(10, 0, 19041);
+}
+
+bool IsWindows11()
+{
+	// もし Windows 12 が出たら変える必要がある
+	return CheckOSVersionLater(10, 0, 22000);
+}
+
+bool IsWindows11OrLater()
+{
+	return CheckOSVersionLater(10, 0, 22000);
 }
 
 

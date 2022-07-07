@@ -143,6 +143,7 @@ namespace TVTest
 		CMouseLeaveTrack m_MouseLeaveTrack;
 		bool m_fMaximized;
 		bool m_fFullscreen;
+		bool m_fSnapLayoutsSupport;
 		CEventHandler *m_pEventHandler;
 
 		static const LPCTSTR CLASS_NAME;
@@ -156,6 +157,7 @@ namespace TVTest
 		bool PtInIcon(int x, int y) const;
 		void UpdateTooltipsRect();
 		void Draw(HDC hdc, const RECT &PaintRect);
+		void SetHotItem(int Item);
 
 	// CCustomWindow
 		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

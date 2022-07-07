@@ -299,6 +299,8 @@ namespace TVTest
 			bool IsWindows10RS5OrLater();
 			bool IsWindows10_19H1OrLater();
 			bool IsWindows10_20H1OrLater();
+			bool IsWindows11();
+			bool IsWindows11OrLater();
 
 		}	// namespace OS
 
