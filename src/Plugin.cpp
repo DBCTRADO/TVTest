@@ -3290,6 +3290,50 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		}
 		return TRUE;
 
+	case MESSAGE_GETELEMENTARYSTREAMCOUNT:
+		{
+			const ElementaryStreamMediaType Media = static_cast<ElementaryStreamMediaType>(lParam1);
+			WORD ServiceID = static_cast<WORD>(lParam2);
+
+			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			if (pAnalyzer == nullptr)
+				return 0;
+
+			if (ServiceID == 0) {
+				ServiceID = CoreEngine.GetServiceID();
+				if (ServiceID == LibISDB::SERVICE_ID_INVALID)
+					return 0;
+			}
+			const int ServiceIndex = pAnalyzer->GetServiceIndexByID(ServiceID);
+			if (ServiceIndex < 0)
+				return 0;
+
+			switch (Media) {
+			case ES_MEDIA_ALL:
+				// TODO: AnalyzerFilter に GetESCount を追加する。
+				{
+					LibISDB::AnalyzerFilter::ServiceInfo Info;
+					if (!pAnalyzer->GetServiceInfo(ServiceIndex, &Info))
+						return 0;
+					return Info.ESList.size();
+				}
+
+			case ES_MEDIA_VIDEO:
+				return pAnalyzer->GetVideoESCount(ServiceIndex);
+
+			case ES_MEDIA_AUDIO:
+				return pAnalyzer->GetAudioESCount(ServiceIndex);
+
+			case ES_MEDIA_CAPTION:
+				return pAnalyzer->GetCaptionESCount(ServiceIndex);
+
+			case ES_MEDIA_DATA_CARROUSEL:
+				return pAnalyzer->GetDataCarrouselESCount(ServiceIndex);
+			}
+		}
+		return 0;
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"), Message);

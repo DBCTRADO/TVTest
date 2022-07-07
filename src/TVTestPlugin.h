@@ -99,6 +99,7 @@
 	  ・MESSAGE_GETSERVICEINFO2
 	  ・MESSAGE_GETSERVICEINFOLIST
 	  ・MESSAGE_GETAUDIOINFO
+	  ・MESSAGE_GETELEMENTARYSTREAMCOUNT
 	・以下のイベントを追加した
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
@@ -505,6 +506,7 @@ enum {
 	MESSAGE_GETSERVICEINFO2,             // サービスの情報を取得
 	MESSAGE_GETSERVICEINFOLIST,          // サービスの情報のリストを取得
 	MESSAGE_GETAUDIOINFO,                // 音声の情報を取得
+	MESSAGE_GETELEMENTARYSTREAMCOUNT,    // Elementary Stream (ES) の数を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -760,7 +762,7 @@ struct ServiceInfo
 	DWORD Size;                 // 構造体のサイズ
 	WORD ServiceID;             // サービスID
 	WORD VideoPID;              // ビデオストリームのPID
-	int NumAudioPIDs;           // 音声PIDの数
+	int NumAudioPIDs;           // 音声PIDの数(最大4まで)
 	WORD AudioPID[4];           // 音声ストリームのPID
 	WCHAR szServiceName[32];    // サービス名
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 2)
@@ -1321,7 +1323,7 @@ inline bool MsgSetNextChannel(PluginParam *pParam, bool fNext = true)
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 2)
 
 // 現在の音声ストリームを取得する
-// 音声ストリームの数は MESSAGE_GETSERVICEINFO で取得できます。
+// 音声ストリームの数は MsgGetAudioStreamCount または MsgGetServiceInfo で取得できます。
 inline int MsgGetAudioStream(PluginParam *pParam)
 {
 	return (int)(*pParam->Callback)(pParam, MESSAGE_GETAUDIOSTREAM, 0, 0);
@@ -3674,6 +3676,19 @@ inline bool MsgGetAudioInfo(PluginParam *pParam, AudioInfo *pInfo)
 	return (*pParam->Callback)(pParam, MESSAGE_GETAUDIOINFO, (LPARAM)pInfo, 0) != FALSE;
 }
 
+// Elementary Stream (ES) の数を取得
+// ServiceID が0の場合、現在のサービスになります。
+inline int MsgGetElementaryStreamCount(PluginParam *pParam, ElementaryStreamMediaType Media, WORD ServiceID = 0)
+{
+	return (int)(*pParam->Callback)(pParam, MESSAGE_GETELEMENTARYSTREAMCOUNT, (LPARAM)Media, ServiceID);
+}
+
+// 音声ストリームの数を取得
+inline int MsgGetAudioStreamCount(PluginParam *pParam)
+{
+	return MsgGetElementaryStreamCount(pParam, ES_MEDIA_AUDIO);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
@@ -4758,6 +4773,18 @@ public:
 	{
 		pInfo->Size = sizeof(AudioInfo);
 		return MsgGetAudioInfo(m_pParam, pInfo);
+	}
+
+	// Elementary Stream (ES) の数を取得
+	int GetElementaryStreamCount(ElementaryStreamMediaType Media, WORD ServiceID = 0)
+	{
+		return MsgGetElementaryStreamCount(m_pParam, Media, ServiceID);
+	}
+
+	// 音声ストリームの数を取得
+	int GetAudioStreamCount()
+	{
+		return MsgGetAudioStreamCount(m_pParam);
 	}
 #endif
 };
