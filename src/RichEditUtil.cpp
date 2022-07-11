@@ -55,7 +55,7 @@ CRichEditUtil::~CRichEditUtil()
 bool CRichEditUtil::LoadRichEditLib()
 {
 	if (m_hLib == nullptr) {
-		m_hLib = Util::LoadSystemLibrary(TEXT("Riched20.dll"));
+		m_hLib = Util::LoadSystemLibrary(TEXT("Msftedit.dll"));
 		if (m_hLib == nullptr)
 			return false;
 	}
