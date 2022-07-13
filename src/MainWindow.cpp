@@ -2887,10 +2887,8 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 					if (m_App.RecordManager.IsRecording())
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_RECORD);
 
-					if (fUpdateEventInfo) {
+					if (fUpdateEventInfo)
 						m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_PROGRAMINFO);
-						m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
-					}
 					break;
 
 				case PANEL_ID_CHANNEL:
@@ -2911,6 +2909,11 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 				case PANEL_ID_PROGRAMLIST:
 					if (fUpdateEventInfo)
 						m_App.Panel.UpdateContent();
+					break;
+
+				case PANEL_ID_CONTROL:
+					if (fUpdateEventInfo)
+						m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
 					break;
 				}
 			}
