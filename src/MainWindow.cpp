@@ -2896,7 +2896,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 					if (!m_App.EpgOptions.IsEpgDataLoading()) {
 						if (m_App.Panel.ChannelPanel.QueryUpdate()) {
 							m_App.Panel.ChannelPanel.UpdateAllChannels();
-						} else if (fUpdateEventInfo) {
+						} else if (!!(UpdateStatus & CCoreEngine::StatusFlag::EventInfo)) {
 							CAppCore::StreamIDInfo Info;
 							if (m_App.Core.GetCurrentStreamIDInfo(&Info))
 								m_App.Panel.ChannelPanel.UpdateChannels(Info.NetworkID, Info.TransportStreamID);
