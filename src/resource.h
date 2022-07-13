@@ -507,9 +507,6 @@
 #define CM_AUDIOSTREAM_LAST                     19169
 #define CM_AUDIO_FIRST                          19170
 #define CM_AUDIO_LAST                           19189
-#define CM_STEREOMODE_STEREO                    19190
-#define CM_STEREOMODE_LEFT                      19191
-#define CM_STEREOMODE_RIGHT                     19192
 
 #define CM_MULTIVIEW_SWITCH                     19200
 #define CM_MULTIVIEW_FIRST                      19210

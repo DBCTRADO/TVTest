@@ -1501,29 +1501,6 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		return SendPluginMessage(pParam, Message, lParam1, lParam2);
 
 	case MESSAGE_GETSTEREOMODE:
-#if 0	// ver.0.9.0 より前
-		return GetAppClass().UICore.GetStereoMode();
-#else
-		{
-			int StereoMode;
-
-			switch (GetAppClass().UICore.GetActualDualMonoMode()) {
-			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
-				StereoMode = STEREOMODE_LEFT;
-				break;
-			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
-				StereoMode = STEREOMODE_RIGHT;
-				break;
-			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
-			default:
-				StereoMode = STEREOMODE_STEREO;
-				break;
-			}
-
-			return StereoMode;
-		}
-#endif
-
 	case MESSAGE_SETSTEREOMODE:
 		return SendPluginMessage(pParam, Message, lParam1, lParam2);
 
@@ -3780,24 +3757,47 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			return pUICore->SetVolume(Volume, true);
 		}
 
-	case MESSAGE_SETSTEREOMODE:
-#if 0	// ver.0.9.0 より前
-		return GetAppClass().UICore.SetStereoMode(static_cast<LibISDB::DirectShow::AudioDecoderFilter::StereoMode>(pParam->lParam1));
-#else
+	case MESSAGE_GETSTEREOMODE:
 		{
-			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode;
+			int StereoMode;
 
-			switch ((int)pParam->lParam1) {
-			case STEREOMODE_STEREO: Mode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both; break;
-			case STEREOMODE_LEFT:   Mode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main; break;
-			case STEREOMODE_RIGHT:  Mode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;  break;
+			switch (GetAppClass().UICore.GetDualMonoMode()) {
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
+				StereoMode = STEREOMODE_LEFT;
+				break;
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
+				StereoMode = STEREOMODE_RIGHT;
+				break;
+			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
+			default:
+				StereoMode = STEREOMODE_STEREO;
+				break;
+			}
+
+			return StereoMode;
+		}
+
+	case MESSAGE_SETSTEREOMODE:
+		{
+			const int StereoMode = static_cast<int>(pParam->lParam1);
+			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode DecoderMode;
+
+			switch (StereoMode) {
+			case STEREOMODE_LEFT:
+				DecoderMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
+				break;
+			case STEREOMODE_RIGHT:
+				DecoderMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
+				break;
+			case STEREOMODE_STEREO:
+				DecoderMode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
+				break;
 			default:
 				return FALSE;
 			}
 
-			return GetAppClass().UICore.SetDualMonoMode(Mode);
+			return GetAppClass().UICore.SetDualMonoMode(DecoderMode);
 		}
-#endif
 
 	case MESSAGE_SETFULLSCREEN:
 		return GetAppClass().UICore.SetFullscreen(pParam->lParam1 != 0);
@@ -5308,28 +5308,6 @@ void CPluginManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilt
 		break;
 	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
 		StereoMode = STEREOMODE_STEREO;
-		break;
-	default:
-		return;
-	}
-
-	SendEvent(EVENT_STEREOMODECHANGE, StereoMode);
-}
-
-
-void CPluginManager::OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
-{
-	int StereoMode;
-
-	switch (Mode) {
-	case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo:
-		StereoMode = STEREOMODE_STEREO;
-		break;
-	case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left:
-		StereoMode = STEREOMODE_LEFT;
-		break;
-	case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right:
-		StereoMode = STEREOMODE_RIGHT;
 		break;
 	default:
 		return;

@@ -47,7 +47,6 @@ CCoreEngine::CCoreEngine()
 	, m_AudioGain(100)
 	, m_SurroundAudioGain(100)
 	, m_DualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main)
-	, m_StereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo)
 	, m_fSPDIFPassthrough(false)
 	, m_ErrorPacketCount(0)
 	, m_ContinuityErrorPacketCount(0)
@@ -254,7 +253,6 @@ bool CCoreEngine::BuildMediaViewer(const LibISDB::ViewerFilter::OpenSettings &Se
 	m_pViewer->SetAudioGainControl(
 		m_AudioGain != 100 || m_SurroundAudioGain != 100,
 		(float)m_AudioGain / 100.0f, (float)m_SurroundAudioGain / 100.0f);
-	m_pViewer->SetStereoMode(m_StereoMode);
 	m_pViewer->SetDualMonoMode(m_DualMonoMode);
 	m_pViewer->SetSPDIFOptions(m_SPDIFOptions);
 
@@ -571,15 +569,6 @@ bool CCoreEngine::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualM
 	m_DualMonoMode = Mode;
 	if (m_pViewer != nullptr)
 		m_pViewer->SetDualMonoMode(Mode);
-	return true;
-}
-
-
-bool CCoreEngine::SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
-{
-	m_StereoMode = Mode;
-	if (m_pViewer != nullptr)
-		m_pViewer->SetStereoMode(Mode);
 	return true;
 }
 

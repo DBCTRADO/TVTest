@@ -192,12 +192,6 @@ void CAppEventManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFi
 }
 
 
-void CAppEventManager::OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
-{
-	CALL_HANDLERS(OnStereoModeChanged(Mode));
-}
-
-
 void CAppEventManager::OnAudioStreamChanged(int Stream)
 {
 	CALL_HANDLERS(OnAudioStreamChanged(Stream));

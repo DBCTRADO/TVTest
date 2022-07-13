@@ -75,7 +75,6 @@ namespace TVTest
 		virtual void OnVolumeChanged(int Volume) {}
 		virtual void OnMuteChanged(bool fMute) {}
 		virtual void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) {}
-		virtual void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode) {}
 		virtual void OnAudioStreamChanged(int Stream) {}
 		virtual void OnColorSchemeChanged() {}
 		virtual void OnStandbyChanged(bool fStandby) {}
@@ -121,7 +120,6 @@ namespace TVTest
 		void OnVolumeChanged(int Volume);
 		void OnMuteChanged(bool fMute);
 		void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
-		void OnStereoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
 		void OnAudioStreamChanged(int Stream);
 		void OnColorSchemeChanged();
 		void OnStandbyChanged(bool fStandby);

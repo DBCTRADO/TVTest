@@ -123,11 +123,8 @@ namespace TVTest
 		bool SetVolume(int Volume, bool fOSD = true);
 		bool GetMute() const;
 		bool SetMute(bool fMute);
-		bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode, bool fApplyStereo = true);
+		bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
 		LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetDualMonoMode() const;
-		LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetActualDualMonoMode() const;
-		bool SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
-		LibISDB::DirectShow::AudioDecoderFilter::StereoMode GetStereoMode() const;
 		int GetNumAudioStreams() const;
 		int GetAudioStream() const;
 		bool SetAudioStream(int Stream);
@@ -265,7 +262,7 @@ namespace TVTest
 
 		bool SelectAudio(const CAudioManager::AudioSelectInfo &Info, bool fUpdate = true);
 		bool SelectAudioStream(int Stream);
-		bool SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode, bool fUpdate = true);
+		bool SelectDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode, bool fUpdate);
 
 		bool CreateChannelMenu(
 			const CChannelList *pChannelList, int CurChannel,

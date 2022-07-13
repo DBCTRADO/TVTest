@@ -109,7 +109,6 @@ namespace TVTest
 		bool SelectSurroundAudioGain(CCommandManager::InvokeParameters &Params);
 		bool AudioDelay(CCommandManager::InvokeParameters &Params);
 		bool DualMonoMode(CCommandManager::InvokeParameters &Params);
-		bool StereoMode(CCommandManager::InvokeParameters &Params);
 		bool SwitchAudio(CCommandManager::InvokeParameters &Params);
 		bool SelectSPDIFMode(CCommandManager::InvokeParameters &Params);
 		bool ToggleSPDIFMode(CCommandManager::InvokeParameters &Params);

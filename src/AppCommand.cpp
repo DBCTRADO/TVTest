@@ -339,10 +339,6 @@ void CAppCommand::RegisterDefaultCommands()
 				nullptr, CCommandManager::BindHandler(&CAppCommand::SelectAudio, this)
 			},
 			{
-				CM_STEREOMODE_STEREO, CM_STEREOMODE_RIGHT, 0,
-				nullptr, CCommandManager::BindHandler(&CAppCommand::StereoMode, this)
-			},
-			{
 				CM_MULTIVIEW_FIRST, CM_MULTIVIEW_LAST, 0,
 				nullptr, CCommandManager::BindHandler(&CAppCommand::MultiView, this)
 			},
@@ -718,20 +714,6 @@ bool CAppCommand::DualMonoMode(CCommandManager::InvokeParameters &Params)
 		Params.ID == CM_DUALMONO_SUB ?
 			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub :
 			LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both);
-	m_App.UICore.ShowAudioOSD();
-
-	return true;
-}
-
-
-bool CAppCommand::StereoMode(CCommandManager::InvokeParameters &Params)
-{
-	m_App.UICore.SetStereoMode(
-		Params.ID == CM_STEREOMODE_STEREO ?
-			LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo :
-		Params.ID == CM_STEREOMODE_LEFT  ?
-			LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left :
-			LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right);
 	m_App.UICore.ShowAudioOSD();
 
 	return true;

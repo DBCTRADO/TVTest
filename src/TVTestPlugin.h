@@ -1066,12 +1066,16 @@ enum {
 };
 
 // ステレオモードを取得する
+// TVTest ver.0.9.0 以降は、デュアルモノラル時に選択される音声を取得します。
+// ver.0.9.0 より前は、ステレオもしくはデュアルモノラル時に現在選択されている音声を取得します。
 inline int MsgGetStereoMode(PluginParam *pParam)
 {
 	return (int)(*pParam->Callback)(pParam, MESSAGE_GETSTEREOMODE, 0, 0);
 }
 
 // ステレオモードを設定する
+// TVTest ver.0.10.0 以降は、デュアルモノラル時に選択される音声を設定します。
+// ver.0.10.0 より前は、ステレオもしくはデュアルモノラル時に再生される音声を設定します。
 inline bool MsgSetStereoMode(PluginParam *pParam, int StereoMode)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_SETSTEREOMODE, StereoMode, 0) != 0;

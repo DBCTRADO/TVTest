@@ -383,88 +383,15 @@ bool CUICore::SetMute(bool fMute)
 }
 
 
-bool CUICore::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode, bool fApplyStereo)
+bool CUICore::SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
-	if (fApplyStereo) {
-		const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
-		const BYTE ComponentType =
-			pAnalyzer != nullptr ?
-				pAnalyzer->GetAudioComponentType(
-					m_App.CoreEngine.GetServiceIndex(), m_App.CoreEngine.GetAudioStream()) :
-				0;
-
-		if (ComponentType == 0x03	// 0x03 = Stereo
-				|| (ComponentType == 0 && GetAudioChannelCount() == 2)) {
-			LibISDB::DirectShow::AudioDecoderFilter::StereoMode StereoMode;
-
-			switch (Mode) {
-			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
-				StereoMode = LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left;
-				break;
-			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
-				StereoMode = LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right;
-				break;
-			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
-				StereoMode = LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo;
-				break;
-			default:
-				return false;
-			}
-
-			SetStereoMode(StereoMode);
-		}
-	}
-
-	return SelectDualMonoMode(Mode);
+	return SelectDualMonoMode(Mode, true);
 }
 
 
 LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode CUICore::GetDualMonoMode() const
 {
 	return m_App.CoreEngine.GetDualMonoMode();
-}
-
-
-LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode CUICore::GetActualDualMonoMode() const
-{
-	LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode = GetDualMonoMode();
-
-	switch (Mode) {
-	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
-	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub:
-	case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
-		break;
-	default:
-		switch (GetStereoMode()) {
-		case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo:
-			Mode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both;
-			break;
-		case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left:
-			Mode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main;
-			break;
-		case LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right:
-			Mode = LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Sub;
-			break;
-		}
-		break;
-	}
-
-	return Mode;
-}
-
-
-bool CUICore::SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode)
-{
-	if (!m_App.CoreEngine.SetStereoMode(Mode))
-		return false;
-	m_App.AppEventManager.OnStereoModeChanged(Mode);
-	return true;
-}
-
-
-LibISDB::DirectShow::AudioDecoderFilter::StereoMode CUICore::GetStereoMode() const
-{
-	return m_App.CoreEngine.GetStereoMode();
 }
 
 
@@ -575,7 +502,6 @@ bool CUICore::SelectAudio(const CAudioManager::AudioSelectInfo &Info, bool fUpda
 		}
 
 		SelectAudioStream(AudioIndex);
-		SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo);
 		if (DualMonoMode != LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Invalid)
 			SelectDualMonoMode(DualMonoMode, fUpdate);
 	}
@@ -675,7 +601,6 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 		return 0;
 
 	const int NumAudio = GetNumAudioStreams();
-	const LibISDB::DirectShow::AudioDecoderFilter::StereoMode StereoMode = GetStereoMode();
 	LibISDB::AnalyzerFilter::EventAudioInfo AudioInfo;
 
 	if (NumAudio > 1)
@@ -683,7 +608,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 
 	if (NumChannels == LibISDB::ViewerFilter::AudioChannelCount_DualMono) {
 		// Dual mono
-		const LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode DualMonoMode = GetActualDualMonoMode();
+		const LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode DualMonoMode = GetDualMonoMode();
 
 		if (pAnalyzer->GetEventAudioInfo(m_App.CoreEngine.GetServiceIndex(), GetAudioStream(), &AudioInfo)
 				&& AudioInfo.ComponentType == 0x02
@@ -741,13 +666,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 			break;
 
 		case 2:
-			StringCopy(
-				szFormat,
-				StereoMode == LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left ?
-					TEXT("[S(L)]") :
-				StereoMode == LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Right ?
-					TEXT("[S(R)]") :
-					TEXT("[S]"));
+			StringCopy(szFormat, TEXT("[S]"));
 			break;
 
 		case 6:
@@ -811,8 +730,6 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 
 		case 2:
 			Formatter.Append(TEXT("Stereo"));
-			if (StereoMode != LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo)
-				Formatter.Append(StereoMode == LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left ? TEXT("(L)") : TEXT("(R)"));
 			break;
 
 		case 6:
@@ -868,7 +785,7 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 				if (szAudio2[0] == _T('\0'))
 					StringCopy(szAudio2, TEXT("副音声"));
 			}
-			switch (GetActualDualMonoMode()) {
+			switch (GetDualMonoMode()) {
 			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main:
 				StringCopy(pszText, szAudio1, MaxLength);
 				break;
@@ -890,14 +807,6 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 				GetAudioStream() + 1,
 				AudioInfo.Text.empty() ? szText : AudioInfo.Text.c_str());
 		}
-	} else if (GetAudioChannelCount() == 2
-			&& GetStereoMode() != LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Stereo) {
-		int Pos = 0;
-		if (GetNumAudioStreams() > 1)
-			Pos = StringPrintf(pszText, MaxLength, TEXT("音声%d: "), GetAudioStream() + 1);
-		StringPrintf(
-			pszText + Pos, MaxLength - Pos, TEXT("ステレオ%s"),
-			GetStereoMode() == LibISDB::DirectShow::AudioDecoderFilter::StereoMode::Left ? TEXT("左") : TEXT("右"));
 	} else {
 		StringPrintf(pszText, MaxLength, TEXT("音声%d"), GetAudioStream() + 1);
 	}

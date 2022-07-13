@@ -155,8 +155,6 @@ namespace TVTest
 		bool GetAudioGainControl(int *pGain, int *pSurroundGain) const;
 		bool SetDualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
 		LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode GetDualMonoMode() const { return m_DualMonoMode; }
-		bool SetStereoMode(LibISDB::DirectShow::AudioDecoderFilter::StereoMode Mode);
-		LibISDB::DirectShow::AudioDecoderFilter::StereoMode GetStereoMode() const { return m_StereoMode; }
 		bool SetSPDIFOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options);
 		bool GetSPDIFOptions(LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions *pOptions) const;
 		bool IsSPDIFPassthroughEnabled() const;
@@ -254,7 +252,6 @@ namespace TVTest
 		int m_AudioGain;
 		int m_SurroundAudioGain;
 		LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode m_DualMonoMode;
-		LibISDB::DirectShow::AudioDecoderFilter::StereoMode m_StereoMode;
 		LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions m_SPDIFOptions;
 		bool m_fSPDIFPassthrough;
 		unsigned long long m_ErrorPacketCount;
