@@ -3315,6 +3315,19 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 	case MESSAGE_GETSELECTEDAUDIO:
 		return SendPluginMessage(pParam, Message, lParam1, lParam2);
 
+	case MESSAGE_GETCURRENTEPGEVENTINFO:
+		{
+			const WORD ServiceID = LOWORD(lParam1);
+			const bool fNext = (lParam2 & 1) != 0;
+			LibISDB::EventInfo EventInfo;
+
+			if (!GetAppClass().CoreEngine.GetCurrentEventInfo(&EventInfo, ServiceID, fNext))
+				return reinterpret_cast<LRESULT>(nullptr);
+
+			CEpgDataConverter Converter;
+			return reinterpret_cast<LRESULT>(Converter.Convert(EventInfo));
+		}
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"), Message);

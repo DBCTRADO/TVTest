@@ -102,6 +102,7 @@
 	  ・MESSAGE_GETELEMENTARYSTREAMCOUNT
 	  ・MESSAGE_SELECTAUDIO
 	  ・MESSAGE_GETSELECTEDAUDIO
+	  ・MESSAGE_GETCURRENTEPGEVENTINFO
 	・以下のイベントを追加した
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
@@ -513,6 +514,7 @@ enum {
 	MESSAGE_GETELEMENTARYSTREAMCOUNT,    // Elementary Stream (ES) の数を取得
 	MESSAGE_SELECTAUDIO,                 // 音声を選択
 	MESSAGE_GETSELECTEDAUDIO,            // 選択された音声を取得
+	MESSAGE_GETCURRENTEPGEVENTINFO,      // 現在の番組情報を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -1280,7 +1282,7 @@ struct ProgramInfo
 // MaxEventName / MaxEventText / MaxEventExtText メンバにバッファの長さ(要素数)を設定します。
 // 必要のない情報は、ポインタを nullptr にすると取得されません。
 // 引数 fNext を true にすると、次の番組の情報が取得されます。
-// MsgGetEpgEventInfo で、より詳しい番組情報を取得することもできます。
+// MsgGetEpgEventInfo または MsgGetCurrentEpgEventInfo で、より詳しい番組情報を取得することもできます。
 inline bool MsgGetCurrentProgramInfo(PluginParam *pParam, ProgramInfo *pInfo, bool fNext = false)
 {
 	return (*pParam->Callback)(pParam, MESSAGE_GETCURRENTPROGRAMINFO, (LPARAM)pInfo, fNext) != 0;
@@ -3742,6 +3744,16 @@ inline bool MsgGetSelectedAudio(PluginParam *pParam, AudioSelectInfo *pInfo)
 	return (*pParam->Callback)(pParam, MESSAGE_GETSELECTEDAUDIO, (LPARAM)pInfo, 0) != FALSE;
 }
 
+// 現在の番組情報を取得する
+// 引数 ServiceID に0を指定すると、現在のサービスの情報が取得されます。
+// 引数 fNext を true にすると、次の番組の情報が取得されます。
+// 取得した情報が不要になった場合、MsgFreeEpgEventInfo で解放します。
+// 情報が取得できなかった場合は nullptr が返ります。
+inline EpgEventInfo *MsgGetCurrentEpgEventInfo(PluginParam *pParam, WORD ServiceID = 0, bool fNext = false)
+{
+	return (EpgEventInfo*)(*pParam->Callback)(pParam, MESSAGE_GETCURRENTEPGEVENTINFO, ServiceID, fNext);
+}
+
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
@@ -4851,6 +4863,13 @@ public:
 	{
 		pInfo->Size = sizeof(AudioSelectInfo);
 		return MsgGetSelectedAudio(m_pParam, pInfo);
+	}
+
+	// 現在の番組情報を取得
+	// (不要になったら FreeEpgEventInfo で解放)
+	EpgEventInfo *GetCurrentEpgEventInfo(WORD ServiceID = 0, bool fNext = false)
+	{
+		return MsgGetCurrentEpgEventInfo(m_pParam, ServiceID, fNext);
 	}
 #endif
 };
