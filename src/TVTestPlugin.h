@@ -100,6 +100,8 @@
 	  ・MESSAGE_GETSERVICEINFOLIST
 	  ・MESSAGE_GETAUDIOINFO
 	  ・MESSAGE_GETELEMENTARYSTREAMCOUNT
+	  ・MESSAGE_SELECTAUDIO
+	  ・MESSAGE_GETSELECTEDAUDIO
 	・以下のイベントを追加した
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
@@ -507,6 +509,8 @@ enum {
 	MESSAGE_GETSERVICEINFOLIST,          // サービスの情報のリストを取得
 	MESSAGE_GETAUDIOINFO,                // 音声の情報を取得
 	MESSAGE_GETELEMENTARYSTREAMCOUNT,    // Elementary Stream (ES) の数を取得
+	MESSAGE_SELECTAUDIO,                 // 音声を選択
+	MESSAGE_GETSELECTEDAUDIO,            // 選択された音声を取得
 #endif
 	MESSAGE_TRAILER
 };
@@ -3693,6 +3697,47 @@ inline int MsgGetAudioStreamCount(PluginParam *pParam)
 	return MsgGetElementaryStreamCount(pParam, ES_MEDIA_AUDIO);
 }
 
+// デュアルモノラルのチャンネル
+enum DualMonoChannel {
+	DUAL_MONO_CHANNEL_INVALID, // 無効
+	DUAL_MONO_CHANNEL_MAIN,    // 主音声(左)
+	DUAL_MONO_CHANNEL_SUB,     // 副音声(右)
+	DUAL_MONO_CHANNEL_BOTH     // 主+副音声(左右)
+};
+
+// 音声選択の情報
+struct AudioSelectInfo
+{
+	DWORD Size;               // 構造体のサイズ
+	DWORD Flags;              // フラグ(AUDIO_SELECT_FLAG_*)
+	int Index;                // インデックス
+	BYTE ComponentTag;        // コンポーネントタグ(component_tag)
+	BYTE Reserved[3];         // 予約
+	DualMonoChannel DualMono; // デュアルモノラルのチャンネル
+};
+
+// 音声選択のフラグ
+enum {
+	AUDIO_SELECT_FLAG_COMPONENT_TAG = 0x00000001U, // コンポーネントタグ(component_tag)で選択する
+	AUDIO_SELECT_FLAG_DUAL_MONO     = 0x00000002U  // DualMono メンバが有効
+};
+
+// 音声を選択する
+// Flags に AUDIO_SELECT_FLAG_COMPONENT_TAG が指定されている場合、ComponentTag メンバでコンポーネントタグを指定します。
+// それ以外の場合、Index メンバに音声ストリームのインデックスを指定します。
+inline bool MsgSelectAudio(PluginParam *pParam, const AudioSelectInfo *pInfo)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_SELECTAUDIO, (LPARAM)pInfo, 0) != FALSE;
+}
+
+// 選択された音声を取得する
+// 事前に AudioSelectInfo 構造体の Size と Flags メンバを設定して呼び出します。
+// Flags は今のところ常に0に設定します。
+inline bool MsgGetSelectedAudio(PluginParam *pParam, AudioSelectInfo *pInfo)
+{
+	return (*pParam->Callback)(pParam, MESSAGE_GETSELECTEDAUDIO, (LPARAM)pInfo, 0) != FALSE;
+}
+
 #endif	// TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
 
 /*
@@ -4789,6 +4834,19 @@ public:
 	int GetAudioStreamCount()
 	{
 		return MsgGetAudioStreamCount(m_pParam);
+	}
+
+	// 音声を選択
+	bool SelectAudio(const AudioSelectInfo *pInfo)
+	{
+		return MsgSelectAudio(m_pParam, pInfo);
+	}
+
+	// 選択された音声を取得
+	bool GetSelectedAudio(AudioSelectInfo *pInfo)
+	{
+		pInfo->Size = sizeof(AudioSelectInfo);
+		return MsgGetSelectedAudio(m_pParam, pInfo);
 	}
 #endif
 };

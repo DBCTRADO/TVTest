@@ -3311,6 +3311,10 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		}
 		return 0;
 
+	case MESSAGE_SELECTAUDIO:
+	case MESSAGE_GETSELECTEDAUDIO:
+		return SendPluginMessage(pParam, Message, lParam1, lParam2);
+
 #ifdef _DEBUG
 	default:
 		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"), Message);
@@ -4098,6 +4102,77 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 			return Result;
 		}
+
+	case MESSAGE_SELECTAUDIO:
+		{
+			const AudioSelectInfo *pInfo = reinterpret_cast<const AudioSelectInfo *>(pParam->lParam1);
+
+			if (pInfo == nullptr
+					|| pInfo->Size != sizeof(AudioSelectInfo)
+					|| (pInfo->Flags & ~(
+						AUDIO_SELECT_FLAG_COMPONENT_TAG |
+						AUDIO_SELECT_FLAG_DUAL_MONO)) != 0)
+				return FALSE;
+
+			CAppMain &App = GetAppClass();
+			CAudioManager::AudioSelectInfo SelectInfo;
+
+			if ((pInfo->Flags & AUDIO_SELECT_FLAG_COMPONENT_TAG) != 0) {
+				SelectInfo.ID = CAudioManager::MakeID(0, pInfo->ComponentTag);
+			} else {
+				LibISDB::AnalyzerFilter *pAnalyzer = App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+				const uint8_t ComponentTag = pAnalyzer->GetAudioComponentTag(App.CoreEngine.GetServiceIndex(), pInfo->Index);
+				if (ComponentTag == LibISDB::COMPONENT_TAG_INVALID)
+					return FALSE;
+				SelectInfo.ID = CAudioManager::MakeID(0, ComponentTag);
+			}
+
+			if ((pInfo->Flags & AUDIO_SELECT_FLAG_DUAL_MONO) != 0) {
+				switch (pInfo->DualMono) {
+				case DUAL_MONO_CHANNEL_INVALID:
+					SelectInfo.DualMono = CAudioManager::DualMonoMode::Invalid;
+					break;
+				case DUAL_MONO_CHANNEL_MAIN:
+					SelectInfo.DualMono = CAudioManager::DualMonoMode::Main;
+					break;
+				case DUAL_MONO_CHANNEL_SUB:
+					SelectInfo.DualMono = CAudioManager::DualMonoMode::Sub;
+					break;
+				case DUAL_MONO_CHANNEL_BOTH:
+					SelectInfo.DualMono = CAudioManager::DualMonoMode::Both;
+					break;
+				default:
+					return FALSE;
+				}
+			} else {
+				SelectInfo.DualMono = App.AudioManager.GetSelectedDualMonoMode();
+			}
+
+			App.AudioManager.SetSelectedAudio(&SelectInfo);
+			const int Index = App.AudioManager.FindSelectedAudio();
+			if (Index < 0)
+				return FALSE;
+			return App.UICore.SelectAudio(Index);
+		}
+
+	case MESSAGE_GETSELECTEDAUDIO:
+		{
+			AudioSelectInfo *pInfo = reinterpret_cast<AudioSelectInfo *>(pParam->lParam1);
+
+			if (pInfo == nullptr
+					|| pInfo->Size != sizeof(AudioSelectInfo)
+					|| pInfo->Flags != 0)
+				return FALSE;
+
+			CAppMain &App = GetAppClass();
+			LibISDB::AnalyzerFilter *pAnalyzer = App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+
+			pInfo->Index = App.UICore.GetAudioStream();
+			pInfo->ComponentTag = pAnalyzer->GetAudioComponentTag(App.CoreEngine.GetServiceIndex(), pInfo->Index);
+			std::memset(pInfo->Reserved, 0, sizeof(pInfo->Reserved));
+			pInfo->DualMono = (DualMonoChannel)App.UICore.GetDualMonoMode();
+		}
+		return TRUE;
 
 #ifdef _DEBUG
 	default:
