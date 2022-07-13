@@ -70,12 +70,14 @@ namespace TVTest
 		virtual void On1SegModeChanged(bool f1SegMode) {}
 		virtual void OnFullscreenChanged(bool fFullscreen) {}
 		virtual void OnPlaybackStateChanged(bool fPlayback) {}
+		virtual void OnVideoFormatChanged() {}
 		virtual void OnPanAndScanChanged() {}
 		virtual void OnAspectRatioTypeChanged(int Type) {}
 		virtual void OnVolumeChanged(int Volume) {}
 		virtual void OnMuteChanged(bool fMute) {}
 		virtual void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) {}
 		virtual void OnAudioStreamChanged(int Stream) {}
+		virtual void OnAudioFormatChanged() {}
 		virtual void OnColorSchemeChanged() {}
 		virtual void OnStandbyChanged(bool fStandby) {}
 		virtual void OnExecute(LPCTSTR pszCommandLine) {}
@@ -115,12 +117,14 @@ namespace TVTest
 		void On1SegModeChanged(bool f1SegMode);
 		void OnFullscreenChanged(bool fFullscreen);
 		void OnPlaybackStateChanged(bool fPlayback);
+		void OnVideoFormatChanged();
 		void OnPanAndScanChanged();
 		void OnAspectRatioTypeChanged(int Type);
 		void OnVolumeChanged(int Volume);
 		void OnMuteChanged(bool fMute);
 		void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode);
 		void OnAudioStreamChanged(int Stream);
+		void OnAudioFormatChanged();
 		void OnColorSchemeChanged();
 		void OnStandbyChanged(bool fStandby);
 		void OnExecute(LPCTSTR pszCommandLine);

@@ -5358,6 +5358,12 @@ void CPluginManager::OnPlaybackStateChanged(bool fPlayback)
 }
 
 
+void CPluginManager::OnVideoFormatChanged()
+{
+	SendEvent(EVENT_VIDEOFORMATCHANGE);
+}
+
+
 void CPluginManager::OnVolumeChanged(int Volume)
 {
 	SendEvent(EVENT_VOLUMECHANGE, Volume, false);
@@ -5395,6 +5401,12 @@ void CPluginManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilt
 void CPluginManager::OnAudioStreamChanged(int Stream)
 {
 	SendEvent(EVENT_AUDIOSTREAMCHANGE, Stream);
+}
+
+
+void CPluginManager::OnAudioFormatChanged()
+{
+	SendEvent(EVENT_AUDIOFORMATCHANGE);
 }
 
 

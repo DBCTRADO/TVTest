@@ -106,6 +106,8 @@
 	  ・EVENT_DARKMODECHANGED
 	  ・EVENT_MAINWINDOWDARKMODECHANGED
 	  ・EVENT_PROGRAMGUIDEDARKMODECHANGED
+	  ・EVENT_VIDEOFORMATCHANGE
+	  ・EVENT_AUDIOFORMATCHANGE
 	・チャンネル選択のフラグに CHANNEL_SELECT_FLAG_ALLOWDISABLED を追加した
 	・ダイアログ表示のフラグに SHOW_DIALOG_FLAG_DISABLE_DARK_MODE を追加した
 
@@ -586,6 +588,8 @@ enum {
 	EVENT_DARKMODECHANGED,                     // ダークモード状態が変わった
 	EVENT_MAINWINDOWDARKMODECHANGED,           // メインウィンドウのダークモード状態が変わった
 	EVENT_PROGRAMGUIDEDARKMODECHANGED,         // 番組表のダークモード状態が変わった
+	EVENT_VIDEOFORMATCHANGE,                   // 映像の形式が変わった
+	EVENT_AUDIOFORMATCHANGE,                   // 音声の形式が変わった
 #endif
 	EVENT_TRAILER
 };
@@ -5038,6 +5042,10 @@ protected:
 	virtual void OnMainWindowDarkModeChanged(bool fDarkMode) {}
 	// 番組表のダークモードの状態が変わった
 	virtual void OnProgramGuideDarkModeChanged(bool fDarkMode) {}
+	// 映像の形式が変わった
+	virtual void OnVideoFormatChange() {}
+	// 音声の形式が変わった
+	virtual void OnAudioFormatChange() {}
 #endif
 
 public:
@@ -5148,6 +5156,12 @@ public:
 			return 0;
 		case EVENT_PROGRAMGUIDEDARKMODECHANGED:
 			OnProgramGuideDarkModeChanged(lParam1 != 0);
+			return 0;
+		case EVENT_VIDEOFORMATCHANGE:
+			OnVideoFormatChange();
+			return 0;
+		case EVENT_AUDIOFORMATCHANGE:
+			OnAudioFormatChange();
 			return 0;
 #endif
 		}

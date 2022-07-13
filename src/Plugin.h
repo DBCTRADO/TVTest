@@ -399,10 +399,12 @@ namespace TVTest
 		void On1SegModeChanged(bool f1SegMode) override;
 		void OnFullscreenChanged(bool fFullscreen) override;
 		void OnPlaybackStateChanged(bool fPlayback) override;
+		void OnVideoFormatChanged() override;
 		void OnVolumeChanged(int Volume) override;
 		void OnMuteChanged(bool fMute) override;
 		void OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode) override;
 		void OnAudioStreamChanged(int Stream) override;
+		void OnAudioFormatChanged() override;
 		void OnColorSchemeChanged() override;
 		void OnStandbyChanged(bool fStandby) override;
 		void OnExecute(LPCTSTR pszCommandLine) override;

@@ -2777,6 +2777,8 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 				m_App.StatusView.UpdateItem(STATUS_ITEM_VIDEOSIZE);
 				m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_VIDEOINFO);
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_VIDEO);
+
+				m_App.AppEventManager.OnVideoFormatChanged();
 			}
 
 			// 音声形式の変化
@@ -2790,6 +2792,8 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 				m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
 				m_pCore->SetCommandCheckedState(
 					CM_SPDIF_TOGGLE, m_App.CoreEngine.IsSPDIFPassthroughEnabled());
+
+				m_App.AppEventManager.OnAudioFormatChanged();
 			}
 
 			bool fUpdateEventInfo = false;
