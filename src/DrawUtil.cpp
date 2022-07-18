@@ -888,11 +888,6 @@ bool CFont::operator==(const CFont &Font) const
 	return CompareLogFont(&lf1, &lf2);
 }
 
-bool CFont::operator!=(const CFont &Font) const
-{
-	return !(*this == Font);
-}
-
 bool CFont::Create(const LOGFONT *pLogFont)
 {
 	if (pLogFont == nullptr)

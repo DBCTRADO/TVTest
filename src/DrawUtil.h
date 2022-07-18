@@ -39,10 +39,7 @@ namespace TVTest
 			RGBA(BYTE r, BYTE g, BYTE b, BYTE a = 255) : Red(r), Green(g), Blue(b), Alpha(a) {}
 			RGBA(COLORREF c) : Red(GetRValue(c)), Green(GetGValue(c)), Blue(GetBValue(c)), Alpha(255) {}
 
-			bool operator==(const RGBA &op) const {
-				return Red == op.Red && Green == op.Green && Blue == op.Blue && Alpha == op.Alpha;
-			}
-			bool operator!=(const RGBA &op) const { return !(*this == op); }
+			bool operator==(const RGBA &op) const noexcept = default;
 
 			operator COLORREF() const { return GetCOLORREF(); }
 
@@ -129,7 +126,6 @@ namespace TVTest
 
 			CFont &operator=(const CFont &Font);
 			bool operator==(const CFont &Font) const;
-			bool operator!=(const CFont &Font) const;
 
 			bool Create(const LOGFONT *pLogFont);
 			bool Create(FontType Type);

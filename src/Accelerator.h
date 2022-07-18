@@ -77,10 +77,7 @@ namespace TVTest
 			WORD KeyCode;
 			BYTE Modifiers;
 			bool fGlobal;
-			bool operator==(const KeyInfo &Info) const {
-				return Command == Info.Command && KeyCode == Info.KeyCode
-					&& Modifiers == Info.Modifiers && fGlobal == Info.fGlobal;
-			}
+			bool operator==(const KeyInfo &Info) const noexcept = default;
 		};
 		std::vector<KeyInfo> m_KeyList;
 		enum class MediaKeyType {
@@ -97,9 +94,7 @@ namespace TVTest
 			WORD Command;
 			MediaKeyType Type;
 			WORD AppCommand;
-			bool operator==(const AppCommandInfo &Info) const {
-				return Command == Info.Command && Type == Info.Type && AppCommand == Info.AppCommand;
-			}
+			bool operator==(const AppCommandInfo &Info) const noexcept = default;
 		};
 		std::vector<AppCommandInfo> m_AppCommandList;
 		HWND m_hwndHotKey;

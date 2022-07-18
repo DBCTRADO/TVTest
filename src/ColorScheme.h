@@ -399,12 +399,7 @@ namespace TVTest
 			Theme::GradientType Type;
 			Theme::GradientDirection Direction;
 
-			bool operator==(const GradientStyle &Op) const {
-				return Type == Op.Type && Direction == Op.Direction;
-			}
-			bool operator!=(const GradientStyle &Op) const {
-				return !(*this == Op);
-			}
+			bool operator==(const GradientStyle &Op) const noexcept = default;
 		};
 
 		struct FillStyle
@@ -412,12 +407,7 @@ namespace TVTest
 			Theme::FillType Type;
 			GradientStyle Gradient;
 
-			bool operator==(const FillStyle &Op) const {
-				return Type == Op.Type && Gradient == Op.Gradient;
-			}
-			bool operator!=(const FillStyle &Op) const {
-				return !(*this == Op);
-			}
+			bool operator==(const FillStyle &Op) const noexcept = default;
 		};
 
 		enum class BaseSchemeType {

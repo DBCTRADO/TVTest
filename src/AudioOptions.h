@@ -40,10 +40,7 @@ namespace TVTest
 			DWORD Language;
 			bool fSub;
 
-			bool operator==(const AudioLanguageInfo &Op) const {
-				return Language == Op.Language && fSub == Op.fSub;
-			}
-			bool operator!=(const AudioLanguageInfo &Op) const { return !(*this == Op); }
+			bool operator==(const AudioLanguageInfo &Op) const noexcept = default;
 		};
 
 		typedef std::vector<AudioLanguageInfo> AudioLanguageList;

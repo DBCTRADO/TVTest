@@ -71,8 +71,7 @@ namespace TVTest
 			operator T() const { return Value; }
 			ValueTemplate<T> &operator=(T v) { Value = v; return *this; }
 
-			bool operator==(const ValueTemplate<T> &o) const { return Value == o.Value && Unit == o.Unit; }
-			bool operator!=(const ValueTemplate<T> &o) const { return !(*this == o); }
+			bool operator==(const ValueTemplate<T> &o) const = default;
 			bool operator==(T v) const { return Value == v; }
 			bool operator!=(T v) const { return Value != v; }
 		};
@@ -88,8 +87,7 @@ namespace TVTest
 			Size(int w, int h, UnitType u = UnitType::LogicalPixel) : Width(w, u), Height(h, u) {}
 			Size(int w, UnitType wu, int h, UnitType hu) : Width(w, wu), Height(h, hu) {}
 
-			bool operator==(const Size &o) const { return Width == o.Width && Height == o.Height; }
-			bool operator!=(const Size &o) const { return !(*this == o); }
+			bool operator==(const Size &o) const noexcept = default;
 		};
 
 		struct Margins
@@ -107,10 +105,7 @@ namespace TVTest
 			Margins(int m, UnitType u = UnitType::LogicalPixel)
 				: Left(m, u), Top(m, u), Right(m, u), Bottom(m, u) {}
 
-			bool operator==(const Margins &o) const {
-				return Left == o.Left && Top == o.Top && Right == o.Right && Bottom == o.Bottom;
-			}
-			bool operator!=(const Margins &o) const { return !(*this == o); }
+			bool operator==(const Margins &o) const noexcept = default;
 
 			int Horz() const { return Left + Right; }
 			int Vert() const { return Top + Bottom; }
@@ -129,7 +124,6 @@ namespace TVTest
 			bool operator==(const Font &o) const {
 				return CompareLogFont(&LogFont, &o.LogFont) && Size == o.Size;
 			}
-			bool operator!=(const Font &o) const { return !(*this == o); }
 		};
 
 		class CStyleScaling

@@ -96,7 +96,6 @@ namespace TVTest
 			bool fActiveOnly;
 
 			bool operator==(const ControllerSettings &Operand) const;
-			bool operator!=(const ControllerSettings &Operand) const { return !(*this == Operand); }
 		};
 
 		CControllerManager();

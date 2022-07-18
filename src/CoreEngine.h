@@ -68,13 +68,7 @@ namespace TVTest
 			int XFactor, YFactor;
 			int XAspect, YAspect;
 
-			bool operator==(const PanAndScanInfo &Op) const {
-				return XPos == Op.XPos && YPos == Op.YPos
-					&& Width == Op.Width && Height == Op.Height
-					&& XFactor == Op.XFactor && YFactor == Op.YFactor
-					&& XAspect == Op.XAspect && YAspect == Op.YAspect;
-			}
-			bool operator!=(const PanAndScanInfo &Op) const { return !(*this == Op); }
+			bool operator==(const PanAndScanInfo &Op) const noexcept = default;
 		};
 
 		class EventListener

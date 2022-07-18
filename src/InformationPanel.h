@@ -371,8 +371,7 @@ namespace TVTest
 			ItemButtonNumber() : Item(-1), Button(-1) {}
 			ItemButtonNumber(int item, int button) : Item(item), Button(button) {}
 
-			bool operator==(const ItemButtonNumber &rhs) const { return Item == rhs.Item && Button == rhs.Button; }
-			bool operator!=(const ItemButtonNumber &rhs) const { return !(*this == rhs); }
+			bool operator==(const ItemButtonNumber &rhs) const noexcept = default;
 
 			bool IsValid() const { return Item >= 0 && Button >= 0; }
 		};

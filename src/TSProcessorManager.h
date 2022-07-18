@@ -41,10 +41,7 @@ namespace TVTest
 			String Device;
 			String Filter;
 
-			bool operator==(const FilterInfo &op) const {
-				return Module == op.Module && Device == op.Device && Filter == op.Filter;
-			}
-			bool operator!=(const FilterInfo &op) const { return !(*this == op); }
+			bool operator==(const FilterInfo &op) const noexcept = default;
 		};
 
 		struct TunerFilterInfo

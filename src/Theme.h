@@ -43,8 +43,7 @@ namespace TVTest
 			SolidStyle() = default;
 			SolidStyle(const ThemeColor &color) : Color(color) {}
 
-			bool operator==(const SolidStyle &Op) const { return Color == Op.Color; }
-			bool operator!=(const SolidStyle &Op) const { return Color != Op.Color; }
+			bool operator==(const SolidStyle &Op) const noexcept = default;
 		};
 
 		enum class GradientType {
@@ -84,12 +83,7 @@ namespace TVTest
 			{
 			}
 
-			bool operator==(const GradientStyle &Op) const
-			{
-				return Type == Op.Type && Direction == Op.Direction
-					&& Color1 == Op.Color1 && Color2 == Op.Color2;
-			}
-			bool operator!=(const GradientStyle &Op) const { return !(*this == Op); }
+			bool operator==(const GradientStyle &Op) const noexcept = default;
 
 			bool IsSolid() const { return Type == GradientType::Normal && Color1 == Color2; }
 			void Rotate(RotateType Rotate);
@@ -111,10 +105,7 @@ namespace TVTest
 			FillStyle(const SolidStyle &solid) : Type(FillType::Solid), Solid(solid) {}
 			FillStyle(const GradientStyle &gradient) : Type(FillType::Gradient), Gradient(gradient) {}
 
-			bool operator==(const FillStyle &Op) const {
-				return Type == Op.Type && Solid == Op.Solid && Gradient == Op.Gradient;
-			}
-			bool operator!=(const FillStyle &Op) const { return !(*this == Op); }
+			bool operator==(const FillStyle &Op) const noexcept = default;
 
 			ThemeColor GetSolidColor() const;
 		};
@@ -136,10 +127,7 @@ namespace TVTest
 			BorderWidth() = default;
 			BorderWidth(int Width) : Left(Width), Top(Width), Right(Width), Bottom(Width) {}
 
-			bool operator==(const BorderWidth &Op) const {
-				return Left == Op.Left && Top == Op.Top && Right == Op.Right && Bottom == Op.Bottom;
-			}
-			bool operator!=(const BorderWidth &Op) const { return !(*this == Op); }
+			bool operator==(const BorderWidth &Op) const noexcept = default;
 		};
 
 		struct BorderStyle
@@ -151,10 +139,7 @@ namespace TVTest
 			BorderStyle() = default;
 			BorderStyle(BorderType type, const ThemeColor &color) : Type(type), Color(color) {}
 
-			bool operator==(const BorderStyle &Op) const {
-				return Type == Op.Type && Color == Op.Color && Width == Op.Width;
-			}
-			bool operator!=(const BorderStyle &Op) const { return !(*this == Op); }
+			bool operator==(const BorderStyle &Op) const noexcept = default;
 		};
 
 		struct BackgroundStyle
@@ -166,8 +151,7 @@ namespace TVTest
 			BackgroundStyle(const FillStyle &fill, const BorderStyle &border) : Fill(fill), Border(border) {}
 			BackgroundStyle(const FillStyle &fill) : Fill(fill) {}
 
-			bool operator==(const BackgroundStyle &Op) const { return Fill == Op.Fill && Border == Op.Border; }
-			bool operator!=(const BackgroundStyle &Op) const { return !(*this == Op); }
+			bool operator==(const BackgroundStyle &Op) const noexcept = default;
 		};
 
 		struct ForegroundStyle
@@ -177,8 +161,7 @@ namespace TVTest
 			ForegroundStyle() = default;
 			ForegroundStyle(const FillStyle &fill) : Fill(fill) {}
 
-			bool operator==(const ForegroundStyle &Op) const { return Fill == Op.Fill; }
-			bool operator!=(const ForegroundStyle &Op) const { return !(*this == Op); }
+			bool operator==(const ForegroundStyle &Op) const noexcept = default;
 		};
 
 		struct Style
@@ -189,8 +172,7 @@ namespace TVTest
 			Style() = default;
 			Style(const BackgroundStyle &back, const ForegroundStyle &fore) : Back(back), Fore(fore) {}
 
-			bool operator==(const Style &Op) const { return Back == Op.Back && Fore == Op.Fore; }
-			bool operator!=(const Style &Op) const { return !(*this == Op); }
+			bool operator==(const Style &Op) const noexcept = default;
 		};
 
 		bool Draw(HDC hdc, const RECT &Rect, const SolidStyle &Style);

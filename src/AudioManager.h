@@ -55,18 +55,7 @@ namespace TVTest
 			DWORD Language2;
 			String Text;
 
-			bool operator==(const AudioInfo &Op) const
-			{
-				return ID == Op.ID
-					&& ComponentTag == Op.ComponentTag
-					&& ComponentType == Op.ComponentType
-					&& DualMono == Op.DualMono
-					&& fMultiLingual == Op.fMultiLingual
-					&& Language == Op.Language
-					&& Language2 == Op.Language2
-					&& Text == Op.Text;
-			}
-			bool operator!=(const AudioInfo &Op) const { return !(*this == Op); }
+			bool operator==(const AudioInfo &Op) const noexcept = default;
 			bool IsDualMono() const { return ComponentType == 0x02; }
 		};
 
