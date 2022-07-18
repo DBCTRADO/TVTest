@@ -3137,8 +3137,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			AnalyzerServiceInfoToServiceInfo2(Info, pServiceInfo);
 			// 厳密にいえば GetServiceInfo() と同期が必要
-			pServiceInfo->NetworkID = pAnalyzer->GetTransportStreamID();
-			pServiceInfo->TransportStreamID = pAnalyzer->GetNetworkID();
+			pServiceInfo->NetworkID = pAnalyzer->GetNetworkID();
+			pServiceInfo->TransportStreamID = pAnalyzer->GetTransportStreamID();
 		}
 		return TRUE;
 
