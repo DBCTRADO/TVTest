@@ -34,6 +34,7 @@ CEpgDataLoader::CEpgDataLoader()
 	, m_pEventHandler(nullptr)
 {
 	m_EPGDatabaseFilter.SetEPGDatabase(&m_EPGDatabase);
+	m_EPGDatabaseFilter.SetSourceID(2);
 }
 
 

@@ -37,6 +37,7 @@ CEpgDataStore::CEpgDataStore()
 	, m_UpdateCount(0)
 	, m_LockTimeout(10000)
 {
+	m_EPGDataFile.SetSourceID(1);
 }
 
 
