@@ -102,11 +102,15 @@ namespace TVTest
 	// CUIBase
 		void RealizeStyle() override;
 
+	// CLogger
+		bool CreateFileLock(CGlobalLock *pLock) const;
+
 		std::vector<std::unique_ptr<CLogItem>> m_LogList;
 		DWORD m_SerialNumber;
 		bool m_fOutputToFile;
 		mutable MutexLock m_Lock;
 		String m_DefaultLogFileName;
+		HANDLE m_hFile;
 	};
 
 }	// namespace TVTest

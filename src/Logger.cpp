@@ -36,6 +36,8 @@ namespace
 
 constexpr std::size_t MAX_LOG_TEXT_LENGTH = 1024;
 
+constexpr DWORD LOG_FILE_ADVISORY_LOCK_WAIT_TIMEOUT = 5000;
+
 }
 
 
@@ -146,6 +148,7 @@ int CLogItem::FormatTime(WCHAR *pszText, int MaxLength) const
 CLogger::CLogger()
 	: m_SerialNumber(0)
 	, m_fOutputToFile(false)
+	, m_hFile(INVALID_HANDLE_VALUE)
 {
 	TCHAR szFileName[MAX_PATH];
 	DWORD Result = ::GetModuleFileName(nullptr, szFileName, lengthof(szFileName));
@@ -159,6 +162,8 @@ CLogger::CLogger()
 CLogger::~CLogger()
 {
 	Destroy();
+	if (m_hFile != INVALID_HANDLE_VALUE)
+		::CloseHandle(m_hFile);
 }
 
 
@@ -227,31 +232,41 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText)
 	TRACE(TEXT("Log : %s\n"), pszText);
 
 	if (m_fOutputToFile && !m_DefaultLogFileName.empty()) {
-		HANDLE hFile;
+		if (m_hFile == INVALID_HANDLE_VALUE) {
+			m_hFile = ::CreateFile(
+				m_DefaultLogFileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+				OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+		}
 
-		hFile = ::CreateFile(
-			m_DefaultLogFileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-		if (hFile != INVALID_HANDLE_VALUE) {
-			static const LARGE_INTEGER Zero = {};
-			LARGE_INTEGER Pos;
-			DWORD Size;
-
-			if (::SetFilePointerEx(hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0) {
-				static const WORD BOM = 0xFEFF;
-
-				::WriteFile(hFile, &BOM, 2, &Size, nullptr);
-			}
-
+		if (m_hFile != INVALID_HANDLE_VALUE) {
 			WCHAR szText[MAX_LOG_TEXT_LENGTH];
 			DWORD Length;
 
 			Length = pLogItem->Format(szText, lengthof(szText) - 1);
 			szText[Length++] = L'\r';
 			szText[Length++] = L'\n';
-			::WriteFile(hFile, szText, Length * sizeof(WCHAR), &Size, nullptr);
 
-			::CloseHandle(hFile);
+			{
+				// 書き込みを排他制御する
+				CGlobalLock Lock;
+				if (CreateFileLock(&Lock) && Lock.Wait(LOG_FILE_ADVISORY_LOCK_WAIT_TIMEOUT)) {
+					static const LARGE_INTEGER Zero = {};
+					LARGE_INTEGER Pos;
+					DWORD Size;
+
+					if (::SetFilePointerEx(m_hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0) {
+						static const WORD BOM = 0xFEFF;
+
+						::WriteFile(m_hFile, &BOM, 2, &Size, nullptr);
+					}
+					::WriteFile(m_hFile, szText, Length * sizeof(WCHAR), &Size, nullptr);
+				}
+			}
+		}
+	} else {
+		if (m_hFile != INVALID_HANDLE_VALUE) {
+			::CloseHandle(m_hFile);
+			m_hFile = INVALID_HANDLE_VALUE;
 		}
 	}
 
@@ -326,33 +341,40 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 
 	hFile = ::CreateFile(
 		pszFileName != nullptr ? pszFileName : m_DefaultLogFileName.c_str(),
-		GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-		fAppend ? OPEN_ALWAYS : CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, nullptr);
+		GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+		OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 
-	bool fBOM = !fAppend;
-	DWORD Size;
-
-	if (fAppend) {
-		static const LARGE_INTEGER Zero = {};
-		LARGE_INTEGER Pos;
-
-		if (::SetFilePointerEx(hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0)
-			fBOM = true;
-	}
-
-	if (fBOM) {
-		static const WORD BOM = 0xFEFF;
-
-		::WriteFile(hFile, &BOM, 2, &Size, nullptr);
-	}
-
 	String Text;
-
 	GetLogText(&Text);
-	::WriteFile(hFile, Text.data(), (DWORD)(Text.length() * sizeof(WCHAR)), &Size, nullptr);
+
+	{
+		// 既定ファイルにかぎり書き込みを排他制御する
+		CGlobalLock Lock;
+		if ((pszFileName != nullptr && StringUtility::CompareNoCase(m_DefaultLogFileName, pszFileName) != 0)
+				|| (CreateFileLock(&Lock) && Lock.Wait(LOG_FILE_ADVISORY_LOCK_WAIT_TIMEOUT))) {
+			bool fBOM = !fAppend;
+			DWORD Size;
+
+			if (fAppend) {
+				static const LARGE_INTEGER Zero = {};
+				LARGE_INTEGER Pos;
+
+				if (::SetFilePointerEx(hFile, Zero, &Pos, FILE_END) && Pos.QuadPart == 0)
+					fBOM = true;
+			} else {
+				::SetEndOfFile(hFile);
+			}
+
+			if (fBOM) {
+				static const WORD BOM = 0xFEFF;
+
+				::WriteFile(hFile, &BOM, 2, &Size, nullptr);
+			}
+			::WriteFile(hFile, Text.data(), (DWORD)(Text.length() * sizeof(WCHAR)), &Size, nullptr);
+		}
+	}
 
 	::CloseHandle(hFile);
 
@@ -568,6 +590,21 @@ void CLogger::RealizeStyle()
 		for (int i = 1; i < NUM_COLUMNS; i++)
 			ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
 	}
+}
+
+
+bool CLogger::CreateFileLock(CGlobalLock *pLock) const
+{
+	String LockName = m_DefaultLogFileName;
+
+	if (LockName.empty() || !PathUtil::Canonicalize(&LockName))
+		return false;
+
+	StringUtility::ToUpper(LockName);
+	StringUtility::Replace(LockName, TEXT('\\'), TEXT(':'));
+	LockName += TEXT(":Lock");
+
+	return pLock->Create(LockName.c_str(), false);
 }
 
 
