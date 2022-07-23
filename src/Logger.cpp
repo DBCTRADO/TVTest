@@ -104,10 +104,16 @@ int CLogItem::FormatTime(char *pszText, int MaxLength) const
 	Length = ::GetDateFormatA(
 		LOCALE_USER_DEFAULT, DATE_SHORTDATE,
 		&st, nullptr, pszText, MaxLength - 1);
+	if (Length < 1)
+		Length = 1;
 	pszText[Length - 1] = ' ';
-	Length += ::GetTimeFormatA(
+	int TimeLength = ::GetTimeFormatA(
 		LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT,
 		&st, nullptr, pszText + Length, MaxLength - Length);
+	if (TimeLength < 1)
+		TimeLength = 1;
+	Length += TimeLength;
+	pszText[Length - 1] = '\0';
 	return Length - 1;
 }
 
@@ -121,10 +127,16 @@ int CLogItem::FormatTime(WCHAR *pszText, int MaxLength) const
 	Length = ::GetDateFormatW(
 		LOCALE_USER_DEFAULT, DATE_SHORTDATE,
 		&st, nullptr, pszText, MaxLength - 1);
+	if (Length < 1)
+		Length = 1;
 	pszText[Length - 1] = L' ';
-	Length += ::GetTimeFormatW(
+	int TimeLength = ::GetTimeFormatW(
 		LOCALE_USER_DEFAULT, TIME_FORCE24HOURFORMAT,
 		&st, nullptr, pszText + Length, MaxLength - Length);
+	if (TimeLength < 1)
+		TimeLength = 1;
+	Length += TimeLength;
+	pszText[Length - 1] = L'\0';
 	return Length - 1;
 }
 
