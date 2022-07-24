@@ -3288,13 +3288,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			switch (Media) {
 			case ES_MEDIA_ALL:
-				// TODO: AnalyzerFilter に GetESCount を追加する。
-				{
-					LibISDB::AnalyzerFilter::ServiceInfo Info;
-					if (!pAnalyzer->GetServiceInfo(ServiceIndex, &Info))
-						return 0;
-					return Info.ESList.size();
-				}
+				return pAnalyzer->GetESCount(ServiceIndex);
 
 			case ES_MEDIA_VIDEO:
 				return pAnalyzer->GetVideoESCount(ServiceIndex);
