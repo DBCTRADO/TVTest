@@ -76,7 +76,7 @@ int CLogItem::Format(char *pszText, int MaxLength) const
 	int Length;
 
 	Length = FormatTime(pszText, MaxLength);
-	pszText[Length++] = '>';
+	Length += StringPrintf(pszText + Length, MaxLength - Length, " [%u]>", ::GetCurrentProcessId());
 	Length += ::WideCharToMultiByte(
 		CP_ACP, 0, m_Text.data(), (int)m_Text.length(),
 		pszText + Length, MaxLength - Length - 1, nullptr, nullptr);
@@ -90,7 +90,7 @@ int CLogItem::Format(WCHAR *pszText, int MaxLength) const
 	int Length;
 
 	Length = FormatTime(pszText, MaxLength);
-	pszText[Length++] = L'>';
+	Length += StringPrintf(pszText + Length, MaxLength - Length, L" [%u]>", ::GetCurrentProcessId());
 	StringCopy(pszText + Length, m_Text.c_str(), MaxLength - Length);
 	Length += ::lstrlenW(pszText + Length);
 	return Length;
