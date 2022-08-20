@@ -51,7 +51,6 @@ namespace TVTest
 		String m_SystemMessage;
 		String m_Caption;
 		MessageType m_MessageType;
-		HWND m_hDlg;
 
 	// CBasicDialog
 		bool Show(HWND hwndOwner) override;
