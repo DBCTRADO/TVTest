@@ -100,6 +100,20 @@ namespace TVTest
 			CChannelScan *m_pChannelScan;
 		};
 
+		class CScanDialog
+			: public CBasicDialog
+		{
+		public:
+			CScanDialog(CChannelScan *pChannelScan);
+
+			bool Show(HWND hwndOwner) override;
+
+		private:
+			INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+			CChannelScan *m_pChannelScan;
+		};
+
 		int m_ScanSpace;
 		int m_ScanChannel;
 		const CTuningSpaceList *m_pOriginalTuningSpaceList;
@@ -145,7 +159,6 @@ namespace TVTest
 		bool IsScanServiceType(BYTE ServiceType, bool fData = true) const;
 
 		static unsigned int __stdcall ScanProc(LPVOID lpParameter);
-		static INT_PTR CALLBACK ScanDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
 }	// namespace TVTest
