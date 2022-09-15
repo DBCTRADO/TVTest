@@ -111,6 +111,7 @@
 	  ・EVENT_AUDIOFORMATCHANGE
 	・チャンネル選択のフラグに CHANNEL_SELECT_FLAG_ALLOWDISABLED を追加した
 	・ダイアログ表示のフラグに SHOW_DIALOG_FLAG_DISABLE_DARK_MODE を追加した
+	・番組表のイベントのフラグに PROGRAMGUIDE_EVENT_COMMAND_ALWAYS を追加した
 
 	ver.0.0.14 (TVTest ver.0.9.0 or later)
 	・以下のメッセージを追加した
@@ -2078,6 +2079,10 @@ struct ProgramGuideProgramInitializeMenuInfo
 enum {
 	PROGRAMGUIDE_EVENT_GENERAL = 0x0001, // 全体のイベント(EVENT_PROGRAMGUIDE_*)
 	PROGRAMGUIDE_EVENT_PROGRAM = 0x0002  // 各番組のイベント(EVENT_PROGRAMGUIDE_PROGRAM_*)
+#if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 15)
+	, PROGRAMGUIDE_EVENT_COMMAND_ALWAYS = 0x0004 // コマンドのイベント(EVENT_PROGRAMGUIDE_COMMAND)をプラグイン無効時にも送る
+	                                             // EVENT_PROGRAMGUIDE_COMMAND は PROGRAMGUIDE_EVENT_GENERAL を指定した場合にも送られるが、プラグインが無効状態の時は送られない
+#endif
 };
 
 // 番組表のイベントの有効/無効を設定する

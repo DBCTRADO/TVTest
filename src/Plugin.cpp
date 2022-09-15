@@ -5158,9 +5158,11 @@ bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, cons
 	if (PluginIndex < 0)
 		return false;
 	CPlugin *pPlugin = m_PluginList[PluginIndex].get();
-	if (!pPlugin->IsEnabled()
-			|| !pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL))
-		return false;
+	if (!pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_COMMAND_ALWAYS)) {
+		if (!pPlugin->IsEnabled()
+				|| !pPlugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL))
+			return false;
+	}
 	return pPlugin->NotifyProgramGuideCommand(pDelimiter + 1, Action, pEvent, pCursorPos, pItemRect);
 }
 
