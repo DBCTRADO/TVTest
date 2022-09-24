@@ -5859,6 +5859,8 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			for (int i = 0; i < NUM_COLUMNS; i++)
 				ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
+
+			SetListViewTooltipsTopMost(hwndList);
 		}
 		return TRUE;
 

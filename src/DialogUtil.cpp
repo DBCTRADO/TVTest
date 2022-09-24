@@ -510,6 +510,36 @@ bool AdjustListViewColumnWidth(HWND hwndList, bool fUseHeader)
 }
 
 
+static LRESULT CALLBACK TooltipsTopMostSubclassProc(
+	HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+	UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg) {
+	case WM_NOTIFY:
+		{
+			const NMHDR *pnmh = reinterpret_cast<const NMHDR *>(lParam);
+			if (pnmh->code == TTN_SHOW) {
+				::SetWindowPos(pnmh->hwndFrom, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+			}
+		}
+		break;
+
+	case WM_NCDESTROY:
+		::RemoveWindowSubclass(hWnd, TooltipsTopMostSubclassProc, uIdSubclass);
+		break;
+	}
+
+	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+// リストビューのツールチップを最前面に表示する
+// 親ウィンドウ(または親ウィンドウのオーナー)が最前面表示されていると背後に隠れてしまうため
+bool SetListViewTooltipsTopMost(HWND hwndList)
+{
+	return ::SetWindowSubclass(hwndList, TooltipsTopMostSubclassProc, 1, 0);
+}
+
+
 // ボタンをドロップダウンメニュー表示用に初期化する
 bool InitDropDownButton(HWND hDlg, int ID)
 {

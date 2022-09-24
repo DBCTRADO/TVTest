@@ -683,6 +683,7 @@ INT_PTR CPIDInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			ListView_SetExtendedListViewStyle(
 				hwndList,
 				LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
 
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;

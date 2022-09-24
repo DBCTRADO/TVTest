@@ -261,6 +261,7 @@ namespace TVTest
 	bool ExtendListBox(HWND hwndList, unsigned int Flags = 0);
 	bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending = true);
 	bool AdjustListViewColumnWidth(HWND hwndList, bool fUseHeader = true);
+	bool SetListViewTooltipsTopMost(HWND hwndList);
 	bool InitDropDownButton(HWND hDlg, int ID);
 	bool InitDropDownButtonWithText(HWND hDlg, int ID);
 

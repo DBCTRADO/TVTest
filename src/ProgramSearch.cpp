@@ -1960,6 +1960,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		{
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
 
 			bool fNeedFontSize = false;
 			bool fAllZero = true;

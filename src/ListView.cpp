@@ -60,8 +60,12 @@ void CListView::Detach()
 
 void CListView::SetExtendedStyle(DWORD Style)
 {
-	if (m_hwnd != nullptr)
+	if (m_hwnd != nullptr) {
 		ListView_SetExtendedListViewStyle(m_hwnd, Style);
+
+		if ((Style & (LVS_EX_INFOTIP | LVS_EX_LABELTIP)) != 0)
+			SetListViewTooltipsTopMost(m_hwnd);
+	}
 }
 
 
@@ -82,6 +86,8 @@ bool CListView::InitCheckList()
 	lvc.pszText = const_cast<LPTSTR>(TEXT(""));
 	lvc.iSubItem = 0;
 	ListView_InsertColumn(m_hwnd, 0, &lvc);
+
+	SetListViewTooltipsTopMost(m_hwnd);
 
 	return true;
 }

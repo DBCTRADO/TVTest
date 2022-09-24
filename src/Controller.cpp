@@ -538,6 +538,8 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
 			ListView_SetExtendedListViewStyle(
 				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
+
 			LV_COLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;

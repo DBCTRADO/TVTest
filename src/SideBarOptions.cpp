@@ -504,6 +504,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
 			m_himlIcons = CreateIconImageList();
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
 			RECT rc;
@@ -516,8 +517,10 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
 			SetItemList(hwndList, &m_ItemList[0], (int)m_ItemList.size());
+
 			hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_COMMANDLIST);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
 			::GetClientRect(hwndList, &rc);
 			rc.right -= GetScrollBarWidth(hwndList);

@@ -620,6 +620,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 			ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
+
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 80;

@@ -668,6 +668,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 			ListView_SetExtendedListViewStyle(
 				hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			SetListViewTooltipsTopMost(hwndList);
 
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
