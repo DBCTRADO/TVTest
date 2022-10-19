@@ -216,6 +216,11 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			EnableDlgItem(
 				hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
 				App.TaskbarOptions.GetEnableJumpList());
+
+			AddControls({
+				{IDC_OPTIONS_DRIVERDIRECTORY,        AlignFlag::Horz},
+				{IDC_OPTIONS_DRIVERDIRECTORY_BROWSE, AlignFlag::Right},
+			});
 		}
 		return TRUE;
 

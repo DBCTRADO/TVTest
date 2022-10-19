@@ -31,7 +31,7 @@ namespace TVTest
 
 	class COptionDialog
 		: public COptionFrame
-		, public CBasicDialog
+		, public CResizableDialog
 	{
 	public:
 		enum {

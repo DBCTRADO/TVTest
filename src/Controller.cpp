@@ -565,6 +565,12 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 			InitDlgItems();
 			SetDlgItemStatus();
+
+			AddControls({
+				{IDC_CONTROLLER_ASSIGN,  AlignFlag::All},
+				{IDC_CONTROLLER_COMMAND, AlignFlag::HorzBottom},
+				{IDC_CONTROLLER_DEFAULT, AlignFlag::Right},
+			});
 		}
 		return TRUE;
 

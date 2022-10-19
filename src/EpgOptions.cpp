@@ -354,6 +354,19 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			m_CurEventInfoFont = m_EventInfoFont;
 			StyleUtil::SetFontInfoItem(hDlg, IDC_EVENTINFOOPTIONS_FONT_INFO, m_CurEventInfoFont);
+
+			AddControls({
+				{IDC_EPGOPTIONS_GROUP,                AlignFlag::Horz},
+				{IDC_EPGOPTIONS_EPGFILENAME,          AlignFlag::Horz},
+				{IDC_EPGOPTIONS_EPGFILENAME_BROWSE,   AlignFlag::Right},
+				{IDC_EPGOPTIONS_EPGDATAFOLDER,        AlignFlag::Horz},
+				{IDC_EPGOPTIONS_EPGDATAFOLDER_BROWSE, AlignFlag::Right},
+				{IDC_LOGOOPTIONS_GROUP,               AlignFlag::Horz},
+				{IDC_LOGOOPTIONS_DATAFILENAME,        AlignFlag::Horz},
+				{IDC_LOGOOPTIONS_DATAFILENAME_BROWSE, AlignFlag::Right},
+				{IDC_LOGOOPTIONS_LOGOFOLDER,          AlignFlag::Horz},
+				{IDC_LOGOOPTIONS_LOGOFOLDER_BROWSE,   AlignFlag::Right},
+			});
 		}
 		return TRUE;
 

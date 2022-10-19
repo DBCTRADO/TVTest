@@ -329,6 +329,13 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			if (i < lengthof(Palette))
 				ZeroMemory(&Palette[i], (lengthof(Palette) - i) * sizeof(RGBQUAD));
 			m_ColorPalette.SetPalette(Palette, lengthof(Palette));
+
+			AddControls({
+				{IDC_COLORSCHEME_LIST,         AlignFlag::All},
+				{IDC_COLORSCHEME_PALETTE,      AlignFlag::Right},
+				{IDC_COLORSCHEME_PALETTEPLACE, AlignFlag::Right},
+				{IDC_COLORSCHEME_PREVIEW,      AlignFlag::BottomRight},
+			});
 		}
 		return TRUE;
 
@@ -895,7 +902,7 @@ void CColorSchemeOptions::OnDarkModeChanged(bool fDarkMode)
 
 void CColorSchemeOptions::ApplyStyle()
 {
-	CBasicDialog::ApplyStyle();
+	CResizableDialog::ApplyStyle();
 
 	if (m_hDlg != nullptr) {
 		m_ColorListMargin = m_pStyleScaling->LogicalPixelsToPhysicalPixels(2);
@@ -905,7 +912,7 @@ void CColorSchemeOptions::ApplyStyle()
 
 void CColorSchemeOptions::RealizeStyle()
 {
-	CBasicDialog::RealizeStyle();
+	CResizableDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
 		SetListItemSize();

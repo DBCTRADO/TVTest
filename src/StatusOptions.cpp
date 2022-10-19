@@ -411,6 +411,13 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				hDlg, IDC_STATUSOPTIONS_OPACITY_LABEL, IDC_STATUSOPTIONS_OPACITY_UNIT,
 				m_fShowPopup && Util::OS::IsWindows8OrLater());
 
+			AddControl(IDC_STATUSOPTIONS_ITEMLIST, AlignFlag::All);
+			AddControl(IDC_STATUSOPTIONS_DEFAULT, AlignFlag::BottomRight);
+			AddControls(
+				IDC_STATUSOPTIONS_FONTINFO_LABEL,
+				IDC_STATUSOPTIONS_OPACITY_UNIT,
+				AlignFlag::Bottom);
+
 			OpenTheme();
 		}
 		return TRUE;
@@ -631,7 +638,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 void CStatusOptions::ApplyStyle()
 {
-	CBasicDialog::ApplyStyle();
+	CResizableDialog::ApplyStyle();
 
 	if (m_hDlg != nullptr) {
 		m_ItemMargin = Style::Margins(3);
@@ -645,7 +652,7 @@ void CStatusOptions::ApplyStyle()
 
 void CStatusOptions::RealizeStyle()
 {
-	CBasicDialog::RealizeStyle();
+	CResizableDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
 		if (DlgListBox_GetCount(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST) > 0) {

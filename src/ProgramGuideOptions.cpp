@@ -658,6 +658,10 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				ListView_SetColumnWidth(hwndList, 1, LVSCW_AUTOSIZE_USEHEADER);
 				SetDlgItemState();
 			}
+
+			AddControl(IDC_PROGRAMGUIDETOOL_GROUP, AlignFlag::All);
+			AddControl(IDC_PROGRAMGUIDETOOL_LIST, AlignFlag::All);
+			AddControls(IDC_PROGRAMGUIDETOOL_ADD, IDC_PROGRAMGUIDETOOL_REMOVEALL, AlignFlag::Bottom);
 		}
 		return TRUE;
 

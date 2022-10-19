@@ -5861,6 +5861,9 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
 
 			SetListViewTooltipsTopMost(hwndList);
+
+			AddControl(IDC_PLUGIN_LIST, AlignFlag::All);
+			AddControl(IDC_PLUGIN_SETTINGS, AlignFlag::Bottom);
 		}
 		return TRUE;
 

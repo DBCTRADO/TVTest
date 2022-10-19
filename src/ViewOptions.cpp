@@ -250,6 +250,13 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER, m_fNoMonitorLowPower);
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPowerActiveOnly);
 			EnableDlgItem(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPower);
+
+			AddControls({
+				{IDC_OPTIONS_WINDOW_SEPARATOR,           AlignFlag::Horz},
+				{IDC_OPTIONS_PREVENT_SEPARATOR,          AlignFlag::Horz},
+				{IDC_OPTIONS_TITLETEXTFORMAT,            AlignFlag::Horz},
+				{IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS, AlignFlag::Right},
+			});
 		}
 		return TRUE;
 

@@ -194,6 +194,10 @@ namespace TVTest
 			Top         = 0x0002U,
 			Right       = 0x0004U,
 			Bottom      = 0x0008U,
+			LeftHalf    = 0x0010U,
+			TopHalf     = 0x0020U,
+			RightHalf   = 0x0040U,
+			BottomHalf  = 0x0080U,
 			BottomRight = Right | Bottom,
 			Horz        = Left | Right,
 			Vert        = Top | Bottom,
@@ -202,6 +206,12 @@ namespace TVTest
 			VertLeft    = Vert | Left,
 			VertRight   = Vert | Right,
 			All         = Horz | Vert,
+		};
+
+		struct ControlAlignInfo
+		{
+			int ID;
+			AlignFlag Align;
 		};
 
 		CResizableDialog();
@@ -228,6 +238,7 @@ namespace TVTest
 		void DoLayout();
 		bool AddControl(int ID, AlignFlag Align);
 		bool AddControls(int FirstID, int LastID, AlignFlag Align);
+		void AddControls(std::initializer_list<ControlAlignInfo> List);
 		bool UpdateControlPosition(int ID);
 
 	// CUIBase

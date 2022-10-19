@@ -526,9 +526,14 @@ bool CAppMain::LoadSettings()
 			FavoritesManager.SetOrganizeDialogPos(Pos);
 		}
 
-		if (Settings.Read(TEXT("OptionDialogLeft"), &Left)
-				&& Settings.Read(TEXT("OptionDialogTop"), &Top))
-			m_OptionDialog.SetPosition(Left, Top);
+		if (Settings.Read(TEXT("OptionDialogLeft"), &Pos.x)
+				&& Settings.Read(TEXT("OptionDialogTop"), &Pos.y)) {
+			Pos.Width = 0;
+			Pos.Height = 0;
+			Settings.Read(TEXT("OptionDialogWidth"), &Pos.Width);
+			Settings.Read(TEXT("OptionDialogHeight"), &Pos.Height);
+			m_OptionDialog.SetPosition(Pos);
+		}
 
 		Settings.Read(TEXT("ExitTimeout"), &m_ExitTimeout);
 		Settings.Read(TEXT("IncrementUDPPort"), &m_fIncrementNetworkPort);
@@ -652,9 +657,13 @@ bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 			}
 
 			if (m_OptionDialog.IsPositionSet()) {
-				m_OptionDialog.GetPosition(&Left, &Top);
-				Settings.Write(TEXT("OptionDialogLeft"), Left);
-				Settings.Write(TEXT("OptionDialogTop"), Top);
+				m_OptionDialog.GetPosition(&Pos);
+				Settings.Write(TEXT("OptionDialogLeft"), Pos.x);
+				Settings.Write(TEXT("OptionDialogTop"), Pos.y);
+				if (Pos.Width > 0)
+					Settings.Write(TEXT("OptionDialogWidth"), Pos.Width);
+				if (Pos.Height > 0)
+					Settings.Write(TEXT("OptionDialogHeight"), Pos.Height);
 			}
 
 			//Settings.Write(TEXT("ExitTimeout"), m_ExitTimeout);

@@ -421,6 +421,14 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			DlgUpDown_SetRange(
 				hDlg, IDC_RECORDOPTIONS_MAXPENDINGSIZE_SPIN,
 				MAX_PENDING_SIZE_MIN / MEGA_BYTES, MAX_PENDING_SIZE_MAX / MEGA_BYTES);
+
+			AddControls({
+				{IDC_RECORDOPTIONS_SAVEFOLDER,        AlignFlag::Horz},
+				{IDC_RECORDOPTIONS_SAVEFOLDER_BROWSE, AlignFlag::Right},
+				{IDC_RECORDOPTIONS_FILENAME,          AlignFlag::Horz},
+				{IDC_RECORDOPTIONS_FILENAMEFORMAT,    AlignFlag::Right},
+				{IDC_RECORDOPTIONS_FILENAMEPREVIEW,   AlignFlag::Horz},
+			});
 		}
 		return TRUE;
 

@@ -495,6 +495,14 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_Lock.Unlock();
 
 			DlgCheckBox_Check(hDlg, IDC_LOG_OUTPUTTOFILE, m_fOutputToFile);
+
+			AddControls({
+				{IDC_LOG_LIST,         AlignFlag::All},
+				{IDC_LOG_COPY,         AlignFlag::Bottom},
+				{IDC_LOG_SAVE,         AlignFlag::Bottom},
+				{IDC_LOG_CLEAR,        AlignFlag::BottomRight},
+				{IDC_LOG_OUTPUTTOFILE, AlignFlag::Bottom},
+			});
 		}
 		return TRUE;
 

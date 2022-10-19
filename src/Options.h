@@ -39,7 +39,7 @@ namespace TVTest
 	};
 
 	class COptions
-		: public CBasicDialog
+		: public CResizableDialog
 		, public CSettingsBase
 	{
 	public:

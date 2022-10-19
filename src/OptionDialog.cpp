@@ -172,6 +172,7 @@ void COptionDialog::SetPage(int Page)
 			CreatePage(Page);
 		}
 		m_PageList[m_CurrentPage].pOptions->SetVisible(false);
+		SetPagePos(Page);
 		m_PageList[Page].pOptions->SetVisible(true);
 		m_CurrentPage = Page;
 		DlgListBox_SetCurSel(m_hDlg, IDC_OPTIONS_LIST, Page);
@@ -183,14 +184,10 @@ void COptionDialog::SetPage(int Page)
 void COptionDialog::SetPagePos(int Page)
 {
 	if (m_PageList[Page].pOptions->IsCreated()) {
-		RECT rcPage, rcOptions;
+		RECT rcPage;
 
 		GetDlgItemRect(m_hDlg, IDC_OPTIONS_PAGEPLACE, &rcPage);
-		m_PageList[Page].pOptions->GetPosition(&rcOptions);
-		m_PageList[Page].pOptions->SetPosition(
-			rcPage.left, rcPage.top,
-			rcOptions.right - rcOptions.left,
-			rcOptions.bottom - rcOptions.top);
+		m_PageList[Page].pOptions->SetPosition(&rcPage);
 	}
 }
 
@@ -219,6 +216,18 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			CreatePage(m_CurrentPage);
 			m_PageList[m_CurrentPage].pOptions->SetVisible(true);
 			DlgListBox_SetCurSel(hDlg, IDC_OPTIONS_LIST, m_CurrentPage);
+
+			AddControls({
+				{IDC_OPTIONS_LIST,      AlignFlag::Vert},
+				{IDC_OPTIONS_TITLE,     AlignFlag::Horz},
+				{IDC_OPTIONS_PAGEPLACE, AlignFlag::All},
+				{IDC_OPTIONS_SEPARATOR, AlignFlag::HorzBottom},
+				{IDC_OPTIONS_HELP,      AlignFlag::Bottom},
+				{IDOK,                  AlignFlag::BottomRight},
+				{IDCANCEL,              AlignFlag::BottomRight},
+			});
+
+			ApplyPosition();
 
 			m_fApplied = false;
 		}
@@ -363,6 +372,11 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		}
 		return TRUE;
 
+	case WM_SIZE:
+		SetPagePos(m_CurrentPage);
+		InvalidateDlgItem(hDlg, IDC_OPTIONS_TITLE, false);
+		return TRUE;
+
 	case WM_DESTROY:
 		if (m_himlIcons != nullptr) {
 			::ImageList_Destroy(m_himlIcons);
@@ -378,7 +392,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 void COptionDialog::ApplyStyle()
 {
-	CBasicDialog::ApplyStyle();
+	CResizableDialog::ApplyStyle();
 
 	if (m_hDlg != nullptr) {
 		m_IconWidth = m_pStyleScaling->GetScaledSystemMetrics(SM_CXSMICON);
@@ -410,7 +424,7 @@ void COptionDialog::ApplyStyle()
 
 void COptionDialog::RealizeStyle()
 {
-	CBasicDialog::RealizeStyle();
+	CResizableDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
 		if (DlgListBox_GetCount(m_hDlg, IDC_OPTIONS_LIST) > 0) {

@@ -347,6 +347,13 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 
+			AddControl(IDC_MENUOPTIONS_ITEMLIST, AlignFlag::All);
+			AddControls(
+				IDC_MENUOPTIONS_ITEMLIST_UP,
+				IDC_MENUOPTIONS_ITEMLIST_REMOVESEPARATOR,
+				AlignFlag::Right);
+			AddControl(IDC_MENUOPTIONS_ITEMLIST_DEFAULT, AlignFlag::BottomRight);
+
 			m_fChanging = false;
 		}
 		return TRUE;
@@ -446,6 +453,10 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			}
 			return TRUE;
 		}
+		return TRUE;
+
+	case WM_SIZE:
+		m_ItemListView.AdjustSingleColumnWidth();
 		return TRUE;
 
 	case WM_NOTIFY:

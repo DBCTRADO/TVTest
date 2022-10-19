@@ -854,6 +854,20 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_APPCOMMAND, m_MediaKeyList[i].pszText);
 
 			SetDlgItemStatus(hDlg);
+
+			AddControls({
+				{IDC_ACCELERATOR_GROUP,               AlignFlag::All},
+				{IDC_ACCELERATOR_LIST,                AlignFlag::All},
+				{IDC_ACCELERATOR_SHIFT,               AlignFlag::Right},
+				{IDC_ACCELERATOR_CONTROL,             AlignFlag::Right},
+				{IDC_ACCELERATOR_ALT,                 AlignFlag::Right},
+				{IDC_ACCELERATOR_KEY,                 AlignFlag::Right},
+				{IDC_ACCELERATOR_GLOBAL,              AlignFlag::Right},
+				{IDC_ACCELERATOR_APPCOMMAND,          AlignFlag::Right},
+				{IDC_ACCELERATOR_NOTE,                AlignFlag::Right},
+				{IDC_ACCELERATOR_DEFAULT,             AlignFlag::BottomRight},
+				{IDC_ACCELERATOR_CHANNELINPUTOPTIONS, AlignFlag::Bottom},
+			});
 		}
 		return TRUE;
 

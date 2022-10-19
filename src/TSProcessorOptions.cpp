@@ -130,6 +130,9 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			UpdateCurSettings();
 
 			m_TunerMapListView.AdjustColumnWidth();
+
+			AddControl(IDC_TSPROCESSOR_TUNERMAP, AlignFlag::All);
+			AddControls(IDC_TSPROCESSOR_TUNERMAP_ADD, IDC_TSPROCESSOR_TUNERMAP_DOWN, AlignFlag::Right);
 		}
 		return TRUE;
 

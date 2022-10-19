@@ -531,6 +531,12 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			for (size_t i = 0; i < m_AvailItemList.size(); i++)
 				List[i] = m_AvailItemList[i].Command;
 			SetItemList(hwndList, List.data(), (int)List.size());
+
+			AddControl(IDC_SIDEBAR_ITEMLIST, AlignFlag::VertLeft | AlignFlag::RightHalf);
+			AddControl(IDC_SIDEBAR_COMMANDLIST_LABEL, AlignFlag::LeftHalf);
+			AddControl(IDC_SIDEBAR_COMMANDLIST, AlignFlag::LeftHalf | AlignFlag::VertRight);
+			AddControls(IDC_SIDEBAR_UP, IDC_SIDEBAR_DEFAULT, AlignFlag::Bottom);
+			AddControls(IDC_SIDEBAR_ADD, IDC_SIDEBAR_SEPARATOR, AlignFlag::LeftHalf | AlignFlag::Bottom);
 		}
 		return TRUE;
 
@@ -644,6 +650,21 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				ListView_InsertItem(hwndList, &lvi);
 			}
 			return TRUE;
+		}
+		return TRUE;
+
+	case WM_SIZE:
+		{
+			static const int IDList[] = {IDC_SIDEBAR_ITEMLIST, IDC_SIDEBAR_COMMANDLIST};
+
+			for (const int ID : IDList) {
+				HWND hwndList = ::GetDlgItem(hDlg, ID);
+				RECT rcWindow;
+				::GetWindowRect(hwndList, &rcWindow);
+				RECT rcFrame = {};
+				AdjustWindowRectWithDPI(&rcFrame, GetWindowStyle(hwndList), GetWindowExStyle(hwndList), false, GetWindowDPI(hwndList));
+				ListView_SetColumnWidth(hwndList, 0, (rcWindow.right - rcWindow.left) - (-rcFrame.left + rcFrame.right + GetScrollBarWidth(hwndList)));
+			}
 		}
 		return TRUE;
 

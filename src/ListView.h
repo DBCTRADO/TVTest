@@ -56,6 +56,7 @@ namespace TVTest
 		bool EnsureItemVisible(int Index, bool fPartialOK = false);
 		int InsertColumn(int Index, LPCTSTR pszText, int Format = LVCFMT_LEFT);
 		void AdjustColumnWidth(bool fUseHeader = true);
+		void AdjustSingleColumnWidth();
 
 	protected:
 		HWND m_hwnd;

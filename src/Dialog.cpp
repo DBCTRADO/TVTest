@@ -1253,7 +1253,9 @@ bool CBasicDialog::SetControlDarkTheme(HWND hwnd, bool fDark)
 		return SetWindowDarkTheme(hwnd, fDark);
 
 	if (::lstrcmpi(szClassName, TRACKBAR_CLASS) == 0) {
-		::SetWindowLong(hwnd, GWL_STYLE, GetWindowStyle(hwnd) | TBS_TRANSPARENTBKGND);
+		const DWORD Style = GetWindowStyle(hwnd);
+		if (((Style & TBS_TRANSPARENTBKGND) != 0) != fDark)
+			::SetWindowLong(hwnd, GWL_STYLE, Style ^ TBS_TRANSPARENTBKGND);
 		return true;
 	}
 
@@ -1998,11 +2000,11 @@ bool CResizableDialog::ApplyPosition()
 void CResizableDialog::DoLayout()
 {
 	RECT rc;
-	int Width, Height;
-
 	::GetClientRect(m_hDlg, &rc);
-	Width = rc.right;
-	Height = rc.bottom;
+	const int Width = rc.right;
+	const int Height = rc.bottom;
+	const int WidthDiff = Width - m_ScaledClientSize.cx;
+	const int HeightDiff = Height - m_ScaledClientSize.cy;
 
 	HDWP hdwp = ::BeginDeferWindowPos(static_cast<int>(m_ControlList.size()));
 
@@ -2017,20 +2019,39 @@ void CResizableDialog::DoLayout()
 			rc.bottom = ::MulDiv(rc.bottom, m_CurrentDPI, DPI);
 		}
 
-		if (!!(e.Align & AlignFlag::Right)) {
-			rc.right += Width - m_ScaledClientSize.cx;
-			if (!(e.Align & AlignFlag::Left))
-				rc.left += Width - m_ScaledClientSize.cx;
-			if (rc.right < rc.left)
-				rc.right = rc.left;
+		if (!!(e.Align & AlignFlag::RightHalf)) {
+			rc.right += WidthDiff / 2;
+			if (!!(e.Align & AlignFlag::LeftHalf) || !(e.Align & AlignFlag::Left))
+				rc.left += WidthDiff / 2;
+		} else if (!!(e.Align & AlignFlag::Right)) {
+			rc.right += WidthDiff;
+			if (!!(e.Align & AlignFlag::LeftHalf))
+				rc.left += WidthDiff / 2;
+			else if (!(e.Align & AlignFlag::Left))
+				rc.left += WidthDiff;
+		} else if (!!(e.Align & AlignFlag::LeftHalf)) {
+			rc.left += WidthDiff / 2;
+			rc.right += WidthDiff / 2;
 		}
-		if (!!(e.Align & AlignFlag::Bottom)) {
-			rc.bottom += Height - m_ScaledClientSize.cy;
-			if (!(e.Align & AlignFlag::Top))
-				rc.top += Height - m_ScaledClientSize.cy;
-			if (rc.bottom < rc.top)
-				rc.bottom = rc.top;
+		if (rc.right < rc.left)
+			rc.right = rc.left;
+
+		if (!!(e.Align & AlignFlag::BottomHalf)) {
+			rc.bottom += HeightDiff / 2;
+			if (!!(e.Align & AlignFlag::TopHalf) || !(e.Align & AlignFlag::Top))
+				rc.top += HeightDiff / 2;
+		} else if (!!(e.Align & AlignFlag::Bottom)) {
+			rc.bottom += HeightDiff;
+			if (!!(e.Align & AlignFlag::TopHalf))
+				rc.top += HeightDiff / 2;
+			else if (!(e.Align & AlignFlag::Top))
+				rc.top += HeightDiff;
+		} else if (!!(e.Align & AlignFlag::TopHalf)) {
+			rc.top += HeightDiff / 2;
+			rc.bottom += HeightDiff / 2;
 		}
+		if (rc.bottom < rc.top)
+			rc.bottom = rc.top;
 
 		if (hdwp != nullptr) {
 			::DeferWindowPos(
@@ -2085,6 +2106,13 @@ bool CResizableDialog::AddControls(int FirstID, int LastID, AlignFlag Align)
 			return false;
 	}
 	return true;
+}
+
+
+void CResizableDialog::AddControls(std::initializer_list<ControlAlignInfo> List)
+{
+	for (const ControlAlignInfo &Info : List)
+		AddControl(Info.ID, Info.Align);
 }
 
 

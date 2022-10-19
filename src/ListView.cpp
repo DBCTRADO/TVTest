@@ -323,4 +323,17 @@ void CListView::AdjustColumnWidth(bool fUseHeader)
 }
 
 
+void CListView::AdjustSingleColumnWidth()
+{
+	if (m_hwnd == nullptr)
+		return;
+
+	RECT rcWindow;
+	::GetWindowRect(m_hwnd, &rcWindow);
+	RECT rcFrame = {};
+	AdjustWindowRectWithDPI(&rcFrame, GetWindowStyle(m_hwnd), GetWindowExStyle(m_hwnd), false, GetWindowDPI(m_hwnd));
+	ListView_SetColumnWidth(m_hwnd, 0, (rcWindow.right - rcWindow.left) - (-rcFrame.left + rcFrame.right + GetScrollBarWidth(m_hwnd)));
+}
+
+
 }	// namespace TVTest

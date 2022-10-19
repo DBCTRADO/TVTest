@@ -849,6 +849,15 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			if (CoreEngine.IsNetworkDriver())
 				EnableDlgItems(hDlg, IDC_CHANNELSCAN_FIRST, IDC_CHANNELSCAN_LAST, false);
+
+			AddControls({
+				{IDC_CHANNELSCAN_CHANNELLIST,       AlignFlag::All},
+				{IDC_CHANNELSCAN_SCANSERVICE,       AlignFlag::Bottom},
+				{IDC_CHANNELSCAN_IGNORESIGNALLEVEL, AlignFlag::Bottom},
+				{IDC_CHANNELSCAN_SETTINGS,          AlignFlag::Bottom},
+				{IDC_CHANNELSCAN_LOADPRESET,        AlignFlag::BottomRight},
+				{IDC_CHANNELSCAN_START,             AlignFlag::BottomRight},
+			});
 		}
 		return TRUE;
 

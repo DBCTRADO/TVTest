@@ -253,6 +253,12 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_DisplayFontCur = m_DisplayFont;
 			StyleUtil::SetFontInfoItem(hDlg, IDC_DISPLAYMENU_FONT_INFO, m_DisplayFont);
 			DlgCheckBox_Check(hDlg, IDC_DISPLAYMENU_AUTOFONTSIZE, m_fDisplayFontAutoSize);
+
+			AddControls({
+				{IDC_OSDOPTIONS_GROUP,                     AlignFlag::Horz},
+				{IDC_OSDOPTIONS_CHANNELCHANGE_TEXT,        AlignFlag::Horz},
+				{IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS, AlignFlag::Right},
+			});
 		}
 		return TRUE;
 

@@ -522,6 +522,16 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				IDC_CAPTUREOPTIONS_COMMENT,
 				IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,
 				m_fSetComment);
+
+			AddControls({
+				{IDC_CAPTUREOPTIONS_SAVEFOLDER,          AlignFlag::Horz},
+				{IDC_CAPTUREOPTIONS_SAVEFOLDER_BROWSE,   AlignFlag::Right},
+				{IDC_CAPTUREOPTIONS_FILENAME,            AlignFlag::Horz},
+				{IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS, AlignFlag::Right},
+				{IDC_CAPTUREOPTIONS_FILENAME_PREVIEW,    AlignFlag::Horz},
+				{IDC_CAPTUREOPTIONS_COMMENT,             AlignFlag::Horz},
+				{IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS,  AlignFlag::Right},
+			});
 		}
 		return TRUE;
 

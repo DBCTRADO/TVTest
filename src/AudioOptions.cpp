@@ -393,6 +393,11 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, 0);
 
 			UpdateLanguagePriorityControls();
+
+			AddControls({
+				{IDC_OPTIONS_AUDIODEVICE, AlignFlag::Horz},
+				{IDC_OPTIONS_AUDIOFILTER, AlignFlag::Horz},
+			});
 		}
 		return TRUE;
 
