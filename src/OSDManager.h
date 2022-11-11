@@ -72,6 +72,7 @@ namespace TVTest
 		void HideChannelOSD();
 		bool ShowVolumeOSD(int Volume);
 		void HideVolumeOSD();
+		void OnOSDFontChanged();
 
 	private:
 		struct OSDStyle
@@ -89,6 +90,10 @@ namespace TVTest
 			Style::Margins VolumeMargin;
 			Style::IntValue VolumeTextSizeMin;
 			Style::IntValue VolumeTextSizeMax;
+			Style::IntValue VolumeHorizontalScale;
+			Style::IntValue VolumeSteps;
+			String VolumeTextFill;
+			String VolumeTextRemain;
 
 			OSDStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
@@ -102,6 +107,7 @@ namespace TVTest
 		CEventHandler *m_pEventHandler;
 		CPseudoOSD m_OSD;
 		CPseudoOSD m_VolumeOSD;
+		int m_VolumeOSDMaxWidth;
 
 		bool CompositeText(LPCTSTR pszText, const RECT &rcClient, int LeftOffset, DWORD FadeTime);
 		bool CreateTextOSD(

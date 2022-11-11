@@ -344,7 +344,10 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_fShowOSD = DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOWOSD);
 				m_fPseudoOSD = !DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_COMPOSITE);
 				m_TextColor = m_CurTextColor;
-				m_OSDFont = m_CurOSDFont;
+				if (!CompareLogFont(&m_OSDFont, &m_CurOSDFont)) {
+					m_OSDFont = m_CurOSDFont;
+					GetAppClass().OSDManager.OnOSDFontChanged();
+				}
 				m_FadeTime = ::GetDlgItemInt(hDlg, IDC_OSDOPTIONS_FADETIME, nullptr, FALSE) * 1000;
 				unsigned int EnabledOSD = 0;
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_CHANNEL))

@@ -33,6 +33,7 @@ namespace TVTest
 COSDManager::COSDManager(const COSDOptions *pOptions)
 	: m_pOptions(pOptions)
 	, m_pEventHandler(nullptr)
+	, m_VolumeOSDMaxWidth(0)
 {
 }
 
@@ -229,15 +230,49 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 	if (!m_pEventHandler->GetOSDClientInfo(&ClientInfo))
 		return false;
 
-	static const int VolumeSteps = 20;
-	WCHAR szText[64];
+	const int VolumeSteps = std::clamp(m_Style.VolumeSteps.Value, 2, 100);
+	TCHAR szText[256];
+	CStaticStringFormatter Formatter(szText, lengthof(szText));
 	int i;
 
 	for (i = 0; i < std::min(Volume, 100) / (100 / VolumeSteps); i++)
-		szText[i] = L'■';
+		Formatter.Append(m_Style.VolumeTextFill.c_str());
 	for (; i < VolumeSteps; i++)
-		szText[i] = L'□';
-	StringPrintf(szText + i, lengthof(szText) - i, TEXT(" %d"), Volume);
+		Formatter.Append(m_Style.VolumeTextRemain.c_str());
+	Formatter.AppendFormat(TEXT(" %d"), Volume);
+
+	LOGFONT lf = *m_pOptions->GetOSDFont();
+	lf.lfWidth = 0;
+
+	if (m_VolumeOSDMaxWidth == 0) {
+		lf.lfHeight = -m_Style.VolumeTextSizeMax;
+		HFONT hfont = ::CreateFontIndirect(&lf);
+		HDC hdc = ::GetDC(ClientInfo.hwndParent);
+		HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
+
+		RECT rcFill = {};
+		::DrawText(
+			hdc,
+			m_Style.VolumeTextFill.data(), static_cast<int>(m_Style.VolumeTextFill.length()),
+			&rcFill,
+			DT_NOPREFIX | DT_SINGLELINE | DT_CALCRECT);
+
+		RECT rcRemain = {};
+		::DrawText(
+			hdc,
+			m_Style.VolumeTextRemain.data(), static_cast<int>(m_Style.VolumeTextRemain.length()),
+			&rcRemain,
+			DT_NOPREFIX | DT_SINGLELINE | DT_CALCRECT);
+
+		RECT rcPercentage = {};
+		::DrawText(hdc, TEXT(" 100"), 4, &rcPercentage, DT_NOPREFIX | DT_SINGLELINE | DT_CALCRECT);
+
+		::SelectObject(hdc, hOldFont);
+		::ReleaseDC(ClientInfo.hwndParent, hdc);
+		::DeleteObject(hfont);
+
+		m_VolumeOSDMaxWidth = std::max(rcFill.right, rcRemain.right) * VolumeSteps + rcPercentage.right;
+	}
 
 	if (!m_pOptions->GetPseudoOSD() && !ClientInfo.fForcePseudoOSD
 			&& pViewer->IsDrawTextSupported()) {
@@ -245,15 +280,14 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 
 		if (pViewer->GetSourceRect(&rcSrc)) {
 			const int FontSize = std::clamp<int>(
-				((rcSrc.right - rcSrc.left) - m_Style.VolumeMargin.Horz()) / (VolumeSteps * 2),
+				::MulDiv(
+					(rcSrc.right - rcSrc.left) - m_Style.VolumeMargin.Horz(),
+					m_Style.VolumeTextSizeMax * m_Style.VolumeHorizontalScale,
+					m_VolumeOSDMaxWidth * 100),
 				m_Style.VolumeTextSizeMin, m_Style.VolumeTextSizeMax);
-			LOGFONT lf;
-			HFONT hfont;
-
-			lf = *m_pOptions->GetOSDFont();
 			lf.lfHeight = -FontSize;
 			lf.lfQuality = NONANTIALIASED_QUALITY;
-			hfont = ::CreateFontIndirect(&lf);
+			HFONT hfont = ::CreateFontIndirect(&lf);
 			rcSrc.left +=
 				m_Style.VolumeMargin.Left * (rcSrc.right - rcSrc.left) /
 				(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left);
@@ -272,11 +306,11 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		}
 	} else {
 		const int FontSize = std::clamp<int>(
-			((ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) - m_Style.VolumeMargin.Horz()) / (VolumeSteps * 2),
+			::MulDiv(
+				(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left) - m_Style.VolumeMargin.Horz(),
+				m_Style.VolumeTextSizeMax * m_Style.VolumeHorizontalScale,
+				m_VolumeOSDMaxWidth * 100),
 			m_Style.VolumeTextSizeMin, m_Style.VolumeTextSizeMax);
-		LOGFONT lf;
-
-		lf = *m_pOptions->GetOSDFont();
 		lf.lfHeight = -FontSize;
 		m_VolumeOSD.Create(ClientInfo.hwndParent, m_pOptions->GetLayeredWindow());
 		m_VolumeOSD.SetTextStyle(
@@ -305,6 +339,12 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 void COSDManager::HideVolumeOSD()
 {
 	m_VolumeOSD.Hide();
+}
+
+
+void COSDManager::OnOSDFontChanged()
+{
+	m_VolumeOSDMaxWidth = 0;
 }
 
 
@@ -415,6 +455,7 @@ bool COSDManager::CreateTextOSD(LPCTSTR pszText, const OSDClientInfo &ClientInfo
 void COSDManager::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
+	m_VolumeOSDMaxWidth = 0;
 }
 
 
@@ -423,6 +464,7 @@ void COSDManager::NormalizeStyle(
 	const Style::CStyleScaling *pStyleScaling)
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
+	m_VolumeOSDMaxWidth = 0;
 }
 
 
@@ -442,6 +484,10 @@ COSDManager::OSDStyle::OSDStyle()
 	, VolumeMargin(16)
 	, VolumeTextSizeMin(10)
 	, VolumeTextSizeMax(50)
+	, VolumeHorizontalScale(60)
+	, VolumeSteps(20)
+	, VolumeTextFill(TEXT("■"))
+	, VolumeTextRemain(TEXT("□"))
 {
 }
 
@@ -466,6 +512,10 @@ void COSDManager::OSDStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 	pStyleManager->Get(TEXT("volume-osd.margin"), &VolumeMargin);
 	pStyleManager->Get(TEXT("volume-osd.text-size-min"), &VolumeTextSizeMin);
 	pStyleManager->Get(TEXT("volume-osd.text-size-max"), &VolumeTextSizeMax);
+	pStyleManager->Get(TEXT("volume-osd.horizontal-scale"), &VolumeHorizontalScale);
+	pStyleManager->Get(TEXT("volume-osd.steps"), &VolumeSteps);
+	pStyleManager->Get(TEXT("volume-osd.text.fill"), &VolumeTextFill);
+	pStyleManager->Get(TEXT("volume-osd.text.remain"), &VolumeTextRemain);
 }
 
 
