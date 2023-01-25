@@ -117,7 +117,7 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 				BYTE *p = pri->data.hid.bRawData;
 				int Index = KeyDataToIndex(p[1] | (p[2] << 8));
 
-				TRACE(TEXT("WM_INPUT 0x%02x%02x%02x%02x\n"), p[0], p[1], p[2], p[3]);
+				TRACE(TEXT("WM_INPUT 0x{:02x}{:02x}{:02x}{:02x}\n"), p[0], p[1], p[2], p[3]);
 				if (Index >= 0) {
 					m_pEventHandler->OnInput(Index);
 				} else {

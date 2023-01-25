@@ -91,10 +91,9 @@ namespace TVTest
 
 	typedef std::wstring String;
 	typedef std::string AnsiString;
+	typedef std::wstring_view StringView;
 
 	using LibISDB::StringLength;
-	using LibISDB::StringPrintf;
-	using LibISDB::StringPrintfV;
 	using LibISDB::StringCopy;
 	using LibISDB::StringCompare;
 	using LibISDB::StringCompareI;

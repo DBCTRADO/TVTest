@@ -396,7 +396,7 @@ namespace TVTest
 		void SortSearchResult();
 		void UpdateEventInfoText();
 		void SetEventInfoText(const LibISDB::EventInfo *pEventInfo);
-		int FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const;
+		size_t FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, size_t MaxLength) const;
 		void FormatEventInfoText(const LibISDB::EventInfo *pEventInfo, String *pText) const;
 		void HighlightKeyword();
 		bool SearchNextKeyword(LPCTSTR *ppszText, LPCTSTR pKeyword, int KeywordLength, int *pLength) const;

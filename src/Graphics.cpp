@@ -666,7 +666,7 @@ bool CCanvas::GetOutlineTextSize(
 
 #if 0
 	TRACE(
-		TEXT("Outline text bounds : [%d x %d] [%f %f %f %f] \"%s\"\n"),
+		TEXT("Outline text bounds : [{} x {}] [{} {} {} {}] \"{}\"\n"),
 		Size.cx, Size.cy, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, pszText);
 #endif
 

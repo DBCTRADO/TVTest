@@ -700,7 +700,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 		TCHAR szName[5];
 
 		for (int i = 1; i <= 9; i++) {
-			StringPrintf(szName, TEXT("COM%d"), i);
+			StringFormat(szName, TEXT("COM{}"), i);
 			if (lstrcmpi(szName, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -708,7 +708,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 			}
 		}
 		for (int i = 1; i <= 9; i++) {
-			StringPrintf(szName, TEXT("LPT%d"), i);
+			StringFormat(szName, TEXT("LPT{}"), i);
 			if (lstrcmpi(szName, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -728,13 +728,13 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 				|| (!fAllowDelimiter && *p == _T('\\'))) {
 			if (pMessage != nullptr) {
 				if (*p <= 31) {
-					StringUtility::Format(
-						*pMessage,
-						TEXT("ファイル名に使用できない文字 0x%02x が含まれています。"), *p);
+					StringFormat(
+						pMessage,
+						TEXT("ファイル名に使用できない文字 {:#02x} が含まれています。"), *p);
 				} else {
-					StringUtility::Format(
-						*pMessage,
-						TEXT("ファイル名に使用できない文字 %c が含まれています。"), *p);
+					StringFormat(
+						pMessage,
+						TEXT("ファイル名に使用できない文字 {:c} が含まれています。"), *p);
 				}
 			}
 			return false;
@@ -792,7 +792,7 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 		String Name;
 
 		if (IsStringEmpty(pszNumberFormat))
-			pszNumberFormat = TEXT("-%d");
+			pszNumberFormat = TEXT("-{}");
 
 		for (int i = 2;; i++) {
 			if (i == MAX_NUMBER)
@@ -800,7 +800,7 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 
 			TCHAR szNumber[16];
 
-			StringPrintf(szNumber, pszNumberFormat, i);
+			StringFormat(szNumber, pszNumberFormat, i);
 			Name = BaseName;
 			Name += szNumber;
 			Name += pszExtension;
@@ -1334,23 +1334,10 @@ void CStaticStringFormatter::Append(LPCTSTR pszString)
 	}
 }
 
-void CStaticStringFormatter::AppendFormat(LPCTSTR pszFormat, ...)
+void CStaticStringFormatter::AppendFormatV(StringView Format, FormatArgs Args)
 {
-	if (pszFormat != nullptr && m_Length + 1 < m_BufferLength) {
-		va_list Args;
-
-		va_start(Args, pszFormat);
-		AppendFormatV(pszFormat, Args);
-		va_end(Args);
-	}
-}
-
-void CStaticStringFormatter::AppendFormatV(LPCTSTR pszFormat, va_list Args)
-{
-	if (pszFormat != nullptr && m_Length + 1 < m_BufferLength) {
-		int Length = StringPrintfV(m_pBuffer + m_Length, m_BufferLength - m_Length, pszFormat, Args);
-		if (Length >= 0)
-			m_Length += Length;
+	if (!Format.empty() && m_Length + 1 < m_BufferLength) {
+		m_Length += StringVFormatArgs(m_pBuffer + m_Length, m_BufferLength - m_Length, Format, Args);
 	}
 }
 

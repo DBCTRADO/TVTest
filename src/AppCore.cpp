@@ -40,15 +40,12 @@ CAppCore::CAppCore(CAppMain &App)
 }
 
 
-void CAppCore::OnError(LPCTSTR pszText, ...)
+void CAppCore::OnErrorV(StringView Format, FormatArgs Args)
 {
-	va_list Args;
 	TCHAR szText[1024];
 
-	va_start(Args, pszText);
-	StringPrintfV(szText, pszText, Args);
-	va_end(Args);
-	m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
+	StringVFormatArgs(szText, std::size(szText), Format, Args);
+	m_App.AddLogRaw(CLogItem::LogType::Error, szText);
 	if (!m_fSilent)
 		m_App.UICore.GetSkin()->ShowErrorMessage(szText);
 }
@@ -60,14 +57,14 @@ void CAppCore::OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTi
 		return;
 
 	if (!IsStringEmpty(pErrorHandler->GetLastErrorText())) {
-		m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), pErrorHandler->GetLastErrorText());
+		m_App.AddLogRaw(CLogItem::LogType::Error, pErrorHandler->GetLastErrorText());
 	} else if (pErrorHandler->GetLastErrorCode()) {
 		std::string Message = pErrorHandler->GetLastErrorCode().message();
 		if (!Message.empty()) {
 			int Length = ::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), nullptr, 0);
 			String Text(Length, TEXT('\0'));
 			::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), &Text[0], Length);
-			m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), Text.c_str());
+			m_App.AddLogRaw(CLogItem::LogType::Error, Text);
 		}
 	} else {
 		m_App.AddLog(CLogItem::LogType::Error, TEXT("Unknown error"));
@@ -103,8 +100,8 @@ bool CAppCore::InitializeChannel()
 	if (!ChannelFilePath.empty()) {
 		if (m_App.ChannelManager.LoadChannelList(ChannelFilePath.c_str())) {
 			m_App.AddLog(
-				TEXT("チャンネル設定を \"%s\" から読み込みました。"),
-				ChannelFilePath.c_str());
+				TEXT("チャンネル設定を \"{}\" から読み込みました。"),
+				ChannelFilePath);
 			if (!m_App.ChannelManager.ChannelFileHasStreamIDs())
 				m_App.AddLog(CLogItem::LogType::Warning, TEXT("チャンネルファイルが古いので再スキャンをお薦めします。"));
 		}
@@ -308,7 +305,7 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName, const CTuningSpaceLis
 									&& (pChInfo->GetServiceID() == ChannelInfo.GetServiceID()
 										|| ::lstrcmp(pChInfo->GetName(), ChannelInfo.GetName()) == 0)) {
 								TRACE(
-									TEXT("お気に入りチャンネル更新 : %s -> %s / NID %d -> %d / TSID %04x -> %04x / SID %d -> %d\n"),
+									TEXT("お気に入りチャンネル更新 : {} -> {} / NID {} -> {} / TSID {:04x} -> {:04x} / SID {} -> {}\n"),
 									ChannelInfo.GetName(), pChInfo->GetName(),
 									ChannelInfo.GetNetworkID(), pChInfo->GetNetworkID(),
 									ChannelInfo.GetTransportStreamID(), pChInfo->GetTransportStreamID(),
@@ -380,7 +377,7 @@ bool CAppCore::SetChannel(int Space, int Channel, int ServiceID/* = -1*/, bool f
 
 		LPCTSTR pszTuningSpace = m_App.ChannelManager.GetDriverTuningSpaceList()->GetTuningSpaceName(pChInfo->GetSpace());
 		m_App.AddLog(
-			TEXT("BonDriverにチャンネル変更を要求します。(チューニング空間 %d[%s] / Ch %d[%s] / Sv %d)"),
+			TEXT("BonDriverにチャンネル変更を要求します。(チューニング空間 {}[{}] / Ch {}[{}] / Sv {})"),
 			pChInfo->GetSpace(), pszTuningSpace != nullptr ? pszTuningSpace : TEXT("\?\?\?"),
 			pChInfo->GetChannelIndex(), pChInfo->GetName(), ServiceID);
 
@@ -410,7 +407,7 @@ bool CAppCore::SetChannel(int Space, int Channel, int ServiceID/* = -1*/, bool f
 		m_App.CoreEngine.SetServiceSelectInfo(&ServiceSel);
 
 		if (!pSourceFilter->SetChannelAndPlay(pChInfo->GetSpace(), pChInfo->GetChannelIndex())) {
-			m_App.AddLog(CLogItem::LogType::Error, TEXT("%s"), pSourceFilter->GetLastErrorText());
+			m_App.AddLogRaw(CLogItem::LogType::Error, pSourceFilter->GetLastErrorText());
 			m_App.ChannelManager.SetCurrentChannel(OldSpace, OldChannel);
 			return false;
 		}
@@ -706,7 +703,7 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID, WORD ServiceID)
 	const CChannelInfo *pCurChInfo = m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pCurChInfo == nullptr
 			|| pCurChInfo->GetTransportStreamID() != TransportStreamID) {
-		m_App.AddLog(TEXT("ストリームの変化を検知しました。(TSID %d / SID %d)"), TransportStreamID, ServiceID);
+		m_App.AddLog(TEXT("ストリームの変化を検知しました。(TSID {} / SID {})"), TransportStreamID, ServiceID);
 	}
 	const bool fSpaceChanged = Space != m_App.ChannelManager.GetCurrentSpace();
 	if (!m_App.ChannelManager.SetCurrentChannel(Space, Channel))
@@ -723,7 +720,9 @@ bool CAppCore::FollowChannelChange(WORD TransportStreamID, WORD ServiceID)
 
 bool CAppCore::SetServiceByID(WORD ServiceID, SetServiceFlag Flags)
 {
-	TRACE(TEXT("CAppCore::SetServiceByID(%04x,%x)\n"), ServiceID, Flags);
+	TRACE(
+		TEXT("CAppCore::SetServiceByID({:04x}, {:x})\n"),
+		ServiceID, static_cast<std::underlying_type_t<SetServiceFlag>>(Flags));
 
 	const bool fStrict = !!(Flags & SetServiceFlag::StrictID);
 	const CChannelInfo *pCurChInfo = m_App.ChannelManager.GetCurrentChannelInfo();
@@ -769,7 +768,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID, SetServiceFlag Flags)
 		if (ServiceSel.OneSegSelect == LibISDB::TSEngine::OneSegSelectType::HighPriority)
 			m_App.AddLog(TEXT("サービスを選択します..."));
 		else
-			m_App.AddLog(TEXT("サービスを選択します(SID %d)..."), ServiceSel.ServiceID);
+			m_App.AddLog(TEXT("サービスを選択します(SID {})..."), ServiceSel.ServiceID);
 		fResult = m_App.CoreEngine.SetService(ServiceSel);
 	}
 	if (!fResult) {
@@ -783,7 +782,7 @@ bool CAppCore::SetServiceByID(WORD ServiceID, SetServiceFlag Flags)
 	if (ServiceID != LibISDB::SERVICE_ID_INVALID) {
 		int ServiceIndex = pAnalyzer->GetServiceIndexByID(ServiceID);
 		if (ServiceIndex >= 0) {
-			//m_App.AddLog(TEXT("サービスを変更しました。(SID %d)"), ServiceID);
+			//m_App.AddLog(TEXT("サービスを変更しました。(SID {})"), ServiceID);
 
 			if (fStrict && m_f1SegMode
 					&& !pAnalyzer->Is1SegService(ServiceIndex)) {
@@ -919,9 +918,9 @@ bool CAppCore::GetCurrentServiceName(LPTSTR pszName, int MaxLength, bool fUseCha
 		return false;
 #if 0
 	if (pChannelInfo != nullptr) {
-		int Length = StringPrintf(pszName, MaxLength, TEXT("#%d "), Index + 1);
+		const size_t Length = StringFormat(pszName, MaxLength, TEXT("#{} "), Index + 1);
 		pszName += Length;
-		MaxLength -= Length;
+		MaxLength -= static_cast<int>(Length);
 	}
 #endif
 	LibISDB::String Name;
@@ -941,7 +940,7 @@ bool CAppCore::OpenTuner(LPCTSTR pszFileName)
 			&& IsEqualFileName(m_App.CoreEngine.GetDriverFileName(), pszFileName))
 		return true;
 
-	TRACE(TEXT("CAppCore::OpenTuner(%s)\n"), pszFileName);
+	TRACE(TEXT("CAppCore::OpenTuner({})\n"), pszFileName);
 
 	HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 	bool fOK;
@@ -1008,7 +1007,7 @@ bool CAppCore::OpenAndInitializeTuner(OpenTunerFlag OpenFlags)
 	if (!m_App.CoreEngine.OpenTuner())
 		return false;
 
-	m_App.AddLog(TEXT("%s を読み込みました。"), m_App.CoreEngine.GetDriverFileName());
+	m_App.AddLog(TEXT("{} を読み込みました。"), m_App.CoreEngine.GetDriverFileName());
 
 	ApplyBonDriverOptions();
 
@@ -1068,7 +1067,7 @@ bool CAppCore::Set1SegMode(bool f1Seg, bool fServiceChange)
 	if (m_f1SegMode != f1Seg) {
 		m_f1SegMode = f1Seg;
 
-		m_App.AddLog(TEXT("ワンセグモードを%sにします。"), f1Seg ? TEXT("オン") : TEXT("オフ"));
+		m_App.AddLog(TEXT("ワンセグモードを{}にします。"), f1Seg ? TEXT("オン") : TEXT("オフ"));
 
 		if (fServiceChange) {
 			if (m_f1SegMode) {
@@ -1196,7 +1195,7 @@ bool CAppCore::GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName)
 	if (!::PathIsDirectory(szDir)) {
 		int Result = ::SHCreateDirectoryEx(nullptr, szDir, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
-			OnError(TEXT("録画ファイルの保存先フォルダ \"%s\" を作成できません。"), szDir);
+			OnError(TEXT("録画ファイルの保存先フォルダ \"{}\" を作成できません。"), szDir);
 			return false;
 		}
 	}
@@ -1254,7 +1253,7 @@ bool CAppCore::StartRecord(
 	m_App.TaskTrayManager.SetStatus(
 		CTaskTrayManager::StatusFlag::Recording,
 		CTaskTrayManager::StatusFlag::Recording);
-	m_App.AddLog(TEXT("録画開始 %s"), szFileName);
+	m_App.AddLog(TEXT("録画開始 {}"), szFileName);
 	m_App.AppEventManager.OnRecordingStarted();
 	return true;
 }
@@ -1316,7 +1315,7 @@ bool CAppCore::StartReservedRecord()
 	}
 	String ActualFileName;
 	m_App.RecordManager.GetRecordTask()->GetFileName(&ActualFileName);
-	m_App.AddLog(TEXT("録画開始 %s"), ActualFileName.c_str());
+	m_App.AddLog(TEXT("録画開始 {}"), ActualFileName);
 
 	m_App.TaskTrayManager.SetStatus(
 		CTaskTrayManager::StatusFlag::Recording,
@@ -1350,8 +1349,8 @@ bool CAppCore::StopRecord()
 	LibISDB::RecorderFilter::RecordingStatistics Stats;
 	pTask->GetStatistics(&Stats);
 	m_App.AddLog(
-		TEXT("録画停止 %s (出力TSサイズ %llu Bytes / 書き出しエラー回数 %lu)"),
-		FileName.c_str(), Stats.OutputBytes, Stats.WriteErrorCount);
+		TEXT("録画停止 {} (出力TSサイズ {} Bytes / 書き出しエラー回数 {})"),
+		FileName, Stats.OutputBytes, Stats.WriteErrorCount);
 
 	m_App.TaskTrayManager.SetStatus(CTaskTrayManager::StatusFlag::None, CTaskTrayManager::StatusFlag::Recording);
 	m_App.AppEventManager.OnRecordingStopped();
@@ -1389,7 +1388,7 @@ bool CAppCore::RelayRecord(LPCTSTR pszFileName)
 		OnError(&m_App.RecordManager, TEXT("録画ファイルを切り替えできません。"));
 		return false;
 	}
-	m_App.AddLog(TEXT("録画ファイルを切り替えました %s"), pszFileName);
+	m_App.AddLog(TEXT("録画ファイルを切り替えました {}"), pszFileName);
 	m_App.AppEventManager.OnRecordingFileChanged(pszFileName);
 	return true;
 }
@@ -1420,12 +1419,12 @@ bool CAppCore::CommandLineRecord(LPCTSTR pszFileName, const SYSTEMTIME *pStartTi
 		SYSTEMTIME st;
 		::SystemTimeToTzSpecificLocalTime(nullptr, &StartTime.Time.DateTime, &st);
 		m_App.AddLog(
-			TEXT("コマンドラインから録画指定されました。(%d/%d/%d %d:%02d:%02d 開始)"),
+			TEXT("コマンドラインから録画指定されました。({}/{}/{} {}:{:02}:{:02} 開始)"),
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 	} else if (Delay > 0) {
 		StartTime.Type = CRecordManager::TimeSpecType::Duration;
 		StartTime.Time.Duration = Delay * 1000;
-		m_App.AddLog(TEXT("コマンドラインから録画指定されました。(%d 秒後開始)"), Delay);
+		m_App.AddLog(TEXT("コマンドラインから録画指定されました。({} 秒後開始)"), Delay);
 	} else {
 		StartTime.Type = CRecordManager::TimeSpecType::NotSpecified;
 		m_App.AddLog(TEXT("コマンドラインから録画指定されました。"));

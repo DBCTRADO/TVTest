@@ -318,7 +318,7 @@ void CChannelDisplay::LoadSettings()
 			TCHAR szName[64], *p;
 			TunerInfo Info;
 
-			StringPrintf(szName, TEXT("Tuner%d_Driver"), i);
+			StringFormat(szName, TEXT("Tuner{}_Driver"), i);
 			if (!Settings.Read(szName, Info.DriverMasks, lengthof(Info.DriverMasks) - 1))
 				break;
 			p = Info.DriverMasks;
@@ -328,10 +328,10 @@ void CChannelDisplay::LoadSettings()
 				p++;
 			}
 			*(p + 1) = '\0';
-			StringPrintf(szName, TEXT("Tuner%d_Name"), i);
+			StringFormat(szName, TEXT("Tuner{}_Name"), i);
 			if (!Settings.Read(szName, Info.szDisplayName, lengthof(Info.szDisplayName)))
 				Info.szDisplayName[0] = '\0';
-			StringPrintf(szName, TEXT("Tuner%d_Icon"), i);
+			StringFormat(szName, TEXT("Tuner{}_Icon"), i);
 			if (!Settings.Read(szName, Info.szIconFile, lengthof(Info.szIconFile)))
 				Info.szIconFile[0] = '\0';
 			if (::PathIsRelative(Info.szIconFile)) {
@@ -351,7 +351,7 @@ void CChannelDisplay::LoadSettings()
 				}
 				p++;
 			}
-			StringPrintf(szName, TEXT("Tuner%d_UseDriverChannel"), i);
+			StringFormat(szName, TEXT("Tuner{}_UseDriverChannel"), i);
 			if (!Settings.Read(szName, &Info.fUseDriverChannel))
 				Info.fUseDriverChannel = false;
 			m_TunerInfoList.push_back(Info);
@@ -891,16 +891,15 @@ void CChannelDisplay::Draw(HDC hdc, const RECT *pPaintRect)
 					for (int j = 0; j < 2; j++) {
 						const LibISDB::EventInfo *pEventInfo = pChannel->GetEvent(j);
 						if (pEventInfo != nullptr) {
-							int Length;
-							Length = EpgUtil::FormatEventTime(
+							size_t Length = EpgUtil::FormatEventTime(
 								*pEventInfo, szText, lengthof(szText),
 								EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 							if (!pEventInfo->EventName.empty()) {
-								Length += StringPrintf(
+								Length += StringFormat(
 									szText + Length, lengthof(szText) - Length,
-									TEXT("%s%s"),
+									TEXT("{}{}"),
 									Length > 0 ? TEXT(" ") : TEXT(""),
-									pEventInfo->EventName.c_str());
+									pEventInfo->EventName);
 							}
 							if (Length > 0) {
 								Theme::Draw(
@@ -941,7 +940,7 @@ void CChannelDisplay::DrawClock(HDC hdc) const
 	Theme::Draw(hdc, rc, m_ClockStyle.Back);
 	Style::Subtract(&rc, m_ChannelDisplayStyle.ClockPadding);
 	OldBkMode = SetBkMode(hdc, TRANSPARENT);
-	StringPrintf(szText, TEXT("%d:%02d"), m_ClockTime.Hour, m_ClockTime.Minute);
+	StringFormat(szText, TEXT("{}:{:02}"), m_ClockTime.Hour, m_ClockTime.Minute);
 	Theme::Draw(
 		hdc, rc, m_ClockStyle.Fore, szText,
 		DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
@@ -1355,9 +1354,9 @@ void CChannelDisplay::CTuner::GetDisplayName(int Space, LPTSTR pszName, int MaxN
 		if (pTuningSpace != nullptr) {
 			int Length = ::lstrlen(pszName);
 			if (!IsStringEmpty(pTuningSpace->GetName()))
-				StringPrintf(pszName + Length, MaxName - Length, TEXT(" [%s]"), pTuningSpace->GetName());
+				StringFormat(pszName + Length, MaxName - Length, TEXT(" [{}]"), pTuningSpace->GetName());
 			else
-				StringPrintf(pszName + Length, MaxName - Length, TEXT(" [%d]"), Space + 1);
+				StringFormat(pszName + Length, MaxName - Length, TEXT(" [{}]"), Space + 1);
 		}
 	}
 }

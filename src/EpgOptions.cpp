@@ -229,7 +229,7 @@ bool CEpgOptions::SaveEpgFile(LibISDB::EPGDatabase *pEPGDatabase)
 		if (pEPGDatabase->GetServiceCount() > 0) {
 			WaitEpgFileLoad();
 
-			GetAppClass().AddLog(TEXT("EPG データを \"%s\" に保存します..."), FilePath.c_str());
+			GetAppClass().AddLog(TEXT("EPG データを \"{}\" に保存します..."), FilePath);
 
 			if (m_EpgDataStore.Open(pEPGDatabase, FilePath.c_str())) {
 				if (!m_EpgDataStore.Save()) {
@@ -261,7 +261,7 @@ bool CEpgOptions::LoadLogoFile()
 		if (!GetAbsolutePath(m_LogoFileName, &FilePath))
 			return false;
 		if (FilePath.IsFileExists()) {
-			App.AddLog(TEXT("ロゴデータを \"%s\" から読み込みます..."), FilePath.c_str());
+			App.AddLog(TEXT("ロゴデータを \"{}\" から読み込みます..."), FilePath);
 			if (!LogoManager.LoadLogoFile(FilePath.c_str())) {
 				App.AddLog(CLogItem::LogType::Error, TEXT("ロゴファイルの読み込みでエラーが発生しました。"));
 				return false;
@@ -276,7 +276,7 @@ bool CEpgOptions::LoadLogoFile()
 			if (!FilePath.IsFileExists())
 				return false;
 		}
-		App.AddLog(TEXT("ロゴ設定を \"%s\" から読み込みます..."), FilePath.c_str());
+		App.AddLog(TEXT("ロゴ設定を \"{}\" から読み込みます..."), FilePath);
 		LogoManager.LoadLogoIDMap(FilePath.c_str());
 	}
 
@@ -294,7 +294,7 @@ bool CEpgOptions::SaveLogoFile()
 		if (!GetAbsolutePath(m_LogoFileName, &FilePath))
 			return false;
 		if (!FilePath.IsFileExists() || LogoManager.IsLogoDataUpdated()) {
-			App.AddLog(TEXT("ロゴデータを \"%s\" に保存します..."), FilePath.c_str());
+			App.AddLog(TEXT("ロゴデータを \"{}\" に保存します..."), FilePath);
 			if (!LogoManager.SaveLogoFile(FilePath.c_str())) {
 				App.AddLog(CLogItem::LogType::Error, TEXT("ロゴファイルの保存でエラーが発生しました。"));
 				return false;
@@ -303,7 +303,7 @@ bool CEpgOptions::SaveLogoFile()
 
 		FilePath += TEXT(".ini");
 		if (!FilePath.IsFileExists() || LogoManager.IsLogoIDMapUpdated()) {
-			App.AddLog(TEXT("ロゴ設定を \"%s\" に保存します..."), FilePath.c_str());
+			App.AddLog(TEXT("ロゴ設定を \"{}\" に保存します..."), FilePath);
 			LogoManager.SaveLogoIDMap(FilePath.c_str());
 		}
 	}
@@ -652,7 +652,7 @@ void CEpgOptions::CEpgFileLoader::OnEnd(bool fSuccess, LibISDB::EPGDatabase *pEP
 void CEpgOptions::CEpgFileLoader::LoadMain()
 {
 	if (m_pEpgDataStore != nullptr) {
-		GetAppClass().AddLog(TEXT("EPG データを \"%s\" から読み込みます..."), m_EpgDataPath.c_str());
+		GetAppClass().AddLog(TEXT("EPG データを \"{}\" から読み込みます..."), m_EpgDataPath);
 
 		if (m_pEpgDataStore->Open(m_pEPGDatabase, m_EpgDataPath.c_str(), CEpgDataStore::OpenFlag::LoadBackground)) {
 			m_pEpgDataStore->SetEventHandler(this);
@@ -664,7 +664,7 @@ void CEpgOptions::CEpgFileLoader::LoadMain()
 		return;
 
 	if (m_pEdcbDataLoader != nullptr) {
-		GetAppClass().AddLog(TEXT("EDCB の EPG データを \"%s\" から読み込みます..."), m_EdcbDataFolder.c_str());
+		GetAppClass().AddLog(TEXT("EDCB の EPG データを \"{}\" から読み込みます..."), m_EdcbDataFolder);
 
 		m_pEdcbDataLoader->Load(m_EdcbDataFolder.c_str(), m_hAbortEvent, this);
 	}

@@ -101,22 +101,22 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			::SendDlgItemMessage(hDlg, IDC_CHANNELPROP_NAME, EM_LIMITTEXT, MAX_CHANNEL_NAME - 1, 0);
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_NAME, m_pChannelInfo->GetName());
 			for (int i = 1; i <= 12; i++) {
-				StringPrintf(szText, TEXT("%d"), i);
+				StringFormat(szText, TEXT("{}"), i);
 				DlgComboBox_AddString(hDlg, IDC_CHANNELPROP_CONTROLKEY, szText);
 			}
 			if (m_pChannelInfo->GetChannelNo() > 0)
 				::SetDlgItemInt(hDlg, IDC_CHANNELPROP_CONTROLKEY, m_pChannelInfo->GetChannelNo(), TRUE);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				m_pChannelInfo->GetNetworkID(), m_pChannelInfo->GetNetworkID());
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
+				m_pChannelInfo->GetNetworkID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_NETWORKID, szText);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				m_pChannelInfo->GetTransportStreamID(), m_pChannelInfo->GetTransportStreamID());
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
+				m_pChannelInfo->GetTransportStreamID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_TSID, szText);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				m_pChannelInfo->GetServiceID(), m_pChannelInfo->GetServiceID());
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
+				m_pChannelInfo->GetServiceID());
 			::SetDlgItemText(hDlg, IDC_CHANNELPROP_SERVICEID, szText);
 			::SetDlgItemInt(hDlg, IDC_CHANNELPROP_TUNINGSPACE, m_pChannelInfo->GetSpace(), TRUE);
 			::SetDlgItemInt(hDlg, IDC_CHANNELPROP_CHANNELINDEX, m_pChannelInfo->GetChannelIndex(), TRUE);
@@ -413,9 +413,9 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 							pChannelList->InsertChannel(Index, ChannelInfo);
 
 							if (pMessageList != nullptr) {
-								StringUtility::Format(
-									Message,
-									TEXT("新しいサービス %d \"%s\" (NID %d TSID 0x%04x) を追加しました。"),
+								StringFormat(
+									&Message,
+									TEXT("新しいサービス {} \"{}\" (NID {} TSID {:#04x}) を追加しました。"),
 									ChannelInfo.GetServiceID(),
 									ChannelInfo.GetName(),
 									ChannelInfo.GetNetworkID(),
@@ -431,11 +431,11 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 				}
 
 				if (!fInserted && pMessageList != nullptr) {
-					StringUtility::Format(
-						Message,
-						TEXT("新しいサービス %d \"%s\" (NID %d TSID 0x%04x) が検出されましたが、当該 TS が見付かりません。"),
+					StringFormat(
+						&Message,
+						TEXT("新しいサービス {} \"{}\" (NID {} TSID {:#04x}) が検出されましたが、当該 TS が見付かりません。"),
 						ServiceInfo.ServiceID,
-						ServiceInfo.ServiceName.c_str(),
+						ServiceInfo.ServiceName,
 						TsInfo.OriginalNetworkID,
 						TsInfo.TransportStreamID);
 					pMessageList->push_back(Message);
@@ -486,9 +486,9 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 										pChannelList->InsertChannel(Index, ChannelInfo);
 
 										if (pMessageList != nullptr) {
-											StringUtility::Format(
-												Message,
-												TEXT("サービス %d \"%s\" が TS 0x%04x から 0x%04x に移動しました。"),
+											StringFormat(
+												&Message,
+												TEXT("サービス {} \"{}\" が TS {:#04x} から {:#04x} に移動しました。"),
 												ChannelInfo.GetServiceID(),
 												ChannelInfo.GetName(),
 												pChannelInfo->GetTransportStreamID(),
@@ -500,9 +500,9 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 										fUpdated = false;
 									} else {
 										if (pMessageList != nullptr) {
-											StringUtility::Format(
-												Message,
-												TEXT("サービス %d \"%s\" の TS 0x%04x から 0x%04x への移動を検出しましたが、移動先 TS が見付かりません。"),
+											StringFormat(
+												&Message,
+												TEXT("サービス {} \"{}\" の TS {:#04x} から {:#04x} への移動を検出しましたが、移動先 TS が見付かりません。"),
 												ServiceInfo.ServiceID,
 												pChannelInfo->GetName(),
 												pChannelInfo->GetTransportStreamID(),
@@ -524,9 +524,9 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 				} else {
 					// サービス削除
 					if (!fServiceMoved && pMessageList != nullptr) {
-						StringUtility::Format(
-							Message,
-							TEXT("サービス %d \"%s\" は削除されました。"),
+						StringFormat(
+							&Message,
+							TEXT("サービス {} \"{}\" は削除されました。"),
 							pChannelInfo->GetServiceID(),
 							pChannelInfo->GetName());
 						pMessageList->push_back(Message);
@@ -568,7 +568,7 @@ void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, boo
 		case LibISDB::SERVICE_TYPE_DATA:            StringCopy(szText, TEXT("データ/ワンセグ"));    break;
 		case LibISDB::SERVICE_TYPE_4K_TV:           StringCopy(szText, TEXT("4K TV"));              break;
 		default:
-			StringPrintf(szText, TEXT("他(%02x)"), pChInfo->GetServiceType());
+			StringFormat(szText, TEXT("他({:02x})"), pChInfo->GetServiceType());
 			break;
 		}
 	} else {
@@ -584,18 +584,18 @@ void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, boo
 	ListView_SetItem(hwndList, &lvi);
 
 	lvi.iSubItem = COLUMN_SERVICEID;
-	StringPrintf(szText, TEXT("%d"), pChInfo->GetServiceID());
+	StringFormat(szText, TEXT("{}"), pChInfo->GetServiceID());
 	ListView_SetItem(hwndList, &lvi);
 
 	if (pChInfo->GetChannelNo() > 0) {
 		lvi.iSubItem = COLUMN_REMOTECONTROLKEYID;
-		StringPrintf(szText, TEXT("%d"), pChInfo->GetChannelNo());
+		StringFormat(szText, TEXT("{}"), pChInfo->GetChannelNo());
 		lvi.pszText = szText;
 		ListView_SetItem(hwndList, &lvi);
 	}
 
 	lvi.iSubItem = COLUMN_CHANNELINDEX;
-	StringPrintf(szText, TEXT("%d"), pChInfo->GetChannelIndex());
+	StringFormat(szText, TEXT("{}"), pChInfo->GetChannelIndex());
 	ListView_SetItem(hwndList, &lvi);
 
 	ListView_SetCheckState(hwndList, lvi.iItem, pChInfo->IsEnabled());
@@ -957,14 +957,14 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 								CStaticStringFormatter Formatter(szMessage, lengthof(szMessage));
 
 								Formatter.AppendFormat(
-									TEXT("元あったチャンネルのうち、以下の%d%sのチャンネルが検出されませんでした。\n\n"),
+									TEXT("元あったチャンネルのうち、以下の{}{}のチャンネルが検出されませんでした。\n\n"),
 									Channels, Channels < 10 ? TEXT("つ") : TEXT(""));
 								for (int i = 0; i < Channels; i++) {
 									if (i == 10) {
 										Formatter.Append(TEXT("...\n"));
 										break;
 									}
-									Formatter.AppendFormat(TEXT("・%s\n"), MissingChannels[i]->GetName());
+									Formatter.AppendFormat(TEXT("・{}\n"), MissingChannels[i]->GetName());
 								}
 								Formatter.Append(TEXT("\n検出されなかったチャンネルを残しますか？"));
 								if (::MessageBox(
@@ -1049,7 +1049,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						lvi.iSubItem = 4;
 						TCHAR szText[16];
 						if (pChInfo->GetChannelNo() > 0)
-							StringPrintf(szText, TEXT("%d"), pChInfo->GetChannelNo());
+							StringFormat(szText, TEXT("{}"), pChInfo->GetChannelNo());
 						else
 							szText[0] = '\0';
 						lvi.pszText = szText;
@@ -1186,13 +1186,13 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 					bool fOK = m_TuningSpaceList.SaveToFile(szFileName);
 					if (fOK) {
-						App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
+						App.AddLog(TEXT("チャンネルファイルを \"{}\" に保存しました。"), szFileName);
 					} else {
 						TCHAR szText[32 + MAX_PATH];
-						StringPrintf(
+						StringFormat(
 							szText,
-							TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
-						App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
+							TEXT("チャンネルファイル \"{}\" を保存できません。"), szFileName);
+						App.AddLogRaw(CLogItem::LogType::Error, szText);
 						::MessageBox(hDlg, szText, nullptr, MB_OK | MB_ICONEXCLAMATION);
 					}
 					SetUpdateFlag(UPDATE_CHANNELLIST);
@@ -1213,11 +1213,11 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 								CStaticStringFormatter Formatter(szText, lengthof(szText));
 
 								*pSequence = _T('0');
-								Formatter.AppendFormat(TEXT("%s のチャンネルスキャン結果を\n以下の BonDriver にも反映させますか？\n\n"), pszName);
+								Formatter.AppendFormat(TEXT("{} のチャンネルスキャン結果を\n以下の BonDriver にも反映させますか？\n\n"), pszName);
 								for (int i = 1; i <= 9; i++) {
 									if ((Exists & (1U << i)) != 0) {
 										*pSequence = _T('0') + i;
-										Formatter.AppendFormat(TEXT("・%s\n"), pszName);
+										Formatter.AppendFormat(TEXT("・{}\n"), pszName);
 									}
 								}
 								if (::MessageBox(hDlg, Formatter.GetString(), TEXT("チャンネルスキャン"), MB_YESNO | MB_ICONINFORMATION) == IDYES) {
@@ -1226,14 +1226,14 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 											::PathRenameExtension(szFileName, CHANNEL_FILE_EXTENSION);
 											*pSequence = _T('0') + i;
 											if (m_TuningSpaceList.SaveToFile(szFileName)) {
-												App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
+												App.AddLog(TEXT("チャンネルファイルを \"{}\" に保存しました。"), szFileName);
 												::PathRenameExtension(szFileName, TEXT(".dll"));
 												App.Core.UpdateChannelList(szFileName, &m_TuningSpaceList);
 											} else {
-												StringPrintf(
+												StringFormat(
 													szText,
-													TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
-												App.AddLog(CLogItem::LogType::Error, TEXT("%s"), szText);
+													TEXT("チャンネルファイル \"{}\" を保存できません。"), szFileName);
+												App.AddLogRaw(CLogItem::LogType::Error, szText);
 												if (::MessageBox(hDlg, szText, nullptr, MB_OKCANCEL | MB_ICONEXCLAMATION) != IDOK)
 													break;
 											}
@@ -1348,7 +1348,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			CoreEngine.GetSignalLevelText(szSignalLevel, lengthof(szSignalLevel));
 			CoreEngine.GetBitRateText(szBitRate, lengthof(szBitRate));
-			StringPrintf(szText, TEXT("%s / %s"), szSignalLevel, szBitRate);
+			StringFormat(szText, TEXT("{} / {}"), szSignalLevel, szBitRate);
 			::SetDlgItemText(hDlg, IDC_CHANNELSCAN_LEVEL, szText);
 		}
 		return TRUE;
@@ -1409,9 +1409,9 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			if (m_fIgnoreSignalLevel)
 				EstimateRemain += (NumChannels - CurChannel) * m_RetryCount * m_RetryInterval;
 			EstimateRemain = (EstimateRemain + 500) / 1000;
-			StringPrintf(
+			StringFormat(
 				szText,
-				TEXT("チャンネル %d/%d をスキャンしています... (残り時間 %u:%02u)"),
+				TEXT("チャンネル {}/{} をスキャンしています... (残り時間 {}:{:02})"),
 				CurChannel + 1, NumChannels,
 				EstimateRemain / 60, EstimateRemain % 60);
 			::SetDlgItemText(hDlg, IDC_CHANNELSCAN_INFO, szText);
@@ -1458,9 +1458,9 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					const int ErrorCount = HIWORD(lParam);
 					String Message;
 					if (ErrorCount < ChannelCount) {
-						StringUtility::Format(
-							Message,
-							TEXT("%dチャンネルのうち、%d回のチャンネル変更が BonDriver に受け付けられませんでした。\n")
+						StringFormat(
+							&Message,
+							TEXT("{}チャンネルのうち、{}回のチャンネル変更が BonDriver に受け付けられませんでした。\n")
 							TEXT("(受信できるチャンネルが全てスキャンできていれば問題はありません)"),
 							ChannelCount, ErrorCount);
 						Dialog.Show(hDlg, CMessageDialog::MessageType::Info, Message.c_str(), nullptr, nullptr, TEXT("お知らせ"));
@@ -1704,8 +1704,8 @@ void CChannelScan::Scan()
 						pChInfo->Enable(false);
 
 					TRACE(
-						TEXT("Channel found [%2d][%2d] : %s NID 0x%04x TSID 0x%04x SID 0x%04x\n"),
-						m_ScanChannel, (int)i, Name.c_str(),
+						TEXT("Channel found [{:2}][{:2}] : {} NID {:#04x} TSID {:#04x} SID {:#04x}\n"),
+						m_ScanChannel, (int)i, Name,
 						NetworkID, TransportStreamID, ServiceID);
 
 					m_ScanningChannelList.AddChannel(pChInfo);
@@ -1738,7 +1738,7 @@ void CChannelScan::Scan()
 				}
 
 				TRACE(
-					TEXT("Channel found [%2d] : %s NID 0x%04x TSID 0x%04x SID 0x%04x\n"),
+					TEXT("Channel found [{:2}] : {} NID {:#04x} TSID {:#04x} SID {:#04x}\n"),
 					m_ScanChannel, Name.c_str(), TransportStreamID, NetworkID, pChInfo->GetServiceID());
 
 				m_ScanningChannelList.AddChannel(pChInfo);
@@ -1751,7 +1751,7 @@ void CChannelScan::Scan()
 #ifdef _DEBUG
 		else {
 			TRACE(
-				TEXT("Channel scan [%2d] Service not found.\n"),
+				TEXT("Channel scan [{:2}] Service not found.\n"),
 				m_ScanChannel);
 		}
 #endif
@@ -1832,20 +1832,20 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 		{
 			TCHAR szText[16];
 
-			StringPrintf(
-				szText, TEXT("%.2f"),
+			StringFormat(
+				szText, TEXT("{:.2f}"),
 				m_pChannelScan->m_SignalLevelThreshold);
 			::SetDlgItemText(hDlg, IDC_CHANNELSCANSETTINGS_SIGNALLEVELTHRESHOLD, szText);
 
 			for (int i = 1; i <= 10; i++) {
-				StringPrintf(szText, TEXT("%d 秒"), i);
+				StringFormat(szText, TEXT("{} 秒"), i);
 				DlgComboBox_AddString(hDlg, IDC_CHANNELSCANSETTINGS_SCANWAIT, szText);
 			}
 			DlgComboBox_SetCurSel(
 				hDlg, IDC_CHANNELSCANSETTINGS_SCANWAIT,
 				m_pChannelScan->m_ScanWait / 1000 - 1);
 			for (int i = 0; i <= 10; i++) {
-				StringPrintf(szText, TEXT("%d 秒"), i);
+				StringFormat(szText, TEXT("{} 秒"), i);
 				DlgComboBox_AddString(hDlg, IDC_CHANNELSCANSETTINGS_RETRYCOUNT, szText);
 			}
 			DlgComboBox_SetCurSel(

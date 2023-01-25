@@ -98,9 +98,9 @@ void CChannelControlItem::Draw(HDC hdc, const RECT &Rect)
 		crBack = ::GetBkColor(hdc);
 		::SetTextColor(hdc, MixColor(crText, crBack, 128));
 		pInfo = ChannelManager.GetChangingChannelInfo();
-		StringPrintf(szText, TEXT("%d: %s"), pInfo->GetChannelNo(), pInfo->GetName());
+		StringFormat(szText, TEXT("{}: {}"), pInfo->GetChannelNo(), pInfo->GetName());
 	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != nullptr) {
-		StringPrintf(szText, TEXT("%d: %s"), pInfo->GetChannelNo(), pInfo->GetName());
+		StringFormat(szText, TEXT("{}: {}"), pInfo->GetChannelNo(), pInfo->GetName());
 	} else {
 		StringCopy(szText, TEXT("<チャンネル>"));
 	}
@@ -140,8 +140,8 @@ void CVideoControlItem::Draw(HDC hdc, const RECT &Rect)
 	const CCoreEngine &CoreEngine = App.CoreEngine;
 	TCHAR szText[32];
 
-	StringPrintf(
-		szText, TEXT("%d x %d (%d %%)"),
+	StringFormat(
+		szText, TEXT("{} x {} ({} %)"),
 		CoreEngine.GetOriginalVideoWidth(),
 		CoreEngine.GetOriginalVideoHeight(),
 		App.UICore.GetZoomPercentage());

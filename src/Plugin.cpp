@@ -751,9 +751,9 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		const int ErrorCode = ::GetLastError();
 		TCHAR szText[256];
 
-		StringPrintf(
+		StringFormat(
 			szText,
-			TEXT("DLLがロードできません。(エラーコード 0x%lx)"), ErrorCode);
+			TEXT("DLLがロードできません。(エラーコード {:#x})"), ErrorCode);
 		SetWin32Error(ErrorCode, szText);
 		switch (ErrorCode) {
 		case ERROR_BAD_EXE_FORMAT:
@@ -879,21 +879,21 @@ void CPlugin::Free()
 	if (m_hLib != nullptr) {
 		LPCTSTR pszFileName = ::PathFindFileName(m_FileName.c_str());
 
-		App.AddLog(TEXT("%s の終了処理を行っています..."), pszFileName);
+		App.AddLog(TEXT("{} の終了処理を行っています..."), pszFileName);
 
 		FinalizeFunc pFinalize =
 			reinterpret_cast<FinalizeFunc>(::GetProcAddress(m_hLib, "TVTFinalize"));
 		if (pFinalize == nullptr) {
 			App.AddLog(
 				CLogItem::LogType::Error,
-				TEXT("%s のTVTFinalize()関数のアドレスを取得できません。"),
+				TEXT("{} のTVTFinalize()関数のアドレスを取得できません。"),
 				pszFileName);
 		} else {
 			pFinalize();
 		}
 		::FreeLibrary(m_hLib);
 		m_hLib = nullptr;
-		App.AddLog(TEXT("%s を解放しました。"), pszFileName);
+		App.AddLog(TEXT("{} を解放しました。"), pszFileName);
 	}
 
 	for (auto &Item : m_StatusItemList) {
@@ -1254,7 +1254,7 @@ LRESULT CPlugin::SendPluginMessage(
 		return Result;
 	GetAppClass().AddLog(
 		CLogItem::LogType::Error,
-		TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
+		TEXT("応答が無いためプラグインからのメッセージを処理できません。({} : {})"),
 		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()), Message);
 	return FailedResult;
 }
@@ -1721,7 +1721,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				return FALSE;
 
 			LPCTSTR pszFileName = ::PathFindFileName(m_FileName.c_str());
-			GetAppClass().AddLog((CLogItem::LogType)lParam2, TEXT("%s : %s"), pszFileName, pszText);
+			GetAppClass().AddLog((CLogItem::LogType)lParam2, TEXT("{} : {}"), pszFileName, pszText);
 		}
 		return TRUE;
 
@@ -3324,7 +3324,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"), Message);
+		TRACE(TEXT("CPluign::OnCallback() : Unknown message {}\n"), Message);
 		break;
 #endif
 	}
@@ -4183,7 +4183,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPlugin::OnPluginMessage() : Unknown message %u\n"), pParam->Message);
+		TRACE(TEXT("CPlugin::OnPluginMessage() : Unknown message {}\n"), pParam->Message);
 		break;
 #endif
 	}
@@ -4269,7 +4269,7 @@ bool CPlugin::OnGetSetting(SettingInfo *pSetting) const
 	}
 #ifdef _DEBUG
 	else {
-		TRACE(TEXT("CPlugin::OnGetSettings() : Unknown setting \"%s\"\n"), pSetting->pszName);
+		TRACE(TEXT("CPlugin::OnGetSettings() : Unknown setting \"{}\"\n"), pSetting->pszName);
 	}
 #endif
 
@@ -4965,7 +4965,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 				}
 				if (fExclude) {
 					App.AddLog(
-						TEXT("%s は除外指定されているため読み込まれません。"),
+						TEXT("{} は除外指定されているため読み込まれません。"),
 						wfd.cFileName);
 					continue;
 				}
@@ -4978,18 +4978,18 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 
 			::PathCombine(szFileName, pszDirectory, wfd.cFileName);
 			if (pPlugin->Load(szFileName)) {
-				App.AddLog(TEXT("%s を読み込みました。"), wfd.cFileName);
+				App.AddLog(TEXT("{} を読み込みました。"), wfd.cFileName);
 				m_PluginList.emplace_back(pPlugin);
 			} else {
 				App.AddLog(
 					CLogItem::LogType::Error,
-					TEXT("%s : %s"),
+					TEXT("{} : {}"),
 					wfd.cFileName,
 					!IsStringEmpty(pPlugin->GetLastErrorText()) ?
 					pPlugin->GetLastErrorText() :
 					TEXT("プラグインを読み込めません。"));
 				if (!IsStringEmpty(pPlugin->GetLastErrorAdvise()))
-					App.AddLog(CLogItem::LogType::Error, TEXT("(%s)"), pPlugin->GetLastErrorAdvise());
+					App.AddLog(CLogItem::LogType::Error, TEXT("({})"), pPlugin->GetLastErrorAdvise());
 				delete pPlugin;
 			}
 		} while (::FindNextFile(hFind, &wfd));
@@ -5731,13 +5731,13 @@ bool CPluginOptions::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < Count; i++) {
 				TCHAR szName[32], szFileName[MAX_PATH];
 
-				StringPrintf(szName, TEXT("Plugin%d_Name"), i);
+				StringFormat(szName, TEXT("Plugin{}_Name"), i);
 				if (!Settings.Read(szName, szFileName, lengthof(szFileName)))
 					break;
 				if (szFileName[0] != '\0') {
 					bool fEnable;
 
-					StringPrintf(szName, TEXT("Plugin%d_Enable"), i);
+					StringFormat(szName, TEXT("Plugin{}_Enable"), i);
 					if (Settings.Read(szName, &fEnable) && fEnable) {
 						m_EnablePluginList.emplace_back(szFileName);
 					}
@@ -5760,9 +5760,9 @@ bool CPluginOptions::SaveSettings(CSettings &Settings)
 	for (size_t i = 0; i < m_EnablePluginList.size(); i++) {
 		TCHAR szName[32];
 
-		StringPrintf(szName, TEXT("Plugin%d_Name"), i);
+		StringFormat(szName, TEXT("Plugin{}_Name"), i);
 		Settings.Write(szName, m_EnablePluginList[i]);
-		StringPrintf(szName, TEXT("Plugin%d_Enable"), i);
+		StringFormat(szName, TEXT("Plugin{}_Enable"), i);
 		Settings.Write(szName, true);
 	}
 

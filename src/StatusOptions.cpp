@@ -124,7 +124,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < NumItems; i++) {
 			TCHAR szKey[32];
 
-			StringPrintf(szKey, TEXT("Item%d_ID"), i);
+			StringFormat(szKey, TEXT("Item{}_ID"), i);
 			if (Settings.Read(szKey, &ID) && !ID.empty()) {
 				StatusItemInfo Item;
 
@@ -162,9 +162,9 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 					Item.fVisible = false;
 				}
 
-				StringPrintf(szKey, TEXT("Item%d_Visible"), i);
+				StringFormat(szKey, TEXT("Item{}_Visible"), i);
 				Settings.Read(szKey, &Item.fVisible);
-				StringPrintf(szKey, TEXT("Item%d_Width"), i);
+				StringFormat(szKey, TEXT("Item{}_Width"), i);
 				if (!Settings.Read(szKey, &Item.Width) || Item.Width < 1)
 					Item.Width = -1;
 
@@ -220,14 +220,14 @@ bool CStatusOptions::WriteSettings(CSettings &Settings)
 			const StatusItemInfo &Info = m_ItemList[i];
 			TCHAR szKey[32];
 
-			StringPrintf(szKey, TEXT("Item%d_ID"), i);
+			StringFormat(szKey, TEXT("Item{}_ID"), i);
 			if (!Info.IDText.empty())
 				Settings.Write(szKey, Info.IDText);
 			else
 				Settings.Write(szKey, Info.ID);
-			StringPrintf(szKey, TEXT("Item%d_Visible"), i);
+			StringFormat(szKey, TEXT("Item{}_Visible"), i);
 			Settings.Write(szKey, Info.fVisible);
-			StringPrintf(szKey, TEXT("Item%d_Width"), i);
+			StringFormat(szKey, TEXT("Item{}_Width"), i);
 			Settings.Write(szKey, Info.Width);
 		}
 	}

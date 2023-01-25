@@ -75,7 +75,11 @@ namespace TVTest
 		CAppCore(const CAppCore &) = delete;
 		CAppCore &operator=(const CAppCore &) = delete;
 
-		void OnError(LPCTSTR pszText, ...);
+		template<typename... TArgs> void OnError(StringView Format, const TArgs&... Args)
+		{
+			return OnErrorV(Format, MakeFormatArgs(Args...));
+		}
+		void OnErrorV(StringView Format, FormatArgs Args);
 		void OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle = nullptr);
 		void SetSilent(bool fSilent);
 		bool IsSilent() const { return m_fSilent; }

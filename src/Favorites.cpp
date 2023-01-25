@@ -612,8 +612,8 @@ void CFavoritesManager::SaveFolder(const CFavoriteFolder *pFolder, const String 
 					unsigned int Flags = 0;
 					if (pChannel->GetForceBonDriverChange())
 						Flags |= CHANNEL_FLAG_FORCEBONDRIVERCHANGE;
-					StringUtility::Format(
-						ChannelSpec, TEXT(",%s,%d,%d,%d,%d,%d,%d,%u"),
+					StringFormat(
+						&ChannelSpec, TEXT(",{},{},{},{},{},{},{},{}"),
 						pChannel->GetBonDriverFileName(),
 						ChannelInfo.GetSpace(),
 						ChannelInfo.GetChannelIndex(),
@@ -1216,9 +1216,9 @@ int CFavoritesMenu::GetEventText(
 	EpgUtil::FormatEventTime(
 		*pEventInfo, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 
-	return StringPrintf(
-		pszText, MaxLength, TEXT("%s %s"),
-		szTime, pEventInfo->EventName.c_str());
+	return static_cast<int>(StringFormat(
+		pszText, MaxLength, TEXT("{} {}"),
+		szTime, pEventInfo->EventName));
 }
 
 void CFavoritesMenu::CreateFont(HDC hdc)
@@ -1290,19 +1290,16 @@ INT_PTR CFavoritePropertiesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, 
 
 			DlgCheckBox_Check(hDlg, IDC_FAVORITEPROP_FORCEBONDRIVERCHANGE, m_pChannel->GetForceBonDriverChange());
 
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				ChannelInfo.GetServiceID(),
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
 				ChannelInfo.GetServiceID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_SERVICEID, szText);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				ChannelInfo.GetNetworkID(),
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
 				ChannelInfo.GetNetworkID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_NETWORKID, szText);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				ChannelInfo.GetTransportStreamID(),
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
 				ChannelInfo.GetTransportStreamID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_TRANSPORTSTREAMID, szText);
 		}

@@ -445,7 +445,7 @@ bool Encode(LPCWSTR pszSrc, String *pDst, LPCWSTR pszEncodeChars)
 			fEncode = ::StrChr(pszEncodeChars, *p) != nullptr;
 		if (fEncode) {
 			WCHAR szCode[8];
-			StringPrintf(szCode, L"%%%04X", *p);
+			StringFormat(szCode, L"%{:04X}", *p);
 			*pDst += szCode;
 		} else {
 			pDst->push_back(*p);

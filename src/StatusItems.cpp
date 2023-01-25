@@ -55,13 +55,13 @@ void CChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRec
 		crBack = ::GetBkColor(hdc);
 		::SetTextColor(hdc, MixColor(crText, crBack, 128));
 		pInfo = ChannelManager.GetChangingChannelInfo();
-		StringPrintf(
-			szText, TEXT("%d: %s"),
+		StringFormat(
+			szText, TEXT("{}: {}"),
 			pInfo->GetChannelNo(), pInfo->GetName());
 	} else if ((pInfo = ChannelManager.GetCurrentChannelInfo()) != nullptr) {
 		TCHAR szService[MAX_CHANNEL_NAME];
-		StringPrintf(
-			szText, TEXT("%d: %s"),
+		StringFormat(
+			szText, TEXT("{}: {}"),
 			pInfo->GetChannelNo(),
 			App.Core.GetCurrentServiceName(szService, lengthof(szService)) ? szService : pInfo->GetName());
 	} else {
@@ -131,8 +131,8 @@ void CVideoSizeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawR
 	if ((Flags & DRAW_PREVIEW) == 0) {
 		TCHAR szText[64];
 
-		StringPrintf(
-			szText, TEXT("%d x %d (%d %%)"),
+		StringFormat(
+			szText, TEXT("{} x {} ({} %)"),
 			m_OriginalVideoWidth, m_OriginalVideoHeight,
 			m_ZoomPercentage);
 		DrawText(hdc, DrawRect, szText);
@@ -410,8 +410,8 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 		} else {
 			RecordSec = (int)(RecordManager.GetRecordTime() / 1000);
 		}
-		StringPrintf(
-			szText, TEXT("%s%d:%02d:%02d"),
+		StringFormat(
+			szText, TEXT("{}{}:{:02}:{:02}"),
 			fRemain ? TEXT("-") : TEXT(""),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
 	} else if (RecordManager.IsReserved()) {
@@ -474,35 +474,34 @@ bool CRecordStatusItem::OnMouseHover(int x, int y)
 	return true;
 }
 
-int CRecordStatusItem::GetTipText(LPTSTR pszText, int MaxLength)
+size_t CRecordStatusItem::GetTipText(LPTSTR pszText, size_t MaxLength)
 {
 	const CRecordManager &RecordManager = GetAppClass().RecordManager;
 
 	if (RecordManager.IsRecording()) {
 		const CRecordTask *pRecordTask = RecordManager.GetRecordTask();
-		int Length;
 
 		unsigned int RecordSec = (unsigned int)(pRecordTask->GetRecordTime() / 1000);
-		Length = StringPrintf(
+		size_t Length = StringFormat(
 			pszText, MaxLength,
-			TEXT("● %d:%02d:%02d"),
+			TEXT("● {}:{:02}:{:02}"),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
 
 		LONGLONG WroteSize = pRecordTask->GetWroteSize();
 		if (WroteSize >= 0) {
 			unsigned int Size = (unsigned int)(WroteSize / (1024 * 1024 / 100));
-			Length += StringPrintf(
+			Length += StringFormat(
 				pszText + Length, MaxLength - Length,
-				TEXT("\r\nサイズ: %d.%02d MB"),
+				TEXT("\r\nサイズ: {}.{:02} MB"),
 				Size / 100, Size % 100);
 		}
 
 		LONGLONG DiskFreeSpace = pRecordTask->GetFreeSpace();
 		if (DiskFreeSpace > 0) {
 			unsigned int FreeSpace = (unsigned int)(DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
-			Length += StringPrintf(
+			Length += StringFormat(
 				pszText + Length, MaxLength - Length,
-				TEXT("\r\n空き容量: %d.%02d GB"),
+				TEXT("\r\n空き容量: {}.{:02} GB"),
 				FreeSpace / 100, FreeSpace % 100);
 		}
 
@@ -645,8 +644,8 @@ void CErrorStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect,
 	if ((Flags & DRAW_PREVIEW) == 0) {
 		TCHAR szText[80];
 
-		StringPrintf(
-			szText, TEXT("D %llu / E %llu / S %llu"),
+		StringFormat(
+			szText, TEXT("D {} / E {} / S {}"),
 			m_ContinuityErrorPacketCount,
 			m_ErrorPacketCount,
 			m_ScramblePacketCount);
@@ -703,20 +702,20 @@ void CSignalLevelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dra
 	TCHAR szText[64];
 
 	if ((Flags & DRAW_PREVIEW) == 0) {
-		int Length = 0;
+		size_t Length = 0;
 
 		if (m_fShowSignalLevel) {
 			TCHAR szSignalLevel[32];
 			CoreEngine.GetSignalLevelText(m_SignalLevel, szSignalLevel, lengthof(szSignalLevel));
-			Length = StringPrintf(szText, TEXT("%s / "), szSignalLevel);
+			Length = StringFormat(szText, TEXT("{} / "), szSignalLevel);
 		}
-		CoreEngine.GetBitRateText(m_BitRate, szText + Length, lengthof(szText) - Length);
+		CoreEngine.GetBitRateText(m_BitRate, szText + Length, static_cast<int>(lengthof(szText) - Length));
 	} else {
 		TCHAR szSignalLevel[32], szBitRate[32];
 
 		CoreEngine.GetSignalLevelText(24.52f, szSignalLevel, lengthof(szSignalLevel));
 		CoreEngine.GetBitRateText(16.73f, szBitRate, lengthof(szBitRate));
-		StringPrintf(szText, TEXT("%s / %s"), szSignalLevel, szBitRate);
+		StringFormat(szText, TEXT("{} / {}"), szSignalLevel, szBitRate);
 	}
 
 	DrawText(hdc, DrawRect, szText);
@@ -833,13 +832,13 @@ void CClockStatusItem::FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText,
 {
 #if 0
 	if (m_fTOT) {
-		StringPrintf(
-			pszText, MaxLength, TEXT("TOT %d/%d/%d %d:%02d:%02d"),
+		StringFormat(
+			pszText, MaxLength, TEXT("TOT {}/{}/{} {}:{:02}:{:02}"),
 			Time.Year, Time.Month, Time.Day,
 			Time.Hour, Time.Minute, Time.Second);
 	} else {
-		StringPrintf(
-			pszText, MaxLength, TEXT("%d:%02d:%02d"),
+		StringFormat(
+			pszText, MaxLength, TEXT("{}:{:02}:{:02}"),
 			Time.Hour, Time.Minute, Time.Second);
 	}
 #else
@@ -855,9 +854,9 @@ void CClockStatusItem::FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText,
 					TIME_FORCE24HOURFORMAT | TIME_NOTIMEMARKER,
 					&st, nullptr, szTime, lengthof(szTime)) == 0)
 			szTime[0] = _T('\0');
-		StringPrintf(
+		StringFormat(
 			pszText, MaxLength,
-			TEXT("TOT %s %s"), szDate, szTime);
+			TEXT("TOT {} {}"), szDate, szTime);
 	} else {
 		::GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, nullptr, pszText, MaxLength);
 	}
@@ -1134,9 +1133,9 @@ void CBufferingStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawR
 
 	TCHAR szText[32];
 
-	StringPrintf(
-		szText, TEXT("R %u / B %d%%"),
-		static_cast<unsigned int>(m_StreamRemain),
+	StringFormat(
+		szText, TEXT("R {} / B {}%"),
+		m_StreamRemain,
 		m_PacketBufferUsedPercentage);
 	DrawText(hdc, DrawRect, szText);
 }
@@ -1244,22 +1243,22 @@ void CMediaBitRateStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dr
 	}
 
 	TCHAR szText[64];
-	int Length;
+	size_t Length;
 
 	if (m_VideoBitRate < 1000 * 1000) {
-		Length = StringPrintf(
+		Length = StringFormat(
 			szText,
-			TEXT("V %u kbps"),
+			TEXT("V {} kbps"),
 			(m_VideoBitRate + 500) / 1000);
 	} else {
-		Length = StringPrintf(
+		Length = StringFormat(
 			szText,
-			TEXT("V %.2f Mbps"),
+			TEXT("V {:.2f} Mbps"),
 			(double)(m_VideoBitRate) / (double)(1000 * 1000));
 	}
-	StringPrintf(
+	StringFormat(
 		szText + Length, lengthof(szText) - Length,
-		TEXT(" / A %u kbps"),
+		TEXT(" / A {} kbps"),
 		(m_AudioBitRate + 500) / 1000);
 
 	DrawText(hdc, DrawRect, szText);

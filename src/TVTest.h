@@ -38,6 +38,10 @@
 
 
 #include "LibISDB/LibISDB/LibISDB.hpp"
+#include "LibISDB/LibISDB/Base/Debug.hpp"
+
+
+#define TRACE LIBISDB_TRACE
 
 
 namespace TVTest

@@ -90,7 +90,7 @@ bool CTotTimeAdjuster::AdjustTime()
 				OffsetSystemTime(&st, -2 * TimeConsts::SYSTEMTIME_SECOND);
 				if (::SetLocalTime(&st)) {
 					GetAppClass().AddLog(
-						TEXT("TOTで時刻合わせを行いました。(%d/%d/%d %d:%02d:%02d)"),
+						TEXT("TOTで時刻合わせを行いました。({}/{}/{} {}:{:02}:{:02})"),
 						st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 					fOK = true;
 				}
@@ -217,7 +217,7 @@ int APIENTRY _tWinMain(
 		);
 #ifdef _MSC_FULL_VER
 	App.AddLog(
-		TEXT("Compiled with MSVC %d.%d.%d.%d"),
+		TEXT("Compiled with MSVC {}.{}.{}.{}"),
 		_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD);
 #endif
 

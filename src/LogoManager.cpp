@@ -237,7 +237,7 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 				LibISDB::FileStream::OpenFlag::Read |
 				LibISDB::FileStream::OpenFlag::ShareRead |
 				LibISDB::FileStream::OpenFlag::SequentialRead)) {
-		TRACE(TEXT("CLogoManager::LoadLogoFile() : File open error \"%s\"\n"), pszFileName);
+		TRACE(TEXT("CLogoManager::LoadLogoFile() : File open error \"{}\"\n"), pszFileName);
 		return false;
 	}
 
@@ -330,8 +330,8 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 	for (const auto &e : m_LogoIDMap) {
 		TCHAR szKey[16], szText[16];
 
-		StringPrintf(szKey, TEXT("%08lX"), e.first);
-		StringPrintf(szText, TEXT("%d"), e.second);
+		StringFormat(szKey, TEXT("{:08X}"), e.first);
+		StringFormat(szText, TEXT("{}"), e.second);
 		::WritePrivateProfileString(TEXT("LogoIDMap"), szKey, szText, pszFileName);
 	}
 	return true;
@@ -596,8 +596,8 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 				return;
 		}
 		if (m_fSaveLogo) {
-			StringPrintf(
-				szFileName, TEXT("%04X_%03X_%03X_%02X"),
+			StringFormat(
+				szFileName, TEXT("{:04X}_{:03X}_{:03X}_{:02X}"),
 				Data.NetworkID, Data.LogoID, Data.LogoVersion, Data.LogoType);
 			FilePath = szDirectory;
 			FilePath.Append(szFileName);
@@ -605,8 +605,8 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 				pLogoData->SaveToFile(FilePath.c_str());
 		}
 		if (m_fSaveBmp) {
-			StringPrintf(
-				szFileName, TEXT("%04X_%03X_%03X_%02X.bmp"),
+			StringFormat(
+				szFileName, TEXT("{:04X}_{:03X}_{:03X}_{:02X}.bmp"),
 				Data.NetworkID, Data.LogoID, Data.LogoVersion, Data.LogoType);
 			FilePath = szDirectory;
 			FilePath.Append(szFileName);
@@ -624,13 +624,13 @@ bool CLogoManager::SetLogoIDMap(WORD NetworkID, WORD ServiceID, WORD LogoID, boo
 
 	if (i == m_LogoIDMap.end()) {
 		TRACE(
-			TEXT("Logo ID mapped : NID %04x / SID %04x / Logo ID %04x\n"),
+			TEXT("Logo ID mapped : NID {:04x} / SID {:04x} / Logo ID {:04x}\n"),
 			NetworkID, ServiceID, LogoID);
 		m_LogoIDMap.emplace(Key, LogoID);
 		m_fLogoIDMapUpdated = true;
 	} else if (fUpdate && i->second != LogoID) {
 		TRACE(
-			TEXT("Logo ID changed : NID %04x / SID %04x / Logo ID %04x -> %04x\n"),
+			TEXT("Logo ID changed : NID {:04x} / SID {:04x} / Logo ID {:04x} -> {:04x}\n"),
 			NetworkID, ServiceID, i->second, LogoID);
 		i->second = LogoID;
 		m_fLogoIDMapUpdated = true;
@@ -648,7 +648,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 	if (!GetAbsolutePath(m_LogoDirectory.c_str(), szDirectory, lengthof(szDirectory)))
 		return nullptr;
 	// 最もバージョンが新しいロゴを探す
-	StringPrintf(szMask, TEXT("%04X_%03X_\?\?\?_%02X"), NetworkID, LogoID, LogoType);
+	StringFormat(szMask, TEXT("{:04X}_{:03X}_\?\?\?_{:02X}"), NetworkID, LogoID, LogoType);
 	if (::lstrlen(szDirectory) + 1 + ::lstrlen(szMask) >= lengthof(szFileName))
 		return nullptr;
 	::PathCombine(szFileName, szDirectory, szMask);

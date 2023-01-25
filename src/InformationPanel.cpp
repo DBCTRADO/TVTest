@@ -1105,9 +1105,9 @@ void CInformationPanel::CVideoInfoItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[256];
 
-	StringPrintf(
+	StringFormat(
 		szText,
-		TEXT("%d x %d [%d x %d (%d:%d)]"),
+		TEXT("{} x {} [{} x {} ({}:{})]"),
 		m_OriginalVideoWidth, m_OriginalVideoHeight,
 		m_DisplayVideoWidth, m_DisplayVideoHeight,
 		m_AspectX, m_AspectY);
@@ -1273,14 +1273,14 @@ void CInformationPanel::CSignalLevelItem::Draw(HDC hdc, const RECT &Rect)
 {
 	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 	TCHAR szText[64];
-	int Length = 0;
+	size_t Length = 0;
 
 	if (m_fShowSignalLevel) {
 		TCHAR szSignalLevel[32];
 		CoreEngine.GetSignalLevelText(m_SignalLevel, szSignalLevel, lengthof(szSignalLevel));
-		Length = StringPrintf(szText, TEXT("%s / "), szSignalLevel);
+		Length = StringFormat(szText, TEXT("{} / "), szSignalLevel);
 	}
-	CoreEngine.GetBitRateText(m_BitRate, szText + Length, lengthof(szText) - Length);
+	CoreEngine.GetBitRateText(m_BitRate, szText + Length, static_cast<int>(lengthof(szText) - Length));
 
 	DrawItem(hdc, Rect, szText);
 }
@@ -1339,22 +1339,22 @@ bool CInformationPanel::CMediaBitRateItem::Update()
 void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[64];
-	int Length;
+	size_t Length;
 
 	if (m_VideoBitRate < 1000 * 1000) {
-		Length = StringPrintf(
+		Length = StringFormat(
 			szText,
-			TEXT("映像 %u kbps"),
+			TEXT("映像 {} kbps"),
 			(m_VideoBitRate + 500) / 1000);
 	} else {
-		Length = StringPrintf(
+		Length = StringFormat(
 			szText,
-			TEXT("映像 %.2f Mbps"),
+			TEXT("映像 {:.2f} Mbps"),
 			(double)(m_VideoBitRate) / (double)(1000 * 1000));
 	}
-	StringPrintf(
+	StringFormat(
 		szText + Length, lengthof(szText) - Length,
-		TEXT(" / 音声 %u kbps"),
+		TEXT(" / 音声 {} kbps"),
 		(m_AudioBitRate + 500) / 1000);
 
 	DrawItem(hdc, Rect, szText);
@@ -1402,17 +1402,17 @@ bool CInformationPanel::CErrorItem::Update()
 void CInformationPanel::CErrorItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[256];
-	int Length;
+	size_t Length;
 
-	Length = StringPrintf(
+	Length = StringFormat(
 		szText,
-		TEXT("D %llu / E %llu"),
+		TEXT("D {} / E {}"),
 		m_ContinuityErrorPacketCount,
 		m_ErrorPacketCount);
 	if (m_fShowScramble) {
-		StringPrintf(
+		StringFormat(
 			szText + Length, lengthof(szText) - Length,
-			TEXT(" / S %llu"), m_ScramblePacketCount);
+			TEXT(" / S {}"), m_ScramblePacketCount);
 	}
 	DrawItem(hdc, Rect, szText);
 }
@@ -1470,27 +1470,27 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 {
 	if (m_fRecording) {
 		TCHAR szText[256];
-		int Length;
+		size_t Length;
 
 		unsigned int RecordSec = (unsigned int)(m_RecordTime / 1000);
-		Length = StringPrintf(
+		Length = StringFormat(
 			szText,
-			TEXT("● %d:%02d:%02d"),
+			TEXT("● {}:{:02}:{:02}"),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
 		if (m_WroteSize >= 0) {
 			unsigned int Size =
 				(unsigned int)(m_WroteSize / (ULONGLONG)(1024 * 1024 / 100));
-			Length += StringPrintf(
+			Length += StringFormat(
 				szText + Length, lengthof(szText) - Length,
-				TEXT(" / %d.%02d MB"),
+				TEXT(" / {}.{:02} MB"),
 				Size / 100, Size % 100);
 		}
 		if (m_DiskFreeSpace >= 0) {
 			unsigned int FreeSpace =
 				(unsigned int)(m_DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
-			StringPrintf(
+			StringFormat(
 				szText + Length, lengthof(szText) - Length,
-				TEXT(" / %d.%02d GB空き"),
+				TEXT(" / {}.{:02} GB空き"),
 				FreeSpace / 100, FreeSpace % 100);
 		}
 		DrawItem(hdc, Rect, szText);
@@ -1601,13 +1601,13 @@ bool CInformationPanel::CProgramInfoItem::Update()
 			Formatter.Append(TEXT(" [再]"));
 		if (SeriesInfo.EpisodeNumber != 0 && SeriesInfo.LastEpisodeNumber != 0)
 			Formatter.AppendFormat(
-				TEXT(" 第%d回 / 全%d回"),
+				TEXT(" 第{}回 / 全{}回"),
 				SeriesInfo.EpisodeNumber, SeriesInfo.LastEpisodeNumber);
 		// expire_date は実際の最終回の日時でないので、紛らわしいため表示しない
 		/*
 		if (SeriesInfo.ExpireDate.IsValid()) {
 			Formatter.AppendFormat(
-				TEXT(" 終了予定%d/%d/%d"),
+				TEXT(" 終了予定{}/{}/{}"),
 				SeriesInfo.ExpireDate.Year,
 				SeriesInfo.ExpireDate.Month,
 				SeriesInfo.ExpireDate.Day);

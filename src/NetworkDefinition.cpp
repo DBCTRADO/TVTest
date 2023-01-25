@@ -93,7 +93,7 @@ bool CNetworkDefinition::LoadSettings(CSettings &Settings)
 			TCHAR szKey[32];
 			String Value;
 
-			StringPrintf(szKey, TEXT("Assign%d"), i);
+			StringFormat(szKey, TEXT("Assign{}"), i);
 			if (!Settings.Read(szKey, &Value))
 				break;
 

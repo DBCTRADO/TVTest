@@ -43,20 +43,20 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 			TCHAR szKey[64];
 			GUID guid;
 
-			StringPrintf(szKey, TEXT("Processor%d.GUID"), i);
+			StringFormat(szKey, TEXT("Processor{}.GUID"), i);
 			if (Settings.Read(szKey, &Buffer)
 					&& ::IIDFromString(Buffer.c_str(), &guid) == S_OK) {
 				CTSProcessorSettings *pTSProcessorSettings = new CTSProcessorSettings(guid);
 				bool f;
 
-				StringPrintf(szKey, TEXT("Processor%d.EnableProcessing"), i);
+				StringFormat(szKey, TEXT("Processor{}.EnableProcessing"), i);
 				if (Settings.Read(szKey, &f))
 					pTSProcessorSettings->m_EnableProcessing = f;
-				StringPrintf(szKey, TEXT("Processor%d.DefaultModule"), i);
+				StringFormat(szKey, TEXT("Processor{}.DefaultModule"), i);
 				Settings.Read(szKey, &pTSProcessorSettings->m_DefaultFilter.Module);
-				StringPrintf(szKey, TEXT("Processor%d.DefaultDevice"), i);
+				StringFormat(szKey, TEXT("Processor{}.DefaultDevice"), i);
 				Settings.Read(szKey, &pTSProcessorSettings->m_DefaultFilter.Device);
-				StringPrintf(szKey, TEXT("Processor%d.DefaultFilter"), i);
+				StringFormat(szKey, TEXT("Processor{}.DefaultFilter"), i);
 				Settings.Read(szKey, &pTSProcessorSettings->m_DefaultFilter.Filter);
 
 #if 1
@@ -65,22 +65,22 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					TunerFilterInfo TunerDecInfo;
 					int Value;
 
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.NetworkID"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.NetworkID"), i, j);
 					if (!Settings.Read(szKey, &Value))
 						break;
 					TunerDecInfo.NetworkID = (WORD)Value;
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.TSID"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.TSID"), i, j);
 					if (Settings.Read(szKey, &Value))
 						TunerDecInfo.TransportStreamID = (WORD)Value;
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.Enable"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.Enable"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.fEnable);
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.EnableProcessing"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.EnableProcessing"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.fEnableProcessing);
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.Module"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.Module"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Module);
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.Device"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.Device"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Device);
-					StringPrintf(szKey, TEXT("Processor%d.NetworkMap%d.Filter"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.Filter"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Filter);
 
 					pTSProcessorSettings->m_TunerFilterMap.push_back(TunerDecInfo);
@@ -91,27 +91,27 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					TunerFilterInfo TunerDecInfo;
 					unsigned int Value;
 
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Enable"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Enable"), i, j);
 					if (!Settings.IsValueExists(szKey))
 						break;
 					Settings.Read(szKey, &TunerDecInfo.fEnable);
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.EnableProcessing"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.EnableProcessing"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.fEnableProcessing);
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Module"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Module"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Module);
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Device"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Device"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Device);
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Filter"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Filter"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Filter);
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Tuner"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Tuner"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.Tuner);
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.NetworkID"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.NetworkID"), i, j);
 					if (Settings.Read(szKey, &Value))
 						TunerDecInfo.NetworkID = (WORD)Value;
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.TSID"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.TSID"), i, j);
 					if (Settings.Read(szKey, &Value))
 						TunerDecInfo.TransportStreamID = (WORD)Value;
-					StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.ServiceID"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.ServiceID"), i, j);
 					if (Settings.Read(szKey, &Value))
 						TunerDecInfo.ServiceID = (WORD)Value;
 
@@ -121,10 +121,10 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 				for (int j = 0;; j++) {
 					String Name, Value;
 
-					StringPrintf(szKey, TEXT("Processor%d.Property%d.Name"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.Property{}.Name"), i, j);
 					if (!Settings.Read(szKey, &Name))
 						break;
-					StringPrintf(szKey, TEXT("Processor%d.Property%d.Value"), i, j);
+					StringFormat(szKey, TEXT("Processor{}.Property{}.Value"), i, j);
 					if (Settings.Read(szKey, &Value)) {
 						CVariant Var;
 						if (SUCCEEDED(Var.FromString(StringUtility::Decode(Value))))
@@ -150,45 +150,45 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 		const CTSProcessorSettings *pTSProcessorSettings = m_SettingsList[i].get();
 		TCHAR szKey[64], szBuffer[256];
 
-		StringPrintf(szKey, TEXT("Processor%d.GUID"), i);
+		StringFormat(szKey, TEXT("Processor{}.GUID"), i);
 		::StringFromGUID2(pTSProcessorSettings->m_guid, szBuffer, lengthof(szBuffer));
 		Settings.Write(szKey, szBuffer);
 		if (pTSProcessorSettings->m_EnableProcessing) {
-			StringPrintf(szKey, TEXT("Processor%d.EnableProcessing"), i);
+			StringFormat(szKey, TEXT("Processor{}.EnableProcessing"), i);
 			Settings.Write(szKey, pTSProcessorSettings->m_EnableProcessing.value());
 		}
-		StringPrintf(szKey, TEXT("Processor%d.DefaultModule"), i);
+		StringFormat(szKey, TEXT("Processor{}.DefaultModule"), i);
 		Settings.Write(szKey, pTSProcessorSettings->m_DefaultFilter.Module);
-		StringPrintf(szKey, TEXT("Processor%d.DefaultDevice"), i);
+		StringFormat(szKey, TEXT("Processor{}.DefaultDevice"), i);
 		Settings.Write(szKey, pTSProcessorSettings->m_DefaultFilter.Device);
-		StringPrintf(szKey, TEXT("Processor%d.DefaultFilter"), i);
+		StringFormat(szKey, TEXT("Processor{}.DefaultFilter"), i);
 		Settings.Write(szKey, pTSProcessorSettings->m_DefaultFilter.Filter);
 
 		for (int j = 0; j < (int)pTSProcessorSettings->m_TunerFilterMap.size(); j++) {
 			const TunerFilterInfo &TunerDecInfo = pTSProcessorSettings->m_TunerFilterMap[j];
 
-			StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Enable"), i, j);
+			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Enable"), i, j);
 			Settings.Write(szKey, TunerDecInfo.fEnable);
-			StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.EnableProcessing"), i, j);
+			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.EnableProcessing"), i, j);
 			Settings.Write(szKey, TunerDecInfo.fEnableProcessing);
-			StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Module"), i, j);
+			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Module"), i, j);
 			Settings.Write(szKey, TunerDecInfo.Module);
-			StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Device"), i, j);
+			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Device"), i, j);
 			Settings.Write(szKey, TunerDecInfo.Device);
-			StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Filter"), i, j);
+			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Filter"), i, j);
 			Settings.Write(szKey, TunerDecInfo.Filter);
-			StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.Tuner"), i, j);
+			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Tuner"), i, j);
 			Settings.Write(szKey, TunerDecInfo.Tuner);
 			if (TunerDecInfo.IsNetworkIDEnabled()) {
-				StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.NetworkID"), i, j);
+				StringFormat(szKey, TEXT("Processor{}.TunerMap{}.NetworkID"), i, j);
 				Settings.Write(szKey, (unsigned int)TunerDecInfo.NetworkID);
 			}
 			if (TunerDecInfo.IsTransportStreamIDEnabled()) {
-				StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.TSID"), i, j);
+				StringFormat(szKey, TEXT("Processor{}.TunerMap{}.TSID"), i, j);
 				Settings.Write(szKey, (unsigned int)TunerDecInfo.TransportStreamID);
 			}
 			if (TunerDecInfo.IsServiceIDEnabled()) {
-				StringPrintf(szKey, TEXT("Processor%d.TunerMap%d.ServiceID"), i, j);
+				StringFormat(szKey, TEXT("Processor{}.TunerMap{}.ServiceID"), i, j);
 				Settings.Write(szKey, (unsigned int)TunerDecInfo.ServiceID);
 			}
 		}
@@ -198,9 +198,9 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 		for (auto it = PropertyList.begin(); it != PropertyList.end(); ++it) {
 			String Value;
 			if (SUCCEEDED(it->second.ToString(&Value))) {
-				StringPrintf(szKey, TEXT("Processor%d.Property%d.Name"), i, j);
+				StringFormat(szKey, TEXT("Processor{}.Property{}.Name"), i, j);
 				Settings.Write(szKey, it->first);
-				StringPrintf(szKey, TEXT("Processor%d.Property%d.Value"), i, j);
+				StringFormat(szKey, TEXT("Processor{}.Property{}.Value"), i, j);
 				Settings.Write(szKey, StringUtility::Encode(Value, TEXT("\"")));
 				j++;
 			}
@@ -560,8 +560,8 @@ void CTSProcessorManager::OpenFilter(
 	const FilterInfo &Filter, FilterOpenFlag FilterOpenFlags)
 {
 	TRACE(
-		TEXT("CTSProcessorManager::OpenFilter() : %s %s %s\n"),
-		Filter.Module.c_str(), Filter.Device.c_str(), Filter.Filter.c_str());
+		TEXT("CTSProcessorManager::OpenFilter() : {} {} {}\n"),
+		Filter.Module, Filter.Device, Filter.Filter);
 
 	// オープンに失敗したフィルタを繰り返しオープンしようとするのを避けるため、
 	// 前回オープンを試みたフィルタを記憶しておく
@@ -577,15 +577,15 @@ void CTSProcessorManager::OpenFilter(
 					|| !IsEqualFileName(pTSProcessor->GetModuleName().c_str(), Filter.Module.c_str())) {
 				if (!pTSProcessor->LoadModule(Filter.Module.c_str())) {
 					pSettings->m_fLastOpenFailed = true;
-					App.AddLog(CLogItem::LogType::Error, TEXT("\"%s\" を読み込めません。"), Filter.Module.c_str());
+					App.AddLog(CLogItem::LogType::Error, TEXT("\"{}\" を読み込めません。"), Filter.Module);
 					return;
 				}
 
 				CTSProcessor::FilterModuleInfo ModuleInfo;
 				pTSProcessor->GetModuleInfo(&ModuleInfo);
 				App.AddLog(
-					TEXT("モジュール \"%s\" (%s %s) を読み込みました。"),
-					Filter.Module.c_str(), ModuleInfo.Name.c_str(), ModuleInfo.Version.c_str());
+					TEXT("モジュール \"{}\" ({} {}) を読み込みました。"),
+					Filter.Module, ModuleInfo.Name, ModuleInfo.Version);
 			}
 		} else {
 			if (!pTSProcessor->IsModuleLoaded())
@@ -608,9 +608,9 @@ void CTSProcessorManager::OpenFilter(
 	pSettings->m_fLastOpenFailed = !fResult;
 	if (!fResult) {
 		if (!Filter.Filter.empty())
-			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"%s\" : \"%s\" をオープンできません。"), DeviceName.c_str(), Filter.Filter.c_str());
+			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"{}\" : \"{}\" をオープンできません。"), DeviceName, Filter.Filter);
 		else
-			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"%s\" をオープンできません。"), DeviceName.c_str());
+			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルター \"{}\" をオープンできません。"), DeviceName);
 
 		if (!!(FilterOpenFlags & FilterOpenFlag::RetryDialog)) {
 			String Message;
@@ -664,7 +664,7 @@ void CTSProcessorManager::CloseFilter(CTSProcessor *pTSProcessor)
 	if (pTSProcessor->IsModuleLoaded()) {
 		String ModuleName = pTSProcessor->GetModuleName();
 		pTSProcessor->UnloadModule();
-		GetAppClass().AddLog(TEXT("モジュール \"%s\" を開放しました。"), ModuleName.c_str());
+		GetAppClass().AddLog(TEXT("モジュール \"{}\" を開放しました。"), ModuleName);
 	}
 #endif
 }

@@ -214,7 +214,7 @@ bool CChannelList::AddChannel(CChannelInfo *pInfo)
 bool CChannelList::InsertChannel(int Index, const CChannelInfo &Info)
 {
 	if (Index < 0 || (size_t)Index > m_ChannelList.size()) {
-		TRACE(TEXT("CChannelList::InsertChannel() : Out of range [%d]\n"), Index);
+		TRACE(TEXT("CChannelList::InsertChannel() : Out of range [{}]\n"), Index);
 		return false;
 	}
 
@@ -230,7 +230,7 @@ bool CChannelList::InsertChannel(int Index, const CChannelInfo &Info)
 CChannelInfo *CChannelList::GetChannelInfo(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_ChannelList.size()) {
-		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range %d\n"), Index);
+		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range {}\n"), Index);
 		return nullptr;
 	}
 	return m_ChannelList[Index].get();
@@ -240,7 +240,7 @@ CChannelInfo *CChannelList::GetChannelInfo(int Index)
 const CChannelInfo *CChannelList::GetChannelInfo(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_ChannelList.size()) {
-		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range %d\n"), Index);
+		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range {}\n"), Index);
 		return nullptr;
 	}
 	return m_ChannelList[Index].get();
@@ -860,7 +860,7 @@ static const UINT CP_SHIFT_JIS = 932;
 
 bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 {
-	TRACE(TEXT("CTuningSpaceList::SaveToFile() : \"%s\"\n"), pszFileName);
+	TRACE(TEXT("CTuningSpaceList::SaveToFile() : \"{}\"\n"), pszFileName);
 
 	String Buffer;
 
@@ -876,7 +876,7 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 			continue;
 
 		if (GetTuningSpaceName(i) != nullptr) {
-			StringPrintf(szText, TEXT(";#SPACE(%d,%s)\r\n"), i, GetTuningSpaceName(i));
+			StringFormat(szText, TEXT(";#SPACE({},{})\r\n"), i, GetTuningSpaceName(i));
 			Buffer += szText;
 		}
 
@@ -914,31 +914,31 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 				Name += _T('"');
 			}
 
-			StringPrintf(
+			StringFormat(
 				szText,
-				TEXT("%s,%d,%d,%d,"),
+				TEXT("{},{},{},{},"),
 				Name.empty() ? pszName : Name.c_str(),
 				pChInfo->GetSpace(),
 				pChInfo->GetChannelIndex(),
 				pChInfo->GetChannelNo());
 			Buffer += szText;
 			if (pChInfo->GetServiceType() != 0) {
-				StringPrintf(szText, TEXT("%d"), pChInfo->GetServiceType());
+				StringFormat(szText, TEXT("{}"), pChInfo->GetServiceType());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
 			if (pChInfo->GetServiceID() != 0) {
-				StringPrintf(szText, TEXT("%d"), pChInfo->GetServiceID());
+				StringFormat(szText, TEXT("{}"), pChInfo->GetServiceID());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
 			if (pChInfo->GetNetworkID() != 0) {
-				StringPrintf(szText, TEXT("%d"), pChInfo->GetNetworkID());
+				StringFormat(szText, TEXT("{}"), pChInfo->GetNetworkID());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
 			if (pChInfo->GetTransportStreamID() != 0) {
-				StringPrintf(szText, TEXT("%d"), pChInfo->GetTransportStreamID());
+				StringFormat(szText, TEXT("{}"), pChInfo->GetTransportStreamID());
 				Buffer += szText;
 			}
 			Buffer += _T(',');
@@ -1043,7 +1043,7 @@ static int ParseDigits(LPTSTR *ppText)
 
 bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 {
-	TRACE(TEXT("CTuningSpaceList::LoadFromFile() : \"%s\"\n"), pszFileName);
+	TRACE(TEXT("CTuningSpaceList::LoadFromFile() : \"{}\"\n"), pszFileName);
 
 	static const LONGLONG MAX_FILE_SIZE = 8LL * 1024 * 1024;
 

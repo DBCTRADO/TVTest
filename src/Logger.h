@@ -25,6 +25,7 @@
 #include <vector>
 #include <memory>
 #include "Options.h"
+#include "StringFormat.h"
 
 
 namespace TVTest
@@ -40,7 +41,7 @@ namespace TVTest
 		};
 
 		CLogItem();
-		CLogItem(LogType Type, LPCTSTR pszText, DWORD SerialNumber);
+		CLogItem(LogType Type, StringView Text, DWORD SerialNumber);
 		~CLogItem();
 
 		LPCTSTR GetText() const { return m_Text.c_str(); }
@@ -74,9 +75,12 @@ namespace TVTest
 		bool Create(HWND hwndOwner) override;
 
 	// CLogger
-		bool AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
-		bool AddLogV(CLogItem::LogType Type, LPCTSTR pszText, va_list Args);
-		bool AddLogRaw(CLogItem::LogType Type, LPCTSTR pszText);
+		template<typename... TArgs> bool AddLog(CLogItem::LogType Type, StringView Format, const TArgs&... Args)
+		{
+			return AddLogV(Type, Format, MakeFormatArgs(Args...));
+		}
+		bool AddLogV(CLogItem::LogType Type, StringView Format, FormatArgs Args);
+		bool AddLogRaw(CLogItem::LogType Type, StringView Text);
 		void Clear();
 		std::size_t GetLogCount() const;
 		bool GetLog(std::size_t Index, CLogItem *pItem) const;

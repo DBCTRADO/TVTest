@@ -543,17 +543,17 @@ void CTSProcessorOptions::UpdateTunerMapItem(int Index)
 	m_TunerMapListView.SetItemText(
 		Index, 0, !Settings.Tuner.empty() ? Settings.Tuner.c_str() : TEXT("(指定なし)"));
 	if (Settings.IsNetworkIDEnabled())
-		StringPrintf(szText, TEXT("%d"), Settings.NetworkID);
+		StringFormat(szText, TEXT("{}"), Settings.NetworkID);
 	else
 		StringCopy(szText, TEXT("(指定なし)"));
 	m_TunerMapListView.SetItemText(Index, 1, szText);
 	if (Settings.IsTransportStreamIDEnabled())
-		StringPrintf(szText, TEXT("%d"), Settings.TransportStreamID);
+		StringFormat(szText, TEXT("{}"), Settings.TransportStreamID);
 	else
 		StringCopy(szText, TEXT("(指定なし)"));
 	m_TunerMapListView.SetItemText(Index, 2, szText);
 	if (Settings.IsServiceIDEnabled())
-		StringPrintf(szText, TEXT("%d"), Settings.ServiceID);
+		StringFormat(szText, TEXT("{}"), Settings.ServiceID);
 	else
 		StringCopy(szText, TEXT("(指定なし)"));
 	m_TunerMapListView.SetItemText(Index, 3, szText);

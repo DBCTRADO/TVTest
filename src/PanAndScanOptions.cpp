@@ -47,9 +47,9 @@ static void FormatValue(int Value, int Factor, LPTSTR pszText, size_t MaxLength)
 	else
 		Percentage = 0;
 	if (Percentage % 100 == 0)
-		StringPrintf(pszText, MaxLength, TEXT("%d"), Percentage / 100);
+		StringFormat(pszText, MaxLength, TEXT("{}"), Percentage / 100);
 	else
-		StringPrintf(pszText, MaxLength, TEXT("%d.%02d"), Percentage / 100, abs(Percentage) % 100);
+		StringFormat(pszText, MaxLength, TEXT("{}.{:02}"), Percentage / 100, abs(Percentage) % 100);
 }
 
 
@@ -84,9 +84,9 @@ static int FormatPanAndScanInfo(const CCoreEngine::PanAndScanInfo &Info, LPTSTR 
 	FormatValue(Info.YPos, FACTOR_PERCENTAGE, szYPos, lengthof(szYPos));
 	FormatValue(Info.Width, FACTOR_PERCENTAGE, szWidth, lengthof(szWidth));
 	FormatValue(Info.Height, FACTOR_PERCENTAGE, szHeight, lengthof(szHeight));
-	return StringPrintf(
-		pszText, MaxLength, TEXT("%s,%s,%s,%s,%d,%d"),
-		szXPos, szYPos, szWidth, szHeight, Info.XAspect, Info.YAspect);
+	return static_cast<int>(StringFormat(
+		pszText, MaxLength, TEXT("{},{},{},{},{},{}"),
+		szXPos, szYPos, szWidth, szHeight, Info.XAspect, Info.YAspect));
 }
 
 
@@ -175,10 +175,10 @@ bool CPanAndScanOptions::ReadSettings(CSettings &Settings)
 			PanAndScanInfo Info;
 			TCHAR szKey[32], szSettings[256];
 
-			StringPrintf(szKey, TEXT("Preset%d.Name"), i);
+			StringFormat(szKey, TEXT("Preset{}.Name"), i);
 			if (!Settings.Read(szKey, Info.szName, MAX_NAME) || Info.szName[0] == _T('\0'))
 				break;
-			StringPrintf(szKey, TEXT("Preset%d"), i);
+			StringFormat(szKey, TEXT("Preset{}"), i);
 			if (!Settings.Read(szKey, szSettings, lengthof(szSettings)) || szSettings[0] == _T('\0'))
 				break;
 
@@ -201,9 +201,9 @@ bool CPanAndScanOptions::WriteSettings(CSettings &Settings)
 		const PanAndScanInfo &Info = m_PresetList[i];
 		TCHAR szKey[32], szSettings[256];
 
-		StringPrintf(szKey, TEXT("Preset%u.Name"), (unsigned int)i);
+		StringFormat(szKey, TEXT("Preset{}.Name"), i);
 		Settings.Write(szKey, Info.szName);
-		StringPrintf(szKey, TEXT("Preset%u"), (unsigned int)i);
+		StringFormat(szKey, TEXT("Preset{}"), i);
 		FormatPanAndScanInfo(Info.Info, szSettings, lengthof(szSettings));
 		Settings.Write(szKey, szSettings);
 	}
@@ -267,8 +267,8 @@ static void FormatInfo(const CPanAndScanOptions::PanAndScanInfo *pInfo, LPTSTR p
 	FormatValue(pInfo->Info.YPos, FACTOR_PERCENTAGE, szYPos, lengthof(szYPos));
 	FormatValue(pInfo->Info.Width, FACTOR_PERCENTAGE, szWidth, lengthof(szWidth));
 	FormatValue(pInfo->Info.Height, FACTOR_PERCENTAGE, szHeight, lengthof(szHeight));
-	StringPrintf(
-		pszText, MaxLength, TEXT("%s , %s / %s x %s / %d : %d"),
+	StringFormat(
+		pszText, MaxLength, TEXT("{} , {} / {} x {} / {} : {}"),
 		szXPos, szYPos, szWidth, szHeight, pInfo->Info.XAspect, pInfo->Info.YAspect);
 }
 
@@ -757,10 +757,10 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 		PanAndScanInfo Info;
 		TCHAR szKey[32], szSettings[256];
 
-		StringPrintf(szKey, TEXT("Preset%d.Name"), i);
+		StringFormat(szKey, TEXT("Preset{}.Name"), i);
 		if (!Settings.Read(szKey, Info.szName, MAX_NAME) || Info.szName[0] == _T('\0'))
 			break;
-		StringPrintf(szKey, TEXT("Preset%d"), i);
+		StringFormat(szKey, TEXT("Preset{}"), i);
 		if (!Settings.Read(szKey, szSettings, lengthof(szSettings)) || szSettings[0] == _T('\0'))
 			break;
 
@@ -808,11 +808,11 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 		TCHAR szBuffer[256], szSettings[256];
 
 		FormatPanAndScanInfo(pInfo->Info, szSettings, lengthof(szSettings));
-		int Length = StringPrintf(
+		size_t Length = StringFormat(
 			szBuffer,
-			TEXT("Preset%d.Name=%s\r\nPreset%d=%s\r\n"),
+			TEXT("Preset{}.Name={}\r\nPreset{}={}\r\n"),
 			i, pInfo->szName, i, szSettings);
-		::WriteFile(hFile, szBuffer, Length * sizeof(TCHAR), &Write, nullptr);
+		::WriteFile(hFile, szBuffer, static_cast<DWORD>(Length * sizeof(TCHAR)), &Write, nullptr);
 	}
 
 	::CloseHandle(hFile);
@@ -826,11 +826,11 @@ bool CPanAndScanOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxL
 	if (Command < m_FirstID || Command > m_LastID)
 		return false;
 	const int Index = Command - m_FirstID;
-	int Length = StringPrintf(pszText, MaxLength, TEXT("パン&スキャン%d"), Index + 1);
+	const size_t Length = StringFormat(pszText, MaxLength, TEXT("パン&スキャン{}"), Index + 1);
 	if ((size_t)Index < m_PresetList.size()) {
-		StringPrintf(
+		StringFormat(
 			pszText + Length, MaxLength - Length,
-			TEXT(" : %s"), m_PresetList[Index].szName);
+			TEXT(" : {}"), m_PresetList[Index].szName);
 	}
 	return true;
 }

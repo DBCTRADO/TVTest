@@ -354,13 +354,13 @@ static BOOL ServiceListViewGetInfoTip(
 	if (pChannelInfo == nullptr)
 		return FALSE;
 
-	StringPrintf(
+	StringFormat(
 		pGetInfoTip->pszText, pGetInfoTip->cchTextMax,
-		TEXT("%s\r\nサービス: %d (0x%04x)\r\nネットワークID: %d (0x%04x)\r\nTSID: %d (0x%04x)"),
+		TEXT("{0}\r\nサービス: {1} ({1:#04x})\r\nネットワークID: {2} ({2:#04x})\r\nTSID: {3} ({3:#04x})"),
 		pChannelInfo->GetName(),
-		pChannelInfo->GetServiceID(), pChannelInfo->GetServiceID(),
-		pChannelInfo->GetNetworkID(), pChannelInfo->GetNetworkID(),
-		pChannelInfo->GetTransportStreamID(), pChannelInfo->GetTransportStreamID());
+		pChannelInfo->GetServiceID(),
+		pChannelInfo->GetNetworkID(),
+		pChannelInfo->GetTransportStreamID());
 
 	return TRUE;
 }

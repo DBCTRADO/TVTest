@@ -96,15 +96,15 @@ int FormatEventTime(
 
 	TCHAR szDate[32];
 	if (!!(Flags & FormatEventTimeFlag::Date)) {
-		int Length = 0;
+		size_t Length = 0;
 		if (!!(Flags & FormatEventTimeFlag::Year)) {
-			Length = StringPrintf(
-				szDate, TEXT("%d/"),
+			Length = StringFormat(
+				szDate, TEXT("{}/"),
 				stStart.wYear);
 		}
-		StringPrintf(
+		StringFormat(
 			szDate + Length, lengthof(szDate) - Length,
-			TEXT("%d/%d(%s) "),
+			TEXT("{}/{}({}) "),
 			stStart.wMonth,
 			stStart.wDay,
 			GetDayOfWeekText(stStart.wDayOfWeek));
@@ -113,10 +113,10 @@ int FormatEventTime(
 	}
 
 	LPCTSTR pszTimeFormat =
-		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("%02d:%02d") : TEXT("%d:%02d");
+		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("{:02}:{:02}") : TEXT("{}:{:02}");
 	TCHAR szStartTime[32], szEndTime[32];
 
-	StringPrintf(
+	StringFormat(
 		szStartTime,
 		pszTimeFormat,
 		stStart.wHour,
@@ -127,7 +127,7 @@ int FormatEventTime(
 		if (Duration > 0) {
 			SYSTEMTIME EndTime = stStart;
 			if (OffsetSystemTime(&EndTime, Duration * TimeConsts::SYSTEMTIME_SECOND)) {
-				StringPrintf(
+				StringFormat(
 					szEndTime, pszTimeFormat,
 					EndTime.wHour, EndTime.wMinute);
 			}
@@ -137,12 +137,12 @@ int FormatEventTime(
 		}
 	}
 
-	return StringPrintf(
-		pszTime, MaxLength, TEXT("%s%s%s%s"),
+	return static_cast<int>(StringFormat(
+		pszTime, MaxLength, TEXT("{}{}{}{}"),
 		szDate,
 		szStartTime,
 		!(Flags & FormatEventTimeFlag::StartOnly) ? TEXT("～") : TEXT(""),
-		szEndTime);
+		szEndTime));
 }
 
 

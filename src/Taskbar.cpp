@@ -83,8 +83,8 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 				m_fAppIDInvalid = true;
 				App.AddLog(
 					CLogItem::LogType::Error,
-					TEXT("AppID \"%s\" を設定できません。(%08x)"),
-					m_AppID.c_str(), hr);
+					TEXT("AppID \"{}\" を設定できません。({:08x})"),
+					m_AppID, hr);
 			}
 		}
 		if (SUCCEEDED(hr)) {
@@ -296,9 +296,9 @@ HRESULT CTaskbarManager::InitializeJumpList()
 			::CharLowerBuff(szAppPath, Length);
 			LibISDB::MD5Value Hash =
 				LibISDB::CalcMD5(reinterpret_cast<const uint8_t *>(szAppPath), Length * sizeof(TCHAR));
-			StringUtility::Format(
-				PropName,
-				APP_NAME TEXT("_%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x_TaskbarProp"),
+			StringFormat(
+				&PropName,
+				APP_NAME TEXT("_{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}_TaskbarProp"),
 				Hash.Value[ 0], Hash.Value[ 1], Hash.Value[ 2], Hash.Value[ 3], Hash.Value[ 4], Hash.Value[ 5], Hash.Value[ 6], Hash.Value[ 7],
 				Hash.Value[ 8], Hash.Value[ 9], Hash.Value[10], Hash.Value[11], Hash.Value[12], Hash.Value[13], Hash.Value[14], Hash.Value[15]);
 		} else {
@@ -376,9 +376,9 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 				if (Command == CM_PROGRAMGUIDE) {
 					StringCopy(szArgs, L"/jumplist /s /epgonly");
 				} else {
-					StringPrintf(
-						szArgs, L"/jumplist /s /command %s",
-						App.CommandManager.GetCommandIDText(Command).c_str());
+					StringFormat(
+						szArgs, L"/jumplist /s /command {}",
+						App.CommandManager.GetCommandIDText(Command));
 				}
 				App.CommandManager.GetCommandText(Command, szTitle, lengthof(szTitle));
 				int Icon = GetCommandIcon(Command);
@@ -567,13 +567,13 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 				if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 					App.AddLog(
 						CLogItem::LogType::Error,
-						TEXT("ジャンプリストアイコンフォルダ \"%s\" が作成できません。"),
+						TEXT("ジャンプリストアイコンフォルダ \"{}\" が作成できません。"),
 						szIconDir);
 					fShowIcon = false;
 				} else if (Result == ERROR_SUCCESS) {
 					App.AddLog(
 						CLogItem::LogType::Information,
-						TEXT("ジャンプリストアイコンフォルダ \"%s\" を作成しました。"),
+						TEXT("ジャンプリストアイコンフォルダ \"{}\" を作成しました。"),
 						szIconDir);
 				}
 			}
@@ -599,16 +599,16 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			Driver += pszTunerName;
 			Driver += L'"';
 		}
-		StringUtility::Format(
-			Item.Args, L"/jumplist /d %s /chspace %d /chi %d /nid %d /sid %d",
+		StringFormat(
+			&Item.Args, L"/jumplist /d {} /chspace {} /chi {} /nid {} /sid {}",
 			!Driver.empty() ? Driver.c_str() : pszTunerName,
 			pChannel->GetSpace(),
 			pChannel->GetChannelIndex(),
 			NetworkID, ServiceID);
 		StringCopy(szTuner, pszTunerName);
 		::PathRemoveExtensionW(szTuner);
-		StringUtility::Format(
-			Item.Description, L"%s (%s)",
+		StringFormat(
+			&Item.Description, L"{} ({})",
 			pChannel->GetName(),
 			::StrCmpNIW(szTuner, L"BonDriver_", 10) == 0 ? szTuner + 10 : szTuner);
 
@@ -616,9 +616,9 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			TCHAR szIconPath[MAX_PATH];
 			TCHAR szFileName[16];
 
-			StringPrintf(
+			StringFormat(
 				szFileName,
-				TEXT("%04x%04x.ico"), NetworkID, ServiceID);
+				TEXT("{:04x}{:04x}.ico"), NetworkID, ServiceID);
 			::PathCombine(szIconPath, szIconDir, szFileName);
 
 			bool fUseIcon = true;

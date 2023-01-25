@@ -680,6 +680,7 @@
     <ClInclude Include="PathUtil.h" />
     <ClInclude Include="ProgramGuideTool.h" />
     <ClInclude Include="SharedMemory.h" />
+    <ClInclude Include="StringFormat.h" />
     <ClInclude Include="StyleUtil.h" />
     <ClInclude Include="TaskbarOptions.h" />
     <ClInclude Include="TaskbarSharedProperties.h" />

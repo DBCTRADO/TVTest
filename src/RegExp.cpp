@@ -215,7 +215,9 @@ bool CRegExpEngine_ECMAScript::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFl
 		m_RegEx.assign(m_Pattern, RegExFlags);
 #ifdef _DEBUG
 	} catch (std::regex_error &e) {
-		TRACE(TEXT("std::regex::assign() error %d\n"), e.code());
+		TRACE(
+			TEXT("std::regex::assign() error {}\n"),
+			static_cast<std::underlying_type_t<std::regex_constants::error_type>>(e.code()));
 #else
 	} catch (...) {
 #endif

@@ -87,17 +87,17 @@ bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 		}
 		*pString = m_iEpgFileName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("eid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.EventID);
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("nid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetNetworkID());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetNetworkID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("tsid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetTransportStreamID());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetTransportStreamID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("sid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetServiceID());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetServiceID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("duration-sec")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.Duration);
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Event.Duration);
 	} else if (::lstrcmpi(pszKeyword, TEXT("duration-min")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), (m_EventInfo.Event.Duration + 59) / 60);
+		StringFormat(pString, TEXT("{}"), (m_EventInfo.Event.Duration + 59) / 60);
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword, pString);
 	}
@@ -204,7 +204,7 @@ bool CProgramGuideTool::Execute(
 		}
 	}
 
-	TRACE(TEXT("外部ツール実行 : %s, %s\n"), szFileName, Parameter.c_str());
+	TRACE(TEXT("外部ツール実行 : {}, {}\n"), szFileName, Parameter);
 
 	return ::ShellExecute(nullptr, nullptr, szFileName, Parameter.c_str(), nullptr, SW_SHOWNORMAL) >= (HINSTANCE)32;
 }

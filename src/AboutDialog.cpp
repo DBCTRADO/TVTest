@@ -88,7 +88,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 			TCHAR szText[MAX_INFO_TEXT];
 
-			StringPrintf(
+			StringCopy(
 				szText,
 				ABOUT_VERSION_TEXT
 #ifdef VERSION_HASH
@@ -108,7 +108,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			RECT rcHeaderText = {0, 0, 0, 0};
 			::DrawText(hdc, szText, -1, &rcHeaderText, DT_CALCRECT | DT_NOPREFIX);
 
-			int Length = StringPrintf(
+			const size_t Length = StringFormat(
 				szText,
 				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING
 #ifdef LIBISDB_VERSION_HASH
@@ -116,11 +116,11 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 #endif
 				TEXT("\r\n")
 #ifdef _MSC_FULL_VER
-				TEXT("Compiled with MSVC %d.%d.%d.%d\r\n"),
+				TEXT("Compiled with MSVC {}.{}.{}.{}\r\n"),
 				_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD
 #endif
 				);
-			::GetWindowText(hwndInfo, szText + Length, lengthof(szText) - Length);
+			::GetWindowText(hwndInfo, szText + Length, static_cast<int>(lengthof(szText) - Length));
 			::SetWindowText(hwndInfo, szText);
 			RECT rcText = {0, 0, 0, 0};
 			::DrawText(hdc, szText, -1, &rcText, DT_CALCRECT | DT_NOPREFIX);

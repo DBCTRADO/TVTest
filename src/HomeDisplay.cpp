@@ -195,17 +195,17 @@ void CChannelListCategoryBase::Draw(
 
 			if (pEventInfo != nullptr) {
 				TCHAR szText[1024];
-				int Length;
+				size_t Length;
 
 				Length = EpgUtil::FormatEventTime(
 					*pEventInfo, szText, lengthof(szText),
 					EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 				if (!pEventInfo->EventName.empty()) {
-					Length += StringPrintf(
+					Length += StringFormat(
 						szText + Length, lengthof(szText) - Length,
-						TEXT("%s%s"),
+						TEXT("{}{}"),
 						Length > 0 ? TEXT(" ") : TEXT(""),
-						pEventInfo->EventName.c_str());
+						pEventInfo->EventName);
 				}
 				if (Length > 0) {
 					ThemeDraw.Draw(
@@ -1528,7 +1528,7 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 				TCHAR szKey[32];
 				int ID;
 
-				StringPrintf(szKey, TEXT("Category%d_ID"), i);
+				StringFormat(szKey, TEXT("Category{}_ID"), i);
 				if (Settings.Read(szKey, &ID)) {
 					size_t j;
 					for (j = 0; j < i; j++) {
@@ -1589,7 +1589,7 @@ bool CHomeDisplay::SaveSettings(CSettings &Settings)
 				const CCategory *pCategory = m_CategoryList[i].get();
 				TCHAR szKey[32];
 
-				StringPrintf(szKey, TEXT("Category%d_ID"), i);
+				StringFormat(szKey, TEXT("Category{}_ID"), i);
 				Settings.Write(szKey, pCategory->GetID());
 			}
 		}

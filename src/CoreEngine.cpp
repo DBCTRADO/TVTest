@@ -627,14 +627,14 @@ CCoreEngine::StatusFlag CCoreEngine::UpdateAsyncStatus()
 		if (NumAudioChannels != m_NumAudioChannels) {
 			m_NumAudioChannels = NumAudioChannels;
 			Updated |= StatusFlag::AudioChannels;
-			TRACE(TEXT("Audio channels = %dch\n"), NumAudioChannels);
+			TRACE(TEXT("Audio channels = {}ch\n"), NumAudioChannels);
 		}
 
 		bool fSPDIFPassthrough = m_pViewer->IsSPDIFPassthrough();
 		if (fSPDIFPassthrough != m_fSPDIFPassthrough) {
 			m_fSPDIFPassthrough = fSPDIFPassthrough;
 			Updated |= StatusFlag::SPDIFPassthrough;
-			TRACE(TEXT("S/PDIF passthrough %s\n"), fSPDIFPassthrough ? TEXT("ON") : TEXT("OFF"));
+			TRACE(TEXT("S/PDIF passthrough {}\n"), fSPDIFPassthrough ? TEXT("ON") : TEXT("OFF"));
 		}
 	}
 
@@ -642,7 +642,7 @@ CCoreEngine::StatusFlag CCoreEngine::UpdateAsyncStatus()
 	if (NumAudioStreams != m_NumAudioStreams) {
 		m_NumAudioStreams = NumAudioStreams;
 		Updated |= StatusFlag::AudioStreams;
-		TRACE(TEXT("Audio streams = %dch\n"), NumAudioStreams);
+		TRACE(TEXT("Audio streams = {}ch\n"), NumAudioStreams);
 	}
 
 	if (m_pAnalyzer != nullptr) {
@@ -651,7 +651,7 @@ CCoreEngine::StatusFlag CCoreEngine::UpdateAsyncStatus()
 		if (AudioComponentType != m_AudioComponentType) {
 			m_AudioComponentType = AudioComponentType;
 			Updated |= StatusFlag::AudioComponentType;
-			TRACE(TEXT("AudioComponentType = %x\n"), AudioComponentType);
+			TRACE(TEXT("AudioComponentType = {:x}\n"), AudioComponentType);
 		}
 	}
 
@@ -755,7 +755,7 @@ int CCoreEngine::GetSignalLevelText(LPTSTR pszText, int MaxLength) const
 
 int CCoreEngine::GetSignalLevelText(float SignalLevel, LPTSTR pszText, int MaxLength) const
 {
-	return StringPrintf(pszText, MaxLength, TEXT("%.2f dB"), SignalLevel);
+	return static_cast<int>(StringFormat(pszText, MaxLength, TEXT("{:.2f} dB"), SignalLevel));
 }
 
 
@@ -773,7 +773,7 @@ int CCoreEngine::GetBitRateText(unsigned long BitRate, LPTSTR pszText, int MaxLe
 
 int CCoreEngine::GetBitRateText(float BitRate, LPTSTR pszText, int MaxLength, int Precision) const
 {
-	return StringPrintf(pszText, MaxLength, TEXT("%.*f Mbps"), Precision, BitRate);
+	return static_cast<int>(StringFormat(pszText, MaxLength, TEXT("{:.{}f} Mbps"), BitRate, Precision));
 }
 
 
@@ -832,7 +832,7 @@ bool CCoreEngine::SetMinTimerResolution(bool fMin)
 			if (::timeBeginPeriod(tc.wPeriodMin) != TIMERR_NOERROR)
 				return false;
 			m_TimerResolution = tc.wPeriodMin;
-			TRACE(TEXT("CCoreEngine::SetMinTimerResolution() Set %u\n"), m_TimerResolution);
+			TRACE(TEXT("CCoreEngine::SetMinTimerResolution() Set {}\n"), m_TimerResolution);
 		} else {
 			::timeEndPeriod(m_TimerResolution);
 			m_TimerResolution = 0;

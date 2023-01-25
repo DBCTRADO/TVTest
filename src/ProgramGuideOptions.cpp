@@ -187,7 +187,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < NumSearchKeywords; i++) {
 				TCHAR szName[32];
 
-				StringPrintf(szName, TEXT("SearchKeyword%d"), i);
+				StringFormat(szName, TEXT("SearchKeyword{}"), i);
 				if (Settings.Read(szName, &Keywords[j]) && !Keywords[j].empty())
 					j++;
 			}
@@ -202,7 +202,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		for (int i = 0; i < CProgramSearchDialog::NUM_COLUMNS; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("SearchColumn%d_Width"), i);
+			StringFormat(szName, TEXT("SearchColumn{}_Width"), i);
 			if (Settings.Read(szName, &Value))
 				pProgramSearch->SetColumnWidth(i, Value);
 		}
@@ -233,10 +233,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 			for (unsigned int i = 0; i < NumTools; i++) {
 				TCHAR szName[32];
 
-				StringPrintf(szName, TEXT("Tool%u_Name"), i);
+				StringFormat(szName, TEXT("Tool{}_Name"), i);
 				if (!Settings.Read(szName, &ToolName) || ToolName.empty())
 					break;
-				StringPrintf(szName, TEXT("Tool%u_Command"), i);
+				StringFormat(szName, TEXT("Tool{}_Command"), i);
 				if (!Settings.Read(szName, &Command) || Command.empty())
 					break;
 				pToolList->Add(new CProgramGuideTool(ToolName, Command));
@@ -250,7 +250,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < ServiceCount; i++) {
 				TCHAR szName[32], szText[64];
 
-				StringPrintf(szName, TEXT("ExcludeService%d"), i);
+				StringFormat(szName, TEXT("ExcludeService{}"), i);
 				if (!Settings.Read(szName, szText, lengthof(szText))
 						|| szText[0] == _T('\0'))
 					break;
@@ -285,20 +285,20 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 				for (int i = 0; i < FavoritesCount; i++) {
 					TCHAR szName[32];
 
-					StringPrintf(szName, TEXT("Favorite%d_Name"), i);
+					StringFormat(szName, TEXT("Favorite{}_Name"), i);
 					if (!Settings.Read(szName, &FavoriteInfo.Name)
 							|| FavoriteInfo.Name.empty())
 						break;
-					StringPrintf(szName, TEXT("Favorite%d_Group"), i);
+					StringFormat(szName, TEXT("Favorite{}_Group"), i);
 					if (!Settings.Read(szName, &FavoriteInfo.GroupID))
 						break;
-					StringPrintf(szName, TEXT("Favorite%d_Label"), i);
+					StringFormat(szName, TEXT("Favorite{}_Label"), i);
 					if (!Settings.Read(szName, &FavoriteInfo.Label))
 						break;
 					FavoriteInfo.SetDefaultColors();
-					StringPrintf(szName, TEXT("Favorite%d_BackColor"), i);
+					StringFormat(szName, TEXT("Favorite{}_BackColor"), i);
 					Settings.ReadColor(szName, &FavoriteInfo.BackColor);
-					StringPrintf(szName, TEXT("Favorite%d_TextColor"), i);
+					StringFormat(szName, TEXT("Favorite{}_TextColor"), i);
 					Settings.ReadColor(szName, &FavoriteInfo.TextColor);
 
 					pFavorites->Add(FavoriteInfo);
@@ -376,7 +376,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		for (int i = 0; i < NumSearchKeywords; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("SearchKeyword%d"), i);
+			StringFormat(szName, TEXT("SearchKeyword{}"), i);
 			Settings.Write(szName, pProgramSearch->GetOptions().GetKeywordHistory(i));
 		}
 
@@ -385,7 +385,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		for (int i = 0; i < CProgramSearchDialog::NUM_COLUMNS; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("SearchColumn%d_Width"), i);
+			StringFormat(szName, TEXT("SearchColumn{}_Width"), i);
 			Settings.Write(szName, pProgramSearch->GetColumnWidth(i));
 		}
 
@@ -411,9 +411,9 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			const CProgramGuideTool *pTool = pToolList->GetTool(i);
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("Tool%u_Name"), (UINT)i);
+			StringFormat(szName, TEXT("Tool{}_Name"), (UINT)i);
 			Settings.Write(szName, pTool->GetName());
-			StringPrintf(szName, TEXT("Tool%u_Command"), (UINT)i);
+			StringFormat(szName, TEXT("Tool{}_Command"), (UINT)i);
 			Settings.Write(szName, pTool->GetCommand());
 		}
 	}
@@ -426,9 +426,9 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			Settings.Write(TEXT("ExcludeServiceCount"), (unsigned int)ExcludeServiceList.size());
 			for (size_t i = 0; i < ExcludeServiceList.size(); i++) {
 				TCHAR szName[32], szText[64];
-				StringPrintf(szName, TEXT("ExcludeService%u"), (unsigned int)i);
-				StringPrintf(
-					szText, TEXT("%u,%u,%u"),
+				StringFormat(szName, TEXT("ExcludeService{}"), (unsigned int)i);
+				StringFormat(
+					szText, TEXT("{},{},{}"),
 					ExcludeServiceList[i].NetworkID,
 					ExcludeServiceList[i].TransportStreamID,
 					ExcludeServiceList[i].ServiceID);
@@ -447,15 +447,15 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			const CProgramGuideFavorites::FavoriteInfo *pFavoriteInfo = pFavorites->Get(i);
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("Favorite%d_Name"), i);
+			StringFormat(szName, TEXT("Favorite{}_Name"), i);
 			Settings.Write(szName, pFavoriteInfo->Name);
-			StringPrintf(szName, TEXT("Favorite%d_Group"), i);
+			StringFormat(szName, TEXT("Favorite{}_Group"), i);
 			Settings.Write(szName, pFavoriteInfo->GroupID);
-			StringPrintf(szName, TEXT("Favorite%d_Label"), i);
+			StringFormat(szName, TEXT("Favorite{}_Label"), i);
 			Settings.Write(szName, pFavoriteInfo->Label);
-			StringPrintf(szName, TEXT("Favorite%d_BackColor"), i);
+			StringFormat(szName, TEXT("Favorite{}_BackColor"), i);
 			Settings.WriteColor(szName, pFavoriteInfo->BackColor);
-			StringPrintf(szName, TEXT("Favorite%d_TextColor"), i);
+			StringFormat(szName, TEXT("Favorite{}_TextColor"), i);
 			Settings.WriteColor(szName, pFavoriteInfo->TextColor);
 		}
 
@@ -509,7 +509,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR, TEXT("現在時"));
 			for (int i = 0; i <= 23; i++) {
 				TCHAR szText[8];
-				StringPrintf(szText, TEXT("%d時"), i);
+				StringFormat(szText, TEXT("{}時"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR, szText);
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR, m_BeginHour + 1);
@@ -590,8 +590,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					if (CommandInfo.Type == PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
 						TCHAR szCommand[512];
 
-						StringPrintf(
-							szCommand, TEXT("%s:%s"),
+						StringFormat(
+							szCommand, TEXT("{}:{}"),
 							::PathFindFileName(pPlugin->GetFileName()),
 							CommandInfo.pszText);
 						LRESULT Index = DlgComboBox_AddString(

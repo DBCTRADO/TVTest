@@ -239,7 +239,7 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		Formatter.Append(m_Style.VolumeTextFill.c_str());
 	for (; i < VolumeSteps; i++)
 		Formatter.Append(m_Style.VolumeTextRemain.c_str());
-	Formatter.AppendFormat(TEXT(" %d"), Volume);
+	Formatter.AppendFormat(TEXT(" {}"), Volume);
 
 	LOGFONT lf = *m_pOptions->GetOSDFont();
 	lf.lfWidth = 0;

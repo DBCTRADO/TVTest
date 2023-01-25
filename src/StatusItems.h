@@ -143,7 +143,7 @@ namespace TVTest
 		bool m_fRemain;
 		CTooltip m_Tooltip;
 
-		int GetTipText(LPTSTR pszText, int MaxLength);
+		size_t GetTipText(LPTSTR pszText, size_t MaxLength);
 		void SetTipFont();
 
 	public:

@@ -51,7 +51,7 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 	if (IsStringEmpty(pszFileName))
 		return false;
 
-	TRACE(TEXT("CStyleManager::Load() : \"%s\"\n"), pszFileName);
+	TRACE(TEXT("CStyleManager::Load() : \"{}\"\n"), pszFileName);
 
 	CSettings Settings;
 
@@ -96,7 +96,7 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 					}
 #ifdef _DEBUG
 					else {
-						TRACE(TEXT("Invalid style : %s=%s\n"), e.Name.c_str(), e.Value.c_str());
+						TRACE(TEXT("Invalid style : {}={}\n"), e.Name, e.Value);
 					}
 #endif
 				}

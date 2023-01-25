@@ -179,7 +179,7 @@ void CEventInfoPopup::UpdateEventInfo()
 			m_EventInfo.VideoList[0].StreamContent,
 			m_EventInfo.VideoList[0].ComponentType);
 		if (pszVideo != nullptr) {
-			Formatter.AppendFormat(TEXT("\r\n■ 映像： %s"), pszVideo);
+			Formatter.AppendFormat(TEXT("\r\n■ 映像： {}"), pszVideo);
 		}
 	}
 
@@ -211,18 +211,18 @@ void CEventInfoPopup::UpdateEventInfo()
 		CEpgGenre EpgGenre;
 		LPCTSTR pszGenre = EpgGenre.GetText(Genre1, -1);
 		if (pszGenre != nullptr) {
-			Formatter.AppendFormat(TEXT("\r\n■ ジャンル： %s"), pszGenre);
+			Formatter.AppendFormat(TEXT("\r\n■ ジャンル： {}"), pszGenre);
 			pszGenre = EpgGenre.GetText(Genre1, Genre2);
 			if (pszGenre != nullptr)
-				Formatter.AppendFormat(TEXT(" - %s"), pszGenre);
+				Formatter.AppendFormat(TEXT(" - {}"), pszGenre);
 		}
 	}
 
 	if (m_fDetailInfo) {
-		Formatter.AppendFormat(TEXT("\r\n■ イベントID： 0x%04X"), m_EventInfo.EventID);
+		Formatter.AppendFormat(TEXT("\r\n■ イベントID： {:#04x}"), m_EventInfo.EventID);
 		if (m_EventInfo.IsCommonEvent)
 			Formatter.AppendFormat(
-				TEXT(" (イベント共有 サービスID 0x%04X / イベントID 0x%04X)"),
+				TEXT(" (イベント共有 サービスID {:#04x} / イベントID {:#04x})"),
 				m_EventInfo.CommonEvent.ServiceID,
 				m_EventInfo.CommonEvent.EventID);
 	}
@@ -288,19 +288,19 @@ void CEventInfoPopup::FormatAudioInfo(
 		TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode, szLang1, lengthof(szLang1));
 		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode2, szLang2, lengthof(szLang2));
-		StringPrintf(
+		StringFormat(
 			szAudioComponent,
-			TEXT(" [%s/%s]"), szLang1, szLang2);
+			TEXT(" [{}/{}]"), szLang1, szLang2);
 	} else {
 		TCHAR szLang[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 		LibISDB::GetLanguageText_ja(pAudioInfo->LanguageCode, szLang, lengthof(szLang));
-		StringPrintf(
+		StringFormat(
 			szAudioComponent,
-			TEXT(" [%s]"), szLang);
+			TEXT(" [{}]"), szLang);
 	}
 
-	StringPrintf(
-		pszText, MaxLength, TEXT("%s%s"),
+	StringFormat(
+		pszText, MaxLength, TEXT("{}{}"),
 		pszAudio != nullptr ? pszAudio : TEXT("?"),
 		szAudioComponent);
 }

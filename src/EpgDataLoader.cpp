@@ -196,7 +196,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 	delete [] pBuffer;
 	::CloseHandle(hFile);
-	TRACE(TEXT("EPG data loaded %s\n"), pszFileName);
+	TRACE(TEXT("EPG data loaded {}\n"), pszFileName);
 	return true;
 }
 

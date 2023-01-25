@@ -105,16 +105,16 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 	for (int i = 0; i <= CM_CUSTOMZOOM_LAST - CM_CUSTOMZOOM_FIRST; i++, j++) {
 		int Type, Rate, Width, Height;
 
-		StringPrintf(szText, TEXT("CustomZoom%d"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}"), i + 1);
 		if (Settings.Read(szText, &Rate) && Rate > 0 && Rate <= MAX_RATE)
 			m_ZoomList[j].Rate.Rate = Rate;
-		StringPrintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Type"), i + 1);
 		if (Settings.Read(szText, &Type) && CheckEnumRange(static_cast<ZoomType>(Type)))
 			m_ZoomList[j].Type = static_cast<ZoomType>(Type);
-		StringPrintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Width"), i + 1);
 		if (Settings.Read(szText, &Width) && Width > 0)
 			m_ZoomList[j].Size.Width = Width;
-		StringPrintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Height"), i + 1);
 		if (Settings.Read(szText, &Height) && Height > 0)
 			m_ZoomList[j].Size.Height = Height;
 	}
@@ -129,7 +129,7 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < ListCount; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("ZoomList%d"), i);
+			StringFormat(szName, TEXT("ZoomList{}"), i);
 			if (Settings.Read(szName, szText, lengthof(szText))) {
 				LPTSTR p = szText;
 				while (*p != _T('\0') && *p != _T(','))
@@ -176,13 +176,13 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 
 	int j = CM_ZOOM_LAST - CM_ZOOM_FIRST + 1;
 	for (int i = 0; i <= CM_CUSTOMZOOM_LAST - CM_CUSTOMZOOM_FIRST; i++, j++) {
-		StringPrintf(szText, TEXT("CustomZoom%d"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Rate.Rate);
-		StringPrintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Type"), i + 1);
 		Settings.Write(szText, (int)m_ZoomList[j].Type);
-		StringPrintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Width"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Width);
-		StringPrintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Height"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Height);
 	}
 
@@ -193,10 +193,10 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 		const ZoomInfo &Info = m_ZoomList[Index];
 		TCHAR szName[32];
 
-		StringPrintf(szName, TEXT("ZoomList%d"), i);
-		StringPrintf(
-			szText, TEXT("%s,%d"),
-			pCommandManager->GetCommandIDText(m_DefaultZoomList[Index].Command).c_str(),
+		StringFormat(szName, TEXT("ZoomList{}"), i);
+		StringFormat(
+			szText, TEXT("{},{}"),
+			pCommandManager->GetCommandIDText(m_DefaultZoomList[Index].Command),
 			Info.fVisible ? 1 : 0);
 		Settings.Write(szName, szText);
 	}
@@ -220,12 +220,12 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 			UINT Flags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
 
 			if (Info.Type == ZoomType::Rate) {
-				int Length = StringPrintf(
-					szText, TEXT("%d%%"),
+				size_t Length = StringFormat(
+					szText, TEXT("{}%"),
 					Info.Rate.GetPercentage());
 				if (Info.Rate.Rate * 100 % Info.Rate.Factor != 0) {
-					StringPrintf(
-						szText + Length, lengthof(szText) - Length, TEXT(" (%d/%d)"),
+					StringFormat(
+						szText + Length, lengthof(szText) - Length, TEXT(" ({}/{})"),
 						Info.Rate.Rate, Info.Rate.Factor);
 				}
 				if (!fRateCheck
@@ -235,8 +235,8 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 					fRateCheck = true;
 				}
 			} else {
-				StringPrintf(
-					szText, TEXT("%d x %d"),
+				StringFormat(
+					szText, TEXT("{} x {}"),
 					Info.Size.Width, Info.Size.Height);
 				if (!fSizeCheck
 						&& pCurZoom != nullptr
@@ -280,9 +280,9 @@ void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR p
 	int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, (int)MaxLength);
 	if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
 		if (Info.Type == ZoomType::Rate)
-			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d%%"), Info.Rate.GetPercentage());
+			StringFormat(pszText + Length, MaxLength - Length, TEXT(" : {}%"), Info.Rate.GetPercentage());
 		else if (Info.Type == ZoomType::Size)
-			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d x %d"), Info.Size.Width, Info.Size.Height);
+			StringFormat(pszText + Length, MaxLength - Length, TEXT(" : {} x {}"), Info.Size.Width, Info.Size.Height);
 	}
 }
 

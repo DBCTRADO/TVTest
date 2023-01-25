@@ -383,7 +383,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					r = m_Palette[Index].rgbRed;
 					g = m_Palette[Index].rgbGreen;
 					b = m_Palette[Index].rgbBlue;
-					StringPrintf(pttdi->szText, TEXT("%d,%d,%d #%02X%02X%02X"), r, g, b, r, g, b);
+					StringFormat(pttdi->szText, TEXT("{0},{1},{2} #{0:02X}{1:02X}{2:02X}"), r, g, b);
 				} else {
 					pttdi->szText[0] = '\0';
 				}

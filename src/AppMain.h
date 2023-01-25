@@ -232,8 +232,32 @@ namespace TVTest
 		bool GetAppDirectory(LPTSTR pszDirectory) const;
 		LPCTSTR GetIniFileName() const { return m_IniFileName.c_str(); }
 		LPCTSTR GetFavoritesFileName() const { return m_FavoritesFileName.c_str(); }
-		void AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
-		void AddLog(LPCTSTR pszText, ...);
+
+		template<typename... TArgs> void AddLog(CLogItem::LogType Type, StringView Format, const TArgs&... Args)
+		{
+			Logger.AddLog(Type, Format, Args...);
+		}
+		template<typename... TArgs> void AddLog(StringView Format, const TArgs&... Args)
+		{
+			Logger.AddLog(CLogItem::LogType::Information, Format, Args...);
+		}
+		void AddLogV(CLogItem::LogType Type, StringView Format, FormatArgs Args)
+		{
+			Logger.AddLogV(Type, Format, Args);
+		}
+		void AddLogV(StringView Format, FormatArgs Args)
+		{
+			Logger.AddLogV(CLogItem::LogType::Information, Format, Args);
+		}
+		void AddLogRaw(CLogItem::LogType Type, StringView Text)
+		{
+			Logger.AddLogRaw(Type, Text);
+		}
+		void AddLogRaw(StringView Text)
+		{
+			Logger.AddLogRaw(CLogItem::LogType::Information, Text);
+		}
+
 		bool IsFirstExecute() const;
 		int Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow);
 		void Initialize();

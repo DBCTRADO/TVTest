@@ -22,6 +22,7 @@
 #define TVTEST_UTIL_H
 
 
+#include "StringFormat.h"
 #include "StringUtility.h"
 #include "PathUtil.h"
 
@@ -138,8 +139,11 @@ namespace TVTest
 		LPCTSTR GetString() const { return m_pBuffer; }
 		void Clear();
 		void Append(LPCTSTR pszString);
-		void AppendFormat(LPCTSTR pszFormat, ...);
-		void AppendFormatV(LPCTSTR pszFormat, va_list Args);
+		template<typename... TArgs> void AppendFormat(StringView Format, const TArgs&... Args)
+		{
+			AppendFormatV(Format, MakeFormatArgs(Args...));
+		}
+		void AppendFormatV(StringView Format, FormatArgs Args);
 		void RemoveTrailingWhitespace();
 
 	private:

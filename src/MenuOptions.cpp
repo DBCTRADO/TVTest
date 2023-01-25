@@ -118,14 +118,14 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < ItemCount; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("Item%d_ID"), i);
+			StringFormat(szName, TEXT("Item{}_ID"), i);
 			if (Settings.Read(szName, &Text)) {
 				MenuItemInfo Item;
 
 				Item.Name = Text;
 				Item.ID = MENU_ID_INVALID;
 				Item.fVisible = true;
-				StringPrintf(szName, TEXT("Item%d_State"), i);
+				StringFormat(szName, TEXT("Item{}_State"), i);
 				if (Settings.Read(szName, &Value))
 					Item.fVisible = (Value & ITEM_STATE_VISIBLE) != 0;
 				m_MenuItemList.push_back(Item);
@@ -174,7 +174,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 				const MenuItemInfo &Item = m_MenuItemList[i];
 				TCHAR szName[32];
 
-				StringPrintf(szName, TEXT("Item%zu_ID"), i);
+				StringFormat(szName, TEXT("Item{}_ID"), i);
 				if (Item.ID == MENU_ID_INVALID) {
 					Settings.Write(szName, Item.Name);
 				} else if (Item.ID == MENU_ID_SEPARATOR) {
@@ -182,7 +182,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 				} else {
 					Settings.Write(szName, CommandManager.GetCommandIDText(IDToCommand(Item.ID)));
 				}
-				StringPrintf(szName, TEXT("Item%zu_State"), i);
+				StringFormat(szName, TEXT("Item{}_State"), i);
 				Settings.Write(szName, Item.fVisible ? ITEM_STATE_VISIBLE : 0);
 			}
 		}

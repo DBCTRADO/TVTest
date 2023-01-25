@@ -259,15 +259,15 @@ bool CEventSearchSettings::ToString(String *pString) const
 	TCHAR szGenre2[16 * 4 + 1];
 	if (fGenre2) {
 		for (int i = 0; i < 16; i++) {
-			StringPrintf(&szGenre2[i * 4], 5, TEXT("%04x"), Genre2[i]);
+			StringFormat(&szGenre2[i * 4], 5, TEXT("{:04x}"), Genre2[i]);
 		}
 	} else {
 		szGenre2[0] = _T('\0');
 	}
 
-	StringUtility::Format(
-		Buffer,
-		TEXT(",%u,%d,%s,%u,%d:%02d,%d:%02d,%u,%u,%d,%d"),
+	StringFormat(
+		&Buffer,
+		TEXT(",{},{},{},{},{}:{:02},{}:{:02},{},{},{},{}"),
 		Flags,
 		Genre1,
 		szGenre2,
@@ -525,7 +525,7 @@ bool CEventSearchSettingsList::Load(CSettings &Settings, LPCTSTR pszPrefix)
 	String Value;
 
 	for (int i = 0;; i++) {
-		StringPrintf(szKey, TEXT("%s%d"), pszPrefix, i);
+		StringFormat(szKey, TEXT("{}{}"), pszPrefix, i);
 		if (!Settings.Read(szKey, &Value))
 			break;
 		CEventSearchSettings SearchSettings;
@@ -544,7 +544,7 @@ bool CEventSearchSettingsList::Save(CSettings &Settings, LPCTSTR pszPrefix) cons
 	String Value;
 
 	for (size_t i = 0; i < m_List.size(); i++) {
-		StringPrintf(szKey, TEXT("%s%d"), pszPrefix, (int)i);
+		StringFormat(szKey, TEXT("{}{}"), pszPrefix, (int)i);
 		m_List[i]->ToString(&Value);
 		Settings.Write(szKey, Value);
 	}
@@ -1154,10 +1154,10 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		TCHAR szText[16];
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_TIME, Settings.fTime);
 		DlgEdit_SetInt(m_hDlg, IDC_EVENTSEARCH_TIME_START_HOUR, Settings.StartTime.Hour);
-		StringPrintf(szText, TEXT("%02d"), Settings.StartTime.Minute);
+		StringFormat(szText, TEXT("{:02}"), Settings.StartTime.Minute);
 		DlgEdit_SetText(m_hDlg, IDC_EVENTSEARCH_TIME_START_MINUTE, szText);
 		DlgEdit_SetInt(m_hDlg, IDC_EVENTSEARCH_TIME_END_HOUR, Settings.EndTime.Hour);
-		StringPrintf(szText, TEXT("%02d"), Settings.EndTime.Minute);
+		StringFormat(szText, TEXT("{:02}"), Settings.EndTime.Minute);
 		DlgEdit_SetText(m_hDlg, IDC_EVENTSEARCH_TIME_END_MINUTE, szText);
 		EnableDlgItems(
 			m_hDlg, IDC_EVENTSEARCH_TIME_START_HOUR, IDC_EVENTSEARCH_TIME_END_MINUTE,
@@ -1537,8 +1537,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				}
 
 				TCHAR szText[lengthof(szName) + 64];
-				StringPrintf(
-					szText, TEXT("設定 \"%s\" を%sしました。"),
+				StringFormat(
+					szText, TEXT("設定 \"{}\" を{}しました。"),
 					szName, pSettings == nullptr ? TEXT("保存") : TEXT("上書き"));
 				::MessageBox(hDlg, szText, TEXT("設定の保存"), MB_OK | MB_ICONINFORMATION);
 			}
@@ -1560,7 +1560,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 						ComboBox_DeleteString(hwndComboBox, Index);
 
 						TCHAR szText[lengthof(szName) + 64];
-						StringPrintf(szText, TEXT("設定 \"%s\" を削除しました。"), szName);
+						StringFormat(szText, TEXT("設定 \"{}\" を削除しました。"), szName);
 						::MessageBox(hDlg, szText, TEXT("設定の削除"), MB_OK | MB_ICONINFORMATION);
 					}
 				}
@@ -1752,7 +1752,7 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 
 	TCHAR szText[256];
 	if (CheckCount > 0)
-		StringPrintf(szText, TEXT("%d 個選択"), CheckCount);
+		StringFormat(szText, TEXT("{} 個選択"), CheckCount);
 	else
 		StringCopy(szText, TEXT("指定なし"));
 	::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_GENRE_STATUS, szText);
@@ -2307,9 +2307,9 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	EpgUtil::EpgTimeToDisplayTime(pEventInfo->StartTime, &Start);
 	pEventInfo->GetEndTime(&End);
 	EpgUtil::EpgTimeToDisplayTime(&End);
-	StringPrintf(
+	StringFormat(
 		szText,
-		TEXT("%02d/%02d(%s) %02d:%02d～%02d:%02d"),
+		TEXT("{:02}/{:02}({}) {:02}:{:02}～{:02}:{:02}"),
 		Start.Month, Start.Day,
 		GetDayOfWeekText(Start.DayOfWeek),
 		Start.Hour, Start.Minute,
@@ -2402,7 +2402,7 @@ void CProgramSearchDialog::SetEventInfoText(const LibISDB::EventInfo *pEventInfo
 }
 
 
-int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const
+size_t CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, size_t MaxLength) const
 {
 	if (pEventInfo == nullptr) {
 		pszText[0] = '\0';
@@ -2412,14 +2412,14 @@ int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventIn
 	TCHAR szEndTime[16];
 	LibISDB::DateTime End;
 	if (pEventInfo->Duration > 0 && pEventInfo->GetEndTime(&End)) {
-		StringPrintf(
+		StringFormat(
 			szEndTime,
-			TEXT("～%d:%02d"), End.Hour, End.Minute);
+			TEXT("～{}:{:02}"), End.Hour, End.Minute);
 	} else {
 		szEndTime[0] = '\0';
 	}
-	return StringPrintf(
-		pszText, MaxLength, TEXT("%d/%d/%d(%s) %d:%02d%s\r\n"),
+	return StringFormat(
+		pszText, MaxLength, TEXT("{}/{}/{}({}) {}:{:02}{}\r\n"),
 		pEventInfo->StartTime.Year,
 		pEventInfo->StartTime.Month,
 		pEventInfo->StartTime.Day,
@@ -2647,7 +2647,7 @@ void CProgramSearchDialog::OnSearch()
 	if (!m_SearchSettings.Keyword.empty()) {
 		if (m_SearchSettings.fGenre)
 			StatusFormat.Append(TEXT("指定ジャンルから "));
-		StatusFormat.AppendFormat(TEXT("%s に一致する番組"), m_SearchSettings.Keyword.c_str());
+		StatusFormat.AppendFormat(TEXT("{} に一致する番組"), m_SearchSettings.Keyword);
 	} else {
 		if (m_SearchSettings.fGenre)
 			StatusFormat.Append(TEXT("指定ジャンルの番組"));
@@ -2655,7 +2655,7 @@ void CProgramSearchDialog::OnSearch()
 			StatusFormat.Append(TEXT("すべての番組"));
 	}
 	StatusFormat.AppendFormat(
-		TEXT(" %d 件 (%d.%02d 秒)"),
+		TEXT(" {} 件 ({}.{:02} 秒)"),
 		ListView_GetItemCount(::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT)),
 		SearchTime / 1000, SearchTime / 10 % 100);
 	::SetDlgItemText(m_hDlg, IDC_PROGRAMSEARCH_STATUS, StatusFormat.GetString());

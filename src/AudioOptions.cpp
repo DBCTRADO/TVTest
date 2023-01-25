@@ -38,10 +38,10 @@ static const size_t MAX_LANGUAGE_TEXT_LENGTH = LibISDB::MAX_LANGUAGE_TEXT_LENGTH
 
 static const int MAX_FORMAT_DOUBLE_LENGTH = 16;
 
-static void FormatDouble(double Value, LPTSTR pszString, int MaxString)
+static void FormatDouble(double Value, LPTSTR pszString, size_t MaxString)
 {
-	int Length = StringPrintf(pszString, MaxString, TEXT("%.4f"), Value);
-	int i;
+	size_t Length = StringFormat(pszString, MaxString, TEXT("{:.4f}"), Value);
+	size_t i;
 	for (i = Length - 1; i > 1; i--) {
 		if (pszString[i] != TEXT('0')) {
 			i++;
@@ -158,7 +158,7 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	for (int i = 0;; i++) {
 		TCHAR szKey[32];
 		String Value;
-		StringPrintf(szKey, TEXT("LangPriority%d"), i);
+		StringFormat(szKey, TEXT("LangPriority{}"), i);
 		if (!Settings.Read(szKey, &Value) || Value.length() < 3)
 			break;
 		AudioLanguageInfo Info;
@@ -211,13 +211,13 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EnableLangPriority"), m_fEnableLanguagePriority);
 	for (int i = 0;; i++) {
 		TCHAR szKey[32];
-		StringPrintf(szKey, TEXT("LangPriority%d"), i);
+		StringFormat(szKey, TEXT("LangPriority{}"), i);
 
 		if (i < (int)m_LanguagePriority.size()) {
 			const DWORD Lang = m_LanguagePriority[i].Language;
 			TCHAR szValue[8];
-			StringPrintf(
-				szValue, TEXT("%c%c%c%s"),
+			StringFormat(
+				szValue, TEXT("{:c}{:c}{:c}{}"),
 				(Lang >> 16), (Lang >> 8) & 0xFF, Lang & 0xFF,
 				m_LanguagePriority[i].fSub ? TEXT("2") : TEXT(""));
 			Settings.Write(szKey, szValue);

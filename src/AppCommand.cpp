@@ -359,7 +359,7 @@ void CAppCommand::RegisterDynamicCommands()
 		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
 		TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
-		StringPrintf(szText, TEXT("BonDriver切替 : %s"), pszFileName);
+		StringFormat(szText, TEXT("BonDriver切替 : {}"), pszFileName);
 		m_App.CommandManager.RegisterCommand(
 			CM_DRIVER_FIRST + i, pszFileName,
 			CCommandManager::BindHandler(&CAppCommand::SelectDriver, this),
@@ -371,14 +371,14 @@ void CAppCommand::RegisterDynamicCommands()
 		const CPlugin *pPlugin = m_App.PluginManager.GetPlugin(i);
 		TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
-		StringPrintf(
+		StringFormat(
 			szText,
-			TEXT("プラグイン有効/無効 : %s"), pPlugin->GetPluginName());
+			TEXT("プラグイン有効/無効 : {}"), pPlugin->GetPluginName());
 		/*
 		TCHAR szShortText[CCommandManager::MAX_COMMAND_TEXT];
-		StringPrintf(
+		StringFormat(
 			szShortText,
-			TEXT("%s 有効/無効"), pPlugin->GetPluginName());
+			TEXT("{} 有効/無効"), pPlugin->GetPluginName());
 		*/
 		m_App.CommandManager.RegisterCommand(
 			CM_PLUGIN_FIRST + i,
@@ -409,8 +409,8 @@ void CAppCommand::RegisterDynamicCommands()
 			IDText += pInfo->GetText();
 
 			TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
-			StringPrintf(
-				szText, TEXT("%s : %s"),
+			StringFormat(
+				szText, TEXT("{} : {}"),
 				pPlugin->GetPluginName(), pInfo->GetName());
 
 			CCommandManager::CommandState State = CCommandManager::CommandState::None;
@@ -1226,7 +1226,7 @@ bool CAppCommand::UpdateChannelList(CCommandManager::InvokeParameters &Params)
 		if (m_App.ChannelScan.AutoUpdateChannelList(&TuningSpaceList, &MessageList)) {
 			m_App.AddLog(TEXT("チャンネルリストの自動更新を行いました。"));
 			for (const String &e : MessageList)
-				m_App.AddLog(TEXT("%s"), e.c_str());
+				m_App.AddLog(TEXT("{}"), e);
 
 			TuningSpaceList.MakeAllChannelList();
 			m_App.Core.UpdateCurrentChannelList(&TuningSpaceList);
@@ -1239,9 +1239,9 @@ bool CAppCommand::UpdateChannelList(CCommandManager::InvokeParameters &Params)
 				::PathRenameExtension(szFileName, CHANNEL_FILE_EXTENSION);
 			}
 			if (TuningSpaceList.SaveToFile(szFileName))
-				m_App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
+				m_App.AddLog(TEXT("チャンネルファイルを \"{}\" に保存しました。"), szFileName);
 			else
-				m_App.AddLog(CLogItem::LogType::Error, TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
+				m_App.AddLog(CLogItem::LogType::Error, TEXT("チャンネルファイル \"{}\" を保存できません。"), szFileName);
 		}
 	}
 

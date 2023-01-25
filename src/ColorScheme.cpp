@@ -759,7 +759,7 @@ bool CColorScheme::Load(CSettings &Settings)
 	for (int i = 0; i < NUM_GRADIENTS; i++) {
 		TCHAR szName[128];
 
-		StringPrintf(szName, TEXT("%sStyle"), m_GradientInfoList[i].pszText);
+		StringFormat(szName, TEXT("{}Style"), m_GradientInfoList[i].pszText);
 		m_FillList[i].Type = Theme::FillType::Gradient;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(FillTypeNameList); j++) {
@@ -770,7 +770,7 @@ bool CColorScheme::Load(CSettings &Settings)
 			}
 		}
 
-		StringPrintf(szName, TEXT("%sGradient"), m_GradientInfoList[i].pszText);
+		StringFormat(szName, TEXT("{}Gradient"), m_GradientInfoList[i].pszText);
 		m_FillList[i].Gradient.Type = Theme::GradientType::Normal;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(GradientTypeNameList); j++) {
@@ -790,7 +790,7 @@ bool CColorScheme::Load(CSettings &Settings)
 			}
 		}
 
-		StringPrintf(szName, TEXT("%sGradientDirection"), m_GradientInfoList[i].pszText);
+		StringFormat(szName, TEXT("{}GradientDirection"), m_GradientInfoList[i].pszText);
 		m_FillList[i].Gradient.Direction = m_GradientInfoList[i].Direction;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(GradientDirectionList); j++) {
@@ -963,11 +963,11 @@ bool CColorScheme::Save(CSettings &Settings, SaveFlag Flags) const
 		for (int i = 0; i < NUM_GRADIENTS; i++) {
 			TCHAR szName[128];
 
-			StringPrintf(szName, TEXT("%sType"), m_GradientInfoList[i].pszText);
+			StringFormat(szName, TEXT("{}Type"), m_GradientInfoList[i].pszText);
 			Settings.Write(szName, FillTypeNameList[(int)m_FillList[i].Type]);
-			StringPrintf(szName, TEXT("%sGradient"), m_GradientInfoList[i].pszText);
+			StringFormat(szName, TEXT("{}Gradient"), m_GradientInfoList[i].pszText);
 			Settings.Write(szName, GradientTypeNameList[(int)m_FillList[i].Gradient.Type]);
-			StringPrintf(szName, TEXT("%sGradientDirection"), m_GradientInfoList[i].pszText);
+			StringFormat(szName, TEXT("{}GradientDirection"), m_GradientInfoList[i].pszText);
 			Settings.Write(szName, GradientDirectionList[(int)m_FillList[i].Gradient.Direction]);
 		}
 	}

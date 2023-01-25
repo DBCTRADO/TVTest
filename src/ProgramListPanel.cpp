@@ -151,7 +151,7 @@ void CProgramItemInfo::GetEventTitleText(LPTSTR pszText, int MaxLength, bool fUs
 		if (fUseARIBSymbol)
 			EpgUtil::MapARIBSymbol(m_EventInfo.EventName.c_str(), pszText + Length, MaxLength - Length);
 		else
-			StringPrintf(pszText + Length, MaxLength - Length, TEXT("%s"), m_EventInfo.EventName.c_str());
+			StringFormat(pszText + Length, MaxLength - Length, TEXT("{}"), m_EventInfo.EventName);
 	}
 }
 
@@ -1108,25 +1108,25 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					TCHAR szEndTime[16];
 					SYSTEMTIME stEnd;
 					if (EventInfo.m_Duration > 0 && EventInfo.GetEndTime(&stEnd)) {
-						StringPrintf(
+						StringFormat(
 							szEndTime,
-							TEXT("～%d:%02d"), stEnd.wHour, stEnd.wMinute);
+							TEXT("～{}:{:02}"), stEnd.wHour, stEnd.wMinute);
 					} else {
 						szEndTime[0] = '\0';
 					}
-					StringPrintf(
+					StringFormat(
 						szText,
-						TEXT("%d/%d(%s) %d:%02d%s\n%s\n\n%s%s%s%s"),
+						TEXT("{}/{}({}) {}:{:02}{}\n{}\n\n{}{}{}{}"),
 						EventInfo.m_StartTime.wMonth,
 						EventInfo.m_StartTime.wDay,
 						GetDayOfWeekText(EventInfo.m_StartTime.wDayOfWeek),
 						EventInfo.m_StartTime.wHour,
 						EventInfo.m_StartTime.wMinute,
 						szEndTime,
-						EventInfo.m_EventName.c_str(),
-						EventInfo.m_EventText.c_str(),
+						EventInfo.m_EventName,
+						EventInfo.m_EventText,
 						!EventInfo.m_EventText.empty() ? TEXT("\n\n") : TEXT(""),
-						EventInfo.m_EventExtendedText.c_str(),
+						EventInfo.m_EventExtendedText,
 						!EventInfo.m_EventExtendedText.empty() ? TEXT("\n\n") : TEXT(""));
 					pnmtdi->lpszText = szText;
 				} else {

@@ -218,8 +218,8 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 			const ParameterInfo &Param = Group.ParameterList[j];
 
 			TCHAR szText[128];
-			StringPrintf(
-				szText, TEXT("%s\t%%%s%%"),
+			StringFormat(
+				szText, TEXT("{}\t%{}%"),
 				Param.pszText, Param.pszParameter);
 			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, (i << 10) | (j + 1), szText);
 		}
@@ -261,33 +261,33 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 bool CVariableStringMap::GetTimeString(LPCWSTR pszKeyword, const LibISDB::DateTime &Time, String *pString) const
 {
 	if (::lstrcmpiW(pszKeyword, L"date") == 0) {
-		StringUtility::Format(*pString, L"%d%02d%02d", Time.Year, Time.Month, Time.Day);
+		StringFormat(pString, L"{}{:02}{:02}", Time.Year, Time.Month, Time.Day);
 	} else if (::lstrcmpiW(pszKeyword, L"time") == 0) {
-		StringUtility::Format(*pString, L"%02d%02d%02d", Time.Hour, Time.Minute, Time.Second);
+		StringFormat(pString, L"{:02}{:02}{:02}", Time.Hour, Time.Minute, Time.Second);
 	} else if (::lstrcmpiW(pszKeyword, L"year") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Year);
+		StringFormat(pString, L"{}", Time.Year);
 	} else if (::lstrcmpiW(pszKeyword, L"year2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Year % 100);
+		StringFormat(pString, L"{:02}", Time.Year % 100);
 	} else if (::lstrcmpiW(pszKeyword, L"month") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Month);
+		StringFormat(pString, L"{}", Time.Month);
 	} else if (::lstrcmpiW(pszKeyword, L"month2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Month);
+		StringFormat(pString, L"{:02}", Time.Month);
 	} else if (::lstrcmpiW(pszKeyword, L"day") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Day);
+		StringFormat(pString, L"{}", Time.Day);
 	} else if (::lstrcmpiW(pszKeyword, L"day2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Day);
+		StringFormat(pString, L"{:02}", Time.Day);
 	} else if (::lstrcmpiW(pszKeyword, L"hour") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Hour);
+		StringFormat(pString, L"{}", Time.Hour);
 	} else if (::lstrcmpiW(pszKeyword, L"hour2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Hour);
+		StringFormat(pString, L"{:02}", Time.Hour);
 	} else if (::lstrcmpiW(pszKeyword, L"minute") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Minute);
+		StringFormat(pString, L"{}", Time.Minute);
 	} else if (::lstrcmpiW(pszKeyword, L"minute2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Minute);
+		StringFormat(pString, L"{:02}", Time.Minute);
 	} else if (::lstrcmpiW(pszKeyword, L"second") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Second);
+		StringFormat(pString, L"{}", Time.Second);
 	} else if (::lstrcmpiW(pszKeyword, L"second2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Second);
+		StringFormat(pString, L"{:02}", Time.Second);
 	} else if (::lstrcmpiW(pszKeyword, L"day-of-week") == 0) {
 		*pString = GetDayOfWeekText(Time.DayOfWeek);
 	} else {
@@ -360,15 +360,15 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no")) == 0) {
 		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetChannelNo());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no2")) == 0) {
 		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString, TEXT("%02d"), m_EventInfo.Channel.GetChannelNo());
+		StringFormat(pString, TEXT("{:02}"), m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no3")) == 0) {
 		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString, TEXT("%03d"), m_EventInfo.Channel.GetChannelNo());
+		StringFormat(pString, TEXT("{:03}"), m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-name")) == 0) {
 		*pString = m_EventInfo.Event.EventName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-title")) == 0) {
@@ -376,11 +376,11 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-mark")) == 0) {
 		GetEventMark(m_EventInfo.Event.EventName, pString);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-id")) == 0) {
-		StringUtility::Format(*pString, TEXT("%04X"), m_EventInfo.Event.EventID);
+		StringFormat(pString, TEXT("{:04X}"), m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("service-name")) == 0) {
 		*pString = m_EventInfo.ServiceName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("service-id")) == 0) {
-		StringUtility::Format(*pString, TEXT("%04X"), m_EventInfo.Event.ServiceID);
+		StringFormat(pString, TEXT("{:04X}"), m_EventInfo.Event.ServiceID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("tuner-filename")) == 0) {
 		*pString = m_EventInfo.Channel.GetTunerName();
 	} else if (::lstrcmpi(pszKeyword, TEXT("tuner-name")) == 0) {
@@ -389,28 +389,28 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 			pszTuner += 10;
 		pString->assign(pszTuner, ::PathFindExtension(pszTuner) - pszTuner);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%d"),
+		StringFormat(
+			pString, TEXT("{}"),
 			(int)(m_EventInfo.Event.Duration / (60 * 60)));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour2")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%02d"),
+		StringFormat(
+			pString, TEXT("{:02}"),
 			(int)(m_EventInfo.Event.Duration / (60 * 60)));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%d"),
+		StringFormat(
+			pString, TEXT("{}"),
 			(int)(m_EventInfo.Event.Duration / 60 % 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min2")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%02d"),
+		StringFormat(
+			pString, TEXT("{:02}"),
 			(int)(m_EventInfo.Event.Duration / 60 % 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%d"),
+		StringFormat(
+			pString, TEXT("{}"),
 			(int)(m_EventInfo.Event.Duration % 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec2")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%02d"),
+		StringFormat(
+			pString, TEXT("{:02}"),
 			(int)(m_EventInfo.Event.Duration % 60));
 	} else if (IsDateTimeParameter(pszKeyword)) {
 		if (!!(m_Flags & Flag::NoCurrentTime))

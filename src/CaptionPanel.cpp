@@ -651,7 +651,7 @@ void CCaptionPanel::OnCaption(
 #ifdef _DEBUG
 							TCHAR szTrace[1024];
 							StringCopy(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
-							TRACE(TEXT("Caption exclude : %s\n"), szTrace);
+							TRACE(TEXT("Caption exclude : {}\n"), szTrace);
 #endif
 							memmove(
 								&pszBuff[Pos], &pszBuff[NextPos],
@@ -734,7 +734,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 						m_pCaptionPanel->m_LanguageList[i].LanguageCode,
 						szText, lengthof(szText));
 					if (szText[0] == _T('\0'))
-						StringPrintf(szText, TEXT("言語%d"), i + 1);
+						StringFormat(szText, TEXT("言語{}"), i + 1);
 					Menu.Append(CM_CAPTIONPANEL_LANGUAGE_FIRST + i, szText);
 				}
 				Menu.CheckRadioItem(
@@ -845,7 +845,7 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 				m_HashMap.emplace(MD5, Entry.Value);
 				/*
 				TRACE(
-					TEXT("DRCS map : %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X = %s\n"),
+					TEXT("DRCS map : {:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X} = {}\n"),
 					MD5.Value[0], MD5.Value[1], MD5.Value[2], MD5.Value[3], MD5.Value[4], MD5.Value[5], MD5.Value[6], MD5.Value[7],
 					MD5.Value[8], MD5.Value[9], MD5.Value[10], MD5.Value[11], MD5.Value[12], MD5.Value[13], MD5.Value[14], MD5.Value[15],
 					Entry.Value.c_str());
@@ -864,7 +864,7 @@ LPCTSTR CCaptionDRCSMap::GetString(WORD Code)
 	CodeMap::iterator itr = m_CodeMap.find(Code);
 
 	if (itr != m_CodeMap.end()) {
-		TRACE(TEXT("DRCS : Code %d %s\n"), Code, itr->second.c_str());
+		TRACE(TEXT("DRCS : Code {} {}\n"), Code, itr->second);
 		return itr->second.c_str();
 	}
 	return nullptr;
@@ -887,13 +887,13 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 
 	const LibISDB::MD5Value MD5 = LibISDB::CalcMD5(pBitmap->pData, pBitmap->DataSize);
 	TRACE(
-		TEXT("DRCS : Code %d, %d x %d (%d), MD5 %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
+		TEXT("DRCS : Code {}, {} x {} ({}), MD5 {:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}\n"),
 		Code, pBitmap->Width, pBitmap->Height, pBitmap->Depth,
 		MD5.Value[0], MD5.Value[1], MD5.Value[2], MD5.Value[3], MD5.Value[4], MD5.Value[5], MD5.Value[6], MD5.Value[7],
 		MD5.Value[8], MD5.Value[9], MD5.Value[10], MD5.Value[11], MD5.Value[12], MD5.Value[13], MD5.Value[14], MD5.Value[15]);
 	HashMap::iterator itr = m_HashMap.find(MD5);
 	if (itr != m_HashMap.end()) {
-		TRACE(TEXT("DRCS assign %d = %s\n"), Code, itr->second.c_str());
+		TRACE(TEXT("DRCS assign {} = {}\n"), Code, itr->second);
 		m_CodeMap[Code] = itr->second;
 	}
 

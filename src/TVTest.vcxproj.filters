@@ -872,6 +872,9 @@
     <ClInclude Include="DarkMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="StringFormat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TVTest.rc">

@@ -43,7 +43,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
 {
 	Close();
 
-	TRACE(TEXT("CIniFile::Open( \"%s\", 0x%x)\n"), pszFileName, Flags);
+	TRACE(TEXT("CIniFile::Open( \"{}\", {:#x})\n"), pszFileName, Flags);
 
 	if (IsStringEmpty(pszFileName)
 			|| (Flags & (OPEN_READ | OPEN_WRITE)) == 0
@@ -107,7 +107,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
 				delete [] pBuffer;
 			}
 		} else {
-			TRACE(TEXT("Ini file open failed 0x%x\n"), ::GetLastError());
+			TRACE(TEXT("Ini file open failed {:#x}\n"), ::GetLastError());
 			throw __LINE__;
 		}
 	} catch (...) {
@@ -317,7 +317,7 @@ bool CIniFile::SetValue(LPCWSTR pszName, LPCWSTR pszValue)
 
 	auto itrValue = FindValue(pSection->Entries, pszName);
 	if (itrValue == pSection->Entries.end()) {
-		//TRACE(TEXT("新規設定 : %s=%s\n"), pszName, pszValue);
+		//TRACE(TEXT("新規設定 : {}={}\n"), pszName, pszValue);
 		bool fInserted = false;
 		for (auto i = pSection->Entries.rbegin(); i != pSection->Entries.rend(); i++) {
 			if (!i->Name.empty()) {
@@ -421,7 +421,7 @@ bool CIniFile::Parse(LPCWSTR pszBuffer)
 			StringUtility::Trim(Name);
 			CreateSection(Name.c_str());
 		} else {
-			//TRACE(L"%4d : %s\n", LineCount + 1, Line.c_str());
+			//TRACE(L"{:4} : {}\n", LineCount + 1, Line);
 			if (m_SectionList.empty())
 				CreateSection(L"");
 			m_SectionList.back().Entries.emplace_back(Line);
@@ -486,7 +486,7 @@ CIniFile::EntryList::const_iterator CIniFile::FindValue(const EntryList &Entries
 
 bool CIniFile::CreateSection(LPCWSTR pszName)
 {
-	//TRACE(L"INIセクション作成 : [%s]\n", pszName);
+	//TRACE(L"INIセクション作成 : [{}]\n", pszName);
 
 	m_SectionList.emplace_back(pszName);
 

@@ -187,7 +187,7 @@ BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd, LPARAM lParam)
 			WORD UDPPort = LOWORD(Result);
 
 			pThis->m_UDPPortList.push_back(UDPPort);
-			GetAppClass().AddLog(TEXT("既に起動している") APP_NAME TEXT("が見付かりました。(UDPポート %d)"), UDPPort);
+			GetAppClass().AddLog(TEXT("既に起動している") APP_NAME TEXT("が見付かりました。(UDPポート {})"), UDPPort);
 		}
 	}
 	return TRUE;

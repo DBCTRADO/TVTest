@@ -604,7 +604,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 	LibISDB::AnalyzerFilter::EventAudioInfo AudioInfo;
 
 	if (NumAudio > 1)
-		Formatter.AppendFormat(TEXT("#%d: "), GetAudioStream() + 1);
+		Formatter.AppendFormat(TEXT("#{}: "), GetAudioStream() + 1);
 
 	if (NumChannels == LibISDB::ViewerFilter::AudioChannelCount_DualMono) {
 		// Dual mono
@@ -645,7 +645,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 					AudioInfo.LanguageCode2,
 					szLang2, lengthof(szLang2),
 					LibISDB::LanguageTextType::Short);
-				Formatter.AppendFormat(TEXT("%s+%s"), szLang1, szLang2);
+				Formatter.AppendFormat(TEXT("{}+{}"), szLang1, szLang2);
 				break;
 			}
 		} else {
@@ -674,7 +674,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 			break;
 
 		default:
-			StringPrintf(szFormat, TEXT("[%dch]"), NumChannels);
+			StringFormat(szFormat, TEXT("[{}ch]"), NumChannels);
 			break;
 		}
 
@@ -687,7 +687,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 				Pos++;
 				if (Pos < AudioInfo.Text.length() && AudioInfo.Text[Pos] == TEXT('\n'))
 					Pos++;
-				StringPrintf(szBuf + Pos, lengthof(szBuf) - Pos, TEXT("/%s"), AudioInfo.Text.c_str() + Pos);
+				StringFormat(szBuf + Pos, lengthof(szBuf) - Pos, TEXT("/{}"), AudioInfo.Text.c_str() + Pos);
 				StringUtility::ToHalfWidthNoKatakana(
 					szBuf, szAudio, lengthof(szAudio));
 			} else {
@@ -721,7 +721,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 				LibISDB::LanguageTextType::Simple);
 		}
 
-		Formatter.AppendFormat(TEXT("%s %s"), szFormat, szAudio);
+		Formatter.AppendFormat(TEXT("{} {}"), szFormat, szAudio);
 	} else {
 		switch (NumChannels) {
 		case 1:
@@ -737,7 +737,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 			break;
 
 		default:
-			Formatter.AppendFormat(TEXT("%dch"), NumChannels);
+			Formatter.AppendFormat(TEXT("{}ch"), NumChannels);
 			break;
 		}
 	}
@@ -793,7 +793,7 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 				StringCopy(pszText, szAudio2, MaxLength);
 				break;
 			case LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Both:
-				StringPrintf(pszText, MaxLength, TEXT("%s+%s"), szAudio1, szAudio2);
+				StringFormat(pszText, MaxLength, TEXT("{}+{}"), szAudio1, szAudio2);
 				break;
 			default:
 				return false;
@@ -802,13 +802,13 @@ bool CUICore::GetSelectedAudioText(LPTSTR pszText, int MaxLength) const
 			TCHAR szText[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 			if (AudioInfo.Text.empty())
 				LibISDB::GetLanguageText_ja(AudioInfo.LanguageCode, szText, lengthof(szText));
-			StringPrintf(
-				pszText, MaxLength, TEXT("音声%d: %s"),
+			StringFormat(
+				pszText, MaxLength, TEXT("音声{}: {}"),
 				GetAudioStream() + 1,
 				AudioInfo.Text.empty() ? szText : AudioInfo.Text.c_str());
 		}
 	} else {
-		StringPrintf(pszText, MaxLength, TEXT("音声%d"), GetAudioStream() + 1);
+		StringFormat(pszText, MaxLength, TEXT("音声{}"), GetAudioStream() + 1);
 	}
 
 	return true;
@@ -1163,8 +1163,8 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 			TCHAR szText[MAX_CHANNEL_NAME + 4];
 
 			if (pChInfo->IsEnabled()) {
-				StringPrintf(
-					szText, TEXT("%d: %s"),
+				StringFormat(
+					szText, TEXT("{}: {}"),
 					fControlKeyID ? pChInfo->GetChannelNo() : i + 1, pChInfo->GetName());
 				::AppendMenu(
 					hmenu,
@@ -1196,7 +1196,6 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 
 	const bool fIsTunerOpen = m_App.CoreEngine.IsTunerOpen();
 	TCHAR szText[256];
-	int Length;
 
 	// 各チューニング空間のメニューを追加する
 	// 実際のメニューの設定は WM_INITMENUPOPUP で行っている
@@ -1212,14 +1211,14 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 			const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(i);
 
 			hmenuSpace = ::CreatePopupMenu();
-			Length = StringPrintf(szText, TEXT("&%d: "), i);
+			const size_t Length = StringFormat(szText, TEXT("&{}: "), i);
 			pszName = m_App.ChannelManager.GetTuningSpaceName(i);
 			if (pszName != nullptr) {
-				CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
+				CopyToMenuText(pszName, szText + Length, static_cast<int>(lengthof(szText) - Length));
 			} else {
-				StringPrintf(
+				StringFormat(
 					szText + Length, lengthof(szText) - Length,
-					TEXT("チューニング空間%d"), i);
+					TEXT("チューニング空間{}"), i);
 			}
 			Menu.Append(
 				hmenuSpace, szText,
@@ -1736,7 +1735,7 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 		i--;
 	}
 	if (i >= ChannelManager.NumSpaces()) {
-		TRACE(TEXT("CUICore::InitChannelMenuPopup() : Invalid space %d\n"), i);
+		TRACE(TEXT("CUICore::InitChannelMenuPopup() : Invalid space {}\n"), i);
 		ClearMenu(hmenu);
 		return true;
 	}
@@ -1861,7 +1860,6 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 	int Command;
 	LPCTSTR pszName;
 	TCHAR szText[MAX_PATH * 2];
-	int Length;
 
 	Command = CM_SPACE_CHANNEL_FIRST;
 
@@ -1875,12 +1873,12 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 		for (int i = 0; i < ChannelManager.NumSpaces(); i++) {
 			pChannelList = ChannelManager.GetChannelList(i);
 			hmenuSpace = ::CreatePopupMenu();
-			Length = StringPrintf(szText, TEXT("&%d: "), i);
+			const size_t Length = StringFormat(szText, TEXT("&{}: "), i);
 			pszName = ChannelManager.GetTuningSpaceName(i);
 			if (!IsStringEmpty(pszName))
-				CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
+				CopyToMenuText(pszName, szText + Length, static_cast<int>(lengthof(szText) - Length));
 			else
-				StringPrintf(szText + Length, lengthof(szText) - Length, TEXT("チューニング空間%d"), i);
+				StringFormat(szText + Length, lengthof(szText) - Length, TEXT("チューニング空間{}"), i);
 			m_Menu.Append(
 				hmenuSpace, szText,
 				pChannelList != nullptr && pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
@@ -1932,13 +1930,13 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 				Command += pChannelList->NumChannels();
 				if (hmenuSpace != hmenuDriver) {
 					pszName = pTuningSpaceList->GetTuningSpaceName(j);
-					Length = StringPrintf(szText, TEXT("&%d: "), j);
+					const size_t Length = StringFormat(szText, TEXT("&{}: "), j);
 					if (!IsStringEmpty(pszName)) {
-						CopyToMenuText(pszName, szText + Length, lengthof(szText) - Length);
+						CopyToMenuText(pszName, szText + Length, static_cast<int>(lengthof(szText) - Length));
 					} else {
-						StringPrintf(
+						StringFormat(
 							szText + Length, lengthof(szText) - Length,
-							TEXT("チューニング空間%d"), j);
+							TEXT("チューニング空間{}"), j);
 					}
 					::AppendMenu(
 						hmenuDriver, MF_POPUP | MF_ENABLED,
@@ -1948,8 +1946,8 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 			if (!IsStringEmpty(pDriverInfo->GetTunerName())) {
 				TCHAR szTemp[lengthof(szText)];
 
-				StringPrintf(
-					szTemp, TEXT("%s [%s]"),
+				StringFormat(
+					szTemp, TEXT("{} [{}]"),
 					pDriverInfo->GetTunerName(),
 					szFileName);
 				CopyToMenuText(szTemp, szText, lengthof(szText));

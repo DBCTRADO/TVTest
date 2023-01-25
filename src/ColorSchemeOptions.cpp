@@ -844,9 +844,9 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					for (int i = 0; i < CColorScheme::NUM_COLORS; i++) {
 						COLORREF cr = (COLORREF)DlgListBox_GetItemData(hDlg, IDC_COLORSCHEME_LIST, i);
 						TCHAR szColor[32];
-						StringPrintf(
+						StringFormat(
 							szColor,
-							TEXT("HEXRGB(0x%02X%02X%02X)\r\n"),
+							TEXT("HEXRGB(0x{:02X}{:02X}{:02X})\r\n"),
 							GetRValue(cr), GetGValue(cr), GetBValue(cr));
 						Buffer += szColor;
 					}

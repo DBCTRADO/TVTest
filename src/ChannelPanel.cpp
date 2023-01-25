@@ -1526,12 +1526,12 @@ int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText, int MaxLen
 	const LibISDB::EventInfo &Info = m_EventList[Index];
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 	EpgUtil::FormatEventTime(Info, szTime, lengthof(szTime));
-	return StringPrintf(
-		pszText, MaxLength, TEXT("%s %s%s%s"),
+	return static_cast<int>(StringFormat(
+		pszText, MaxLength, TEXT("{} {}{}{}"),
 		szTime,
-		Info.EventName.c_str(),
+		Info.EventName,
 		!Info.EventText.empty() ? TEXT("\n\n") : TEXT(""),
-		Info.EventText.c_str());
+		Info.EventText));
 }
 
 
@@ -1567,8 +1567,8 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 
 	TCHAR szText[MAX_CHANNEL_NAME + 16];
 	if (m_ChannelInfo.GetChannelNo() != 0)
-		StringPrintf(
-			szText, TEXT("%d: %s"),
+		StringFormat(
+			szText, TEXT("{}: {}"),
 			m_ChannelInfo.GetChannelNo(), m_ChannelInfo.GetName());
 	else
 		StringCopy(szText, m_ChannelInfo.GetName());
@@ -1590,7 +1590,7 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(
 		if (fUseARIBSymbol)
 			EpgUtil::MapARIBSymbol(Info.EventName.c_str(), szText + Length, lengthof(szText) - Length);
 		else
-			StringPrintf(szText + Length, lengthof(szText) - Length, TEXT("%s"), Info.EventName.c_str());
+			StringFormat(szText + Length, lengthof(szText) - Length, TEXT("{}"), Info.EventName);
 		TextDraw.Draw(szText, Rect, LineHeight);
 	}
 }

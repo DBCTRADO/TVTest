@@ -297,7 +297,7 @@ void CDirectWriteOptionsDialog::SetItemFloatValue(int ID, float Value)
 {
 	TCHAR szText[64];
 
-	StringPrintf(szText, TEXT("%.2f"), Value);
+	StringFormat(szText, TEXT("{:.2f}"), Value);
 	::SetDlgItemText(m_hDlg, ID, szText);
 }
 

@@ -207,7 +207,7 @@ bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 		for (int i = 0; i < NumButtons; i++) {
 			TCHAR szName[64];
 
-			StringPrintf(szName, TEXT("Button%d_Command"), i);
+			StringFormat(szName, TEXT("Button{}_Command"), i);
 			if (Settings.Read(szName, &Command) && !Command.empty()) {
 				Info.Settings.AssignList[i] = CommandManager.ParseIDText(Command);
 			}
@@ -244,7 +244,7 @@ bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 		for (int i = 0; i < NumButtons; i++) {
 			TCHAR szName[64];
 
-			StringPrintf(szName, TEXT("Button%d_Command"), i);
+			StringFormat(szName, TEXT("Button{}_Command"), i);
 			if (Info.Settings.AssignList[i] != 0)
 				Text = CommandManager.GetCommandIDText(Info.Settings.AssignList[i]);
 			else

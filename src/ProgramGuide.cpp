@@ -219,7 +219,7 @@ int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol)
 			if (fUseARIBSymbol)
 				Length += (int)EpgUtil::MapARIBSymbol(pEventName->c_str(), pszText + Length, MaxLength - Length);
 			else
-				Length += StringPrintf(pszText + Length, MaxLength - Length, TEXT("%s"), pEventName->c_str());
+				Length += (int)StringFormat(pszText + Length, MaxLength - Length, TEXT("{}"), *pEventName);
 		}
 	}
 	return Length;
@@ -479,7 +479,7 @@ HBITMAP CServiceInfo::GetStretchedLogo(int Width, int Height)
 LibISDB::EventInfo *CServiceInfo::GetEvent(int Index)
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size()) {
-		TRACE(TEXT("CServiceInfo::GetEvent() : Out of range %d\n"), Index);
+		TRACE(TEXT("CServiceInfo::GetEvent() : Out of range {}\n"), Index);
 		return nullptr;
 	}
 	return m_EventList[Index].get();
@@ -489,7 +489,7 @@ LibISDB::EventInfo *CServiceInfo::GetEvent(int Index)
 const LibISDB::EventInfo *CServiceInfo::GetEvent(int Index) const
 {
 	if (Index < 0 || (size_t)Index >= m_EventList.size()) {
-		TRACE(TEXT("CServiceInfo::GetEvent() const : Out of range %d\n"), Index);
+		TRACE(TEXT("CServiceInfo::GetEvent() const : Out of range {}\n"), Index);
 		return nullptr;
 	}
 	return m_EventList[Index].get();
@@ -703,49 +703,49 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 		switch (GetAppClass().NetworkDefinition.GetNetworkType(m_ServiceInfo.NetworkID)) {
 		default:
 		case CNetworkDefinition::NetworkType::Terrestrial:
-			pszStationFormat = "DFS%05x";
+			pszStationFormat = "DFS{:05x}";
 			break;
 		case CNetworkDefinition::NetworkType::BS:
-			pszStationFormat = "BSDT%03d";
+			pszStationFormat = "BSDT{:03}";
 			break;
 		case CNetworkDefinition::NetworkType::CS:
-			pszStationFormat = "CSDT%03d";
+			pszStationFormat = "CSDT{:03}";
 			break;
 		}
 		char szStation[16];
-		StringPrintf(
+		StringFormat(
 			szStation,
 			pszStationFormat, m_ServiceInfo.ServiceID);
-		Length = StringPrintf(
+		Length = (DWORD)StringFormat(
 			szText,
 			"Content-type: application/x-tv-program-digital-info; charset=shift_jis\r\n"
 			"version: 2\r\n"
-			"station: %s\r\n"
-			"station-name: %s\r\n"
-			"year: %d\r\n"
-			"month: %02d\r\n"
-			"date: %02d\r\n"
-			"start: %02d:%02d\r\n"
-			"end: %02d:%02d\r\n"
-			"program-title: %s\r\n"
-			"program-id: %d\r\n",
+			"station: {}\r\n"
+			"station-name: {}\r\n"
+			"year: {}\r\n"
+			"month: {:02}\r\n"
+			"date: {:02}\r\n"
+			"start: {:02}:{:02}\r\n"
+			"end: {:02}:{:02}\r\n"
+			"program-title: {}\r\n"
+			"program-id: {}\r\n",
 			szStation, szServiceName,
 			StartTime.Year, StartTime.Month, StartTime.Day,
 			StartTime.Hour, StartTime.Minute,
 			EndTime.Hour, EndTime.Minute,
 			szEventName, pEventInfo->EventID);
 	} else {
-		Length = StringPrintf(
+		Length = (DWORD)StringFormat(
 			szText,
 			"Content-type: application/x-tv-program-info; charset=shift_jis\r\n"
 			"version: 1\r\n"
-			"station: %s\r\n"
-			"year: %d\r\n"
-			"month: %02d\r\n"
-			"date: %02d\r\n"
-			"start: %02d:%02d\r\n"
-			"end: %02d:%02d\r\n"
-			"program-title: %s\r\n",
+			"station: {}\r\n"
+			"year: {}\r\n"
+			"month: {:02}\r\n"
+			"date: {:02}\r\n"
+			"start: {:02}:{:02}\r\n"
+			"end: {:02}:{:02}\r\n"
+			"program-title: {}\r\n",
 			szServiceName,
 			StartTime.Year, StartTime.Month, StartTime.Day,
 			StartTime.Hour, StartTime.Minute,
@@ -915,7 +915,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group, LPTSTR pszName
 	if (!IsStringEmpty(pszTuningSpaceName))
 		StringCopy(pszName, pszTuningSpaceName, MaxName);
 	else
-		StringPrintf(pszName, MaxName, TEXT("チューニング空間 %d"), (int)Group + 1);
+		StringFormat(pszName, MaxName, TEXT("チューニング空間 {}"), Group + 1);
 
 	return true;
 }
@@ -926,7 +926,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupID(size_t Group, String *pID) con
 	if (Group >= GetGroupCount() || pID == nullptr)
 		return false;
 
-	StringUtility::Format(*pID, TEXT("%u"), static_cast<unsigned int>(Group));
+	StringFormat(pID, TEXT("{}"), Group);
 
 	return true;
 }
@@ -1824,8 +1824,8 @@ void CProgramGuide::DrawDayHeader(int Day, HDC hdc, const RECT &Rect, Theme::CTh
 	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_TitleFont);
 	COLORREF OldTextColor = ::SetTextColor(hdc, m_Theme.ColorList[COLOR_CHANNELNAMETEXT]);
 	TCHAR szText[64];
-	StringPrintf(
-		szText, TEXT("%d/%d(%s)"),
+	StringFormat(
+		szText, TEXT("{}/{}({})"),
 		Time.Month, Time.Day, GetDayOfWeekText(Time.DayOfWeek));
 	RECT rc = Rect;
 	rc.left += m_Style.HeaderPadding.Left;
@@ -1904,13 +1904,13 @@ void CProgramGuide::DrawTimeBar(HDC hdc, const RECT &Rect, Theme::CThemeDraw &Th
 
 		TCHAR szText[64];
 		if (m_ListMode == ListMode::Services && (i == 0 || DispTime.Hour % 3 == 0)) {
-			StringPrintf(
-				szText, lengthof(szText), TEXT("%d/%d(%s) %d時"),
+			StringFormat(
+				szText, TEXT("{}/{}({}) {}時"),
 				DispTime.Month, DispTime.Day,
 				GetDayOfWeekText(DispTime.DayOfWeek),
 				DispTime.Hour);
 		} else {
-			StringPrintf(szText, lengthof(szText), TEXT("%d"), DispTime.Hour);
+			StringFormat(szText, TEXT("{}"), DispTime.Hour);
 		}
 		::TextOut(
 			hdc,
@@ -2511,9 +2511,9 @@ void CProgramGuide::SetCaption()
 			if (m_fEpgUpdating) {
 				TCHAR szText[256];
 
-				StringPrintf(
+				StringFormat(
 					szText,
-					TITLE_TEXT TEXT(" - 番組表の取得中... [%d/%d] 残り約%d分"),
+					TITLE_TEXT TEXT(" - 番組表の取得中... [{}/{}] 残り約{}分"),
 					m_EpgUpdateProgress.Pos + 1, m_EpgUpdateProgress.End,
 					(m_EpgUpdateProgress.RemainingTime + 59999) / 60000);
 				m_pFrame->SetCaption(szText);
@@ -2524,9 +2524,9 @@ void CProgramGuide::SetCaption()
 				GetCurrentDateInfo(&Info);
 				if (m_ListMode == ListMode::Services) {
 					Info.EndTime.OffsetHours(-1);
-					StringPrintf(
+					StringFormat(
 						szText,
-						TITLE_TEXT TEXT(" - %s%s%d/%d(%s) %d時 ～ %d/%d(%s) %d時"),
+						TITLE_TEXT TEXT(" - {}{}{}/{}({}) {}時 ～ {}/{}({}) {}時"),
 						Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
 						Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 						Info.BeginningTime.Month,
@@ -2540,9 +2540,9 @@ void CProgramGuide::SetCaption()
 				} else {
 					LibISDB::DateTime Last = Info.BeginningTime;
 					Last.OffsetDays(6);
-					StringPrintf(
+					StringFormat(
 						szText,
-						TITLE_TEXT TEXT(" - %s %d/%d(%s) ～ %d/%d(%s)"),
+						TITLE_TEXT TEXT(" - {} {}/{}({}) ～ {}/{}({})"),
 						m_ServiceList.GetItem(m_WeekListService)->GetServiceName(),
 						Info.BeginningTime.Month,
 						Info.BeginningTime.Day,
@@ -4522,8 +4522,8 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		mii.cch = lengthof(szText);
 		::GetMenuItemInfo(hmenu, i, FALSE, &mii);
 		int Length = ::lstrlen(szText);
-		StringPrintf(
-			szText + Length, lengthof(szText) - Length, TEXT(" %d/%d(%s) %d時～"),
+		StringFormat(
+			szText + Length, lengthof(szText) - Length, TEXT(" {}/{}({}) {}時～"),
 			Time.Month, Time.Day, GetDayOfWeekText(Time.DayOfWeek), Time.Hour);
 		::SetMenuItemInfo(hmenu, i, FALSE, &mii);
 	}
@@ -5357,8 +5357,8 @@ public:
 
 			m_pProgramGuide->GetCurrentDateInfo(&Info);
 			EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
-			StringPrintf(
-				szText, TEXT("%s%s%d/%d(%s) %d時～"),
+			StringFormat(
+				szText, TEXT("{}{}{}/{}({}) {}時～"),
 				Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
 				Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 				Info.BeginningTime.Month, Info.BeginningTime.Day,
@@ -5386,8 +5386,8 @@ public:
 
 					m_pProgramGuide->GetDateInfo(i, &Info);
 					EpgUtil::EpgTimeToDisplayTime(&Info.BeginningTime);
-					StringPrintf(
-						szText, TEXT("%s%s%d/%d(%s) %d時～"),
+					StringFormat(
+						szText, TEXT("{}{}{}/{}({}) {}時～"),
 						Info.pszRelativeDayText != nullptr ? Info.pszRelativeDayText : TEXT(""),
 						Info.pszRelativeDayText != nullptr ? TEXT(" ") : TEXT(""),
 						Info.BeginningTime.Month,
@@ -6265,9 +6265,9 @@ bool CDateToolbar::SetButtons(const LibISDB::DateTime *pDateList, int Days, int 
 		TCHAR szText[32];
 
 		tbb.idCommand = FirstCommand + i;
-		StringPrintf(
-			szText, lengthof(szText),
-			TEXT("%d/%d(%s)"),
+		StringFormat(
+			szText,
+			TEXT("{}/{}({})"),
 			Date.Month, Date.Day, GetDayOfWeekText(Date.DayOfWeek));
 		tbb.iString = reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData = ((DWORD)Date.Month << 16) | ((DWORD)Date.Day << 8) | Date.DayOfWeek;
@@ -6284,9 +6284,9 @@ bool CDateToolbar::SetButtons(const LibISDB::DateTime *pDateList, int Days, int 
 	for (int i = 0; i < Days; i++) {
 		const LibISDB::DateTime &Date = pDateList[i];
 		TCHAR szText[32];
-		StringPrintf(
-			szText, lengthof(szText),
-			TEXT("%02d/%02d(%s)"),	// %02d にしているのは幅を揃えるため
+		StringFormat(
+			szText,
+			TEXT("{:02}/{:02}({})"),	// {:02} にしているのは幅を揃えるため
 			Date.Month, Date.Day, GetDayOfWeekText(Date.DayOfWeek));
 		RECT rc = {0, 0, 0, 0};
 		::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6336,8 +6336,8 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	if ((pnmtb->nmcd.lItemlParam & ITEM_FLAG_NOW) != 0) {
 		StringCopy(szText, TEXT("今日"));
 	} else {
-		StringPrintf(
-			szText, TEXT("%d/%d(%s)"),
+		StringFormat(
+			szText, TEXT("{}/{}({})"),
 			(int)(pnmtb->nmcd.lItemlParam >> 16),
 			(int)((pnmtb->nmcd.lItemlParam >> 8) & 0xFF),
 			GetDayOfWeekText(DayOfWeek));
@@ -6547,7 +6547,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 		if (TimeInfo.Command == CM_PROGRAMGUIDE_TIME_CURRENT) {
 			StringCopy(szText, TEXT("現在"));
 		} else {
-			StringPrintf(szText, TEXT("%d時～"), TimeInfo.Hour);
+			StringFormat(szText, TEXT("{}時～"), TimeInfo.Hour);
 		}
 		tbb.iString = reinterpret_cast<INT_PTR>(szText);
 		tbb.dwData = MAKELONG(TimeInfo.Hour, TimeInfo.Offset);
@@ -6562,9 +6562,9 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 	for (int i = 0; i < TimeListLength; i++) {
 		const TimeInfo &TimeInfo = pTimeList[i];
 		TCHAR szText[32];
-		StringPrintf(
+		StringFormat(
 			szText,
-			TEXT("%02d時～"),	// %02d にしているのは幅を揃えるため
+			TEXT("{:02}時～"),	// {:02} にしているのは幅を揃えるため
 			TimeInfo.Hour);
 		RECT rc = {0, 0, 0, 0};
 		::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6629,7 +6629,7 @@ void CTimeToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	if (fCurrent) {
 		StringCopy(szText, TEXT("現在"));
 	} else {
-		StringPrintf(szText, TEXT("%d時～"), Hour);
+		StringFormat(szText, TEXT("{}時～"), Hour);
 	}
 	RECT rc = pnmtb->nmcd.rc;
 	Style::Subtract(&rc, m_Padding);
@@ -7124,7 +7124,7 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 		TCHAR szText[32], szName[32];
 		int ID;
 
-		StringPrintf(szText, TEXT("Toolbar%d_Name"), i);
+		StringFormat(szText, TEXT("Toolbar{}_Name"), i);
 		if (Settings.Read(szText, szName, lengthof(szName))) {
 			ID = ParseIDText(szName);
 			if (ID < 0)
@@ -7142,7 +7142,7 @@ bool CProgramGuideFrameSettings::ReadSettings(CSettings &Settings)
 		if (j < Count)
 			continue;
 
-		StringPrintf(szText, TEXT("Toolbar%d_Status"), i);
+		StringFormat(szText, TEXT("Toolbar{}_Status"), i);
 		unsigned int Status;
 		if (Settings.Read(szText, &Status)) {
 			m_ToolbarSettingsList[ID].fVisible = (Status & TOOLBAR_STATUS_VISIBLE) != 0;
@@ -7200,10 +7200,10 @@ bool CProgramGuideFrameSettings::WriteSettings(CSettings &Settings)
 		const int ID = OrderList[i];
 		TCHAR szText[32];
 
-		StringPrintf(szText, TEXT("Toolbar%d_Name"), i);
+		StringFormat(szText, TEXT("Toolbar{}_Name"), i);
 		Settings.Write(szText, m_ToolbarInfoList[ID].pszIDText);
 
-		StringPrintf(szText, TEXT("Toolbar%d_Status"), i);
+		StringFormat(szText, TEXT("Toolbar{}_Status"), i);
 		unsigned int Status = 0;
 		if (m_ToolbarSettingsList[ID].fVisible)
 			Status |= TOOLBAR_STATUS_VISIBLE;

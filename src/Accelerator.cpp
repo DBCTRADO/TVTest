@@ -296,9 +296,9 @@ void CAccelerator::FormatAccelText(LPTSTR pszText, size_t MaxText, int Key, int 
 		}
 	}
 
-	StringPrintf(
+	StringFormat(
 		pszText, MaxText,
-		TEXT("%s%s%s%s%s"),
+		TEXT("{}{}{}{}{}"),
 		((Modifiers & MOD_SHIFT  ) != 0) ? TEXT("Shift+") : TEXT(""),
 		((Modifiers & MOD_CONTROL) != 0) ? TEXT("Ctrl+")  : TEXT(""),
 		((Modifiers & MOD_ALT    ) != 0) ? TEXT("Alt+")   : TEXT(""),
@@ -423,7 +423,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			TCHAR szKey[32];
 			int Value;
 
-			StringPrintf(szKey, TEXT("ChInputKeyMode%d"), i);
+			StringFormat(szKey, TEXT("ChInputKeyMode{}"), i);
 			if (Settings.Read(szKey, &Value)) {
 				m_ChannelInputOptions.KeyInputMode[i] =
 					static_cast<CChannelInputOptions::KeyInputModeType>(Value);
@@ -463,20 +463,20 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 				TCHAR szName[64];
 				int Command;
 
-				StringPrintf(szName, TEXT("Accel%d_Command"), i);
+				StringFormat(szName, TEXT("Accel{}_Command"), i);
 				if (Settings.Read(szName, &CommandText)
 						&& !CommandText.empty()
 						&& (Command = m_pCommandManager->ParseIDText(CommandText)) != 0) {
 					unsigned int Key, Modifiers;
 
-					StringPrintf(szName, TEXT("Accel%d_Key"), i);
+					StringFormat(szName, TEXT("Accel{}_Key"), i);
 					if (Settings.Read(szName, &Key) && Key != 0) {
 						KeyInfo Info;
 
 						Info.Command = Command;
 						Info.KeyCode = Key;
 						Modifiers = 0;
-						StringPrintf(szName, TEXT("Accel%d_Mod"), i);
+						StringFormat(szName, TEXT("Accel{}_Mod"), i);
 						Settings.Read(szName, &Modifiers);
 						Info.Modifiers = Modifiers & 0x7F;
 						Info.fGlobal = (Modifiers & 0x80) != 0;
@@ -500,15 +500,15 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < NumCommands; i++) {
 				TCHAR szName[64];
 
-				StringPrintf(szName, TEXT("Button%d_Command"), i);
+				StringFormat(szName, TEXT("Button{}_Command"), i);
 				if (Settings.Read(szName, &CommandText) && !CommandText.empty()) {
 					int Type;
 					unsigned int AppCommand;
 
-					StringPrintf(szName, TEXT("Button%d_Type"), i);
+					StringFormat(szName, TEXT("Button{}_Type"), i);
 					if (!Settings.Read(szName, &Type) || (Type != 0 && Type != 1))
 						continue;
-					StringPrintf(szName, TEXT("Button%d_AppCommand"), i);
+					StringFormat(szName, TEXT("Button{}_AppCommand"), i);
 					if (Settings.Read(szName, &AppCommand) && AppCommand != 0) {
 						AppCommandInfo Info;
 
@@ -533,7 +533,7 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("Settings"))) {
 		for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
-			StringPrintf(szKey, TEXT("ChInputKeyMode%d"), i);
+			StringFormat(szKey, TEXT("ChInputKeyMode{}"), i);
 			Settings.Write(szKey, (int)m_ChannelInputOptions.KeyInputMode[i]);
 		}
 		Settings.Write(TEXT("ChInputKeyTimeout"), m_ChannelInputOptions.KeyTimeout);
@@ -571,12 +571,12 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 			for (size_t i = 0; i < m_KeyList.size(); i++) {
 				TCHAR szName[64];
 
-				StringPrintf(szName, TEXT("Accel%d_Command"), i);
+				StringFormat(szName, TEXT("Accel{}_Command"), i);
 				Settings.Write(
 					szName, m_pCommandManager->GetCommandIDText(m_KeyList[i].Command));
-				StringPrintf(szName, TEXT("Accel%d_Key"), i);
+				StringFormat(szName, TEXT("Accel{}_Key"), i);
 				Settings.Write(szName, (int)m_KeyList[i].KeyCode);
-				StringPrintf(szName, TEXT("Accel%d_Mod"), i);
+				StringFormat(szName, TEXT("Accel{}_Mod"), i);
 				Settings.Write(szName, (int)(m_KeyList[i].Modifiers | (m_KeyList[i].fGlobal ? 0x80 : 0x00)));
 			}
 		}
@@ -610,12 +610,12 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 			for (size_t i = 0; i < m_AppCommandList.size(); i++) {
 				TCHAR szName[64];
 
-				StringPrintf(szName, TEXT("Button%d_Command"), i);
+				StringFormat(szName, TEXT("Button{}_Command"), i);
 				Settings.Write(
 					szName, m_pCommandManager->GetCommandIDText(m_AppCommandList[i].Command));
-				StringPrintf(szName, TEXT("Button%d_Type"), i);
+				StringFormat(szName, TEXT("Button{}_Type"), i);
 				Settings.Write(szName, (int)m_AppCommandList[i].Type);
-				StringPrintf(szName, TEXT("Button%d_AppCommand"), i);
+				StringFormat(szName, TEXT("Button{}_AppCommand"), i);
 				Settings.Write(szName, m_AppCommandList[i].AppCommand);
 			}
 		}
@@ -903,9 +903,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
 						m_ListView.GetItemText(i, 0, szCommand, lengthof(szCommand));
-						StringPrintf(
+						StringFormat(
 							szText,
-							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
+							TEXT("既に [{}] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
@@ -948,9 +948,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
 						m_ListView.GetItemText(i, 0, szCommand, lengthof(szCommand));
-						StringPrintf(
+						StringFormat(
 							szText,
-							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
+							TEXT("既に [{}] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
