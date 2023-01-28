@@ -268,6 +268,7 @@ namespace TVTest
 			None    = 0x0000U,
 			Status  = 0x0001U,
 			Options = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER,
 			All     = Status | Options,
 		};
 		bool SaveSettings(SaveSettingsFlag Flags);
@@ -379,8 +380,6 @@ namespace TVTest
 		void ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine);
 		static BOOL CALLBACK ControllerFocusCallback(HWND hwnd, LPARAM Param);
 	};
-
-	TVTEST_ENUM_FLAGS(CAppMain::SaveSettingsFlag)
 
 
 	CAppMain &GetAppClass();

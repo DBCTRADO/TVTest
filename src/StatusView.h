@@ -46,6 +46,7 @@ namespace TVTest
 			VariableWidth = 0x0001U,
 			FullRow       = 0x0002U,
 			ForceFullRow  = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class SizeUnit {
@@ -143,8 +144,6 @@ namespace TVTest
 			HDC hdc, const RECT &Rect, DrawUtil::CMonoColorIconList &IconList,
 			int IconIndex = 0, bool fEnabled = true) const;
 	};
-
-	TVTEST_ENUM_FLAGS(CStatusItem::StyleFlag)
 
 	class CIconStatusItem
 		: public CStatusItem

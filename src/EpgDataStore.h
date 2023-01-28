@@ -43,6 +43,7 @@ namespace TVTest
 		enum class OpenFlag : unsigned int {
 			None           = 0x0000U,
 			LoadBackground = 0x0001U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CEpgDataStore();
@@ -75,8 +76,6 @@ namespace TVTest
 		uint64_t m_UpdateCount;
 		DWORD m_LockTimeout;
 	};
-
-	TVTEST_ENUM_FLAGS(CEpgDataStore::OpenFlag)
 
 }	// namespace TVTest
 

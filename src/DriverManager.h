@@ -78,6 +78,7 @@ namespace TVTest
 				Virtual       = 0x0004U,
 				Volatile      = 0x0008U,
 				NoEnumChannel = 0x0010U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
 			Flag Flags;
@@ -106,8 +107,6 @@ namespace TVTest
 		String m_BaseDirectory;
 		std::vector<TunerSpecInfo> m_TunerSpecList;
 	};
-
-	TVTEST_ENUM_FLAGS(CDriverManager::TunerSpec::Flag)
 
 }	// namespace TVTest
 

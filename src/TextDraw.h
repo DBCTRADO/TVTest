@@ -40,6 +40,7 @@ namespace TVTest
 			None               = 0x0000U,
 			EndEllipsis        = 0x0001U,	// 収まりきらない場合省略記号を付加
 			JapaneseHyphnation = 0x0002U,	// 禁則処理
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class DrawFlag : unsigned int {
@@ -50,6 +51,7 @@ namespace TVTest
 			Align_VertCenter = 0x0008U,
 			Align_Bottom     = 0x0010U,
 			JustifyMultiLine = 0x0020U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct FontMetrics
@@ -102,9 +104,6 @@ namespace TVTest
 		static bool IsStartProhibitChar(WCHAR Char);
 		static bool IsEndProhibitChar(WCHAR Char);
 	};
-
-	TVTEST_ENUM_FLAGS(CTextDraw::Flag)
-	TVTEST_ENUM_FLAGS(CTextDraw::DrawFlag)
 
 	class CTextDrawEngine
 	{

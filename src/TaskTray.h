@@ -33,6 +33,7 @@ namespace TVTest
 			Recording = 0x0001U,
 			Minimized = 0x0002U,
 			Standby   = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum {
@@ -76,8 +77,6 @@ namespace TVTest
 		bool UpdateTipText();
 		bool NeedTrayIcon() const;
 	};
-
-	TVTEST_ENUM_FLAGS(CTaskTrayManager::StatusFlag)
 
 }	// namespace TVTest
 

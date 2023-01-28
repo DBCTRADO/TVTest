@@ -198,6 +198,7 @@ namespace TVTest
 			TopHalf     = 0x0020U,
 			RightHalf   = 0x0040U,
 			BottomHalf  = 0x0080U,
+			TVTEST_ENUM_FLAGS_TRAILER,
 			BottomRight = Right | Bottom,
 			Horz        = Left | Right,
 			Vert        = Top | Bottom,
@@ -245,8 +246,6 @@ namespace TVTest
 		void ApplyStyle() override;
 		void RealizeStyle() override;
 	};
-
-	TVTEST_ENUM_FLAGS(CResizableDialog::AlignFlag)
 
 }	// namespace TVTest
 

@@ -84,6 +84,7 @@ namespace TVTest
 			NoCurrentTime = 0x0002U,
 			NoTOTTime     = 0x0004U,
 			NoSeparator   = 0x0008U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct EventInfo
@@ -116,8 +117,6 @@ namespace TVTest
 		bool m_fCurrentTimeSet;
 		LibISDB::DateTime m_CurrentTime;
 	};
-
-	TVTEST_ENUM_FLAGS(CEventVariableStringMap::Flag)
 
 }
 

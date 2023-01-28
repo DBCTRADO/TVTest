@@ -47,6 +47,7 @@ namespace TVTest
 			Disabled = 0x0001U,
 			Checked  = 0x0002U,
 			Hot      = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct SideBarItem
@@ -186,8 +187,6 @@ namespace TVTest
 	// CUIBase
 		void RealizeStyle() override;
 	};
-
-	TVTEST_ENUM_FLAGS(CSideBar::ItemState)
 
 }	// namespace TVTest
 

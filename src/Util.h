@@ -106,8 +106,8 @@ namespace TVTest
 		None           = 0x0000U,
 		Wildcard       = 0x0001U,
 		AllowDelimiter = 0x0002U,
+		TVTEST_ENUM_FLAGS_TRAILER
 	};
-	TVTEST_ENUM_FLAGS(FileNameValidateFlag)
 	bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags = FileNameValidateFlag::None, String *pMessage = nullptr);
 	bool MakeUniqueFileName(
 		String *pFileName, size_t MaxLength = MAX_PATH - 1,

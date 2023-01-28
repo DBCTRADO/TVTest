@@ -96,6 +96,7 @@ namespace TVTest
 				Standby   = 0x0002U,
 				Suspend   = 0x0004U,
 				EPGUpdate = 0x0008U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
 			CChannelSpec Channel;
@@ -167,6 +168,7 @@ namespace TVTest
 			None     = 0x0000U,
 			OnScreen = 0x0001U,
 			Popup    = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 		struct ProgramGuideSpaceInfo
 		{
@@ -716,9 +718,6 @@ namespace TVTest
 			HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	};
-
-	TVTEST_ENUM_FLAGS(CMainWindow::ResumeInfo::ViewerSuspendFlag)
-	TVTEST_ENUM_FLAGS(CMainWindow::ShowProgramGuideFlag)
 
 }	// namespace TVTest
 

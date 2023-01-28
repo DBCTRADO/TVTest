@@ -49,7 +49,8 @@ namespace TVTest
 	using namespace LibISDB::Literals;
 	using namespace LibISDB::EnumFlags;
 
-#define TVTEST_ENUM_FLAGS LIBISDB_ENUM_FLAGS
+#define TVTEST_ENUM_FLAGS_TRAILER_ LIBISDB_ENUM_FLAGS_TRAILER_
+#define TVTEST_ENUM_FLAGS_TRAILER LIBISDB_ENUM_FLAGS_TRAILER
 
 #define TVTEST_ENUM_CLASS_TRAILER_(first) \
 	Trailer_, \

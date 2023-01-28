@@ -90,6 +90,7 @@ namespace TVTest
 			RetryDialog = 0x0001U,
 			NoUI        = 0x0002U,
 			NotifyError = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		bool ReadSettings(CSettings &Settings);
@@ -131,8 +132,6 @@ namespace TVTest
 			CTSProcessor *pTSProcessor,
 			Interface::NotifyType Type, LPCWSTR pszMessage) override;
 	};
-
-	TVTEST_ENUM_FLAGS(CTSProcessorManager::FilterOpenFlag)
 
 }	// namespace TVTest
 

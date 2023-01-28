@@ -56,6 +56,7 @@ namespace TVTest
 			None   = 0x0000U,
 			NoFade = 0x0001U,
 			Pseudo = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		COSDManager(const COSDOptions *pOptions);
@@ -120,8 +121,6 @@ namespace TVTest
 			const Style::CStyleManager *pStyleManager,
 			const Style::CStyleScaling *pStyleScaling) override;
 	};
-
-	TVTEST_ENUM_FLAGS(COSDManager::ShowFlag)
 
 }	// namespace TVTest
 

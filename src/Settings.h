@@ -37,6 +37,7 @@ namespace TVTest
 			Read          = 0x0001U,
 			Write         = 0x0002U,
 			WriteVolatile = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		typedef CIniFile::CEntry CEntry;
@@ -76,8 +77,6 @@ namespace TVTest
 		CIniFile m_IniFile;
 		OpenFlag m_OpenFlags;
 	};
-
-	TVTEST_ENUM_FLAGS(CSettings::OpenFlag)
 
 	class ABSTRACT_CLASS(CSettingsBase)
 	{

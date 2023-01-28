@@ -46,6 +46,7 @@ namespace TVTest
 			IgnoreCase  = 0x0001U,
 			IgnoreWidth = 0x0002U,
 			Optimize    = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct TextRange
@@ -70,8 +71,6 @@ namespace TVTest
 	private:
 		std::unique_ptr<CRegExpEngine> m_Engine;
 	};
-
-	TVTEST_ENUM_FLAGS(CRegExp::PatternFlag)
 
 	class ABSTRACT_CLASS(CRegExpEngine)
 	{

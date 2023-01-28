@@ -419,6 +419,7 @@ namespace TVTest
 			None      = 0x0000U,
 			NoDefault = 0x0001U,	// デフォルトと同じ設定を保存しない
 			NoName    = 0x0002U,	// 名前を保存しない
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CColorScheme();
@@ -498,8 +499,6 @@ namespace TVTest
 		static const BorderInfo m_BorderInfoList[NUM_BORDERS];
 		static const Theme::BorderType m_CustomDefaultBorderList[NUM_BORDERS];
 	};
-
-	TVTEST_ENUM_FLAGS(CColorScheme::SaveFlag)
 
 	class CColorSchemeList
 	{

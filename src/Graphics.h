@@ -64,9 +64,8 @@ namespace TVTest
 			Draw_ClearType       = 0x00004000UL,
 			Draw_Hinting         = 0x00008000UL,
 			Draw_Path            = 0x00010000UL,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
-
-		TVTEST_ENUM_FLAGS(TextFlag)
 
 		class CColor
 		{

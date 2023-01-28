@@ -163,6 +163,7 @@ namespace TVTest
 			EventInfo          = 0x0020U,
 			EventID            = 0x0040U,
 			TOT                = 0x0080U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 		StatusFlag UpdateAsyncStatus();
 		void SetAsyncStatusUpdatedFlag(StatusFlag Status);
@@ -175,6 +176,7 @@ namespace TVTest
 			BitRate                    = 0x0010U,
 			StreamRemain               = 0x0020U,
 			PacketBufferRate           = 0x0040U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 		StatisticsFlag UpdateStatistics();
 		unsigned long long GetErrorPacketCount() const { return m_ErrorPacketCount; }
@@ -294,9 +296,6 @@ namespace TVTest
 	// RecorderFilter::EventListener
 		void OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::RecorderFilter::RecordingTask *pTask) override;
 	};
-
-	TVTEST_ENUM_FLAGS(CCoreEngine::StatusFlag)
-	TVTEST_ENUM_FLAGS(CCoreEngine::StatisticsFlag)
 
 }	// namespace TVTest
 

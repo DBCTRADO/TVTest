@@ -119,6 +119,7 @@ namespace TVTest
 			ShowLogo      = 0x0002U,
 			ShowToolTip   = 0x0004U,
 			Shared        = 0x1000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CFavoritesMenu();
@@ -174,8 +175,6 @@ namespace TVTest
 		void CreateFont(HDC hdc);
 		static void GetBaseTime(LibISDB::DateTime *pTime);
 	};
-
-	TVTEST_ENUM_FLAGS(CFavoritesMenu::CreateFlag)
 
 	class COrganizeFavoritesDialog
 		: public CResizableDialog

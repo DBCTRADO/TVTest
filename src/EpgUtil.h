@@ -51,8 +51,8 @@ namespace TVTest
 			Year          = 0x0008U,
 			UndecidedText = 0x0010U,
 			NoConvert     = 0x0020U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
-		TVTEST_ENUM_FLAGS(FormatEventTimeFlag)
 
 		static constexpr int MAX_EVENT_TIME_LENGTH = 64;
 
@@ -200,6 +200,7 @@ namespace TVTest
 			None     = 0x0000U,
 			Current  = 0x0001U,
 			NoBorder = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class DrawContentBackgroundFlag : unsigned int {
@@ -207,6 +208,7 @@ namespace TVTest
 			Current   = 0x0001U,
 			Separator = 0x0002U,
 			NoBorder  = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CEpgTheme();
@@ -231,9 +233,6 @@ namespace TVTest
 
 		Theme::ThemeColor m_ColorList[NUM_COLORS];
 	};
-
-	TVTEST_ENUM_FLAGS(CEpgTheme::ContentStyleFlag)
-	TVTEST_ENUM_FLAGS(CEpgTheme::DrawContentBackgroundFlag)
 
 }	// namespace TVTest
 

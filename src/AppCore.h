@@ -55,6 +55,7 @@ namespace TVTest
 			NoUI        = 0x0001U,
 			NoNotify    = 0x0002U,
 			RetryDialog = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class SelectChannelFlag : unsigned int {
@@ -62,12 +63,14 @@ namespace TVTest
 			UseCurrentTuner = 0x0001U,
 			StrictService   = 0x0002U,
 			AllowDisabled   = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class SetServiceFlag : unsigned int {
 			None                     = 0x0000U,
 			StrictID                 = 0x0001U,
 			NoChangeCurrentServiceID = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CAppCore(CAppMain &App);
@@ -159,10 +162,6 @@ namespace TVTest
 		int GetCorresponding1SegService(int Space, WORD NetworkID, WORD TSID, WORD ServiceID) const;
 		bool GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName);
 	};
-
-	TVTEST_ENUM_FLAGS(CAppCore::OpenTunerFlag)
-	TVTEST_ENUM_FLAGS(CAppCore::SelectChannelFlag)
-	TVTEST_ENUM_FLAGS(CAppCore::SetServiceFlag)
 
 }
 

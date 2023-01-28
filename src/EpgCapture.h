@@ -36,18 +36,21 @@ namespace TVTest
 			None    = 0x0000U,
 			NoUI    = 0x0001U,
 			Standby = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class BeginStatus : unsigned int {
 			None               = 0x0000U,
 			Standby            = 0x0001U,
 			TunerAlreadyOpened = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class EndFlag : unsigned int  {
 			None       = 0x0000U,
 			CloseTuner = 0x0001U,
 			Resume     = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER,
 			Default    = CloseTuner | Resume,
 		};
 
@@ -94,10 +97,6 @@ namespace TVTest
 		bool m_fChannelChanging;
 		CEventHandler *m_pEventHandler;
 	};
-
-	TVTEST_ENUM_FLAGS(CEpgCaptureManager::BeginFlag)
-	TVTEST_ENUM_FLAGS(CEpgCaptureManager::BeginStatus)
-	TVTEST_ENUM_FLAGS(CEpgCaptureManager::EndFlag)
 
 }	// namespace TVTest
 

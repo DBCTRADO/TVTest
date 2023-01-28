@@ -52,6 +52,7 @@ namespace TVTest
 			None     = 0x0000U,
 			EpgData  = 0x0001U,
 			EdcbData = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER,
 			AllData  = EpgData | EdcbData,
 		};
 
@@ -171,8 +172,6 @@ namespace TVTest
 
 		bool GetEpgFileFullPath(LPTSTR pszFileName);
 	};
-
-	TVTEST_ENUM_FLAGS(CEpgOptions::EpgFileLoadFlag)
 
 }	// namespace TVTest
 

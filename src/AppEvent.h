@@ -36,8 +36,8 @@ namespace TVTest
 			None         = 0x0000U,
 			SpaceChanged = 0x0001U,
 			Detected     = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
-		TVTEST_ENUM_FLAGS(ChannelChangeStatus)
 
 		struct RecordingStartInfo
 		{
