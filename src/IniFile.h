@@ -32,9 +32,13 @@ namespace TVTest
 	class CIniFile
 	{
 	public:
-		static constexpr UINT OPEN_READ           = 0x0001U;
-		static constexpr UINT OPEN_WRITE          = 0x0002U;
-		static constexpr UINT OPEN_WRITE_VOLATILE = 0x0004U;
+		enum class OpenFlag : unsigned int {
+			None          = 0x0000U,
+			Read          = 0x0001U,
+			Write         = 0x0002U,
+			WriteVolatile = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
+		};
 
 		static constexpr UINT MAX_FILE_SIZE = 0x100000;
 
@@ -57,7 +61,7 @@ namespace TVTest
 		CIniFile(const CIniFile &) = delete;
 		CIniFile &operator=(const CIniFile &) = delete;
 
-		bool Open(LPCWSTR pszFileName, UINT Flags);
+		bool Open(LPCWSTR pszFileName, OpenFlag Flags);
 		bool Close();
 		bool SelectSection(LPCWSTR pszSection);
 		bool IsSectionExists(LPCWSTR pszSection);
@@ -93,7 +97,7 @@ namespace TVTest
 
 		String m_FileName;
 		String m_Section;
-		UINT m_OpenFlags;
+		OpenFlag m_OpenFlags;
 		SectionList m_SectionList;
 		CSectionData *m_pCurSection;
 		CGlobalLock m_FileLock;

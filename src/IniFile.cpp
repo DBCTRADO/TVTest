@@ -28,7 +28,7 @@ namespace TVTest
 {
 
 CIniFile::CIniFile()
-	: m_OpenFlags(0)
+	: m_OpenFlags(OpenFlag::None)
 	, m_pCurSection(nullptr)
 	, m_hFile(INVALID_HANDLE_VALUE)
 {
@@ -39,15 +39,18 @@ CIniFile::~CIniFile()
 	Close();
 }
 
-bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
+bool CIniFile::Open(LPCWSTR pszFileName, OpenFlag Flags)
 {
 	Close();
 
-	TRACE(TEXT("CIniFile::Open( \"{}\", {:#x})\n"), pszFileName, Flags);
+	TRACE(
+		TEXT("CIniFile::Open( \"{}\", {:#x})\n"),
+		pszFileName,
+		static_cast<std::underlying_type_t<OpenFlag>>(Flags));
 
 	if (IsStringEmpty(pszFileName)
-			|| (Flags & (OPEN_READ | OPEN_WRITE)) == 0
-			|| (Flags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == (OPEN_WRITE | OPEN_WRITE_VOLATILE))
+			|| !(Flags & (OpenFlag::Read | OpenFlag::Write))
+			|| (Flags & (OpenFlag::Write | OpenFlag::WriteVolatile)) == (OpenFlag::Write | OpenFlag::WriteVolatile))
 		return false;
 
 	String MutexName;
@@ -63,7 +66,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
 	}
 
 	DWORD DesiredAccess = 0, ShareMode = 0;
-	if ((Flags & OPEN_WRITE) != 0) {
+	if (!!(Flags & OpenFlag::Write)) {
 		DesiredAccess |= GENERIC_READ | GENERIC_WRITE;
 	} else {
 		DesiredAccess |= GENERIC_READ;
@@ -72,7 +75,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
 
 	HANDLE hFile = ::CreateFile(
 		pszFileName, DesiredAccess, ShareMode, nullptr,
-		(Flags & OPEN_WRITE) != 0 ? OPEN_ALWAYS : OPEN_EXISTING,
+		!!(Flags & OpenFlag::Write) ? OPEN_ALWAYS : OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL, nullptr);
 	BYTE *pBuffer = nullptr;
 	try {
@@ -119,7 +122,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
 		return false;
 	}
 
-	if ((Flags & OPEN_WRITE) == 0) {
+	if (!(Flags & OpenFlag::Write)) {
 		::CloseHandle(hFile);
 		m_FileLock.Release();
 		m_FileLock.Close();
@@ -135,12 +138,12 @@ bool CIniFile::Open(LPCWSTR pszFileName, UINT Flags)
 
 bool CIniFile::Close()
 {
-	if (m_OpenFlags == 0)
+	if (!m_OpenFlags)
 		return true;
 
 	bool fOK = true;
 
-	if ((m_OpenFlags & OPEN_WRITE) != 0 && m_hFile != INVALID_HANDLE_VALUE) {
+	if (!!(m_OpenFlags & OpenFlag::Write) && m_hFile != INVALID_HANDLE_VALUE) {
 		String Buffer;
 
 		for (const auto &Section : m_SectionList) {
@@ -185,7 +188,7 @@ bool CIniFile::Close()
 
 	m_FileName.clear();
 	m_Section.clear();
-	m_OpenFlags = 0;
+	m_OpenFlags = OpenFlag::None;
 
 	m_SectionList.clear();
 	m_pCurSection = nullptr;
@@ -195,7 +198,7 @@ bool CIniFile::Close()
 
 bool CIniFile::SelectSection(LPCWSTR pszSection)
 {
-	if (m_OpenFlags == 0)
+	if (!m_OpenFlags)
 		return false;
 
 	m_Section.clear();
@@ -206,7 +209,7 @@ bool CIniFile::SelectSection(LPCWSTR pszSection)
 
 	auto i = FindSection(pszSection);
 	if (i == m_SectionList.end()) {
-		if ((m_OpenFlags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == 0)
+		if (!(m_OpenFlags & (OpenFlag::Write | OpenFlag::WriteVolatile)))
 			return false;
 
 		CreateSection(pszSection);
@@ -230,7 +233,7 @@ bool CIniFile::IsSectionExists(LPCWSTR pszSection)
 
 bool CIniFile::DeleteSection(LPCWSTR pszSection)
 {
-	if ((m_OpenFlags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == 0
+	if (!(m_OpenFlags & (OpenFlag::Write | OpenFlag::WriteVolatile))
 			|| IsStringEmpty(pszSection))
 		return false;
 
@@ -250,7 +253,7 @@ bool CIniFile::DeleteSection(LPCWSTR pszSection)
 
 bool CIniFile::ClearSection(LPCWSTR pszSection)
 {
-	if ((m_OpenFlags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == 0
+	if (!(m_OpenFlags & (OpenFlag::Write | OpenFlag::WriteVolatile))
 			|| IsStringEmpty(pszSection))
 		return false;
 
@@ -278,7 +281,7 @@ bool CIniFile::GetValue(LPCWSTR pszName, String *pValue)
 
 	pValue->clear();
 
-	if ((m_OpenFlags & OPEN_READ) == 0
+	if (!(m_OpenFlags & OpenFlag::Read)
 			|| m_Section.empty()
 			|| IsStringEmpty(pszName))
 		return false;
@@ -306,7 +309,7 @@ bool CIniFile::GetValue(LPCWSTR pszName, String *pValue)
 
 bool CIniFile::SetValue(LPCWSTR pszName, LPCWSTR pszValue)
 {
-	if ((m_OpenFlags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == 0
+	if (!(m_OpenFlags & (OpenFlag::Write | OpenFlag::WriteVolatile))
 			|| m_Section.empty()
 			|| IsStringEmpty(pszName))
 		return false;
@@ -354,7 +357,7 @@ bool CIniFile::IsValueExists(LPCWSTR pszName)
 
 bool CIniFile::DeleteValue(LPCWSTR pszName)
 {
-	if ((m_OpenFlags & (OPEN_WRITE | OPEN_WRITE_VOLATILE)) == 0
+	if (!(m_OpenFlags & (OpenFlag::Write | OpenFlag::WriteVolatile))
 			|| m_Section.empty()
 			|| IsStringEmpty(pszName))
 		return false;
@@ -379,7 +382,7 @@ bool CIniFile::GetSectionEntries(LPCWSTR pszSection, EntryArray *pEntries)
 
 	pEntries->clear();
 
-	if ((m_OpenFlags & OPEN_READ) == 0
+	if (!(m_OpenFlags & OpenFlag::Read)
 			|| IsStringEmpty(pszSection))
 		return false;
 

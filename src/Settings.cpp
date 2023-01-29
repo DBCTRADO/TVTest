@@ -56,13 +56,13 @@ bool CSettings::Open(LPCTSTR pszFileName, OpenFlag Flags)
 			|| (Flags & (OpenFlag::Write | OpenFlag::WriteVolatile)) == (OpenFlag::Write | OpenFlag::WriteVolatile))
 		return false;
 
-	UINT IniFlags = 0;
+	CIniFile::OpenFlag IniFlags = CIniFile::OpenFlag::None;
 	if (!!(Flags & OpenFlag::Read))
-		IniFlags |= CIniFile::OPEN_READ;
+		IniFlags |= CIniFile::OpenFlag::Read;
 	if (!!(Flags & OpenFlag::Write))
-		IniFlags |= CIniFile::OPEN_WRITE;
+		IniFlags |= CIniFile::OpenFlag::Write;
 	if (!!(Flags & OpenFlag::WriteVolatile))
-		IniFlags |= CIniFile::OPEN_WRITE_VOLATILE;
+		IniFlags |= CIniFile::OpenFlag::WriteVolatile;
 	if (!m_IniFile.Open(pszFileName, IniFlags))
 		return false;
 
