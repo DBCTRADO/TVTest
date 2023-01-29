@@ -684,7 +684,7 @@ bool CAppCommand::AudioDelay(CCommandManager::InvokeParameters &Params)
 	if (pViewer == nullptr)
 		return true;
 
-	static const LONGLONG MaxDelay = 10000000LL;
+	static constexpr LONGLONG MaxDelay = 10000000LL;
 	const LONGLONG Step = m_App.OperationOptions.GetAudioDelayStep() * 10000LL;
 	LONGLONG Delay;
 

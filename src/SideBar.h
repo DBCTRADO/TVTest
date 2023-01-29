@@ -169,8 +169,8 @@ namespace TVTest
 		CEventHandler *m_pEventHandler;
 		const CCommandManager *m_pCommandManager;
 
-		static const int ICON_WIDTH;
-		static const int ICON_HEIGHT;
+		static constexpr int ICON_WIDTH = 16;
+		static constexpr int ICON_HEIGHT = 16;
 		static const LPCTSTR CLASS_NAME;
 		static HINSTANCE m_hinst;
 

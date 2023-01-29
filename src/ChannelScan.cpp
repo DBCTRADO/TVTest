@@ -1291,7 +1291,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static const UINT TIMER_ID_STATISTICS = 1;
+	static constexpr UINT TIMER_ID_STATISTICS = 1;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:

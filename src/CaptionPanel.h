@@ -130,8 +130,8 @@ namespace TVTest
 			CHARENCODING_UTF8,
 			CHARENCODING_SHIFTJIS
 		};
-		static const CharEncoding CHARENCODING_FIRST = CHARENCODING_UTF16;
-		static const CharEncoding CHARENCODING_LAST  = CHARENCODING_SHIFTJIS;
+		static constexpr CharEncoding CHARENCODING_FIRST = CHARENCODING_UTF16;
+		static constexpr CharEncoding CHARENCODING_LAST  = CHARENCODING_SHIFTJIS;
 
 		COLORREF m_BackColor;
 		COLORREF m_TextColor;

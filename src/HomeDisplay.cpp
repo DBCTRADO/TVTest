@@ -40,7 +40,7 @@ namespace TVTest
 {
 
 
-static const int CATEGORY_ICON_WIDTH = 32, CATEGORY_ICON_HEIGHT = 32;
+static constexpr int CATEGORY_ICON_WIDTH = 32, CATEGORY_ICON_HEIGHT = 32;
 
 enum {
 	CATEGORY_ICON_FAVORITES,

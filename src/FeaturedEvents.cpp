@@ -631,7 +631,7 @@ bool CFeaturedEventsDialog::Show(HWND hwndOwner)
 
 INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static const int PERIOD_UNIT = 60 * 60;
+	static constexpr int PERIOD_UNIT = 60 * 60;
 
 	switch (uMsg) {
 	case WM_INITDIALOG:

@@ -786,7 +786,7 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 	}
 
 	if (::PathFileExists(Path.c_str())) {
-		static const int MAX_NUMBER = 1000;
+		static constexpr int MAX_NUMBER = 1000;
 		String BaseName(
 			pFileName->substr(DirLength, pFileName->length() - DirLength - ExtensionLength));
 		String Name;

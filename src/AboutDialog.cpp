@@ -33,7 +33,7 @@ namespace TVTest
 {
 
 
-static const size_t MAX_INFO_TEXT = 256;
+static constexpr size_t MAX_INFO_TEXT = 256;
 
 
 CAboutDialog::CAboutDialog()

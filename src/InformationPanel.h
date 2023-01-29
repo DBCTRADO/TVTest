@@ -94,7 +94,7 @@ namespace TVTest
 			: public CItem
 		{
 		public:
-			static const int ID = id;
+			static constexpr int ID = id;
 			CItemTemplate(CInformationPanel *pPanel, bool fVisible, int PropertyID = 0)
 				: CItem(pPanel, fVisible, PropertyID) {}
 

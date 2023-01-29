@@ -384,7 +384,7 @@ namespace TVTest
 		CRichEditLinkHandler m_RichEditLink;
 		CHARFORMAT m_InfoTextFormat;
 
-		static const int MIN_PANE_HEIGHT = 16;
+		static constexpr int MIN_PANE_HEIGHT = 16;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

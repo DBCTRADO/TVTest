@@ -123,8 +123,8 @@ namespace TVTest
 	class CAppMain
 	{
 	public:
-		static const UINT WM_INTERPROCESS = WM_COPYDATA;
-		static const UINT PROCESS_MESSAGE_EXECUTE = 0x54565400;
+		static constexpr UINT WM_INTERPROCESS = WM_COPYDATA;
+		static constexpr UINT PROCESS_MESSAGE_EXECUTE = 0x54565400;
 
 #ifndef _DEBUG
 		static CDebugHelper DebugHelper;

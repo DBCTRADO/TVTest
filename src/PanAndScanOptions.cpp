@@ -31,9 +31,9 @@ namespace TVTest
 {
 
 
-static const int FACTOR_PERCENTAGE = 100;
-static const int HORZ_FACTOR = FACTOR_PERCENTAGE * 100;
-static const int VERT_FACTOR = FACTOR_PERCENTAGE * 100;
+static constexpr int FACTOR_PERCENTAGE = 100;
+static constexpr int HORZ_FACTOR = FACTOR_PERCENTAGE * 100;
+static constexpr int VERT_FACTOR = FACTOR_PERCENTAGE * 100;
 
 
 

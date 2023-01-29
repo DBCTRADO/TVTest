@@ -34,7 +34,7 @@ namespace TVTest
 	public:
 		typedef WORD IDType;
 
-		static const IDType ID_INVALID = 0xFFFF;
+		static constexpr IDType ID_INVALID = 0xFFFF;
 
 		enum class DualMonoMode {
 			Invalid,

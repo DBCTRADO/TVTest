@@ -47,9 +47,9 @@ namespace TVTest
 		struct TunerFilterInfo
 			: public FilterInfo
 		{
-			static const WORD NID_INVALID  = 0xFFFF;
-			static const WORD TSID_INVALID = 0xFFFF;
-			static const WORD SID_INVALID  = 0xFFFF;
+			static constexpr WORD NID_INVALID  = 0xFFFF;
+			static constexpr WORD TSID_INVALID = 0xFFFF;
+			static constexpr WORD SID_INVALID  = 0xFFFF;
 
 			bool fEnable = true;
 			bool fEnableProcessing = true;

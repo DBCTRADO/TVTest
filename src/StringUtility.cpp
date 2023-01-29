@@ -498,10 +498,10 @@ String Decode(const String &Src)
 
 
 // FNV hash parameters
-static const UINT32 FNV_PRIME_32 = 16777619UL;
-static const UINT32 FNV_OFFSET_BASIS_32 = 2166136261UL;
-static const UINT64 FNV_PRIME_64 = 1099511628211ULL;
-static const UINT64 FNV_OFFSET_BASIS_64 = 14695981039346656037ULL;
+static constexpr UINT32 FNV_PRIME_32 = 16777619UL;
+static constexpr UINT32 FNV_OFFSET_BASIS_32 = 2166136261UL;
+static constexpr UINT64 FNV_PRIME_64 = 1099511628211ULL;
+static constexpr UINT64 FNV_OFFSET_BASIS_64 = 14695981039346656037ULL;
 
 template<typename TIterator, typename THash> THash FNVHash(
 	const TIterator &begin, const TIterator &end,

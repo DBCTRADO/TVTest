@@ -32,11 +32,11 @@ namespace TVTest
 	class CIniFile
 	{
 	public:
-		static const UINT OPEN_READ           = 0x0001U;
-		static const UINT OPEN_WRITE          = 0x0002U;
-		static const UINT OPEN_WRITE_VOLATILE = 0x0004U;
+		static constexpr UINT OPEN_READ           = 0x0001U;
+		static constexpr UINT OPEN_WRITE          = 0x0002U;
+		static constexpr UINT OPEN_WRITE_VOLATILE = 0x0004U;
 
-		static const UINT MAX_FILE_SIZE = 0x100000;
+		static constexpr UINT MAX_FILE_SIZE = 0x100000;
 
 		class CEntry
 		{

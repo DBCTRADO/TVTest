@@ -64,7 +64,7 @@ namespace ProgramGuide
 
 class CEventItem
 {
-	static const int MAX_TITLE_LENGTH = 256;
+	static constexpr size_t MAX_TITLE_LENGTH = 256;
 
 	const LibISDB::EventInfo *m_pEventInfo;
 	const LibISDB::EventInfo *m_pCommonEventInfo;
@@ -5303,9 +5303,9 @@ class CListSelectStatusItem
 	class CServiceMenuItem
 		: public CDropDownMenu::CItem
 	{
-		static const int m_LogoWidth = 16;
-		static const int m_LogoHeight = 9;
-		static const int m_LogoMargin = 2;
+		static constexpr int m_LogoWidth = 16;
+		static constexpr int m_LogoHeight = 9;
+		static constexpr int m_LogoMargin = 2;
 
 		HBITMAP m_hbmLogo;
 
@@ -6183,7 +6183,7 @@ public:
 	int GetButtonCount() const { return m_ButtonCount; }
 
 private:
-	static const DWORD ITEM_FLAG_NOW = 0x80000000;
+	static constexpr DWORD ITEM_FLAG_NOW = 0x80000000;
 
 	int m_ButtonCount;
 	DateButtonTheme m_Theme;

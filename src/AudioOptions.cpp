@@ -33,10 +33,10 @@ namespace TVTest
 {
 
 
-static const size_t MAX_LANGUAGE_TEXT_LENGTH = LibISDB::MAX_LANGUAGE_TEXT_LENGTH + 16;
+static constexpr size_t MAX_LANGUAGE_TEXT_LENGTH = LibISDB::MAX_LANGUAGE_TEXT_LENGTH + 16;
 
 
-static const int MAX_FORMAT_DOUBLE_LENGTH = 16;
+static constexpr size_t MAX_FORMAT_DOUBLE_LENGTH = 16;
 
 static void FormatDouble(double Value, LPTSTR pszString, size_t MaxString)
 {

@@ -36,8 +36,8 @@ namespace TVTest
 		: public COptions
 	{
 	public:
-		static const int OPACITY_MIN = 20;
-		static const int OPACITY_MAX = 100;
+		static constexpr int OPACITY_MIN = 20;
+		static constexpr int OPACITY_MAX = 100;
 
 		enum class PlaceType {
 			Left,

@@ -856,7 +856,7 @@ bool CTuningSpaceList::MakeAllChannelList()
 }
 
 
-static const UINT CP_SHIFT_JIS = 932;
+static constexpr UINT CP_SHIFT_JIS = 932;
 
 bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 {
@@ -1045,7 +1045,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 {
 	TRACE(TEXT("CTuningSpaceList::LoadFromFile() : \"{}\"\n"), pszFileName);
 
-	static const LONGLONG MAX_FILE_SIZE = 8LL * 1024 * 1024;
+	static constexpr LONGLONG MAX_FILE_SIZE = 8LL * 1024 * 1024;
 
 	HANDLE hFile;
 	LARGE_INTEGER FileSize;

@@ -29,8 +29,6 @@ namespace TVTest
 {
 
 
-const int CSideBar::ICON_WIDTH = 16;
-const int CSideBar::ICON_HEIGHT = 16;
 const LPCTSTR CSideBar::CLASS_NAME = APP_NAME TEXT(" Side Bar");
 HINSTANCE CSideBar::m_hinst = nullptr;
 

@@ -167,9 +167,9 @@ CMainWindow::CMainWindow(CAppMain &App)
 
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
-	static const int DefaultWidth = 960, DefaultHeight = 540;
+	static constexpr int DefaultWidth = 960, DefaultHeight = 540;
 #else
-	static const int DefaultWidth = 640, DefaultHeight = 360;
+	static constexpr int DefaultWidth = 640, DefaultHeight = 360;
 #endif
 	m_WindowPosition.Width = ::MulDiv(DefaultWidth, DPI, 96);
 	m_WindowPosition.Height = ::MulDiv(DefaultHeight, DPI, 96);

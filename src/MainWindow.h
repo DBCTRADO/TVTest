@@ -86,7 +86,7 @@ namespace TVTest
 		, public COSDManager::CEventHandler
 	{
 	public:
-		static const DWORD HIDE_CURSOR_DELAY = 1000UL;
+		static constexpr DWORD HIDE_CURSOR_DELAY = 1000UL;
 
 		struct ResumeInfo
 		{

@@ -54,7 +54,7 @@ namespace TVTest
 			EM,
 		};
 
-		static const int EM_FACTOR = 1000;
+		static constexpr int EM_FACTOR = 1000;
 
 		struct SizeValue
 		{

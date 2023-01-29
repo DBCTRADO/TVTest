@@ -32,19 +32,19 @@ namespace TVTest
 {
 
 
-static const UINT MEGA_BYTES = 1024 * 1024;
+static constexpr UINT MEGA_BYTES = 1024 * 1024;
 
 // 書き出しバッファサイズの制限(バイト単位)
-static const UINT WRITE_BUFFER_SIZE_MIN = 1024;
-static const UINT WRITE_BUFFER_SIZE_MAX = 32 * MEGA_BYTES;
+static constexpr UINT WRITE_BUFFER_SIZE_MIN = 1024;
+static constexpr UINT WRITE_BUFFER_SIZE_MAX = 32 * MEGA_BYTES;
 
 // さかのぼり録画バッファサイズの制限(バイト単位)
-static const UINT TIMESHIFT_BUFFER_SIZE_MIN = 1 * MEGA_BYTES;
-static const UINT TIMESHIFT_BUFFER_SIZE_MAX = 1024 * MEGA_BYTES;
+static constexpr UINT TIMESHIFT_BUFFER_SIZE_MIN = 1 * MEGA_BYTES;
+static constexpr UINT TIMESHIFT_BUFFER_SIZE_MAX = 1024 * MEGA_BYTES;
 
 // 書き出し待ちバッファの制限(バイト単位)
-static const UINT MAX_PENDING_SIZE_MIN = 32 * MEGA_BYTES;
-static const UINT MAX_PENDING_SIZE_MAX = 1024 * MEGA_BYTES;
+static constexpr UINT MAX_PENDING_SIZE_MIN = 32 * MEGA_BYTES;
+static constexpr UINT MAX_PENDING_SIZE_MAX = 1024 * MEGA_BYTES;
 
 // ステータスバーからの録画のコマンド
 static const int StatusBarCommandList[] = {

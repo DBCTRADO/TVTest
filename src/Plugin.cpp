@@ -1863,7 +1863,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETCONTROLLERSETTINGS:
 		{
-			static const DWORD ValidMask = CONTROLLER_SETTINGS_MASK_FLAGS;
+			static constexpr DWORD ValidMask = CONTROLLER_SETTINGS_MASK_FLAGS;
 			LPCWSTR pszName = reinterpret_cast<LPCWSTR>(lParam1);
 			ControllerSettings *pSettings = reinterpret_cast<ControllerSettings*>(lParam2);
 
