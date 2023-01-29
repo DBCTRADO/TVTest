@@ -223,26 +223,28 @@ namespace TVTest
 		static constexpr int MAX_ITEM_WIDTH = 500;
 		static constexpr int TIME_BAR_BACK_COLORS = 8;
 
-		enum {
-			FILTER_FREE         = 0x00000001U,
-			FILTER_NEWPROGRAM   = 0x00000002U,
-			FILTER_ORIGINAL     = 0x00000004U,
-			FILTER_RERUN        = 0x00000008U,
-			FILTER_NOT_SHOPPING = 0x00000010U,
-			FILTER_GENRE_FIRST  = 0x00000100U,
-			FILTER_GENRE_MASK   = 0x000FFF00U,
-			FILTER_NEWS         = 0x00000100U,
-			FILTER_SPORTS       = 0x00000200U,
-			FILTER_INFORMATION  = 0x00000400U,
-			FILTER_DRAMA        = 0x00000800U,
-			FILTER_MUSIC        = 0x00001000U,
-			FILTER_VARIETY      = 0x00002000U,
-			FILTER_MOVIE        = 0x00004000U,
-			FILTER_ANIME        = 0x00008000U,
-			FILTER_DOCUMENTARY  = 0x00010000U,
-			FILTER_THEATER      = 0x00020000U,
-			FILTER_EDUCATION    = 0x00040000U,
-			FILTER_WELFARE      = 0x00080000U
+		enum class FilterFlag : unsigned int {
+			None        = 0x00000000U,
+			Free        = 0x00000001U,
+			NewProgram  = 0x00000002U,
+			Original    = 0x00000004U,
+			Rerun       = 0x00000008U,
+			NotShopping = 0x00000010U,
+			GenreFirst  = 0x00000100U,
+			GenreMask   = 0x000FFF00U,
+			News        = 0x00000100U,
+			Sports      = 0x00000200U,
+			Information = 0x00000400U,
+			Drama       = 0x00000800U,
+			Music       = 0x00001000U,
+			Variety     = 0x00002000U,
+			Movie       = 0x00004000U,
+			Anime       = 0x00008000U,
+			Documentary = 0x00010000U,
+			Theater     = 0x00020000U,
+			Education   = 0x00040000U,
+			Welfare     = 0x00080000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct ServiceInfo
@@ -415,8 +417,8 @@ namespace TVTest
 		void SetWheelScrollLines(int Lines) { m_WheelScrollLines = Lines; }
 		bool GetDragScroll() const { return m_fDragScroll; }
 		bool SetDragScroll(bool fDragScroll);
-		bool SetFilter(unsigned int Filter);
-		unsigned int GetFilter() const { return m_Filter; }
+		bool SetFilter(FilterFlag Filter);
+		FilterFlag GetFilter() const { return m_Filter; }
 		void SetUseARIBSymbol(bool fUseARIBSymbol);
 		bool GetUseARIBSymbol() const { return m_fUseARIBSymbol; }
 		void SetVisibleEventIcons(UINT VisibleIcons);
@@ -583,7 +585,7 @@ namespace TVTest
 		Theme::BackgroundStyle m_FeaturedMarkStyle;
 		CProgramGuideToolList m_ToolList;
 		int m_WheelScrollLines;
-		unsigned int m_Filter;
+		FilterFlag m_Filter;
 
 		bool m_fEpgUpdating;
 		struct {
@@ -633,13 +635,15 @@ namespace TVTest
 		bool UpdateService(ProgramGuide::CServiceInfo *pService);
 		void UpdateServiceList();
 		void CalcLayout();
-		enum {
-			EVENT_ITEM_STATUS_CURRENT     = 0x0001U,
-			EVENT_ITEM_STATUS_HIGHLIGHTED = 0x0002U,
-			EVENT_ITEM_STATUS_FILTERED    = 0x0004U,
-			EVENT_ITEM_STATUS_COMMON      = 0x0008U
+		enum class EventItemStatus : unsigned int {
+			None        = 0x0000U,
+			Current     = 0x0001U,
+			Highlighted = 0x0002U,
+			Filtered    = 0x0004U,
+			Common      = 0x0008U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
-		unsigned int GetEventItemStatus(const ProgramGuide::CEventItem *pItem, unsigned int Mask) const;
+		EventItemStatus GetEventItemStatus(const ProgramGuide::CEventItem *pItem, EventItemStatus Mask) const;
 		void DrawEventBackground(
 			ProgramGuide::CEventItem *pItem, HDC hdc, const RECT &Rect,
 			Theme::CThemeDraw &ThemeDraw, CTextDraw &TextDraw, int LineHeight, int CurTimePos);

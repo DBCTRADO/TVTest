@@ -658,7 +658,7 @@ CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(
 {
 }
 
-void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_CAPTURE);
 }
@@ -688,7 +688,7 @@ CCaptureWindow::CSaveStatusItem::CSaveStatusItem(
 {
 }
 
-void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_SAVE);
 }
@@ -707,7 +707,7 @@ CCaptureWindow::CCopyStatusItem::CCopyStatusItem(
 {
 }
 
-void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_COPY);
 }

@@ -36,9 +36,9 @@ CChannelStatusItem::CChannelStatusItem()
 {
 }
 
-void CChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		DrawText(hdc, DrawRect, TEXT("アフリカ中央テレビ"));
 		return;
 	}
@@ -126,9 +126,9 @@ bool CVideoSizeStatusItem::UpdateContent()
 	return true;
 }
 
-void CVideoSizeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CVideoSizeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) == 0) {
+	if (!(Flags & DrawFlag::Preview)) {
 		TCHAR szText[64];
 
 		StringFormat(
@@ -176,7 +176,7 @@ CVolumeStatusItem::CVolumeStatusItem()
 {
 }
 
-void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	CUICore *pUICore = &GetAppClass().UICore;
 	LOGBRUSH lb;
@@ -280,9 +280,9 @@ CAudioChannelStatusItem::CAudioChannelStatusItem()
 {
 }
 
-void CAudioChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CAudioChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		DrawText(hdc, DrawRect, TEXT("Stereo"));
 		return;
 	}
@@ -346,9 +346,9 @@ CRecordStatusItem::CRecordStatusItem()
 {
 }
 
-void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		RECT rc = DrawRect;
 		COLORREF OldTextColor = ::SetTextColor(hdc, m_CircleColor);
 		::DrawText(hdc, TEXT("●"), -1, &rc, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
@@ -579,7 +579,7 @@ CCaptureStatusItem::CCaptureStatusItem()
 {
 }
 
-void CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	if (!m_Icons.IsCreated()) {
 		static const Theme::IconList::ResourceInfo ResourceList[] = {
@@ -639,9 +639,9 @@ bool CErrorStatusItem::UpdateContent()
 	return true;
 }
 
-void CErrorStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CErrorStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) == 0) {
+	if (!(Flags & DrawFlag::Preview)) {
 		TCHAR szText[80];
 
 		StringFormat(
@@ -696,12 +696,12 @@ bool CSignalLevelStatusItem::UpdateContent()
 	return true;
 }
 
-void CSignalLevelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CSignalLevelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 	TCHAR szText[64];
 
-	if ((Flags & DRAW_PREVIEW) == 0) {
+	if (!(Flags & DrawFlag::Preview)) {
 		size_t Length = 0;
 
 		if (m_fShowSignalLevel) {
@@ -769,13 +769,13 @@ bool CClockStatusItem::UpdateContent()
 	return true;
 }
 
-void CClockStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CClockStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	LibISDB::BlockLock Lock(m_Lock);
 
 	TCHAR szText[64];
 
-	if ((Flags & DRAW_PREVIEW) == 0) {
+	if (!(Flags & DrawFlag::Preview)) {
 		if (!m_Time.IsValid())
 			return;
 		FormatTime(m_Time, szText, lengthof(szText));
@@ -875,9 +875,9 @@ CProgramInfoStatusItem::CProgramInfoStatusItem()
 {
 }
 
-void CProgramInfoStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CProgramInfoStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		DrawText(hdc, DrawRect, TEXT("1:00～1:30 今日のニュース"));
 		return;
 	}
@@ -1124,9 +1124,9 @@ bool CBufferingStatusItem::UpdateContent()
 	return true;
 }
 
-void CBufferingStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CBufferingStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		DrawText(hdc, DrawRect, TEXT("R 2 / B 48%"));
 		return;
 	}
@@ -1157,9 +1157,9 @@ CTunerStatusItem::CTunerStatusItem()
 {
 }
 
-void CTunerStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CTunerStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		DrawText(hdc, DrawRect, TEXT("地デジ"));
 		return;
 	}
@@ -1235,9 +1235,9 @@ bool CMediaBitRateStatusItem::UpdateContent()
 	return true;
 }
 
-void CMediaBitRateStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CMediaBitRateStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	if ((Flags & DRAW_PREVIEW) != 0) {
+	if (!!(Flags & DrawFlag::Preview)) {
 		DrawText(hdc, DrawRect, TEXT("V 13.25 Mbps / A 185 kbps"));
 		return;
 	}
@@ -1270,7 +1270,7 @@ CFavoritesStatusItem::CFavoritesStatusItem()
 {
 }
 
-void CFavoritesStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CFavoritesStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	if (!m_Icons.IsCreated()) {
 		static const Theme::IconList::ResourceInfo ResourceList[] = {

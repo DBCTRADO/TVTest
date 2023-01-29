@@ -170,12 +170,12 @@ bool CStatusItem::GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect)
 }
 
 
-void CStatusItem::DrawText(HDC hdc, const RECT &Rect, LPCTSTR pszText, DWORD Flags) const
+void CStatusItem::DrawText(HDC hdc, const RECT &Rect, LPCTSTR pszText, DrawTextFlag Flags) const
 {
 	DWORD DTFlags = DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX;
-	if ((Flags & DRAWTEXT_HCENTER) != 0)
+	if (!!(Flags & DrawTextFlag::HorizontalCenter))
 		DTFlags |= DT_CENTER;
-	if ((Flags & DRAWTEXT_NOENDELLIPSIS) == 0)
+	if (!(Flags & DrawTextFlag::NoEndEllipsis))
 		DTFlags |= DT_END_ELLIPSIS;
 	RECT rc = Rect;
 	::DrawText(hdc, pszText, -1, &rc, DTFlags);
@@ -1059,9 +1059,9 @@ bool CStatusView::DrawItemPreview(
 	ThemeDraw.Draw(Style.Back, ItemRect);
 	RECT rcDraw = ItemRect;
 	Style::Subtract(&rcDraw, m_Style.ItemPadding);
-	unsigned int Flags = CStatusItem::DRAW_PREVIEW;
+	CStatusItem::DrawFlag Flags = CStatusItem::DrawFlag::Preview;
 	if (fHighlight)
-		Flags |= CStatusItem::DRAW_HIGHLIGHT;
+		Flags |= CStatusItem::DrawFlag::Highlight;
 	pItem->Draw(hdc, ItemRect, rcDraw, Flags);
 	::SetBkColor(hdc, crOldBkColor);
 	::SetTextColor(hdc, crOldTextColor);
@@ -1199,11 +1199,11 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 					::SetBkColor(hdcDst, Style.Back.Fill.GetSolidColor());
 					RECT rcDraw = rcItem;
 					Style::Subtract(&rcDraw, m_Style.ItemPadding);
-					unsigned int Flags = 0;
+					CStatusItem::DrawFlag Flags = CStatusItem::DrawFlag::None;
 					if (fHighlight)
-						Flags |= CStatusItem::DRAW_HIGHLIGHT;
+						Flags |= CStatusItem::DrawFlag::Highlight;
 					if (Row > 0)
-						Flags |= CStatusItem::DRAW_BOTTOM;
+						Flags |= CStatusItem::DrawFlag::Bottom;
 					pItem->Draw(hdcDst, rcItem, rcDraw, Flags);
 					if (hdcDst != hdc)
 						m_Offscreen.CopyTo(hdc, &rc);

@@ -138,20 +138,22 @@ namespace TVTest
 		bool FromString(LPCTSTR pszString);
 
 	private:
-		enum {
-			FLAG_REG_EXP      = 0x00000001U,
-			FLAG_IGNORE_CASE  = 0x00000002U,
-			FLAG_IGNORE_WIDTH = 0x00000004U,
-			FLAG_GENRE        = 0x00000008U,
-			FLAG_DAY_OF_WEEK  = 0x00000010U,
-			FLAG_TIME         = 0x00000020U,
-			FLAG_DURATION     = 0x00000040U,
-			FLAG_CA           = 0x00000080U,
-			FLAG_VIDEO        = 0x00000100U,
-			FLAG_SERVICE_LIST = 0x00000200U,
-			FLAG_DISABLED     = 0x00000400U,
-			FLAG_EVENT_NAME   = 0x00000800U,
-			FLAG_EVENT_TEXT   = 0x00001000U
+		enum class ConditionFlag : unsigned int {
+			None        = 0x00000000U,
+			RegExp      = 0x00000001U,
+			IgnoreCase  = 0x00000002U,
+			IgnoreWidth = 0x00000004U,
+			Genre       = 0x00000008U,
+			DayOfWeek   = 0x00000010U,
+			Time        = 0x00000020U,
+			Duration    = 0x00000040U,
+			CA          = 0x00000080U,
+			Video       = 0x00000100U,
+			ServiceList = 0x00000200U,
+			Disabled    = 0x00000400U,
+			EventName   = 0x00000800U,
+			EventText   = 0x00001000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		static void ParseTime(LPCWSTR pszString, TimeInfo *pTime);

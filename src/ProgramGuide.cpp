@@ -1094,7 +1094,7 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	, m_pProgramCustomizer(nullptr)
 	, m_WheelScrollLines(0)
 	, m_ProgramSearchEventHandler(this)
-	, m_Filter(0)
+	, m_Filter(FilterFlag::None)
 	, m_fEpgUpdating(false)
 	, m_ProgramSearch(EventSearchOptions)
 	, m_fShowFeaturedMark(true)
@@ -1416,71 +1416,71 @@ void CProgramGuide::CalcLayout()
 }
 
 
-unsigned int CProgramGuide::GetEventItemStatus(
-	const ProgramGuide::CEventItem *pItem, unsigned int Mask) const
+CProgramGuide::EventItemStatus CProgramGuide::GetEventItemStatus(
+	const ProgramGuide::CEventItem *pItem, EventItemStatus Mask) const
 {
 	const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo();
 	const LibISDB::EventInfo *pOrigEventInfo = pEventInfo;
 	const bool fCommonEvent = pEventInfo->IsCommonEvent;
 	if (fCommonEvent && pItem->GetCommonEventInfo() != nullptr)
 		pEventInfo = pItem->GetCommonEventInfo();
-	unsigned int Status = 0;
+	EventItemStatus Status = EventItemStatus::None;
 
-	if ((Mask & EVENT_ITEM_STATUS_HIGHLIGHTED) != 0) {
+	if (!!(Mask & EventItemStatus::Highlighted)) {
 		if (m_ProgramSearch.GetHighlightResult()
 				&& m_ProgramSearch.IsHitEvent(pEventInfo))
-			Status |= EVENT_ITEM_STATUS_HIGHLIGHTED;
+			Status |= EventItemStatus::Highlighted;
 	}
 
-	if ((Mask & EVENT_ITEM_STATUS_CURRENT) != 0) {
+	if (!!(Mask & EventItemStatus::Current)) {
 		if (m_CurrentEventID != 0
 				&& m_CurrentChannel.ServiceID != 0
 				&& pOrigEventInfo->NetworkID == m_CurrentChannel.NetworkID
 				&& pOrigEventInfo->TransportStreamID == m_CurrentChannel.TransportStreamID
 				&& pOrigEventInfo->ServiceID == m_CurrentChannel.ServiceID
 				&& pOrigEventInfo->EventID == m_CurrentEventID)
-			Status |= EVENT_ITEM_STATUS_CURRENT;
+			Status |= EventItemStatus::Current;
 	}
 
-	if ((Mask & EVENT_ITEM_STATUS_FILTERED) != 0) {
+	if (!!(Mask & EventItemStatus::Filtered)) {
 		const int Genre1 = pItem->GetGenre(0);
 		const int Genre2 = pItem->GetGenre(1);
 		bool fFilter = false;
 
-		if ((m_Filter & FILTER_FREE) != 0
+		if (!!(m_Filter & FilterFlag::Free)
 				&& pEventInfo->FreeCAMode
 				&& GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->NetworkID)) {
 			fFilter = true;
-		} else if ((m_Filter & FILTER_NEWPROGRAM) != 0
+		} else if (!!(m_Filter & FilterFlag::NewProgram)
 				&& (pEventInfo->EventName.empty()
 					|| pEventInfo->EventName.find(TEXT("[新]")) == LibISDB::String::npos)) {
 			fFilter = true;
-		} else if ((m_Filter & FILTER_ORIGINAL) != 0
+		} else if (!!(m_Filter & FilterFlag::Original)
 				&& !pEventInfo->EventName.empty()
 				&& pEventInfo->EventName.find(TEXT("[再]")) != LibISDB::String::npos) {
 			fFilter = true;
-		} else if ((m_Filter & FILTER_RERUN) != 0
+		} else if (!!(m_Filter & FilterFlag::Rerun)
 				&& (pEventInfo->EventName.empty()
 					|| pEventInfo->EventName.find(TEXT("[再]")) == LibISDB::String::npos)) {
 			fFilter = true;
-		} else if ((m_Filter & FILTER_NOT_SHOPPING) != 0
+		} else if (!!(m_Filter & FilterFlag::NotShopping)
 				&& Genre1 == 2 && Genre2 == 4) {
 			fFilter = true;
-		} else if ((m_Filter & FILTER_GENRE_MASK) != 0) {
-			if (Genre1 < 0 || (m_Filter & (FILTER_GENRE_FIRST << Genre1)) == 0)
+		} else if ((m_Filter & FilterFlag::GenreMask) != FilterFlag::None) {
+			if (Genre1 < 0 || (static_cast<unsigned int>(m_Filter) & (static_cast<unsigned int>(FilterFlag::GenreFirst) << Genre1)) == 0)
 				fFilter = true;
 			// 映画ジャンルのアニメ
-			if ((m_Filter & FILTER_ANIME) != 0 && Genre1 == 6 && Genre2 == 2)
+			if (!!(m_Filter & FilterFlag::Anime) && Genre1 == 6 && Genre2 == 2)
 				fFilter = false;
 		}
 
 		if (fFilter)
-			Status |= EVENT_ITEM_STATUS_FILTERED;
+			Status |= EventItemStatus::Filtered;
 	}
 
-	if ((Mask & EVENT_ITEM_STATUS_COMMON) != 0) {
+	if (!!(Mask & EventItemStatus::Common)) {
 		if (fCommonEvent)
-			Status |= EVENT_ITEM_STATUS_COMMON;
+			Status |= EventItemStatus::Common;
 	}
 
 	return Status;
@@ -1496,15 +1496,15 @@ void CProgramGuide::DrawEventBackground(
 	const bool fCommonEvent = pEventInfo->IsCommonEvent;
 	if (fCommonEvent && pItem->GetCommonEventInfo() != nullptr)
 		pEventInfo = pItem->GetCommonEventInfo();
-	const unsigned int ItemStatus =
+	const EventItemStatus ItemStatus =
 		GetEventItemStatus(
 			pItem,
-			EVENT_ITEM_STATUS_CURRENT |
-			EVENT_ITEM_STATUS_HIGHLIGHTED |
-			EVENT_ITEM_STATUS_FILTERED);
-	const bool fCurrent = (ItemStatus & EVENT_ITEM_STATUS_CURRENT) != 0;
-	const bool fHighlighted = (ItemStatus & EVENT_ITEM_STATUS_HIGHLIGHTED) != 0;
-	const bool fFiltered = (ItemStatus & EVENT_ITEM_STATUS_FILTERED) != 0;
+			EventItemStatus::Current |
+			EventItemStatus::Highlighted |
+			EventItemStatus::Filtered);
+	const bool fCurrent = !!(ItemStatus & EventItemStatus::Current);
+	const bool fHighlighted = !!(ItemStatus & EventItemStatus::Highlighted);
+	const bool fFiltered = !!(ItemStatus & EventItemStatus::Filtered);
 	const int Genre1 = pItem->GetGenre(0);
 	const int Genre2 = pItem->GetGenre(1);
 	COLORREF BackColor = m_EpgTheme.GetGenreColor(Genre1);
@@ -1630,22 +1630,22 @@ void CProgramGuide::DrawEventText(
 	ProgramGuide::CEventItem *pItem, HDC hdc, const RECT &Rect,
 	Theme::CThemeDraw &ThemeDraw, CTextDraw &TextDraw, int LineHeight)
 {
-	const unsigned int ItemStatus =
+	const EventItemStatus ItemStatus =
 		GetEventItemStatus(
 			pItem,
-			EVENT_ITEM_STATUS_CURRENT |
-			EVENT_ITEM_STATUS_HIGHLIGHTED |
-			EVENT_ITEM_STATUS_FILTERED);
+			EventItemStatus::Current |
+			EventItemStatus::Highlighted |
+			EventItemStatus::Filtered);
 	COLORREF TitleColor = m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTNAME);
 	COLORREF TextColor = m_EpgTheme.GetColor(CEpgTheme::COLOR_EVENTTEXT);
 
-	if ((ItemStatus & EVENT_ITEM_STATUS_HIGHLIGHTED) != 0) {
+	if (!!(ItemStatus & EventItemStatus::Highlighted)) {
 		TitleColor = m_Theme.ColorList[COLOR_HIGHLIGHT_TITLE];
 		TextColor = m_Theme.ColorList[COLOR_HIGHLIGHT_TEXT];
 	}
 
-	if ((ItemStatus & EVENT_ITEM_STATUS_CURRENT) == 0) {
-		if ((ItemStatus & EVENT_ITEM_STATUS_FILTERED) != 0) {
+	if (!(ItemStatus & EventItemStatus::Current)) {
+		if (!!(ItemStatus & EventItemStatus::Filtered)) {
 			TitleColor = MixColor(TitleColor, m_Theme.ColorList[COLOR_BACK], 96);
 			TextColor = MixColor(TextColor, m_Theme.ColorList[COLOR_BACK], 96);
 		}
@@ -3481,10 +3481,10 @@ bool CProgramGuide::SetDragScroll(bool fDragScroll)
 }
 
 
-bool CProgramGuide::SetFilter(unsigned int Filter)
+bool CProgramGuide::SetFilter(FilterFlag Filter)
 {
-	if ((Filter & (FILTER_ORIGINAL | FILTER_RERUN)) == (FILTER_ORIGINAL | FILTER_RERUN))
-		Filter &= ~(FILTER_ORIGINAL | FILTER_RERUN);
+	if ((Filter & (FilterFlag::Original | FilterFlag::Rerun)) == (FilterFlag::Original | FilterFlag::Rerun))
+		Filter &= ~(FilterFlag::Original | FilterFlag::Rerun);
 	if (m_Filter != Filter) {
 		m_Filter = Filter;
 		if (m_hwnd != nullptr) {
@@ -4403,14 +4403,14 @@ void CProgramGuide::OnCommand(int id)
 
 		if (id >= CM_PROGRAMGUIDE_FILTER_FIRST
 				&& id <= CM_PROGRAMGUIDE_FILTER_LAST) {
-			unsigned int Filter = m_Filter ^ (1 << (id - CM_PROGRAMGUIDE_FILTER_FIRST));
+			FilterFlag Filter = m_Filter ^ static_cast<FilterFlag>(1U << (id - CM_PROGRAMGUIDE_FILTER_FIRST));
 
 			if (id == CM_PROGRAMGUIDE_FILTER_ORIGINAL) {
-				if ((Filter & FILTER_ORIGINAL) != 0)
-					Filter &= ~FILTER_RERUN;
+				if (!!(Filter & FilterFlag::Original))
+					Filter &= ~FilterFlag::Rerun;
 			} else if (id == CM_PROGRAMGUIDE_FILTER_RERUN) {
-				if ((Filter & FILTER_RERUN) != 0)
-					Filter &= ~FILTER_ORIGINAL;
+				if (!!(Filter & FilterFlag::Rerun))
+					Filter &= ~FilterFlag::Original;
 			}
 			SetFilter(Filter);
 			return;
@@ -4580,8 +4580,8 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		hmenuPopup, MENU_CHANNELGROUP,
 		MF_BYPOSITION | (::GetMenuItemCount(hmenuChannelGroup) > 0 ? MF_ENABLED : MF_GRAYED));
 
-	for (int i = 0; (m_Filter >> i) != 0; i++) {
-		if (((m_Filter >> i) & 1) != 0)
+	for (int i = 0; (static_cast<unsigned int>(m_Filter) >> i) != 0; i++) {
+		if (((static_cast<unsigned int>(m_Filter) >> i) & 1) != 0)
 			::CheckMenuItem(hmenu, CM_PROGRAMGUIDE_FILTER_FIRST + i, MF_BYCOMMAND | MF_CHECKED);
 	}
 
@@ -5250,7 +5250,7 @@ public:
 	LPCTSTR GetIDText() const override { return TEXT("Tuner"); }
 	LPCTSTR GetName() const override { return TEXT("チューナー"); }
 
-	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override
+	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override
 	{
 		TCHAR szText[256];
 
@@ -5349,7 +5349,7 @@ public:
 	LPCTSTR GetIDText() const override { return TEXT("Date"); }
 	LPCTSTR GetName() const override { return TEXT("日時"); }
 
-	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override
+	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override
 	{
 		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services) {
 			CProgramGuide::DateInfo Info;
@@ -5447,7 +5447,7 @@ public:
 	LPCTSTR GetIDText() const override { return TEXT("Prev"); }
 	LPCTSTR GetName() const override { return TEXT("前へ"); }
 
-	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override
+	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override
 	{
 		bool fEnabled;
 
@@ -5459,7 +5459,7 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor = ::SetTextColor(hdc, MixColor(::GetTextColor(hdc), GetBkColor(hdc)));
-		DrawText(hdc, DrawRect, TEXT("▲"), DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
+		DrawText(hdc, DrawRect, TEXT("▲"), DrawTextFlag::HorizontalCenter | DrawTextFlag::NoEndEllipsis);
 		if (!fEnabled)
 			::SetTextColor(hdc, OldTextColor);
 	}
@@ -5491,7 +5491,7 @@ public:
 	LPCTSTR GetIDText() const override { return TEXT("Next"); }
 	LPCTSTR GetName() const override { return TEXT("次へ"); }
 
-	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override
+	void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override
 	{
 		bool fEnabled;
 
@@ -5503,7 +5503,7 @@ public:
 		COLORREF OldTextColor;
 		if (!fEnabled)
 			OldTextColor = ::SetTextColor(hdc, MixColor(::GetTextColor(hdc), GetBkColor(hdc)));
-		DrawText(hdc, DrawRect, TEXT("▼"), DRAWTEXT_HCENTER | DRAWTEXT_NOENDELLIPSIS);
+		DrawText(hdc, DrawRect, TEXT("▼"), DrawTextFlag::HorizontalCenter | DrawTextFlag::NoEndEllipsis);
 		if (!fEnabled)
 			::SetTextColor(hdc, OldTextColor);
 	}

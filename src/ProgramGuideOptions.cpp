@@ -154,7 +154,7 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("DragScroll"), &fDragScroll))
 			m_pProgramGuide->SetDragScroll(fDragScroll);
 
-		unsigned int Filter;
+		CProgramGuide::FilterFlag Filter;
 		if (Settings.Read(TEXT("Filter"), &Filter))
 			m_pProgramGuide->SetFilter(Filter);
 

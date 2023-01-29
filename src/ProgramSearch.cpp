@@ -221,33 +221,33 @@ bool CEventSearchSettings::ToString(String *pString) const
 	StringUtility::Encode(Keyword.c_str(), &Buffer);
 	*pString += Buffer;
 
-	unsigned int Flags = 0;
+	ConditionFlag Flags = ConditionFlag::None;
 	if (fDisabled)
-		Flags |= FLAG_DISABLED;
+		Flags |= ConditionFlag::Disabled;
 	if (fRegExp)
-		Flags |= FLAG_REG_EXP;
+		Flags |= ConditionFlag::RegExp;
 	if (fIgnoreCase)
-		Flags |= FLAG_IGNORE_CASE;
+		Flags |= ConditionFlag::IgnoreCase;
 	if (fIgnoreWidth)
-		Flags |= FLAG_IGNORE_WIDTH;
+		Flags |= ConditionFlag::IgnoreWidth;
 	if (fEventName)
-		Flags |= FLAG_EVENT_NAME;
+		Flags |= ConditionFlag::EventName;
 	if (fEventText)
-		Flags |= FLAG_EVENT_TEXT;
+		Flags |= ConditionFlag::EventText;
 	if (fGenre)
-		Flags |= FLAG_GENRE;
+		Flags |= ConditionFlag::Genre;
 	if (fDayOfWeek)
-		Flags |= FLAG_DAY_OF_WEEK;
+		Flags |= ConditionFlag::DayOfWeek;
 	if (fTime)
-		Flags |= FLAG_TIME;
+		Flags |= ConditionFlag::Time;
 	if (fDuration)
-		Flags |= FLAG_DURATION;
+		Flags |= ConditionFlag::Duration;
 	if (fCA)
-		Flags |= FLAG_CA;
+		Flags |= ConditionFlag::CA;
 	if (fVideo)
-		Flags |= FLAG_VIDEO;
+		Flags |= ConditionFlag::Video;
 	if (fServiceList)
-		Flags |= FLAG_SERVICE_LIST;
+		Flags |= ConditionFlag::ServiceList;
 
 	bool fGenre2 = false;
 	for (int i = 0; i < 16; i++) {
@@ -268,7 +268,7 @@ bool CEventSearchSettings::ToString(String *pString) const
 	StringFormat(
 		&Buffer,
 		TEXT(",{},{},{},{},{}:{:02},{}:{:02},{},{},{},{}"),
-		Flags,
+		static_cast<std::underlying_type_t<ConditionFlag>>(Flags),
 		Genre1,
 		szGenre2,
 		DayOfWeekFlags,
@@ -308,20 +308,20 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 
 		case 2:
 			{
-				unsigned int Flags = std::wcstoul(Value[i].c_str(), nullptr, 0);
-				fDisabled = (Flags & FLAG_DISABLED) != 0;
-				fRegExp = (Flags & FLAG_REG_EXP) != 0;
-				fIgnoreCase = (Flags & FLAG_IGNORE_CASE) != 0;
-				fIgnoreWidth = (Flags & FLAG_IGNORE_WIDTH) != 0;
-				fEventName = (Flags & FLAG_EVENT_NAME) != 0;
-				fEventText = (Flags & FLAG_EVENT_TEXT) != 0;
-				fGenre = (Flags & FLAG_GENRE) != 0;
-				fDayOfWeek = (Flags & FLAG_DAY_OF_WEEK) != 0;
-				fTime = (Flags & FLAG_TIME) != 0;
-				fDuration = (Flags & FLAG_DURATION) != 0;
-				fCA = (Flags & FLAG_CA) != 0;
-				fVideo = (Flags & FLAG_VIDEO) != 0;
-				fServiceList = (Flags & FLAG_SERVICE_LIST) != 0;
+				ConditionFlag Flags = static_cast<ConditionFlag>(std::wcstoul(Value[i].c_str(), nullptr, 0));
+				fDisabled = !!(Flags & ConditionFlag::Disabled);
+				fRegExp = !!(Flags & ConditionFlag::RegExp);
+				fIgnoreCase = !!(Flags & ConditionFlag::IgnoreCase);
+				fIgnoreWidth = !!(Flags & ConditionFlag::IgnoreWidth);
+				fEventName = !!(Flags & ConditionFlag::EventName);
+				fEventText = !!(Flags & ConditionFlag::EventText);
+				fGenre = !!(Flags & ConditionFlag::Genre);
+				fDayOfWeek = !!(Flags & ConditionFlag::DayOfWeek);
+				fTime = !!(Flags & ConditionFlag::Time);
+				fDuration = !!(Flags & ConditionFlag::Duration);
+				fCA = !!(Flags & ConditionFlag::CA);
+				fVideo = !!(Flags & ConditionFlag::Video);
+				fServiceList = !!(Flags & ConditionFlag::ServiceList);
 			}
 			break;
 

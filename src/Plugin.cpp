@@ -4393,7 +4393,7 @@ CPlugin::CPluginStatusItem::~CPluginStatusItem()
 
 
 void CPlugin::CPluginStatusItem::Draw(
-	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	NotifyDraw(hdc, ItemRect, DrawRect, Flags);
 }
@@ -4587,20 +4587,20 @@ void CPlugin::CPluginStatusItem::ApplyItemStyle()
 
 
 void CPlugin::CPluginStatusItem::NotifyDraw(
-	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	if (m_pPlugin != nullptr && m_pItem != nullptr) {
 		StatusItemDrawInfo Info;
 
 		Info.ID = m_pItem->ID;
 		Info.Flags = 0;
-		if ((Flags & DRAW_PREVIEW) != 0)
+		if (!!(Flags & DrawFlag::Preview))
 			Info.Flags |= STATUS_ITEM_DRAW_FLAG_PREVIEW;
 		Info.State = 0;
-		if ((Flags & DRAW_HIGHLIGHT) != 0) {
+		if (!!(Flags & DrawFlag::Highlight)) {
 			Info.State |= STATUS_ITEM_DRAW_STATE_HOT;
 			Info.pszStyle = L"status-bar.item.hot";
-		} else if ((Flags & DRAW_BOTTOM) != 0) {
+		} else if (!!(Flags & DrawFlag::Bottom)) {
 			Info.pszStyle = L"status-bar.item.bottom";
 		} else {
 			Info.pszStyle = L"status-bar.item";

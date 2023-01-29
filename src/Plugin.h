@@ -171,7 +171,7 @@ namespace TVTest
 		// CStatusItem
 			LPCTSTR GetIDText() const override { return m_IDText.c_str(); }
 			LPCTSTR GetName() const override { return m_pItem->Name.c_str(); }
-			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override;
 			void OnLButtonDown(int x, int y) override;
 			void OnLButtonUp(int x, int y) override;
 			void OnLButtonDoubleClick(int x, int y) override;
@@ -202,7 +202,7 @@ namespace TVTest
 		// CUIBase
 			void RealizeStyle() override;
 
-			void NotifyDraw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags);
+			void NotifyDraw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags);
 			LRESULT NotifyMouseEvent(UINT Action, int x, int y, int WheelDelta = 0);
 		};
 
