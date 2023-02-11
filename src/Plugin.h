@@ -419,7 +419,6 @@ namespace TVTest
 		void OnProgramGuideDarkModeChanged(bool fDarkMode) override;
 
 	public:
-		CPluginManager();
 		~CPluginManager();
 
 		bool LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR> *pExcludePlugins = nullptr);

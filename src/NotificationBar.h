@@ -47,7 +47,6 @@ namespace TVTest
 		};
 
 		CNotificationBar();
-		~CNotificationBar();
 
 	// CBasicWindow
 		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;

@@ -1473,11 +1473,6 @@ CChannelPanel::CChannelEventInfo::CChannelEventInfo(const CChannelInfo *pInfo, i
 }
 
 
-CChannelPanel::CChannelEventInfo::~CChannelEventInfo()
-{
-}
-
-
 bool CChannelPanel::CChannelEventInfo::SetEventInfo(int Index, const LibISDB::EventInfo *pInfo)
 {
 	if (Index < 0)

@@ -60,7 +60,6 @@ namespace TVTest
 		};
 
 		COSDManager(const COSDOptions *pOptions);
-		~COSDManager();
 
 		bool Initialize();
 		void SetEventHandler(CEventHandler *pEventHandler);

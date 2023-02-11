@@ -48,7 +48,6 @@ namespace TVTest
 		};
 
 		CPanAndScanOptions();
-		~CPanAndScanOptions();
 
 	// CBasicDialog
 		bool Show(HWND hwndOwner) override;

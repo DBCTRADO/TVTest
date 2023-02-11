@@ -48,7 +48,7 @@ namespace TVTest
 			String Name;
 			String Value;
 
-			CEntry() {}
+			CEntry() = default;
 			CEntry(const String &Text);
 			CEntry(LPCWSTR pszName, LPCWSTR pszValue);
 		};

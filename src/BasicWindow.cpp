@@ -476,11 +476,6 @@ bool CBasicWindow::SetOpacity(int Opacity, bool fClearLayered)
 
 
 
-CCustomWindow::CCustomWindow()
-{
-}
-
-
 CCustomWindow::~CCustomWindow()
 {
 	Destroy();

@@ -66,7 +66,7 @@ namespace TVTest
 		LibISDB::DataBuffer *m_pData;
 		bool m_fModified;
 
-		~CTSPacketInterface();
+		~CTSPacketInterface() = default;
 	};
 
 	class CTSProcessor

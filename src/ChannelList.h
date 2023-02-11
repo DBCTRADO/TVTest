@@ -77,7 +77,7 @@ namespace TVTest
 		: public CChannelInfo
 	{
 	public:
-		CTunerChannelInfo();
+		CTunerChannelInfo() = default;
 		CTunerChannelInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszTunerName = nullptr);
 
 		CTunerChannelInfo &operator=(const CChannelInfo &Src);
@@ -103,9 +103,8 @@ namespace TVTest
 			TVTEST_ENUM_CLASS_TRAILER
 		};
 
-		CChannelList();
+		CChannelList() = default;
 		CChannelList(const CChannelList &Src);
-		~CChannelList();
 
 		CChannelList &operator=(const CChannelList &Src);
 
@@ -178,7 +177,7 @@ namespace TVTest
 	class CTuningSpaceList
 	{
 	public:
-		CTuningSpaceList();
+		CTuningSpaceList() = default;
 		CTuningSpaceList(const CTuningSpaceList &List);
 
 		CTuningSpaceList &operator=(const CTuningSpaceList &List);

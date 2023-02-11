@@ -84,11 +84,6 @@ CZoomOptions::CZoomOptions()
 }
 
 
-CZoomOptions::~CZoomOptions()
-{
-}
-
-
 bool CZoomOptions::Show(HWND hwndOwner)
 {
 	return ShowDialog(

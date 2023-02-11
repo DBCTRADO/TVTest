@@ -31,16 +31,6 @@ namespace TVTest
 {
 
 
-CMessageDialog::CMessageDialog()
-{
-}
-
-
-CMessageDialog::~CMessageDialog()
-{
-}
-
-
 void CMessageDialog::LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf)
 {
 	HDC hdc = ::GetDC(m_hDlg);

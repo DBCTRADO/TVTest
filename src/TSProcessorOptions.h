@@ -38,7 +38,6 @@ namespace TVTest
 	{
 	public:
 		CTSProcessorOptions(CTSProcessorManager &TSProcessorManager);
-		~CTSProcessorOptions();
 
 	// CSettingsBase
 		bool ReadSettings(CSettings &Settings) override;

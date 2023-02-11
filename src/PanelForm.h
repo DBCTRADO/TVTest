@@ -150,8 +150,8 @@ namespace TVTest
 			int m_ID;
 			int m_Icon;
 			bool m_fVisible;
+
 			CWindowInfo(const PageInfo &Info);
-			~CWindowInfo();
 		};
 
 		struct PanelFormStyle

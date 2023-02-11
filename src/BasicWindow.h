@@ -105,7 +105,6 @@ namespace TVTest
 		virtual LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	public:
-		CCustomWindow();
 		virtual ~CCustomWindow();
 	};
 

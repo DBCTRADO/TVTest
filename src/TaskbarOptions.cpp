@@ -55,11 +55,6 @@ CTaskbarOptions::CTaskbarOptions()
 }
 
 
-CTaskbarOptions::~CTaskbarOptions()
-{
-}
-
-
 bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 {
 	Settings.Read(TEXT("EnableJumpList"), &m_fEnableJumpList);

@@ -37,11 +37,6 @@ CTSProcessorErrorDialog::CTSProcessorErrorDialog(CTSProcessor *pTSProcessor)
 }
 
 
-CTSProcessorErrorDialog::~CTSProcessorErrorDialog()
-{
-}
-
-
 bool CTSProcessorErrorDialog::Show(HWND hwndOwner)
 {
 	return ShowDialog(

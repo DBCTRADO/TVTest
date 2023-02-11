@@ -35,7 +35,6 @@ namespace TVTest
 	{
 	public:
 		CProgramGuideToolbarOptions(CProgramGuideFrameSettings &FrameSettings);
-		~CProgramGuideToolbarOptions();
 
 	// CBasicDialog
 		bool Show(HWND hwndOwner) override;

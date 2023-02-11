@@ -145,11 +145,6 @@ bool CDriverSettings::SetInitialChannel(int Channel)
 
 
 
-CDriverSettingList::CDriverSettingList()
-{
-}
-
-
 CDriverSettingList::CDriverSettingList(const CDriverSettingList &Src)
 {
 	*this = Src;

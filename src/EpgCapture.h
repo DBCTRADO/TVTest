@@ -64,7 +64,6 @@ namespace TVTest
 		};
 
 		CEpgCaptureManager();
-		~CEpgCaptureManager();
 
 		bool BeginCapture(
 			LPCTSTR pszTuner = nullptr,

@@ -76,7 +76,6 @@ namespace TVTest
 
 		public:
 			CWindowContainer(int ID);
-			~CWindowContainer();
 
 		// CContainer
 			void SetPosition(const RECT &Pos) override;

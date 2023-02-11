@@ -4902,11 +4902,6 @@ bool CPlugin::CGetVariable::GetVariable(LPCWSTR pszKeyword, String *pValue)
 
 
 
-CPluginManager::CPluginManager()
-{
-}
-
-
 CPluginManager::~CPluginManager()
 {
 	FreePlugins();

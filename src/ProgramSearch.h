@@ -162,7 +162,7 @@ namespace TVTest
 	class CEventSearchSettingsList
 	{
 	public:
-		CEventSearchSettingsList();
+		CEventSearchSettingsList() = default;
 		CEventSearchSettingsList(const CEventSearchSettingsList &Src);
 		CEventSearchSettingsList &operator=(const CEventSearchSettingsList &Src);
 
@@ -248,7 +248,6 @@ namespace TVTest
 		};
 
 		CEventSearchSettingsDialog(CEventSearchOptions &Options);
-		~CEventSearchSettingsDialog();
 
 	// CBasicDialog
 		bool Create(HWND hwndOwner) override;

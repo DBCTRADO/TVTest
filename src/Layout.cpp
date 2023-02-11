@@ -90,11 +90,6 @@ CWindowContainer::CWindowContainer(int ID)
 }
 
 
-CWindowContainer::~CWindowContainer()
-{
-}
-
-
 void CWindowContainer::SetPosition(const RECT &Pos)
 {
 	CContainer::SetPosition(Pos);

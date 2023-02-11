@@ -37,11 +37,6 @@ CProgramGuideToolbarOptions::CProgramGuideToolbarOptions(CProgramGuideFrameSetti
 }
 
 
-CProgramGuideToolbarOptions::~CProgramGuideToolbarOptions()
-{
-}
-
-
 bool CProgramGuideToolbarOptions::Show(HWND hwndOwner)
 {
 	return ShowDialog(

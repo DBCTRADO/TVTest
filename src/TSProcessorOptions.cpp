@@ -41,11 +41,6 @@ CTSProcessorOptions::CTSProcessorOptions(CTSProcessorManager &TSProcessorManager
 }
 
 
-CTSProcessorOptions::~CTSProcessorOptions()
-{
-}
-
-
 bool CTSProcessorOptions::ReadSettings(CSettings &Settings)
 {
 	return m_TSProcessorManager.ReadSettings(Settings);

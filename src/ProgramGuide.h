@@ -144,9 +144,8 @@ namespace TVTest
 		: public CProgramGuideChannelProvider
 	{
 	public:
-		CProgramGuideBaseChannelProvider();
+		CProgramGuideBaseChannelProvider() = default;
 		CProgramGuideBaseChannelProvider(const CTuningSpaceList *pSpaceList, LPCTSTR pszBonDriver);
-		~CProgramGuideBaseChannelProvider();
 
 	// CProgramGuideChannelProvider
 		virtual bool GetName(LPTSTR pszName, int MaxName) const override;
@@ -750,7 +749,7 @@ namespace TVTest
 			};
 
 			CProgramGuideBar(CProgramGuide * pProgramGuide);
-			virtual ~CProgramGuideBar();
+			virtual ~CProgramGuideBar() = default;
 
 			virtual bool CreateBar(HWND hwndParent, DWORD Style) = 0;
 			virtual bool IsBarCreated() const = 0;

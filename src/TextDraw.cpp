@@ -45,11 +45,6 @@ CTextDraw::CTextDraw()
 }
 
 
-CTextDraw::~CTextDraw()
-{
-}
-
-
 bool CTextDraw::SetEngine(CTextDrawEngine *pEngine)
 {
 	if (pEngine != nullptr) {

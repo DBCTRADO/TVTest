@@ -45,11 +45,6 @@ CFeaturedEventsSettings::CFeaturedEventsSettings()
 }
 
 
-CFeaturedEventsSettings::~CFeaturedEventsSettings()
-{
-}
-
-
 bool CFeaturedEventsSettings::ReadSettings(CSettings &Settings)
 {
 	String Services;
@@ -612,11 +607,6 @@ CFeaturedEventsDialog::CFeaturedEventsDialog(
 	m_SettingsColumnWidth[SETTINGS_COLUMN_NAME] = 120;
 	m_SettingsColumnWidth[SETTINGS_COLUMN_KEYWORD] = 200;
 	m_SettingsColumnWidth[SETTINGS_COLUMN_GENRE] = 200;
-}
-
-
-CFeaturedEventsDialog::~CFeaturedEventsDialog()
-{
 }
 
 

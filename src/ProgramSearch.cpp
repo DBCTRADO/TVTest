@@ -397,11 +397,6 @@ void CEventSearchSettings::ParseTime(LPCWSTR pszString, TimeInfo *pTime)
 
 
 
-CEventSearchSettingsList::CEventSearchSettingsList()
-{
-}
-
-
 CEventSearchSettingsList::CEventSearchSettingsList(const CEventSearchSettingsList &Src)
 {
 	*this = Src;
@@ -1009,11 +1004,6 @@ CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Opti
 {
 	for (bool &e : m_fGenreExpanded)
 		e = false;
-}
-
-
-CEventSearchSettingsDialog::~CEventSearchSettingsDialog()
-{
 }
 
 

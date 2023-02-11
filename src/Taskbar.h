@@ -70,7 +70,7 @@ namespace TVTest
 		{
 			FILETIME UpdatedTime;
 
-			ChannelIconInfo() {}
+			ChannelIconInfo() = default;
 			ChannelIconInfo(const FILETIME &Time) : UpdatedTime(Time) {}
 		};
 

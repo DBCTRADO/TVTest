@@ -791,11 +791,6 @@ CDisplayBase::CDisplayBase()
 }
 
 
-CDisplayBase::~CDisplayBase()
-{
-}
-
-
 void CDisplayBase::SetEventHandler(CEventHandler *pHandler)
 {
 	m_pEventHandler = pHandler;

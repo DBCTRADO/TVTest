@@ -43,22 +43,12 @@ constexpr DWORD LOG_FILE_ADVISORY_LOCK_WAIT_TIMEOUT = 5000;
 
 
 
-CLogItem::CLogItem()
-{
-}
-
-
 CLogItem::CLogItem(LogType Type, StringView Text, DWORD SerialNumber)
 	: m_Type(Type)
 	, m_Text(Text)
 	, m_SerialNumber(SerialNumber)
 {
 	::GetSystemTimeAsFileTime(&m_Time);
-}
-
-
-CLogItem::~CLogItem()
-{
 }
 
 

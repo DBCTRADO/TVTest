@@ -38,11 +38,6 @@ CTSPacketInterface::CTSPacketInterface()
 }
 
 
-CTSPacketInterface::~CTSPacketInterface()
-{
-}
-
-
 STDMETHODIMP CTSPacketInterface::QueryInterface(REFIID riid, void **ppvObject)
 {
 	if (ppvObject == nullptr)

@@ -40,11 +40,6 @@ CEpgChannelSettings::CEpgChannelSettings(CProgramGuide *pProgramGuide)
 }
 
 
-CEpgChannelSettings::~CEpgChannelSettings()
-{
-}
-
-
 bool CEpgChannelSettings::Show(HWND hwndOwner)
 {
 	return ShowDialog(

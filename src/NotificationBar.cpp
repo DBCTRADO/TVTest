@@ -75,11 +75,6 @@ CNotificationBar::CNotificationBar()
 }
 
 
-CNotificationBar::~CNotificationBar()
-{
-}
-
-
 bool CNotificationBar::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 {
 	return CreateBasicWindow(

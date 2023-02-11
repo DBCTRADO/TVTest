@@ -83,7 +83,7 @@ class CEventItem
 public:
 	CEventItem(const LibISDB::EventInfo *pInfo);
 	CEventItem(const LibISDB::DateTime &StartTime, DWORD Duration);
-	~CEventItem();
+
 	const LibISDB::EventInfo *GetEventInfo() const { return m_pEventInfo; }
 	const LibISDB::EventInfo *GetCommonEventInfo() const { return m_pCommonEventInfo; }
 	const LibISDB::DateTime &GetStartTime() const { return m_StartTime; }
@@ -135,11 +135,6 @@ CEventItem::CEventItem(const LibISDB::DateTime &StartTime, DWORD Duration)
 {
 	m_EndTime = StartTime;
 	m_EndTime.OffsetSeconds(Duration);
-}
-
-
-CEventItem::~CEventItem()
-{
 }
 
 
@@ -855,20 +850,10 @@ bool CProgramGuideChannelProvider::Update()
 
 
 
-CProgramGuideBaseChannelProvider::CProgramGuideBaseChannelProvider()
-{
-}
-
-
 CProgramGuideBaseChannelProvider::CProgramGuideBaseChannelProvider(const CTuningSpaceList *pSpaceList, LPCTSTR pszBonDriver)
 {
 	SetTuningSpaceList(pSpaceList);
 	SetBonDriverFileName(pszBonDriver);
-}
-
-
-CProgramGuideBaseChannelProvider::~CProgramGuideBaseChannelProvider()
-{
 }
 
 
@@ -5531,11 +5516,6 @@ CProgramGuideBar::CProgramGuideBar(CProgramGuide *pProgramGuide)
 }
 
 
-CProgramGuideBar::~CProgramGuideBar()
-{
-}
-
-
 
 
 class ABSTRACT_CLASS(CProgramGuideToolbar)
@@ -5908,7 +5888,7 @@ class CTunerMenuBar
 {
 public:
 	CTunerMenuBar(CProgramGuide *pProgramGuide);
-	~CTunerMenuBar();
+
 	void OnSpaceChanged() override;
 };
 
@@ -5917,11 +5897,6 @@ CTunerMenuBar::CTunerMenuBar(CProgramGuide *pProgramGuide)
 	: CStatusBar(pProgramGuide)
 {
 	m_StatusView.AddItem(new CProgramGuideTunerStatusItem(pProgramGuide));
-}
-
-
-CTunerMenuBar::~CTunerMenuBar()
-{
 }
 
 
@@ -5938,7 +5913,7 @@ class CDateMenuBar
 {
 public:
 	CDateMenuBar(CProgramGuide *pProgramGuide);
-	~CDateMenuBar();
+
 	void OnDateChanged() override;
 };
 
@@ -5949,11 +5924,6 @@ CDateMenuBar::CDateMenuBar(CProgramGuide *pProgramGuide)
 	m_StatusView.AddItem(new CListSelectStatusItem(pProgramGuide));
 	m_StatusView.AddItem(new CListPrevStatusItem(pProgramGuide));
 	m_StatusView.AddItem(new CListNextStatusItem(pProgramGuide));
-}
-
-
-CDateMenuBar::~CDateMenuBar()
-{
 }
 
 

@@ -95,7 +95,6 @@ namespace TVTest
 
 	public:
 		CMenuPainter();
-		~CMenuPainter();
 
 		CMenuPainter(const CMenuPainter &) = delete;
 		CMenuPainter &operator=(const CMenuPainter &) = delete;
@@ -308,7 +307,8 @@ namespace TVTest
 		{
 		public:
 			CItem(int Command, LPCTSTR pszText);
-			virtual ~CItem();
+			virtual ~CItem() = default;
+
 			int GetCommand() const { return m_Command; }
 			LPCTSTR GetText() const { return m_Text.c_str(); }
 			void SetText(LPCTSTR pszText);

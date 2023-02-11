@@ -151,11 +151,6 @@ CPanAndScanOptions::CPanAndScanOptions()
 }
 
 
-CPanAndScanOptions::~CPanAndScanOptions()
-{
-}
-
-
 bool CPanAndScanOptions::Show(HWND hwndOwner)
 {
 	return ShowDialog(

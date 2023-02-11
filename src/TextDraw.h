@@ -67,7 +67,6 @@ namespace TVTest
 		};
 
 		CTextDraw();
-		~CTextDraw();
 
 		CTextDraw(const CTextDraw &) = delete;
 		CTextDraw &operator=(const CTextDraw &) = delete;

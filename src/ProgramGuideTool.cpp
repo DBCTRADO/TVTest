@@ -38,7 +38,7 @@ class CEpgVariableStringMap
 	: public CEventVariableStringMap
 {
 public:
-	CEpgVariableStringMap();
+	CEpgVariableStringMap() = default;
 	CEpgVariableStringMap(const EventInfo &Info);
 	bool NormalizeString(String *pString) const override { return false; }
 	bool GetParameterList(ParameterGroupList *pList) const override;
@@ -62,11 +62,6 @@ const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameter
 	{TEXT("duration-sec"), TEXT("番組の長さ(秒単位)")},
 	{TEXT("duration-min"), TEXT("番組の長さ(分単位)")},
 };
-
-
-CEpgVariableStringMap::CEpgVariableStringMap()
-{
-}
 
 
 CEpgVariableStringMap::CEpgVariableStringMap(const EventInfo &Info)
@@ -121,11 +116,6 @@ bool CEpgVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 }
 
 
-
-
-CProgramGuideTool::CProgramGuideTool()
-{
-}
 
 
 CProgramGuideTool::CProgramGuideTool(const String &Name, const String &Command)
@@ -365,11 +355,6 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 }
 
 
-
-
-CProgramGuideToolList::CProgramGuideToolList()
-{
-}
 
 
 CProgramGuideToolList::CProgramGuideToolList(const CProgramGuideToolList &Src)

@@ -37,11 +37,6 @@ CEpgCaptureManager::CEpgCaptureManager()
 }
 
 
-CEpgCaptureManager::~CEpgCaptureManager()
-{
-}
-
-
 bool CEpgCaptureManager::BeginCapture(
 	LPCTSTR pszTuner, const CChannelList *pChannelList, BeginFlag Flags)
 {

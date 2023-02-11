@@ -34,7 +34,6 @@ namespace TVTest
 	{
 	public:
 		CDriverInfo(LPCTSTR pszFileName);
-		~CDriverInfo();
 
 		LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }

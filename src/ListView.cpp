@@ -36,11 +36,6 @@ CListView::CListView()
 }
 
 
-CListView::~CListView()
-{
-}
-
-
 bool CListView::Attach(HWND hwnd)
 {
 	if (hwnd == nullptr)

@@ -257,11 +257,6 @@ CMenuPainter::CMenuPainter()
 }
 
 
-CMenuPainter::~CMenuPainter()
-{
-}
-
-
 void CMenuPainter::Initialize(HWND hwnd, int DPI)
 {
 	m_hwnd = hwnd;
@@ -1907,11 +1902,6 @@ CDropDownMenu::CItem::CItem(int Command, LPCTSTR pszText)
 	: m_Command(Command)
 	, m_Text(StringFromCStr(pszText))
 	, m_Width(0)
-{
-}
-
-
-CDropDownMenu::CItem::~CItem()
 {
 }
 

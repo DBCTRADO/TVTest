@@ -38,11 +38,6 @@ CDriverInfo::CDriverInfo(LPCTSTR pszFileName)
 }
 
 
-CDriverInfo::~CDriverInfo()
-{
-}
-
-
 bool CDriverInfo::LoadTuningSpaceList(LoadTuningSpaceListMode Mode)
 {
 	CAppMain &App = GetAppClass();

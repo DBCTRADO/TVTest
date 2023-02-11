@@ -35,11 +35,6 @@ CChannelManager::CChannelManager()
 }
 
 
-CChannelManager::~CChannelManager()
-{
-}
-
-
 void CChannelManager::Reset()
 {
 	m_CurrentSpace = SPACE_INVALID;
@@ -413,11 +408,6 @@ CChannelSpec::CChannelSpec()
 	: m_Space(CChannelManager::SPACE_INVALID)
 	, m_Channel(-1)
 	, m_ServiceID(-1)
-{
-}
-
-
-CChannelSpec::~CChannelSpec()
 {
 }
 

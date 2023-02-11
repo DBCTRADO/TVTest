@@ -38,11 +38,6 @@ COSDManager::COSDManager(const COSDOptions *pOptions)
 }
 
 
-COSDManager::~COSDManager()
-{
-}
-
-
 bool COSDManager::Initialize()
 {
 	InitializeUI();

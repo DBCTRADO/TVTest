@@ -424,7 +424,6 @@ namespace TVTest
 
 		CColorScheme();
 		CColorScheme(const CColorScheme &ColorScheme);
-		~CColorScheme();
 
 		COLORREF GetColor(int Type) const;
 		COLORREF GetColor(LPCTSTR pszText) const;

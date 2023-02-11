@@ -150,7 +150,7 @@ namespace TVTest
 
 		public:
 			CChannelEventInfo(const CChannelInfo *pChannelInfo, int OriginalIndex);
-			~CChannelEventInfo();
+
 			bool SetEventInfo(int Index, const LibISDB::EventInfo *pInfo);
 			const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 			const LibISDB::EventInfo &GetEventInfo(int Index) const { return m_EventList[Index]; }

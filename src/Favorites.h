@@ -84,7 +84,6 @@ namespace TVTest
 	{
 	public:
 		CFavoriteChannel(const CChannelInfo &ChannelInfo);
-		~CFavoriteChannel();
 
 		CFavoriteChannel *Duplicate() const override;
 		LPCTSTR GetBonDriverFileName() const { return m_BonDriverFileName.c_str(); }
@@ -219,7 +218,6 @@ namespace TVTest
 		};
 
 		CFavoritesManager();
-		~CFavoritesManager();
 
 		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
 		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }

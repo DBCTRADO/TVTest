@@ -231,10 +231,6 @@ CFavoriteChannel::CFavoriteChannel(const CChannelInfo &ChannelInfo)
 	m_Name = ChannelInfo.GetName();
 }
 
-CFavoriteChannel::~CFavoriteChannel()
-{
-}
-
 CFavoriteChannel *CFavoriteChannel::Duplicate() const
 {
 	return new CFavoriteChannel(*this);
@@ -301,10 +297,6 @@ constexpr unsigned int CHANNEL_FLAG_FORCEBONDRIVERCHANGE = 0x0001U;
 CFavoritesManager::CFavoritesManager()
 	: m_fModified(false)
 	, m_OrganizeDialog(this)
-{
-}
-
-CFavoritesManager::~CFavoritesManager()
 {
 }
 

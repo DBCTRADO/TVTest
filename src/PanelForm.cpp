@@ -830,11 +830,6 @@ CPanelForm::CWindowInfo::CWindowInfo(const PageInfo &Info)
 }
 
 
-CPanelForm::CWindowInfo::~CWindowInfo()
-{
-}
-
-
 
 
 CPanelForm::CPage::~CPage() = default;

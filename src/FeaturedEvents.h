@@ -46,7 +46,6 @@ namespace TVTest
 		static constexpr int MAX_EVENT_TEXT_LINES = 10;
 
 		CFeaturedEventsSettings();
-		~CFeaturedEventsSettings();
 
 	// CSettingsBase
 		bool ReadSettings(CSettings &Settings) override;
@@ -109,7 +108,6 @@ namespace TVTest
 		CFeaturedEventsDialog(
 			CFeaturedEventsSettings &Settings,
 			CEventSearchOptions &Options);
-		~CFeaturedEventsDialog();
 
 	// CBasicDialog
 		bool Show(HWND hwndOwner) override;

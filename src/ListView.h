@@ -29,7 +29,6 @@ namespace TVTest
 	{
 	public:
 		CListView();
-		~CListView();
 
 		CListView(const CListView &) = delete;
 		CListView &operator=(const CListView &) = delete;

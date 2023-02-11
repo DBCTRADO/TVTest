@@ -492,11 +492,6 @@ CColorScheme::CColorScheme(const CColorScheme &ColorScheme)
 }
 
 
-CColorScheme::~CColorScheme()
-{
-}
-
-
 COLORREF CColorScheme::GetColor(int Type) const
 {
 	if (Type < 0 || Type >= NUM_COLORS)

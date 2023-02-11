@@ -59,11 +59,6 @@ CUICore::CUICore(CAppMain &App)
 }
 
 
-CUICore::~CUICore()
-{
-}
-
-
 bool CUICore::SetSkin(CUISkin *pSkin)
 {
 	if (m_pSkin != nullptr) {

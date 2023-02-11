@@ -76,11 +76,6 @@ CRawInput::CRawInput()
 }
 
 
-CRawInput::~CRawInput()
-{
-}
-
-
 bool CRawInput::Initialize(HWND hwnd)
 {
 	RAWINPUTDEVICE rid[2];

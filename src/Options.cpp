@@ -45,11 +45,6 @@ COptions::COptions(LPCTSTR pszSection)
 }
 
 
-COptions::~COptions()
-{
-}
-
-
 DWORD COptions::SetUpdateFlag(DWORD Flag)
 {
 	m_UpdateFlags |= Flag;

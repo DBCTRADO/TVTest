@@ -40,9 +40,8 @@ namespace TVTest
 			Error,
 		};
 
-		CLogItem();
+		CLogItem() = default;
 		CLogItem(LogType Type, StringView Text, DWORD SerialNumber);
-		~CLogItem();
 
 		LPCTSTR GetText() const { return m_Text.c_str(); }
 		void GetTime(SYSTEMTIME *pTime) const;

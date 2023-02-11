@@ -92,7 +92,6 @@ namespace TVTest
 		};
 
 		CUICore(CAppMain &App);
-		~CUICore();
 
 		CUICore(const CUICore &) = delete;
 		CUICore &operator=(const CUICore &) = delete;

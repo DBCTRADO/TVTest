@@ -161,16 +161,6 @@ HRESULT CVariant::FromString(const String &Str)
 
 
 
-CPropertyBag::CPropertyBag()
-{
-}
-
-
-CPropertyBag::~CPropertyBag()
-{
-}
-
-
 STDMETHODIMP CPropertyBag::QueryInterface(REFIID riid, void **ppvObject)
 {
 	if (ppvObject == nullptr)
@@ -236,8 +226,6 @@ class CPropertyPageSite
 	, protected CIUnknownImpl
 {
 public:
-	CPropertyPageSite();
-
 // IUnknown
 	STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
 	STDMETHODIMP_(ULONG) AddRef() override { return AddRefImpl(); }
@@ -250,18 +238,8 @@ public:
 	STDMETHODIMP TranslateAccelerator(MSG *pMsg) override { return E_NOTIMPL; }
 
 private:
-	~CPropertyPageSite();
+	~CPropertyPageSite() = default;
 };
-
-
-CPropertyPageSite::CPropertyPageSite()
-{
-}
-
-
-CPropertyPageSite::~CPropertyPageSite()
-{
-}
 
 
 STDMETHODIMP CPropertyPageSite::QueryInterface(REFIID riid, void **ppvObject)

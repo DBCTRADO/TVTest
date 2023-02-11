@@ -122,11 +122,6 @@ void CChannelInfo::SetServiceType(BYTE ServiceType)
 
 
 
-CTunerChannelInfo::CTunerChannelInfo()
-{
-}
-
-
 CTunerChannelInfo::CTunerChannelInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszTunerName)
 	: CChannelInfo(ChannelInfo)
 {
@@ -151,20 +146,9 @@ void CTunerChannelInfo::SetTunerName(LPCTSTR pszName)
 
 
 
-CChannelList::CChannelList()
-{
-}
-
-
 CChannelList::CChannelList(const CChannelList &Src)
 {
 	*this = Src;
-}
-
-
-CChannelList::~CChannelList()
-{
-	Clear();
 }
 
 
@@ -702,11 +686,6 @@ int CTuningSpaceInfo::NumChannels() const
 }
 
 
-
-
-CTuningSpaceList::CTuningSpaceList()
-{
-}
 
 
 CTuningSpaceList::CTuningSpaceList(const CTuningSpaceList &List)

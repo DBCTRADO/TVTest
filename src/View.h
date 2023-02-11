@@ -130,7 +130,6 @@ namespace TVTest
 		};
 
 		CDisplayBase();
-		~CDisplayBase();
 
 		CDisplayBase(const CDisplayBase &) = delete;
 		CDisplayBase &operator=(const CDisplayBase &) = delete;

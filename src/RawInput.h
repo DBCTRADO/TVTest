@@ -42,7 +42,6 @@ namespace TVTest
 
 	public:
 		CRawInput();
-		~CRawInput();
 
 		bool Initialize(HWND hwnd);
 		LRESULT OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam);
