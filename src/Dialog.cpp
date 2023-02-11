@@ -1924,6 +1924,7 @@ CResizableDialog::CResizableDialog()
 
 CResizableDialog::~CResizableDialog()
 {
+	Destroy();
 }
 
 
