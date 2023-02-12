@@ -292,7 +292,7 @@ bool CLogoList::UpdateLogo()
 {
 	bool fUpdated = false;
 
-	for (size_t i = 0; i < m_ServiceList.size(); i++) {
+	for (std::size_t i = 0; i < m_ServiceList.size(); i++) {
 		CServiceInfo *pServiceInfo = m_ServiceList[i];
 
 		UINT ExistsType = 0;
@@ -326,7 +326,7 @@ bool CLogoList::UpdateLogo()
 // サービスのリストをクリアする
 void CLogoList::ClearServiceList()
 {
-	for (size_t i = 0; i < m_ServiceList.size(); i++)
+	for (std::size_t i = 0; i < m_ServiceList.size(); i++)
 		delete m_ServiceList[i];
 	m_ServiceList.clear();
 }
@@ -413,7 +413,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::SendMessage(pThis->m_hwndList, LB_SETITEMHEIGHT, 0, pThis->m_ItemHeight);
 			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
 
-			for (size_t i = 0; i < pThis->m_ServiceList.size(); i++)
+			for (std::size_t i = 0; i < pThis->m_ServiceList.size(); i++)
 				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i]));
 
 			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
