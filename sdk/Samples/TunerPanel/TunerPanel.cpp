@@ -14,13 +14,18 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <windowsx.h>
 #include <shlwapi.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <algorithm>
 #include <string>
 #include <vector>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 #include "resource.h"
@@ -1191,7 +1196,7 @@ int CTunerPanel::GetColumnCount() const
 
 		::GetClientRect(m_hwnd, &rc);
 		int Columns = rc.right / m_ItemWidth;
-		return max(Columns, 1);
+		return std::max(Columns, 1);
 	}
 
 	return 1;
@@ -1216,7 +1221,7 @@ void CTunerPanel::UpdateItemSize()
 	if (m_ViewMode == VIEW_MODE_LIST) {
 		RECT rc;
 		::GetClientRect(m_hwnd, &rc);
-		m_ItemWidth = max(rc.right, 1);
+		m_ItemWidth = std::max<int>(rc.right, 1);
 		m_ItemHeight = m_ChannelItemHeight;
 	} else if (m_ViewMode == VIEW_MODE_LOGO) {
 		SIZE LogoSize = GetLogoSize(m_LogoSize);
@@ -1276,7 +1281,7 @@ void CTunerPanel::SetScrollPos(int Pos)
 		Pos = 0;
 	} else {
 		int Height = CalcVertExtent();
-		int Max = max(Height - rc.bottom, 0);
+		int Max = std::max<int>(Height - rc.bottom, 0);
 		if (Pos > Max)
 			Pos = Max;
 	}

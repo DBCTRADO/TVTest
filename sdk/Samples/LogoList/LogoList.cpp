@@ -14,9 +14,14 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
+#include <algorithm>
 #include <vector>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 
@@ -366,7 +371,7 @@ void CLogoList::CalcMetrics()
 	for (int i = 0; i < 6; i++)
 		LogoWidth += LogoSizeList[i].Width;
 	m_ItemWidth = m_ServiceNameWidth + (m_ItemMargin * 2) + (m_LogoMargin * 6) + LogoWidth;
-	m_ItemHeight = max(36, tm.tmHeight) + (m_ItemMargin * 2);
+	m_ItemHeight = std::max<int>(36, tm.tmHeight) + (m_ItemMargin * 2);
 }
 
 

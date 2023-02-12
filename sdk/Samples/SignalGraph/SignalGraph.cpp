@@ -11,14 +11,20 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
+#include <objbase.h>
 #include <gdiplus.h>
 #include <shlwapi.h>
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <deque>
 #include <strsafe.h>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
@@ -300,7 +306,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 	}
 
 	const int ListSize = (int)m_List.size();
-	const int NumPoints = min(ListSize, GRAPH_WIDTH);
+	const int NumPoints = std::min(ListSize, GRAPH_WIDTH);
 	Gdiplus::PointF *pPoints = new Gdiplus::PointF[NumPoints + 3];
 	const float XScale = (float)Width / (float)GRAPH_WIDTH;
 	const float YScale = (float)(Height - 1);
@@ -316,7 +322,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 	}
 	const float BitRateScale = YScale / (float)m_BitRateScale;
 	for (int j = 0; i < ListSize; i++, j++) {
-		float y = (float)min(m_List[i].BitRate, m_BitRateScale) * BitRateScale;
+		float y = (float)std::min(m_List[i].BitRate, m_BitRateScale) * BitRateScale;
 		pPoints[j].X = (float)x * XScale;
 		if (j == 0) {
 			pPoints[0].Y = (float)Height;
@@ -357,7 +363,7 @@ void CSignalGraph::DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height)
 	}
 	const float SignalLevelScale = YScale / m_ActualSignalLevelScale;
 	for (int j = 0; i < ListSize; i++, j++) {
-		float y = min(m_List[i].SignalLevel, m_ActualSignalLevelScale) * SignalLevelScale;
+		float y = std::min(m_List[i].SignalLevel, m_ActualSignalLevelScale) * SignalLevelScale;
 		pPoints[j].X = (float)x * XScale;
 		pPoints[j].Y = YScale - y;
 		x++;

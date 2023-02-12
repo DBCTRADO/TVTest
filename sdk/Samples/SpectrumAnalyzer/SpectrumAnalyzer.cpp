@@ -15,11 +15,17 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
+#include <objbase.h>
 #include <gdiplus.h>
 #include <shlwapi.h>
+#include <algorithm>
 #define _USE_MATH_DEFINES
 #include <cmath>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
@@ -316,8 +322,8 @@ void CSpectrumAnalyzer::DrawSpectrum(Gdiplus::Graphics &Graphics, int Width, int
 {
 	Graphics.Clear(m_BackColor);
 
-	const int BarWidth = max(Width / NUM_BANDS, 4);
-	const int CellHeight = max(Height / NUM_LEVELS, 3);
+	const int BarWidth = std::max(Width / NUM_BANDS, 4);
+	const int CellHeight = std::max(Height / NUM_LEVELS, 3);
 	const int BaseX = (Width - BarWidth * NUM_BANDS) / 2;
 	const int BaseY = (Height - CellHeight * NUM_LEVELS) / 2;
 
@@ -433,7 +439,7 @@ void CSpectrumAnalyzer::UpdateSpectrum()
 		Peak = std::log10(Peak) * 10.0;
 		m_PeakList[i].Real = Peak;
 		if (Peak < m_PeakList[i].Delayed)
-			Peak = max(m_PeakList[i].Delayed - 2.5, Peak);
+			Peak = std::max(m_PeakList[i].Delayed - 2.5, Peak);
 		m_PeakList[i].Delayed = Peak;
 	}
 }
