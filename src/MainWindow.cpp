@@ -446,11 +446,11 @@ void CMainWindow::AdjustWindowSize(int Width, int Height, bool fScreenSize)
 	::GetMonitorInfo(hMonitor, &mi);
 
 	if (m_App.ViewOptions.GetNearCornerResizeOrigin()) {
-		if (abs(rcOld.left - mi.rcWork.left) > abs(rcOld.right - mi.rcWork.right)) {
+		if (std::abs(rcOld.left - mi.rcWork.left) > std::abs(rcOld.right - mi.rcWork.right)) {
 			rc.left = rcOld.right - (rc.right - rc.left);
 			rc.right = rcOld.right;
 		}
-		if (abs(rcOld.top - mi.rcWork.top) > abs(rcOld.bottom - mi.rcWork.bottom)) {
+		if (std::abs(rcOld.top - mi.rcWork.top) > std::abs(rcOld.bottom - mi.rcWork.bottom)) {
 			rc.top = rcOld.bottom - (rc.bottom - rc.top);
 			rc.bottom = rcOld.bottom;
 		}
@@ -6881,7 +6881,7 @@ bool CMainWindow::CCursorTracker::OnCursorMove(int x, int y)
 	m_LastCursorPos.x = x;
 	m_LastCursorPos.y = y;
 
-	if (abs(m_LastMovePos.x - x) >= m_MoveDelta || abs(m_LastMovePos.y - y) >= m_MoveDelta) {
+	if (std::abs(m_LastMovePos.x - x) >= m_MoveDelta || std::abs(m_LastMovePos.y - y) >= m_MoveDelta) {
 		m_LastMovePos.x = x;
 		m_LastMovePos.y = y;
 		return true;

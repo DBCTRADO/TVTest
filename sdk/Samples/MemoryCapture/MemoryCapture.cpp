@@ -1991,7 +1991,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 			else
 				pThis->m_WheelDelta += Delta;
 
-			if (abs(pThis->m_WheelDelta) >= WHEEL_DELTA) {
+			if (std::abs(pThis->m_WheelDelta) >= WHEEL_DELTA) {
 				CBlockLock Lock(pThis->m_ImageLock);
 				int Delta = pThis->m_WheelDelta / WHEEL_DELTA;
 				int Frame = pThis->m_CurFrame - Delta;

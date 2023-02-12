@@ -429,8 +429,8 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (::GetCapture() == hwnd) {
 				if (!m_fCloseButtonPushed) {
 					::ClientToScreen(hwnd, &pt);
-					if (abs(pt.x - m_ptDragStartPos.x) >= 4
-							|| abs(pt.y - m_ptDragStartPos.y) >= 4) {
+					if (std::abs(pt.x - m_ptDragStartPos.x) >= 4
+							|| std::abs(pt.y - m_ptDragStartPos.y) >= 4) {
 						::ReleaseCapture();
 						if (m_pEventHandler != nullptr
 								&& m_pEventHandler->OnFloating()) {

@@ -109,7 +109,7 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 		GetWindowRect(hwnd, &rc);
 		if (rc.right > rc.left && rc.bottom > rc.top) {
 			if (rc.top < pInfo->rcOriginal.bottom && rc.bottom > pInfo->rcOriginal.top) {
-				if (abs(rc.left - pInfo->rcOriginal.right) < abs(pInfo->rcNearest.right)) {
+				if (std::abs(rc.left - pInfo->rcOriginal.right) < std::abs(pInfo->rcNearest.right)) {
 					rcEdge.left = rc.left;
 					rcEdge.right = rc.left;
 					rcEdge.top = std::max(rc.top, pInfo->rcOriginal.top);
@@ -117,7 +117,7 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 					if (IsWindowEdgeVisible(hwnd, GetTopWindow(GetDesktopWindow()), &rcEdge, pInfo->hwnd))
 						pInfo->rcNearest.right = rc.left - pInfo->rcOriginal.right;
 				}
-				if (abs(rc.right - pInfo->rcOriginal.left) < abs(pInfo->rcNearest.left)) {
+				if (std::abs(rc.right - pInfo->rcOriginal.left) < std::abs(pInfo->rcNearest.left)) {
 					rcEdge.left = rc.right;
 					rcEdge.right = rc.right;
 					rcEdge.top = std::max(rc.top, pInfo->rcOriginal.top);
@@ -127,7 +127,7 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 				}
 			}
 			if (rc.left < pInfo->rcOriginal.right && rc.right > pInfo->rcOriginal.left) {
-				if (abs(rc.top - pInfo->rcOriginal.bottom) < abs(pInfo->rcNearest.bottom)) {
+				if (std::abs(rc.top - pInfo->rcOriginal.bottom) < std::abs(pInfo->rcNearest.bottom)) {
 					rcEdge.left = std::max(rc.left, pInfo->rcOriginal.left);
 					rcEdge.right = std::min(rc.right, pInfo->rcOriginal.right);
 					rcEdge.top = rc.top;
@@ -135,7 +135,7 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 					if (IsWindowEdgeVisible(hwnd, GetTopWindow(GetDesktopWindow()), &rcEdge, pInfo->hwnd))
 						pInfo->rcNearest.bottom = rc.top - pInfo->rcOriginal.bottom;
 				}
-				if (abs(rc.bottom - pInfo->rcOriginal.top) < abs(pInfo->rcNearest.top)) {
+				if (std::abs(rc.bottom - pInfo->rcOriginal.top) < std::abs(pInfo->rcNearest.top)) {
 					rcEdge.left = std::max(rc.left, pInfo->rcOriginal.left);
 					rcEdge.right = std::min(rc.right, pInfo->rcOriginal.right);
 					rcEdge.top = rc.bottom;
@@ -178,23 +178,23 @@ void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude)
 	Info.rcNearest.bottom = rc.bottom - prc->bottom;
 	Info.hwndExclude = hwndExclude;
 	EnumWindows(SnapWindowProc, reinterpret_cast<LPARAM>(&Info));
-	if (abs(Info.rcNearest.left) < abs(Info.rcNearest.right)
+	if (std::abs(Info.rcNearest.left) < std::abs(Info.rcNearest.right)
 			|| Info.rcNearest.left == Info.rcNearest.right)
 		XOffset = Info.rcNearest.left;
-	else if (abs(Info.rcNearest.left) > abs(Info.rcNearest.right))
+	else if (std::abs(Info.rcNearest.left) > std::abs(Info.rcNearest.right))
 		XOffset = Info.rcNearest.right;
 	else
 		XOffset = 0;
-	if (abs(Info.rcNearest.top) < abs(Info.rcNearest.bottom)
+	if (std::abs(Info.rcNearest.top) < std::abs(Info.rcNearest.bottom)
 			|| Info.rcNearest.top == Info.rcNearest.bottom)
 		YOffset = Info.rcNearest.top;
-	else if (abs(Info.rcNearest.top) > abs(Info.rcNearest.bottom))
+	else if (std::abs(Info.rcNearest.top) > std::abs(Info.rcNearest.bottom))
 		YOffset = Info.rcNearest.bottom;
 	else
 		YOffset = 0;
-	if (abs(XOffset) <= Margin)
+	if (std::abs(XOffset) <= Margin)
 		prc->left += XOffset;
-	if (abs(YOffset) <= Margin)
+	if (std::abs(YOffset) <= Margin)
 		prc->top += YOffset;
 	prc->right = prc->left + (Info.rcOriginal.right - Info.rcOriginal.left);
 	prc->bottom = prc->top + (Info.rcOriginal.bottom - Info.rcOriginal.top);
@@ -349,7 +349,7 @@ int CMouseWheelHandler::OnWheel(int Delta)
 int CMouseWheelHandler::OnMouseWheel(WPARAM wParam, int ScrollLines)
 {
 	int Delta = OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
-	if (abs(Delta) < WHEEL_DELTA)
+	if (std::abs(Delta) < WHEEL_DELTA)
 		return 0;
 
 	if (ScrollLines == 0)
@@ -363,7 +363,7 @@ int CMouseWheelHandler::OnMouseWheel(WPARAM wParam, int ScrollLines)
 int CMouseWheelHandler::OnMouseHWheel(WPARAM wParam, int ScrollChars)
 {
 	int Delta = OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
-	if (abs(Delta) < WHEEL_DELTA)
+	if (std::abs(Delta) < WHEEL_DELTA)
 		return 0;
 
 	if (ScrollChars == 0)

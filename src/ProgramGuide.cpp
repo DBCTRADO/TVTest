@@ -2373,8 +2373,8 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 			rcClip.right -= m_Style.TimeBarShadowWidth;
 		}
 		if (rcClip.right > rcClip.left && rcClip.bottom > rcClip.top
-				&& abs(YScrollSize) < rcClip.bottom - rcClip.top
-				&& abs(XScrollSize) < rcClip.right - rcClip.left) {
+				&& std::abs(YScrollSize) < rcClip.bottom - rcClip.top
+				&& std::abs(XScrollSize) < rcClip.right - rcClip.left) {
 			::ScrollWindowEx(
 				m_hwnd, XScrollSize, YScrollSize, &rcGuide, &rcClip,
 				nullptr, nullptr, SW_INVALIDATE);

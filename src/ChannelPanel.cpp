@@ -1171,7 +1171,7 @@ void CChannelPanel::SetScrollPos(int Pos)
 		int Offset = Pos - m_ScrollPos;
 
 		m_ScrollPos = Pos;
-		if (abs(Offset) < rc.bottom) {
+		if (std::abs(Offset) < rc.bottom) {
 			::ScrollWindowEx(
 				m_hwnd, 0, -Offset,
 				nullptr, nullptr, nullptr, nullptr, SW_ERASE | SW_INVALIDATE);

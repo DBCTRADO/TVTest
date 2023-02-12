@@ -51,7 +51,7 @@ SIZE_T CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
 
 SIZE_T CalcDIBBitsSize(const BITMAPINFOHEADER *pbmih)
 {
-	return DIB_ROW_BYTES(pbmih->biWidth, pbmih->biBitCount) * abs(pbmih->biHeight);
+	return DIB_ROW_BYTES(pbmih->biWidth, pbmih->biBitCount) * std::abs(pbmih->biHeight);
 }
 
 
@@ -142,7 +142,7 @@ HGLOBAL ResizeImage(
 	} else {
 		SrcLeft = SrcTop = 0;
 		SrcWidth = pbmiSrc->bmiHeader.biWidth;
-		SrcHeight = abs(pbmiSrc->bmiHeader.biHeight);
+		SrcHeight = std::abs(pbmiSrc->bmiHeader.biHeight);
 	}
 	if (SrcWidth == Width && SrcHeight == Height) {
 		CropImage(pbmiSrc, pSrcData, SrcLeft, SrcTop, Width, Height, pDstData);

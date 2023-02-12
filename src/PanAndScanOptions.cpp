@@ -49,7 +49,7 @@ static void FormatValue(int Value, int Factor, LPTSTR pszText, size_t MaxLength)
 	if (Percentage % 100 == 0)
 		StringFormat(pszText, MaxLength, TEXT("{}"), Percentage / 100);
 	else
-		StringFormat(pszText, MaxLength, TEXT("{}.{:02}"), Percentage / 100, abs(Percentage) % 100);
+		StringFormat(pszText, MaxLength, TEXT("{}.{:02}"), Percentage / 100, std::abs(Percentage) % 100);
 }
 
 

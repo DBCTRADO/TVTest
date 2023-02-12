@@ -1222,7 +1222,7 @@ void CFavoritesMenu::CreateFont(HDC hdc)
 	if (hdc != nullptr)
 		m_TextHeight = m_Font.GetHeight(hdc);
 	else
-		m_TextHeight = abs(lf.lfHeight);
+		m_TextHeight = std::abs(lf.lfHeight);
 }
 
 void CFavoritesMenu::GetBaseTime(LibISDB::DateTime *pTime)

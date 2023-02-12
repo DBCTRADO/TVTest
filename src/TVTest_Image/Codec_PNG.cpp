@@ -21,6 +21,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <cstdlib>
 #include "libpng/png.h"
 #include "zlib/zlib.h"
 #include "ImageLib.h"
@@ -73,7 +74,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 	png_init_io(pPNG, fp);
 	png_set_compression_level(pPNG, _ttoi(pInfo->pszOption));
 	Width = pInfo->pbmi->bmiHeader.biWidth;
-	Height = abs(pInfo->pbmi->bmiHeader.biHeight);
+	Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
 	BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
 	png_set_IHDR(
 		pPNG, pPNGInfo, Width, Height,
@@ -491,9 +492,9 @@ Decode:
 					break;
 				case 4: // Paeth
 					{
-						int pa = abs(a + b - c - a);
-						int pb = abs(a + b - c - b);
-						int pc = abs(a + b - c - c);
+						int pa = std::abs(a + b - c - a);
+						int pb = std::abs(a + b - c - b);
+						int pc = std::abs(a + b - c - c);
 						*q += (pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c;
 					}
 					break;

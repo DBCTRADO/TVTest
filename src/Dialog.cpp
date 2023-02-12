@@ -472,7 +472,7 @@ void CBasicDialog::ApplyStyle()
 		const int DPI = m_pStyleScaling->GetDPI();
 
 		LOGFONT lf = m_lfOriginalFont;
-		LONG Height = ::MulDiv(abs(lf.lfHeight), DPI, m_OriginalDPI);
+		LONG Height = ::MulDiv(std::abs(lf.lfHeight), DPI, m_OriginalDPI);
 		lf.lfHeight = lf.lfHeight < 0 ? -Height : Height;
 		lf.lfWidth = 0;
 		m_Font.Create(&lf);

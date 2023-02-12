@@ -402,7 +402,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 
 		if (!!(m_TextStyle & TextStyle::Outline)) {
 			fResult = Canvas.GetOutlineTextSize(
-				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)), TextFlags, pSize);
+				m_Text.c_str(), lf, GetOutlineWidth(std::abs(lf.lfHeight)), TextFlags, pSize);
 		} else {
 			fResult = Canvas.GetTextSize(
 				m_Text.c_str(), lf, TextFlags, pSize);
@@ -635,7 +635,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 				Canvas.DrawOutlineText(
 					m_Text.c_str(), lf, rc, &TextBrush,
 					Graphics::CColor(0, 0, 0, 160),
-					GetOutlineWidth(abs(lf.lfHeight)),
+					GetOutlineWidth(std::abs(lf.lfHeight)),
 					DrawTextFlags);
 			} else {
 				Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);

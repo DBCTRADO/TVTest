@@ -278,7 +278,7 @@ void CImage::Clear()
 					m_Bitmap->GetPixelFormat(), &Data) == Gdiplus::Ok) {
 			BYTE *pBits = static_cast<BYTE*>(Data.Scan0);
 			for (UINT y = 0; y < Data.Height; y++) {
-				::ZeroMemory(pBits, abs(Data.Stride));
+				::ZeroMemory(pBits, std::abs(Data.Stride));
 				pBits += Data.Stride;
 			}
 			m_Bitmap->UnlockBits(&Data);
@@ -344,7 +344,7 @@ CFont::CFont(const LOGFONT &lf)
 	m_Font.reset(
 		new Gdiplus::Font(
 			lf.lfFaceName,
-			(Gdiplus::REAL)abs(lf.lfHeight),
+			(Gdiplus::REAL)std::abs(lf.lfHeight),
 			FontStyle,
 			Gdiplus::UnitPixel));
 }

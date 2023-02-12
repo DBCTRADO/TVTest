@@ -273,7 +273,7 @@ bool FillInterlacedGradient(
 				Color1, Color2,
 				(BYTE)(Direction == FillDirection::Horz ?
 					(pRect->right - 1 - x) * 255 / (Width - 1) :
-					abs(Center - x * 2) * 255 / (Width - 1)));
+					std::abs(Center - x * 2) * 255 / (Width - 1)));
 			if ((x - pRect->left) % 2 == 1)
 				Color = MixColor(LineColor, Color, LineOpacity);
 			::SetDCPenColor(hdc, Color);
@@ -290,7 +290,7 @@ bool FillInterlacedGradient(
 				Color1, Color2,
 				(BYTE)(Direction == FillDirection::Vert ?
 					(pRect->bottom - 1 - y) * 255 / (Height - 1) :
-					abs(Center - y * 2) * 255 / (Height - 1)));
+					std::abs(Center - y * 2) * 255 / (Height - 1)));
 			if ((y - pRect->top) % 2 == 1)
 				Color = MixColor(LineColor, Color, LineOpacity);
 			::SetDCPenColor(hdc, Color);
@@ -644,7 +644,7 @@ HBITMAP ResizeBitmap(HBITMAP hbmSrc, int Width, int Height, int BitCount, int St
 		BITMAP bm;
 		::GetObject(hbmSrc, sizeof(bm), &bm);
 		::StretchBlt(
-			hdcDst, 0, 0, Width, abs(Height),
+			hdcDst, 0, 0, Width, std::abs(Height),
 			hdcSrc, 0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
 		::SetStretchBltMode(hdcDst, OldStretchMode);
 		::SelectObject(hdcDst, hbmDstOld);
@@ -777,7 +777,7 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 		// メイリオだと行間が空きすぎるのが…
 		if (::lstrcmp(MessageFont.lfFaceName, TEXT("メイリオ")) == 0
 				|| ::lstrcmpi(MessageFont.lfFaceName, TEXT("Meiryo")) == 0) {
-			pFont->lfHeight = -abs(MessageFont.lfHeight);
+			pFont->lfHeight = -std::abs(MessageFont.lfHeight);
 			pFont->lfWeight = FW_NORMAL;
 			StringCopy(pFont->lfFaceName, TEXT("Meiryo UI"));
 			if (IsFontAvailable(*pFont))
@@ -936,7 +936,7 @@ int CFont::GetHeight(bool fCell) const
 		LOGFONT lf;
 		if (!GetLogFont(&lf))
 			return 0;
-		Height = abs(lf.lfHeight);
+		Height = std::abs(lf.lfHeight);
 	} else {
 		Height = GetHeight(hdc, fCell);
 		::DeleteDC(hdc);

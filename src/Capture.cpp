@@ -292,7 +292,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				int DstX, DstY, DstWidth, DstHeight;
 				RECT rcDest;
 
-				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / abs(pbmi->bmiHeader.biHeight);
+				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / std::abs(pbmi->bmiHeader.biHeight);
 				if (DstWidth > rc.right)
 					DstWidth = rc.right;
 				DstHeight = pbmi->bmiHeader.biHeight * rc.right / pbmi->bmiHeader.biWidth;
@@ -503,7 +503,7 @@ void CCaptureWindow::SetTitle()
 				StringFormat(
 					szTitle,
 					TEXT("{} - {} x {} ({} bpp)"),
-					CAPTURE_TITLE_TEXT, bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount);
+					CAPTURE_TITLE_TEXT, bmih.biWidth, std::abs(bmih.biHeight), bmih.biBitCount);
 			}
 		}
 		::SetWindowText(m_hwnd, szTitle);

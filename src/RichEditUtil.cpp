@@ -88,7 +88,7 @@ bool CRichEditUtil::LogFontToCharFormat(HDC hdc, const LOGFONT *plf, CHARFORMAT 
 		pcf->dwEffects |= CFE_UNDERLINE;
 	if (plf->lfStrikeOut)
 		pcf->dwEffects |= CFE_STRIKEOUT;
-	pcf->yHeight = abs(plf->lfHeight) * 72 * 20 / ::GetDeviceCaps(hdc, LOGPIXELSY);
+	pcf->yHeight = std::abs(plf->lfHeight) * 72 * 20 / ::GetDeviceCaps(hdc, LOGPIXELSY);
 	pcf->crTextColor = ::GetSysColor(COLOR_WINDOWTEXT);
 	pcf->bPitchAndFamily = plf->lfPitchAndFamily;
 	pcf->bCharSet = plf->lfCharSet;
@@ -113,7 +113,7 @@ bool CRichEditUtil::LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT
 		pcf->dwEffects |= CFE_UNDERLINE;
 	if (plf->lfStrikeOut)
 		pcf->dwEffects |= CFE_STRIKEOUT;
-	pcf->yHeight = abs(plf->lfHeight) * 72 * 20 / ::GetDeviceCaps(hdc, LOGPIXELSY);
+	pcf->yHeight = std::abs(plf->lfHeight) * 72 * 20 / ::GetDeviceCaps(hdc, LOGPIXELSY);
 	pcf->crTextColor = ::GetSysColor(COLOR_WINDOWTEXT);
 	pcf->bPitchAndFamily = plf->lfPitchAndFamily;
 	pcf->bCharSet = plf->lfCharSet;

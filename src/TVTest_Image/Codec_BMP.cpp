@@ -20,6 +20,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <cstdlib>
 #include "ImageLib.h"
 #include "Codec_BMP.h"
 #include "ImageUtil.h"
@@ -40,7 +41,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	SIZE_T InfoBytes, RowBytes, BitsBytes;
 
 	Width = pInfo->pbmi->bmiHeader.biWidth;
-	Height = abs(pInfo->pbmi->bmiHeader.biHeight);
+	Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
 	BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
 	InfoBytes = sizeof(BITMAPINFOHEADER);
 	if (BitsPerPixel <= 8)
