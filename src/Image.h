@@ -42,9 +42,9 @@ namespace TVTest
 	constexpr std::size_t DIB_ROW_BYTES(int width, int bpp) { return ((width * bpp + 31) >> 5) << 2; }
 
 
-	SIZE_T CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih);
-	SIZE_T CalcDIBBitsSize(const BITMAPINFOHEADER *pbmih);
-	SIZE_T CalcDIBSize(const BITMAPINFOHEADER *pbmih);
+	size_t CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih);
+	size_t CalcDIBBitsSize(const BITMAPINFOHEADER *pbmih);
+	size_t CalcDIBSize(const BITMAPINFOHEADER *pbmih);
 	HGLOBAL ResizeImage(
 		const BITMAPINFO *pbmiSrc, const void *pSrcData,
 		const RECT *pSrcRect, int Width, int Height);
@@ -66,7 +66,7 @@ namespace TVTest
 		LPCTSTR EnumSaveFormat(int Index) const;
 		LPCTSTR GetExtension(int Index) const;
 		int FormatNameToIndex(LPCTSTR pszName) const;
-		HGLOBAL LoadAribPngFromMemory(const void *pData, SIZE_T DataSize);
+		HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize);
 		HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName);
 
 #ifndef TVTEST_IMAGE_STATIC

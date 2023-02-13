@@ -60,10 +60,8 @@ CCaptureImage::CCaptureImage(HGLOBAL hData)
 
 CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi, const void *pBits)
 {
-	SIZE_T InfoSize, BitsSize;
-
-	InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
-	BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
+	const size_t InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
+	const size_t BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
 	m_hData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, InfoSize + BitsSize);
 	if (m_hData != nullptr) {
 		BYTE *pData = static_cast<BYTE*>(::GlobalLock(m_hData));

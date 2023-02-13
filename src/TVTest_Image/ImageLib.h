@@ -38,7 +38,7 @@ namespace TVTest
 		};
 
 		bool SaveImage(const ImageSaveInfo *pInfo);
-		HGLOBAL LoadAribPngFromMemory(const void *pData, SIZE_T DataSize);
+		HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize);
 		HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName);
 
 	}

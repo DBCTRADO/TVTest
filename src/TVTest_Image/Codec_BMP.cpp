@@ -38,14 +38,14 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	int Width, Height, BitsPerPixel;
 	HANDLE hFile;
 	DWORD dwWrite;
-	SIZE_T InfoBytes, RowBytes, BitsBytes;
+	size_t InfoBytes, RowBytes, BitsBytes;
 
 	Width = pInfo->pbmi->bmiHeader.biWidth;
 	Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
 	BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
 	InfoBytes = sizeof(BITMAPINFOHEADER);
 	if (BitsPerPixel <= 8)
-		InfoBytes += ((SIZE_T)1 << BitsPerPixel) * sizeof(RGBQUAD);
+		InfoBytes += ((size_t)1 << BitsPerPixel) * sizeof(RGBQUAD);
 	else if (pInfo->pbmi->bmiHeader.biCompression == BI_BITFIELDS)
 		InfoBytes += 3 * sizeof(DWORD);
 	RowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);

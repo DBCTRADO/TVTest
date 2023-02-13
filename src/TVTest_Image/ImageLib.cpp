@@ -54,7 +54,7 @@ bool SaveImage(const ImageSaveInfo *pInfo)
 }
 
 
-HGLOBAL LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
+HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize)
 {
 	return LoadAribPng(pData, DataSize);
 }

@@ -326,7 +326,7 @@ static const RGBA DefaultPalette[128] = {
 };
 
 // ARIB 形式の PNG を読み込む
-HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
+HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 {
 	static const BYTE Adam7[8][2][2] = {
 		{{ 1, 0}, { 1, 0}},	// No interlace
@@ -339,10 +339,10 @@ HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
 		{{ 1, 0}, { 2, 1}},	// Interlaced image 7
 	};
 	const BYTE *p;
-	SIZE_T Pos;
+	size_t Pos;
 	IHDR ImageHeader;
 	const BYTE *pCompressedImageData = nullptr;
-	SIZE_T CompressedImageSize = 0;
+	size_t CompressedImageSize = 0;
 
 	if (pData == nullptr || DataSize <= 8)
 		return nullptr;
@@ -399,10 +399,10 @@ Decode:
 	struct {
 		int Width;
 		int Height;
-		SIZE_T BytesPerLine;
+		size_t BytesPerLine;
 	} InterlacedImage[8];
 	int i;
-	SIZE_T ImageDataSize;
+	size_t ImageDataSize;
 	BYTE *pImageData;
 
 	switch (ImageHeader.ColorType) {
@@ -474,7 +474,7 @@ Decode:
 				delete [] pImageData;
 				return nullptr;
 			}
-			for (x = 0; (SIZE_T)x < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
+			for (x = 0; (size_t)x < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
 				int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
 				int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
 				int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;

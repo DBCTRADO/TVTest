@@ -327,7 +327,7 @@ bool GlossOverlay(
 	if (hbm == nullptr)
 		return false;
 
-	const SIZE_T RowBytes = Width * 4;
+	const size_t RowBytes = Width * 4;
 	const int Center = Height / 2;
 	int x, y;
 	BYTE *p = static_cast<BYTE*>(pBits);

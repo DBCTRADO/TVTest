@@ -36,26 +36,26 @@ namespace TVTest
 {
 
 
-SIZE_T CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
+size_t CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
 {
-	SIZE_T Size;
+	size_t Size;
 
 	Size = sizeof(BITMAPINFOHEADER);
 	if (pbmih->biBitCount <= 8)
-		Size += ((SIZE_T)1 << pbmih->biBitCount) * sizeof(RGBQUAD);
+		Size += ((size_t)1 << pbmih->biBitCount) * sizeof(RGBQUAD);
 	else if (pbmih->biCompression == BI_BITFIELDS)
 		Size += 3 * sizeof(DWORD);
 	return Size;
 }
 
 
-SIZE_T CalcDIBBitsSize(const BITMAPINFOHEADER *pbmih)
+size_t CalcDIBBitsSize(const BITMAPINFOHEADER *pbmih)
 {
 	return DIB_ROW_BYTES(pbmih->biWidth, pbmih->biBitCount) * std::abs(pbmih->biHeight);
 }
 
 
-SIZE_T CalcDIBSize(const BITMAPINFOHEADER *pbmih)
+size_t CalcDIBSize(const BITMAPINFOHEADER *pbmih)
 {
 	return CalcDIBInfoSize(pbmih) + CalcDIBBitsSize(pbmih);
 }
@@ -302,7 +302,7 @@ int CImageCodec::FormatNameToIndex(LPCTSTR pszName) const
 }
 
 
-HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
+HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData, size_t DataSize)
 {
 #ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib == nullptr && !Init())

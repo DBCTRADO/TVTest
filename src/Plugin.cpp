@@ -247,7 +247,7 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo, ChannelInfo *pChanne
 class CEpgDataConverter
 {
 	static void GetEventInfoSize(
-		const LibISDB::EventInfo &EventInfo, SIZE_T *pInfoSize, SIZE_T *pStringSize);
+		const LibISDB::EventInfo &EventInfo, size_t *pInfoSize, size_t *pStringSize);
 	static void ConvertEventInfo(
 		const LibISDB::EventInfo &EventData,
 		EpgEventInfo **ppEventInfo, LPWSTR *ppStringBuffer);
@@ -272,10 +272,10 @@ public:
 
 
 void CEpgDataConverter::GetEventInfoSize(const LibISDB::EventInfo &EventInfo,
-		SIZE_T *pInfoSize, SIZE_T *pStringSize)
+		size_t *pInfoSize, size_t *pStringSize)
 {
-	SIZE_T InfoSize = sizeof(EpgEventInfo);
-	SIZE_T StringSize = 0;
+	size_t InfoSize = sizeof(EpgEventInfo);
+	size_t StringSize = 0;
 
 	if (!EventInfo.EventName.empty())
 		StringSize += EventInfo.EventName.length() + 1;
@@ -447,7 +447,7 @@ void CEpgDataConverter::ConvertEventInfo(
 
 EpgEventInfo *CEpgDataConverter::Convert(const LibISDB::EventInfo &EventData) const
 {
-	SIZE_T InfoSize, StringSize;
+	size_t InfoSize, StringSize;
 
 	GetEventInfoSize(EventData, &InfoSize, &StringSize);
 	BYTE *pBuffer = (BYTE*)malloc(InfoSize + StringSize);
@@ -467,11 +467,11 @@ EpgEventInfo *CEpgDataConverter::Convert(const LibISDB::EventInfo &EventData) co
 
 EpgEventInfo **CEpgDataConverter::Convert(const LibISDB::EPGDatabase::EventList &EventList) const
 {
-	const SIZE_T ListSize = EventList.size() * sizeof(EpgEventInfo*);
-	SIZE_T InfoSize = 0, StringSize = 0;
+	const size_t ListSize = EventList.size() * sizeof(EpgEventInfo*);
+	size_t InfoSize = 0, StringSize = 0;
 
 	for (auto &Event : EventList) {
-		SIZE_T Info, String;
+		size_t Info, String;
 
 		GetEventInfoSize(Event, &Info, &String);
 		InfoSize += Info;
@@ -1277,7 +1277,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 	case MESSAGE_MEMORYALLOC:
 		{
 			void *pData = reinterpret_cast<void*>(lParam1);
-			SIZE_T Size = lParam2;
+			size_t Size = lParam2;
 
 			if (Size > 0) {
 				return (LRESULT)realloc(pData, Size);
@@ -1533,7 +1533,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			LibISDB::COMMemoryPointer<> Image(GetAppClass().CoreEngine.GetCurrentImage());
 
 			if (Image) {
-				SIZE_T Size = CalcDIBSize(reinterpret_cast<BITMAPINFOHEADER*>(Image.get()));
+				size_t Size = CalcDIBSize(reinterpret_cast<BITMAPINFOHEADER*>(Image.get()));
 				void *pDib;
 
 				pDib = malloc(Size);
@@ -2008,7 +2008,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				return FALSE;
 
 			const int NumSpaces = pTuningSpaceList->NumSpaces();
-			SIZE_T BufferSize =
+			size_t BufferSize =
 				NumSpaces *
 					(sizeof(DriverTuningSpaceInfo) +
 					 sizeof(DriverTuningSpaceInfo*) +

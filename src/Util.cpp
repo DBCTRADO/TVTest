@@ -873,7 +873,7 @@ bool GetAbsolutePath(const String &FilePath, String *pAbsolutePath)
 static HBITMAP CreateIconMaskBitmap(
 	int IconWidth, int IconHeight, int ImageWidth, int ImageHeight)
 {
-	SIZE_T BytesPerLine, BitsBytes;
+	size_t BytesPerLine, BitsBytes;
 	BYTE *pBits;
 	int Top;
 	HBITMAP hbm;
