@@ -604,7 +604,7 @@ HBITMAP DuplicateDIB(HBITMAP hbmSrc)
 	if (hbm == nullptr)
 		return nullptr;
 
-	::CopyMemory(pBits, bm.bmBits, bm.bmHeight * bm.bmWidthBytes);
+	std::memcpy(pBits, bm.bmBits, bm.bmHeight * bm.bmWidthBytes);
 
 	if (bm.bmBitsPixel <= 8) {
 		HDC hdc = ::CreateCompatibleDC(nullptr);
@@ -1196,7 +1196,7 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 
 	if (bm.bmBitsPixel == 32) {
 		m_fColorImage = true;
-		::CopyMemory(pBits, bm.bmBits, bm.bmWidth * 4 * bm.bmHeight);
+		std::memcpy(pBits, bm.bmBits, bm.bmWidth * 4 * bm.bmHeight);
 
 		void *pPremultipliedBits;
 		m_hbmPremultiplied = CreateDIB(bm.bmWidth, bm.bmHeight, 32, &pPremultipliedBits);
@@ -1355,7 +1355,7 @@ HBITMAP CMonoColorBitmap::ExtractBitmap(int x, int y, int Width, int Height, COL
 	BYTE *q = static_cast<BYTE*>(pBits);
 	if (m_fColorImage) {
 		for (int y = 0; y < Height; y++) {
-			::CopyMemory(q, p, Width * 4);
+			std::memcpy(q, p, Width * 4);
 			p += bm.bmWidthBytes;
 			q += Width * 4;
 		}

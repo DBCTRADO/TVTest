@@ -126,7 +126,7 @@ bool CRichEditUtil::LogFontToCharFormat2(HDC hdc, const LOGFONT *plf, CHARFORMAT
 
 void CRichEditUtil::CharFormatToCharFormat2(const CHARFORMAT *pcf, CHARFORMAT2 *pcf2)
 {
-	::CopyMemory(pcf2, pcf, sizeof(CHARFORMAT));
+	std::memcpy(pcf2, pcf, sizeof(CHARFORMAT));
 	pcf2->cbSize = sizeof(CHARFORMAT2);
 }
 

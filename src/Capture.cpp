@@ -67,8 +67,8 @@ CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi, const void *pBits)
 		BYTE *pData = static_cast<BYTE*>(::GlobalLock(m_hData));
 
 		if (pData != nullptr) {
-			::CopyMemory(pData, pbmi, InfoSize);
-			::CopyMemory(pData + InfoSize, pBits, BitsSize);
+			std::memcpy(pData, pbmi, InfoSize);
+			std::memcpy(pData + InfoSize, pBits, BitsSize);
 			::GlobalUnlock(m_hData);
 		} else {
 			::GlobalFree(m_hData);
@@ -102,7 +102,7 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 	hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
 	if (hCopy == nullptr)
 		return false;
-	::CopyMemory(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
+	std::memcpy(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
 	::GlobalUnlock(hCopy);
 	::GlobalUnlock(m_hData);
 	if (!::OpenClipboard(hwnd)) {

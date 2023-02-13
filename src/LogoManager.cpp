@@ -194,7 +194,7 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		return false;
 
 	LogoFileHeader FileHeader;
-	::CopyMemory(FileHeader.Type, LOGOFILEHEADER_TYPE, 8);
+	std::memcpy(FileHeader.Type, LOGOFILEHEADER_TYPE, 8);
 	FileHeader.Version = LOGOFILEHEADER_VERSION;
 	FileHeader.NumImages = (DWORD)m_LogoMap.size();
 	if (File.Write(&FileHeader, sizeof(FileHeader)) != sizeof(FileHeader))
@@ -720,7 +720,7 @@ CLogoManager::CLogoData::CLogoData(const LibISDB::LogoDownloaderFilter::LogoData
 	, m_hbm(nullptr)
 {
 	m_Data = std::make_unique<BYTE[]>(pData->DataSize);
-	::CopyMemory(m_Data.get(), pData->pData, pData->DataSize);
+	std::memcpy(m_Data.get(), pData->pData, pData->DataSize);
 }
 
 
@@ -752,7 +752,7 @@ CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src
 		m_LogoType = Src.m_LogoType;
 		m_DataSize = Src.m_DataSize;
 		m_Data = std::make_unique<BYTE[]>(Src.m_DataSize);
-		::CopyMemory(m_Data.get(), Src.m_Data.get(), Src.m_DataSize);
+		std::memcpy(m_Data.get(), Src.m_Data.get(), Src.m_DataSize);
 		m_Time = Src.m_Time;
 	}
 	return *this;
@@ -770,7 +770,7 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 		m_hbm = ::CreateDIBSection(nullptr, pbmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
 		if (m_hbm == nullptr)
 			return nullptr;
-		::CopyMemory(
+		std::memcpy(
 			pBits, (BYTE*)pbmi + CalcDIBInfoSize(&pbmi->bmiHeader),
 			CalcDIBBitsSize(&pbmi->bmiHeader));
 		::GlobalUnlock(hDIB);

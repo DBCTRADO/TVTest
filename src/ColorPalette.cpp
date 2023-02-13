@@ -88,7 +88,7 @@ bool CColorPalette::GetPalette(RGBQUAD *pPalette)
 {
 	if (!m_Palette)
 		return false;
-	CopyMemory(pPalette, m_Palette.get(), m_NumColors * sizeof(RGBQUAD));
+	std::memcpy(pPalette, m_Palette.get(), m_NumColors * sizeof(RGBQUAD));
 	return true;
 }
 
@@ -101,7 +101,7 @@ bool CColorPalette::SetPalette(const RGBQUAD *pPalette, int NumColors)
 		m_Palette = std::make_unique<RGBQUAD[]>(NumColors);
 		m_NumColors = NumColors;
 	}
-	CopyMemory(m_Palette.get(), pPalette, NumColors * sizeof(RGBQUAD));
+	std::memcpy(m_Palette.get(), pPalette, NumColors * sizeof(RGBQUAD));
 	m_SelColor = -1;
 	m_HotColor = -1;
 	InvalidateRect(m_hwnd, nullptr, TRUE);

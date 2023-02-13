@@ -368,7 +368,7 @@ bool CopyTextToClipboard(HWND hwndOwner, LPCTSTR pszText)
 	if (hData != nullptr) {
 		LPTSTR pBuffer = static_cast<LPTSTR>(::GlobalLock(hData));
 		if (pBuffer != nullptr) {
-			::CopyMemory(pBuffer, pszText, Size);
+			std::memcpy(pBuffer, pszText, Size);
 			::GlobalUnlock(hData);
 
 			if (::OpenClipboard(hwndOwner)) {
@@ -1100,7 +1100,7 @@ bool SaveIconFromBitmap(
 		if (hbmMask != nullptr) {
 			BYTE MaskInfoBuff[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
 			BITMAPINFO *pbmiMask = reinterpret_cast<BITMAPINFO*>(MaskInfoBuff);
-			::CopyMemory(pbmiMask, &bmih, sizeof(BITMAPINFOHEADER));
+			std::memcpy(pbmiMask, &bmih, sizeof(BITMAPINFOHEADER));
 			pbmiMask->bmiHeader.biBitCount = 1;
 			static const RGBQUAD Palette[2] = {{0, 0, 0, 0}, {255, 255, 255, 0}};
 			pbmiMask->bmiColors[0] = Palette[0];

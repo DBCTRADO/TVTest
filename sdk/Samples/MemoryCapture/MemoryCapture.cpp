@@ -759,7 +759,7 @@ void CMemoryCapture::InputStream(DWORD Format, const void *pData, SIZE_T Size)
 
 		// リングバッファに保存する
 		if (Size >= m_StreamSize) {
-			::CopyMemory(m_pStreamBuffer, static_cast<const BYTE*>(pData) + (Size - m_StreamSize), Size);
+			std::memcpy(m_pStreamBuffer, static_cast<const BYTE*>(pData) + (Size - m_StreamSize), Size);
 			m_StreamPos = 0;
 			m_StreamAvail = Size;
 		} else {
@@ -767,9 +767,9 @@ void CMemoryCapture::InputStream(DWORD Format, const void *pData, SIZE_T Size)
 			std::size_t Remain = std::min(m_StreamSize - EndPos, Size);
 
 			if (Remain > 0)
-				::CopyMemory(m_pStreamBuffer + EndPos, pData, Remain);
+				std::memcpy(m_pStreamBuffer + EndPos, pData, Remain);
 			if (Remain < Size)
-				::CopyMemory(m_pStreamBuffer, static_cast<const BYTE*>(pData) + Remain, Size - Remain);
+				std::memcpy(m_pStreamBuffer, static_cast<const BYTE*>(pData) + Remain, Size - Remain);
 
 			if (m_StreamAvail + Size <= m_StreamSize) {
 				m_StreamAvail += Size;
@@ -824,9 +824,9 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 		m_DecodeSize = m_StreamAvail;
 
 		std::size_t Size = std::min(m_StreamSize - m_StreamPos, m_StreamAvail);
-		::CopyMemory(m_pDecodeBuffer, m_pStreamBuffer + m_StreamPos, Size);
+		std::memcpy(m_pDecodeBuffer, m_pStreamBuffer + m_StreamPos, Size);
 		if (Size < m_StreamAvail)
-			::CopyMemory(m_pDecodeBuffer + Size, m_pStreamBuffer, m_StreamAvail - Size);
+			std::memcpy(m_pDecodeBuffer + Size, m_pStreamBuffer, m_StreamAvail - Size);
 	}
 
 	// 前回デコードできなかった場合
@@ -1219,7 +1219,7 @@ bool CMemoryCapture::GetSaveFileName(
 				DWORD Size = (::lstrlenW(szTemp) + 1) * sizeof(WCHAR);
 				*ppszString = static_cast<LPWSTR>(pParam->pApp->MemoryAlloc(Size));
 				if (*ppszString != nullptr)
-					::CopyMemory(*ppszString, szTemp, Size);
+					std::memcpy(*ppszString, szTemp, Size);
 				return TRUE;
 			}
 
@@ -1755,7 +1755,7 @@ bool CMemoryCapture::OnFrame(const CVideoDecoder::FrameInfo &Frame)
 	std::size_t RowBytes = (Frame.Width * Frame.BitsPerPixel + 7) / 8;
 
 	for (int y = 0; y < Frame.Height; y++) {
-		::CopyMemory(pImage->GetRowPixels(y), Frame.Buffer + y * Frame.Pitch, RowBytes);
+		std::memcpy(pImage->GetRowPixels(y), Frame.Buffer + y * Frame.Pitch, RowBytes);
 	}
 
 	std::size_t FrameIndex;

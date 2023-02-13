@@ -218,7 +218,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 									s.ModuleEntry.modBaseSize) != 0
 								|| ::GetLastError() == ERROR_SUCCESS)
 								&& s.NumModuleEntries < MAX_MODULE_ENTRIES) {
-							::CopyMemory(
+							std::memcpy(
 								&s.ModuleEntries[s.NumModuleEntries],
 								&s.ModuleEntry, sizeof(MODULEENTRY32));
 							s.NumModuleEntries++;

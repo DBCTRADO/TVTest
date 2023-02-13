@@ -165,7 +165,7 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 		::GlobalFree(hBuffer);
 		return false;
 	}
-	::CopyMemory(pBuffer, pData, Size);
+	std::memcpy(pBuffer, pData, Size);
 	::GlobalUnlock(hBuffer);
 	IStream *pStream;
 	if (::CreateStreamOnHGlobal(hBuffer, TRUE, &pStream) != S_OK) {
@@ -225,7 +225,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 		const BYTE *p = static_cast<const BYTE*>(bm.bmBits) + (bm.bmHeight - 1) * bm.bmWidthBytes;
 		BYTE *q = static_cast<BYTE*>(Data.Scan0);
 		for (UINT y = 0; y < Data.Height; y++) {
-			::CopyMemory(q, p, bm.bmWidth * 4);
+			std::memcpy(q, p, bm.bmWidth * 4);
 			p -= bm.bmWidthBytes;
 			q += Data.Stride;
 		}

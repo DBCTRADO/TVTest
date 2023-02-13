@@ -82,7 +82,7 @@ bool StringIsDigit(LPCTSTR pszString)
 
 	const size_t Length = lstrlenA(pszString) + 1;
 	LPSTR pszNewString = new char[Length];
-	::CopyMemory(pszNewString, pszString, Length);
+	std::memcpy(pszNewString, pszString, Length);
 	return pszNewString;
 }
 
@@ -94,7 +94,7 @@ bool StringIsDigit(LPCTSTR pszString)
 
 	const size_t Length = lstrlenW(pszString) + 1;
 	LPWSTR pszNewString = new WCHAR[Length];
-	::CopyMemory(pszNewString, pszString, Length * sizeof(WCHAR));
+	std::memcpy(pszNewString, pszString, Length * sizeof(WCHAR));
 	return pszNewString;
 }
 

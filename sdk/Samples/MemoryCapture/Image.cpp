@@ -136,7 +136,7 @@ bool CImage::ExtractRow24(int y, BYTE *pDest) const
 	BYTE *q = pDest;
 
 	if (m_BitsPerPixel == 24) {
-		::CopyMemory(q, p, Width * 3);
+		std::memcpy(q, p, Width * 3);
 	} else if (m_BitsPerPixel == 32) {
 		for (int x = 0; x < Width; x++) {
 			*q++ = p[0];
@@ -165,7 +165,7 @@ CImage * CImage::Clone() const
 		return nullptr;
 	}
 
-	::CopyMemory(pImage->m_pPixels, m_pPixels, m_Height * m_RowBytes);
+	std::memcpy(pImage->m_pPixels, m_pPixels, m_Height * m_RowBytes);
 
 	pImage->m_FrameFlags = m_FrameFlags;
 

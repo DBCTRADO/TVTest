@@ -164,7 +164,7 @@ bool CSideBar::AddItems(const SideBarItem *pItemList, int NumItems)
 
 	size_t OldSize = m_ItemList.size();
 	m_ItemList.resize(OldSize + NumItems);
-	::CopyMemory(&m_ItemList[OldSize], pItemList, NumItems * sizeof(SideBarItem));
+	std::memcpy(&m_ItemList[OldSize], pItemList, NumItems * sizeof(SideBarItem));
 
 	if (m_Tooltip.IsCreated()) {
 		for (int i = 0; i < NumItems; i++) {

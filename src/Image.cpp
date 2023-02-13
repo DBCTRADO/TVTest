@@ -80,7 +80,7 @@ static void CropImage(
 				(pbmiSrc->bmiHeader.biHeight - 1 - (Top + y)) : (Top + y)) * SrcRowBytes +
 			Left * pbmiSrc->bmiHeader.biBitCount / 8;
 		if (pbmiSrc->bmiHeader.biBitCount == 24) {
-			CopyMemory(q, p, Width * 3);
+			std::memcpy(q, p, Width * 3);
 		} else {
 			BYTE *r;
 

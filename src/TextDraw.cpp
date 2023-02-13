@@ -189,7 +189,7 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag
 			m_StringBuffer.clear();
 			m_StringBuffer.resize(std::max(BufferLength, 256_z));
 			LPWSTR pszBuffer = &m_StringBuffer[0];
-			::CopyMemory(pszBuffer, p, Fit * sizeof(WCHAR));
+			std::memcpy(pszBuffer, p, Fit * sizeof(WCHAR));
 			LPWSTR pszCur = pszBuffer + Fit;
 			for (;;) {
 				StringCopy(pszCur, szEllipses);

@@ -545,7 +545,7 @@ static void GetFavoriteItemInfo(
 	*pItemInfo = FavoriteItemInfo();
 	pItemInfo->pszName = pStringBuffer;
 	Length = ::lstrlen(pItem->GetName()) + 1;
-	::CopyMemory(pStringBuffer, pItem->GetName(), Length * sizeof(WCHAR));
+	std::memcpy(pStringBuffer, pItem->GetName(), Length * sizeof(WCHAR));
 	pStringBuffer += Length;
 
 	++*ppItemInfo;
@@ -577,7 +577,7 @@ static void GetFavoriteItemInfo(
 		pItemInfo->Channel.ServiceID = ChannelInfo.GetServiceID();
 		pItemInfo->Channel.pszTuner = pStringBuffer;
 		Length = ::lstrlen(pChannel->GetBonDriverFileName()) + 1;
-		::CopyMemory(pStringBuffer, pChannel->GetBonDriverFileName(), Length * sizeof(WCHAR));
+		std::memcpy(pStringBuffer, pChannel->GetBonDriverFileName(), Length * sizeof(WCHAR));
 		pStringBuffer += Length;
 	}
 
@@ -1538,7 +1538,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 				pDib = std::malloc(Size);
 				if (pDib != nullptr)
-					::CopyMemory(pDib, Image.get(), Size);
+					std::memcpy(pDib, Image.get(), Size);
 				return (LRESULT)pDib;
 			}
 		}
@@ -2957,7 +2957,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pInfo->pszResult = static_cast<LPWSTR>(std::malloc((Result.length() + 1) * sizeof(WCHAR)));
 			if (pInfo->pszResult == nullptr)
 				return FALSE;
-			::CopyMemory(pInfo->pszResult, Result.c_str(), (Result.length() + 1) * sizeof(WCHAR));
+			std::memcpy(pInfo->pszResult, Result.c_str(), (Result.length() + 1) * sizeof(WCHAR));
 		}
 		return TRUE;
 
@@ -4213,7 +4213,7 @@ static bool GetSettingFont(SettingInfo *pSetting, const LOGFONT *pFont)
 	if (pSetting->Value.pData != nullptr) {
 		if (pSetting->ValueSize != sizeof(LOGFONT))
 			return false;
-		::CopyMemory(pSetting->Value.pData, pFont, sizeof(LOGFONT));
+		std::memcpy(pSetting->Value.pData, pFont, sizeof(LOGFONT));
 	} else {
 		pSetting->ValueSize = sizeof(LOGFONT);
 	}
