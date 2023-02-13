@@ -653,7 +653,7 @@ void CCaptionPanel::OnCaption(
 							StringCopy(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
 							TRACE(TEXT("Caption exclude : {}\n"), szTrace);
 #endif
-							memmove(
+							std::memmove(
 								&pszBuff[Pos], &pszBuff[NextPos],
 								(DstLength - NextPos + 1) * sizeof(TCHAR));
 							DstLength -= NextPos - Pos;
@@ -669,13 +669,13 @@ void CCaptionPanel::OnCaption(
 		for (DWORD i = 0; i < DstLength; i++) {
 			if (pszBuff[i] == '\f') {
 				if (i == 0 && !Lang.fContinue) {
-					memmove(&pszBuff[2], &pszBuff[1], DstLength * sizeof(TCHAR));
+					std::memmove(&pszBuff[2], &pszBuff[1], DstLength * sizeof(TCHAR));
 					pszBuff[0] = '\r';
 					pszBuff[1] = '\n';
 					i++;
 					DstLength++;
 				} else {
-					memmove(&pszBuff[i], &pszBuff[i + 1], (DstLength - i) * sizeof(TCHAR));
+					std::memmove(&pszBuff[i], &pszBuff[i + 1], (DstLength - i) * sizeof(TCHAR));
 					DstLength--;
 				}
 			}
