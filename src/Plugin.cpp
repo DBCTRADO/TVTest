@@ -450,7 +450,7 @@ EpgEventInfo *CEpgDataConverter::Convert(const LibISDB::EventInfo &EventData) co
 	size_t InfoSize, StringSize;
 
 	GetEventInfoSize(EventData, &InfoSize, &StringSize);
-	BYTE *pBuffer = (BYTE*)malloc(InfoSize + StringSize);
+	BYTE *pBuffer = (BYTE*)std::malloc(InfoSize + StringSize);
 	if (pBuffer == nullptr)
 		return nullptr;
 	EpgEventInfo *pEventInfo = (EpgEventInfo*)pBuffer;
@@ -477,7 +477,7 @@ EpgEventInfo **CEpgDataConverter::Convert(const LibISDB::EPGDatabase::EventList 
 		InfoSize += Info;
 		StringSize += String;
 	}
-	BYTE *pBuffer = (BYTE*)malloc(ListSize + InfoSize + StringSize);
+	BYTE *pBuffer = (BYTE*)std::malloc(ListSize + InfoSize + StringSize);
 	if (pBuffer == nullptr)
 		return nullptr;
 	EpgEventInfo **ppEventList = (EpgEventInfo**)pBuffer;
@@ -499,13 +499,13 @@ EpgEventInfo **CEpgDataConverter::Convert(const LibISDB::EPGDatabase::EventList 
 
 void CEpgDataConverter::FreeEventInfo(EpgEventInfo *pEventInfo)
 {
-	free(pEventInfo);
+	std::free(pEventInfo);
 }
 
 
 void CEpgDataConverter::FreeEventList(EpgEventInfo **ppEventList)
 {
-	free(ppEventList);
+	std::free(ppEventList);
 }
 
 
@@ -1280,9 +1280,9 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			size_t Size = lParam2;
 
 			if (Size > 0) {
-				return (LRESULT)realloc(pData, Size);
+				return (LRESULT)std::realloc(pData, Size);
 			} else if (pData != nullptr) {
-				free(pData);
+				std::free(pData);
 			}
 		}
 		return (LRESULT)(void*)0;
@@ -1536,7 +1536,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				size_t Size = CalcDIBSize(reinterpret_cast<BITMAPINFOHEADER*>(Image.get()));
 				void *pDib;
 
-				pDib = malloc(Size);
+				pDib = std::malloc(Size);
 				if (pDib != nullptr)
 					::CopyMemory(pDib, Image.get(), Size);
 				return (LRESULT)pDib;
@@ -2019,7 +2019,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					pChannelList->NumChannels() *
 						(sizeof(ChannelInfo) + sizeof(ChannelInfo*));
 			}
-			BYTE *pBuffer = (BYTE*)malloc(BufferSize);
+			BYTE *pBuffer = (BYTE*)std::malloc(BufferSize);
 			if (pBuffer == nullptr)
 				return FALSE;
 			BYTE *p = pBuffer;
@@ -2068,7 +2068,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				reinterpret_cast<DriverTuningSpaceList*>(lParam1);
 
 			if (pList != nullptr) {
-				free(pList->SpaceList);
+				std::free(pList->SpaceList);
 				pList->NumSpaces = 0;
 				pList->SpaceList = nullptr;
 			}
