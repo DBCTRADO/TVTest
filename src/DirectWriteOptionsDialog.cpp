@@ -307,7 +307,7 @@ float CDirectWriteOptionsDialog::GetItemFloatValue(int ID)
 	TCHAR szText[64];
 
 	::GetDlgItemText(m_hDlg, ID, szText, lengthof(szText));
-	return static_cast<float>(std::_tcstod(szText, nullptr));
+	return std::_tcstof(szText, nullptr);
 }
 
 

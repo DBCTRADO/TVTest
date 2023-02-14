@@ -1876,13 +1876,7 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 				if (::GetDlgItemText(
 							hDlg, IDC_CHANNELSCANSETTINGS_SIGNALLEVELTHRESHOLD,
 							szText, lengthof(szText)) > 0) {
-					m_pChannelScan->m_SignalLevelThreshold =
-#ifdef _tcstof
-						_tcstof(szText, nullptr)
-#else
-						static_cast<float>(_tcstod(szText, nullptr))
-#endif
-						;
+					m_pChannelScan->m_SignalLevelThreshold = std::_tcstof(szText, nullptr);
 				}
 
 				m_pChannelScan->m_ScanWait =
