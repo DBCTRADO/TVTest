@@ -23,6 +23,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <algorithm>
 #include <crtdbg.h>
 #if defined(_MSC_VER) && defined(_M_X64)
@@ -445,7 +446,7 @@ bool CEqualizer::ReadPreset(LPCTSTR pszSection, LPCTSTR pszKeyName, EqualizerSet
 		if (*p == _T('\0'))
 			break;
 		LPTSTR pEnd;
-		int Value = (int)::_tcstol(p, &pEnd, 10);
+		int Value = (int)std::_tcstol(p, &pEnd, 10);
 		if (pEnd == p)
 			break;
 		p = pEnd;

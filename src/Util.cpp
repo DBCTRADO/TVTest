@@ -591,7 +591,7 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 
 bool CompareLogFont(const LOGFONT *pFont1, const LOGFONT *pFont2)
 {
-	return memcmp(pFont1, pFont2, 28/*offsetof(LOGFONT, lfFaceName)*/) == 0
+	return std::memcmp(pFont1, pFont2, 28/*offsetof(LOGFONT, lfFaceName)*/) == 0
 		&& lstrcmp(pFont1->lfFaceName, pFont2->lfFaceName) == 0;
 }
 

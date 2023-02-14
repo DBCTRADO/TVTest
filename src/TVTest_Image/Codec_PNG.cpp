@@ -66,7 +66,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 	if (_tfopen_s(&fp, pInfo->pszFileName, TEXT("wbN")) != 0)
 		return false;
 	// 書き込み単位がとても小さく保存先によってはバッファリングの効果が大きいため
-	setvbuf(fp, nullptr, _IOFBF, 64 * 1024);
+	std::setvbuf(fp, nullptr, _IOFBF, 64 * 1024);
 
 	png_structp pPNG = nullptr;
 	png_infop pPNGInfo = nullptr;
@@ -79,13 +79,13 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 
 		pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, PNGError, PNGWarning);
 		if (pPNG == nullptr) {
-			fclose(fp);
+			std::fclose(fp);
 			return false;
 		}
 		pPNGInfo = png_create_info_struct(pPNG);
 		if (pPNGInfo == nullptr) {
 			png_destroy_write_struct(&pPNG, nullptr);
-			fclose(fp);
+			std::fclose(fp);
 			return false;
 		}
 
@@ -187,10 +187,10 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 
 		png_write_end(pPNG, pPNGInfo);
 		png_destroy_write_struct(&pPNG, &pPNGInfo);
-		fclose(fp);
+		std::fclose(fp);
 	} catch (...) {
 		png_destroy_write_struct(&pPNG, &pPNGInfo);
-		fclose(fp);
+		std::fclose(fp);
 		return false;
 	}
 
@@ -377,7 +377,7 @@ HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 	if (pData == nullptr || DataSize <= 8)
 		return nullptr;
 	p = static_cast<const BYTE*>(pData);
-	if (memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
+	if (std::memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
 		return nullptr;
 	Pos = 8;
 	while (Pos + 8 < DataSize) {

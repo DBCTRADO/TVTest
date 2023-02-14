@@ -256,13 +256,13 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 					break;
 
 				LPTSTR p = szText;
-				WORD NetworkID = (WORD)_tcstoul(p, &p, 0);
+				WORD NetworkID = (WORD)std::_tcstoul(p, &p, 0);
 				if (!CSVNextValue(&p))
 					continue;
-				WORD TransportStreamID = (WORD)_tcstoul(p, &p, 0);
+				WORD TransportStreamID = (WORD)std::_tcstoul(p, &p, 0);
 				if (!CSVNextValue(&p))
 					continue;
-				WORD ServiceID = (WORD)_tcstoul(p, &p, 0);
+				WORD ServiceID = (WORD)std::_tcstoul(p, &p, 0);
 				if (ServiceID == 0)
 					continue;
 

@@ -32,13 +32,13 @@ namespace TVTest
 
 LONGLONG StringToInt64(LPCTSTR pszString)
 {
-	return _tcstoi64(pszString, nullptr, 0);
+	return std::_tcstoll(pszString, nullptr, 0);
 }
 
 
 ULONGLONG StringToUInt64(LPCTSTR pszString)
 {
-	return _tcstoui64(pszString, nullptr, 0);
+	return std::_tcstoull(pszString, nullptr, 0);
 }
 
 
