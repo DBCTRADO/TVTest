@@ -22,6 +22,7 @@
 #include "TVTest.h"
 #include "AppMain.h"
 #include "LogoManager.h"
+#include "IniFile.h"
 #include "LibISDB/LibISDB/Base/FileStream.hpp"
 #include "LibISDB/LibISDB/Utilities/CRC.hpp"
 #include "Common/DebugDef.h"
@@ -327,13 +328,20 @@ bool CLogoManager::SaveLogoIDMap(LPCTSTR pszFileName)
 		}
 	}
 
+	CIniFile File;
+	if (!File.Open(pszFileName, CIniFile::OpenFlag::Write))
+		return false;
+
+	File.SelectSection(TEXT("LogoIDMap"));
+
 	for (const auto &e : m_LogoIDMap) {
 		TCHAR szKey[16], szText[16];
 
 		StringFormat(szKey, TEXT("{:08X}"), e.first);
 		StringFormat(szText, TEXT("{}"), e.second);
-		::WritePrivateProfileString(TEXT("LogoIDMap"), szKey, szText, pszFileName);
+		File.SetValue(szKey, szText);
 	}
+
 	return true;
 }
 
@@ -349,28 +357,23 @@ bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 		m_LogoIDMapFileLastWriteTime = AttributeData.ftLastWriteTime;
 	}
 
-	LPTSTR pszSection = new TCHAR[32767];
-	if (::GetPrivateProfileSection(TEXT("LogoIDMap"), pszSection, 32767, pszFileName) > 2) {
-		for (LPTSTR p = pszSection; *p != _T('\0'); p += ::lstrlen(p) + 1) {
-			int i;
-			DWORD Key = 0;
-			for (i = 0; i < 8; i++) {
-				Key <<= 4;
-				if (p[i] >= _T('0') && p[i] <= _T('9'))
-					Key |= p[i] - _T('0');
-				else if (p[i] >= _T('a') && p[i] <= _T('z'))
-					Key |= p[i] - _T('a') + 10;
-				else if (p[i] >= _T('A') && p[i] <= _T('Z'))
-					Key |= p[i] - _T('A') + 10;
-				else
-					break;
-			}
-			if (i == 8 && p[i] == _T('=')) {
-				m_LogoIDMap.emplace(Key, (WORD)::StrToInt(&p[i + 1]));
+	CIniFile File;
+	if (File.Open(pszFileName, CIniFile::OpenFlag::Read)) {
+		CIniFile::EntryArray Entries;
+		if (File.GetSectionEntries(TEXT("LogoIDMap"), &Entries)) {
+			for (const CIniFile::CEntry &Entry : Entries) {
+				if (!Entry.Value.empty()) {
+					if (std::all_of(
+							Entry.Name.begin(), Entry.Name.end(),
+							[](TCHAR c) -> bool { return std::_istxdigit(c) != 0; })) {
+						m_LogoIDMap.emplace(
+							std::_tcstoul(Entry.Name.c_str(), nullptr, 16),
+							static_cast<WORD>(std::_tcstoul(Entry.Value.c_str(), nullptr, 10)));
+					}
+				}
 			}
 		}
 	}
-	delete [] pszSection;
 
 	return true;
 }
