@@ -346,10 +346,9 @@ HACCEL CAccelerator::CreateAccel()
 	if (m_KeyList.size() == 0)
 		return nullptr;
 
-	LPACCEL paccl;
+	std::unique_ptr<ACCEL[]> paccl(new ACCEL[m_KeyList.size()]);
 	int j;
 
-	paccl = new ACCEL[m_KeyList.size()];
 	j = 0;
 	for (size_t i = 0; i < m_KeyList.size(); i++) {
 		if (!m_KeyList[i].fGlobal) {
@@ -365,11 +364,11 @@ HACCEL CAccelerator::CreateAccel()
 			j++;
 		}
 	}
-	HACCEL hAccel = nullptr;
-	if (j > 0)
-		hAccel = ::CreateAcceleratorTable(paccl, j);
-	delete [] paccl;
-	return hAccel;
+
+	if (j == 0)
+		return nullptr;
+
+	return ::CreateAcceleratorTable(paccl.get(), j);
 }
 
 

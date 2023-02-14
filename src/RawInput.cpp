@@ -96,16 +96,15 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	HRAWINPUT hRawInput = reinterpret_cast<HRAWINPUT>(lParam);
 	UINT Size = 0;
-	BYTE *pData;
 
 	if (m_pEventHandler == nullptr)
 		return 0;
 	::GetRawInputData(hRawInput, RID_INPUT, nullptr, &Size, sizeof(RAWINPUTHEADER));
 	if (Size == 0)
 		return 0;
-	pData = new BYTE[Size];
-	if (::GetRawInputData(hRawInput, RID_INPUT, pData, &Size, sizeof(RAWINPUTHEADER)) == Size) {
-		RAWINPUT *pri = reinterpret_cast<RAWINPUT*>(pData);
+	std::unique_ptr<BYTE[]> Data(new BYTE[Size]);
+	if (::GetRawInputData(hRawInput, RID_INPUT, Data.get(), &Size, sizeof(RAWINPUTHEADER)) == Size) {
+		RAWINPUT *pri = reinterpret_cast<RAWINPUT*>(Data.get());
 
 		if (pri->header.dwType == RIM_TYPEHID) {
 			if (pri->data.hid.dwCount >= 1 && pri->data.hid.dwSizeHid >= 3) {
@@ -121,7 +120,7 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			}
 		}
 	}
-	delete [] pData;
+
 	return 0;
 }
 

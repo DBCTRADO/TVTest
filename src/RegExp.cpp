@@ -59,10 +59,9 @@ void StringToHalfWidth(String &Text)
 #if 0
 	int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), nullptr, 0);
 	if (MapLength > 0) {
-		pMapText = new TCHAR[MapLength];
-		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), pMapText, MapLength);
-		Text.assign(pMapText, MapLength);
-		delete [] pMapText;
+		String MapText(MapLength, L'\0');
+		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), MapText.data(), MapLength);
+		Text = std::move(MapText);
 	}
 #else
 	// 変換前後で長さが変わると面倒なので、ASCIIの範囲のみにしておく

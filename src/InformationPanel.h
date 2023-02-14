@@ -348,7 +348,7 @@ namespace TVTest
 		template<typename T> void RegisterItem(bool fVisible = true)
 		{
 			T *pItem = new T(this, fVisible);
-			m_ItemList[pItem->GetID()] = pItem;
+			m_ItemList[pItem->GetID()].reset(pItem);
 		}
 
 		class CProgramInfoSubclass
@@ -379,7 +379,7 @@ namespace TVTest
 		static const LPCTSTR m_pszClassName;
 		static HINSTANCE m_hinst;
 
-		CItem *m_ItemList[NUM_ITEMS];
+		std::unique_ptr<CItem> m_ItemList[NUM_ITEMS];
 		InformationPanelStyle m_Style;
 		InformationPanelTheme m_Theme;
 		DrawUtil::CBrush m_BackBrush;

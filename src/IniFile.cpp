@@ -77,7 +77,6 @@ bool CIniFile::Open(LPCWSTR pszFileName, OpenFlag Flags)
 		pszFileName, DesiredAccess, ShareMode, nullptr,
 		!!(Flags & OpenFlag::Write) ? OPEN_ALWAYS : OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL, nullptr);
-	BYTE *pBuffer = nullptr;
 	try {
 		if (hFile != INVALID_HANDLE_VALUE) {
 			LARGE_INTEGER FileSize;
@@ -86,35 +85,30 @@ bool CIniFile::Open(LPCWSTR pszFileName, OpenFlag Flags)
 			}
 
 			if (FileSize.LowPart > 2) {
-				pBuffer = new BYTE[FileSize.LowPart + 3];
+				std::unique_ptr<BYTE[]> Buffer(new BYTE[FileSize.LowPart + 3]);
 				DWORD Read;
-				if (!::ReadFile(hFile, pBuffer, FileSize.LowPart, &Read, nullptr)
+				if (!::ReadFile(hFile, Buffer.get(), FileSize.LowPart, &Read, nullptr)
 						|| Read != FileSize.LowPart) {
 					throw __LINE__;
 				}
-				pBuffer[FileSize.LowPart + 0] = 0;
-				pBuffer[FileSize.LowPart + 1] = 0;
-				pBuffer[FileSize.LowPart + 2] = 0;
+				Buffer[FileSize.LowPart + 0] = 0;
+				Buffer[FileSize.LowPart + 1] = 0;
+				Buffer[FileSize.LowPart + 2] = 0;
 
-				if (pBuffer[0] == 0xFF && pBuffer[1] == 0xFE) {
-					Parse((WCHAR*)(pBuffer + 2));
+				if (Buffer[0] == 0xFF && Buffer[1] == 0xFE) {
+					Parse((WCHAR*)(Buffer.get() + 2));
 				} else {
-					int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)pBuffer, FileSize.LowPart, nullptr, 0);
-					LPWSTR pszData = new WCHAR[Length + 1];
-					::MultiByteToWideChar(CP_ACP, 0, (char*)pBuffer, FileSize.LowPart, pszData, Length);
-					pszData[Length] = L'\0';
-					Parse(pszData);
-					delete [] pszData;
+					int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, nullptr, 0);
+					std::wstring Data(Length, L'\0');
+					::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, Data.data(), Length);
+					Parse(Data.c_str());
 				}
-
-				delete [] pBuffer;
 			}
 		} else {
 			TRACE(TEXT("Ini file open failed {:#x}\n"), ::GetLastError());
 			throw __LINE__;
 		}
 	} catch (...) {
-		delete [] pBuffer;
 		if (hFile != INVALID_HANDLE_VALUE)
 			::CloseHandle(hFile);
 		m_FileLock.Release();

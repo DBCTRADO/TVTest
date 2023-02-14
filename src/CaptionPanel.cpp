@@ -275,20 +275,19 @@ bool CCaptionPanel::SetLanguage(BYTE Language)
 
 		if (Length > 0) {
 			LanguageInfo &Lang = m_LanguageList[m_CurLanguage];
-			LPTSTR pszBuffer = new TCHAR[Length + 1];
+			String Buffer(Length + 1, _T('\0'));
 			int End;
 
-			::GetWindowText(m_hwndEdit, pszBuffer, Length + 1);
+			::GetWindowText(m_hwndEdit, Buffer.data(), Length + 1);
 			End = Length - 1;
 			for (int i = Length - 2; Lang.CaptionList.size() < MAX_QUEUE_TEXT; i--) {
-				if (i < 0 || pszBuffer[i] == _T('\n')) {
-					Lang.CaptionList.emplace_front(pszBuffer + (i + 1), End - i);
+				if (i < 0 || Buffer[i] == _T('\n')) {
+					Lang.CaptionList.emplace_front(Buffer.substr(i + 1, End - i));
 					if (i < 0)
 						break;
 					End = i;
 				}
 			}
-			delete [] pszBuffer;
 		}
 	}
 
@@ -337,10 +336,10 @@ void CCaptionPanel::OnCommand(int Command)
 		{
 			int Length = ::GetWindowTextLengthW(m_hwndEdit);
 			if (Length > 0) {
-				LPWSTR pszText = new WCHAR[Length + 1];
+				std::wstring Text(Length + 1, L'\0');
 				DWORD Start, End;
 
-				::GetWindowTextW(m_hwndEdit, pszText, Length + 1);
+				::GetWindowTextW(m_hwndEdit, Text.data(), Length + 1);
 				::SendMessageW(m_hwndEdit, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
 
 				OPENFILENAME ofn;
@@ -371,10 +370,10 @@ void CCaptionPanel::OnCommand(int Command)
 						DWORD Write;
 
 						if (Start < End) {
-							pSrcText = pszText + Start;
+							pSrcText = Text.c_str() + Start;
 							SrcLength = End - Start;
 						} else {
-							pSrcText = pszText;
+							pSrcText = Text.c_str();
 							SrcLength = Length;
 						}
 						if (m_SaveCharEncoding == CHARENCODING_UTF16) {
@@ -388,11 +387,10 @@ void CCaptionPanel::OnCommand(int Command)
 								m_SaveCharEncoding == CHARENCODING_UTF8 ? CP_UTF8 : 932;
 							int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
 							if (EncodedLen > 0) {
-								char *pEncodedText = new char[EncodedLen];
-								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, pEncodedText, EncodedLen, nullptr, nullptr);
-								fOK = ::WriteFile(hFile, pEncodedText, EncodedLen, &Write, nullptr)
+								std::string EncodedText(EncodedLen, '\0');
+								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, EncodedText.data(), EncodedLen, nullptr, nullptr);
+								fOK = ::WriteFile(hFile, EncodedText.data(), EncodedLen, &Write, nullptr)
 									&& Write == (DWORD)EncodedLen;
-								delete [] pEncodedText;
 							}
 						}
 
@@ -405,8 +403,6 @@ void CCaptionPanel::OnCommand(int Command)
 							MB_OK | MB_ICONEXCLAMATION);
 					}
 				}
-
-				delete [] pszText;
 			}
 		}
 		break;
@@ -637,62 +633,51 @@ void CCaptionPanel::OnCaption(
 			Lang.fClearLast = false;
 		}
 
-		LPTSTR pszBuff = new TCHAR[Length + 2];
-		StringCopy(pszBuff, pText);
-		DWORD DstLength = Length;
+		String Buff(pText);
 
 		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
 			for (int i = (int)pFormatList->size() - 1; i >= 0; i--) {
 				if ((*pFormatList)[i].Size == LibISDB::ARIBStringDecoder::CharSize::Small) {
-					DWORD Pos = (DWORD)(*pFormatList)[i].Pos;
-					if (Pos < DstLength) {
+					size_t Pos = (*pFormatList)[i].Pos;
+					if (Pos < Buff.length()) {
 						if (i + 1 < (int)pFormatList->size()) {
-							DWORD NextPos = std::min(DstLength, (DWORD)(*pFormatList)[i + 1].Pos);
-#ifdef _DEBUG
-							TCHAR szTrace[1024];
-							StringCopy(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
-							TRACE(TEXT("Caption exclude : {}\n"), szTrace);
-#endif
-							std::memmove(
-								&pszBuff[Pos], &pszBuff[NextPos],
-								(DstLength - NextPos + 1) * sizeof(TCHAR));
-							DstLength -= NextPos - Pos;
+							size_t NextPos = std::min(Buff.length(), (*pFormatList)[i + 1].Pos);
+							TRACE(TEXT("Caption exclude : {}\n"), StringView(&Buff[Pos], NextPos - Pos));
+							Buff.erase(Pos, NextPos - Pos);
 						} else {
-							pszBuff[Pos] = '\0';
-							DstLength = Pos;
+							Buff.erase(Pos);
 						}
 					}
 				}
 			}
 		}
 
-		for (DWORD i = 0; i < DstLength; i++) {
-			if (pszBuff[i] == '\f') {
+		for (size_t i = 0; i < Buff.length(); i++) {
+			if (Buff[i] == '\f') {
 				if (i == 0 && !Lang.fContinue) {
-					std::memmove(&pszBuff[2], &pszBuff[1], DstLength * sizeof(TCHAR));
-					pszBuff[0] = '\r';
-					pszBuff[1] = '\n';
+					Buff.replace(0, 1, TEXT("\r\n"));
 					i++;
-					DstLength++;
 				} else {
-					std::memmove(&pszBuff[i], &pszBuff[i + 1], (DstLength - i) * sizeof(TCHAR));
-					DstLength--;
+					Buff.erase(i);
 				}
 			}
 		}
 		Lang.fContinue =
 #ifdef UNICODE
-			DstLength > 1 && pszBuff[DstLength - 1] == L'→';
+			Buff.length() > 1 && Buff.back() == L'→';
 #else
-			DstLength > 2 && pszBuff[DstLength - 2] == "→"[0] && pszBuff[DstLength - 1] == "→"[1];
+			Buff.length() > 2 && Buff[Buff.length() - 2] == "→"[0] && Buff[Buff.length() - 1] == "→"[1];
 #endif
 		if (Lang.fContinue)
-			pszBuff[DstLength - (3 - sizeof(TCHAR))] = '\0';
-		if (DstLength > 0) {
-			Lang.NextCaption += pszBuff;
+#ifdef UNICODE
+			Buff.pop_back();
+#else
+			Buff.erase(Buff.length() - 2);
+#endif
+		if (!Buff.empty()) {
+			Lang.NextCaption += Buff;
 			AddNextCaption(Language);
 		}
-		delete [] pszBuff;
 	}
 }
 
@@ -978,14 +963,14 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 		return false;
 	}
 
-	BYTE *pDIBBits = new BYTE[BitsSize];
+	std::unique_ptr<BYTE[]> DIBBits(new BYTE[BitsSize]);
 	const BYTE *p = static_cast<const BYTE*>(pBitmap->pData);
-	BYTE *q = pDIBBits + (pBitmap->Height - 1) * DIBRowBytes;
+	BYTE *q = DIBBits.get() + (pBitmap->Height - 1) * DIBRowBytes;
 	int x, y;
 	if (BitCount == 1) {
 		BYTE Mask;
 
-		::ZeroMemory(pDIBBits, BitsSize);
+		::ZeroMemory(DIBBits.get(), BitsSize);
 		Mask = 0x80;
 		for (y = 0; y < pBitmap->Height; y++) {
 			for (x = 0; x < pBitmap->Width; x++) {
@@ -1027,12 +1012,10 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 			q -= DIBRowBytes;
 		}
 	}
-	if (!::WriteFile(hFile, pDIBBits, BitsSize, &Write, nullptr) || Write != BitsSize) {
-		delete [] pDIBBits;
+	if (!::WriteFile(hFile, DIBBits.get(), BitsSize, &Write, nullptr) || Write != BitsSize) {
 		::CloseHandle(hFile);
 		return false;
 	}
-	delete [] pDIBBits;
 
 	::CloseHandle(hFile);
 	return true;

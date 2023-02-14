@@ -549,19 +549,18 @@ HRESULT ShowPropertyPageFrame(IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst
 		hr = pSpecifyPropPages2->GetPages(&Pages);
 		if (SUCCEEDED(hr) && Pages.pElems != nullptr) {
 			if (Pages.cElems > 0) {
-				IPropertyPage **ppPropPages = new IPropertyPage*[Pages.cElems];
+				std::vector<IPropertyPage*> PropPages(Pages.cElems);
 				ULONG j;
 
 				for (j = 0; j < Pages.cElems; j++) {
-					hr = pSpecifyPropPages2->CreatePage(Pages.pElems[j], &ppPropPages[j]);
+					hr = pSpecifyPropPages2->CreatePage(Pages.pElems[j], &PropPages[j]);
 					if (FAILED(hr))
 						break;
 				}
 				if (SUCCEEDED(hr))
-					hr = ShowPropertyPageFrame(ppPropPages, Pages.cElems, pObject, hwndOwner, hinst);
+					hr = ShowPropertyPageFrame(PropPages.data(), Pages.cElems, pObject, hwndOwner, hinst);
 				while (j > 0)
-					ppPropPages[--j]->Release();
-				delete [] ppPropPages;
+					PropPages[--j]->Release();
 			}
 			::CoTaskMemFree(Pages.pElems);
 		}

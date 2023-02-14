@@ -437,7 +437,7 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 
-	BYTE *pBuffer = nullptr;
+	std::unique_ptr<BYTE[]> Buffer;
 	LPWSTR pszBuffer;
 
 	try {
@@ -446,28 +446,27 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 				|| FileSize.QuadPart <= 4 || FileSize.QuadPart > 1024 * 1024)
 			throw __LINE__;
 
-		pBuffer = new BYTE[FileSize.LowPart + 3];
+		Buffer.reset(new BYTE[FileSize.LowPart + 3]);
 		DWORD Read;
-		if (!::ReadFile(hFile, pBuffer, FileSize.LowPart, &Read, nullptr)
+		if (!::ReadFile(hFile, Buffer.get(), FileSize.LowPart, &Read, nullptr)
 				|| Read != FileSize.LowPart)
 			throw __LINE__;
-		pBuffer[FileSize.LowPart + 0] = 0;
-		pBuffer[FileSize.LowPart + 1] = 0;
-		pBuffer[FileSize.LowPart + 2] = 0;
+		Buffer[FileSize.LowPart + 0] = 0;
+		Buffer[FileSize.LowPart + 1] = 0;
+		Buffer[FileSize.LowPart + 2] = 0;
 
-		if (pBuffer[0] == 0xFF && pBuffer[1] == 0xFE) {
-			pszBuffer = (LPWSTR)(pBuffer + 2);
+		if (Buffer[0] == 0xFF && Buffer[1] == 0xFE) {
+			pszBuffer = (LPWSTR)(Buffer.get() + 2);
 		} else {
-			BYTE *pSrc = pBuffer;
-			int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)pSrc, FileSize.LowPart, nullptr, 0);
-			pBuffer = new BYTE[(Length + 1) * sizeof(WCHAR)];
-			pszBuffer = (LPWSTR)pBuffer;
-			::MultiByteToWideChar(CP_ACP, 0, (char*)pSrc, FileSize.LowPart, pszBuffer, Length);
-			pszBuffer[Length] = L'\0';
-			delete [] pSrc;
+			int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, nullptr, 0);
+			std::unique_ptr<BYTE[]> ConvertedBuffer(new BYTE[(Length + 1) * sizeof(WCHAR)]);
+			LPWSTR pszDst = (LPWSTR)ConvertedBuffer.get();
+			::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, pszDst, Length);
+			pszDst[Length] = L'\0';
+			Buffer = std::move(ConvertedBuffer);
+			pszBuffer = pszDst;
 		}
 	} catch (...) {
-		delete [] pBuffer;
 		::CloseHandle(hFile);
 		return false;
 	}
@@ -533,8 +532,6 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 		while (*p == _T('\r') || *p == _T('\n'))
 			p++;
 	}
-
-	delete [] pBuffer;
 
 	return true;
 }

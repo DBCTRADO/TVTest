@@ -874,23 +874,21 @@ static HBITMAP CreateIconMaskBitmap(
 	int IconWidth, int IconHeight, int ImageWidth, int ImageHeight)
 {
 	size_t BytesPerLine, BitsBytes;
-	BYTE *pBits;
 	int Top;
-	HBITMAP hbm;
 
 	BytesPerLine = (IconWidth + 15) / 16 * 2;
 	BitsBytes = BytesPerLine * IconHeight;
-	pBits = new BYTE[BitsBytes];
-	::FillMemory(pBits, BitsBytes, 0xFF);
+	std::unique_ptr<BYTE[]> Bits(new BYTE[BitsBytes]);
+	::FillMemory(Bits.get(), BitsBytes, 0xFF);
 	Top = (IconHeight - ImageHeight) / 2;
 	if (ImageWidth == IconWidth) {
-		::ZeroMemory(pBits + Top * BytesPerLine, ImageHeight * BytesPerLine);
+		::ZeroMemory(Bits.get() + Top * BytesPerLine, ImageHeight * BytesPerLine);
 	} else {
 		int Left, x, y;
 		BYTE *p;
 
 		Left = (IconWidth - ImageWidth) / 2;
-		p = pBits + Top * BytesPerLine;
+		p = Bits.get() + Top * BytesPerLine;
 		for (y = 0; y < ImageHeight; y++) {
 			for (x = Left; x < Left + ImageWidth; x++)
 				//p[x / 8] &= ~(0x80 >> (x % 8));
@@ -898,9 +896,8 @@ static HBITMAP CreateIconMaskBitmap(
 			p += BytesPerLine;
 		}
 	}
-	hbm = ::CreateBitmap(IconWidth, IconHeight, 1, 1, pBits);
-	delete [] pBits;
-	return hbm;
+
+	return ::CreateBitmap(IconWidth, IconHeight, 1, 1, Bits.get());
 }
 
 static HBITMAP CreateIconColorBitmap(
@@ -1105,8 +1102,8 @@ bool SaveIconFromBitmap(
 			static const RGBQUAD Palette[2] = {{0, 0, 0, 0}, {255, 255, 255, 0}};
 			pbmiMask->bmiColors[0] = Palette[0];
 			pbmiMask->bmiColors[1] = Palette[1];
-			BYTE *pMaskBits = new BYTE[MaskBytes];
-			::GetDIBits(hdcSrc, hbmMask, 0, IconHeight, pMaskBits, pbmiMask, DIB_RGB_COLORS);
+			std::unique_ptr<BYTE[]> MaskBits(new BYTE[MaskBytes]);
+			::GetDIBits(hdcSrc, hbmMask, 0, IconHeight, MaskBits.get(), pbmiMask, DIB_RGB_COLORS);
 
 			HANDLE hFile = ::CreateFile(
 				pszFileName, GENERIC_WRITE, 0, nullptr,
@@ -1121,13 +1118,12 @@ bool SaveIconFromBitmap(
 						&& Write == sizeof(BITMAPINFOHEADER)
 						&& ::WriteFile(hFile, pColorBits, PixelBytes, &Write, nullptr)
 						&& Write == PixelBytes
-						&& ::WriteFile(hFile, pMaskBits, MaskBytes, &Write, nullptr)
+						&& ::WriteFile(hFile, MaskBits.get(), MaskBytes, &Write, nullptr)
 						&& Write == MaskBytes)
 					fOK = true;
 				::CloseHandle(hFile);
 			}
 
-			delete [] pMaskBits;
 			::DeleteObject(hbmMask);
 		}
 
@@ -1148,14 +1144,15 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 	ICONINFO ii = {TRUE, 0, 0, nullptr, nullptr};
 	HICON hicon = nullptr;
 
-	const int Planes = BitsPerPixel == 1 ? 2 : 1;
-	const size_t Size = (Width + 15) / 16 * 2 * Height;
-	BYTE *pMaskBits = new BYTE[Size * Planes];
-	::FillMemory(pMaskBits, Size, 0xFF);
-	if (BitsPerPixel == 1)
-		::FillMemory(pMaskBits + Size, Size, 0x00);
-	ii.hbmMask = ::CreateBitmap(Width, Height * Planes, 1, 1, pMaskBits);
-	delete [] pMaskBits;
+	{
+		const int Planes = BitsPerPixel == 1 ? 2 : 1;
+		const size_t Size = (Width + 15) / 16 * 2 * Height;
+		std::unique_ptr<BYTE[]> MaskBits(new BYTE[Size * Planes]);
+		::FillMemory(MaskBits.get(), Size, 0xFF);
+		if (BitsPerPixel == 1)
+			::FillMemory(MaskBits.get() + Size, Size, 0x00);
+		ii.hbmMask = ::CreateBitmap(Width, Height * Planes, 1, 1, MaskBits.get());
+	}
 
 	if (BitsPerPixel != 1) {
 		const DWORD HeaderSize = BitsPerPixel == 32 ? sizeof(BITMAPV5HEADER) : sizeof(BITMAPINFOHEADER);

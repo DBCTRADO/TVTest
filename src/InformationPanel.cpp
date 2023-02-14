@@ -102,9 +102,6 @@ CInformationPanel::CInformationPanel()
 CInformationPanel::~CInformationPanel()
 {
 	Destroy();
-
-	for (int i = 0; i < NUM_ITEMS; i++)
-		delete m_ItemList[i];
 }
 
 
@@ -197,7 +194,7 @@ CInformationPanel::CItem *CInformationPanel::GetItem(int Item)
 {
 	if (Item < 0 || Item >= NUM_ITEMS)
 		return nullptr;
-	return m_ItemList[Item];
+	return m_ItemList[Item].get();
 }
 
 
@@ -205,7 +202,7 @@ const CInformationPanel::CItem *CInformationPanel::GetItem(int Item) const
 {
 	if (Item < 0 || Item >= NUM_ITEMS)
 		return nullptr;
-	return m_ItemList[Item];
+	return m_ItemList[Item].get();
 }
 
 
@@ -335,7 +332,7 @@ void CInformationPanel::UpdateProgramInfoText()
 {
 	if (m_hwndProgramInfo != nullptr) {
 		const String &InfoText =
-			static_cast<const CProgramInfoItem*>(m_ItemList[ITEM_PROGRAMINFO])->GetInfoText();
+			static_cast<const CProgramInfoItem*>(m_ItemList[ITEM_PROGRAMINFO].get())->GetInfoText();
 
 		if (m_fUseRichEdit) {
 			::SendMessage(m_hwndProgramInfo, WM_SETREDRAW, FALSE, 0);
@@ -421,7 +418,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.SetFont(m_Font.GetHandle());
 			for (int i = 0; i < NUM_ITEMS; i++) {
-				const CItem *pItem = m_ItemList[i];
+				const CItem *pItem = m_ItemList[i].get();
 				const int ButtonCount = pItem->GetButtonCount();
 				for (int j = 0; j < ButtonCount; j++) {
 					RECT rc;
@@ -445,7 +442,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_SIZE:
 		{
 			for (int i = 0; i < NUM_ITEMS; i++) {
-				const CItem *pItem = m_ItemList[i];
+				const CItem *pItem = m_ItemList[i].get();
 				const int ButtonCount = pItem->GetButtonCount();
 				for (int j = 0; j < ButtonCount; j++) {
 					RECT rc;
@@ -815,7 +812,7 @@ CInformationPanel::ItemButtonNumber CInformationPanel::ButtonHitTest(int x, int 
 
 	for (int i = 0; i < NUM_ITEMS; i++) {
 		if (IsItemVisible(i)) {
-			const CItem *pItem = m_ItemList[i];
+			const CItem *pItem = m_ItemList[i].get();
 			int Button = pItem->ButtonHitTest(x, y);
 			if (Button >= 0 && pItem->IsButtonEnabled(Button)) {
 				ItemButton.Item = i;
@@ -844,7 +841,7 @@ void CInformationPanel::SetHotButton(ItemButtonNumber Button)
 bool CInformationPanel::ReadSettings(CSettings &Settings)
 {
 	for (int i = 0; i < NUM_ITEMS; i++) {
-		CItem *pItem = m_ItemList[i];
+		CItem *pItem = m_ItemList[i].get();
 		bool f;
 
 		if (Settings.Read(pItem->GetName(), &f))
@@ -857,7 +854,7 @@ bool CInformationPanel::ReadSettings(CSettings &Settings)
 bool CInformationPanel::WriteSettings(CSettings &Settings)
 {
 	for (int i = 0; i < NUM_ITEMS; i++) {
-		const CItem *pItem = m_ItemList[i];
+		const CItem *pItem = m_ItemList[i].get();
 		Settings.Write(pItem->GetName(), pItem->IsVisible());
 	}
 	return true;

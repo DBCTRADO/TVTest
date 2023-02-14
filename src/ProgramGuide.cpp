@@ -611,10 +611,10 @@ void CServiceInfo::CalcLayout(
 				if (pItem->GetItemPos() < 0)
 					pItem->SetItemPos(ItemPos + Offset);
 			} else {
-				int *pItemLines = new int[ProgramsPerHour];
+				std::vector<int> ItemLines(ProgramsPerHour);
 
 				for (int j = 0; j < ProgramsPerHour; j++)
-					pItemLines[j] = j < Lines ? 1 : 0;
+					ItemLines[j] = j < Lines ? 1 : 0;
 				if (Lines > ProgramsPerHour) {
 					int LineCount = ProgramsPerHour;
 
@@ -631,7 +631,7 @@ void CServiceInfo::CalcLayout(
 							LibISDB::DateTime End = pItem->GetEndTime();
 							if (End > Last)
 								End = Last;
-							Time = (DWORD)(End.DiffSeconds(Start) / pItemLines[j]);
+							Time = (DWORD)(End.DiffSeconds(Start) / ItemLines[j]);
 							if (Time > MaxTime) {
 								MaxTime = Time;
 								MaxItem = j;
@@ -639,7 +639,7 @@ void CServiceInfo::CalcLayout(
 						}
 						if (MaxTime == 0)
 							break;
-						pItemLines[MaxItem]++;
+						ItemLines[MaxItem]++;
 						LineCount++;
 					} while (LineCount < Lines);
 				}
@@ -648,10 +648,9 @@ void CServiceInfo::CalcLayout(
 					pItem = pEventList->GetItem(i + j);
 					if (pItem->GetItemPos() < 0)
 						pItem->SetItemPos(Pos);
-					pItem->SetItemLines(pItem->GetItemLines() + pItemLines[j]);
-					Pos += pItemLines[j];
+					pItem->SetItemLines(pItem->GetItemLines() + ItemLines[j]);
+					Pos += ItemLines[j];
 				}
-				delete [] pItemLines;
 				i += ProgramsPerHour - 1;
 			}
 		}
@@ -6630,18 +6629,11 @@ CProgramGuideFrameBase::CProgramGuideFrameBase(CProgramGuide *pProgramGuide, CPr
 	, m_ToolbarRightMargin(0)
 	, m_fNoUpdateLayout(false)
 {
-	m_ToolbarList[TOOLBAR_TUNER_MENU] = new ProgramGuideBar::CTunerMenuBar(pProgramGuide);
-	m_ToolbarList[TOOLBAR_DATE_MENU ] = new ProgramGuideBar::CDateMenuBar(pProgramGuide);
-	m_ToolbarList[TOOLBAR_FAVORITES ] = new ProgramGuideBar::CFavoritesToolbar(pProgramGuide);
-	m_ToolbarList[TOOLBAR_DATE      ] = new ProgramGuideBar::CDateToolbar(pProgramGuide);
-	m_ToolbarList[TOOLBAR_TIME      ] = new ProgramGuideBar::CTimeToolbar(pProgramGuide);
-}
-
-
-CProgramGuideFrameBase::~CProgramGuideFrameBase()
-{
-	for (auto e : m_ToolbarList)
-		delete e;
+	m_ToolbarList[TOOLBAR_TUNER_MENU] = std::make_unique<ProgramGuideBar::CTunerMenuBar>(pProgramGuide);
+	m_ToolbarList[TOOLBAR_DATE_MENU ] = std::make_unique<ProgramGuideBar::CDateMenuBar>(pProgramGuide);
+	m_ToolbarList[TOOLBAR_FAVORITES ] = std::make_unique<ProgramGuideBar::CFavoritesToolbar>(pProgramGuide);
+	m_ToolbarList[TOOLBAR_DATE      ] = std::make_unique<ProgramGuideBar::CDateToolbar>(pProgramGuide);
+	m_ToolbarList[TOOLBAR_TIME      ] = std::make_unique<ProgramGuideBar::CTimeToolbar>(pProgramGuide);
 }
 
 
@@ -6696,7 +6688,7 @@ void CProgramGuideFrameBase::SetTheme(const Theme::CThemeManager *pThemeManager)
 		Theme::CThemeManager::STYLE_PROGRAMGUIDE_FAVORITEBUTTON_HOT,
 		&Theme.FavoriteButton.HotStyle);
 
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		e->SetTheme(Theme);
 }
 
@@ -6706,7 +6698,7 @@ bool CProgramGuideFrameBase::SetToolbarVisible(int Toolbar, bool fVisible)
 	if (Toolbar < 0 || Toolbar >= TOOLBAR_NUM)
 		return false;
 
-	ProgramGuideBar::CProgramGuideBar *pBar = m_ToolbarList[Toolbar];
+	ProgramGuideBar::CProgramGuideBar *pBar = m_ToolbarList[Toolbar].get();
 
 	if (pBar->IsBarVisible() != fVisible) {
 		if (pBar->IsBarCreated()) {
@@ -6741,14 +6733,14 @@ bool CProgramGuideFrameBase::GetToolbarVisible(int Toolbar) const
 
 void CProgramGuideFrameBase::OnDateChanged()
 {
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		e->OnDateChanged();
 }
 
 
 void CProgramGuideFrameBase::OnSpaceChanged()
 {
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		e->OnSpaceChanged();
 }
 
@@ -6761,7 +6753,7 @@ void CProgramGuideFrameBase::OnListModeChanged()
 
 void CProgramGuideFrameBase::OnTimeRangeChanged()
 {
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		e->OnTimeRangeChanged();
 
 	OnLayoutChange();
@@ -6770,7 +6762,7 @@ void CProgramGuideFrameBase::OnTimeRangeChanged()
 
 void CProgramGuideFrameBase::OnFavoritesChanged()
 {
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		e->OnFavoritesChanged();
 
 	OnLayoutChange();
@@ -6817,14 +6809,14 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 					SetToolbarVisible(i, m_pSettings->GetToolbarVisible(i));
 
 				ProgramGuideBar::CDateToolbar *pDateToolbar =
-					static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
+					static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE].get());
 				if (pDateToolbar->GetButtonCount() != m_pSettings->GetDateBarButtonCount()) {
 					pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
 					pDateToolbar->OnTimeRangeChanged();
 				}
 
 				ProgramGuideBar::CTimeToolbar *pTimeToolbar =
-					static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+					static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME].get());
 				pTimeToolbar->SetSettings(m_pSettings->GetTimeBarSettings());
 				pTimeToolbar->OnTimeRangeChanged();
 
@@ -6838,7 +6830,7 @@ bool CProgramGuideFrameBase::OnCommand(int Command)
 	if (Command >= CM_PROGRAMGUIDE_TIME_FIRST
 			&& Command <= CM_PROGRAMGUIDE_TIME_LAST) {
 		const ProgramGuideBar::CTimeToolbar *pTimeToolbar =
-			static_cast<const ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+			static_cast<const ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME].get());
 		LibISDB::DateTime Time;
 
 		if (pTimeToolbar->GetTimeByCommand(Command, &Time))
@@ -6875,7 +6867,7 @@ void CProgramGuideFrameBase::OnWindowCreate(
 {
 	CUIBase *pUIBase = GetUIBase();
 
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		pUIBase->RegisterUIChild(e->GetUIBase());
 	pUIBase->SetStyleScaling(pStyleScaling);
 
@@ -6886,7 +6878,7 @@ void CProgramGuideFrameBase::OnWindowCreate(
 	pUIBase->RegisterUIChild(m_pProgramGuide);
 
 	for (int i = 0; i < lengthof(m_ToolbarList); i++) {
-		ProgramGuideBar::CProgramGuideBar *pBar = m_ToolbarList[i];
+		ProgramGuideBar::CProgramGuideBar *pBar = m_ToolbarList[i].get();
 
 		pBar->SetBarVisible(m_pSettings->GetToolbarVisible(i));
 		pBar->EnableBufferedPaint(fBufferedPaint);
@@ -6894,11 +6886,11 @@ void CProgramGuideFrameBase::OnWindowCreate(
 	}
 
 	ProgramGuideBar::CDateToolbar *pDateToolbar =
-		static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE]);
+		static_cast<ProgramGuideBar::CDateToolbar*>(m_ToolbarList[TOOLBAR_DATE].get());
 	pDateToolbar->SetButtonCount(m_pSettings->GetDateBarButtonCount());
 
 	ProgramGuideBar::CTimeToolbar *pTimeToolbar =
-		static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME]);
+		static_cast<ProgramGuideBar::CTimeToolbar*>(m_ToolbarList[TOOLBAR_TIME].get());
 	pTimeToolbar->SetSettings(m_pSettings->GetTimeBarSettings());
 }
 
@@ -6909,7 +6901,7 @@ void CProgramGuideFrameBase::OnWindowDestroy()
 
 	m_pProgramGuide->SetFrame(nullptr);
 
-	for (auto e : m_ToolbarList)
+	for (auto &e : m_ToolbarList)
 		e->DestroyBar();
 }
 
@@ -6925,7 +6917,7 @@ void CProgramGuideFrameBase::OnSizeChanged(int Width, int Height)
 	int BarHeight = 0;
 
 	for (int i = 0; i < lengthof(m_ToolbarList); i++) {
-		ProgramGuideBar::CProgramGuideBar *pBar = m_ToolbarList[OrderList[i]];
+		ProgramGuideBar::CProgramGuideBar *pBar = m_ToolbarList[OrderList[i]].get();
 
 		if (pBar->IsBarVisible()) {
 			SIZE sz;
@@ -6994,7 +6986,7 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 			HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 			int HitTestCode = LOWORD(lParam);
 
-			for (auto e : m_ToolbarList) {
+			for (auto &e : m_ToolbarList) {
 				if (e->OnSetCursor(hwndCursor, HitTestCode))
 					return TRUE;
 			}
@@ -7005,7 +6997,7 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 		{
 			LRESULT Result;
 
-			for (auto e : m_ToolbarList) {
+			for (auto &e : m_ToolbarList) {
 				if (e->OnNotify(lParam, &Result))
 					return Result;
 			}

@@ -20,6 +20,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <memory>
 #include "ImageLib.h"
 #include "Codec_BMP.h"
 #include "Codec_JPEG.h"
@@ -76,17 +77,14 @@ HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return nullptr;
 	}
-	BYTE *pData = new BYTE[FileSize.LowPart];
+	std::unique_ptr<BYTE[]> Data(new BYTE[FileSize.LowPart]);
 	DWORD Read;
-	if (!::ReadFile(hFile, pData, FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
-		delete [] pData;
+	if (!::ReadFile(hFile, Data.get(), FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
 		::CloseHandle(hFile);
 		return nullptr;
 	}
 	::CloseHandle(hFile);
-	HGLOBAL hDIB = LoadAribPng(pData, FileSize.LowPart);
-	delete [] pData;
-	return hDIB;
+	return LoadAribPng(Data.get(), FileSize.LowPart);
 }
 
 

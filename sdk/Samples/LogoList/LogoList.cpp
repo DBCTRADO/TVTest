@@ -20,6 +20,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
@@ -78,7 +79,7 @@ class CLogoList : public TVTest::CTVTestPlugin
 	int m_ItemHeight;
 	HFONT m_hfont;
 	HBRUSH m_hbrBack;
-	std::vector<CServiceInfo*> m_ServiceList;
+	std::vector<std::unique_ptr<CServiceInfo>> m_ServiceList;
 
 	bool Enable(bool fEnable);
 	void GetServiceList();
@@ -265,19 +266,16 @@ void CLogoList::GetServiceList()
 	int CurTuningSpace = m_pApp->GetTuningSpace(&NumSpaces);
 
 	TVTest::ChannelInfo ChInfo;
-	CServiceInfo *pServiceInfo;
 	if (CurTuningSpace >= 0) {
 		// 現在のチューニング空間のチャンネルを取得する
 		for (int Channel = 0; m_pApp->GetChannelInfo(CurTuningSpace, Channel, &ChInfo); Channel++) {
-			pServiceInfo = new CServiceInfo(ChInfo);
-			m_ServiceList.push_back(pServiceInfo);
+			m_ServiceList.emplace_back(std::make_unique<CServiceInfo>(ChInfo));
 		}
 	} else {
 		// 全てのチューニング空間のチャンネルを取得する
 		for (int Space = 0; Space < NumSpaces; Space++) {
 			for (int Channel = 0; m_pApp->GetChannelInfo(Space, Channel, &ChInfo); Channel++) {
-				pServiceInfo = new CServiceInfo(ChInfo);
-				m_ServiceList.push_back(pServiceInfo);
+				m_ServiceList.emplace_back(std::make_unique<CServiceInfo>(ChInfo));
 			}
 		}
 	}
@@ -293,7 +291,7 @@ bool CLogoList::UpdateLogo()
 	bool fUpdated = false;
 
 	for (std::size_t i = 0; i < m_ServiceList.size(); i++) {
-		CServiceInfo *pServiceInfo = m_ServiceList[i];
+		CServiceInfo *pServiceInfo = m_ServiceList[i].get();
 
 		UINT ExistsType = 0;
 		for (BYTE j = 0; j < 6; j++) {
@@ -326,8 +324,6 @@ bool CLogoList::UpdateLogo()
 // サービスのリストをクリアする
 void CLogoList::ClearServiceList()
 {
-	for (std::size_t i = 0; i < m_ServiceList.size(); i++)
-		delete m_ServiceList[i];
 	m_ServiceList.clear();
 }
 
@@ -414,7 +410,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
 
 			for (std::size_t i = 0; i < pThis->m_ServiceList.size(); i++)
-				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i]));
+				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i].get()));
 
 			// メインウィンドウがダークモードであればそれに合わせてダークモードにする
 			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
@@ -443,7 +439,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			if ((int)pdis->itemID < 0 || pdis->itemID >= pThis->m_ServiceList.size())
 				return TRUE;
 
-			const CServiceInfo *pService = pThis->m_ServiceList[pdis->itemID];
+			const CServiceInfo *pService = pThis->m_ServiceList[pdis->itemID].get();
 
 			HFONT hfontOld = static_cast<HFONT>(::SelectObject(pdis->hDC, pThis->m_hfont));
 			int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);

@@ -793,7 +793,7 @@ namespace TVTest
 		};
 
 		CProgramGuideFrameBase(CProgramGuide * pProgramGuide, CProgramGuideFrameSettings * pSettings);
-		virtual ~CProgramGuideFrameBase();
+		virtual ~CProgramGuideFrameBase() = default;
 		bool SetToolbarVisible(int Toolbar, bool fVisible);
 		bool GetToolbarVisible(int Toolbar) const;
 		void SetTheme(const Theme::CThemeManager * pThemeManager);
@@ -817,7 +817,7 @@ namespace TVTest
 
 		CProgramGuide * m_pProgramGuide;
 		CProgramGuideFrameSettings * m_pSettings;
-		ProgramGuideBar::CProgramGuideBar * m_ToolbarList[TOOLBAR_NUM];
+		std::unique_ptr<ProgramGuideBar::CProgramGuideBar> m_ToolbarList[TOOLBAR_NUM];
 		FrameStyle m_FrameStyle;
 		int m_ToolbarRightMargin;
 		bool m_fNoUpdateLayout;

@@ -19,6 +19,7 @@
 #include <shlwapi.h>
 #include <dbt.h>
 #include <process.h>
+#include <vector>
 
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
@@ -326,7 +327,7 @@ unsigned int __stdcall CGamePad::ThreadProc(void *pParameter)
 		bool fEnable;
 		JOYCAPS Caps;
 	};
-	JoystickInfo *pJoystickList = new JoystickInfo[NumDevices];
+	std::vector<JoystickInfo> JoystickList(NumDevices);
 	pThis->m_fInitDevCaps = true;
 
 	// ステータス初期化
@@ -346,15 +347,15 @@ unsigned int __stdcall CGamePad::ThreadProc(void *pParameter)
 		// 各デバイスの情報を取得する
 		if (pThis->m_fInitDevCaps) {
 			for (UINT i = 0; i < NumDevices; i++) {
-				pJoystickList[i].fEnable =
-					::joyGetDevCaps(i, &pJoystickList[i].Caps, sizeof(JOYCAPS)) == JOYERR_NOERROR;
+				JoystickList[i].fEnable =
+					::joyGetDevCaps(i, &JoystickList[i].Caps, sizeof(JOYCAPS)) == JOYERR_NOERROR;
 			}
 			pThis->m_fInitDevCaps = false;
 
 #ifdef _DEBUG
 			int AvailableDevices = 0;
 			for (UINT i = 0; i < NumDevices; i++) {
-				if (pJoystickList[i].fEnable)
+				if (JoystickList[i].fEnable)
 					AvailableDevices++;
 			}
 			TCHAR szText[64];
@@ -364,8 +365,8 @@ unsigned int __stdcall CGamePad::ThreadProc(void *pParameter)
 		}
 
 		for (UINT i = 0; i < NumDevices; i++) {
-			if (pJoystickList[i].fEnable && ::joyGetPosEx(i, &jix) == JOYERR_NOERROR) {
-				const JOYCAPS &Caps = pJoystickList[i].Caps;
+			if (JoystickList[i].fEnable && ::joyGetPosEx(i, &jix) == JOYERR_NOERROR) {
+				const JOYCAPS &Caps = JoystickList[i].Caps;
 				const bool fPOV = (Caps.wCaps & (JOYCAPS_HASPOV | JOYCAPS_POV4DIR)) != 0;
 
 				for (int j = 0; j < NUM_BUTTONS; j++) {
@@ -441,8 +442,6 @@ unsigned int __stdcall CGamePad::ThreadProc(void *pParameter)
 			}
 		}
 	}
-
-	delete [] pJoystickList;
 
 	return 0;
 }

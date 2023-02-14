@@ -104,7 +104,6 @@ HGLOBAL ResizeImage(
 	HGLOBAL hGlobal;
 	BITMAPINFOHEADER *pbmihDst;
 	void *pDstData;
-	int *pnSrcPos;
 	int SrcLeft, SrcTop, SrcWidth, SrcHeight;
 	int SrcPlanes, SrcXCenter, SrcYCenter, DstXCenter, DstYCenter;
 	int x, y, x1, y1, dx1, dy1, dx2, dy2;
@@ -150,17 +149,17 @@ HGLOBAL ResizeImage(
 		return hGlobal;
 	}
 	SrcPlanes = pbmiSrc->bmiHeader.biBitCount / 8;
-	pnSrcPos = new int[Width];
+	std::unique_ptr<int[]> SrcPos(new int[Width]);
 	SrcXCenter = ((SrcWidth - 1) << 8) / 2;
 	SrcYCenter = ((SrcHeight - 1) << 8) / 2;
 	DstXCenter = ((Width - 1) << 8) / 2;
 	DstYCenter = ((Height - 1) << 8) / 2;
 	for (x = 0; x < Width; x++) {
-		pnSrcPos[x] = ((x << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
-		if (pnSrcPos[x] < 0)
-			pnSrcPos[x] = 0;
-		else if (pnSrcPos[x] > (SrcWidth - 1) << 8)
-			pnSrcPos[x] = (SrcWidth - 1) << 8;
+		SrcPos[x] = ((x << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
+		if (SrcPos[x] < 0)
+			SrcPos[x] = 0;
+		else if (SrcPos[x] > (SrcWidth - 1) << 8)
+			SrcPos[x] = (SrcWidth - 1) << 8;
 	}
 	SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
 	DstPadBytes = DIB_ROW_BYTES(Width, 24) - Width * 3;
@@ -178,7 +177,7 @@ HGLOBAL ResizeImage(
 		dy1 = 0x100 - dy2;
 		YOffset = dy2 > 0 ? SrcRowBytes : 0;
 		for (x = 0; x < Width; x++) {
-			x1 = pnSrcPos[x];
+			x1 = SrcPos[x];
 			dx2 = x1 & 0xFF;
 			dx1 = 0x100 - dx2;
 			p = static_cast<const BYTE*>(pSrcData) + (y1 >> 8) * SrcRowBytes +
@@ -198,7 +197,6 @@ HGLOBAL ResizeImage(
 		}
 		q += DstPadBytes;
 	}
-	delete [] pnSrcPos;
 	GlobalUnlock(hGlobal);
 	return hGlobal;
 }

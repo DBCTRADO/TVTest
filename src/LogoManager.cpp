@@ -685,12 +685,11 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 		::CloseHandle(hFile);
 		return nullptr;
 	}
-	BYTE *pData = new BYTE[FileSize.LowPart];
+	std::unique_ptr<BYTE[]> Data(new BYTE[FileSize.LowPart]);
 	DWORD Read;
-	if (!::ReadFile(hFile, pData, FileSize.LowPart, &Read, nullptr)
+	if (!::ReadFile(hFile, Data.get(), FileSize.LowPart, &Read, nullptr)
 			|| Read != FileSize.LowPart
-			|| std::memcmp(pData, PNG_SIGNATURE, PNG_SIGNATURE_BYTES) != 0) {
-		delete [] pData;
+			|| std::memcmp(Data.get(), PNG_SIGNATURE, PNG_SIGNATURE_BYTES) != 0) {
 		::CloseHandle(hFile);
 		return nullptr;
 	}
@@ -701,10 +700,8 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 	LogoData.LogoVersion = (uint16_t)NewerVersion;
 	LogoData.LogoType = LogoType;
 	LogoData.DataSize = (uint16_t)Read;
-	LogoData.pData = pData;
-	CLogoData *pLogoData = new CLogoData(&LogoData);
-	delete [] pData;
-	return pLogoData;
+	LogoData.pData = Data.get();
+	return new CLogoData(&LogoData);
 }
 
 

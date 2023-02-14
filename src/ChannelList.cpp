@@ -945,19 +945,17 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 			Buffer.data(), static_cast<int>(Buffer.length()),
 			nullptr, 0, nullptr, &fUsedDefaultChar);
 		if (Length > 0 && !fUsedDefaultChar) {
-			char *pMBCSBuffer = new char[Length];
+			std::string MBCSBuffer(Length, '\0');
 			Length = ::WideCharToMultiByte(
 				CP_SHIFT_JIS, 0,
 				Buffer.data(), static_cast<int>(Buffer.length()),
-				pMBCSBuffer, Length, nullptr, nullptr);
+				MBCSBuffer.data(), Length, nullptr, nullptr);
 			if (Length < 1
-					|| !::WriteFile(hFile, pMBCSBuffer, Length, &Write, nullptr)
+					|| !::WriteFile(hFile, MBCSBuffer.data(), Length, &Write, nullptr)
 					|| Write != static_cast<DWORD>(Length)) {
-				delete [] pMBCSBuffer;
 				::CloseHandle(hFile);
 				return false;
 			}
-			delete [] pMBCSBuffer;
 			fUnicode = false;
 		}
 	}
@@ -987,16 +985,16 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 }
 
 
-static void SkipSpaces(LPTSTR *ppText)
+static void SkipSpaces(LPCTSTR *ppText)
 {
-	LPTSTR p = *ppText;
+	LPCTSTR p = *ppText;
 	p += ::StrSpn(p, TEXT(" \t"));
 	*ppText = p;
 }
 
-static bool NextToken(LPTSTR *ppText)
+static bool NextToken(LPCTSTR *ppText)
 {
-	LPTSTR p = *ppText;
+	LPCTSTR p = *ppText;
 
 	SkipSpaces(&p);
 	if (*p != _T(','))
@@ -1012,7 +1010,7 @@ bool inline IsDigit(TCHAR c)
 	return c >= _T('0') && c <= _T('9');
 }
 
-static int ParseDigits(LPTSTR *ppText)
+static int ParseDigits(LPCTSTR *ppText)
 {
 	LPTSTR pEnd;
 	int Value = std::_tcstol(*ppText, &pEnd, 10);
@@ -1041,55 +1039,54 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return false;
 	}
-	BYTE *pFileBuffer = new BYTE[FileSize.LowPart + sizeof(TCHAR)];
-	if (!::ReadFile(hFile, pFileBuffer, FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
-		delete [] pFileBuffer;
+	std::unique_ptr<BYTE[]> FileBuffer(new BYTE[FileSize.LowPart + sizeof(TCHAR)]);
+	if (!::ReadFile(hFile, FileBuffer.get(), FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
 		::CloseHandle(hFile);
 		return false;
 	}
 	::CloseHandle(hFile);
-	LPTSTR pszBuffer = nullptr, p;
-	if (FileSize.LowPart >= 2 && *reinterpret_cast<LPWSTR>(pFileBuffer) == 0xFEFF) {
+
+	String Buffer;
+	LPCTSTR p;
+	if (FileSize.LowPart >= 2 && *reinterpret_cast<LPWSTR>(FileBuffer.get()) == 0xFEFF) {
 #ifdef UNICODE
-		p = reinterpret_cast<LPWSTR>(pFileBuffer) + 1;
-		p[FileSize.LowPart / 2 - 1] = L'\0';
+		LPWSTR pszBuffer = reinterpret_cast<LPWSTR>(FileBuffer.get()) + 1;
+		pszBuffer[FileSize.LowPart / 2 - 1] = L'\0';
+		p = pszBuffer;
 #else
 		int Length = ::WideCharToMultiByte(
 			CP_ACP, 0,
-			reinterpret_cast<LPCSTR>(pFileBuffer), FileSize.LowPart,
+			reinterpret_cast<LPCSTR>(FileBuffer.get()), FileSize.LowPart,
 			nullptr, 0, nullptr, nullptr);
 		if (Length < 1) {
-			delete [] pFileBuffer;
 			return false;
 		}
-		pszBuffer = new char[Length + 1];
-		Length = ::WideCharToMultiByte(
+		Buffer.resize(Length);
+		::WideCharToMultiByte(
 			CP_ACP, 0,
-			reinterpret_cast<LPCWTR>(pFileBuffer) + 1, FileSize.LowPart / 2 - 1,
-			pszBuffer, Length, nullptr, nullptr);
-		pszBuffer[Length] = '\0';
-		p = pszBuffer;
+			reinterpret_cast<LPCWTR>(FileBuffer.get()) + 1, FileSize.LowPart / 2 - 1,
+			Buffer.data(), Length, nullptr, nullptr);
+		p = Buffer.c_str();
 #endif
 	} else {
 #ifdef UNICODE
 		int Length = ::MultiByteToWideChar(
 			CP_SHIFT_JIS, 0,
-			reinterpret_cast<LPCSTR>(pFileBuffer), FileSize.LowPart,
+			reinterpret_cast<LPCSTR>(FileBuffer.get()), FileSize.LowPart,
 			nullptr, 0);
 		if (Length < 1) {
-			delete [] pFileBuffer;
 			return false;
 		}
-		pszBuffer = new WCHAR[Length + 1];
+		Buffer.resize(Length);
 		Length = ::MultiByteToWideChar(
 			CP_SHIFT_JIS, 0,
-			reinterpret_cast<LPCSTR>(pFileBuffer), FileSize.LowPart,
-			pszBuffer, Length);
-		pszBuffer[Length] = L'\0';
-		p = pszBuffer;
+			reinterpret_cast<LPCSTR>(FileBuffer.get()), FileSize.LowPart,
+			Buffer.data(), Length);
+		p = Buffer.c_str();
 #else
-		p = reinterpret_cast<LPSTR>(pFileBuffer);
-		p[FileSize.LowPart] = '\0';
+		LPSTR pszBuffer = reinterpret_cast<LPSTR>(FileBuffer.get());
+		pszBuffer[FileSize.LowPart] = '\0';
+		p = pszBuffer;
 #endif
 	}
 
@@ -1212,9 +1209,6 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 Next:
 		p += ::StrCSpn(p, TEXT("\r\n"));
 	} while (*p != _T('\0'));
-
-	delete [] pszBuffer;
-	delete [] pFileBuffer;
 
 	return MakeTuningSpaceList(&m_AllChannelList);
 }

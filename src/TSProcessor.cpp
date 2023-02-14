@@ -285,19 +285,18 @@ bool CTSProcessor::ShowPropertyPage(HWND hwndOwner, HINSTANCE hinst)
 		if (Pages.cElems > 0) {
 			ISpecifyPropertyPages2 *pSpecifyPropPages2;
 			if (SUCCEEDED(pSpecifyPropPages->QueryInterface(IID_PPV_ARGS(&pSpecifyPropPages2)))) {
-				IPropertyPage **ppPropPages = new IPropertyPage*[Pages.cElems];
+				std::vector<IPropertyPage *> PropPages(Pages.cElems);
 				ULONG PageCount = 0;
 				for (ULONG i = 0; i < Pages.cElems; i++) {
 					IPropertyPage *pPropPage;
 					if (SUCCEEDED(pSpecifyPropPages2->CreatePage(Pages.pElems[i], &pPropPage)))
-						ppPropPages[PageCount++] = pPropPage;
+						PropPages[PageCount++] = pPropPage;
 				}
 				if (PageCount > 0) {
-					hr = ShowPropertyPageFrame(ppPropPages, PageCount, m_pTSProcessor, hwndOwner, hinst);
+					hr = ShowPropertyPageFrame(PropPages.data(), PageCount, m_pTSProcessor, hwndOwner, hinst);
 				}
 				for (ULONG i = 0; i < PageCount; i++)
-					ppPropPages[i]->Release();
-				delete [] ppPropPages;
+					PropPages[i]->Release();
 				pSpecifyPropPages2->Release();
 			} else {
 				IUnknown *pObject;

@@ -70,7 +70,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 	HANDLE hFile;
 	LARGE_INTEGER FileSize;
 	DWORD ReadSize, RemainSize;
-	BYTE *pBuffer;
+	std::unique_ptr<BYTE[]> Buffer;
 	DWORD Size, Read;
 	LibISDB::TSPacket Packet;
 
@@ -92,7 +92,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::SetFilePointerEx(hFile, Offset, nullptr, FILE_BEGIN);
 	}
 	try {
-		pBuffer = new BYTE[std::min(BUFFER_SIZE, ReadSize)];
+		Buffer.reset(new BYTE[std::min(BUFFER_SIZE, ReadSize)]);
 	} catch (...) {
 		::CloseHandle(hFile);
 		return false;
@@ -103,10 +103,10 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 	for (RemainSize = ReadSize; RemainSize >= 188; RemainSize -= Size) {
 		Size = std::min(RemainSize, BUFFER_SIZE);
-		if (!::ReadFile(hFile, pBuffer, Size, &Read, nullptr))
+		if (!::ReadFile(hFile, Buffer.get(), Size, &Read, nullptr))
 			break;
 
-		BYTE *pEnd = pBuffer + Read / 188 * 188;
+		BYTE *pEnd = Buffer.get() + Read / 188 * 188;
 
 		// 最初に TOT を渡すようにする
 		if (RemainSize == ReadSize) {
@@ -157,7 +157,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 			TOTFilter TOT;
 
-			BYTE *p = pBuffer;
+			BYTE *p = Buffer.get();
 			while (p < pEnd) {
 				const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
 				if (PID == 0x0014) {
@@ -176,7 +176,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 			}
 		}
 
-		BYTE *p = pBuffer;
+		BYTE *p = Buffer.get();
 		while (p < pEnd) {
 			const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
 			// H-EIT / TOT / M-EIT / L-EIT
@@ -194,7 +194,6 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 			break;
 	}
 
-	delete [] pBuffer;
 	::CloseHandle(hFile);
 	TRACE(TEXT("EPG data loaded {}\n"), pszFileName);
 	return true;
