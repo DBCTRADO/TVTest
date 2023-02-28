@@ -512,7 +512,7 @@ void CBasicDialog::RealizeStyle()
 				rc.right = ::MulDiv(rc.right, DPI, m_OriginalDPI);
 				rc.bottom = ::MulDiv(rc.bottom, DPI, m_OriginalDPI);
 				if (hdwp != nullptr) {
-					::DeferWindowPos(
+					hdwp = ::DeferWindowPos(
 						hdwp, hwnd, nullptr,
 						rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
 						SWP_NOZORDER | SWP_NOACTIVATE);
@@ -2055,7 +2055,7 @@ void CResizableDialog::DoLayout()
 			rc.bottom = rc.top;
 
 		if (hdwp != nullptr) {
-			::DeferWindowPos(
+			hdwp = ::DeferWindowPos(
 				hdwp, ::GetDlgItem(m_hDlg, e.ID), nullptr,
 				rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
