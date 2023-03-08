@@ -1451,6 +1451,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				IDC_EVENTSEARCH_TIME_START_HOUR,
 				IDC_EVENTSEARCH_TIME_END_MINUTE,
 				IDC_EVENTSEARCH_TIME);
+			return TRUE;
 
 		case IDC_EVENTSEARCH_DURATION:
 			EnableDlgItemsSyncCheckBox(
