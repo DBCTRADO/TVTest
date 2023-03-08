@@ -105,7 +105,7 @@ bool CTextDraw::SetFont(const LOGFONT &Font)
 
 	::DeleteObject(hfont);
 
-	return true;
+	return fOK;
 }
 
 
