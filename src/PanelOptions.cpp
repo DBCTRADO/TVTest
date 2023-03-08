@@ -136,7 +136,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 
 			PanelItemInfo Item;
 			LPTSTR p;
-			long IDNum = std::_tcstol(ID.c_str(), &p, 10);
+			const long IDNum = std::_tcstol(ID.c_str(), &p, 10);
 			if (*p == _T('\0')) {
 				if (IDNum < PANEL_ID_FIRST || IDNum > PANEL_ID_LAST)
 					continue;
@@ -185,7 +185,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 
 bool CPanelOptions::WriteSettings(CSettings &Settings)
 {
-	int CurPage = GetAppClass().Panel.Form.GetCurPageID();
+	const int CurPage = GetAppClass().Panel.Form.GetCurPageID();
 	if (CurPage >= 0 && (size_t)CurPage < m_AvailItemList.size())
 		Settings.Write(TEXT("InfoCurTab"), m_AvailItemList[CurPage].ID);
 	Settings.Write(TEXT("PanelFirstTab"), m_InitialTab);
@@ -233,7 +233,7 @@ int CPanelOptions::GetInitialTab() const
 
 	if (!m_InitialTab.empty()) {
 		LPTSTR p;
-		long IDNum = std::_tcstol(m_InitialTab.c_str(), &p, 10);
+		const long IDNum = std::_tcstol(m_InitialTab.c_str(), &p, 10);
 		if (*p == _T('\0')) {
 			if (IDNum >= 0 && (size_t)IDNum < m_AvailItemList.size())
 				ID = IDNum;
@@ -243,7 +243,7 @@ int CPanelOptions::GetInitialTab() const
 	}
 	if (ID < 0 && !m_LastTab.empty()) {
 		LPTSTR p;
-		long IDNum = std::_tcstol(m_LastTab.c_str(), &p, 10);
+		const long IDNum = std::_tcstol(m_LastTab.c_str(), &p, 10);
 		if (*p == _T('\0')) {
 			if (IDNum >= 0 && (size_t)IDNum < m_AvailItemList.size())
 				ID = IDNum;
@@ -328,7 +328,7 @@ bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 	TabOrder.reserve(m_AvailItemList.size());
 
 	for (const PanelItemInfo &Item : m_ItemList) {
-		int ID = GetItemIDFromIDText(Item.ID);
+		const int ID = GetItemIDFromIDText(Item.ID);
 		if (ID >= 0) {
 			TabOrder.push_back(ID);
 			pPanelForm->SetTabVisible(ID, Item.fVisible);
@@ -407,7 +407,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			}
 			int ItemCount = 0;
 			for (const PanelItemInfo &Item : ItemList) {
-				int ID = GetItemIDFromIDText(Item.ID);
+				const int ID = GetItemIDFromIDText(Item.ID);
 				if (ID >= 0) {
 					m_ItemListView.InsertItem(ItemCount, m_AvailItemList[ID].Title.c_str(), ID);
 					m_ItemListView.CheckItem(ItemCount, Item.fVisible);
@@ -420,7 +420,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			int Sel = 0;
 			if (!m_InitialTab.empty()) {
 				LPTSTR p;
-				long IDNum = std::_tcstol(m_InitialTab.c_str(), &p, 10);
+				const long IDNum = std::_tcstol(m_InitialTab.c_str(), &p, 10);
 				if (*p == _T('\0')) {
 					if (IDNum >= 0 && (size_t)IDNum < m_AvailItemList.size())
 						Sel = IDNum + 1;
@@ -438,7 +438,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				TEXT("アイコンのみ"),
 				TEXT("アイコンと文字"),
 			};
-			for (LPCTSTR pszText : TabStyleList)
+			for (const LPCTSTR pszText : TabStyleList)
 				DlgComboBox_AddString(hDlg, IDC_PANELOPTIONS_TABSTYLE, pszText);
 			DlgComboBox_SetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE, (int)m_TabStyle);
 
@@ -463,7 +463,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case IDC_PANELOPTIONS_ITEMLIST_UP:
 		case IDC_PANELOPTIONS_ITEMLIST_DOWN:
 			{
-				int From = m_ItemListView.GetSelectedItem(), To;
+				const int From = m_ItemListView.GetSelectedItem();
+				int To;
 
 				if (LOWORD(wParam) == IDC_PANELOPTIONS_ITEMLIST_UP)
 					To = From - 1;
@@ -508,7 +509,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				m_Opacity = ::GetDlgItemInt(hDlg, IDC_PANELOPTIONS_OPACITY_EDIT, nullptr, TRUE);
 				Panel.Frame.SetPanelOpacity(m_Opacity * 255 / 100);
 
-				bool fFontChanged = m_Font != m_CurSettingFont;
+				const bool fFontChanged = m_Font != m_CurSettingFont;
 				if (fFontChanged) {
 					m_Font = m_CurSettingFont;
 					Panel.Form.SetTabFont(m_Font);
@@ -516,7 +517,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 
 				bool fChangeCaptionFont = false;
-				bool fSpecCaptionFont = DlgCheckBox_IsChecked(hDlg, IDC_PANELOPTIONS_SPECCAPTIONFONT);
+				const bool fSpecCaptionFont = DlgCheckBox_IsChecked(hDlg, IDC_PANELOPTIONS_SPECCAPTIONFONT);
 				if (m_fSpecCaptionFont != fSpecCaptionFont) {
 					m_fSpecCaptionFont = fSpecCaptionFont;
 					fChangeCaptionFont = true;
@@ -544,14 +545,14 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				ApplyItemList(&Panel.Form);
 
-				int InitialTab = (int)DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_FIRSTTAB);
+				const int InitialTab = (int)DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_FIRSTTAB);
 				if (InitialTab == 0) {
 					m_InitialTab.clear();
 				} else if (InitialTab > 0) {
 					m_InitialTab = m_AvailItemList[InitialTab - 1].ID;
 				}
 
-				int TabStyleSel = (int)DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE);
+				const int TabStyleSel = (int)DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE);
 				if (TabStyleSel >= 0) {
 					m_TabStyle = static_cast<CPanelForm::TabStyle>(TabStyleSel);
 					Panel.Form.SetTabStyle(m_TabStyle);
@@ -582,7 +583,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 void CPanelOptions::UpdateItemListControlsState()
 {
-	int Sel = m_ItemListView.GetSelectedItem();
+	const int Sel = m_ItemListView.GetSelectedItem();
 
 	EnableDlgItem(m_hDlg, IDC_PANELOPTIONS_ITEMLIST_UP, Sel > 0);
 	EnableDlgItem(

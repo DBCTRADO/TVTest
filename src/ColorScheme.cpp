@@ -1180,12 +1180,11 @@ bool CColorSchemeList::Insert(int Index, CColorScheme *pColorScheme)
 
 bool CColorSchemeList::Load(LPCTSTR pszDirectory)
 {
-	HANDLE hFind;
 	WIN32_FIND_DATA wfd;
 	TCHAR szFileName[MAX_PATH];
 
 	::PathCombine(szFileName, pszDirectory, TEXT("*.httheme"));
-	hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
+	const HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {

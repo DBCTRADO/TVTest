@@ -310,11 +310,9 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CUICore::CTitleStringMap StrMap(GetAppClass());
 				StrMap.InputParameter(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, pt);
 			}
@@ -395,7 +393,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					case CDDS_POSTPAINT:
 						{
-							HDC hdc = pnmcd->hdc;
+							const HDC hdc = pnmcd->hdc;
 							RECT rc = pnmcd->rc;
 
 							bool fMargins = false;
@@ -415,7 +413,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							}
 							if (!fMargins)
 								::InflateRect(&rc, -6, -4);
-							HGDIOBJ hOldPen = ::SelectObject(hdc, ::GetStockObject(BLACK_PEN));
+							const HGDIOBJ hOldPen = ::SelectObject(hdc, ::GetStockObject(BLACK_PEN));
 							::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
 							::InflateRect(&rc, -1, -1);
 							::SelectObject(hdc, ::GetStockObject(WHITE_PEN));

@@ -392,7 +392,7 @@ bool CBasicDialog::ApplyPosition()
 
 	RECT rc;
 	m_Position.Get(&rc);
-	HMONITOR hMonitor = ::MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+	const HMONITOR hMonitor = ::MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
 	MONITORINFO mi;
 	mi.cbSize = sizeof(mi);
 	if (::GetMonitorInfo(hMonitor, &mi)) {
@@ -472,7 +472,7 @@ void CBasicDialog::ApplyStyle()
 		const int DPI = m_pStyleScaling->GetDPI();
 
 		LOGFONT lf = m_lfOriginalFont;
-		LONG Height = ::MulDiv(std::abs(lf.lfHeight), DPI, m_OriginalDPI);
+		const LONG Height = ::MulDiv(std::abs(lf.lfHeight), DPI, m_OriginalDPI);
 		lf.lfHeight = lf.lfHeight < 0 ? -Height : Height;
 		lf.lfWidth = 0;
 		m_Font.Create(&lf);
@@ -575,7 +575,7 @@ INT_PTR CBasicDialog::HandleDarkModeMessage(HWND hDlg, UINT uMsg, WPARAM wParam,
 						}
 					}
 				} else {
-					CBasicDialog *pParentDialog = GetThis(::GetParent(hDlg));
+					const CBasicDialog *pParentDialog = GetThis(::GetParent(hDlg));
 					if (pParentDialog != nullptr) {
 						m_fDarkMode = pParentDialog->m_fDarkMode;
 					}
@@ -602,7 +602,7 @@ INT_PTR CBasicDialog::HandleDarkModeMessage(HWND hDlg, UINT uMsg, WPARAM wParam,
 				return Result;
 
 			if (m_FaceBrush.IsCreated()) {
-				HDC hdc = reinterpret_cast<HDC>(wParam);
+				const HDC hdc = reinterpret_cast<HDC>(wParam);
 				RECT rc;
 				::GetClientRect(hDlg, &rc);
 				::FillRect(hdc, &rc, m_FaceBrush.GetHandle());
@@ -614,7 +614,7 @@ INT_PTR CBasicDialog::HandleDarkModeMessage(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 	case WM_PRINTCLIENT:
 		if (m_fDarkMode && m_FaceBrush.IsCreated()) {
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 			RECT rc;
 			::GetClientRect(hDlg, &rc);
 			::FillRect(hdc, &rc, m_FaceBrush.GetHandle());
@@ -674,7 +674,7 @@ LRESULT CBasicDialog::HandleDarkModeCtlColor(HWND hDlg, UINT uMsg, WPARAM wParam
 	if (Result != 0)
 		return Result;
 
-	HWND hwnd = reinterpret_cast<HWND>(lParam);
+	const HWND hwnd = reinterpret_cast<HWND>(lParam);
 
 	if (IsDisableThemingControl(hwnd))
 		return FALSE;
@@ -710,11 +710,11 @@ LRESULT CBasicDialog::HandleDarkModeCtlColor(HWND hDlg, UINT uMsg, WPARAM wParam
 		break;
 	}
 
-	DrawUtil::CBrush &Brush = fFaceColor ? m_FaceBrush : m_BackBrush;
+	const DrawUtil::CBrush &Brush = fFaceColor ? m_FaceBrush : m_BackBrush;
 	if (!Brush.IsCreated())
 		return FALSE;
 
-	HDC hdc = reinterpret_cast<HDC>(wParam);
+	const HDC hdc = reinterpret_cast<HDC>(wParam);
 
 	::SetTextColor(hdc, m_TextColor);
 	::SetBkColor(hdc, fFaceColor ? m_FaceColor : m_BackColor);
@@ -757,7 +757,7 @@ bool CBasicDialog::HandleDarkModeNotifyMessage(NMHDR *pnmh)
 
 LRESULT CBasicDialog::CustomDrawDarkModeButton(NMCUSTOMDRAW *pnmcd)
 {
-	HWND hwnd = pnmcd->hdr.hwndFrom;
+	const HWND hwnd = pnmcd->hdr.hwndFrom;
 	const DWORD Style = GetWindowStyle(hwnd);
 	const DWORD Type = Style & BS_TYPEMASK;
 	LRESULT Result = CDRF_DODEFAULT;
@@ -766,7 +766,7 @@ LRESULT CBasicDialog::CustomDrawDarkModeButton(NMCUSTOMDRAW *pnmcd)
 				|| Type == BS_3STATE || Type == BS_AUTO3STATE
 				|| Type == BS_RADIOBUTTON || Type == BS_AUTORADIOBUTTON)
 			&& (Style & BS_PUSHLIKE) == 0) {
-		HDC hdc = pnmcd->hdc;
+		const HDC hdc = pnmcd->hdc;
 
 		switch (pnmcd->dwDrawStage) {
 		case CDDS_PREPAINT:
@@ -910,7 +910,7 @@ LRESULT CBasicDialog::CustomDrawDarkModeButton(NMCUSTOMDRAW *pnmcd)
 					Format |= DT_HIDEPREFIX;
 
 				bool fNoText = false;
-				HBITMAP hbm = reinterpret_cast<HBITMAP>(::SendMessage(hwnd, BM_GETIMAGE, IMAGE_BITMAP, 0));
+				const HBITMAP hbm = reinterpret_cast<HBITMAP>(::SendMessage(hwnd, BM_GETIMAGE, IMAGE_BITMAP, 0));
 				BITMAP bm;
 				if (hbm != nullptr) {
 					if (::GetObject(hbm, sizeof(BITMAP), &bm) == sizeof(BITMAP)) {
@@ -1035,7 +1035,7 @@ LRESULT CBasicDialog::CustomDrawDarkModeTreeView(NMTVCUSTOMDRAW *pnmcd)
 
 	case CDDS_ITEMPOSTPAINT:
 		if ((pnmcd->nmcd.uItemState & CDIS_SELECTED) != 0) {
-			HTREEITEM hItem = reinterpret_cast<HTREEITEM>(pnmcd->nmcd.dwItemSpec);
+			const HTREEITEM hItem = reinterpret_cast<HTREEITEM>(pnmcd->nmcd.dwItemSpec);
 			RECT rc;
 			if (TreeView_GetItemRect(
 					pnmcd->nmcd.hdr.hwndFrom, hItem, &rc,
@@ -1230,11 +1230,11 @@ bool CBasicDialog::SetControlDarkTheme(HWND hwnd, bool fDark)
 
 		::SetWindowTheme(hwnd, fDark ? L"DarkMode_Explorer" : nullptr, nullptr);
 
-		HWND hwndHeader = ListView_GetHeader(hwnd);
+		const HWND hwndHeader = ListView_GetHeader(hwnd);
 		if (hwndHeader != nullptr)
 			::SetWindowTheme(hwndHeader, fDark ? L"DarkMode_ItemsView" : nullptr, nullptr);
 
-		HWND hwndToolTips = ListView_GetToolTips(hwnd);
+		const HWND hwndToolTips = ListView_GetToolTips(hwnd);
 		if (hwndToolTips != nullptr)
 			SetWindowDarkTheme(hwndToolTips, fDark);
 
@@ -1243,7 +1243,7 @@ bool CBasicDialog::SetControlDarkTheme(HWND hwnd, bool fDark)
 	}
 
 	if (::lstrcmpi(szClassName, WC_TABCONTROL) == 0) {
-		HWND hwndToolTips = TabCtrl_GetToolTips(hwnd);
+		const HWND hwndToolTips = TabCtrl_GetToolTips(hwnd);
 		if (hwndToolTips != nullptr)
 			SetWindowDarkTheme(hwndToolTips, fDark);
 		return true;
@@ -1262,7 +1262,7 @@ bool CBasicDialog::SetControlDarkTheme(HWND hwnd, bool fDark)
 	if (::lstrcmpi(szClassName, WC_TREEVIEW) == 0) {
 		::SetWindowTheme(hwnd, fDark ? L"DarkMode_Explorer" : nullptr, nullptr);
 
-		HWND hwndToolTips = TreeView_GetToolTips(hwnd);
+		const HWND hwndToolTips = TreeView_GetToolTips(hwnd);
 		if (hwndToolTips != nullptr)
 			SetWindowDarkTheme(hwndToolTips, fDark);
 
@@ -1287,7 +1287,7 @@ bool CBasicDialog::UpdateControlColors(HWND hwnd, bool fDark)
 		ListView_SetTextBkColor(hwnd, m_BackColor);
 
 		for (int i = 0; i < 2; i++) {
-			HIMAGELIST himl = ListView_GetImageList(hwnd, i);
+			const HIMAGELIST himl = ListView_GetImageList(hwnd, i);
 			if (himl != nullptr)
 				::ImageList_SetBkColor(himl, m_BackColor);
 		}
@@ -1299,7 +1299,7 @@ bool CBasicDialog::UpdateControlColors(HWND hwnd, bool fDark)
 		TreeView_SetTextColor(hwnd, m_TextColor);
 		TreeView_SetBkColor(hwnd, m_BackColor);
 
-		HIMAGELIST himl = TreeView_GetImageList(hwnd, TVSIL_NORMAL);
+		const HIMAGELIST himl = TreeView_GetImageList(hwnd, TVSIL_NORMAL);
 		if (himl != nullptr)
 			::ImageList_SetBkColor(himl, m_BackColor);
 
@@ -1440,15 +1440,15 @@ void CBasicDialog::DrawDarkModeTab(HWND hwnd, HDC hdc, const RECT &PaintRect)
 	const int ItemCount = TabCtrl_GetItemCount(hwnd);
 	const int SelectedItem = TabCtrl_GetCurSel(hwnd);
 
-	HIMAGELIST himl = TabCtrl_GetImageList(hwnd);
+	const HIMAGELIST himl = TabCtrl_GetImageList(hwnd);
 	int IconWidth, IconHeight;
 	if (himl != nullptr)
 		ImageList_GetIconSize(himl, &IconWidth, &IconHeight);
 
 	const COLORREF OldTextColor = ::GetTextColor(hdc);
 	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-	HFONT hfont = GetWindowFont(hwnd);
-	HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
+	const HFONT hfont = GetWindowFont(hwnd);
+	const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
 	const int IconTextMargin = 3;
 	const int BorderWidth = ::MulDiv(1, m_CurrentDPI, 96);
 	int TabBottom = 0;
@@ -1568,7 +1568,7 @@ void CBasicDialog::DrawDarkModeUpDown(HWND hwnd, HDC hdc, const RECT &PaintRect)
 		pInfo->Font.Create(&lf);
 	}
 
-	HGDIOBJ hOldFont = ::SelectObject(hdc, pInfo->Font.GetHandle());
+	const HGDIOBJ hOldFont = ::SelectObject(hdc, pInfo->Font.GetHandle());
 	const COLORREF OldTextColor = ::SetTextColor(hdc, fDisabled ? MixColor(m_TextColor, m_FaceColor) : m_TextColor);
 	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 
@@ -2082,7 +2082,7 @@ void CResizableDialog::DoLayout()
 
 bool CResizableDialog::AddControl(int ID, AlignFlag Align)
 {
-	HWND hwnd = ::GetDlgItem(m_hDlg, ID);
+	const HWND hwnd = ::GetDlgItem(m_hDlg, ID);
 	if (hwnd == nullptr)
 		return false;
 

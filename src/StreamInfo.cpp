@@ -85,7 +85,7 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		case IDC_STREAMINFO_COPY:
 			{
-				HWND hwndTree = ::GetDlgItem(hDlg, IDC_STREAMINFO_SERVICE);
+				const HWND hwndTree = ::GetDlgItem(hDlg, IDC_STREAMINFO_SERVICE);
 				String Text, Temp;
 
 				GetDlgItemString(hDlg, IDC_STREAMINFO_STREAM, &Temp);
@@ -106,16 +106,16 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		switch (reinterpret_cast<NMHDR*>(lParam)->code) {
 		case NM_RCLICK:
 			{
-				NMHDR *pnmhdr = reinterpret_cast<NMHDR*>(lParam);
-				//HTREEITEM hItem = TreeView_GetSelection(pnmhdr->hwndFrom);
-				DWORD Pos = ::GetMessagePos();
+				const NMHDR *pnmhdr = reinterpret_cast<const NMHDR*>(lParam);
+				//const HTREEITEM hItem = TreeView_GetSelection(pnmhdr->hwndFrom);
+				const DWORD Pos = ::GetMessagePos();
 				TVHITTESTINFO tvhti;
 				tvhti.pt.x = (SHORT)LOWORD(Pos);
 				tvhti.pt.y = (SHORT)HIWORD(Pos);
 				::ScreenToClient(pnmhdr->hwndFrom, &tvhti.pt);
-				HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
+				const HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
 				if (hItem != nullptr) {
-					HMENU hmenu = ::CreatePopupMenu();
+					const HMENU hmenu = ::CreatePopupMenu();
 					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("コピー(&C)"));
 					POINT pt;
 					::GetCursorPos(&pt);
@@ -145,7 +145,7 @@ static void FormatEsInfo(
 	LPCTSTR pszName, int Index, const LibISDB::AnalyzerFilter::ESInfo &Es,
 	LPTSTR pszText, int MaxText)
 {
-	LPCTSTR pszStreamType = LibISDB::GetStreamTypeText(Es.StreamType);
+	const LPCTSTR pszStreamType = LibISDB::GetStreamTypeText(Es.StreamType);
 	StringFormat(
 		pszText, MaxText,
 		TEXT("{}{} : PID {:#04x} ({}) / stream type {:#02x} ({}) / component tag {:#02x}"),
@@ -193,7 +193,7 @@ void CStreamInfoPage::SetService()
 	LibISDB::AnalyzerFilter::ServiceList ServiceList;
 	pAnalyzer->GetServiceList(&ServiceList);
 
-	HWND hwndTree = ::GetDlgItem(m_hDlg, IDC_STREAMINFO_SERVICE);
+	const HWND hwndTree = ::GetDlgItem(m_hDlg, IDC_STREAMINFO_SERVICE);
 	TVINSERTSTRUCT tvis;
 	HTREEITEM hItem;
 
@@ -238,7 +238,7 @@ void CStreamInfoPage::SetService()
 			StringFormat(szText, TEXT("PMT : PID {0:#04x} ({0})"), PID);
 			TreeView_InsertItem(hwndTree, &tvis);
 
-			int NumVideoStreams = (int)ServiceInfo.VideoESList.size();
+			const int NumVideoStreams = (int)ServiceInfo.VideoESList.size();
 			for (int j = 0; j < NumVideoStreams; j++) {
 				FormatEsInfo(
 					TEXT("映像"), j, ServiceInfo.VideoESList[j],
@@ -246,7 +246,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			int NumAudioStreams = (int)ServiceInfo.AudioESList.size();
+			const int NumAudioStreams = (int)ServiceInfo.AudioESList.size();
 			for (int j = 0; j < NumAudioStreams; j++) {
 				FormatEsInfo(
 					TEXT("音声"), j, ServiceInfo.AudioESList[j],
@@ -254,7 +254,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			int NumCaptionStreams = (int)ServiceInfo.CaptionESList.size();
+			const int NumCaptionStreams = (int)ServiceInfo.CaptionESList.size();
 			for (int j = 0; j < NumCaptionStreams; j++) {
 				PID = ServiceInfo.CaptionESList[j].PID;
 				StringFormat(
@@ -264,7 +264,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			int NumDataStreams = (int)ServiceInfo.DataCarrouselESList.size();
+			const int NumDataStreams = (int)ServiceInfo.DataCarrouselESList.size();
 			for (int j = 0; j < NumDataStreams; j++) {
 				PID = ServiceInfo.DataCarrouselESList[j].PID;
 				StringFormat(
@@ -274,7 +274,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			int NumOtherStreams = (int)ServiceInfo.OtherESList.size();
+			const int NumOtherStreams = (int)ServiceInfo.OtherESList.size();
 			for (int j = 0; j < NumOtherStreams; j++) {
 				FormatEsInfo(
 					TEXT("その他"), j, ServiceInfo.OtherESList[j],
@@ -288,7 +288,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			int NumEcmStreams = (int)ServiceInfo.ECMList.size();
+			const int NumEcmStreams = (int)ServiceInfo.ECMList.size();
 			for (int j = 0; j < NumEcmStreams; j++) {
 				PID = ServiceInfo.ECMList[j].PID;
 				StringFormat(
@@ -438,7 +438,7 @@ void CStreamInfoPage::SetService()
 		if (hItem != nullptr) {
 			for (int i = 0; i < (int)TerrestrialList.size(); i++) {
 				const LibISDB::AnalyzerFilter::TerrestrialDeliverySystemInfo &Info = TerrestrialList[i];
-				LPCTSTR pszArea = LibISDB::GetAreaText_ja(Info.AreaCode);
+				const LPCTSTR pszArea = LibISDB::GetAreaText_ja(Info.AreaCode);
 
 				StringFormat(
 					szText,
@@ -556,7 +556,7 @@ void CStreamInfoPage::GetTreeViewText(
 			*pText += szBuff;
 			*pText += TEXT("\r\n");
 		}
-		HTREEITEM hChild = TreeView_GetChild(hwndTree, tvi.hItem);
+		const HTREEITEM hChild = TreeView_GetChild(hwndTree, tvi.hItem);
 		if (hChild != nullptr) {
 			GetTreeViewText(hwndTree, hChild, true, pText, Level + 1);
 		}
@@ -675,7 +675,7 @@ INT_PTR CPIDInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			AddControl(IDC_PIDINFO_LIST, AlignFlag::All);
 			AddControl(IDC_PIDINFO_COPY, AlignFlag::BottomRight);
 
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PIDINFO_LIST);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PIDINFO_LIST);
 
 			ListView_SetExtendedListViewStyle(
 				hwndList,
@@ -727,7 +727,7 @@ INT_PTR CPIDInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		switch (reinterpret_cast<NMHDR*>(lParam)->code) {
 		case LVN_COLUMNCLICK:
 			{
-				NMLISTVIEW *pnmlv = reinterpret_cast<NMLISTVIEW*>(lParam);
+				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
 				const int Column = pnmlv->iSubItem;
 				const bool fDescending =
 					(Column == m_SortColumn) ?
@@ -750,7 +750,7 @@ INT_PTR CPIDInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_DESTROY:
 		{
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PIDINFO_LIST);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PIDINFO_LIST);
 			for (int i = 0; i < NUM_COLUMNS; i++) {
 				m_ColumnWidth[i] = ListView_GetColumnWidth(hwndList, i);
 			}
@@ -764,7 +764,7 @@ INT_PTR CPIDInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 void CPIDInfoPage::UpdateInfo()
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	const LibISDB::TSPacketParserFilter *pParser =
 		App.CoreEngine.GetFilter<LibISDB::TSPacketParserFilter>();
 	const LibISDB::AnalyzerFilter *pAnalyzer =
@@ -779,7 +779,7 @@ void CPIDInfoPage::UpdateInfo()
 		pAnalyzer->GetEMMPIDList(&EMMPIDList);
 	}
 
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PIDINFO_LIST);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PIDINFO_LIST);
 	const int ItemCount = ListView_GetItemCount(hwndList);
 
 	BYTE ItemState[LibISDB::PID_MAX + 1];
@@ -800,7 +800,7 @@ void CPIDInfoPage::UpdateInfo()
 	int PIDCount = 0;
 
 	for (std::uint16_t PID = 0; PID <= LibISDB::PID_MAX; PID++) {
-		PacketCountInfo PacketCount = pParser->GetPacketCount(PID);
+		const PacketCountInfo PacketCount = pParser->GetPacketCount(PID);
 
 		if (PacketCount.Input > 0) {
 			if (m_PIDInfoList.size() <= static_cast<size_t>(PIDCount))
@@ -925,7 +925,7 @@ void CPIDInfoPage::UpdateInfo()
 
 String CPIDInfoPage::GetListText()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PIDINFO_LIST);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PIDINFO_LIST);
 	const int ItemCount = ListView_GetItemCount(hwndList);
 	int ColumnDigits[NUM_COLUMNS];
 	String Text;
@@ -972,7 +972,7 @@ String CPIDInfoPage::GetListText()
 
 void CPIDInfoPage::SortItems(int Column, bool fDescending)
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PIDINFO_LIST);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PIDINFO_LIST);
 	SortParams Params;
 
 	Params.pPIDInfoList = &m_PIDInfoList;
@@ -989,7 +989,7 @@ int CALLBACK CPIDInfoPage::ItemCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 	const SortParams *pParams = reinterpret_cast<const SortParams*>(lParamSort);
 	const PIDInfo &Info1 = (*pParams->pPIDInfoList)[lParam1];
 	const PIDInfo &Info2 = (*pParams->pPIDInfoList)[lParam2];
-	auto CompareValue = [](auto v1, auto v2) -> int { return (v1 < v2) ? -1 : (v1 > v2) ? 1 : 0; };
+	const auto CompareValue = [](auto v1, auto v2) -> int { return (v1 < v2) ? -1 : (v1 > v2) ? 1 : 0; };
 	int Cmp;
 
 	switch (pParams->Column) {
@@ -1058,7 +1058,7 @@ CStreamInfo::CStreamInfo()
 	m_PageList[PAGE_PIDINFO   ].pszTitle = TEXT("PID");
 	m_PageList[PAGE_PIDINFO   ].Dialog = std::make_unique<CPIDInfoPage>();
 
-	for (auto &Page : m_PageList)
+	for (const auto &Page : m_PageList)
 		RegisterUIChild(Page.Dialog.get());
 
 	SetStyleScaling(&m_StyleScaling);
@@ -1145,7 +1145,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HWND hwndTab = ::GetDlgItem(hDlg, IDC_STREAMPROPERTIES_TAB);
+			const HWND hwndTab = ::GetDlgItem(hDlg, IDC_STREAMPROPERTIES_TAB);
 
 			TCITEM tci;
 			tci.mask = TCIF_TEXT;
@@ -1197,7 +1197,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		{
-			for (auto &Page : m_PageList)
+			for (const auto &Page : m_PageList)
 				Page.Dialog->Destroy();
 
 			GetAppClass().UICore.UnregisterModelessDialog(this);
@@ -1211,7 +1211,7 @@ INT_PTR CStreamInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CStreamInfo::OnSizeChanged(int Width, int Height)
 {
-	HWND hwndTab = ::GetDlgItem(m_hDlg, IDC_STREAMPROPERTIES_TAB);
+	const HWND hwndTab = ::GetDlgItem(m_hDlg, IDC_STREAMPROPERTIES_TAB);
 
 	::MoveWindow(hwndTab, 0, 0, Width, Height, TRUE);
 
@@ -1226,7 +1226,7 @@ bool CStreamInfo::CreatePage(int Page)
 	if (Page < 0 || Page >= NUM_PAGES)
 		return false;
 
-	PageInfo &Info = m_PageList[Page];
+	const PageInfo &Info = m_PageList[Page];
 
 	if (Info.Dialog->IsCreated())
 		return true;

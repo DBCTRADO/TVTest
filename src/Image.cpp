@@ -65,14 +65,12 @@ static void CropImage(
 	const BITMAPINFO *pbmiSrc, const void *pSrcData,
 	int Left, int Top, int Width, int Height, void *pDstData)
 {
+	const std::size_t SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
+	const std::size_t DstRowBytes = DIB_ROW_BYTES(Width, 24);
 	int x, y;
-	std::size_t SrcRowBytes, DstRowBytes;
 	const BYTE *p;
 	BYTE *q;
 
-	SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth,
-								pbmiSrc->bmiHeader.biBitCount);
-	DstRowBytes = DIB_ROW_BYTES(Width, 24);
 	q = (BYTE*)pDstData + (Height - 1) * DstRowBytes;
 	for (y = 0; y < Height; y++) {
 		p = (const BYTE*)pSrcData +
@@ -101,21 +99,17 @@ HGLOBAL ResizeImage(
 	const BITMAPINFO *pbmiSrc, const void *pSrcData,
 	const RECT *pSrcRect, int Width, int Height)
 {
-	HGLOBAL hGlobal;
 	BITMAPINFOHEADER *pbmihDst;
 	void *pDstData;
 	int SrcLeft, SrcTop, SrcWidth, SrcHeight;
-	int SrcPlanes, SrcXCenter, SrcYCenter, DstXCenter, DstYCenter;
 	int x, y, x1, y1, dx1, dy1, dx2, dy2;
-	std::size_t YOffset;
 	int b, g, r;
-	std::size_t SrcRowBytes, DstPadBytes;
 	const BYTE *p, *p1;
 	BYTE *q;
 
 	if (pbmiSrc->bmiHeader.biBitCount != 24 && pbmiSrc->bmiHeader.biBitCount != 32)
 		return nullptr;
-	hGlobal = GlobalAlloc(
+	const HGLOBAL hGlobal = GlobalAlloc(
 		GMEM_MOVEABLE | GMEM_SHARE,
 		sizeof(BITMAPINFOHEADER) + DIB_ROW_BYTES(Width, 24) * Height);
 	if (hGlobal == nullptr)
@@ -148,12 +142,12 @@ HGLOBAL ResizeImage(
 		GlobalUnlock(hGlobal);
 		return hGlobal;
 	}
-	SrcPlanes = pbmiSrc->bmiHeader.biBitCount / 8;
+	const int SrcPlanes = pbmiSrc->bmiHeader.biBitCount / 8;
 	std::unique_ptr<int[]> SrcPos(new int[Width]);
-	SrcXCenter = ((SrcWidth - 1) << 8) / 2;
-	SrcYCenter = ((SrcHeight - 1) << 8) / 2;
-	DstXCenter = ((Width - 1) << 8) / 2;
-	DstYCenter = ((Height - 1) << 8) / 2;
+	const int SrcXCenter = ((SrcWidth - 1) << 8) / 2;
+	const int SrcYCenter = ((SrcHeight - 1) << 8) / 2;
+	const int DstXCenter = ((Width - 1) << 8) / 2;
+	const int DstYCenter = ((Height - 1) << 8) / 2;
 	for (x = 0; x < Width; x++) {
 		SrcPos[x] = ((x << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
 		if (SrcPos[x] < 0)
@@ -161,8 +155,8 @@ HGLOBAL ResizeImage(
 		else if (SrcPos[x] > (SrcWidth - 1) << 8)
 			SrcPos[x] = (SrcWidth - 1) << 8;
 	}
-	SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
-	DstPadBytes = DIB_ROW_BYTES(Width, 24) - Width * 3;
+	const std::size_t SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
+	const std::size_t DstPadBytes = DIB_ROW_BYTES(Width, 24) - Width * 3;
 	if (SrcTop > 0)
 		pSrcData = static_cast<const BYTE*>(pSrcData) +
 			(pbmiSrc->bmiHeader.biHeight > 0 ? (pbmiSrc->bmiHeader.biHeight - (SrcHeight + SrcTop)) : SrcTop) * SrcRowBytes;
@@ -175,7 +169,7 @@ HGLOBAL ResizeImage(
 			y1 = (SrcHeight - 1) << 8;
 		dy2 = y1 & 0xFF;
 		dy1 = 0x100 - dy2;
-		YOffset = dy2 > 0 ? SrcRowBytes : 0;
+		const std::size_t YOffset = dy2 > 0 ? SrcRowBytes : 0;
 		for (x = 0; x < Width; x++) {
 			x1 = SrcPos[x];
 			dx2 = x1 & 0xFF;
@@ -305,7 +299,7 @@ HGLOBAL CImageCodec::LoadAribPngFromMemory(const void *pData, size_t DataSize)
 #ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib == nullptr && !Init())
 		return nullptr;
-	auto pLoadAribPngFromMemory =
+	const auto pLoadAribPngFromMemory =
 		reinterpret_cast<ImageDLL::LoadAribPngFromMemoryFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromMemory"));
 	if (pLoadAribPngFromMemory == nullptr)
 		return nullptr;
@@ -321,7 +315,7 @@ HGLOBAL CImageCodec::LoadAribPngFromFile(LPCTSTR pszFileName)
 #ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib == nullptr && !Init())
 		return nullptr;
-	auto pLoadAribPngFromFile =
+	const auto pLoadAribPngFromFile =
 		reinterpret_cast<ImageDLL::LoadAribPngFromFileFunc>(::GetProcAddress(m_hLib, "LoadAribPngFromFile"));
 	if (pLoadAribPngFromFile == nullptr)
 		return nullptr;

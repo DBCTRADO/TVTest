@@ -307,7 +307,7 @@ bool CChannelPanel::SetChannelList(const CChannelList *pChannelList, bool fSetEv
 			if (fSetEvent && m_pEPGDatabase != nullptr)
 				UpdateEvents(pEventInfo, &Current);
 			if (m_pLogoManager != nullptr) {
-				HBITMAP hbmLogo = m_pLogoManager->GetAssociatedLogoBitmap(
+				const HBITMAP hbmLogo = m_pLogoManager->GetAssociatedLogoBitmap(
 					pEventInfo->GetNetworkID(), pEventInfo->GetServiceID(),
 					CLogoManager::LOGOTYPE_SMALL);
 				if (hbmLogo != nullptr)
@@ -426,7 +426,7 @@ bool CChannelPanel::ScrollToChannel(int Channel)
 	GetItemRect(Channel, &rcItem);
 	if (rcItem.top >= rcClient.top && rcItem.bottom <= rcClient.bottom)
 		return true;
-	bool fBottom = rcItem.bottom > rcClient.bottom;
+	const bool fBottom = rcItem.bottom > rcClient.bottom;
 	if (m_ScrollPos != 0)
 		::OffsetRect(&rcItem, 0, m_ScrollPos);
 	int Pos = rcItem.top;
@@ -555,7 +555,7 @@ bool CChannelPanel::ExpandChannel(int Channel, bool fExpand)
 				rc.bottom = rcClient.bottom;
 				Invalidate(&rc);
 			} else {
-				int Height = CalcHeight();
+				const int Height = CalcHeight();
 
 				if (m_ScrollPos > Height - rcClient.bottom) {
 					m_ScrollPos = std::max(Height - rcClient.bottom, 0L);
@@ -730,10 +730,10 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_SIZE:
 		{
-			int Height = HIWORD(lParam), Max;
-			int TotalHeight = CalcHeight();
+			const int Height = HIWORD(lParam);
+			const int TotalHeight = CalcHeight();
+			const int Max = std::max(TotalHeight - Height, 0);
 
-			Max = std::max(TotalHeight - Height, 0);
 			if (m_ScrollPos > Max) {
 				m_ScrollPos = Max;
 				Invalidate();
@@ -745,7 +745,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_MOUSEWHEEL:
 		{
-			int Delta = m_MouseWheel.OnMouseWheel(wParam, m_FontHeight * m_MouseWheel.GetDefaultScrollLines());
+			const int Delta = m_MouseWheel.OnMouseWheel(wParam, m_FontHeight * m_MouseWheel.GetDefaultScrollLines());
 
 			if (Delta != 0)
 				SetScrollPos(m_ScrollPos - Delta);
@@ -754,13 +754,13 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_VSCROLL:
 		{
-			int Height = CalcHeight();
-			int Pos, Page;
+			const int Height = CalcHeight();
+			int Pos;
 			RECT rc;
 
 			Pos = m_ScrollPos;
 			GetClientRect(&rc);
-			Page = rc.bottom;
+			const int Page = rc.bottom;
 			switch (LOWORD(wParam)) {
 			case SB_LINEUP:        Pos -= m_FontHeight;              break;
 			case SB_LINEDOWN:      Pos += m_FontHeight;              break;
@@ -778,11 +778,9 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_LBUTTONDOWN:
 		{
-			HitType Type;
-			int Channel;
-
 			SetFocus(hwnd);
-			Channel = HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &Type);
+			HitType Type;
+			const int Channel = HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &Type);
 			if (Channel >= 0) {
 				if (Type == HIT_CHEVRON)
 					ExpandChannel(Channel, !m_ChannelList[Channel]->IsExpanded());
@@ -807,9 +805,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_MOUSEMOVE:
 		{
 			HitType Type;
-			int Channel;
-
-			Channel = HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &Type);
+			const int Channel = HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &Type);
 			if (Channel >= 0 && Type != HIT_MARGIN)
 				::SetCursor(GetActionCursor());
 			else
@@ -826,7 +822,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case TTN_NEEDTEXT:
 			{
 				LPNMTTDISPINFO pnmtdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
-				int Channel = LOWORD(pnmtdi->lParam), Event = HIWORD(pnmtdi->lParam);
+				const int Channel = LOWORD(pnmtdi->lParam), Event = HIWORD(pnmtdi->lParam);
 
 				if (Channel >= 0 && (size_t)Channel < m_ChannelList.size()) {
 					static TCHAR szText[1024];
@@ -853,7 +849,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				::GetWindowRect(pnmh->hwndFrom, &rcTip);
 				::GetCursorPos(&pt);
 				if (::PtInRect(&rcTip, pt)) {
-					HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONEAREST);
+					const HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONEAREST);
 					if (hMonitor != nullptr) {
 						MONITORINFO mi;
 
@@ -947,9 +943,9 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 	if (hdcDst == nullptr)
 		hdcDst = hdc;
 
-	HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(hdcDst, OBJ_FONT));
-	COLORREF crOldTextColor = ::GetTextColor(hdcDst);
-	int OldBkMode = ::SetBkMode(hdcDst, TRANSPARENT);
+	const HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(hdcDst, OBJ_FONT));
+	const COLORREF crOldTextColor = ::GetTextColor(hdcDst);
+	const int OldBkMode = ::SetBkMode(hdcDst, TRANSPARENT);
 
 	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcDst));
 
@@ -1046,7 +1042,7 @@ void CChannelPanel::Draw(HDC hdc, const RECT *prcPaint)
 						if (EventInfo.Duration > 0) {
 							if (Elapsed > static_cast<LONGLONG>(EventInfo.Duration))
 								Elapsed = EventInfo.Duration;
-							int Width =
+							const int Width =
 								::MulDiv(
 									rcProgress.right - rcProgress.left,
 									static_cast<int>(Elapsed), EventInfo.Duration);
@@ -1162,13 +1158,13 @@ void CChannelPanel::SetScrollPos(int Pos)
 	if (Pos < 0) {
 		Pos = 0;
 	} else {
-		int Height = CalcHeight();
-		int Max = std::max(Height - rc.bottom, 0L);
+		const int Height = CalcHeight();
+		const int Max = std::max(Height - rc.bottom, 0L);
 		if (Pos > Max)
 			Pos = Max;
 	}
 	if (Pos != m_ScrollPos) {
-		int Offset = Pos - m_ScrollPos;
+		const int Offset = Pos - m_ScrollPos;
 
 		m_ScrollPos = Pos;
 		if (std::abs(Offset) < rc.bottom) {
@@ -1202,9 +1198,7 @@ void CChannelPanel::SetScrollBar()
 
 void CChannelPanel::CalcItemHeight()
 {
-	HDC hdc;
-
-	hdc = ::GetDC(m_hwnd);
+	const HDC hdc = ::GetDC(m_hwnd);
 	if (hdc == nullptr)
 		return;
 	m_FontHeight = m_Font.GetHeight(hdc);
@@ -1324,7 +1318,7 @@ void CChannelPanel::SetTooltips(bool fRectOnly)
 		ToolCount = 0;
 		for (int i = 0; i < (int)m_ChannelList.size(); i++) {
 			rc.top += m_ChannelNameHeight;
-			int NumEvents = m_ChannelList[i]->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel;
+			const int NumEvents = m_ChannelList[i]->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel;
 			for (int j = 0; j < NumEvents; j++) {
 				rc.bottom = rc.top + m_EventNameHeight;
 				if (ToolCount < NumTools)
@@ -1347,10 +1341,10 @@ bool CChannelPanel::EventInfoPopupHitTest(int x, int y, LPARAM *pParam)
 {
 	if (m_fDetailToolTip) {
 		HitType Type;
-		int Channel = HitTest(x, y, &Type);
+		const int Channel = HitTest(x, y, &Type);
 
 		if (Channel >= 0 && Type >= HIT_EVENT1) {
-			int Event = Type - HIT_EVENT1;
+			const int Event = Type - HIT_EVENT1;
 			if (m_ChannelList[Channel]->IsEventEnabled(Event)) {
 				*pParam = MAKELONG(Channel, Event);
 				return true;
@@ -1363,7 +1357,7 @@ bool CChannelPanel::EventInfoPopupHitTest(int x, int y, LPARAM *pParam)
 
 bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 {
-	int Channel = LOWORD(Param), Event = HIWORD(Param);
+	const int Channel = LOWORD(Param), Event = HIWORD(Param);
 
 	if (Channel < 0 || (size_t)Channel >= m_ChannelList.size())
 		return false;
@@ -1387,7 +1381,7 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 	pt.x = rc.left;
 	pt.y = rc.top;
 	::ClientToScreen(m_hwnd, &pt);
-	int y = pt.y + m_ChannelNameHeight + m_EventNameHeight * (Event + 1);
+	const int y = pt.y + m_ChannelNameHeight + m_EventNameHeight * (Event + 1);
 	pPopup->GetDefaultPopupPosition(&rc);
 	if (rc.top > y) {
 		rc.bottom = y + (rc.bottom - rc.top);
@@ -1430,7 +1424,7 @@ void CChannelPanel::ShowMenu(int x, int y)
 			CM_CHANNELPANEL_PROGRESSBAR_ELAPSED :
 			CM_CHANNELPANEL_PROGRESSBAR_REMAINING);
 
-	POINT pt = {x, y};
+	const POINT pt = {x, y};
 	Menu.Show(m_hwnd, &pt);
 }
 
@@ -1536,18 +1530,16 @@ void CChannelPanel::CChannelEventInfo::DrawChannelName(
 	RECT rc = *pRect;
 
 	if (m_hbmLogo != nullptr) {
-		int LogoWidth, LogoHeight;
-
-		LogoHeight = (rc.bottom - rc.top) - (LogoMargins.Top + LogoMargins.Bottom);
+		const int LogoHeight = (rc.bottom - rc.top) - (LogoMargins.Top + LogoMargins.Bottom);
 		if (LogoHeight > 0) {
-			LogoWidth = LogoHeight * 16 / 9;
+			const int LogoWidth = LogoHeight * 16 / 9;
 			// AlphaBlendでリサイズすると汚いので、予めリサイズした画像を作成しておく
 			if (m_StretchedLogo.IsCreated()) {
 				if (m_StretchedLogo.GetWidth() != LogoWidth || m_StretchedLogo.GetHeight() != LogoHeight)
 					m_StretchedLogo.Destroy();
 			}
 			if (!m_StretchedLogo.IsCreated()) {
-				HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, LogoWidth, LogoHeight);
+				const HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, LogoWidth, LogoHeight);
 				if (hbm != nullptr)
 					m_StretchedLogo.Attach(hbm);
 			}

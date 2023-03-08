@@ -79,13 +79,13 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HWND hwndHeader = ::GetDlgItem(hDlg, IDC_ABOUT_HEADER);
-			HWND hwndInfo = ::GetDlgItem(hDlg, IDC_ABOUT_INFO);
-			HWND hwndLogo = ::GetDlgItem(hDlg, IDC_ABOUT_LOGO);
-			HWND hwndLink = ::GetDlgItem(hDlg, IDC_ABOUT_LINK);
+			const HWND hwndHeader = ::GetDlgItem(hDlg, IDC_ABOUT_HEADER);
+			const HWND hwndInfo = ::GetDlgItem(hDlg, IDC_ABOUT_INFO);
+			const HWND hwndLogo = ::GetDlgItem(hDlg, IDC_ABOUT_LOGO);
+			const HWND hwndLink = ::GetDlgItem(hDlg, IDC_ABOUT_LINK);
 
-			HDC hdc = ::GetDC(hDlg);
-			HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+			const HDC hdc = ::GetDC(hDlg);
+			const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 			TCHAR szText[MAX_INFO_TEXT];
 
 			StringCopy(
@@ -148,9 +148,9 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			if (rcInfo.bottom < rcText.bottom || rcInfo.right < rcText.right
 					|| rcLink.bottom - rcLink.top < rcLinkText.bottom) {
-				int Width = std::max(rcInfo.right, rcText.right);
-				int Height = std::max(rcInfo.bottom, rcText.bottom);
-				int XDiff = Width - rcInfo.right;
+				const int Width = std::max(rcInfo.right, rcText.right);
+				const int Height = std::max(rcInfo.bottom, rcText.bottom);
+				const int XDiff = Width - rcInfo.right;
 				int YDiff = Height - rcInfo.bottom;
 
 				::SetWindowPos(
@@ -196,7 +196,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					MAKEINTRESOURCE(IDB_LOGO32), TEXT("PNG"));
 				::ShowWindow(hwndLogo, SW_HIDE);
 			} else {
-				HBITMAP hbm = static_cast<HBITMAP>(
+				const HBITMAP hbm = static_cast<HBITMAP>(
 					::LoadImage(GetAppClass().GetResourceInstance(),
 						MAKEINTRESOURCE(IDB_LOGO),
 						IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR));
@@ -221,9 +221,9 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_DRAWITEM:
 		{
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-			int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-			COLORREF OldTextColor = ::GetTextColor(pdis->hDC);;
-			HFONT hfontOld = (HFONT)::GetCurrentObject(pdis->hDC, OBJ_FONT);
+			const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+			const COLORREF OldTextColor = ::GetTextColor(pdis->hDC);;
+			const HFONT hfontOld = (HFONT)::GetCurrentObject(pdis->hDC, OBJ_FONT);
 			TCHAR szText[MAX_INFO_TEXT];
 
 			if (pdis->CtlID == IDC_ABOUT_HEADER) {
@@ -335,7 +335,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_DESTROY:
 		{
-			HBITMAP hbm = reinterpret_cast<HBITMAP>(
+			const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_ABOUT_LOGO,
 					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));

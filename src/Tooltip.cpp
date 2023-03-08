@@ -82,7 +82,7 @@ void CTooltip::Destroy()
 void CTooltip::DeleteAllTools()
 {
 	if (m_hwndTooltip != nullptr) {
-		int Count = (int)::SendMessage(m_hwndTooltip, TTM_GETTOOLCOUNT, 0, 0);
+		const int Count = (int)::SendMessage(m_hwndTooltip, TTM_GETTOOLCOUNT, 0, 0);
 		TOOLINFO ti;
 
 		ti.cbSize = TTTOOLINFO_V1_SIZE;

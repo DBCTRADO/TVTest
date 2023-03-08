@@ -97,7 +97,7 @@ static boolean JPEGEmptyOutputBuffer(j_compress_ptr cinfo)
 static void JPEGTermDestination(j_compress_ptr cinfo)
 {
 	JPEGDestinationInfo *pInfo = (JPEGDestinationInfo*)cinfo->dest;
-	DWORD Size = JPEG_OUTPUT_BUFFER_SIZE - (DWORD)pInfo->dest.free_in_buffer;
+	const DWORD Size = JPEG_OUTPUT_BUFFER_SIZE - (DWORD)pInfo->dest.free_in_buffer;
 
 	if (Size > 0) {
 		DWORD Write;
@@ -113,7 +113,7 @@ static void JPEGTermDestination(j_compress_ptr cinfo)
 
 bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 {
-	HANDLE hFile = CreateFile(
+	const HANDLE hFile = CreateFile(
 		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)

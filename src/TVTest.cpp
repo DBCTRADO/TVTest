@@ -59,7 +59,7 @@ bool CTotTimeAdjuster::AdjustTime()
 		return false;
 	}
 
-	LibISDB::AnalyzerFilter *pAnalyzer =
+	const LibISDB::AnalyzerFilter *pAnalyzer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 	if (pAnalyzer == nullptr)
 		return false;
@@ -154,7 +154,7 @@ CServiceUpdateInfo::CServiceUpdateInfo(LibISDB::TSEngine *pEngine, LibISDB::Anal
 	pEngine->GetSelectableServiceList(&m_ServiceList);
 	m_CurService = -1;
 	if (!m_ServiceList.empty()) {
-		WORD ServiceID = pEngine->GetServiceID();
+		const WORD ServiceID = pEngine->GetServiceID();
 		if (ServiceID != LibISDB::SERVICE_ID_INVALID) {
 			for (size_t i = 0; i < m_ServiceList.size(); i++) {
 				if (m_ServiceList[i].ServiceID == ServiceID) {

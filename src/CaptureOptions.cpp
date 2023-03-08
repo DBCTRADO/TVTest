@@ -177,7 +177,7 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 	}
 	TCHAR szFormat[32];
 	if (Settings.Read(TEXT("CaptureSaveFormat"), szFormat, lengthof(szFormat))) {
-		int Format = m_ImageCodec.FormatNameToIndex(szFormat);
+		const int Format = m_ImageCodec.FormatNameToIndex(szFormat);
 		if (Format >= 0)
 			m_SaveFormat = Format;
 	}
@@ -339,7 +339,7 @@ bool CCaptureOptions::GenerateFileName(
 	if (SaveFolder.length() >= MAX_PATH)
 		return false;
 	if (!::PathIsDirectory(SaveFolder.c_str())) {
-		int Result = ::SHCreateDirectoryEx(nullptr, SaveFolder.c_str(), nullptr);
+		const int Result = ::SHCreateDirectoryEx(nullptr, SaveFolder.c_str(), nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			GetAppClass().AddLog(
 				CLogItem::LogType::Error,
@@ -402,14 +402,13 @@ bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 	TCHAR szOption[16];
 	BITMAPINFO *pbmi;
 	BYTE *pBits;
-	bool fOK;
 
 	if (!GenerateFileName(&FileName, pImage))
 		return false;
 	GetOptionText(szOption, lengthof(szOption));
 	if (!pImage->LockData(&pbmi, &pBits))
 		return false;
-	fOK = m_ImageCodec.SaveImage(
+	const bool fOK = m_ImageCodec.SaveImage(
 		FileName.c_str(), m_SaveFormat, szOption,
 		pbmi, pBits, m_fSetComment ? pImage->GetComment() : nullptr);
 	pImage->UnlockData();
@@ -563,11 +562,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CCaptureVariableStringMap VarStrMap;
 				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_FILENAME, pt);
 			}
@@ -599,11 +596,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CCaptureVariableStringMap VarStrMap;
 				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_COMMENT, pt);
 			}
@@ -617,7 +612,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			{
 				String SaveFolder;
 				GetDlgItemString(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, &SaveFolder);
-				CAppMain::CreateDirectoryResult CreateDirResult =
+				const CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
 						hDlg, SaveFolder.c_str(),
 						TEXT("キャプチャ画像の保存先フォルダ \"{}\" がありません。\n")

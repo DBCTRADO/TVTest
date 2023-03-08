@@ -132,7 +132,7 @@ bool CControllerManager::AddController(CController *pController)
 	m_ControllerList.emplace_back(pController);
 	pController->SetEventHandler(this);
 	ControllerInfo &Info = m_ControllerList[m_ControllerList.size() - 1];
-	int NumButtons = pController->NumButtons();
+	const int NumButtons = pController->NumButtons();
 	Info.Settings.AssignList.resize(NumButtons);
 	Info.Settings.fActiveOnly = pController->IsActiveOnly();
 	for (int i = 0; i < NumButtons; i++) {
@@ -175,7 +175,7 @@ void CControllerManager::DeleteAllControllers()
 
 bool CControllerManager::IsControllerEnabled(LPCTSTR pszName) const
 {
-	int Index = FindController(pszName);
+	const int Index = FindController(pszName);
 	if (Index < 0)
 		return false;
 	return m_ControllerList[Index].Controller->IsEnabled();
@@ -184,7 +184,7 @@ bool CControllerManager::IsControllerEnabled(LPCTSTR pszName) const
 
 bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 {
-	int Index = FindController(pszName);
+	const int Index = FindController(pszName);
 	if (Index < 0)
 		return false;
 
@@ -222,7 +222,7 @@ bool CControllerManager::LoadControllerSettings(LPCTSTR pszName)
 
 bool CControllerManager::SaveControllerSettings(LPCTSTR pszName) const
 {
-	int Index = FindController(pszName);
+	const int Index = FindController(pszName);
 	if (Index < 0)
 		return false;
 
@@ -295,7 +295,7 @@ bool CControllerManager::OnButtonDown(LPCTSTR pszName, int Button) const
 	if (pszName == nullptr || Button < 0)
 		return false;
 
-	int Index = FindController(pszName);
+	const int Index = FindController(pszName);
 	if (Index < 0)
 		return false;
 	const ControllerInfo &Info = m_ControllerList[Index];
@@ -331,7 +331,7 @@ bool CControllerManager::OnButtonDown(CController *pController, int Index)
 
 const CControllerManager::ControllerSettings *CControllerManager::GetControllerSettings(LPCTSTR pszName) const
 {
-	int Index = FindController(pszName);
+	const int Index = FindController(pszName);
 
 	if (Index < 0)
 		return nullptr;
@@ -353,7 +353,7 @@ int CControllerManager::FindController(LPCTSTR pszName) const
 
 void CControllerManager::InitDlgItems()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CONTROLLER_ASSIGN);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CONTROLLER_ASSIGN);
 	ListView_DeleteAllItems(hwndList);
 
 	if (m_hbmController != nullptr) {
@@ -366,7 +366,7 @@ void CControllerManager::InitDlgItems()
 	}
 	m_Tooltip.DeleteAllTools();
 
-	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
+	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
 	if (Sel >= 0) {
 		const CCommandManager &CommandManager = GetAppClass().CommandManager;
 		const ControllerInfo &Info = m_ControllerList[Sel];
@@ -378,7 +378,7 @@ void CControllerManager::InitDlgItems()
 				m_CurSettingsList[Sel] = Info.Settings;
 		}
 
-		bool fActiveOnly = pController->IsActiveOnly();
+		const bool fActiveOnly = pController->IsActiveOnly();
 		EnableDlgItem(m_hDlg, IDC_CONTROLLER_ACTIVEONLY, !fActiveOnly);
 		DlgCheckBox_Check(
 			m_hDlg, IDC_CONTROLLER_ACTIVEONLY,
@@ -386,7 +386,7 @@ void CControllerManager::InitDlgItems()
 
 		for (int i = 0; i < NumButtons; i++) {
 			CController::ButtonInfo Button;
-			int Command = m_CurSettingsList[Sel].AssignList[i];
+			const int Command = m_CurSettingsList[Sel].AssignList[i];
 			LV_ITEM lvi;
 
 			pController->GetButtonInfo(i, &Button);
@@ -447,7 +447,7 @@ void CControllerManager::InitDlgItems()
 
 void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 {
-	int CurController = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
+	const int CurController = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
 	if (CurController < 0)
 		return;
 
@@ -474,10 +474,9 @@ void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 
 void CControllerManager::SetDlgItemStatus()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CONTROLLER_ASSIGN);
-	int Sel;
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CONTROLLER_ASSIGN);
+	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-	Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 	if (Sel >= 0) {
 		LV_ITEM lvi;
 
@@ -505,7 +504,7 @@ void CControllerManager::SetDlgItemStatus()
 
 CController *CControllerManager::GetCurController() const
 {
-	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
+	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
 
 	if (Sel < 0 || Sel >= (int)m_ControllerList.size())
 		return nullptr;
@@ -535,7 +534,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			}
 			EnableDlgItem(hDlg, IDC_CONTROLLER_LIST, NumControllers > 0);
 
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
 			ListView_SetExtendedListViewStyle(
 				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
 			SetListViewTooltipsTopMost(hwndList);
@@ -556,7 +555,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			DlgComboBox_AddString(hDlg, IDC_CONTROLLER_COMMAND, TEXT("なし"));
 			while ((Command = CommandLister.Next()) != 0) {
 				CommandManager.GetCommandText(Command, szText, lengthof(szText));
-				LRESULT Index = DlgComboBox_AddString(hDlg, IDC_CONTROLLER_COMMAND, szText);
+				const LRESULT Index = DlgComboBox_AddString(hDlg, IDC_CONTROLLER_COMMAND, szText);
 				DlgComboBox_SetItemData(hDlg, IDC_CONTROLLER_COMMAND, Index, Command);
 			}
 
@@ -583,13 +582,11 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			if (pController == nullptr)
 				break;
 
-			int CurButton = ListView_GetNextItem(::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN), -1, LVNI_SELECTED);
+			const int CurButton = ListView_GetNextItem(::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN), -1, LVNI_SELECTED);
 
 			PAINTSTRUCT ps;
 			BITMAP bm;
 			RECT rc;
-			HDC hdcMem;
-			HBITMAP hbmOld;
 
 			::BeginPaint(hDlg, &ps);
 			::GetObject(m_hbmController, sizeof(BITMAP), &bm);
@@ -599,8 +596,8 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				DrawUtil::Fill(ps.hdc, &rc, GetThemeColor(COLOR_3DFACE));
 			else
 				::FillRect(ps.hdc, &rc, static_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH)));
-			hdcMem = ::CreateCompatibleDC(ps.hdc);
-			hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem, m_hbmController));
+			const HDC hdcMem = ::CreateCompatibleDC(ps.hdc);
+			const HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem, m_hbmController));
 			::BitBlt(
 				ps.hdc, m_ImageRect.left, m_ImageRect.top,
 				bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -630,10 +627,8 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 	case WM_LBUTTONDOWN:
 		{
-			POINT pt;
+			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			if (m_hbmSelButtons != nullptr
 					&& ::PtInRect(&m_ImageRect, pt)) {
 				const CController *pController = GetCurController();
@@ -651,7 +646,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					rc.right = rc.left + Button.ImageButtonRect.Width;
 					rc.bottom = rc.top + Button.ImageButtonRect.Height;
 					if (::PtInRect(&rc, pt)) {
-						HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
+						const HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
 
 						ListView_SetItemState(
 							hwndList, i,
@@ -715,7 +710,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_CONTROLLER_ACTIVEONLY:
 			{
-				int CurController = (int)DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_LIST);
+				const int CurController = (int)DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_LIST);
 
 				if (CurController >= 0) {
 					m_CurSettingsList[CurController].fActiveOnly =
@@ -726,11 +721,11 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_CONTROLLER_COMMAND:
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					int Command = (int)DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_COMMAND);
+					const int Command = (int)DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_COMMAND);
 
 					SetButtonCommand(
 						hwndList, Sel,
@@ -745,7 +740,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				if (pController == nullptr)
 					return TRUE;
 
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
 				const int NumButtons = pController->NumButtons();
 				for (int i = 0; i < NumButtons; i++) {
 					CController::ButtonInfo Button;
@@ -768,11 +763,11 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case LVN_KEYDOWN:
 			{
-				LPNMLVKEYDOWN pnmlvk = reinterpret_cast<LPNMLVKEYDOWN>(lParam);
+				const NMLVKEYDOWN *pnmlvk = reinterpret_cast<const NMLVKEYDOWN*>(lParam);
 
 				if (pnmlvk->wVKey == VK_BACK || pnmlvk->wVKey == VK_DELETE) {
-					HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
-					int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+					const HWND hwndList = ::GetDlgItem(hDlg, IDC_CONTROLLER_ASSIGN);
+					const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 					if (Sel >= 0)
 						SetButtonCommand(hwndList, Sel, 0);
@@ -784,7 +779,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			{
 				for (size_t i = 0; i < m_ControllerList.size(); i++) {
 					ControllerInfo &Info = m_ControllerList[i];
-					ControllerSettings &CurSettings = m_CurSettingsList[i];
+					const ControllerSettings &CurSettings = m_CurSettingsList[i];
 
 					if (Info.Settings != CurSettings) {
 						if (Info.Controller->IsEnabled()) {
@@ -828,7 +823,7 @@ void CControllerManager::RealizeStyle()
 	CBasicDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
-		HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CONTROLLER_ASSIGN);
+		const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CONTROLLER_ASSIGN);
 
 		for (int i = 0; i < 2; i++)
 			ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);

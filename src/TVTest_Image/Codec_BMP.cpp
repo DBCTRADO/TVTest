@@ -35,22 +35,20 @@ namespace ImageLib
 
 bool SaveBMPFile(const ImageSaveInfo *pInfo)
 {
-	int Width, Height, BitsPerPixel;
-	HANDLE hFile;
 	DWORD dwWrite;
-	size_t InfoBytes, RowBytes, BitsBytes;
+	size_t InfoBytes;
 
-	Width = pInfo->pbmi->bmiHeader.biWidth;
-	Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
-	BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
+	const int Width = pInfo->pbmi->bmiHeader.biWidth;
+	const int Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
+	const int BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
 	InfoBytes = sizeof(BITMAPINFOHEADER);
 	if (BitsPerPixel <= 8)
 		InfoBytes += ((size_t)1 << BitsPerPixel) * sizeof(RGBQUAD);
 	else if (pInfo->pbmi->bmiHeader.biCompression == BI_BITFIELDS)
 		InfoBytes += 3 * sizeof(DWORD);
-	RowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
-	BitsBytes = RowBytes * Height;
-	hFile = CreateFile(
+	const size_t RowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
+	const size_t BitsBytes = RowBytes * Height;
+	const HANDLE hFile = CreateFile(
 		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE) {
@@ -90,7 +88,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 		return false;
 	}
 	if (InfoBytes > sizeof(BITMAPINFOHEADER)) {
-		DWORD PalBytes = (DWORD)(InfoBytes - sizeof(BITMAPINFOHEADER));
+		const DWORD PalBytes = (DWORD)(InfoBytes - sizeof(BITMAPINFOHEADER));
 
 		if (!WriteFile(
 					hFile, pInfo->pbmi->bmiColors, PalBytes,

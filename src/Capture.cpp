@@ -95,11 +95,8 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 	if (m_hData == nullptr || m_fLocked)
 		return false;
 
-	HGLOBAL hCopy;
-	SIZE_T Size;
-
-	Size = ::GlobalSize(m_hData);
-	hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
+	const SIZE_T Size = ::GlobalSize(m_hData);
+	const HGLOBAL hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
 	if (hCopy == nullptr)
 		return false;
 	std::memcpy(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
@@ -110,7 +107,7 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 		return false;
 	}
 	::EmptyClipboard();
-	bool fOK = ::SetClipboardData(CF_DIB, hCopy) != nullptr;
+	const bool fOK = ::SetClipboardData(CF_DIB, hCopy) != nullptr;
 	::CloseClipboard();
 	return fOK;
 }
@@ -121,7 +118,7 @@ bool CCaptureImage::GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const
 	if (m_hData == nullptr || m_fLocked)
 		return false;
 
-	BITMAPINFOHEADER *pbmihSrc = static_cast<BITMAPINFOHEADER*>(::GlobalLock(m_hData));
+	const BITMAPINFOHEADER *pbmihSrc = static_cast<const BITMAPINFOHEADER*>(::GlobalLock(m_hData));
 
 	if (pbmihSrc == nullptr)
 		return false;
@@ -287,7 +284,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			::BeginPaint(hwnd, &ps);
 			GetClientRect(&rc);
 			if (m_Image && m_Image->LockData(&pbmi, &pBits)) {
-				int DstX, DstY, DstWidth, DstHeight;
+				int DstWidth, DstHeight;
 				RECT rcDest;
 
 				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / std::abs(pbmi->bmiHeader.biHeight);
@@ -296,12 +293,10 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				DstHeight = pbmi->bmiHeader.biHeight * rc.right / pbmi->bmiHeader.biWidth;
 				if (DstHeight > rc.bottom)
 					DstHeight = rc.bottom;
-				DstX = (rc.right - DstWidth) / 2;
-				DstY = (rc.bottom - DstHeight) / 2;
+				const int DstX = (rc.right - DstWidth) / 2;
+				const int DstY = (rc.bottom - DstHeight) / 2;
 				if (DstWidth > 0 && DstHeight > 0) {
-					int OldStretchBltMode;
-
-					OldStretchBltMode = ::SetStretchBltMode(ps.hdc, STRETCH_HALFTONE);
+					const int OldStretchBltMode = ::SetStretchBltMode(ps.hdc, STRETCH_HALFTONE);
 					::StretchDIBits(ps.hdc, DstX, DstY, DstWidth, DstHeight,
 									0, 0, pbmi->bmiHeader.biWidth, pbmi->bmiHeader.biHeight,
 									pBits, pbmi, DIB_RGB_COLORS, SRCCOPY);
@@ -528,7 +523,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					{MAKEINTRESOURCE(IDB_CAPTURE16), 16, 16},
 					{MAKEINTRESOURCE(IDB_CAPTURE32), 32, 32},
 				};
-				Style::Size IconSize = m_Status.GetIconSize();
+				const Style::Size IconSize = m_Status.GetIconSize();
 				m_StatusIcons.Load(
 					GetAppClass().GetResourceInstance(),
 					IconSize.Width, IconSize.Height,
@@ -547,7 +542,8 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_SIZE:
 		{
-			int Width = LOWORD(lParam), Height = HIWORD(lParam);
+			const int Width = LOWORD(lParam);
+			int Height = HIWORD(lParam);
 
 			if (m_fShowStatusBar) {
 				Height -= m_Status.GetHeight();

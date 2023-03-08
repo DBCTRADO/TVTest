@@ -134,7 +134,7 @@ HRESULT CVariant::ToString(String *pStr) const
 	VARIANT var;
 
 	::VariantInit(&var);
-	HRESULT hr = ::VariantChangeType(&var, this, VARIANT_ALPHABOOL, VT_BSTR);
+	const HRESULT hr = ::VariantChangeType(&var, this, VARIANT_ALPHABOOL, VT_BSTR);
 	if (FAILED(hr))
 		return hr;
 
@@ -201,7 +201,7 @@ STDMETHODIMP CPropertyBag::Write(LPCOLESTR pszPropName, VARIANT *pVar)
 		return E_POINTER;
 
 	CVariant var;
-	HRESULT hr = var.Assign(*pVar);
+	const HRESULT hr = var.Assign(*pVar);
 	if (FAILED(hr))
 		return hr;
 
@@ -347,7 +347,7 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			m_fTabInitialized = false;
 			m_CurTab = -1;
 
-			HWND hwndTab = ::GetDlgItem(hDlg, IDC_PROPERTYPAGEFRAME_TAB);
+			const HWND hwndTab = ::GetDlgItem(hDlg, IDC_PROPERTYPAGEFRAME_TAB);
 			SIZE MaxSize = {0, 0};
 			TCITEM tci;
 
@@ -356,7 +356,7 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			for (size_t i = 0; i < m_PageList.size(); i++) {
 				PageInfo &Info = m_PageList[i];
 				PROPPAGEINFO PropPageInfo = {sizeof(PROPPAGEINFO)};
-				HRESULT hr = Info.pPropPage->GetPageInfo(&PropPageInfo);
+				const HRESULT hr = Info.pPropPage->GetPageInfo(&PropPageInfo);
 				if (FAILED(hr))
 					return TRUE;
 				Info.Size = PropPageInfo.size;
@@ -441,7 +441,7 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 	case WM_NOTIFY:
 		{
-			NMHDR *pnmh = reinterpret_cast<NMHDR*>(lParam);
+			const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
 
 			switch (pnmh->code) {
 			case TCN_SELCHANGE:

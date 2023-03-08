@@ -104,7 +104,7 @@ Break:
 				CChannelInfo *pChInfo = pTuningSpace->GetChannelInfo(j);
 
 				if (pChInfo->GetPhysicalChannel() == 0) {
-					int Channel = pDriverChannelList->GetPhysicalChannel(pChInfo->GetChannelIndex());
+					const int Channel = pDriverChannelList->GetPhysicalChannel(pChInfo->GetChannelIndex());
 
 					if (Channel > 0)
 						pChInfo->SetPhysicalChannel(Channel);

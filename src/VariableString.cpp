@@ -100,9 +100,9 @@ bool FormatVariableString(CVariableStringMap *pVariableMap, LPCWSTR pszFormat, S
 				pString->begin() +
 				(i + 1 < static_cast<int>(SeparatorList.size()) ? SeparatorList[i + 1].Pos : pString->length());
 			auto itCur = pString->begin() + SeparatorList[i].Pos;
-			bool fPrev =
+			const bool fPrev =
 				std::find_if(itBegin, itCur, [](WCHAR c) -> bool { return c != L' '; }) != itCur;
-			bool fNext =
+			const bool fNext =
 				std::find_if(itCur, itEnd, [](WCHAR c) -> bool { return c != L' '; }) != itEnd;
 			if ((fPrev && fNext) || (fPrev && !fLast))
 				pString->insert(SeparatorList[i].Pos, SeparatorList[i].pszSeparator);
@@ -198,7 +198,7 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 	if (!GetParameterList(&GroupList) || GroupList.empty())
 		return false;
 
-	HMENU hmenuRoot = ::CreatePopupMenu();
+	const HMENU hmenuRoot = ::CreatePopupMenu();
 
 	for (size_t i = 0; i < GroupList.size(); i++) {
 		const ParameterGroup &Group = GroupList[i];
@@ -225,7 +225,7 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 		}
 	}
 
-	int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
+	const int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
 	::DestroyMenu(hmenuRoot);
 	if (Command <= 0)
 		return false;
@@ -318,7 +318,7 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 		TEXT("day-of-week"),
 	};
 
-	for (LPCTSTR e : ParameterList) {
+	for (const LPCTSTR e : ParameterList) {
 		if (::lstrcmpi(e, pszKeyword) == 0)
 			return true;
 	}
@@ -690,13 +690,13 @@ void CEventVariableStringMap::GetEventTitle(const String &EventName, String *pTi
 	String::size_type Next = 0;
 
 	while (Next < EventName.length()) {
-		String::size_type Left = EventName.find(L'[', Next);
+		const String::size_type Left = EventName.find(L'[', Next);
 		if (Left == String::npos) {
 			pTitle->append(EventName.substr(Next));
 			break;
 		}
 
-		String::size_type Right = EventName.find(L']', Left + 1);
+		const String::size_type Right = EventName.find(L']', Left + 1);
 		if (Right == String::npos) {
 			pTitle->append(EventName.substr(Next));
 			break;
@@ -724,15 +724,15 @@ void CEventVariableStringMap::GetEventMark(const String &EventName, String *pMar
 	String::size_type Next = 0;
 
 	while (Next < EventName.length()) {
-		String::size_type Left = EventName.find(L'[', Next);
+		const String::size_type Left = EventName.find(L'[', Next);
 		if (Left == String::npos)
 			break;
 
-		String::size_type Right = EventName.find(L']', Left + 1);
+		const String::size_type Right = EventName.find(L']', Left + 1);
 		if (Right == String::npos)
 			break;
 
-		String::size_type Length = Right - Left + 1;
+		const String::size_type Length = Right - Left + 1;
 		if (Length > 2 && Length <= MAX_MARK_LENGTH + 2)
 			pMarks->append(EventName.substr(Left, Length));
 

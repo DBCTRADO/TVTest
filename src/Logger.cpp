@@ -141,7 +141,7 @@ CLogger::CLogger()
 	, m_hFile(INVALID_HANDLE_VALUE)
 {
 	TCHAR szFileName[MAX_PATH];
-	DWORD Result = ::GetModuleFileName(nullptr, szFileName, lengthof(szFileName));
+	const DWORD Result = ::GetModuleFileName(nullptr, szFileName, lengthof(szFileName));
 	if ((Result > 0) && (Result < MAX_PATH)) {
 		m_DefaultLogFileName = szFileName;
 		m_DefaultLogFileName += TEXT(".log");
@@ -293,7 +293,7 @@ bool CLogger::GetLogBySerialNumber(DWORD SerialNumber, CLogItem *pItem) const
 	if (m_LogList.empty())
 		return false;
 
-	DWORD FirstSerial = m_LogList.front()->GetSerialNumber();
+	const DWORD FirstSerial = m_LogList.front()->GetSerialNumber();
 	if (SerialNumber < FirstSerial || SerialNumber >= FirstSerial + m_LogList.size())
 		return false;
 
@@ -314,9 +314,7 @@ bool CLogger::SetOutputToFile(bool fOutput)
 
 bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 {
-	HANDLE hFile;
-
-	hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName != nullptr ? pszFileName : m_DefaultLogFileName.c_str(),
 		GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
 		OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -402,7 +400,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HWND hwndList = GetDlgItem(hDlg, IDC_LOG_LIST);
+			const HWND hwndList = GetDlgItem(hDlg, IDC_LOG_LIST);
 
 			ListView_SetExtendedListViewStyle(
 				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES);
@@ -415,11 +413,11 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			};
 			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
 			const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
-			HIMAGELIST himl = ::ImageList_Create(
+			const HIMAGELIST himl = ::ImageList_Create(
 				IconWidth, IconHeight,
 				ILC_COLOR32, lengthof(IconList), 1);
-			for (LPCTSTR pszIcon : IconList) {
-				HICON hico = LoadSystemIcon(pszIcon, IconWidth, IconHeight);
+			for (const LPCTSTR pszIcon : IconList) {
+				const HICON hico = LoadSystemIcon(pszIcon, IconWidth, IconHeight);
 				::ImageList_AddIcon(himl, hico);
 				::DestroyIcon(hico);
 			}
@@ -516,7 +514,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case NM_CUSTOMDRAW:
 			// ダミーの列が描画されないようにする
 			{
-				LPNMLVCUSTOMDRAW pnmlvcd = reinterpret_cast<LPNMLVCUSTOMDRAW>(lParam);
+				const NMLVCUSTOMDRAW *pnmlvcd = reinterpret_cast<const NMLVCUSTOMDRAW*>(lParam);
 
 				if (pnmlvcd->nmcd.hdr.idFrom == IDC_LOG_LIST) {
 					LRESULT Result = CDRF_DODEFAULT;
@@ -544,7 +542,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case PSN_APPLY:
 			{
-				bool fOutput = DlgCheckBox_IsChecked(hDlg, IDC_LOG_OUTPUTTOFILE);
+				const bool fOutput = DlgCheckBox_IsChecked(hDlg, IDC_LOG_OUTPUTTOFILE);
 
 				if (fOutput != m_fOutputToFile) {
 					BlockLock Lock(m_Lock);
@@ -571,7 +569,7 @@ void CLogger::RealizeStyle()
 	CBasicDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
-		HWND hwndList = ::GetDlgItem(m_hDlg, IDC_LOG_LIST);
+		const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_LOG_LIST);
 
 		for (int i = 1; i < NUM_COLUMNS; i++)
 			ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);

@@ -124,7 +124,8 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 		case IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_UP:
 		case IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_DOWN:
 			{
-				int From = m_ItemListView.GetSelectedItem(), To;
+				const int From = m_ItemListView.GetSelectedItem();
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_UP) {
@@ -162,7 +163,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				int OrderList[CProgramGuideFrameSettings::TOOLBAR_NUM];
 
 				for (int i = 0; i < CProgramGuideFrameSettings::TOOLBAR_NUM; i++) {
-					int ID = static_cast<int>(m_ItemListView.GetItemParam(i));
+					const int ID = static_cast<int>(m_ItemListView.GetItemParam(i));
 
 					OrderList[i] = ID;
 					m_FrameSettings.SetToolbarVisible(ID, m_ItemListView.IsItemChecked(i));
@@ -212,7 +213,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 void CProgramGuideToolbarOptions::UpdateItemState()
 {
-	int Sel = m_ItemListView.GetSelectedItem();
+	const int Sel = m_ItemListView.GetSelectedItem();
 
 	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_UP, Sel > 0);
 	EnableDlgItem(

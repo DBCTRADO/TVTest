@@ -75,7 +75,7 @@ namespace
 DPI_AWARENESS_CONTEXT MySetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT Context)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pSetThreadDpiAwarenessContext =
+		const auto pSetThreadDpiAwarenessContext =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), SetThreadDpiAwarenessContext);
 		if (pSetThreadDpiAwarenessContext != nullptr)
 			return pSetThreadDpiAwarenessContext(Context);
@@ -87,7 +87,7 @@ DPI_AWARENESS_CONTEXT MySetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT Conte
 DPI_AWARENESS_CONTEXT MyGetThreadDpiAwarenessContext()
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pGetThreadDpiAwarenessContext =
+		const auto pGetThreadDpiAwarenessContext =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), GetThreadDpiAwarenessContext);
 		if (pGetThreadDpiAwarenessContext != nullptr)
 			return pGetThreadDpiAwarenessContext();
@@ -99,7 +99,7 @@ DPI_AWARENESS_CONTEXT MyGetThreadDpiAwarenessContext()
 bool MyAreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT Context1, DPI_AWARENESS_CONTEXT Context2)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pAreDpiAwarenessContextsEqual =
+		const auto pAreDpiAwarenessContextsEqual =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), AreDpiAwarenessContextsEqual);
 		if (pAreDpiAwarenessContextsEqual != nullptr)
 			return pAreDpiAwarenessContextsEqual(Context1, Context2) != FALSE;
@@ -114,7 +114,7 @@ bool MyAreDpiAwarenessContextsEqual(DPI_AWARENESS_CONTEXT Context1, DPI_AWARENES
 bool EnableNonClientDPIScaling(HWND hwnd)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pEnableNonClientDpiScaling =
+		const auto pEnableNonClientDpiScaling =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), EnableNonClientDpiScaling);
 		if (pEnableNonClientDpiScaling != nullptr)
 			return pEnableNonClientDpiScaling(hwnd) != FALSE;
@@ -132,13 +132,13 @@ int GetSystemDPI()
 
 	int DPI;
 
-	auto pGetDpiForSystem = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetDpiForSystem);
+	const auto pGetDpiForSystem = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetDpiForSystem);
 	if (pGetDpiForSystem != nullptr) {
 		// GetDpiForSystem の結果はキャッシュしてはいけない
 		DPI = pGetDpiForSystem();
 	} else {
 		if (SystemDPI == 0) {
-			HDC hdc = ::GetDC(nullptr);
+			const HDC hdc = ::GetDC(nullptr);
 			if (hdc != nullptr) {
 				SystemDPI = ::GetDeviceCaps(hdc, LOGPIXELSY);
 				::ReleaseDC(nullptr, hdc);
@@ -154,11 +154,11 @@ int GetSystemDPI()
 int GetMonitorDPI(HMONITOR hMonitor)
 {
 	if (hMonitor != nullptr && Util::OS::IsWindows8_1OrLater()) {
-		HMODULE hLib = Util::LoadSystemLibrary(TEXT("shcore.dll"));
+		const HMODULE hLib = Util::LoadSystemLibrary(TEXT("shcore.dll"));
 		if (hLib != nullptr) {
 			UINT DpiX, DpiY;
-			auto pGetDpiForMonitor = GET_LIBRARY_FUNCTION(hLib, GetDpiForMonitor);
-			bool fOK =
+			const auto pGetDpiForMonitor = GET_LIBRARY_FUNCTION(hLib, GetDpiForMonitor);
+			const bool fOK =
 				pGetDpiForMonitor != nullptr &&
 				pGetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &DpiX, &DpiY) == S_OK;
 			::FreeLibrary(hLib);
@@ -178,14 +178,14 @@ int GetWindowDPI(HWND hwnd)
 		return 0;
 
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pGetDpiForWindow = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetDpiForWindow);
+		const auto pGetDpiForWindow = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetDpiForWindow);
 		if (pGetDpiForWindow != nullptr)
 			return pGetDpiForWindow(hwnd);
 	}
 
 	int DPI;
 
-	HMONITOR hMonitor = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
+	const HMONITOR hMonitor = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
 	if (hMonitor != nullptr)
 		DPI = GetMonitorDPI(hMonitor);
 	else
@@ -198,7 +198,7 @@ int GetWindowDPI(HWND hwnd)
 int GetSystemMetricsWithDPI(int Index, int DPI, bool fFallbackScaling)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pGetSystemMetricsForDpi =
+		const auto pGetSystemMetricsForDpi =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), GetSystemMetricsForDpi);
 		if (pGetSystemMetricsForDpi != nullptr)
 			return pGetSystemMetricsForDpi(Index, DPI);
@@ -215,7 +215,7 @@ int GetSystemMetricsWithDPI(int Index, int DPI, bool fFallbackScaling)
 bool SystemParametersInfoWithDPI(UINT Action, UINT Param, void *pParam, UINT Flags, int DPI)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pSystemParametersInfoForDpi =
+		const auto pSystemParametersInfoForDpi =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), SystemParametersInfoForDpi);
 		if (pSystemParametersInfoForDpi != nullptr)
 			return pSystemParametersInfoForDpi(Action, Param, pParam, Flags, DPI) != FALSE;
@@ -228,7 +228,7 @@ bool SystemParametersInfoWithDPI(UINT Action, UINT Param, void *pParam, UINT Fla
 bool AdjustWindowRectWithDPI(RECT *pRect, DWORD Style, DWORD ExStyle, bool fMenu, int DPI)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pAdjustWindowRectExForDpi =
+		const auto pAdjustWindowRectExForDpi =
 			GET_MODULE_FUNCTION(TEXT("user32.dll"), AdjustWindowRectExForDpi);
 		if (pAdjustWindowRectExForDpi != nullptr)
 			return pAdjustWindowRectExForDpi(pRect, Style, fMenu, ExStyle, DPI) != FALSE;
@@ -250,15 +250,15 @@ int GetScrollBarWidth(HWND hwnd)
 DPI_AWARENESS_CONTEXT GetWindowDPIAwareness(HWND hwnd)
 {
 	if (Util::OS::IsWindows10AnniversaryUpdateOrLater()) {
-		auto pGetWindowDpiAwarenessContext = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetWindowDpiAwarenessContext);
+		const auto pGetWindowDpiAwarenessContext = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetWindowDpiAwarenessContext);
 		if (pGetWindowDpiAwarenessContext != nullptr)
 			return pGetWindowDpiAwarenessContext(hwnd);
 	}
 
 	if (Util::OS::IsWindows8_1OrLater()) {
-		HMODULE hLib = Util::LoadSystemLibrary(TEXT("shcore.dll"));
+		const HMODULE hLib = Util::LoadSystemLibrary(TEXT("shcore.dll"));
 		if (hLib != nullptr) {
-			auto pGetProcessDpiAwareness = GET_LIBRARY_FUNCTION(hLib, GetProcessDpiAwareness);
+			const auto pGetProcessDpiAwareness = GET_LIBRARY_FUNCTION(hLib, GetProcessDpiAwareness);
 			PROCESS_DPI_AWARENESS Awareness;
 			if ((pGetProcessDpiAwareness != nullptr)
 					&& (pGetProcessDpiAwareness(nullptr, &Awareness) == S_OK)) {
@@ -286,7 +286,7 @@ bool IsWindowPerMonitorDPIV1(HWND hwnd)
 bool IsWindowPerMonitorDPIV2(HWND hwnd)
 {
 	if (Util::OS::IsWindows10CreatorsUpdateOrLater()) {
-		auto pGetWindowDpiAwarenessContext = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetWindowDpiAwarenessContext);
+		const auto pGetWindowDpiAwarenessContext = GET_MODULE_FUNCTION(TEXT("user32.dll"), GetWindowDpiAwarenessContext);
 		if (pGetWindowDpiAwarenessContext != nullptr) {
 			return MyAreDpiAwarenessContextsEqual(
 				pGetWindowDpiAwarenessContext(hwnd), DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);

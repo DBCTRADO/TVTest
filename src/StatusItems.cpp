@@ -43,16 +43,14 @@ void CChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRec
 		return;
 	}
 
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	const CChannelManager &ChannelManager = App.ChannelManager;
 	const CChannelInfo *pInfo;
 	TCHAR szText[4 + MAX_CHANNEL_NAME];
 
 	if (App.UICore.GetSkin()->IsWheelChannelChanging()) {
-		COLORREF crText, crBack;
-
-		crText = ::GetTextColor(hdc);
-		crBack = ::GetBkColor(hdc);
+		const COLORREF crText = ::GetTextColor(hdc);
+		const COLORREF crBack = ::GetBkColor(hdc);
 		::SetTextColor(hdc, MixColor(crText, crBack, 128));
 		pInfo = ChannelManager.GetChangingChannelInfo();
 		StringFormat(
@@ -178,21 +176,20 @@ CVolumeStatusItem::CVolumeStatusItem()
 
 void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
-	CUICore *pUICore = &GetAppClass().UICore;
+	const CUICore *pUICore = &GetAppClass().UICore;
 	LOGBRUSH lb;
-	HPEN hpen, hpenOld;
-	HBRUSH hbrOld;
 	RECT rc;
-	COLORREF crText = ::GetTextColor(hdc), crBar;
+	const COLORREF crText = ::GetTextColor(hdc);
+	COLORREF crBar;
 
 	lb.lbStyle = BS_SOLID;
 	lb.lbColor = crText;
 	lb.lbHatch = 0;
-	hpen = ::ExtCreatePen(
+	const HPEN hpen = ::ExtCreatePen(
 		PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
 		m_Style.BarBorderWidth, &lb, 0, nullptr);
-	hpenOld = SelectPen(hdc, hpen);
-	hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
+	const HPEN hpenOld = SelectPen(hdc, hpen);
+	const HBRUSH hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
 	rc.left = DrawRect.left;
 	rc.top = DrawRect.top + ((DrawRect.bottom - DrawRect.top) - m_Style.BarHeight) / 2;
 	rc.right = DrawRect.right;
@@ -287,12 +284,12 @@ void CAudioChannelStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dr
 		return;
 	}
 
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	RECT rc = DrawRect;
 
 	const LibISDB::ViewerFilter *pViewer = App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer != nullptr && pViewer->IsSPDIFPassthrough()) {
-		Style::Size IconSize = m_pStatus->GetIconSize();
+		const Style::Size IconSize = m_pStatus->GetIconSize();
 		if (!m_Icons.IsCreated()) {
 			static const Theme::IconList::ResourceInfo ResourceList[] = {
 				{MAKEINTRESOURCE(IDB_PASSTHROUGH16), 16, 16},
@@ -350,7 +347,7 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 {
 	if (!!(Flags & DrawFlag::Preview)) {
 		RECT rc = DrawRect;
-		COLORREF OldTextColor = ::SetTextColor(hdc, m_CircleColor);
+		const COLORREF OldTextColor = ::SetTextColor(hdc, m_CircleColor);
 		::DrawText(hdc, TEXT("●"), -1, &rc, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
 		::SetTextColor(hdc, OldTextColor);
 		rc.left += m_pStatus->GetFontHeight() + 4;
@@ -366,7 +363,7 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 	rc = DrawRect;
 	if (RecordManager.IsRecording()) {
 		if (RecordManager.IsPaused()) {
-			HBRUSH hbr = ::CreateSolidBrush(::GetTextColor(hdc));
+			const HBRUSH hbr = ::CreateSolidBrush(::GetTextColor(hdc));
 			RECT rc1;
 
 			rc1.left = rc.left;
@@ -381,19 +378,16 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 		} else {
 #if 0
 			// Ellipseで小さい丸を描くと汚い
-			HBRUSH hbr = ::CreateSolidBrush(m_CircleColor);
-			HBRUSH hbrOld;
-			HPEN hpenOld;
-
+			const HBRUSH hbr = ::CreateSolidBrush(m_CircleColor);
 			rc1.right = rc1.left + FontHeight;
-			hbrOld = SelectBrush(hdc, hbr);
-			hpenOld = SelectPen(hdc, ::GetStockObject(NULL_PEN));
+			const HBRUSH hbrOld = SelectBrush(hdc, hbr);
+			const HPEN hpenOld = SelectPen(hdc, ::GetStockObject(NULL_PEN));
 			::Ellipse(hdc, rc1.left, rc1.top, rc1.right, rc1.bottom);
 			SelectPen(hdc, hpenOld);
 			SelectBrush(hdc, hbrOld);
 			::DeleteObject(hbr);
 #else
-			COLORREF OldTextColor = ::SetTextColor(hdc, m_CircleColor);
+			const COLORREF OldTextColor = ::SetTextColor(hdc, m_CircleColor);
 			::DrawText(
 				hdc, TEXT("●"), -1, &rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER);
@@ -401,7 +395,7 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 #endif
 		}
 		rc.left += FontHeight + 4;
-		bool fRemain = m_fRemain && RecordManager.IsStopTimeSpecified();
+		const bool fRemain = m_fRemain && RecordManager.IsStopTimeSpecified();
 		int RecordSec;
 		if (fRemain) {
 			RecordSec = (int)(RecordManager.GetRemainTime() / 1000);
@@ -427,7 +421,7 @@ void CRecordStatusItem::OnLButtonDown(int x, int y)
 	CAppMain &App = GetAppClass();
 	const CRecordManager &RecordManager = App.RecordManager;
 	CUICore &UICore = App.UICore;
-	bool fRecording = RecordManager.IsRecording();
+	const bool fRecording = RecordManager.IsRecording();
 
 	if (fRecording && !RecordManager.IsPaused()) {
 		if (!UICore.ConfirmStopRecording())
@@ -481,24 +475,24 @@ size_t CRecordStatusItem::GetTipText(LPTSTR pszText, size_t MaxLength)
 	if (RecordManager.IsRecording()) {
 		const CRecordTask *pRecordTask = RecordManager.GetRecordTask();
 
-		unsigned int RecordSec = (unsigned int)(pRecordTask->GetRecordTime() / 1000);
+		const unsigned int RecordSec = (unsigned int)(pRecordTask->GetRecordTime() / 1000);
 		size_t Length = StringFormat(
 			pszText, MaxLength,
 			TEXT("● {}:{:02}:{:02}"),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
 
-		LONGLONG WroteSize = pRecordTask->GetWroteSize();
+		const LONGLONG WroteSize = pRecordTask->GetWroteSize();
 		if (WroteSize >= 0) {
-			unsigned int Size = (unsigned int)(WroteSize / (1024 * 1024 / 100));
+			const unsigned int Size = (unsigned int)(WroteSize / (1024 * 1024 / 100));
 			Length += StringFormat(
 				pszText + Length, MaxLength - Length,
 				TEXT("\r\nサイズ: {}.{:02} MB"),
 				Size / 100, Size % 100);
 		}
 
-		LONGLONG DiskFreeSpace = pRecordTask->GetFreeSpace();
+		const LONGLONG DiskFreeSpace = pRecordTask->GetFreeSpace();
 		if (DiskFreeSpace > 0) {
-			unsigned int FreeSpace = (unsigned int)(DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
+			const unsigned int FreeSpace = (unsigned int)(DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
 			Length += StringFormat(
 				pszText + Length, MaxLength - Length,
 				TEXT("\r\n空き容量: {}.{:02} GB"),
@@ -529,13 +523,12 @@ LRESULT CRecordStatusItem::OnNotifyMessage(LPNMHDR pnmh)
 	if (pnmh->hwndFrom == m_Tooltip.GetHandle()) {
 		if (pnmh->code == TTN_SHOW) {
 			RECT rc, rcTip;
-			int x, y;
 
 			GetRect(&rc);
 			MapWindowRect(m_pStatus->GetHandle(), nullptr, &rc);
 			::GetWindowRect(pnmh->hwndFrom, &rcTip);
-			x = rc.left + ((rc.right - rc.left) - (rcTip.right - rcTip.left)) / 2;
-			y = rc.top - (rcTip.bottom - rcTip.top);
+			const int x = rc.left + ((rc.right - rc.left) - (rcTip.right - rcTip.left)) / 2;
+			const int y = rc.top - (rcTip.bottom - rcTip.top);
 			::SendMessage(pnmh->hwndFrom, TTM_TRACKPOSITION, 0, MAKELONG(x, y));
 			::SetWindowPos(
 				pnmh->hwndFrom, nullptr, x, y, 0, 0,
@@ -586,7 +579,7 @@ void CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRec
 			{MAKEINTRESOURCE(IDB_CAPTURE16), 16, 16},
 			{MAKEINTRESOURCE(IDB_CAPTURE32), 32, 32},
 		};
-		Style::Size IconSize = m_pStatus->GetIconSize();
+		const Style::Size IconSize = m_pStatus->GetIconSize();
 		m_Icons.Load(
 			GetAppClass().GetResourceInstance(),
 			IconSize.Width, IconSize.Height,
@@ -842,7 +835,7 @@ void CClockStatusItem::FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText,
 			Time.Hour, Time.Minute, Time.Second);
 	}
 #else
-	SYSTEMTIME st = Time.ToSYSTEMTIME();
+	const SYSTEMTIME st = Time.ToSYSTEMTIME();
 	if (m_fTOT) {
 		TCHAR szDate[32], szTime[32];
 		if (::GetDateFormat(
@@ -887,7 +880,7 @@ void CProgramInfoStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dra
 		RECT rcProgress = DrawRect;
 		rcProgress.top = rcProgress.bottom - (DrawRect.bottom - DrawRect.top) / 3;
 		ThemeDraw.Draw(m_ProgressBackStyle, &rcProgress);
-		long long Elapsed = m_CurTime.DiffSeconds(m_EventInfo.StartTime);
+		const long long Elapsed = m_CurTime.DiffSeconds(m_EventInfo.StartTime);
 		if (Elapsed > 0) {
 			if (m_EventInfo.Duration > 0 && Elapsed < static_cast<long long>(m_EventInfo.Duration)) {
 				rcProgress.right =
@@ -1030,7 +1023,7 @@ bool CProgramInfoStatusItem::UpdateProgress()
 		const LibISDB::AnalyzerFilter *pAnalyzer =
 			GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 		LibISDB::DateTime CurTime;
-		bool fValid =
+		const bool fValid =
 			m_EventInfo.StartTime.IsValid() &&
 			pAnalyzer != nullptr &&
 			pAnalyzer->GetTOTTime(&CurTime);
@@ -1077,7 +1070,7 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 
 			int IconWidth, IconHeight;
 			m_EventInfoPopup.GetPreferredIconSize(&IconWidth, &IconHeight);
-			HICON hIcon = App.LogoManager.CreateLogoIcon(
+			const HICON hIcon = App.LogoManager.CreateLogoIcon(
 				ChInfo.GetNetworkID(), ChInfo.GetServiceID(),
 				IconWidth, IconHeight);
 
@@ -1110,7 +1103,7 @@ CBufferingStatusItem::CBufferingStatusItem()
 
 bool CBufferingStatusItem::UpdateContent()
 {
-	CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+	const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 	const DWORD StreamRemain = CoreEngine.GetStreamRemain();
 	const int PacketBufferUsedPercentage = CoreEngine.GetPacketBufferUsedPercentage();
 
@@ -1277,7 +1270,7 @@ void CFavoritesStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawR
 			{MAKEINTRESOURCE(IDB_STATUSBAR_FAVORITES16), 16, 16},
 			{MAKEINTRESOURCE(IDB_STATUSBAR_FAVORITES32), 32, 32},
 		};
-		Style::Size IconSize = m_pStatus->GetIconSize();
+		const Style::Size IconSize = m_pStatus->GetIconSize();
 		m_Icons.Load(
 			GetAppClass().GetResourceInstance(),
 			IconSize.Width, IconSize.Height,

@@ -53,7 +53,7 @@ void InvalidateDlgItem(HWND hDlg, int ID, bool fErase)
 
 void InvalidateDlgItem(HWND hDlg, int ID, const RECT *pRect, bool fErase)
 {
-	HWND hwnd = GetDlgItem(hDlg, ID);
+	const HWND hwnd = GetDlgItem(hDlg, ID);
 	if (hwnd != nullptr)
 		InvalidateRect(hwnd, pRect, fErase);
 }
@@ -67,7 +67,7 @@ void ShowDlgItem(HWND hDlg, int ID, bool fShow)
 
 bool GetDlgItemRect(HWND hDlg, int ID, RECT *pRect)
 {
-	HWND hwnd = ::GetDlgItem(hDlg, ID);
+	const HWND hwnd = ::GetDlgItem(hDlg, ID);
 	if (hwnd == nullptr)
 		return false;
 	GetWindowRect(hwnd, pRect);
@@ -107,7 +107,7 @@ bool AdjustDialogPos(HWND hwndOwner, HWND hDlg)
 	int x, y;
 
 	if (hwndOwner) {
-		HMONITOR hMonitor = ::MonitorFromWindow(hwndOwner, MONITOR_DEFAULTTONEAREST);
+		const HMONITOR hMonitor = ::MonitorFromWindow(hwndOwner, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO mi;
 
 		mi.cbSize = sizeof(mi);
@@ -139,20 +139,16 @@ bool AdjustDialogPos(HWND hwndOwner, HWND hDlg)
 
 void SyncTrackBarWithEdit(HWND hDlg, int EditID, int TrackbarID)
 {
-	int Min, Max, Val;
-
-	Min = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMIN, 0, 0);
-	Max = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMAX, 0, 0);
-	Val = GetDlgItemInt(hDlg, EditID, nullptr, TRUE);
+	const int Min = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMIN, 0, 0);
+	const int Max = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMAX, 0, 0);
+	const int Val = GetDlgItemInt(hDlg, EditID, nullptr, TRUE);
 	SendDlgItemMessage(hDlg, TrackbarID, TBM_SETPOS, TRUE, std::clamp(Val, Min, Max));
 }
 
 
 void SyncEditWithTrackBar(HWND hDlg, int TrackbarID, int EditID)
 {
-	int Val;
-
-	Val = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETPOS, 0, 0);
+	const int Val = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETPOS, 0, 0);
 	SetDlgItemInt(hDlg, EditID, Val, TRUE);
 }
 
@@ -175,9 +171,7 @@ void SetComboBoxList(HWND hDlg, int ID, const LPCTSTR *ppszList, int Length)
 
 bool SetDlgButtonBitmap(HWND hDlg, int ID, HINSTANCE hinst, LPCTSTR pszName)
 {
-	HBITMAP hbm;
-
-	hbm = (HBITMAP)LoadImage(
+	const HBITMAP hbm = (HBITMAP)LoadImage(
 		hinst, pszName, IMAGE_BITMAP, 0, 0,
 		LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS);
 	if (hbm == nullptr)
@@ -189,20 +183,21 @@ bool SetDlgButtonBitmap(HWND hDlg, int ID, HINSTANCE hinst, LPCTSTR pszName)
 
 bool SetListBoxHExtent(HWND hDlg, int ID)
 {
-	HWND hwnd = GetDlgItem(hDlg, ID);
-	int Count, MaxWidth = 0;
+	const HWND hwnd = GetDlgItem(hDlg, ID);
+	int MaxWidth = 0;
 
-	Count = (int)SendMessage(hwnd, LB_GETCOUNT, 0, 0);
+	const int Count = (int)SendMessage(hwnd, LB_GETCOUNT, 0, 0);
 	if (Count >= 1) {
-		HFONT hfont, hfontOld;
-		HDC hdc;
 		TCHAR szText[MAX_PATH];
 		SIZE sz;
 
-		hfont = (HFONT)(UINT_PTR)SendMessage(hwnd, WM_GETFONT, 0, 0);
-		if (hfont == nullptr || (hdc = GetDC(hwnd)) == nullptr)
+		const HFONT hfont = (HFONT)(UINT_PTR)SendMessage(hwnd, WM_GETFONT, 0, 0);
+		if (hfont == nullptr)
 			return false;
-		hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
+		const HDC hdc = GetDC(hwnd);
+		if (hdc == nullptr)
+			return false;
+		const HFONT hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
 		for (int i = 0; i < Count; i++) {
 			SendMessage(hwnd, LB_GETTEXT, i, (LPARAM)szText);
 			GetTextExtentPoint32(hdc, szText, lstrlen(szText), &sz);
@@ -220,13 +215,10 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 
 LPTSTR GetDlgItemString(HWND hDlg, int ID)
 {
-	int Length;
-	LPTSTR pszString;
-
-	Length = GetDlgItemTextLength(hDlg, ID);
+	const int Length = GetDlgItemTextLength(hDlg, ID);
 	if (Length <= 0)
 		return nullptr;
-	pszString = new TCHAR[Length + 1];
+	const LPTSTR pszString = new TCHAR[Length + 1];
 	if (pszString != nullptr)
 		GetDlgItemText(hDlg, ID, pszString, Length + 1);
 	return pszString;
@@ -288,7 +280,7 @@ bool GetDlgComboBoxItemString(HWND hDlg, int ID, int Index, String *pString)
 
 bool EnableDlgItemSyncCheckBox(HWND hDlg, int ID, int CheckBoxID)
 {
-	bool fCheck = DlgCheckBox_IsChecked(hDlg, CheckBoxID);
+	const bool fCheck = DlgCheckBox_IsChecked(hDlg, CheckBoxID);
 
 	EnableDlgItem(hDlg, ID, fCheck);
 	return fCheck;
@@ -297,7 +289,7 @@ bool EnableDlgItemSyncCheckBox(HWND hDlg, int ID, int CheckBoxID)
 
 bool EnableDlgItemsSyncCheckBox(HWND hDlg, int FirstID, int LastID, int CheckBoxID)
 {
-	bool fCheck = DlgCheckBox_IsChecked(hDlg, CheckBoxID);
+	const bool fCheck = DlgCheckBox_IsChecked(hDlg, CheckBoxID);
 
 	EnableDlgItems(hDlg, FirstID, LastID, fCheck);
 	return fCheck;
@@ -347,19 +339,16 @@ ULONGLONG GetDlgItemInt64(HWND hDlg, int ID, BOOL *pfTranslated, BOOL fSigned)
 
 HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLength)
 {
-	HMENU hmenu;
-	TCHAR szText[256];
-	HWND hwnd;
-	unsigned int Flags;
-
-	hmenu = CreatePopupMenu();
+	const HMENU hmenu = CreatePopupMenu();
 	if (hmenu == nullptr)
 		return nullptr;
+
 	for (int i = 0; i < IDListLength; i++) {
 		if (pIDList[i] != 0) {
-			hwnd = GetDlgItem(hDlg, pIDList[i]);
+			const HWND hwnd = GetDlgItem(hDlg, pIDList[i]);
+			TCHAR szText[256];
 			GetWindowText(hwnd, szText, lengthof(szText));
-			Flags = MFT_STRING;
+			unsigned int Flags = MFT_STRING;
 			if (!IsWindowEnabled(hwnd))
 				Flags |= MFS_GRAYED;
 			AppendMenu(hmenu, Flags, pIDList[i], szText);
@@ -367,6 +356,7 @@ HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLengt
 			AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
 		}
 	}
+
 	return hmenu;
 }
 
@@ -375,10 +365,9 @@ bool PopupMenuFromControls(
 	HWND hDlg, const int *pIDList, int IDListLength,
 	unsigned int Flags, const POINT *ppt)
 {
-	HMENU hmenu;
 	POINT pt;
 
-	hmenu = CreatePopupMenuFromControls(hDlg, pIDList, IDListLength);
+	const HMENU hmenu = CreatePopupMenuFromControls(hDlg, pIDList, IDListLength);
 	if (hmenu == nullptr)
 		return false;
 	if (ppt != nullptr)
@@ -403,10 +392,9 @@ LRESULT CListBoxSubclass::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 	switch (uMsg) {
 	case WM_RBUTTONDOWN:
 		{
-			int y = GET_Y_LPARAM(lParam);
-			int Index;
+			const int y = GET_Y_LPARAM(lParam);
+			const int Index = ListBox_GetTopIndex(hwnd) + y / ListBox_GetItemHeight(hwnd, 0);
 
-			Index = ListBox_GetTopIndex(hwnd) + y / ListBox_GetItemHeight(hwnd, 0);
 			if (Index >= 0 && Index < ListBox_GetCount(hwnd)) {
 				if ((GetWindowStyle(hwnd) & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) != 0) {
 					if (ListBox_GetSel(hwnd, Index) <= 0) {
@@ -461,11 +449,11 @@ bool ExtendListBox(HWND hwndList, unsigned int Flags)
 
 bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending)
 {
-	HMODULE hLib = ::GetModuleHandle(TEXT("comctl32.dll"));
+	const HMODULE hLib = ::GetModuleHandle(TEXT("comctl32.dll"));
 	if (hLib == nullptr)
 		return false;
 
-	DLLGETVERSIONPROC pDllGetVersion = (DLLGETVERSIONPROC)::GetProcAddress(hLib, "DllGetVersion");
+	const DLLGETVERSIONPROC pDllGetVersion = (DLLGETVERSIONPROC)::GetProcAddress(hLib, "DllGetVersion");
 
 	if (pDllGetVersion == nullptr)
 		return false;
@@ -475,11 +463,11 @@ bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending)
 	if (FAILED((*pDllGetVersion)(&dvi)) || dvi.dwMajorVersion < 6)
 		return false;
 
-	HWND hwndHeader = ListView_GetHeader(hwndList);
+	const HWND hwndHeader = ListView_GetHeader(hwndList);
 	HDITEM hdi;
 
 	hdi.mask = HDI_FORMAT;
-	int Count = Header_GetItemCount(hwndHeader);
+	const int Count = Header_GetItemCount(hwndHeader);
 	for (int i = 0; i < Count; i++) {
 		Header_GetItem(hwndHeader, i, &hdi);
 		if (i == Column) {
@@ -502,7 +490,7 @@ bool AdjustListViewColumnWidth(HWND hwndList, bool fUseHeader)
 	if (hwndList == nullptr)
 		return false;
 
-	int Count = Header_GetItemCount(ListView_GetHeader(hwndList));
+	const int Count = Header_GetItemCount(ListView_GetHeader(hwndList));
 	for (int i = 0; i < Count; i++)
 		ListView_SetColumnWidth(hwndList, i, fUseHeader ? LVSCW_AUTOSIZE_USEHEADER : LVSCW_AUTOSIZE);
 
@@ -543,7 +531,7 @@ bool SetListViewTooltipsTopMost(HWND hwndList)
 // ボタンをドロップダウンメニュー表示用に初期化する
 bool InitDropDownButton(HWND hDlg, int ID)
 {
-	HWND hwnd = ::GetDlgItem(hDlg, ID);
+	const HWND hwnd = ::GetDlgItem(hDlg, ID);
 	if (hwnd == nullptr)
 		return false;
 
@@ -564,7 +552,7 @@ bool InitDropDownButton(HWND hDlg, int ID)
 
 bool InitDropDownButtonWithText(HWND hDlg, int ID)
 {
-	HWND hwnd = ::GetDlgItem(hDlg, ID);
+	const HWND hwnd = ::GetDlgItem(hDlg, ID);
 	if (hwnd == nullptr)
 		return false;
 

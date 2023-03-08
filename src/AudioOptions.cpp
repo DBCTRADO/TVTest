@@ -40,7 +40,7 @@ static constexpr size_t MAX_FORMAT_DOUBLE_LENGTH = 16;
 
 static void FormatDouble(double Value, LPTSTR pszString, size_t MaxString)
 {
-	size_t Length = StringFormat(pszString, MaxString, TEXT("{:.4f}"), Value);
+	const size_t Length = StringFormat(pszString, MaxString, TEXT("{:.4f}"), Value);
 	size_t i;
 	for (i = Length - 1; i > 1; i--) {
 		if (pszString[i] != TEXT('0')) {
@@ -381,7 +381,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 			}
 
-			for (DWORD Language : m_AudioLanguageList) {
+			for (const DWORD Language : m_AudioLanguageList) {
 				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 				GetLanguageText(Language, false, szText, lengthof(szText));
 				int Index = (int)DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, szText);
@@ -433,10 +433,10 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_ADD:
 			{
-				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST);
+				const int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST);
 
 				if (Sel >= 0) {
-					DWORD Param = (DWORD)DlgComboBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, Sel);
+					const DWORD Param = (DWORD)DlgComboBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, Sel);
 					TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 					GetLanguageText(
 						Param & 0x00FFFFFFUL, (Param & LANGUAGE_FLAG_SUB) != 0,
@@ -454,7 +454,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_REMOVE:
 			{
-				int Sel = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				const int Sel = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
 
 				if (Sel >= 0) {
 					DlgListBox_DeleteString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, Sel);
@@ -466,7 +466,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP:
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_DOWN:
 			{
-				int From = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				const int From = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
 				int To;
 
 				if (LOWORD(wParam) == IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP) {
@@ -481,7 +481,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 				DlgListBox_GetString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From, szText);
-				DWORD Param = (DWORD)DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From);
+				const DWORD Param = (DWORD)DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From);
 				DlgListBox_DeleteString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From);
 				DlgListBox_InsertString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, To, szText);
 				DlgListBox_SetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, To, Param);
@@ -544,7 +544,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				const int LangCount = (int)DlgListBox_GetCount(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
 				m_LanguagePriority.resize(LangCount);
 				for (int i = 0; i < LangCount; i++) {
-					DWORD Param = (DWORD)DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, i);
+					const DWORD Param = (DWORD)DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, i);
 					m_LanguagePriority[i].Language = Param & 0x00FFFFFFUL;
 					m_LanguagePriority[i].fSub = (Param & LANGUAGE_FLAG_SUB) != 0;
 				}
@@ -576,7 +576,7 @@ void CAudioOptions::GetLanguageText(DWORD Language, bool fSub, LPTSTR pszText, i
 
 void CAudioOptions::UpdateLanguagePriorityControls()
 {
-	bool fEnable = DlgCheckBox_IsChecked(m_hDlg, IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY);
+	const bool fEnable = DlgCheckBox_IsChecked(m_hDlg, IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY);
 	int Sel;
 
 	if (fEnable)

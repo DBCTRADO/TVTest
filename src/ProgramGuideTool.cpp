@@ -224,7 +224,7 @@ bool CProgramGuideTool::GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileN
 	}
 	int Length = 0;
 	while (*p != _T('\0') && *p != cDelimiter) {
-		int CharLength = StringCharLength(p);
+		const int CharLength = StringCharLength(p);
 		if (CharLength == 0 || Length + CharLength >= MaxFileName) {
 			pszFileName[0] = _T('\0');
 			return false;

@@ -83,7 +83,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 			if (Command.empty()) {
 				m_TaskList.push_back(0);	// Separator
 			} else {
-				int ID = CommandManager.ParseIDText(Command);
+				const int ID = CommandManager.ParseIDText(Command);
 				if (ID != 0)
 					m_TaskList.push_back(ID);
 			}

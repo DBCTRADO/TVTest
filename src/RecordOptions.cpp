@@ -145,7 +145,7 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 	String CommandText;
 	if (Settings.Read(TEXT("StatusBarRecordCommand"), &CommandText)) {
 		if (!CommandText.empty()) {
-			int Command = GetAppClass().CommandManager.ParseIDText(CommandText);
+			const int Command = GetAppClass().CommandManager.ParseIDText(CommandText);
 			if (Command != 0)
 				m_StatusBarRecordCommand = Command;
 		} else {
@@ -462,11 +462,9 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case IDC_RECORDOPTIONS_FILENAMEFORMAT:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORDOPTIONS_FILENAMEFORMAT), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CEventVariableStringMap EventVarStrMap;
 				EventVarStrMap.InputParameter(hDlg, IDC_RECORDOPTIONS_FILENAME, pt);
 			}
@@ -495,7 +493,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case IDC_RECORDOPTIONS_WRITEPLUGINSETTING:
 			{
-				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
+				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
 
 				if (Sel >= 0 && (size_t)Sel < m_WritePluginList.size()) {
 					CRecordManager::ShowWritePluginSetting(hDlg, m_WritePluginList[Sel].c_str());
@@ -512,7 +510,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				String SaveFolder, FileName;
 
 				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, &SaveFolder);
-				CAppMain::CreateDirectoryResult CreateDirResult =
+				const CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
 						hDlg, SaveFolder.c_str(),
 						TEXT("録画ファイルの保存先フォルダ \"{}\" がありません。\n")

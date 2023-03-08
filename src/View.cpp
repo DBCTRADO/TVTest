@@ -91,10 +91,9 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		{
 			PAINTSTRUCT ps;
 			RECT rcDest, rc;
-			HBRUSH hbr;
 
 			::BeginPaint(hwnd, &ps);
-			hbr = static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
+			const HBRUSH hbr = static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
 			if (!m_pViewer->GetDestRect(&rcDest)
 					|| ::IsRectEmpty(&rcDest)) {
 				::FillRect(ps.hdc, &ps.rcPaint, hbr);
@@ -110,7 +109,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 
 	case WM_MOVE:
 		{
-			LibISDB::DirectShow::VideoRenderer::RendererType Renderer =
+			const LibISDB::DirectShow::VideoRenderer::RendererType Renderer =
 				m_pViewer->GetVideoRendererType();
 
 			if (Renderer != LibISDB::DirectShow::VideoRenderer::RendererType::VMR7
@@ -119,7 +118,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 		}
 	case WM_SIZE:
 		{
-			int Width = LOWORD(lParam), Height = HIWORD(lParam);
+			const int Width = LOWORD(lParam), Height = HIWORD(lParam);
 
 			m_pViewer->SetViewSize(Width, Height);
 			if (m_pDisplayBase != nullptr)
@@ -348,11 +347,10 @@ void CViewWindow::ShowCursor(bool fShow)
 		m_fShowCursor = fShow;
 		if (m_hwnd != nullptr) {
 			POINT pt;
-			HWND hwnd;
 
 			::GetCursorPos(&pt);
 			::ScreenToClient(m_hwnd, &pt);
-			hwnd = ::ChildWindowFromPointEx(m_hwnd, pt, CWP_SKIPINVISIBLE);
+			const HWND hwnd = ::ChildWindowFromPointEx(m_hwnd, pt, CWP_SKIPINVISIBLE);
 			if (hwnd == m_hwnd
 					|| (m_pVideoContainer != nullptr
 						&& hwnd == m_pVideoContainer->GetHandle()))
@@ -412,7 +410,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			PAINTSTRUCT ps;
 			RECT rcClient;
-			HBRUSH hbr = static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
+			const HBRUSH hbr = static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
 
 			::BeginPaint(hwnd, &ps);
 			::GetClientRect(hwnd, &rcClient);
@@ -471,7 +469,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_SETCURSOR:
 		if (LOWORD(lParam) == HTCLIENT) {
-			HWND hwndCursor = reinterpret_cast<HWND>(wParam);
+			const HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 
 			if (hwndCursor == hwnd
 					|| (m_pVideoContainer != nullptr
@@ -676,7 +674,7 @@ bool CDisplayView::GetBackgroundStyle(BackgroundType Type, Theme::BackgroundStyl
 int CDisplayView::GetDefaultFontSize(int Width, int Height) const
 {
 	int Size = std::min(Width / m_Style.TextSizeRatioHorz, Height / m_Style.TextSizeRatioVert);
-	double DPI = (double)m_pStyleScaling->GetDPI();
+	const double DPI = (double)m_pStyleScaling->GetDPI();
 	double Points = (double)Size * 72.0 / DPI;
 	const double BasePoints = 9.0;
 	if (Points > BasePoints && m_Style.TextSizeScaleBase > 0) {
@@ -825,7 +823,7 @@ bool CDisplayBase::SetVisible(bool fVisible)
 	if (m_fVisible == fVisible)
 		return true;
 
-	bool fFocus = !fVisible && m_pDisplayView->GetHandle() == ::GetFocus();
+	const bool fFocus = !fVisible && m_pDisplayView->GetHandle() == ::GetFocus();
 
 	if (m_pEventHandler != nullptr && !m_pEventHandler->OnVisibleChange(fVisible))
 		return false;
@@ -905,7 +903,7 @@ void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView, UINT Messa
 {
 	if (pView == nullptr)
 		return;
-	HWND hwndParent = pView->GetParent();
+	const HWND hwndParent = pView->GetParent();
 	POINT pt = {x, y};
 	::MapWindowPoints(pView->GetHandle(), hwndParent, &pt, 1);
 	::SendMessage(hwndParent, Message, 0, MAKELPARAM(pt.x, pt.y));

@@ -234,7 +234,7 @@ bool CTSProcessor::LoadProperties(IPropertyBag *pPropBag)
 	if (FAILED(m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&pPersistPropBag))))
 		return false;
 
-	HRESULT hr = pPersistPropBag->Load(pPropBag, nullptr);
+	const HRESULT hr = pPersistPropBag->Load(pPropBag, nullptr);
 
 	pPersistPropBag->Release();
 
@@ -249,7 +249,7 @@ bool CTSProcessor::SaveProperties(IPropertyBag *pPropBag)
 	if (FAILED(m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&pPersistPropBag))))
 		return false;
 
-	HRESULT hr = pPersistPropBag->Save(pPropBag, FALSE, TRUE);
+	const HRESULT hr = pPersistPropBag->Save(pPropBag, FALSE, TRUE);
 
 	pPersistPropBag->Release();
 
@@ -536,7 +536,7 @@ bool CTSProcessor::GetDeviceInfo(int Device, FilterDeviceInfo *pInfo) const
 
 		if (SUCCEEDED(m_pFilterModule->GetDevice(Device, &pDevice))) {
 			Interface::FilterDeviceInfo Info;
-			HRESULT hr = pDevice->GetDeviceInfo(&Info);
+			const HRESULT hr = pDevice->GetDeviceInfo(&Info);
 			pDevice->Release();
 			if (SUCCEEDED(hr)) {
 				pInfo->DeviceID = Info.DeviceID;
@@ -579,7 +579,7 @@ bool CTSProcessor::GetDeviceList(std::vector<String> *pList) const
 
 	pList->clear();
 
-	int Count = GetDeviceCount();
+	const int Count = GetDeviceCount();
 
 	for (int i = 0; i < Count; i++) {
 		String Name;
@@ -743,7 +743,7 @@ bool CTSProcessor::OpenFilter(int Device, LPCWSTR pszName)
 
 bool CTSProcessor::OpenFilter(LPCWSTR pszDevice, LPCWSTR pszName)
 {
-	int Device = GetDeviceByName(pszDevice);
+	const int Device = GetDeviceByName(pszDevice);
 	if (Device < 0)
 		return false;
 

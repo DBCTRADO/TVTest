@@ -245,8 +245,8 @@ void CPanel::CalcDimensions()
 {
 	m_FontHeight = Style::GetFontHeight(
 		m_hwnd, m_Font.GetHandle(), m_Style.TitleLabelExtraHeight);
-	int LabelHeight = m_FontHeight + m_Style.TitleLabelMargin.Vert();
-	int ButtonHeight =
+	const int LabelHeight = m_FontHeight + m_Style.TitleLabelMargin.Vert();
+	const int ButtonHeight =
 		m_Style.TitleButtonIconSize.Height +
 		m_Style.TitleButtonPadding.Vert();
 	Theme::BorderStyle Border = m_Theme.TitleStyle.Back.Border;
@@ -394,15 +394,13 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_LBUTTONUP:
 		if (::GetCapture() == hwnd) {
-			bool fCloseButtonPushed = m_fCloseButtonPushed;
+			const bool fCloseButtonPushed = m_fCloseButtonPushed;
 
 			::ReleaseCapture();
 			if (fCloseButtonPushed) {
-				POINT pt;
+				const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 				RECT rc;
 
-				pt.x = GET_X_LPARAM(lParam);
-				pt.y = GET_Y_LPARAM(lParam);
 				GetCloseButtonRect(&rc);
 				if (::PtInRect(&rc, pt)) {
 					if (m_pEventHandler != nullptr)
@@ -474,14 +472,14 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			pt.y = GET_Y_LPARAM(lParam);
 			if (m_fShowTitle && pt.y < m_TitleHeight
 					&& m_pEventHandler != nullptr) {
-				HMENU hmenu = ::CreatePopupMenu();
+				const HMENU hmenu = ::CreatePopupMenu();
 
 				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("閉じる(&C)"));
 				if (m_fEnableFloating)
 					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 2, TEXT("切り離す(&F)"));
 				m_pEventHandler->OnMenuPopup(hmenu);
 				::ClientToScreen(hwnd, &pt);
-				int Command = ::TrackPopupMenu(
+				const int Command = ::TrackPopupMenu(
 					hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
 				switch (Command) {
 				case 0:
@@ -842,7 +840,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_CREATE:
 		{
 			m_fDragMoving = false;
-			HMENU hmenu = GetSystemMenu(hwnd, FALSE);
+			const HMENU hmenu = GetSystemMenu(hwnd, FALSE);
 			InsertMenu(hmenu, 0, MF_BYPOSITION | MF_STRING | MF_ENABLED, SC_DOCKING, TEXT("ドッキング(&D)"));
 			InsertMenu(hmenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
 		}
@@ -1054,7 +1052,7 @@ bool CPanelFrame::OnMenuPopup(HMENU hmenu)
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_RIGHT, TEXT("右へ(&R)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_TOP, TEXT("上へ(&T)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, PANEL_MENU_BOTTOM, TEXT("下へ(&B)"));
-	int Index = m_pSplitter->IDToIndex(m_PanelID);
+	const int Index = m_pSplitter->IDToIndex(m_PanelID);
 	::EnableMenuItem(
 		hmenu,
 		IsDockingVertical() ?

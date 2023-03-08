@@ -175,7 +175,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CAppMain &App = GetAppClass();
+			const CAppMain &App = GetAppClass();
 
 			::SendDlgItemMessage(hDlg, IDC_OPTIONS_DRIVERDIRECTORY, EM_LIMITTEXT, MAX_PATH - 1, 0);
 			::SetDlgItemText(hDlg, IDC_OPTIONS_DRIVERDIRECTORY, m_BonDriverDirectory.c_str());
@@ -314,7 +314,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					szDefaultBonDriver, lengthof(szDefaultBonDriver));
 				m_DefaultBonDriverName = szDefaultBonDriver;
 
-				bool fResident = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_RESIDENT);
+				const bool fResident = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_RESIDENT);
 				if (fResident != m_fResident) {
 					m_fResident = fResident;
 					SetUpdateFlag(UPDATE_RESIDENT);
@@ -326,7 +326,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				m_fStandaloneProgramGuide =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_STANDALONEPROGRAMGUIDE);
 
-				bool fEnable1SegFallback =
+				const bool fEnable1SegFallback =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLE1SEGFALLBACK);
 				if (fEnable1SegFallback != m_fEnable1SegFallback) {
 					m_fEnable1SegFallback = fEnable1SegFallback;

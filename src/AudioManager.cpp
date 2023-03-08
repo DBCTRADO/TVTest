@@ -94,7 +94,6 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 		return -1;
 
 	const CAudioOptions &AudioOptions = GetAppClass().AudioOptions;
-	bool fDefault = true;
 
 	if (AudioOptions.GetEnableLanguagePriority()) {
 		const CAudioOptions::AudioLanguageList &PriorityList = AudioOptions.GetLanguagePriority();
@@ -245,8 +244,8 @@ bool CAudioManager::OnServiceUpdated()
 {
 	// PMT の情報から音声のリストを作成
 	LibISDB::BlockLock Lock(m_Lock);
-	CCoreEngine &Engine = GetAppClass().CoreEngine;
-	LibISDB::AnalyzerFilter *pAnalyzer = Engine.GetFilter<LibISDB::AnalyzerFilter>();
+	const CCoreEngine &Engine = GetAppClass().CoreEngine;
+	const LibISDB::AnalyzerFilter *pAnalyzer = Engine.GetFilter<LibISDB::AnalyzerFilter>();
 
 	if (pAnalyzer == nullptr)
 		return false;
@@ -260,9 +259,8 @@ bool CAudioManager::OnServiceUpdated()
 	for (int i = 0; i < StreamCount; i++)
 		ComponentList[i] = MakeID(i, pAnalyzer->GetAudioComponentTag(ServiceIndex, i));
 
-	WORD TransportStreamID, ServiceID;
-	TransportStreamID = Engine.GetTransportStreamID();
-	ServiceID = Engine.GetServiceID();
+	const WORD TransportStreamID = Engine.GetTransportStreamID();
+	const WORD ServiceID = Engine.GetServiceID();
 	const bool fServiceChanged =
 		TransportStreamID != m_CurTransportStreamID || ServiceID != m_CurServiceID;
 
@@ -318,7 +316,7 @@ bool CAudioManager::OnEventUpdated()
 {
 	// EIT の情報から音声のリストを作成
 	LibISDB::BlockLock Lock(m_Lock);
-	CCoreEngine &Engine = GetAppClass().CoreEngine;
+	const CCoreEngine &Engine = GetAppClass().CoreEngine;
 	const LibISDB::AnalyzerFilter *pAnalyzer = Engine.GetFilter<LibISDB::AnalyzerFilter>();
 	AudioList EventAudioList;
 

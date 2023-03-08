@@ -167,7 +167,7 @@ bool CEpgDataStore::Save()
 		}
 	}
 
-	bool fOK = m_EPGDataFile.Save();
+	const bool fOK = m_EPGDataFile.Save();
 
 	if (fOK) {
 		m_UpdateCount = m_EPGDataFile.GetUpdateCount();
@@ -201,7 +201,7 @@ bool CEpgDataStore::LoadMain()
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->OnBeginLoading();
 
-	bool fOK = m_EPGDataFile.Load();
+	const bool fOK = m_EPGDataFile.Load();
 
 	if (fOK)
 		m_UpdateCount = m_EPGDataFile.GetUpdateCount();

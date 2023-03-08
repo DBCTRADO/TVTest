@@ -219,7 +219,7 @@ bool CUICore::InitializeViewer(BYTE VideoStreamType)
 {
 	if (m_pSkin == nullptr)
 		return false;
-	bool fOK = m_pSkin->InitializeViewer(VideoStreamType);
+	const bool fOK = m_pSkin->InitializeViewer(VideoStreamType);
 	m_fViewerInitializeError = !fOK;
 	return fOK;
 }
@@ -451,7 +451,7 @@ bool CUICore::SelectAudio(int Index)
 
 bool CUICore::AutoSelectAudio()
 {
-	int Index = m_App.AudioManager.FindSelectedAudio();
+	const int Index = m_App.AudioManager.FindSelectedAudio();
 	if (Index >= 0)
 		return SelectAudio(Index);
 
@@ -895,9 +895,9 @@ bool CUICore::SetAlwaysOnTop(bool fTop)
 bool CUICore::PreventDisplaySave(bool fPrevent)
 {
 	if (fPrevent) {
-		bool fNoScreenSaver = m_App.ViewOptions.GetNoScreenSaver();
-		bool fNoMonitorLowPower = m_App.ViewOptions.GetNoMonitorLowPower();
-		bool fNoMonitorLowPowerActiveOnly = m_App.ViewOptions.GetNoMonitorLowPowerActiveOnly();
+		const bool fNoScreenSaver = m_App.ViewOptions.GetNoScreenSaver();
+		const bool fNoMonitorLowPower = m_App.ViewOptions.GetNoMonitorLowPower();
+		const bool fNoMonitorLowPowerActiveOnly = m_App.ViewOptions.GetNoMonitorLowPowerActiveOnly();
 
 		if (!fNoScreenSaver && m_fScreenSaverActiveOriginal) {
 			SystemParametersInfo(
@@ -1007,7 +1007,7 @@ void CUICore::PopupMenu(const POINT *pPos, PopupMenuFlag Flags)
 		m_App.MenuOptions.GetMenuItemList(&ItemList);
 
 	const int OldDPI = m_PopupMenuDPI;
-	HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+	const HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
 	if (hMonitor != nullptr)
 		m_PopupMenuDPI = GetMonitorDPI(hMonitor);
 
@@ -1029,7 +1029,7 @@ void CUICore::PopupSubMenu(int SubMenu, const POINT *pPos, UINT Flags, const REC
 		::GetCursorPos(&pt);
 
 	const int OldDPI = m_PopupMenuDPI;
-	HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
+	const HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
 	if (hMonitor != nullptr)
 		m_PopupMenuDPI = GetMonitorDPI(hMonitor);
 
@@ -1062,7 +1062,7 @@ bool CUICore::ShowSpecialMenu(MenuType Menu, const POINT *pPos, UINT Flags, cons
 			Menu.CheckItem(CM_RECORDEVENT, m_App.RecordManager.GetStopOnEventEnd());
 			Menu.EnableItem(CM_RECORD_PAUSE, m_App.RecordManager.IsRecording());
 			Menu.CheckItem(CM_RECORD_PAUSE, m_App.RecordManager.IsPaused());
-			bool fTimeShift = m_App.RecordOptions.IsTimeShiftRecordingEnabled();
+			const bool fTimeShift = m_App.RecordOptions.IsTimeShiftRecordingEnabled();
 			Menu.EnableItem(CM_TIMESHIFTRECORDING, fTimeShift && !m_App.RecordManager.IsRecording());
 			Menu.CheckItem(CM_ENABLETIMESHIFTRECORDING, fTimeShift);
 			Menu.EnableItem(
@@ -1152,7 +1152,7 @@ void CUICore::InitChannelMenu(HMENU hmenu)
 			pList, m_App.ChannelManager.GetCurrentChannel(),
 			CM_CHANNEL_FIRST, CM_CHANNEL_LAST, hmenu, GetMainWindow());
 	} else {
-		bool fControlKeyID = pList->HasRemoteControlKeyID();
+		const bool fControlKeyID = pList->HasRemoteControlKeyID();
 		for (int i = 0, j = 0; i < pList->NumChannels(); i++) {
 			const CChannelInfo *pChInfo = pList->GetChannelInfo(i);
 			TCHAR szText[MAX_CHANNEL_NAME + 4];
@@ -1345,7 +1345,7 @@ bool CUICore::DoCommand(LPCTSTR pszCommand)
 {
 	if (pszCommand == nullptr)
 		return false;
-	int Command = m_App.CommandManager.ParseIDText(pszCommand);
+	const int Command = m_App.CommandManager.ParseIDText(pszCommand);
 	if (Command == 0)
 		return false;
 	return DoCommand(Command);
@@ -1365,7 +1365,7 @@ bool CUICore::DoCommandAsync(LPCTSTR pszCommand)
 {
 	if (pszCommand == nullptr)
 		return false;
-	int Command = m_App.CommandManager.ParseIDText(pszCommand);
+	const int Command = m_App.CommandManager.ParseIDText(pszCommand);
 	if (Command == 0)
 		return false;
 	return DoCommandAsync(Command);
@@ -1445,7 +1445,7 @@ bool CUICore::UpdateIcon()
 		}
 	}
 
-	HWND hwnd = GetMainWindow();
+	const HWND hwnd = GetMainWindow();
 	if (hwnd != nullptr) {
 		::SendMessage(
 			hwnd, WM_SETICON, ICON_BIG,
@@ -1481,7 +1481,7 @@ static void RemoveMultipleSpaces(String &Str)
 
 bool CUICore::UpdateTitle()
 {
-	HWND hwnd = GetMainWindow();
+	const HWND hwnd = GetMainWindow();
 
 	if (hwnd == nullptr)
 		return false;
@@ -1549,7 +1549,7 @@ bool CUICore::SetLogo(LPCTSTR pszFileName)
 		StringCopy(szFileName, pszFileName);
 	}
 
-	HBITMAP hbm = static_cast<HBITMAP>(
+	const HBITMAP hbm = static_cast<HBITMAP>(
 		::LoadImage(
 			nullptr, szFileName, IMAGE_BITMAP,
 			0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION));
@@ -1613,7 +1613,7 @@ const CColorScheme *CUICore::GetCurrentColorScheme() const
 // 配色を適用する
 bool CUICore::ApplyColorScheme(const CColorScheme *pColorScheme)
 {
-	Theme::CThemeManager ThemeManager(pColorScheme);
+	const Theme::CThemeManager ThemeManager(pColorScheme);
 
 	m_pColorScheme = pColorScheme;
 
@@ -1698,7 +1698,7 @@ bool CUICore::CreateChannelMenu(
 bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 {
 	bool fChannelMenu = false;
-	int Count = ::GetMenuItemCount(hmenuParent);
+	const int Count = ::GetMenuItemCount(hmenuParent);
 	int i;
 	for (i = 0; i < Count; i++) {
 		if (::GetSubMenu(hmenuParent, i) == hmenu) {
@@ -1902,7 +1902,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 		const CTuningSpaceList *pTuningSpaceList;
 		if (pDriverInfo->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::NoLoadDriver)
 				&& (pTuningSpaceList = pDriverInfo->GetAvailableTuningSpaceList()) != nullptr) {
-			HMENU hmenuDriver = ::CreatePopupMenu();
+			const HMENU hmenuDriver = ::CreatePopupMenu();
 
 			for (int j = 0; j < pTuningSpaceList->NumSpaces(); j++) {
 				pChannelList = pTuningSpaceList->GetChannelList(j);
@@ -1984,7 +1984,7 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 		return true;
 
 	bool fChannelMenu = false;
-	int Count = m_Menu.GetItemCount();
+	const int Count = m_Menu.GetItemCount();
 	int i = 0;
 	if (m_UICore.m_App.CoreEngine.IsTunerOpen()) {
 		i = m_UICore.m_App.ChannelManager.NumSpaces();
@@ -1992,8 +1992,8 @@ bool CUICore::CTunerSelectMenu::OnInitMenuPopup(HMENU hmenu)
 			i++;
 	}
 	for (i++; i < Count; i++) {
-		HMENU hmenuChannel = m_Menu.GetSubMenu(i);
-		int Items = ::GetMenuItemCount(hmenuChannel);
+		const HMENU hmenuChannel = m_Menu.GetSubMenu(i);
+		const int Items = ::GetMenuItemCount(hmenuChannel);
 
 		if (hmenuChannel == hmenu) {
 			if (Items > 0)

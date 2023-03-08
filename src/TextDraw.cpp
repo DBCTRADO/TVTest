@@ -97,11 +97,11 @@ bool CTextDraw::SetFont(const LOGFONT &Font)
 	if (m_pEngine == nullptr)
 		return false;
 
-	HFONT hfont = ::CreateFontIndirect(&Font);
+	const HFONT hfont = ::CreateFontIndirect(&Font);
 	if (hfont == nullptr)
 		return false;
 
-	bool fOK = m_pEngine->SetFont(hfont);
+	const bool fOK = m_pEngine->SetFont(hfont);
 
 	::DeleteObject(hfont);
 
@@ -188,7 +188,7 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag
 			const size_t BufferLength = Fit + lengthof(szEllipses);
 			m_StringBuffer.clear();
 			m_StringBuffer.resize(std::max(BufferLength, 256_z));
-			LPWSTR pszBuffer = &m_StringBuffer[0];
+			const LPWSTR pszBuffer = &m_StringBuffer[0];
 			std::memcpy(pszBuffer, p, Fit * sizeof(WCHAR));
 			LPWSTR pszCur = pszBuffer + Fit;
 			for (;;) {
@@ -466,7 +466,7 @@ bool CTextDrawEngine_GDI::DrawText(LPCWSTR pText, int Length, const RECT &Rect, 
 			return false;
 		int Prev = ::MulDiv(CharPos[0], Rect.right - Rect.left, sz.cx);
 		for (int i = 1; i < Length; i++) {
-			int Pos = ::MulDiv(CharPos[i], Rect.right - Rect.left, sz.cx);
+			const int Pos = ::MulDiv(CharPos[i], Rect.right - Rect.left, sz.cx);
 			CharPos[i] = Pos - Prev;
 			Prev = Pos;
 		}
@@ -588,7 +588,7 @@ bool CTextDrawEngine_DirectWrite::BeginDraw(HDC hdc, const RECT &Rect)
 
 bool CTextDrawEngine_DirectWrite::EndDraw()
 {
-	bool fOK = m_Renderer.EndDraw();
+	const bool fOK = m_Renderer.EndDraw();
 	m_pFont = nullptr;
 	m_Brush.Destroy();
 	if (m_Renderer.IsNeedRecreate())

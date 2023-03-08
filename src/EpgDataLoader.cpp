@@ -67,14 +67,13 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 	static constexpr DWORD MAX_READ_SIZE = 0x1000000UL;	// 16MiB
 	static constexpr DWORD BUFFER_SIZE = 188 * 4096;
-	HANDLE hFile;
 	LARGE_INTEGER FileSize;
 	DWORD ReadSize, RemainSize;
 	std::unique_ptr<BYTE[]> Buffer;
 	DWORD Size, Read;
 	LibISDB::TSPacket Packet;
 
-	hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -106,7 +105,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		if (!::ReadFile(hFile, Buffer.get(), Size, &Read, nullptr))
 			break;
 
-		BYTE *pEnd = Buffer.get() + Read / 188 * 188;
+		const BYTE *pEnd = Buffer.get() + Read / 188 * 188;
 
 		// 最初に TOT を渡すようにする
 		if (RemainSize == ReadSize) {
@@ -207,12 +206,11 @@ bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent, CEventHandler *
 
 	FILETIME ftCurrent;
 	TCHAR szFileMask[MAX_PATH];
-	HANDLE hFind;
 	WIN32_FIND_DATA fd;
 
 	::GetSystemTimeAsFileTime(&ftCurrent);
 	::PathCombine(szFileMask, pszFolder, TEXT("*_epg.dat"));
-	hFind = ::FindFirstFileEx(
+	const HANDLE hFind = ::FindFirstFileEx(
 		szFileMask, FindExInfoBasic, &fd,
 		FindExSearchNameMatch, nullptr, FIND_FIRST_EX_LARGE_FETCH);
 	if (hFind == INVALID_HANDLE_VALUE)
@@ -305,7 +303,7 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 	if (pThis->m_pEventHandler != nullptr)
 		pThis->m_pEventHandler->OnStart();
 	::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-	bool fSuccess = pThis->Load(pThis->m_Folder.c_str(), pThis->m_hAbortEvent);
+	const bool fSuccess = pThis->Load(pThis->m_Folder.c_str(), pThis->m_hAbortEvent);
 	if (pThis->m_pEventHandler != nullptr)
 		pThis->m_pEventHandler->OnEnd(fSuccess, &pThis->m_EPGDatabase);
 	pThis->m_EPGDatabase.Clear();

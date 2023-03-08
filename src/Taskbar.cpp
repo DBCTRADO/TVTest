@@ -137,7 +137,7 @@ bool CTaskbarManager::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		};
 		THUMBBUTTON tb[lengthof(ButtonList)];
 		const CAppMain &App = GetAppClass();
-		HINSTANCE hinst = App.GetResourceInstance();
+		const HINSTANCE hinst = App.GetResourceInstance();
 
 		for (int i = 0; i < lengthof(tb); i++) {
 			const int Command = ButtonList[i];
@@ -162,7 +162,7 @@ bool CTaskbarManager::SetRecordingStatus(bool fRecording)
 {
 	if (m_pTaskbarList != nullptr) {
 		if (fRecording) {
-			HICON hico = static_cast<HICON>(
+			const HICON hico = static_cast<HICON>(
 				::LoadImage(
 					GetAppClass().GetResourceInstance(),
 					MAKEINTRESOURCE(IDI_TASKBAR_RECORDING),
@@ -210,7 +210,7 @@ bool CTaskbarManager::ReinitializeJumpList()
 	if (m_fAppIDInvalid)
 		return false;
 	if (GetAppClass().TaskbarOptions.IsJumpListEnabled()) {
-		HRESULT hr = InitializeJumpList();
+		const HRESULT hr = InitializeJumpList();
 		if (FAILED(hr))
 			return false;
 		m_fJumpListInitialized = true;
@@ -292,7 +292,7 @@ HRESULT CTaskbarManager::InitializeJumpList()
 
 		if (m_AppID.empty()) {
 			TCHAR szAppPath[MAX_PATH];
-			DWORD Length = ::GetModuleFileName(nullptr, szAppPath, lengthof(szAppPath));
+			const DWORD Length = ::GetModuleFileName(nullptr, szAppPath, lengthof(szAppPath));
 			::CharLowerBuff(szAppPath, Length);
 			LibISDB::MD5Value Hash =
 				LibISDB::CalcMD5(reinterpret_cast<const uint8_t *>(szAppPath), Length * sizeof(TCHAR));
@@ -347,7 +347,7 @@ HRESULT CTaskbarManager::InitializeJumpList()
 
 HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	const CTaskbarOptions::TaskList &TaskList = App.TaskbarOptions.GetTaskList();
 
 	if (TaskList.empty())
@@ -381,7 +381,7 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 						App.CommandManager.GetCommandIDText(Command));
 				}
 				App.CommandManager.GetCommandText(Command, szTitle, lengthof(szTitle));
-				int Icon = GetCommandIcon(Command);
+				const int Icon = GetCommandIcon(Command);
 				hr = CreateAppShellLink(szArgs, szTitle, nullptr, Icon != 0 ? szIconPath : nullptr, -Icon, &pShellLink);
 			}
 
@@ -411,7 +411,7 @@ HRESULT CTaskbarManager::CreateAppShellLink(
 	IShellLink **ppShellLink)
 {
 	WCHAR szAppPath[MAX_PATH];
-	DWORD Length = ::GetModuleFileNameW(nullptr, szAppPath, lengthof(szAppPath));
+	const DWORD Length = ::GetModuleFileNameW(nullptr, szAppPath, lengthof(szAppPath));
 	if (Length == 0 || Length >= lengthof(szAppPath) - 1)
 		return E_FAIL;
 
@@ -507,7 +507,7 @@ HRESULT CTaskbarManager::AddJumpListCategory(
 		CLSID_EnumerableObjectCollection, nullptr,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pCollection));
 	if (SUCCEEDED(hr)) {
-		CAppMain &App = GetAppClass();
+		const CAppMain &App = GetAppClass();
 
 		for (const auto &e : ItemList) {
 			IShellLink *pShellLink;
@@ -563,7 +563,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 					App.TaskbarOptions.GetIconDirectory().c_str(),
 					szIconDir, lengthof(szIconDir) - 13)) {
 			if (!::PathIsDirectory(szIconDir)) {
-				int Result = ::SHCreateDirectoryEx(nullptr, szIconDir, nullptr);
+				const int Result = ::SHCreateDirectoryEx(nullptr, szIconDir, nullptr);
 				if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 					App.AddLog(
 						CLogItem::LogType::Error,
@@ -588,7 +588,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 		const CTunerChannelInfo *pChannel = pRecentChannels->GetChannelInfo(i);
 		const WORD NetworkID = pChannel->GetNetworkID();
 		const WORD ServiceID = pChannel->GetServiceID();
-		LPCWSTR pszTunerName = pChannel->GetTunerName();
+		const LPCWSTR pszTunerName = pChannel->GetTunerName();
 		JumpListItem Item;
 		String Driver;
 		WCHAR szTuner[MAX_PATH];

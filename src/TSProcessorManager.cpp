@@ -596,7 +596,7 @@ void CTSProcessorManager::OpenFilter(
 	String DeviceName(Filter.Device);
 
 	if (DeviceName.empty()) {
-		int DeviceNo = pTSProcessor->GetDefaultDevice();
+		const int DeviceNo = pTSProcessor->GetDefaultDevice();
 		if (DeviceNo < 0) {
 			App.AddLog(CLogItem::LogType::Error, TEXT("TSフィルターのデフォルトデバイスがありません。"));
 			return;
@@ -604,7 +604,7 @@ void CTSProcessorManager::OpenFilter(
 		pTSProcessor->GetDeviceName(DeviceNo, &DeviceName);
 	}
 
-	bool fResult = pTSProcessor->OpenFilter(DeviceName.c_str(), Filter.Filter.c_str());
+	const bool fResult = pTSProcessor->OpenFilter(DeviceName.c_str(), Filter.Filter.c_str());
 	pSettings->m_fLastOpenFailed = !fResult;
 	if (!fResult) {
 		if (!Filter.Filter.empty())

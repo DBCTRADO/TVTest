@@ -104,7 +104,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 
 		if (pItemList != nullptr && !pItemList->empty()) {
 			hmenuCustom = ::CreatePopupMenu();
-			int OrigItemCount = ::GetMenuItemCount(m_hmenuPopup);
+			const int OrigItemCount = ::GetMenuItemCount(m_hmenuPopup);
 			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 
 			MENUITEMINFO mii;
@@ -114,7 +114,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 			mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_STRING;
 			mii.dwTypeData = szText;
 
-			for (int ID : *pItemList) {
+			for (const int ID : *pItemList) {
 				if (ID < 0) {
 					::AppendMenu(hmenuCustom, MF_SEPARATOR, 0, nullptr);
 				} else if (ID >= CM_COMMAND_FIRST) {
@@ -129,7 +129,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 						if (::GetMenuItemInfo(m_hmenuPopup, i, TRUE, &mii))
 							::InsertMenuItem(hmenuCustom, ::GetMenuItemCount(hmenuCustom), TRUE, &mii);
 					} else if (CommandManager.GetCommandShortText(ID, szText, lengthof(szText)) > 0) {
-						CCommandManager::CommandState State = CommandManager.GetCommandState(ID);
+						const CCommandManager::CommandState State = CommandManager.GetCommandState(ID);
 						UINT Flags = MF_STRING;
 						if (!!(State & CCommandManager::CommandState::Disabled))
 							Flags |= MF_GRAYED;
@@ -175,7 +175,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 bool CMainMenu::PopupSubMenu(
 	int SubMenu, UINT Flags, HWND hwnd, const POINT *pPos, bool fToggle, const RECT *pExcludeRect)
 {
-	HMENU hmenu = GetSubMenu(SubMenu);
+	const HMENU hmenu = GetSubMenu(SubMenu);
 
 	if (hmenu == nullptr)
 		return false;
@@ -322,7 +322,7 @@ void CMenuPainter::DrawItemBackground(HDC hdc, const RECT &Rect, UINT State)
 		m_UxTheme.DrawBackground(
 			hdc, MENU_POPUPITEM, ItemStateToID(State), MENU_POPUPBACKGROUND, 0, &Rect);
 	} else {
-		bool fSelected = (State & ODS_SELECTED) != 0;
+		const bool fSelected = (State & ODS_SELECTED) != 0;
 		if (m_fFlatMenu) {
 			::FillRect(
 				hdc, &Rect,
@@ -492,8 +492,8 @@ void CMenuPainter::DrawSeparator(HDC hdc, const RECT &Rect)
 
 int CMenuPainter::ItemStateToID(UINT State) const
 {
-	bool fDisabled = (State & (ODS_INACTIVE | ODS_DISABLED)) != 0;
-	bool fHot = (State & (ODS_HOTLIGHT | ODS_SELECTED)) != 0;
+	const bool fDisabled = (State & (ODS_INACTIVE | ODS_DISABLED)) != 0;
+	const bool fHot = (State & (ODS_HOTLIGHT | ODS_SELECTED)) != 0;
 	int StateID;
 	if (fDisabled) {
 		StateID = fHot ? MPI_DISABLEDHOT : MPI_DISABLED;
@@ -548,7 +548,7 @@ bool CChannelMenuLogo::Initialize(int IconHeight, InitializeFlag Flags)
 
 bool CChannelMenuLogo::DrawLogo(HDC hdc, int x, int y, const CChannelInfo &Channel)
 {
-	HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
+	const HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
 		Channel.GetNetworkID(), Channel.GetServiceID(),
 		m_LogoHeight <= 24 ? CLogoManager::LOGOTYPE_SMALL : CLogoManager::LOGOTYPE_BIG);
 	if (hbmLogo == nullptr)
@@ -733,10 +733,10 @@ bool CChannelMenu::Create(
 	if (m_Margins.cxRightWidth < 2)
 		m_Margins.cxRightWidth = 2;
 
-	HDC hdc = ::GetDC(hwnd);
+	const HDC hdc = ::GetDC(hwnd);
 
 	CreateFont(hdc);
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
 	const bool fCurServices = !!(Flags & CreateFlag::CurrentServices);
@@ -913,12 +913,12 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	TCHAR szText[256];
 
 	m_MenuPainter.DrawItemBackground(pdis->hDC, pdis->rcItem, pdis->itemState);
-	COLORREF crTextColor = m_MenuPainter.GetTextColor(pdis->itemState);
+	const COLORREF crTextColor = m_MenuPainter.GetTextColor(pdis->itemState);
 
-	HFONT hfontOld = DrawUtil::SelectObject(
+	const HFONT hfontOld = DrawUtil::SelectObject(
 		pdis->hDC, (pdis->itemState & ODS_CHECKED) == 0 ? m_Font : m_FontCurrent);
-	int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-	COLORREF crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
+	const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+	const COLORREF crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
 
 	RECT rc;
 	rc.left = pdis->rcItem.left + m_Margins.cxLeftWidth;
@@ -945,7 +945,7 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	if (!!(m_Flags & CreateFlag::ShowEventInfo)) {
 		const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
 		if (pEventInfo != nullptr) {
-			int Length = GetEventText(pEventInfo, szText, lengthof(szText));
+			const int Length = GetEventText(pEventInfo, szText, lengthof(szText));
 			rc.left = rc.right + m_TextHeight;
 			rc.right = pdis->rcItem.right - m_Margins.cxRightWidth;
 			::DrawText(
@@ -964,8 +964,8 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-	HMENU hmenu = reinterpret_cast<HMENU>(lParam);
-	UINT Command = LOWORD(wParam);
+	const HMENU hmenu = reinterpret_cast<HMENU>(lParam);
+	const UINT Command = LOWORD(wParam);
 
 	if (hmenu == nullptr || hmenu != m_hmenu || hwnd != m_hwnd || HIWORD(wParam) == 0xFFFF
 			|| Command < m_FirstCommand || Command > m_LastCommand) {
@@ -1348,7 +1348,7 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 		return false;
 
 	for (int i = 0; i < ItemCount; i++) {
-		HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, IconSizeType::Small);
+		const HICON hicon = LoadIconStandardSize(hinst, pItemList[i].pszIcon, IconSizeType::Small);
 
 		if (hicon != nullptr) {
 			ICONINFO ii;
@@ -1358,7 +1358,7 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 					ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
 					アルファチャンネルが無視されるため、DIB に変換する
 				*/
-				HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+				const HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 				if (hbm != nullptr) {
 					m_BitmapList.push_back(hbm);
 					ItemIconInfo Item;
@@ -1398,8 +1398,8 @@ bool CIconMenu::OnInitMenuPopup(HWND hwnd, HMENU hmenu)
 
 	MENUITEMINFO mii;
 	mii.cbSize = sizeof(mii);
-	int Count = ::GetMenuItemCount(hmenu);
-	int j = 0;
+	const int Count = ::GetMenuItemCount(hmenu);
+
 	for (int i = 0; i < Count; i++) {
 		mii.fMask = MIIM_ID | MIIM_STATE | MIIM_DATA;
 		if (::GetMenuItemInfo(hmenu, i, TRUE, &mii)) {
@@ -1576,7 +1576,7 @@ bool CDropDownMenu::InsertSeparator(int Index)
 
 bool CDropDownMenu::DeleteItem(int Command)
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -1589,7 +1589,7 @@ bool CDropDownMenu::DeleteItem(int Command)
 
 bool CDropDownMenu::SetItemText(int Command, LPCTSTR pszText)
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -1615,14 +1615,14 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 	if (m_ItemList.empty() || m_hwnd != nullptr)
 		return false;
 
-	HMONITOR hMonitor = ::MonitorFromPoint(*pPos, MONITOR_DEFAULTTONEAREST);
+	const HMONITOR hMonitor = ::MonitorFromPoint(*pPos, MONITOR_DEFAULTTONEAREST);
 
 	if (DPI != 0)
 		m_DPI = DPI;
 	else
 		m_DPI = GetMonitorDPI(hMonitor);
 
-	HWND hwnd = ::CreateWindowEx(
+	const HWND hwnd = ::CreateWindowEx(
 		WS_EX_NOACTIVATE | WS_EX_TOPMOST, DROPDOWNMENU_WINDOW_CLASS,
 		nullptr, WS_POPUP, 0, 0, 0, 0, hwndOwner, nullptr, m_hinst, this);
 	if (hwnd == nullptr)
@@ -1631,11 +1631,11 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 	m_HotItem = CommandToIndex(CurItem);
 	m_hwndMessage = hwndMessage;
 
-	HDC hdc = ::GetDC(hwnd);
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const HDC hdc = ::GetDC(hwnd);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 	int MaxWidth = 0;
 	for (const auto &Item : m_ItemList) {
-		int Width = Item->GetWidth(hdc);
+		const int Width = Item->GetWidth(hdc);
 		if (Width > MaxWidth)
 			MaxWidth = Width;
 	}
@@ -1654,10 +1654,10 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 	MONITORINFO mi;
 	mi.cbSize = sizeof(mi);
 	if (::GetMonitorInfo(hMonitor, &mi)) {
-		int Rows = ((mi.rcMonitor.bottom - y) - VertMargin) / m_ItemHeight;
+		const int Rows = ((mi.rcMonitor.bottom - y) - VertMargin) / m_ItemHeight;
 
 		if ((int)m_ItemList.size() > Rows) {
-			int MaxColumns = ((mi.rcMonitor.right - mi.rcMonitor.left) - HorzMargin) / m_ItemWidth;
+			const int MaxColumns = ((mi.rcMonitor.right - mi.rcMonitor.left) - HorzMargin) / m_ItemWidth;
 			if (MaxColumns > 1) {
 				if (Rows * MaxColumns >= (int)m_ItemList.size()) {
 					Columns = ((int)m_ItemList.size() + Rows - 1) / Rows;
@@ -1670,8 +1670,8 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 				}
 			}
 		}
-		int Width = Columns * m_ItemWidth + HorzMargin;
-		int Height = m_MaxRows * m_ItemHeight + VertMargin;
+		const int Width = Columns * m_ItemWidth + HorzMargin;
+		const int Height = m_MaxRows * m_ItemHeight + VertMargin;
 		if (x + Width > mi.rcMonitor.right)
 			x = std::max(mi.rcMonitor.right - Width, 0L);
 		if (y + Height > mi.rcMonitor.bottom)
@@ -1720,10 +1720,8 @@ bool CDropDownMenu::GetItemRect(int Index, RECT *pRect) const
 
 int CDropDownMenu::HitTest(int x, int y) const
 {
-	POINT pt;
+	const POINT pt = {x, y};
 
-	pt.x = x;
-	pt.y = y;
 	for (int i = 0; i < (int)m_ItemList.size(); i++) {
 		RECT rc;
 
@@ -1750,9 +1748,9 @@ void CDropDownMenu::UpdateItem(int Index) const
 
 void CDropDownMenu::Draw(HDC hdc, const RECT *pPaintRect)
 {
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-	COLORREF OldTextColor = ::GetTextColor(hdc);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+	const COLORREF OldTextColor = ::GetTextColor(hdc);
 	RECT rc;
 
 	::GetClientRect(m_hwnd, &rc);
@@ -1838,10 +1836,10 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	case WM_MOUSEMOVE:
 		{
 			CDropDownMenu *pThis = GetThis(hwnd);
-			int Item = pThis->HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			const int Item = pThis->HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
 			if (Item != pThis->m_HotItem) {
-				int OldHotItem = pThis->m_HotItem;
+				const int OldHotItem = pThis->m_HotItem;
 
 				pThis->m_HotItem = Item;
 				if (OldHotItem >= 0)

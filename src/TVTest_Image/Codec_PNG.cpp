@@ -72,9 +72,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 	png_infop pPNGInfo = nullptr;
 
 	try {
-		int Width, Height, BitsPerPixel;
-		int i, nPasses, y;
-		int nSrcRowBytes;
+		int i, y;
 		png_bytep pbRow;
 
 		pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, PNGError, PNGWarning);
@@ -92,9 +90,9 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		png_init_io(pPNG, fp);
 		png_set_compression_level(pPNG, _ttoi(pInfo->pszOption));
 
-		Width = pInfo->pbmi->bmiHeader.biWidth;
-		Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
-		BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
+		const int Width = pInfo->pbmi->bmiHeader.biWidth;
+		const int Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
+		const int BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
 		png_set_IHDR(
 			pPNG, pPNGInfo, Width, Height,
 			BitsPerPixel < 8 ? BitsPerPixel : 8,
@@ -104,7 +102,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 		if (BitsPerPixel <= 8) {
-			int nColors = 1 << BitsPerPixel;
+			const int nColors = 1 << BitsPerPixel;
 			png_color PNGPalette[256];
 			const RGBQUAD *prgb;
 
@@ -130,7 +128,7 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 			Text.resize(Length);
 			WideCharToMultiByte(CP_UTF8, 0, Comment.c_str(), -1, Text.data(), Length, nullptr, nullptr);
 #else
-			int Length = WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
+			const int Length = WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
 			Text.resize(Length);
 			WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, Text.data(), Length, nullptr, nullptr);
 #endif
@@ -154,8 +152,8 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		else
 			nPasses = 1;
 		*/
-		nPasses = 1;
-		nSrcRowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
+		constexpr int nPasses = 1;
+		const int nSrcRowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
 
 		std::unique_ptr<BYTE[]> Buff;
 		if (BitsPerPixel == 32)
@@ -381,8 +379,8 @@ HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 		return nullptr;
 	Pos = 8;
 	while (Pos + 8 < DataSize) {
-		DWORD ChunkSize = MSBFirst32(&p[Pos]);
-		DWORD ChunkType = MSBFirst32(&p[Pos + 4]);
+		const DWORD ChunkSize = MSBFirst32(&p[Pos]);
+		const DWORD ChunkType = MSBFirst32(&p[Pos + 4]);
 		if (Pos + 8 + ChunkSize + 4 > DataSize)
 			return nullptr;
 		if (crc32(crc32(0, Z_NULL, 0), &p[Pos + 4], ChunkSize + 4) != MSBFirst32(&p[Pos + 8 + ChunkSize]))
@@ -468,7 +466,7 @@ Decode:
 	}
 
 	// 常に32ビットDIBに変換する
-	HGLOBAL hDIB =::GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + ImageHeader.Width * 4 * ImageHeader.Height);
+	const HGLOBAL hDIB =::GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + ImageHeader.Width * 4 * ImageHeader.Height);
 	if (hDIB == nullptr) {
 		return nullptr;
 	}
@@ -487,13 +485,13 @@ Decode:
 	BYTE *pDIBBits = (BYTE*)(pbmih + 1);
 
 	BYTE *q = ImageData.get();
-	int SampleMask = (1 << ImageHeader.BitDepth) - 1;
-	int PixelBytes = (ImageHeader.BitDepth * PlanesPerPixel + 7) / 8;
+	const int SampleMask = (1 << ImageHeader.BitDepth) - 1;
+	const int PixelBytes = (ImageHeader.BitDepth * PlanesPerPixel + 7) / 8;
 	int x, y, z;
 
 	for (i = ImageHeader.InterlaceMethod; i < 8; i++) {
 		for (y = 0; y < InterlacedImage[i].Height; y++) {
-			int FilterType = *q++;
+			const int FilterType = *q++;
 			BYTE *r = q;
 
 			if (FilterType > 4) {
@@ -501,9 +499,9 @@ Decode:
 				return nullptr;
 			}
 			for (x = 0; (size_t)x < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
-				int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
-				int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
-				int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;
+				const int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
+				const int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
+				const int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;
 				switch (FilterType) {
 				case 0: // None
 					break;
@@ -518,9 +516,9 @@ Decode:
 					break;
 				case 4: // Paeth
 					{
-						int pa = std::abs(a + b - c - a);
-						int pb = std::abs(a + b - c - b);
-						int pc = std::abs(a + b - c - c);
+						const int pa = std::abs(a + b - c - a);
+						const int pb = std::abs(a + b - c - b);
+						const int pc = std::abs(a + b - c - c);
 						*q += (pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c;
 					}
 					break;
@@ -541,7 +539,7 @@ Decode:
 						Sample[z] = (t[0] >> s)&SampleMask;
 					}
 				}
-				int x1 = x * Adam7[i][0][0] + Adam7[i][0][1];
+				const int x1 = x * Adam7[i][0][0] + Adam7[i][0][1];
 				switch (ImageHeader.ColorType) {
 				case 0:	// Grayscale
 					pDestLine[x1 * 4 + 0] = Sample[0];

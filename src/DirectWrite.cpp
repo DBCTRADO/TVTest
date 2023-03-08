@@ -92,7 +92,7 @@ bool CDirectWriteSystem::Initialize()
 			reinterpret_cast<D2D1CreateFactoryFunc>(::GetProcAddress(m_hD2DLib, "D2D1CreateFactory"));
 		if (pD2D1CreateFactory == nullptr)
 			return false;
-		HRESULT hr = pD2D1CreateFactory(
+		const HRESULT hr = pD2D1CreateFactory(
 			D2D1_FACTORY_TYPE_SINGLE_THREADED,
 			__uuidof(ID2D1Factory),
 			nullptr,
@@ -106,7 +106,7 @@ bool CDirectWriteSystem::Initialize()
 			GET_LIBRARY_FUNCTION(m_hDWriteLib, DWriteCreateFactory);
 		if (pDWriteCreateFactory == nullptr)
 			return false;
-		HRESULT hr = pDWriteCreateFactory(
+		const HRESULT hr = pDWriteCreateFactory(
 			DWRITE_FACTORY_TYPE_SHARED,
 			__uuidof(IDWriteFactory),
 			reinterpret_cast<IUnknown**>(&m_pDWriteFactory));
@@ -190,9 +190,9 @@ bool CDirectWriteFont::Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf)
 	if (lf.lfHeight < 0 || Renderer.GetDC() == nullptr) {
 		FontSize = static_cast<float>(std::abs(lf.lfHeight));
 	} else {
-		HDC hdc = Renderer.GetDC();
-		HFONT hfont = ::CreateFontIndirect(&lf);
-		HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
+		const HDC hdc = Renderer.GetDC();
+		const HFONT hfont = ::CreateFontIndirect(&lf);
+		const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
 		TEXTMETRIC tm;
 		::GetTextMetrics(hdc, &tm);
 		FontSize = static_cast<float>(tm.tmHeight - tm.tmInternalLeading);
@@ -201,7 +201,7 @@ bool CDirectWriteFont::Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf)
 	}
 
 	IDWriteTextFormat *pTextFormat;
-	HRESULT hr = pFactory->CreateTextFormat(
+	const HRESULT hr = pFactory->CreateTextFormat(
 		lf.lfFaceName,
 		nullptr,
 		static_cast<DWRITE_FONT_WEIGHT>(lf.lfWeight),
@@ -279,7 +279,7 @@ bool CDirectWriteBrush::Create(CDirectWriteRenderer &Renderer, BYTE Red, BYTE Gr
 		return false;
 
 	ID2D1SolidColorBrush *pBrush;
-	HRESULT hr = pRenderTarget->CreateSolidColorBrush(
+	const HRESULT hr = pRenderTarget->CreateSolidColorBrush(
 		D2DColorF(Red, Green, Blue, Alpha),
 		&pBrush);
 	if (SUCCEEDED(hr))
@@ -366,7 +366,7 @@ bool CDirectWriteRenderer::Initialize(HWND hwnd)
 		D2D1_RENDER_TARGET_USAGE_NONE,
 		D2D1_FEATURE_LEVEL_DEFAULT);
 	ID2D1DCRenderTarget *pRenderTarget;
-	HRESULT hr = pFactory->CreateDCRenderTarget(&Props, &pRenderTarget);
+	const HRESULT hr = pFactory->CreateDCRenderTarget(&Props, &pRenderTarget);
 	if (SUCCEEDED(hr)) {
 		m_pRenderTarget = pRenderTarget;
 		m_hwnd = hwnd;
@@ -433,7 +433,7 @@ bool CDirectWriteRenderer::EndDraw()
 	if (m_pRenderTarget == nullptr)
 		return false;
 
-	HRESULT hr = m_pRenderTarget->EndDraw();
+	const HRESULT hr = m_pRenderTarget->EndDraw();
 
 	m_fNeedRecreate = hr == D2DERR_RECREATE_TARGET;
 	if (m_fNeedRecreate) {
@@ -547,7 +547,7 @@ bool CDirectWriteRenderer::OnWindowPosChanged()
 		return false;
 
 	bool fUpdated = false;
-	HMONITOR hMonitor = ::MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONULL);
+	const HMONITOR hMonitor = ::MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONULL);
 
 	if (hMonitor != nullptr && hMonitor != m_hMonitor) {
 		m_hMonitor = hMonitor;
@@ -591,7 +591,7 @@ bool CDirectWriteRenderer::DrawText(
 					DWRITE_PARAGRAPH_ALIGNMENT_FAR :
 					DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 			pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-			DWRITE_TRIMMING Trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
+			const DWRITE_TRIMMING Trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
 			pTextFormat->SetTrimming(&Trimming, nullptr);
 
 			m_pRenderTarget->DrawText(
@@ -744,14 +744,13 @@ bool CDirectWriteRenderer::GetTextMetrics(
 		IDWriteTextFormat *pTextFormat = Font.GetTextFormat();
 
 		if (pTextFormat != nullptr) {
-			D2D1_SIZE_F Size;
 			IDWriteTextLayout *pTextLayout;
 
 			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 			pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 			if (Length < 0)
 				Length = ::lstrlenW(pText);
-			Size = m_pRenderTarget->GetSize();
+			const D2D1_SIZE_F Size = m_pRenderTarget->GetSize();
 			hr = pFactory->CreateTextLayout(
 				pText,
 				Length,

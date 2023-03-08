@@ -45,7 +45,7 @@ BOOLEAN WINAPI ShouldAppsUseDarkMode()
 	if (!Util::OS::IsWindows10RS5OrLater())
 		return FALSE;
 
-	auto pShouldAppsUseDarkMode =
+	const auto pShouldAppsUseDarkMode =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), ShouldAppsUseDarkMode, 132);
 	if (pShouldAppsUseDarkMode == nullptr)
 		return FALSE;
@@ -59,7 +59,7 @@ BOOL WINAPI AllowDarkModeForWindow(HWND hwnd, BOOL fAllow)
 	if (!Util::OS::IsWindows10RS5OrLater())
 		return FALSE;
 
-	auto pAllowDarkModeForWindow =
+	const auto pAllowDarkModeForWindow =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), AllowDarkModeForWindow, 133);
 	if (pAllowDarkModeForWindow == nullptr)
 		return FALSE;
@@ -75,7 +75,7 @@ void WINAPI FlushMenuThemes()
 	if (!Util::OS::IsWindows10RS5OrLater())
 		return;
 
-	auto pFlushMenuThemes =
+	const auto pFlushMenuThemes =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), FlushMenuThemes, 136);
 	if (pFlushMenuThemes == nullptr)
 		return;
@@ -89,7 +89,7 @@ void WINAPI RefreshImmersiveColorPolicyState()
 	if (!Util::OS::IsWindows10RS5OrLater())
 		return;
 
-	auto pRefreshImmersiveColorPolicyState =
+	const auto pRefreshImmersiveColorPolicyState =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), RefreshImmersiveColorPolicyState, 104);
 	if (pRefreshImmersiveColorPolicyState == nullptr)
 		return;
@@ -103,7 +103,7 @@ BOOL WINAPI IsDarkModeAllowedForWindow(HWND hwnd)
 	if (!Util::OS::IsWindows10RS5OrLater())
 		return FALSE;
 
-	auto pIsDarkModeAllowedForWindow =
+	const auto pIsDarkModeAllowedForWindow =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), IsDarkModeAllowedForWindow, 137);
 	if (pIsDarkModeAllowedForWindow == nullptr)
 		return FALSE;
@@ -117,7 +117,7 @@ BOOL WINAPI ShouldSystemUseDarkMode()
 	if (!Util::OS::IsWindows10_19H1OrLater())
 		return FALSE;
 
-	auto pShouldSystemUseDarkMode =
+	const auto pShouldSystemUseDarkMode =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), ShouldSystemUseDarkMode, 138);
 	if (pShouldSystemUseDarkMode == nullptr)
 		return FALSE;
@@ -131,7 +131,7 @@ PreferredAppMode WINAPI SetPreferredAppMode(PreferredAppMode Mode)
 	if (!Util::OS::IsWindows10_19H1OrLater())
 		return PreferredAppMode::Default;
 
-	auto pSetPreferredAppMode =
+	const auto pSetPreferredAppMode =
 		GET_MODULE_FUNCTION_ORDINAL(TEXT("uxtheme.dll"), SetPreferredAppMode, 135);
 	if (pSetPreferredAppMode == nullptr)
 		return PreferredAppMode::Default;
@@ -202,7 +202,7 @@ bool SetWindowFrameDarkMode(HWND hwnd, bool fDarkMode)
 	if (!::IsWindow(hwnd))
 		return false;
 
-	BOOL fDark = fDarkMode;
+	const BOOL fDark = fDarkMode;
 
 	// DWMWA_USE_IMMERSIVE_DARK_MODE = 20
 	if (SUCCEEDED(::DwmSetWindowAttribute(hwnd, 20, &fDark, sizeof(fDark))))

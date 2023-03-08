@@ -53,7 +53,7 @@ bool CKeywordSearch::Load(LPCTSTR pszFileName)
 		m_SearchEngineList.reserve(Entries.size() / 2);
 
 		for (const auto &Entry : Entries) {
-			String::size_type Pos = Entry.Name.find(_T('.'));
+			const String::size_type Pos = Entry.Name.find(_T('.'));
 
 			if (Pos != String::npos && Pos > 0
 					&& ::lstrcmpi(Entry.Name.c_str() + Pos + 1, TEXT("Name")) == 0) {
@@ -101,17 +101,17 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 	String::size_type Pos = 0;
 
 	while (Pos < pEngine->URL.length()) {
-		String::size_type Begin = pEngine->URL.find(_T('{'), Pos);
+		const String::size_type Begin = pEngine->URL.find(_T('{'), Pos);
 		if (Begin == String::npos)
 			break;
-		String::size_type End = pEngine->URL.find(_T('}'), Begin + 1);
+		const String::size_type End = pEngine->URL.find(_T('}'), Begin + 1);
 		if (End == String::npos)
 			break;
 
 		if (Begin > Pos)
 			Buffer += pEngine->URL.substr(Pos, Begin - Pos);
 
-		String Param = pEngine->URL.substr(Begin + 1, End - Begin - 1);
+		const String Param = pEngine->URL.substr(Begin + 1, End - Begin - 1);
 		static const struct {
 			LPCTSTR pszParam;
 			UINT CodePage;
@@ -203,9 +203,9 @@ bool CKeywordSearch::EncodeURL(UINT CodePage, LPCWSTR pszSrc, String *pDst) cons
 			Buffer.data(), DstLength, nullptr, nullptr);
 	} else {
 		bool fOK = false;
-		HMODULE hMLang = Util::LoadSystemLibrary(TEXT("mlang.dll"));
+		const HMODULE hMLang = Util::LoadSystemLibrary(TEXT("mlang.dll"));
 		if (hMLang != nullptr) {
-			auto pConvertINetUnicodeToMultiByte =
+			const auto pConvertINetUnicodeToMultiByte =
 				GET_LIBRARY_FUNCTION(hMLang, ConvertINetUnicodeToMultiByte);
 			if (pConvertINetUnicodeToMultiByte != nullptr) {
 				DWORD Mode = 0;

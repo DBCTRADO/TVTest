@@ -224,11 +224,11 @@ String CRichEditUtil::GetSelectedText(HWND hwndEdit)
 
 int CRichEditUtil::GetMaxLineWidth(HWND hwndEdit)
 {
-	int NumLines = (int)::SendMessage(hwndEdit, EM_GETLINECOUNT, 0, 0);
+	const int NumLines = (int)::SendMessage(hwndEdit, EM_GETLINECOUNT, 0, 0);
 	int MaxWidth = 0;
 
 	for (int i = 0; i < NumLines; i++) {
-		int Index = (int)::SendMessage(hwndEdit, EM_LINEINDEX, i, 0);
+		const int Index = (int)::SendMessage(hwndEdit, EM_LINEINDEX, i, 0);
 		POINTL pt;
 		::SendMessage(
 			hwndEdit, EM_POSFROMCHAR,
@@ -311,14 +311,14 @@ bool CRichEditUtil::DetectURL(
 				if (!!(Flags & DetectURLFlag::ToHalfWidth)) {
 					LPWSTR pszURL = nullptr;
 					for (int j = 0; j < Length; j++) {
-						LPCWSTR pFound = ::StrChr(m_pszURLFullWidthChars, q[j]);
+						const LPCWSTR pFound = ::StrChr(m_pszURLFullWidthChars, q[j]);
 						if (pFound != nullptr) {
 							pszURL = szText + (q - szText);
 							pszURL[j] = m_pszURLChars[pFound - m_pszURLFullWidthChars];
 						}
 					}
 					if (pszURL != nullptr) {
-						WCHAR cEnd = pszURL[Length];
+						const WCHAR cEnd = pszURL[Length];
 						pszURL[Length] = L'\0';
 						::SendMessage(hwndEdit, EM_REPLACESEL, 0, reinterpret_cast<LPARAM>(pszURL));
 						pszURL[Length] = cEnd;
@@ -404,7 +404,7 @@ bool CRichEditUtil::HandleLinkClick(const ENLINK *penl)
 
 bool CRichEditUtil::HandleLinkClick(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList)
 {
-	int Index = LinkHitTest(hwndEdit, Pos, LinkList);
+	const int Index = LinkHitTest(hwndEdit, Pos, LinkList);
 	if (Index < 0)
 		return false;
 
@@ -418,7 +418,7 @@ int CRichEditUtil::LinkHitTest(HWND hwndEdit, const POINT &Pos, const CharRangeL
 		return -1;
 
 	POINTL pt = {Pos.x, Pos.y};
-	LONG Index = (LONG)::SendMessage(hwndEdit, EM_CHARFROMPOS, 0, reinterpret_cast<LPARAM>(&pt));
+	const LONG Index = (LONG)::SendMessage(hwndEdit, EM_CHARFROMPOS, 0, reinterpret_cast<LPARAM>(&pt));
 	for (size_t i = 0; i < LinkList.size(); i++) {
 		if (LinkList[i].cpMin <= Index && LinkList[i].cpMax > Index) {
 			return (int)i;

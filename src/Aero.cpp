@@ -61,7 +61,7 @@ bool CAeroGlass::ApplyAeroGlass(HWND hwnd, const RECT *pRect)
 // フレームの描画を無効にする
 bool CAeroGlass::EnableNcRendering(HWND hwnd, bool fEnable)
 {
-	DWMNCRENDERINGPOLICY ncrp = fEnable ? DWMNCRP_USEWINDOWSTYLE : DWMNCRP_DISABLED;
+	const DWMNCRENDERINGPOLICY ncrp = fEnable ? DWMNCRP_USEWINDOWSTYLE : DWMNCRP_DISABLED;
 
 	return ::DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &ncrp, sizeof(ncrp)) == S_OK;
 }
@@ -183,7 +183,7 @@ void CDoubleBufferingDraw::OnPaint(HWND hwnd)
 		CBufferedPaint BufferedPaint;
 		RECT rc;
 		::GetClientRect(hwnd, &rc);
-		HDC hdc = BufferedPaint.Begin(ps.hdc, &rc);
+		const HDC hdc = BufferedPaint.Begin(ps.hdc, &rc);
 		if (hdc != nullptr) {
 			Draw(hdc, ps.rcPaint);
 			BufferedPaint.End();

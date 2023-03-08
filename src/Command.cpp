@@ -124,7 +124,7 @@ bool CCommandManager::IsCommandValid(int ID) const
 
 String CCommandManager::GetCommandIDText(int ID) const
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return String();
@@ -251,8 +251,8 @@ bool CCommandManager::SetCommandState(int ID, CommandState Mask, CommandState St
 
 	const size_t Index = ID - CM_COMMAND_FIRST;
 
-	CommandState OldState = m_CommandStateList[Index];
-	CommandState NewState = (OldState & ~Mask) | (State & Mask);
+	const CommandState OldState = m_CommandStateList[Index];
+	const CommandState NewState = (OldState & ~Mask) | (State & Mask);
 	if (OldState != NewState) {
 		m_CommandStateList[Index] = NewState;
 

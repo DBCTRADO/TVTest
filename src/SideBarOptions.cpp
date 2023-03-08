@@ -287,20 +287,20 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 		pIconSize->cy = IconHeight;
 	}
 
-	HINSTANCE hinst = GetAppClass().GetResourceInstance();
-	HBITMAP hbm = (HBITMAP)::LoadImage(
+	const HINSTANCE hinst = GetAppClass().GetResourceInstance();
+	const HBITMAP hbm = (HBITMAP)::LoadImage(
 		hinst, pszImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
 	if (hbm != nullptr) {
 		// 表示倍率のアイコンを描画する
-		HBITMAP hbmZoom = (HBITMAP)::LoadImage(
+		const HBITMAP hbmZoom = (HBITMAP)::LoadImage(
 			hinst, pszZoomImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 
 		if (hbmZoom != nullptr) {
-			HDC hdcDst = ::CreateCompatibleDC(nullptr);
-			HBITMAP hbmDstOld = static_cast<HBITMAP>(::SelectObject(hdcDst, hbm));
-			HDC hdcSrc = ::CreateCompatibleDC(nullptr);
-			HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmZoom));
+			const HDC hdcDst = ::CreateCompatibleDC(nullptr);
+			const HBITMAP hbmDstOld = static_cast<HBITMAP>(::SelectObject(hdcDst, hbm));
+			const HDC hdcSrc = ::CreateCompatibleDC(nullptr);
+			const HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmZoom));
 
 			for (int i = 0; i < CZoomOptions::NUM_ZOOM_COMMANDS; i++) {
 				CZoomOptions::ZoomInfo Zoom;
@@ -396,7 +396,7 @@ void CSideBarOptions::ApplyItemList()
 			if (Name.empty()) {
 				m_ItemList.push_back(ITEM_SEPARATOR);
 			} else {
-				int ID = pCommandManager->ParseIDText(Name);
+				const int ID = pCommandManager->ParseIDText(Name);
 				if (ID != 0)
 					m_ItemList.push_back(ID);
 			}
@@ -416,7 +416,7 @@ void CSideBarOptions::ApplyItemList()
 					Item.Command = Command;
 					Item.Icon = e.Icon;
 					Item.State = CSideBar::ItemState::None;
-					CCommandManager::CommandState State = pCommandManager->GetCommandState(Command);
+					const CCommandManager::CommandState State = pCommandManager->GetCommandState(Command);
 					if (!!(State & CCommandManager::CommandState::Disabled))
 						Item.State |= CSideBar::ItemState::Disabled;
 					if (!!(State & CCommandManager::CommandState::Checked))
@@ -435,14 +435,14 @@ void CSideBarOptions::ApplyItemList()
 
 bool CSideBarOptions::SetSideBarImage()
 {
-	Style::Size IconSize = m_pSideBar->GetIconDrawSize();
+	const Style::Size IconSize = m_pSideBar->GetIconDrawSize();
 	SIZE sz;
-	HBITMAP hbm = CreateImage(
+	const HBITMAP hbm = CreateImage(
 		IconSize.Width <= 16 && IconSize.Height <= 16 ? IconSizeType::Small : IconSizeType::Big,
 		&sz);
 	if (hbm == nullptr)
 		return false;
-	bool fResult = m_pSideBar->SetIconImage(hbm, sz.cx, sz.cy);
+	const bool fResult = m_pSideBar->SetIconImage(hbm, sz.cx, sz.cy);
 	::DeleteObject(hbm);
 	return fResult;
 }
@@ -569,9 +569,9 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_SIDEBAR_UP:
 		case IDC_SIDEBAR_DOWN:
 			{
-				bool fUp = LOWORD(wParam) == IDC_SIDEBAR_UP;
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const bool fUp = LOWORD(wParam) == IDC_SIDEBAR_UP;
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if ((fUp && Sel > 0) || (!fUp && Sel < ListView_GetItemCount(hwndList) - 1)) {
 					LVITEM lvi;
@@ -596,8 +596,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		case IDC_SIDEBAR_REMOVE:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0)
 					ListView_DeleteItem(hwndList, Sel);
@@ -637,8 +637,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		case IDC_SIDEBAR_SEPARATOR:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 				LVITEM lvi;
 
 				lvi.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
@@ -658,7 +658,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			static const int IDList[] = {IDC_SIDEBAR_ITEMLIST, IDC_SIDEBAR_COMMANDLIST};
 
 			for (const int ID : IDList) {
-				HWND hwndList = ::GetDlgItem(hDlg, ID);
+				const HWND hwndList = ::GetDlgItem(hDlg, ID);
 				RECT rcWindow;
 				::GetWindowRect(hwndList, &rcWindow);
 				RECT rcFrame = {};
@@ -672,8 +672,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		switch (((LPNMHDR)lParam)->code) {
 		case LVN_ITEMCHANGED:
 			{
-				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
-				int Sel = ListView_GetNextItem(pnmlv->hdr.hwndFrom, -1, LVNI_SELECTED);
+				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
+				const int Sel = ListView_GetNextItem(pnmlv->hdr.hwndFrom, -1, LVNI_SELECTED);
 
 				if (pnmlv->hdr.idFrom == IDC_SIDEBAR_ITEMLIST) {
 					EnableDlgItem(hDlg, IDC_SIDEBAR_UP, Sel > 0);
@@ -687,7 +687,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 		case NM_RCLICK:
 			{
-				LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
+				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->hdr.idFrom == IDC_SIDEBAR_ITEMLIST) {
 					if (pnmia->iItem >= 0) {
@@ -714,23 +714,22 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			{
 				m_fShowPopup = DlgCheckBox_IsChecked(hDlg, IDC_SIDEBAR_SHOWPOPUP);
 				if (Util::OS::IsWindows8OrLater()) {
-					int Opacity = DlgEdit_GetInt(hDlg, IDC_SIDEBAR_OPACITY_INPUT);
+					const int Opacity = DlgEdit_GetInt(hDlg, IDC_SIDEBAR_OPACITY_INPUT);
 					m_PopupOpacity = std::clamp(Opacity, OPACITY_MIN, OPACITY_MAX);
 				}
 				m_fShowToolTips = DlgCheckBox_IsChecked(hDlg, IDC_SIDEBAR_SHOWTOOLTIPS);
 				m_pSideBar->ShowToolTips(m_fShowToolTips);
-				bool fShowChannelLogo = DlgCheckBox_IsChecked(hDlg, IDC_SIDEBAR_SHOWCHANNELLOGO);
+				const bool fShowChannelLogo = DlgCheckBox_IsChecked(hDlg, IDC_SIDEBAR_SHOWCHANNELLOGO);
 				if (m_fShowChannelLogo != fShowChannelLogo) {
 					m_fShowChannelLogo = fShowChannelLogo;
 					m_pSideBar->Invalidate();
 				}
 
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
+				const int Count = ListView_GetItemCount(hwndList);
 				std::vector<int> ItemList;
-				int Count;
 				LVITEM lvi;
 
-				Count = ListView_GetItemCount(hwndList);
 				lvi.mask = LVIF_PARAM;
 				lvi.iSubItem = 0;
 				for (int i = 0; i < Count; i++) {
@@ -776,7 +775,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void CSideBarOptions::OnDarkModeChanged(bool fDarkMode)
 {
-	HIMAGELIST himlIcons = CreateIconImageList();
+	const HIMAGELIST himlIcons = CreateIconImageList();
 	if (himlIcons != nullptr) {
 		UpdateListViewIcons(::GetDlgItem(m_hDlg, IDC_SIDEBAR_ITEMLIST), himlIcons);
 		UpdateListViewIcons(::GetDlgItem(m_hDlg, IDC_SIDEBAR_COMMANDLIST), himlIcons);
@@ -794,11 +793,11 @@ HIMAGELIST CSideBarOptions::CreateIconImageList()
 	const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
 	const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
 	SIZE sz;
-	HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
+	const HBITMAP hbmIcons = CreateImage(IconWidth <= 16 && IconHeight <= 16 ? IconSizeType::Small : IconSizeType::Big, &sz);
 	Theme::IconList Bitmap;
 	Bitmap.Create(hbmIcons, sz.cx, sz.cy, IconWidth, IconHeight);
 	::DeleteObject(hbmIcons);
-	HIMAGELIST himlIcons = Bitmap.CreateImageList(IconColor);
+	const HIMAGELIST himlIcons = Bitmap.CreateImageList(IconColor);
 	Bitmap.Destroy();
 
 	m_IconIDMap.clear();
@@ -810,9 +809,9 @@ HIMAGELIST CSideBarOptions::CreateIconImageList()
 		if (ID >= CM_PLUGIN_FIRST && ID <= CM_PLUGIN_LAST) {
 			CPlugin *pPlugin = GetAppClass().PluginManager.GetPluginByCommand(ID);
 			if (pPlugin != nullptr && pPlugin->GetIcon().IsCreated()) {
-				HICON hIcon = pPlugin->GetIcon().ExtractIcon(IconColor);
+				const HICON hIcon = pPlugin->GetIcon().ExtractIcon(IconColor);
 				if (hIcon != nullptr) {
-					int Icon = ImageList_AddIcon(himlIcons, hIcon);
+					const int Icon = ImageList_AddIcon(himlIcons, hIcon);
 					::DestroyIcon(hIcon);
 					m_IconIDMap.emplace(ID, Icon);
 				}
@@ -825,9 +824,9 @@ HIMAGELIST CSideBarOptions::CreateIconImageList()
 				CPlugin::CPluginCommandInfo *pCommandInfo =
 					pPlugin->GetPluginCommandInfo(pszCommand);
 				if (pCommandInfo != nullptr && pCommandInfo->GetIcon().IsCreated()) {
-					HICON hIcon = pCommandInfo->GetIcon().ExtractIcon(IconColor);
+					const HICON hIcon = pCommandInfo->GetIcon().ExtractIcon(IconColor);
 					if (hIcon != nullptr) {
-						int Icon = ImageList_AddIcon(himlIcons, hIcon);
+						const int Icon = ImageList_AddIcon(himlIcons, hIcon);
 						::DestroyIcon(hIcon);
 						m_IconIDMap.emplace(ID, Icon);
 					}

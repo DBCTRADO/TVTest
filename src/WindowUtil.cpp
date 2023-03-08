@@ -34,12 +34,11 @@ namespace TVTest
 static bool IsWindowEdgeVisible(HWND hwnd, HWND hwndTop, const RECT *pRect, HWND hwndTarget)
 {
 	RECT rc, rcEdge;
-	HWND hwndNext;
 
 	if (hwndTop == hwnd || hwndTop == nullptr)
 		return true;
 	GetWindowRect(hwndTop, &rc);
-	hwndNext = GetNextWindow(hwndTop, GW_HWNDNEXT);
+	const HWND hwndNext = GetNextWindow(hwndTop, GW_HWNDNEXT);
 	if (hwndTop == hwndTarget || !IsWindowVisible(hwndTop)
 			|| rc.left == rc.right || rc.top == rc.bottom)
 		return IsWindowEdgeVisible(hwnd, hwndNext, pRect, hwndTarget);
@@ -152,12 +151,11 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 
 void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude)
 {
-	HMONITOR hMonitor;
 	RECT rc;
 	SnapWindowInfo Info;
 	int XOffset, YOffset;
 
-	hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+	const HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 	if (hMonitor != nullptr) {
 		MONITORINFO mi;
 
@@ -303,8 +301,8 @@ bool CMouseLeaveTrack::OnMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 
 bool CMouseLeaveTrack::IsCursorInWindow() const
 {
-	DWORD Pos = ::GetMessagePos();
-	POINT pt = {GET_X_LPARAM(Pos), GET_Y_LPARAM(Pos)};
+	const DWORD Pos = ::GetMessagePos();
+	const POINT pt = {GET_X_LPARAM(Pos), GET_Y_LPARAM(Pos)};
 	RECT rc;
 
 	::GetWindowRect(m_hwnd, &rc);
@@ -332,7 +330,7 @@ void CMouseWheelHandler::ResetDelta()
 
 int CMouseWheelHandler::OnWheel(int Delta)
 {
-	DWORD CurTime = ::GetTickCount();
+	const DWORD CurTime = ::GetTickCount();
 
 	if ((DWORD)(CurTime - m_LastTime) > 500
 			|| (Delta > 0) != (m_LastDelta > 0)) {
@@ -348,7 +346,7 @@ int CMouseWheelHandler::OnWheel(int Delta)
 
 int CMouseWheelHandler::OnMouseWheel(WPARAM wParam, int ScrollLines)
 {
-	int Delta = OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+	const int Delta = OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
 	if (std::abs(Delta) < WHEEL_DELTA)
 		return 0;
 
@@ -362,7 +360,7 @@ int CMouseWheelHandler::OnMouseWheel(WPARAM wParam, int ScrollLines)
 
 int CMouseWheelHandler::OnMouseHWheel(WPARAM wParam, int ScrollChars)
 {
-	int Delta = OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+	const int Delta = OnWheel(GET_WHEEL_DELTA_WPARAM(wParam));
 	if (std::abs(Delta) < WHEEL_DELTA)
 		return 0;
 
@@ -430,7 +428,7 @@ void CWindowTimerManager::EndAllTimers()
 {
 	unsigned int Flags = m_TimerIDs;
 	for (int i = 0; Flags != 0; i++, Flags >>= 1) {
-		unsigned int ID = m_TimerIDs & (1U << i);
+		const unsigned int ID = m_TimerIDs & (1U << i);
 		if (ID != 0)
 			EndTimer(ID);
 	}
@@ -493,7 +491,7 @@ LRESULT CALLBACK CWindowSubclass::SubclassProc(
 
 	if (uMsg == WM_NCDESTROY) {
 		pThis->RemoveSubclass();
-		LRESULT Result = pThis->OnMessage(hWnd, uMsg, wParam, lParam);
+		const LRESULT Result = pThis->OnMessage(hWnd, uMsg, wParam, lParam);
 		pThis->OnSubclassRemoved();
 		return Result;
 	}

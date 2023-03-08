@@ -117,7 +117,7 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 			TEXT("映像なし") :
 			LibISDB::GetStreamTypeText(VideoStreamType));
 
-	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer == nullptr)
 		return false;
 

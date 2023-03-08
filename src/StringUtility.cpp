@@ -81,7 +81,7 @@ bool StringIsDigit(LPCTSTR pszString)
 		return nullptr;
 
 	const size_t Length = lstrlenA(pszString) + 1;
-	LPSTR pszNewString = new char[Length];
+	const LPSTR pszNewString = new char[Length];
 	std::memcpy(pszNewString, pszString, Length);
 	return pszNewString;
 }
@@ -93,7 +93,7 @@ bool StringIsDigit(LPCTSTR pszString)
 		return nullptr;
 
 	const size_t Length = lstrlenW(pszString) + 1;
-	LPWSTR pszNewString = new WCHAR[Length];
+	const LPWSTR pszNewString = new WCHAR[Length];
 	std::memcpy(pszNewString, pszString, Length * sizeof(WCHAR));
 	return pszNewString;
 }
@@ -177,7 +177,7 @@ int Format(String &Str, LPCWSTR pszFormat, ...)
 {
 	va_list Args;
 	va_start(Args, pszFormat);
-	int Length = FormatV(Str, pszFormat, Args);
+	const int Length = FormatV(Str, pszFormat, Args);
 	va_end(Args);
 
 	return Length;
@@ -317,7 +317,7 @@ bool ToHalfWidthNoKatakana(LPCWSTR pSrc, String::size_type SrcLength, String *pD
 		if (::GetStringTypeExW(LOCALE_USER_DEFAULT, CT_CTYPE3, &pSrc[i], 1, &Type)
 				&& (Type & (C3_FULLWIDTH | C3_KATAKANA)) == C3_FULLWIDTH) {
 			WCHAR Buff[4];
-			int Length = ::LCMapStringW(
+			const int Length = ::LCMapStringW(
 				LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH,
 				&pSrc[i], 1, Buff, _countof(Buff));
 			if (Length > 0) {
@@ -375,7 +375,7 @@ bool ToAnsi(const String &Src, AnsiString *pDst)
 	pDst->clear();
 
 	if (!Src.empty()) {
-		int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), nullptr, 0, nullptr, nullptr);
+		const int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), nullptr, 0, nullptr, nullptr);
 		if (Length < 1)
 			return false;
 		pDst->resize(Length);
@@ -476,7 +476,7 @@ bool Decode(LPCWSTR pszSrc, String *pDst)
 	while (*p != L'\0') {
 		if (*p == L'%') {
 			p++;
-			WCHAR Code = (WCHAR)HexStringToUInt(p, 4, &p);
+			const WCHAR Code = (WCHAR)HexStringToUInt(p, 4, &p);
 			pDst->push_back(Code);
 		} else {
 			pDst->push_back(*p);

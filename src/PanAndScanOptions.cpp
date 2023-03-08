@@ -97,7 +97,7 @@ static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo, LPTSTR pszTe
 	for (j = 0; j < 6 && *p != _T('\0'); j++) {
 		while (*p == _T(' '))
 			p++;
-		LPTSTR pszValue = p;
+		const LPTSTR pszValue = p;
 		while (*p != _T('\0') && *p != _T(','))
 			p++;
 		if (*p != _T('\0'))
@@ -226,7 +226,7 @@ bool CPanAndScanOptions::GetPreset(size_t Index, PanAndScanInfo *pInfo) const
 
 bool CPanAndScanOptions::GetPresetByID(UINT ID, PanAndScanInfo *pInfo) const
 {
-	int Index = FindPresetByID(ID);
+	const int Index = FindPresetByID(ID);
 	if (Index < 0)
 		return false;
 
@@ -342,7 +342,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		{
 			m_fTested = false;
 
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
 
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 			SetListViewTooltipsTopMost(hwndList);
@@ -380,14 +380,13 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
 			if (pdis->CtlID == IDC_PANANDSCAN_PREVIEW) {
-				int ItemWidth, ItemHeight, ScreenWidth, ScreenHeight;
 				RECT rcScreen;
 				CCoreEngine::PanAndScanInfo PanScan;
 
-				ItemWidth = pdis->rcItem.right - pdis->rcItem.left;
-				ItemHeight = pdis->rcItem.bottom - pdis->rcItem.top;
-				ScreenWidth = std::min(ItemHeight * 16 / 9, ItemWidth);
-				ScreenHeight = std::min(ItemWidth * 9 / 16, ItemHeight);
+				const int ItemWidth = pdis->rcItem.right - pdis->rcItem.left;
+				const int ItemHeight = pdis->rcItem.bottom - pdis->rcItem.top;
+				const int ScreenWidth = std::min(ItemHeight * 16 / 9, ItemWidth);
+				const int ScreenHeight = std::min(ItemWidth * 9 / 16, ItemHeight);
 				rcScreen.left = pdis->rcItem.left + (ItemWidth - ScreenWidth) / 2;
 				rcScreen.top = pdis->rcItem.top + (ItemHeight - ScreenHeight) / 2;
 				rcScreen.right = rcScreen.left + ScreenWidth;
@@ -396,13 +395,13 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					pdis->hDC, &rcScreen,
 					static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 				if (GetPanAndScanSettings(&PanScan)) {
-					HBRUSH hbr = ::CreateSolidBrush(RGB(128, 128, 128));
-					HPEN hpen = ::CreatePen(
+					const HBRUSH hbr = ::CreateSolidBrush(RGB(128, 128, 128));
+					const HPEN hpen = ::CreatePen(
 						PS_INSIDEFRAME,
 						m_pStyleScaling->ToPixels(1, Style::UnitType::LogicalPixel),
 						RGB(160, 160, 160));
-					HGDIOBJ hOldBrush = ::SelectObject(pdis->hDC, hbr);
-					HGDIOBJ hOldPen = ::SelectObject(pdis->hDC, hpen);
+					const HGDIOBJ hOldBrush = ::SelectObject(pdis->hDC, hbr);
+					const HGDIOBJ hOldPen = ::SelectObject(pdis->hDC, hpen);
 
 					::Rectangle(
 						pdis->hDC,
@@ -424,8 +423,9 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		case IDC_PANANDSCAN_UP:
 		case IDC_PANANDSCAN_DOWN:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
-				int From = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED), To;
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				const int From = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_PANANDSCAN_UP) {
@@ -452,8 +452,8 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_PANANDSCAN_REMOVE:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
 					CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(hwndList, Sel);
@@ -468,7 +468,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_PANANDSCAN_CLEAR:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
 				const int ItemCount = ListView_GetItemCount(hwndList);
 
 				for (int i = 0; i < ItemCount; i++)
@@ -537,11 +537,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_PANANDSCAN_REPLACE:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					PanAndScanInfo *pOldInfo = GetInfo(hwndList, Sel);
+					const PanAndScanInfo *pOldInfo = GetInfo(hwndList, Sel);
 
 					if (pOldInfo != nullptr) {
 						CPanAndScanOptions::PanAndScanInfo Info;
@@ -557,9 +557,9 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_PANANDSCAN_NAME:
 			if (HIWORD(wParam) == EN_CHANGE && !m_fStateChanging) {
-				HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
-				bool fOK = IsSettingsValid();
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const bool fOK = IsSettingsValid();
 
 				EnableDlgItem(hDlg, IDC_PANANDSCAN_ADD, fOK);
 				EnableDlgItem(hDlg, IDC_PANANDSCAN_REPLACE, fOK && Sel >= 0);
@@ -597,12 +597,12 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDOK:
 			{
-				HWND hwndList = GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
+				const HWND hwndList = GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
 				const int ItemCount = ListView_GetItemCount(hwndList);
 				std::vector<PanAndScanInfo> List;
 
 				for (int i = 0; i < ItemCount; i++) {
-					PanAndScanInfo *pInfo = GetInfo(hwndList, i);
+					const PanAndScanInfo *pInfo = GetInfo(hwndList, i);
 					if (pInfo != nullptr)
 						List.push_back(*pInfo);
 				}
@@ -622,11 +622,11 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			{
-				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
+				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
 
 				if ((pnmlv->uOldState & LVIS_SELECTED) != (pnmlv->uNewState & LVIS_SELECTED)) {
 					if ((pnmlv->uNewState & LVIS_SELECTED) != 0) {
-						CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(pnmlv->hdr.hwndFrom, pnmlv->iItem);
+						const CPanAndScanOptions::PanAndScanInfo *pInfo = GetInfo(pnmlv->hdr.hwndFrom, pnmlv->iItem);
 
 						if (pInfo != nullptr) {
 							TCHAR szText[32];
@@ -657,7 +657,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 	case WM_DESTROY:
 		{
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
 			const int ItemCount = ListView_GetItemCount(hwndList);
 
 			for (int i = 0; i < ItemCount; i++)
@@ -673,10 +673,10 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 void CPanAndScanOptions::SetItemStatus() const
 {
-	HWND hwndList = GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
-	int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
-	int ItemCount = ListView_GetItemCount(hwndList);
-	bool fValid = IsSettingsValid();
+	const HWND hwndList = GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
+	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+	const int ItemCount = ListView_GetItemCount(hwndList);
+	const bool fValid = IsSettingsValid();
 
 	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_UP, Sel > 0);
 	EnableDlgItem(m_hDlg, IDC_PANANDSCAN_DOWN, Sel >= 0 && Sel + 1 < ItemCount);
@@ -775,7 +775,7 @@ bool CPanAndScanOptions::Import(LPCTSTR pszFileName)
 
 bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 {
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, 0, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE) {
@@ -793,7 +793,7 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 	static const TCHAR szHeader[] = TEXT("; ") APP_NAME TEXT(" Pan&Scan presets\r\n[PanAndScan]\r\n");
 	::WriteFile(hFile, szHeader, sizeof(szHeader) - sizeof(TCHAR), &Write, nullptr);
 
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PANANDSCAN_LIST);
 	const int ItemCount = ListView_GetItemCount(hwndList);
 	for (int i = 0; i < ItemCount; i++) {
 		const PanAndScanInfo *pInfo = GetInfo(hwndList, i);
@@ -803,7 +803,7 @@ bool CPanAndScanOptions::Export(LPCTSTR pszFileName) const
 		TCHAR szBuffer[256], szSettings[256];
 
 		FormatPanAndScanInfo(pInfo->Info, szSettings, lengthof(szSettings));
-		size_t Length = StringFormat(
+		const size_t Length = StringFormat(
 			szBuffer,
 			TEXT("Preset{}.Name={}\r\nPreset{}={}\r\n"),
 			i, pInfo->szName, i, szSettings);

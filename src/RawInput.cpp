@@ -94,7 +94,7 @@ bool CRawInput::Initialize(HWND hwnd)
 
 LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-	HRAWINPUT hRawInput = reinterpret_cast<HRAWINPUT>(lParam);
+	const HRAWINPUT hRawInput = reinterpret_cast<HRAWINPUT>(lParam);
 	UINT Size = 0;
 
 	if (m_pEventHandler == nullptr)
@@ -108,8 +108,8 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 		if (pri->header.dwType == RIM_TYPEHID) {
 			if (pri->data.hid.dwCount >= 1 && pri->data.hid.dwSizeHid >= 3) {
-				BYTE *p = pri->data.hid.bRawData;
-				int Index = KeyDataToIndex(p[1] | (p[2] << 8));
+				const BYTE *p = pri->data.hid.bRawData;
+				const int Index = KeyDataToIndex(p[1] | (p[2] << 8));
 
 				TRACE(TEXT("WM_INPUT 0x{:02x}{:02x}{:02x}{:02x}\n"), p[0], p[1], p[2], p[3]);
 				if (Index >= 0) {

@@ -253,7 +253,7 @@ bool CAppMain::GetAppFilePath(String *pPath) const
 		return false;
 
 	TCHAR szPath[MAX_PATH];
-	DWORD Length = ::GetModuleFileName(nullptr, szPath, MAX_PATH);
+	const DWORD Length = ::GetModuleFileName(nullptr, szPath, MAX_PATH);
 	if ((Length == 0) || (Length >= MAX_PATH)) {
 		pPath->clear();
 		return false;
@@ -271,7 +271,7 @@ bool CAppMain::GetAppDirectory(String *pDirectory) const
 		return false;
 
 	TCHAR szDir[MAX_PATH];
-	DWORD Length = ::GetModuleFileName(nullptr, szDir, MAX_PATH);
+	const DWORD Length = ::GetModuleFileName(nullptr, szDir, MAX_PATH);
 	if ((Length == 0) || (Length >= MAX_PATH)) {
 		pDirectory->clear();
 		return false;
@@ -290,7 +290,7 @@ bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 	if (pszDirectory == nullptr)
 		return false;
 
-	DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MAX_PATH);
+	const DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MAX_PATH);
 	if ((Length == 0) || (Length >= MAX_PATH)) {
 		pszDirectory[0] = _T('\0');
 		return false;
@@ -331,7 +331,7 @@ void CAppMain::Initialize()
 	m_FavoritesFileName = szModuleFileName;
 	m_FavoritesFileName.RenameExtension(TEXT(".tvfavorites"));
 
-	bool fExists = m_IniFileName.IsFileExists();
+	const bool fExists = m_IniFileName.IsFileExists();
 	m_fFirstExecute = !fExists && CmdLineOptions.m_IniFileName.empty();
 	if (fExists) {
 		AddLog(TEXT("設定を読み込んでいます..."));
@@ -748,7 +748,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			&& (GeneralOptions.GetKeepSingleTask() || CmdLineOptions.m_fSingleTask)) {
 		AddLog(TEXT("複数起動が禁止されています。"));
 		CTVTestWindowFinder Finder;
-		HWND hwnd = Finder.FindCommandLineTarget();
+		const HWND hwnd = Finder.FindCommandLineTarget();
 		if (::IsWindow(hwnd)) {
 			if (!SendInterprocessMessage(
 						hwnd, PROCESS_MESSAGE_EXECUTE,
@@ -1171,7 +1171,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 				const int CurChannel = (int)pSourceFilter->GetCurChannel();
 				if (CurSpace >= 0 && CurChannel >= 0) {
 					const CChannelList *pList = ChannelManager.GetCurrentChannelList();
-					int i = pList->FindByIndex(CurSpace, CurChannel);
+					const int i = pList->FindByIndex(CurSpace, CurChannel);
 					if (i >= 0)
 						Core.SwitchChannel(i);
 				}
@@ -1210,7 +1210,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	::SetFocus(MainWindow.GetHandle());
 
 	{
-		HWND hwndForeground = ::GetForegroundWindow();
+		const HWND hwndForeground = ::GetForegroundWindow();
 		if (hwndForeground != nullptr) {
 			DWORD ProcessID = 0;
 			::GetWindowThreadProcessId(hwndForeground, &ProcessID);
@@ -1243,7 +1243,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 // アクセラレータにしないメッセージの判定
 bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 {
-	HWND hwnd = ::GetFocus();
+	const HWND hwnd = ::GetFocus();
 
 	if (hwnd != nullptr && ::IsWindowVisible(hwnd)) {
 		if (MainWindow.IsNoAcceleratorMessage(pmsg))
@@ -1253,7 +1253,7 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 		if (pDisplayView != nullptr && hwnd == pDisplayView->GetHandle()) {
 			return pDisplayView->IsMessageNeed(pmsg);
 		} else if (pmsg->message == WM_KEYDOWN || pmsg->message == WM_KEYUP) {
-			LRESULT Result = ::SendMessage(hwnd, WM_GETDLGCODE, pmsg->wParam, reinterpret_cast<LPARAM>(pmsg));
+			const LRESULT Result = ::SendMessage(hwnd, WM_GETDLGCODE, pmsg->wParam, reinterpret_cast<LPARAM>(pmsg));
 			if ((Result & (DLGC_WANTALLKEYS | DLGC_WANTCHARS)) != 0)
 				return true;
 			if ((Result & DLGC_WANTARROWS) != 0) {
@@ -1282,8 +1282,8 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner, int StartPage)
 		if (pViewer != nullptr
 				&& (pViewer->IsOpen()
 					|| UICore.IsViewerInitializeError())) {
-			bool fOldError = UICore.IsViewerInitializeError();
-			bool fResult = UICore.InitializeViewer();
+			const bool fOldError = UICore.IsViewerInitializeError();
+			const bool fResult = UICore.InitializeViewer();
 			// エラーで再生オフになっていた場合はオンにする
 			if (fResult && fOldError && !UICore.IsViewerEnabled())
 				UICore.EnableViewer(true);
@@ -1335,7 +1335,7 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 					MB_YESNO | MB_ICONINFORMATION) != IDYES)
 			return CreateDirectoryResult::Cancelled;
 
-		int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
+		const int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			StringFormat(
 				szMessage,
@@ -1518,7 +1518,7 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
 
 	if (!CmdLine.m_Command.empty()) {
-		int Command = CommandManager.ParseIDText(CmdLine.m_Command);
+		const int Command = CommandManager.ParseIDText(CmdLine.m_Command);
 		if (Command != 0) {
 			UICore.DoCommand(Command);
 		} else {

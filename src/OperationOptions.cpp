@@ -229,7 +229,7 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 				m_pCommandManager->GetCommandText(Command, szText, lengthof(szText));
 				for (int j = IDC_OPTIONS_MOUSECOMMAND_FIRST; j <= IDC_OPTIONS_MOUSECOMMAND_LAST; j++) {
-					int Index = (int)DlgComboBox_AddString(hDlg, j, szText);
+					const int Index = (int)DlgComboBox_AddString(hDlg, j, szText);
 					DlgComboBox_SetItemData(hDlg, j, Index, Command);
 				}
 				if (Command == m_LeftDoubleClickCommand)
@@ -335,10 +335,10 @@ void COperationOptions::InitWheelSettings(int ID, int CurCommand) const
 	DlgComboBox_SetItemData(m_hDlg, ID, 0, 0);
 
 	for (int i = 0; i < CommandCount; i++) {
-		int Command = m_WheelCommandManager.GetCommandID(i);
+		const int Command = m_WheelCommandManager.GetCommandID(i);
 		TCHAR szText[CWheelCommandManager::MAX_COMMAND_TEXT];
 		m_WheelCommandManager.GetCommandText(Command, szText, lengthof(szText));
-		LRESULT Index = DlgComboBox_AddString(m_hDlg, ID, szText);
+		const LRESULT Index = DlgComboBox_AddString(m_hDlg, ID, szText);
 		DlgComboBox_SetItemData(m_hDlg, ID, Index, Command);
 		if (Command == CurCommand)
 			Sel = i + 1;

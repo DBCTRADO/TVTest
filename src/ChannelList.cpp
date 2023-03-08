@@ -423,7 +423,7 @@ int CChannelList::GetNextChannel(int Index, bool fWrap) const
 			return i;
 	}
 
-	int Channel, Min, No;
+	int Channel, Min;
 
 	Channel = INT_MAX;
 	Min = INT_MAX;
@@ -431,7 +431,7 @@ int CChannelList::GetNextChannel(int Index, bool fWrap) const
 		const CChannelInfo *pChInfo = i->get();
 
 		if (pChInfo->IsEnabled()) {
-			No = pChInfo->GetChannelNo();
+			const int No = pChInfo->GetChannelNo();
 			if (No != 0) {
 				if (No > ChannelNo && No < Channel)
 					Channel = No;
@@ -463,7 +463,7 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 			return i;
 	}
 
-	int Channel, Max, No;
+	int Channel, Max;
 
 	Channel = 0;
 	Max = 0;
@@ -471,7 +471,7 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 		const CChannelInfo *pChInfo = i->get();
 
 		if (pChInfo->IsEnabled()) {
-			No = pChInfo->GetChannelNo();
+			const int No = pChInfo->GetChannelNo();
 			if (No != 0) {
 				if (No < ChannelNo && No > Channel)
 					Channel = No;
@@ -499,11 +499,11 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 
 int CChannelList::GetMaxChannelNo() const
 {
-	int Max, No;
+	int Max;
 
 	Max = 0;
 	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); i++) {
-		No = (*i)->GetChannelNo();
+		const int No = (*i)->GetChannelNo();
 		if (No > Max)
 			Max = No;
 	}
@@ -760,10 +760,8 @@ CTuningSpaceInfo::TuningSpaceType CTuningSpaceList::GetTuningSpaceType(int Space
 
 bool CTuningSpaceList::MakeTuningSpaceList(const CChannelList *pList, int Spaces)
 {
-	int Space;
-
 	for (int i = 0; i < pList->NumChannels(); i++) {
-		Space = pList->GetSpace(i);
+		const int Space = pList->GetSpace(i);
 		if (Space + 1 > Spaces)
 			Spaces = Space + 1;
 	}
@@ -926,14 +924,13 @@ bool CTuningSpaceList::SaveToFile(LPCTSTR pszFileName) const
 		}
 	}
 
-	HANDLE hFile;
-	DWORD Write;
-
-	hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
+
+	DWORD Write;
 
 #ifdef UNICODE
 	bool fUnicode = true;
@@ -1013,7 +1010,7 @@ bool inline IsDigit(TCHAR c)
 static int ParseDigits(LPCTSTR *ppText)
 {
 	LPTSTR pEnd;
-	int Value = std::_tcstol(*ppText, &pEnd, 10);
+	const int Value = std::_tcstol(*ppText, &pEnd, 10);
 	*ppText = pEnd;
 	return Value;
 }
@@ -1024,11 +1021,10 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 
 	static constexpr LONGLONG MAX_FILE_SIZE = 8LL * 1024 * 1024;
 
-	HANDLE hFile;
 	LARGE_INTEGER FileSize;
 	DWORD Read;
 
-	hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -1054,7 +1050,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 		pszBuffer[FileSize.LowPart / 2 - 1] = L'\0';
 		p = pszBuffer;
 #else
-		int Length = ::WideCharToMultiByte(
+		const int Length = ::WideCharToMultiByte(
 			CP_ACP, 0,
 			reinterpret_cast<LPCSTR>(FileBuffer.get()), FileSize.LowPart,
 			nullptr, 0, nullptr, nullptr);
@@ -1106,7 +1102,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 					p += 6;
 					SkipSpaces(&p);
 					if (IsDigit(*p)) {
-						int Space = ParseDigits(&p);
+						const int Space = ParseDigits(&p);
 						if (Space >= 0 && Space < 100 && NextToken(&p)) {
 							int Length = ::StrCSpn(p, TEXT(")\r\n"));
 							if (p[Length] == _T(')') && p[Length + 1] == _T(')'))
@@ -1193,7 +1189,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 								if (NextToken(&p)) {
 									// 状態(オプション)
 									if (IsDigit(*p)) {
-										int Flags = ParseDigits(&p);
+										const int Flags = ParseDigits(&p);
 										ChInfo.Enable((Flags & 1) != 0);
 									}
 								}

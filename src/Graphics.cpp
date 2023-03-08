@@ -147,17 +147,17 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 {
 	Free();
 
-	HRSRC hRes = ::FindResource(hinst, pszName, pszType);
+	const HRSRC hRes = ::FindResource(hinst, pszName, pszType);
 	if (hRes == nullptr)
 		return false;
-	DWORD Size = ::SizeofResource(hinst, hRes);
+	const DWORD Size = ::SizeofResource(hinst, hRes);
 	if (Size == 0)
 		return false;
-	HGLOBAL hData = ::LoadResource(hinst, hRes);
+	const HGLOBAL hData = ::LoadResource(hinst, hRes);
 	const void *pData = ::LockResource(hData);
 	if (pData == nullptr)
 		return false;
-	HGLOBAL hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, Size);
+	const HGLOBAL hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, Size);
 	if (hBuffer == nullptr)
 		return false;
 	void *pBuffer = ::GlobalLock(hBuffer);
@@ -213,7 +213,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 		if (!Create(bm.bmWidth, bm.bmHeight, 32))
 			return false;
 
-		Gdiplus::Rect rc(0, 0, bm.bmWidth, bm.bmHeight);
+		const Gdiplus::Rect rc(0, 0, bm.bmWidth, bm.bmHeight);
 		Gdiplus::BitmapData Data;
 
 		if (m_Bitmap->LockBits(
@@ -270,7 +270,7 @@ int CImage::GetHeight() const
 void CImage::Clear()
 {
 	if (m_Bitmap) {
-		Gdiplus::Rect rc(0, 0, m_Bitmap->GetWidth(), m_Bitmap->GetHeight());
+		const Gdiplus::Rect rc(0, 0, m_Bitmap->GetWidth(), m_Bitmap->GetHeight());
 		Gdiplus::BitmapData Data;
 
 		if (m_Bitmap->LockBits(
@@ -309,7 +309,7 @@ void CBrush::Free()
 
 bool CBrush::CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a)
 {
-	Gdiplus::Color Color(a, r, g, b);
+	const Gdiplus::Color Color(a, r, g, b);
 
 	if (m_Brush) {
 		m_Brush->SetColor(Color);
@@ -446,12 +446,12 @@ bool CCanvas::FillGradient(
 	const RECT &Rect, GradientDirection Direction)
 {
 	if (m_Graphics) {
-		Gdiplus::RectF rect(
+		const Gdiplus::RectF rect(
 			Gdiplus::REAL(Rect.left) - 0.1f,
 			Gdiplus::REAL(Rect.top) - 0.1f,
 			Gdiplus::REAL(Rect.right - Rect.left) + 0.2f,
 			Gdiplus::REAL(Rect.bottom - Rect.top) + 0.2f);
-		Gdiplus::LinearGradientBrush Brush(
+		const Gdiplus::LinearGradientBrush Brush(
 			rect,
 			GdiplusColor(Color1), GdiplusColor(Color2),
 			Direction == GradientDirection::Horz ?
@@ -490,7 +490,7 @@ bool CCanvas::DrawText(
 					GdiplusRect(Rect), &Format) != Gdiplus::Ok)
 			return false;
 
-		Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
+		const Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
 		m_Graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
 		m_Graphics->FillPath(pBrush->m_Brush.get(), &Path);
@@ -605,7 +605,7 @@ bool CCanvas::DrawOutlineText(
 			GdiplusRect(Rect), &Format) != Gdiplus::Ok)
 		return false;
 
-	Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
+	const Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
 	m_Graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
 	Gdiplus::Pen Pen(GdiplusColor(OutlineColor), OutlineWidth);

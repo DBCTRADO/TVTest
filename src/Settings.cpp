@@ -374,7 +374,7 @@ bool CSettings::Read(LPCTSTR pszValueName, LOGFONT *pFont)
 				break;
 			case 3:
 				{
-					unsigned int Flags = StrToUInt(q);
+					const unsigned int Flags = StrToUInt(q);
 					pFont->lfItalic = (Flags & FONT_FLAG_ITALIC) != 0;
 					pFont->lfUnderline = (Flags & FONT_FLAG_UNDERLINE) != 0;
 					pFont->lfStrikeOut = (Flags & FONT_FLAG_STRIKEOUT) != 0;

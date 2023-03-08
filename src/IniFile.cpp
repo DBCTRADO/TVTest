@@ -73,7 +73,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, OpenFlag Flags)
 		ShareMode |= FILE_SHARE_READ;
 	}
 
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, DesiredAccess, ShareMode, nullptr,
 		!!(Flags & OpenFlag::Write) ? OPEN_ALWAYS : OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -98,7 +98,7 @@ bool CIniFile::Open(LPCWSTR pszFileName, OpenFlag Flags)
 				if (Buffer[0] == 0xFF && Buffer[1] == 0xFE) {
 					Parse((WCHAR*)(Buffer.get() + 2));
 				} else {
-					int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, nullptr, 0);
+					const int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, nullptr, 0);
 					std::wstring Data(Length, L'\0');
 					::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, Data.data(), Length);
 					Parse(Data.c_str());

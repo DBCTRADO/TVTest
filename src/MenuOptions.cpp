@@ -258,7 +258,7 @@ int CMenuOptions::GetIDFromString(const String &Str) const
 	if (Str.empty())
 		return MENU_ID_SEPARATOR;
 
-	int Command = GetAppClass().CommandManager.ParseIDText(Str);
+	const int Command = GetAppClass().CommandManager.ParseIDText(Str);
 	if (Command > 0)
 		return CommandToID(Command);
 
@@ -363,7 +363,8 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_MENUOPTIONS_ITEMLIST_UP:
 		case IDC_MENUOPTIONS_ITEMLIST_DOWN:
 			{
-				int From = m_ItemListView.GetSelectedItem(), To;
+				const int From = m_ItemListView.GetSelectedItem();
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_MENUOPTIONS_ITEMLIST_UP) {
@@ -386,7 +387,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_MENUOPTIONS_ITEMLIST_INSERTSEPARATOR:
 			{
-				int Sel = m_ItemListView.GetSelectedItem();
+				const int Sel = m_ItemListView.GetSelectedItem();
 
 				if (Sel >= 0) {
 					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
@@ -405,7 +406,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_MENUOPTIONS_ITEMLIST_REMOVESEPARATOR:
 			{
-				int Sel = m_ItemListView.GetSelectedItem();
+				const int Sel = m_ItemListView.GetSelectedItem();
 
 				if (Sel >= 0) {
 					if (m_ItemListView.GetItemParam(Sel) == MENU_ID_SEPARATOR) {
@@ -425,7 +426,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_ItemListView.DeleteAllItems();
 
 				for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-					int ID = m_DefaultMenuItemList[i].ID;
+					const int ID = m_DefaultMenuItemList[i].ID;
 					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 					GetItemText(ID, szText, lengthof(szText));
@@ -442,7 +443,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 						GetItemText(ID, szText, lengthof(szText));
-						int Index = m_ItemListView.InsertItem(-1, szText, ID);
+						const int Index = m_ItemListView.InsertItem(-1, szText, ID);
 						m_ItemListView.CheckItem(Index, false);
 					}
 				}
@@ -506,7 +507,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 void CMenuOptions::SetDlgItemState(HWND hDlg)
 {
-	int Sel = m_ItemListView.GetSelectedItem();
+	const int Sel = m_ItemListView.GetSelectedItem();
 
 	EnableDlgItem(hDlg, IDC_MENUOPTIONS_ITEMLIST_UP, Sel > 0);
 	EnableDlgItem(hDlg, IDC_MENUOPTIONS_ITEMLIST_DOWN, Sel >= 0 && Sel + 1 < m_ItemListView.GetItemCount());

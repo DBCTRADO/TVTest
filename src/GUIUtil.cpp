@@ -85,7 +85,7 @@ void CIcon::Attach(HICON hico)
 
 HICON CIcon::Detach()
 {
-	HICON hico = m_hico;
+	const HICON hico = m_hico;
 
 	m_hico = nullptr;
 
@@ -110,7 +110,7 @@ HIMAGELIST CreateImageListFromIcons(
 	if (ppszIcons == nullptr || IconCount <= 0)
 		return nullptr;
 
-	HIMAGELIST himl = ::ImageList_Create(Width, Height, ILC_COLOR32 | ILC_MASK, IconCount, 1);
+	const HIMAGELIST himl = ::ImageList_Create(Width, Height, ILC_COLOR32 | ILC_MASK, IconCount, 1);
 	if (himl == nullptr)
 		return nullptr;
 

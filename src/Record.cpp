@@ -389,7 +389,7 @@ LONGLONG CRecordTask::GetFreeSpace() const
 	String FileName;
 	if (!GetFileName(&FileName))
 		return -1;
-	String::size_type Pos = FileName.find_last_of(TEXT("\\/"));
+	const String::size_type Pos = FileName.find_last_of(TEXT("\\/"));
 	if (Pos == String::npos)
 		return -1;
 	FileName.resize(Pos + 1);
@@ -807,12 +807,11 @@ bool CRecordManager::GetWritePluginList(std::vector<String> *pList)
 	pList->clear();
 
 	TCHAR szDir[MAX_PATH];
-	HANDLE hFind;
 	WIN32_FIND_DATA fd;
 
 	GetAppClass().GetAppDirectory(szDir);
 	::PathAppend(szDir, TEXT("Write_*.dll"));
-	hFind = ::FindFirstFileEx(szDir, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
+	const HANDLE hFind = ::FindFirstFileEx(szDir, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return false;
 	do {
@@ -839,7 +838,7 @@ bool CRecordManager::ShowWritePluginSetting(HWND hwndOwner, LPCTSTR pszPlugin)
 		return false;
 
 	bool fOK = false;
-	HMODULE hLib = ::LoadLibrary(pszPlugin);
+	const HMODULE hLib = ::LoadLibrary(pszPlugin);
 	if (hLib != nullptr) {
 		typedef void (WINAPI * Setting)(HWND parentWnd);
 		Setting pSetting = (Setting)::GetProcAddress(hLib, "Setting");
@@ -924,7 +923,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					::SystemTimeToTzSpecificLocalTime(
 						nullptr, &m_pRecManager->m_StartTimeSpec.Time.DateTime, &stStart);
 					::GetSystemTime(&st);
-					LONGLONG Diff = DiffSystemTime(&m_pRecManager->m_StartTimeSpec.Time.DateTime, &st);
+					const LONGLONG Diff = DiffSystemTime(&m_pRecManager->m_StartTimeSpec.Time.DateTime, &st);
 					if (Diff > 0) {
 						Delay = (DWORD)Diff;
 					} else {
@@ -987,7 +986,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					::SystemTimeToTzSpecificLocalTime(
 						nullptr, &m_pRecManager->m_StopTimeSpec.Time.DateTime, &stStop);
 					::GetSystemTime(&st);
-					LONGLONG Diff = DiffSystemTime(&st, &m_pRecManager->m_StopTimeSpec.Time.DateTime);
+					const LONGLONG Diff = DiffSystemTime(&st, &m_pRecManager->m_StopTimeSpec.Time.DateTime);
 					if (Diff > 0)
 						Duration = (DWORD)Diff;
 					else
@@ -1127,11 +1126,9 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 		case IDC_RECORD_FILENAMEFORMAT:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORD_FILENAMEFORMAT), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CEventVariableStringMap EventVarStrMap;
 				EventVarStrMap.InputParameter(hDlg, IDC_RECORD_FILENAME, pt);
 			}
@@ -1154,7 +1151,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 		case IDC_RECORD_STOPDATETIME:
 		case IDC_RECORD_STOPREMAINTIME:
 			if (DlgCheckBox_IsChecked(hDlg, IDC_RECORD_STOPSPECTIME)) {
-				bool fDateTime = DlgRadioButton_IsChecked(hDlg, IDC_RECORD_STOPDATETIME);
+				const bool fDateTime = DlgRadioButton_IsChecked(hDlg, IDC_RECORD_STOPDATETIME);
 
 				EnableDlgItems(
 					hDlg,
@@ -1196,7 +1193,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 
 		case IDC_RECORD_WRITEPLUGINSETTING:
 			{
-				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORD_WRITEPLUGIN) - 1;
+				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORD_WRITEPLUGIN) - 1;
 
 				if (Sel >= 0 && (size_t)Sel < m_pRecManager->m_WritePluginList.size()) {
 					ShowWritePluginSetting(hDlg, m_pRecManager->m_WritePluginList[Sel].c_str());
@@ -1278,7 +1275,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					}
 
 					if (StartTimeChecked != IDC_RECORD_START_NOW) {
-						CAppMain::CreateDirectoryResult CreateDirResult =
+						const CAppMain::CreateDirectoryResult CreateDirResult =
 							GetAppClass().CreateDirectory(
 								hDlg, Dir.c_str(),
 								TEXT("録画ファイルの保存先フォルダ \"{}\" がありません。\n")
@@ -1308,12 +1305,11 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					case IDC_RECORD_START_DELAY:
 						{
 							TimeSpecInfo TimeSpec;
-							unsigned int Hour, Minute, Second;
 
 							TimeSpec.Type = TimeSpecType::Duration;
-							Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_HOUR, nullptr, FALSE);
-							Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_MINUTE, nullptr, FALSE);
-							Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_SECOND, nullptr, FALSE);
+							const unsigned int Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_HOUR, nullptr, FALSE);
+							const unsigned int Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_MINUTE, nullptr, FALSE);
+							const unsigned int Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STARTTIME_SECOND, nullptr, FALSE);
 							TimeSpec.Time.Duration = (Hour * (60 * 60) + Minute * 60 + Second) * 1000;
 							m_pRecManager->SetStartTimeSpec(&TimeSpec);
 						}
@@ -1327,7 +1323,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					m_pSettings->SetSaveDataCarrousel(
 						DlgCheckBox_IsChecked(hDlg, IDC_RECORD_SAVEDATACARROUSEL));
 
-					int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
+					const int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
 					if (Sel >= 0 && (size_t)Sel < m_pRecManager->m_WritePluginList.size())
 						m_pSettings->m_WritePlugin = m_pRecManager->m_WritePluginList[Sel];
 					else
@@ -1341,12 +1337,10 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 						TimeSpec.Type = TimeSpecType::DateTime;
 						TimeSpec.Time.DateTime = stStop;
 					} else {
-						unsigned int Hour, Minute, Second;
-
 						TimeSpec.Type = TimeSpecType::Duration;
-						Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_HOUR, nullptr, FALSE);
-						Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_MINUTE, nullptr, FALSE);
-						Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_SECOND, nullptr, FALSE);
+						const unsigned int Hour = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_HOUR, nullptr, FALSE);
+						const unsigned int Minute = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_MINUTE, nullptr, FALSE);
+						const unsigned int Second = ::GetDlgItemInt(hDlg, IDC_RECORD_STOPTIME_SECOND, nullptr, FALSE);
 						TimeSpec.Time.Duration = (Hour * (60 * 60) + Minute * 60 + Second) * 1000;
 					}
 					m_pRecManager->SetStopTimeSpec(&TimeSpec);

@@ -179,8 +179,8 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			};
 
 			for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
-				int ID = IDC_CHANNELINPUT_DIGITKEYMODE + i;
-				for (LPCTSTR pszMode : KeyModeList)
+				const int ID = IDC_CHANNELINPUT_DIGITKEYMODE + i;
+				for (const LPCTSTR pszMode : KeyModeList)
 					DlgComboBox_AddString(hDlg, ID, pszMode);
 				DlgComboBox_SetCurSel(hDlg, ID, static_cast<int>(m_Options.KeyInputMode[i]));
 			}
@@ -202,7 +202,7 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 		case IDOK:
 			{
 				for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
-					int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_DIGITKEYMODE + i);
+					const int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_DIGITKEYMODE + i);
 					if (Sel >= 0) {
 						m_Options.KeyInputMode[i] =
 							static_cast<CChannelInputOptions::KeyInputModeType>(Sel);

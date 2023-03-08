@@ -461,7 +461,7 @@ CThemeManager::CThemeManager(const CColorScheme *pColorScheme)
 
 ThemeColor CThemeManager::GetColor(int Type) const
 {
-	COLORREF cr = m_pColorScheme->GetColor(Type);
+	const COLORREF cr = m_pColorScheme->GetColor(Type);
 	if (cr == CLR_INVALID)
 		return ThemeColor();
 	return ThemeColor(cr);
@@ -470,7 +470,7 @@ ThemeColor CThemeManager::GetColor(int Type) const
 
 ThemeColor CThemeManager::GetColor(LPCTSTR pszName) const
 {
-	COLORREF cr = m_pColorScheme->GetColor(pszName);
+	const COLORREF cr = m_pColorScheme->GetColor(pszName);
 	if (cr == CLR_INVALID)
 		return ThemeColor();
 	return ThemeColor(cr);

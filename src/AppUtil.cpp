@@ -47,7 +47,7 @@ struct TVTestWindowEnumInfo {
 static BOOL CALLBACK TVTestWindowEnumProc(HWND hwnd, LPARAM Param)
 {
 	if (IsTVTestWindow(hwnd)) {
-		TVTestWindowEnumInfo *pInfo = reinterpret_cast<TVTestWindowEnumInfo*>(Param);
+		const TVTestWindowEnumInfo *pInfo = reinterpret_cast<const TVTestWindowEnumInfo*>(Param);
 
 		if (!(*pInfo->pEnumFunc)(hwnd, pInfo->Param))
 			return FALSE;
@@ -184,7 +184,7 @@ BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd, LPARAM lParam)
 		if (::SendMessageTimeout(
 					hwnd, WM_APP_QUERYPORT, 0, 0,
 					SMTO_NORMAL | SMTO_ABORTIFHUNG, 1000, &Result)) {
-			WORD UDPPort = LOWORD(Result);
+			const WORD UDPPort = LOWORD(Result);
 
 			pThis->m_UDPPortList.push_back(UDPPort);
 			GetAppClass().AddLog(TEXT("既に起動している") APP_NAME TEXT("が見付かりました。(UDPポート {})"), UDPPort);

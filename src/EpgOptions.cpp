@@ -120,7 +120,7 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 
 bool CEpgOptions::WriteSettings(CSettings &Settings)
 {
-	CLogoManager &LogoManager = GetAppClass().LogoManager;
+	const CLogoManager &LogoManager = GetAppClass().LogoManager;
 
 	Settings.Write(TEXT("SaveEpgData"), m_fSaveEpgFile);
 	Settings.Write(TEXT("EpgDataFileName"), m_EpgFileName);
@@ -317,7 +317,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CLogoManager &LogoManager = GetAppClass().LogoManager;
+			const CLogoManager &LogoManager = GetAppClass().LogoManager;
 
 			DlgCheckBox_Check(hDlg, IDC_EPGOPTIONS_SAVEEPGFILE, m_fSaveEpgFile);
 			EnableDlgItems(
@@ -488,7 +488,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_UPDATEBSEXTENDED);
 				m_fUpdateCSExtended =
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_UPDATECSEXTENDED);
-				bool fUseEpgData =
+				const bool fUseEpgData =
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGOPTIONS_USEEPGDATA);
 				GetDlgItemString(hDlg, IDC_EPGOPTIONS_EPGDATAFOLDER, &m_EDCBDataFolder);
 				if (!m_fUseEDCBData && fUseEpgData) {

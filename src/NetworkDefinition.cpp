@@ -32,7 +32,7 @@ namespace TVTest
 
 WORD StrToWord(const String &Str)
 {
-	unsigned long Value = std::_tcstoul(Str.c_str(), nullptr, 0);
+	const unsigned long Value = std::_tcstoul(Str.c_str(), nullptr, 0);
 	if (Value > 0xFFFF)
 		return 0;
 	return static_cast<WORD>(Value);
@@ -176,7 +176,7 @@ bool CNetworkDefinition::IsCSNetworkID(WORD NetworkID) const
 
 bool CNetworkDefinition::IsSatelliteNetworkID(WORD NetworkID) const
 {
-	NetworkType Type = GetNetworkType(NetworkID);
+	const NetworkType Type = GetNetworkType(NetworkID);
 	return Type == NetworkType::BS || Type == NetworkType::CS;
 }
 
@@ -185,8 +185,8 @@ int CNetworkDefinition::GetNetworkTypeOrder(WORD NetworkID1, WORD NetworkID2) co
 {
 	if (NetworkID1 == NetworkID2)
 		return 0;
-	NetworkType Network1 = GetNetworkType(NetworkID1);
-	NetworkType Network2 = GetNetworkType(NetworkID2);
+	const NetworkType Network1 = GetNetworkType(NetworkID1);
+	const NetworkType Network2 = GetNetworkType(NetworkID2);
 	int Order;
 	if (Network1 == Network2)
 		Order = 0;

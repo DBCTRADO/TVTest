@@ -93,7 +93,7 @@ bool CMainPanel::OnOwnerWindowPosChanging(const RECT *pOldRect, const RECT *pNew
 
 bool CMainPanel::IsAttached()
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	bool fAttached = false;
 
 	if (fShowPanelWindow && App.PanelOptions.GetAttachToMainWindow()
@@ -154,7 +154,7 @@ void CMainPanel::UpdateInformationPanel()
 
 void CMainPanel::UpdateProgramListPanel()
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	CChannelInfo ChInfo;
 
 	if (App.Core.GetCurrentStreamChannelInfo(&ChInfo)
@@ -166,7 +166,7 @@ void CMainPanel::UpdateProgramListPanel()
 
 void CMainPanel::UpdateChannelPanel()
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	Util::CWaitCursor WaitCursor;
 
 	if (ChannelPanel.IsChannelListEmpty()) {
@@ -206,7 +206,7 @@ void CMainPanel::InitControlPanel()
 
 void CMainPanel::UpdateControlPanel()
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	const CChannelList *pList = App.ChannelManager.GetCurrentChannelList();
 	const CChannelInfo *pCurChannel = App.ChannelManager.GetCurrentChannelInfo();
 
@@ -246,7 +246,7 @@ bool CMainPanel::CFrameEventHandler::OnMoving(RECT *pRect)
 	if (!m_pFrame->GetFloating())
 		return false;
 
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	POINT pt;
 	RECT rc;
 
@@ -256,7 +256,7 @@ bool CMainPanel::CFrameEventHandler::OnMoving(RECT *pRect)
 	::OffsetRect(pRect, pt.x - pRect->left, pt.y - pRect->top);
 	if (App.PanelOptions.GetSnapAtMainWindow()) {
 		// メインウィンドウにスナップさせる
-		int SnapMargin = App.PanelOptions.GetSnapMargin();
+		const int SnapMargin = App.PanelOptions.GetSnapMargin();
 		int XOffset, YOffset;
 		bool fSnap;
 
@@ -336,7 +336,7 @@ void CMainPanel::CFrameEventHandler::OnVisibleChange(bool fVisible)
 	if (!m_pFrame->GetFloating())
 		return;
 
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 
 	if (!fVisible) {
 		m_SnapEdge = EDGE_NONE;

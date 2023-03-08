@@ -198,10 +198,10 @@ ULONGLONG CSharedMemory::GetSize() const
 		return 0;
 
 	ULONGLONG Size = 0;
-	HMODULE hLib = Util::LoadSystemLibrary(TEXT("ntdll.dll"));
+	const HMODULE hLib = Util::LoadSystemLibrary(TEXT("ntdll.dll"));
 
 	if (hLib != nullptr) {
-		auto pNtQuerySection = GET_LIBRARY_FUNCTION(hLib, NtQuerySection);
+		const auto pNtQuerySection = GET_LIBRARY_FUNCTION(hLib, NtQuerySection);
 
 		if (pNtQuerySection != nullptr) {
 			SECTION_BASIC_INFORMATION Info;

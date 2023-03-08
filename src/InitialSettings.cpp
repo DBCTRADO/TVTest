@@ -74,7 +74,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 	case WM_INITDIALOG:
 		{
 			{
-				HWND hwndLogo = ::GetDlgItem(hDlg, IDC_INITIALSETTINGS_LOGO);
+				const HWND hwndLogo = ::GetDlgItem(hDlg, IDC_INITIALSETTINGS_LOGO);
 				RECT rc;
 
 				::GetWindowRect(hwndLogo, &rc);
@@ -87,7 +87,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 						MAKEINTRESOURCE(IDB_LOGO32), TEXT("PNG"));
 					::ShowWindow(hwndLogo, SW_HIDE);
 				} else {
-					HBITMAP hbm = static_cast<HBITMAP>(
+					const HBITMAP hbm = static_cast<HBITMAP>(
 						::LoadImage(
 							GetAppClass().GetResourceInstance(),
 							MAKEINTRESOURCE(IDB_LOGO),
@@ -213,11 +213,11 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 		case IDOK:
 			{
-				bool fMpeg2Decoder =
+				const bool fMpeg2Decoder =
 					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_MPEG2DECODER) > 1;
-				bool fH264Decoder =
+				const bool fH264Decoder =
 					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_H264DECODER) > 1;
-				bool fH265Decoder =
+				const bool fH265Decoder =
 					DlgComboBox_GetCount(hDlg, IDC_INITIALSETTINGS_H265DECODER) > 1;
 				if (!fMpeg2Decoder || !fH264Decoder || !fH265Decoder) {
 					String Codecs, Message;
@@ -249,7 +249,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (fH265Decoder)
 					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER, &H265DecoderName);
 
-				LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer =
+				const LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer =
 					(LibISDB::DirectShow::VideoRenderer::RendererType)
 						DlgComboBox_GetItemData(
 							hDlg, IDC_INITIALSETTINGS_VIDEORENDERER,
@@ -270,7 +270,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					},
 				};
 				for (const auto &e : ConflictList) {
-					int Length = ::lstrlen(e.pszDecoder);
+					const int Length = ::lstrlen(e.pszDecoder);
 					if (VideoRenderer == e.Renderer
 							&& (::StrCmpNI(Mpeg2DecoderName.c_str(), e.pszDecoder, Length) == 0
 								|| ::StrCmpNI(H264DecoderName.c_str(), e.pszDecoder, Length) == 0)
@@ -302,7 +302,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				::GetDlgItemText(
 					hDlg, IDC_INITIALSETTINGS_RECORDFOLDER,
 					szRecordFolder, lengthof(szRecordFolder));
-				CAppMain::CreateDirectoryResult CreateDirResult =
+				const CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
 						hDlg, szRecordFolder,
 						TEXT("録画ファイルの保存先フォルダ \"{}\" がありません。\n")
@@ -352,7 +352,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_DESTROY:
 		{
-			HBITMAP hbm = reinterpret_cast<HBITMAP>(
+			const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_INITIALSETTINGS_LOGO,
 					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
@@ -372,7 +372,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszDecoderName)
 {
-	LPCWSTR pszDefaultDecoderName =
+	const LPCWSTR pszDefaultDecoderName =
 		LibISDB::DirectShow::KnownDecoderManager::IsDecoderAvailable(SubType) ?
 		LibISDB::DirectShow::KnownDecoderManager::GetDecoderName(SubType) : nullptr;
 	LibISDB::DirectShow::FilterFinder FilterFinder;
@@ -421,7 +421,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 
 void CInitialSettings::GetDecoderSetting(int ID, String *pDecoderName) const
 {
-	int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
+	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
 	if (Sel > 0) {
 		TCHAR szDecoder[MAX_DECODER_NAME];
 		DlgComboBox_GetLBString(m_hDlg, ID, Sel, szDecoder);

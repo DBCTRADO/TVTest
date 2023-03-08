@@ -647,7 +647,7 @@ inline LPWSTR MsgStringDuplicate(PluginParam *pParam, LPCWSTR pszString)
 {
 	if (pszString == nullptr)
 		return nullptr;
-	DWORD Size = (::lstrlenW(pszString) + 1) * sizeof(WCHAR);
+	const DWORD Size = (::lstrlenW(pszString) + 1) * sizeof(WCHAR);
 	LPWSTR pszDup = (LPWSTR)MsgMemoryAlloc(pParam, Size);
 	if (pszDup != nullptr)
 		::CopyMemory(pszDup, pszString, Size);
@@ -2568,7 +2568,7 @@ inline bool MsgRegisterPluginIcon(PluginParam *pParam, HBITMAP hbmIcon)
 inline bool MsgRegisterPluginIconFromResource(PluginParam *pParam, HINSTANCE hinst, LPCTSTR pszName)
 {
 	HBITMAP hbmIcon = (HBITMAP)::LoadImage(hinst, pszName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-	bool fResult = MsgRegisterPluginIcon(pParam, hbmIcon);
+	const bool fResult = MsgRegisterPluginIcon(pParam, hbmIcon);
 	::DeleteObject(hbmIcon);
 	return fResult;
 }

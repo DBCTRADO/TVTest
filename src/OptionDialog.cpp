@@ -94,7 +94,7 @@ bool COptionDialog::Show(HWND hwndOwner, int StartPage)
 	if (hwndOwner != nullptr)
 		::RedrawWindow(hwndOwner, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
 	for (int i = 0; i < NUM_PAGES; i++) {
-		DWORD Flags = m_PageList[i].pOptions->GetUpdateFlags();
+		const DWORD Flags = m_PageList[i].pOptions->GetUpdateFlags();
 
 		if (Flags != 0)
 			m_PageList[i].pOptions->Apply(Flags);
@@ -239,8 +239,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 			if (wParam == IDC_OPTIONS_LIST) {
 				const bool fSelected = (pdis->itemState & ODS_SELECTED) != 0;
-				COLORREF crText, crOldText;
-				int OldBkMode;
+				COLORREF crText;
 				RECT rc;
 
 				if (fSelected) {
@@ -259,7 +258,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				rc = pdis->rcItem;
 				rc.left += m_ListMargin;
-				int y = rc.top + ((rc.bottom - rc.top) - m_IconHeight) / 2;
+				const int y = rc.top + ((rc.bottom - rc.top) - m_IconHeight) / 2;
 
 				int IconWidth, IconHeight;
 				::ImageList_GetIconSize(m_himlIcons, &IconWidth, &IconHeight);
@@ -268,7 +267,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					if (fSelected)
 						::ImageList_Draw(m_himlIcons, (int)pdis->itemData, pdis->hDC, rc.left, y, ILD_TRANSPARENT);
 				} else {
-					HICON hicon = ::ImageList_ExtractIcon(nullptr, m_himlIcons, (int)pdis->itemData);
+					const HICON hicon = ::ImageList_ExtractIcon(nullptr, m_himlIcons, (int)pdis->itemData);
 #if 0				// DrawIconEx で描画すると汚い
 					::DrawIconEx(pdis->hDC, rc.left, y, hicon, m_IconWidth, m_IconHeight, 0, nullptr, DI_NORMAL);
 					if (fSelected)
@@ -276,7 +275,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 #else
 					ICONINFO ii;
 					if (::GetIconInfo(hicon, &ii)) {
-						HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+						const HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
 						::DeleteObject(ii.hbmColor);
 						::DeleteObject(ii.hbmMask);
 						Graphics::CImage Image;
@@ -292,8 +291,8 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					::DestroyIcon(hicon);
 				}
 
-				crOldText = ::SetTextColor(pdis->hDC, crText);
-				OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+				const COLORREF crOldText = ::SetTextColor(pdis->hDC, crText);
+				const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 				rc.left += m_IconWidth + m_IconTextMargin;
 				::DrawText(
 					pdis->hDC, m_PageList[pdis->itemData].pszTitle, -1,
@@ -306,16 +305,13 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					::DrawFocusRect(pdis->hDC, &rc);
 				}
 			} else if (wParam == IDC_OPTIONS_TITLE) {
-				HFONT hfontOld;
-				COLORREF crOldText;
-				int OldBkMode;
 				RECT rc;
 
 				DrawUtil::FillGradient(
 					pdis->hDC, &pdis->rcItem, RGB(0, 0, 0), GetTitleColor(m_CurrentPage));
-				hfontOld = SelectFont(pdis->hDC, m_TitleFont.GetHandle());
-				crOldText = ::SetTextColor(pdis->hDC, RGB(255, 255, 255));
-				OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+				const HFONT hfontOld = SelectFont(pdis->hDC, m_TitleFont.GetHandle());
+				const COLORREF crOldText = ::SetTextColor(pdis->hDC, RGB(255, 255, 255));
+				const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 				rc.left = pdis->rcItem.left + 2;
 				rc.top = pdis->rcItem.top;
 				rc.right = pdis->rcItem.right - 2;
@@ -334,7 +330,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		switch (LOWORD(wParam)) {
 		case IDC_OPTIONS_LIST:
 			if (HIWORD(wParam) == LBN_SELCHANGE) {
-				int NewPage = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_LIST);
+				const int NewPage = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_LIST);
 
 				if (NewPage >= 0)
 					SetPage(NewPage);
@@ -348,10 +344,9 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case IDOK:
 		case IDCANCEL:
 			{
-				HCURSOR hcurOld;
+				const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 				NMHDR nmh;
 
-				hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 				nmh.code = LOWORD(wParam) == IDOK ? PSN_APPLY : PSN_RESET;
 				m_fSettingError = false;
 				for (int i = 0; i < NUM_PAGES; i++) {
@@ -405,7 +400,7 @@ void COptionDialog::ApplyStyle()
 		lf.lfWeight = FW_BOLD;
 		m_TitleFont.Create(&lf);
 
-		HDC hdc = ::GetDC(m_hDlg);
+		const HDC hdc = ::GetDC(m_hDlg);
 		const int FontHeight = m_Font.GetHeight(hdc, false);
 		::ReleaseDC(m_hDlg, hdc);
 

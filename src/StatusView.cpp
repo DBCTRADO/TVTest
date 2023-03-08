@@ -189,8 +189,8 @@ void CStatusItem::DrawIcon(
 	if (hdc == nullptr)
 		return;
 
-	Style::Size IconSize = m_pStatus->GetIconSize();
-	COLORREF cr = ::GetTextColor(hdc);
+	const Style::Size IconSize = m_pStatus->GetIconSize();
+	const COLORREF cr = ::GetTextColor(hdc);
 	//if (!fEnabled)
 	//	cr = MixColor(cr, ::GetBkColor(hdc));
 	IconList.Draw(
@@ -346,7 +346,7 @@ CStatusItem *CStatusView::GetItem(int Index)
 
 const CStatusItem *CStatusView::GetItemByID(int ID) const
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return nullptr;
@@ -356,7 +356,7 @@ const CStatusItem *CStatusView::GetItemByID(int ID) const
 
 CStatusItem *CStatusView::GetItemByID(int ID)
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return nullptr;
@@ -410,7 +410,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			InitializeUI();
 
-			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			const CREATESTRUCT *pcs = reinterpret_cast<const CREATESTRUCT*>(lParam);
 			RECT rc;
 
 			::SetRectEmpty(&rc);
@@ -436,7 +436,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 			::BeginPaint(hwnd, &ps);
 			if (m_fBufferedPaint) {
-				HDC hdc = m_BufferedPaint.Begin(ps.hdc, &ps.rcPaint, true);
+				const HDC hdc = m_BufferedPaint.Begin(ps.hdc, &ps.rcPaint, true);
 
 				if (hdc != nullptr) {
 					Draw(hdc, &ps.rcPaint);
@@ -465,9 +465,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				if (m_fSingleMode)
 					break;
 
-				POINT pt;
-				pt.x = x;
-				pt.y = y;
+				const POINT pt = {x, y};
 				int i;
 				for (i = 0; i < (int)m_ItemList.size(); i++) {
 					if (!m_ItemList[i]->GetVisible())
@@ -494,7 +492,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_MOUSELEAVE:
 		{
-			bool fLeave = m_MouseLeaveTrack.OnMouseLeave();
+			const bool fLeave = m_MouseLeaveTrack.OnMouseLeave();
 			if (!m_fOnButtonDown) {
 				if (m_HotItem >= 0)
 					SetHotItem(-1);
@@ -530,7 +528,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			x -= rc.left;
 			y -= rc.top;
 
-			bool fCaptured = ::GetCapture() == hwnd;
+			const bool fCaptured = ::GetCapture() == hwnd;
 
 			m_fOnButtonDown = true;
 
@@ -689,9 +687,7 @@ void CStatusView::RedrawItem(int ID)
 
 bool CStatusView::GetItemRect(int ID, RECT *pRect) const
 {
-	int Index;
-
-	Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 	if (Index < 0)
 		return false;
 	return GetItemRectByIndex(Index, pRect);
@@ -711,7 +707,7 @@ bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 	if (m_Rows > 1)
 		rc.bottom = rc.top + m_ItemHeight;
 	const int HorzMargin = m_Style.ItemPadding.Horz();
-	int Left = rc.left;
+	const int Left = rc.left;
 	const CStatusItem *pItem;
 	for (int i = 0; i < Index; i++) {
 		pItem = m_ItemList[i].get();
@@ -810,7 +806,7 @@ bool CStatusView::AdjustSize()
 	if (m_hwnd == nullptr || !m_fAdjustSize)
 		return false;
 
-	int OldRows = m_Rows;
+	const int OldRows = m_Rows;
 	RECT rcWindow, rc;
 
 	CalcLayout();
@@ -821,7 +817,7 @@ bool CStatusView::AdjustSize()
 	ConvertBorderWidthsInPixels(&Border);
 	Theme::AddBorderRect(Border, &rc);
 	::AdjustWindowRectEx(&rc, GetWindowStyle(), FALSE, GetWindowExStyle());
-	int Height = rc.bottom - rc.top;
+	const int Height = rc.bottom - rc.top;
 	if (Height != rcWindow.bottom - rcWindow.top) {
 		::SetWindowPos(
 			m_hwnd, nullptr, 0, 0, rcWindow.right - rcWindow.left, Height,
@@ -982,7 +978,7 @@ int CStatusView::CalcHeight(int Width) const
 	RECT rcBorder;
 	GetBorderWidthsInPixels(m_Theme.Border, &rcBorder);
 
-	int Rows = CalcRows(ItemList, Width - (rcBorder.left + rcBorder.right));
+	const int Rows = CalcRows(ItemList, Width - (rcBorder.left + rcBorder.right));
 
 	return m_ItemHeight * Rows + rcBorder.top + rcBorder.bottom;
 }
@@ -1044,8 +1040,6 @@ bool CStatusView::DrawItemPreview(
 
 	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 	HFONT hfontOld;
-	int OldBkMode;
-	COLORREF crOldTextColor, crOldBkColor;
 	const Theme::Style &Style =
 		fHighlight ? m_Theme.HighlightItemStyle : m_Theme.ItemStyle;
 
@@ -1053,9 +1047,9 @@ bool CStatusView::DrawItemPreview(
 		hfontOld = SelectFont(hdc, hfont);
 	else
 		hfontOld = DrawUtil::SelectObject(hdc, m_DrawFont);
-	OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-	crOldTextColor = ::SetTextColor(hdc, Style.Fore.Fill.GetSolidColor());
-	crOldBkColor = ::SetBkColor(hdc, Style.Back.Fill.GetSolidColor());
+	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+	const COLORREF crOldTextColor = ::SetTextColor(hdc, Style.Fore.Fill.GetSolidColor());
+	const COLORREF crOldBkColor = ::SetBkColor(hdc, Style.Back.Fill.GetSolidColor());
 	ThemeDraw.Draw(Style.Back, ItemRect);
 	RECT rcDraw = ItemRect;
 	Style::Subtract(&rcDraw, m_Style.ItemPadding);
@@ -1093,7 +1087,7 @@ void CStatusView::SetHotItem(int Item)
 	if (Item < 0 || (size_t)Item >= m_ItemList.size())
 		Item = -1;
 	if (m_HotItem != Item) {
-		int OldHotItem = m_HotItem;
+		const int OldHotItem = m_HotItem;
 
 		m_HotItem = Item;
 		if (OldHotItem >= 0) {
@@ -1122,9 +1116,6 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 	const int HorzMargin = m_Style.ItemPadding.Horz();
 	RECT rcClient, rc;
 	HDC hdcDst;
-	HFONT hfontOld;
-	COLORREF crOldTextColor, crOldBkColor;
-	int OldBkMode;
 
 	GetClientRect(&rcClient);
 	rc = rcClient;
@@ -1149,10 +1140,10 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 		hdcDst = hdc;
 	}
 
-	hfontOld = DrawUtil::SelectObject(hdcDst, m_DrawFont);
-	OldBkMode = ::SetBkMode(hdcDst, TRANSPARENT);
-	crOldTextColor = ::GetTextColor(hdcDst);
-	crOldBkColor = ::GetBkColor(hdcDst);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdcDst, m_DrawFont);
+	const int OldBkMode = ::SetBkMode(hdcDst, TRANSPARENT);
+	const COLORREF crOldTextColor = ::GetTextColor(hdcDst);
+	const COLORREF crOldBkColor = ::GetBkColor(hdcDst);
 
 	if (m_Rows > 1)
 		rc.bottom = rc.top + ItemHeight;
@@ -1268,7 +1259,7 @@ void CStatusView::CalcLayout()
 		RowWidth += pItem->GetActualWidth() + m_Style.ItemPadding.Horz();
 		if (pItem->m_fBreak || i + 1 == ItemList.size()) {
 			if (pVariableItem != nullptr) {
-				int Add = MaxRowWidth - RowWidth;
+				const int Add = MaxRowWidth - RowWidth;
 				if (Add > 0)
 					pVariableItem->SetActualWidth(pVariableItem->GetActualWidth() + Add);
 			}
@@ -1356,7 +1347,7 @@ int CStatusView::CalcRows(const std::vector<CStatusItem*> &ItemList, int MaxRowW
 int CStatusView::CalcTextHeight(const DrawUtil::CFont &Font, int *pFontHeight) const
 {
 	TEXTMETRIC tm;
-	int TextHeight = Style::GetFontHeight(
+	const int TextHeight = Style::GetFontHeight(
 		m_hwnd, Font.GetHandle(), m_Style.TextExtraHeight, &tm);
 	if (pFontHeight != nullptr)
 		*pFontHeight = tm.tmHeight - tm.tmInternalLeading;

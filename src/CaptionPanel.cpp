@@ -305,7 +305,7 @@ void CCaptionPanel::OnCommand(int Command)
 	switch (Command) {
 	case CM_CAPTIONPANEL_COPY:
 		{
-			HWND hwndEdit = m_hwndEdit;
+			const HWND hwndEdit = m_hwndEdit;
 			DWORD Start, End;
 
 			::SendMessage(hwndEdit, WM_SETREDRAW, FALSE, 0);
@@ -334,7 +334,7 @@ void CCaptionPanel::OnCommand(int Command)
 
 	case CM_CAPTIONPANEL_SAVE:
 		{
-			int Length = ::GetWindowTextLengthW(m_hwndEdit);
+			const int Length = ::GetWindowTextLengthW(m_hwndEdit);
 			if (Length > 0) {
 				std::wstring Text(Length + 1, L'\0');
 				DWORD Start, End;
@@ -361,7 +361,7 @@ void CCaptionPanel::OnCommand(int Command)
 					m_SaveCharEncoding = (CharEncoding)(ofn.nFilterIndex - 1);
 
 					bool fOK = false;
-					HANDLE hFile = ::CreateFile(
+					const HANDLE hFile = ::CreateFile(
 						szFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 					if (hFile != INVALID_HANDLE_VALUE) {
@@ -385,7 +385,7 @@ void CCaptionPanel::OnCommand(int Command)
 						} else {
 							const UINT CodePage =
 								m_SaveCharEncoding == CHARENCODING_UTF8 ? CP_UTF8 : 932;
-							int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
+							const int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
 							if (EncodedLen > 0) {
 								std::string EncodedText(EncodedLen, '\0');
 								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, EncodedText.data(), EncodedLen, nullptr, nullptr);
@@ -490,7 +490,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_CTLCOLORSTATIC:
 		{
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 
 			::SetTextColor(hdc, m_TextColor);
 			::SetBkColor(hdc, m_BackColor);
@@ -612,7 +612,7 @@ void CCaptionPanel::OnCaption(
 	if (Language >= m_LanguageList.size() || m_hwnd == nullptr || !m_fEnable)
 		return;
 
-	int Length = ::lstrlen(pText);
+	const int Length = ::lstrlen(pText);
 
 	if (Length > 0) {
 		LanguageInfo &Lang = m_LanguageList[Language];
@@ -638,10 +638,10 @@ void CCaptionPanel::OnCaption(
 		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
 			for (int i = (int)pFormatList->size() - 1; i >= 0; i--) {
 				if ((*pFormatList)[i].Size == LibISDB::ARIBStringDecoder::CharSize::Small) {
-					size_t Pos = (*pFormatList)[i].Pos;
+					const size_t Pos = (*pFormatList)[i].Pos;
 					if (Pos < Buff.length()) {
 						if (i + 1 < (int)pFormatList->size()) {
-							size_t NextPos = std::min(Buff.length(), (*pFormatList)[i + 1].Pos);
+							const size_t NextPos = std::min(Buff.length(), (*pFormatList)[i + 1].Pos);
 							TRACE(TEXT("Caption exclude : {}\n"), StringView(&Buff[Pos], NextPos - Pos));
 							Buff.erase(Pos, NextPos - Pos);
 						} else {
@@ -911,7 +911,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 
 bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -951,13 +951,13 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 
 	RGBQUAD Colormap[256];
 	for (int i = 0; i < 1 << BitCount; i++) {
-		BYTE v = (BYTE)(i * 255 / ((1 << BitCount) - 1));
+		const BYTE v = (BYTE)(i * 255 / ((1 << BitCount) - 1));
 		Colormap[i].rgbBlue = v;
 		Colormap[i].rgbGreen = v;
 		Colormap[i].rgbRed = v;
 		Colormap[i].rgbReserved = 0;
 	}
-	DWORD PalSize = (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
+	const DWORD PalSize = (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
 	if (!::WriteFile(hFile, Colormap, PalSize, &Write, nullptr) || Write != PalSize) {
 		::CloseHandle(hFile);
 		return false;
@@ -985,14 +985,15 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 			q -= DIBRowBytes;
 		}
 	} else {
+		const unsigned int Max = pBitmap->Depth + 1;
+		unsigned int Mask;
 		int Shift;
-		unsigned int Mask, Pixel, Max = pBitmap->Depth + 1;
 
 		Shift = 16 - pBitmap->BitsPerPixel;
 		Mask = (1 << pBitmap->BitsPerPixel) - 1;
 		for (y = 0; y < pBitmap->Height; y++) {
 			for (x = 0; x < pBitmap->Width; x++) {
-				Pixel = *p;
+				unsigned int Pixel = *p;
 				if (Shift < 8)
 					Pixel = (Pixel << (8 - Shift)) | (*p >> Shift);
 				else
@@ -1024,7 +1025,7 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 
 bool CCaptionDRCSMap::SaveRaw(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)

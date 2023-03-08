@@ -695,12 +695,10 @@ int CAccelerator::TranslateAppCommand(WPARAM wParam, LPARAM lParam) const
 
 void CAccelerator::SetMenuAccel(HMENU hmenu)
 {
-	int Count, i;
-	unsigned int State;
+	const int Count = ::GetMenuItemCount(hmenu);
 
-	Count = ::GetMenuItemCount(hmenu);
-	for (i = 0; i < Count; i++) {
-		State = ::GetMenuState(hmenu, i, MF_BYPOSITION);
+	for (int i = 0; i < Count; i++) {
+		const unsigned int State = ::GetMenuState(hmenu, i, MF_BYPOSITION);
 		if ((State & MF_POPUP) != 0) {
 			SetMenuAccel(::GetSubMenu(hmenu, i));
 		} else if ((State & MF_SEPARATOR) == 0) {
@@ -715,7 +713,7 @@ int CAccelerator::CheckAccelKey(BYTE Mod, WORD Key)
 	const int Count = m_ListView.GetItemCount();
 
 	for (int i = 0; i < Count; i++) {
-		LPARAM Param = m_ListView.GetItemParam(i);
+		const LPARAM Param = m_ListView.GetItemParam(i);
 		if (GET_ACCEL_KEY(Param) == Key && GET_ACCEL_MOD(Param) == Mod)
 			return i;
 	}
@@ -729,7 +727,7 @@ int CAccelerator::CheckAppCommand(int AppCommand)
 	const int Count = m_ListView.GetItemCount();
 
 	for (int i = 0; i < Count; i++) {
-		LPARAM Param = m_ListView.GetItemParam(i);
+		const LPARAM Param = m_ListView.GetItemParam(i);
 		if (GET_ACCEL_APPCOMMAND(Param) == AppCommand)
 			return i;
 	}
@@ -760,12 +758,12 @@ void CAccelerator::SetAccelItem(int Index, BYTE Mod, WORD Key, bool fGlobal, BYT
 
 void CAccelerator::SetDlgItemStatus(HWND hDlg)
 {
-	int Sel = m_ListView.GetSelectedItem();
+	const int Sel = m_ListView.GetSelectedItem();
 
 	if (Sel >= 0) {
-		LPARAM Param = m_ListView.GetItemParam(Sel);
-		WORD Key = GET_ACCEL_KEY(Param);
-		BYTE Mod = GET_ACCEL_MOD(Param);
+		const LPARAM Param = m_ListView.GetItemParam(Sel);
+		const WORD Key = GET_ACCEL_KEY(Param);
+		const BYTE Mod = GET_ACCEL_MOD(Param);
 		for (int i = 0; i < lengthof(AccelKeyList); i++) {
 			if (AccelKeyList[i].KeyCode == (unsigned)Key) {
 				::SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_SETCURSEL, i + 1, 0);
@@ -832,7 +830,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					Param = MAKE_ACCEL_PARAM(pKey->KeyCode, pKey->Modifiers, pKey->fGlobal, AppCommand);
 				else
 					Param = MAKE_ACCEL_PARAM(0, 0, false, AppCommand);
-				int Index = m_ListView.InsertItem(i, szText, Param);
+				const int Index = m_ListView.InsertItem(i, szText, Param);
 				if (pKey != nullptr) {
 					FormatAccelText(szText, lengthof(szText), pKey->KeyCode, pKey->Modifiers, pKey->fGlobal);
 					m_ListView.SetItemText(Index, COLUMN_KEY, szText);
@@ -880,12 +878,12 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_ACCELERATOR_ALT:
 		case IDC_ACCELERATOR_GLOBAL:
 			{
-				int Sel = m_ListView.GetSelectedItem();
+				const int Sel = m_ListView.GetSelectedItem();
 				if (Sel < 0)
 					return TRUE;
 
 				LPARAM Param = m_ListView.GetItemParam(Sel);
-				int Key = (int)SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_GETCURSEL, 0, 0);
+				const int Key = (int)SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_GETCURSEL, 0, 0);
 				if (Key > 0) {
 					BYTE Mod;
 					int i;
@@ -934,11 +932,11 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ACCELERATOR_APPCOMMAND:
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
-				int Sel = m_ListView.GetSelectedItem();
+				const int Sel = m_ListView.GetSelectedItem();
 				if (Sel < 0)
 					return TRUE;
 
-				int AppCommand = (int)DlgComboBox_GetCurSel(hDlg, IDC_ACCELERATOR_APPCOMMAND);
+				const int AppCommand = (int)DlgComboBox_GetCurSel(hDlg, IDC_ACCELERATOR_APPCOMMAND);
 				if (AppCommand > 0) {
 					int i;
 
@@ -953,7 +951,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
-						LPARAM Param = m_ListView.GetItemParam(i);
+						const LPARAM Param = m_ListView.GetItemParam(i);
 						SetAccelItem(i, GET_ACCEL_MOD(Param), GET_ACCEL_KEY(Param), GET_ACCEL_GLOBAL(Param), 0);
 					}
 				}
@@ -1000,7 +998,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							break;
 						}
 					}
-					LPARAM Param = m_ListView.GetItemParam(i);
+					const LPARAM Param = m_ListView.GetItemParam(i);
 					if (GET_ACCEL_KEY(Param) != Key
 							|| GET_ACCEL_MOD(Param) != Mod
 							|| GET_ACCEL_APPCOMMAND(Param) != AppCommand)
@@ -1023,7 +1021,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_APPCOMMAND:
 		{
-			int Sel = m_ListView.GetSelectedItem();
+			const int Sel = m_ListView.GetSelectedItem();
 
 			if (Sel >= 0) {
 				const WORD Command = GET_APPCOMMAND_LPARAM(lParam);
@@ -1046,7 +1044,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_APP:
 		{
-			int Sel = m_ListView.GetSelectedItem();
+			const int Sel = m_ListView.GetSelectedItem();
 
 			if (Sel >= 0) {
 				int Index = m_RawInput.KeyDataToIndex((int)wParam);
@@ -1070,11 +1068,11 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case NM_CLICK:
 			{
-				LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
-				HWND hwndList = pnmia->hdr.hwndFrom;
-				HWND hwndAppCommand = ::GetDlgItem(hDlg, IDC_ACCELERATOR_APPCOMMAND);
+				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
+				const HWND hwndList = pnmia->hdr.hwndFrom;
+				const HWND hwndAppCommand = ::GetDlgItem(hDlg, IDC_ACCELERATOR_APPCOMMAND);
 				LVHITTESTINFO lvhi;
-				DWORD Pos = ::GetMessagePos();
+				const DWORD Pos = ::GetMessagePos();
 
 				lvhi.pt.x = GET_X_LPARAM(Pos);
 				lvhi.pt.y = GET_Y_LPARAM(Pos);
@@ -1101,10 +1099,10 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case LVN_KEYDOWN:
 			{
-				LPNMLVKEYDOWN pnmlvk = reinterpret_cast<LPNMLVKEYDOWN>(lParam);
+				const NMLVKEYDOWN *pnmlvk = reinterpret_cast<const NMLVKEYDOWN*>(lParam);
 
 				if (pnmlvk->wVKey == VK_BACK || pnmlvk->wVKey == VK_DELETE) {
-					int Sel = m_ListView.GetSelectedItem();
+					const int Sel = m_ListView.GetSelectedItem();
 
 					if (Sel >= 0)
 						SetAccelItem(Sel, 0, 0, false, 0);
@@ -1121,7 +1119,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				CCommandManager::CCommandLister CommandLister(*m_pCommandManager);
 				int Command;
 				for (int i = 0; (Command = CommandLister.Next()) != 0; i++) {
-					LPARAM Param = m_ListView.GetItemParam(i);
+					const LPARAM Param = m_ListView.GetItemParam(i);
 					if (GET_ACCEL_KEY(Param) != 0) {
 						KeyInfo Info;
 
@@ -1132,7 +1130,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						m_KeyList.push_back(Info);
 					}
 
-					int AppCommand = GET_ACCEL_APPCOMMAND(Param);
+					const int AppCommand = GET_ACCEL_APPCOMMAND(Param);
 					if (AppCommand != 0) {
 						AppCommandInfo Info;
 
@@ -1143,7 +1141,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 				}
 
-				HACCEL hAccel = CreateAccel();
+				const HACCEL hAccel = CreateAccel();
 				if (m_hAccel != nullptr)
 					::DestroyAcceleratorTable(m_hAccel);
 				m_hAccel = hAccel;
@@ -1178,7 +1176,7 @@ void CAccelerator::RealizeStyle()
 // CRawInput::CEventHandler
 void CAccelerator::OnInput(int Type)
 {
-	int Data = m_RawInput.GetKeyData(Type);
+	const int Data = m_RawInput.GetKeyData(Type);
 
 	if (m_hDlg == nullptr || !::IsWindowVisible(m_hDlg)) {
 		for (size_t i = 0; i < m_AppCommandList.size(); i++) {

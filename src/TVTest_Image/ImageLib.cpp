@@ -63,7 +63,7 @@ HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize)
 
 HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName)
 {
-	HANDLE hFile =::CreateFile(
+	const HANDLE hFile =::CreateFile(
 		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, 0, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)

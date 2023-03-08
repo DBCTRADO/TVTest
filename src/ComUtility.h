@@ -46,7 +46,7 @@ namespace TVTest
 		}
 
 		ULONG ReleaseImpl() {
-			LONG Count = ::InterlockedDecrement(&m_RefCount);
+			const LONG Count = ::InterlockedDecrement(&m_RefCount);
 			if (Count == 0)
 				delete this;
 			return Count;

@@ -427,7 +427,7 @@ HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID, WORD ServiceID, BY
 const Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID, WORD LogoID, BYTE LogoType)
 {
 	BlockLock Lock(m_Lock);
-	ULONGLONG Key = GetMapKey(NetworkID, LogoID, LogoType);
+	const ULONGLONG Key = GetMapKey(NetworkID, LogoID, LogoType);
 	LogoMap::iterator itr = m_LogoMap.find(Key);
 	if (itr == m_LogoMap.end())
 		return nullptr;
@@ -450,15 +450,15 @@ HICON CLogoManager::CreateLogoIcon(WORD NetworkID, WORD ServiceID, int Width, in
 	if (Width < 1 || Height < 1)
 		return nullptr;
 
-	HBITMAP hbm = GetAssociatedLogoBitmap(
+	const HBITMAP hbm = GetAssociatedLogoBitmap(
 		NetworkID, ServiceID,
 		(Width <= 36 && Height <= 24) ? LOGOTYPE_SMALL : LOGOTYPE_BIG);
 	if (hbm == nullptr)
 		return nullptr;
 
 	// 本来の比率より縦長にしている(見栄えのため)
-	int ImageWidth = Height * 16 / 10;
-	int ImageHeight = Width * 10 / 16;
+	const int ImageWidth = Height * 16 / 10;
+	const int ImageHeight = Width * 10 / 16;
 	return CreateIconFromBitmap(
 		hbm, Width, Height,
 		std::min(Width, ImageWidth),
@@ -473,12 +473,12 @@ bool CLogoManager::SaveLogoIcon(
 	if (Width < 1 || Height < 1 || IsStringEmpty(pszFileName))
 		return false;
 
-	HBITMAP hbm = GetAssociatedLogoBitmap(NetworkID, ServiceID, LogoType);
+	const HBITMAP hbm = GetAssociatedLogoBitmap(NetworkID, ServiceID, LogoType);
 	if (hbm == nullptr)
 		return false;
 
-	int ImageWidth = Height * 16 / 10;
-	int ImageHeight = Width * 10 / 16;
+	const int ImageWidth = Height * 16 / 10;
+	const int ImageHeight = Width * 10 / 16;
 	return SaveIconFromBitmap(
 		pszFileName, hbm, Width, Height,
 		std::min(Width, ImageWidth),
@@ -534,7 +534,7 @@ bool CLogoManager::GetLogoInfo(WORD NetworkID, WORD ServiceID, BYTE LogoType, Lo
 	pInfo->LogoType = pLogoData->GetLogoType();
 	LibISDB::DateTime Time;
 	LibISDB::EPGTimeToUTCTime(pLogoData->GetTime(), &Time);
-	SYSTEMTIME st = Time.ToSYSTEMTIME();
+	const SYSTEMTIME st = Time.ToSYSTEMTIME();
 	::SystemTimeToFileTime(&st, &pInfo->UpdatedTime);
 
 	return true;
@@ -555,7 +555,7 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 	CLogoData *pLogoData;
 	if (itr != m_LogoMap.end()) {
 		// バージョンが新しい場合のみ更新
-		int VerCmp = CompareLogoVersion(itr->second->GetLogoVersion(), Data.LogoVersion);
+		const int VerCmp = CompareLogoVersion(itr->second->GetLogoVersion(), Data.LogoVersion);
 		if (VerCmp < 0
 				|| (VerCmp == 0 && itr->second->GetTime() < Data.Time)) {
 			// BS/CSはバージョンが共通のため、データを比較して更新を確認する
@@ -656,7 +656,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 		return nullptr;
 	::PathCombine(szFileName, szDirectory, szMask);
 	WIN32_FIND_DATA fd;
-	HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
+	const HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &fd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind == INVALID_HANDLE_VALUE)
 		return nullptr;
 	int NewerVersion = -1;
@@ -677,7 +677,7 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 
 	// ロゴをファイルから読み込む
 	::PathAppend(szDirectory, szFileName);
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		szDirectory, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, 0, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -762,7 +762,7 @@ CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src
 HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 {
 	if (m_hbm == nullptr) {
-		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
+		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
 		BITMAPINFO *pbmi = (BITMAPINFO*)::GlobalLock(hDIB);
@@ -783,11 +783,11 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 const Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 {
 	if (!m_Image.IsCreated()) {
-		HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
+		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
 		BITMAPINFO *pbmi = (BITMAPINFO*)::GlobalLock(hDIB);
-		bool fResult = m_Image.CreateFromDIB(pbmi, (BYTE*)pbmi + CalcDIBInfoSize(&pbmi->bmiHeader));
+		const bool fResult = m_Image.CreateFromDIB(pbmi, (BYTE*)pbmi + CalcDIBInfoSize(&pbmi->bmiHeader));
 		::GlobalUnlock(hDIB);
 		::GlobalFree(hDIB);
 		if (!fResult)
@@ -799,7 +799,7 @@ const Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 
 bool CLogoManager::CLogoData::SaveToFile(LPCTSTR pszFileName) const
 {
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -816,14 +816,14 @@ bool CLogoManager::CLogoData::SaveToFile(LPCTSTR pszFileName) const
 
 bool CLogoManager::CLogoData::SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFileName) const
 {
-	HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
+	const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 	if (hDIB == nullptr)
 		return false;
-	HANDLE hFile = ::CreateFile(pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	const HANDLE hFile = ::CreateFile(pszFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
-	BITMAPINFOHEADER *pbmih = static_cast<BITMAPINFOHEADER*>(::GlobalLock(hDIB));
-	DWORD InfoSize = (DWORD)CalcDIBInfoSize(pbmih), BitsSize = (DWORD)CalcDIBBitsSize(pbmih);
+	const BITMAPINFOHEADER *pbmih = static_cast<BITMAPINFOHEADER*>(::GlobalLock(hDIB));
+	const DWORD InfoSize = (DWORD)CalcDIBInfoSize(pbmih), BitsSize = (DWORD)CalcDIBBitsSize(pbmih);
 	DWORD Write;
 	BITMAPFILEHEADER bmfh;
 	bmfh.bfType = 0x4D42;
@@ -831,7 +831,7 @@ bool CLogoManager::CLogoData::SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFile
 	bmfh.bfReserved1 = 0;
 	bmfh.bfReserved2 = 0;
 	bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + InfoSize;
-	bool fResult =
+	const bool fResult =
 		::WriteFile(hFile, &bmfh, sizeof(bmfh), &Write, nullptr) && Write == sizeof(bmfh)
 		&& ::WriteFile(hFile, pbmih, InfoSize + BitsSize, &Write, nullptr) && Write == InfoSize + BitsSize;
 	::CloseHandle(hFile);

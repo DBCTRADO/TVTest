@@ -265,7 +265,7 @@ void CSplitter::OnLButtonUp(int x, int y)
 
 void CSplitter::OnMouseMove(int x, int y)
 {
-	POINT pt = {x, y};
+	const POINT pt = {x, y};
 	RECT rc;
 	LPCTSTR pszCursor;
 
@@ -340,7 +340,7 @@ CContainer *CSplitter::GetPane(int Index) const
 
 CContainer *CSplitter::GetPaneByID(int ID) const
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return nullptr;
@@ -350,9 +350,7 @@ CContainer *CSplitter::GetPaneByID(int ID) const
 
 void CSplitter::SwapPane()
 {
-	PaneInfo Temp;
-
-	Temp = m_PaneList[0];
+	const PaneInfo Temp = m_PaneList[0];
 	m_PaneList[0] = m_PaneList[1];
 	m_PaneList[1] = Temp;
 	if (!(m_Style & StyleFlag::Vert))
@@ -367,7 +365,7 @@ void CSplitter::SwapPane()
 
 bool CSplitter::SetPaneSize(int ID, int Size)
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return false;
@@ -400,7 +398,7 @@ bool CSplitter::SetPaneSize(int ID, int Size)
 
 int CSplitter::GetPaneSize(int ID)
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return 0;
@@ -667,7 +665,7 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_LBUTTONDOWN:
 		if (m_pContainer != nullptr) {
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			CContainer *pContainer = GetContainerFromPoint(x, y);
 
 			if (pContainer != nullptr)
@@ -678,7 +676,7 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_LBUTTONUP:
 		if (m_pFocusContainer != nullptr) {
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			m_pFocusContainer->OnLButtonUp(x, y);
 			m_pFocusContainer = nullptr;
@@ -687,7 +685,7 @@ LRESULT CLayoutBase::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_MOUSEMOVE:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			if (m_pFocusContainer != nullptr) {
 				m_pFocusContainer->OnMouseMove(x, y);
@@ -731,7 +729,7 @@ bool CLayoutBase::SetTopContainer(CContainer *pContainer)
 
 void CLayoutBase::SetBasePointer(CContainer *pContainer, CLayoutBase *pBase)
 {
-	int NumChildren = pContainer->NumChildContainers();
+	const int NumChildren = pContainer->NumChildContainers();
 
 	pContainer->m_pBase = pBase;
 	for (int i = 0; i < NumChildren; i++) {
@@ -755,7 +753,7 @@ CContainer *CLayoutBase::GetContainerByID(int ID) const
 
 CContainer *CLayoutBase::GetChildContainerByID(const CContainer *pContainer, int ID) const
 {
-	int NumChildren = pContainer->NumChildContainers();
+	const int NumChildren = pContainer->NumChildContainers();
 
 	for (int i = 0; i < NumChildren; i++) {
 		CContainer *pChild = pContainer->GetChildContainer(i);
@@ -785,15 +783,15 @@ CContainer *CLayoutBase::GetChildContainerFromPoint(const CContainer *pContainer
 	if (pContainer == nullptr || !pContainer->GetVisible())
 		return nullptr;
 
-	POINT pt = {x, y};
+	const POINT pt = {x, y};
 	RECT rc;
 
 	rc = pContainer->GetPosition();
 	if (::PtInRect(&rc, pt)) {
-		int NumChildren = pContainer->NumChildContainers();
+		const int NumChildren = pContainer->NumChildContainers();
 
 		for (int i = 0; i < NumChildren; i++) {
-			CContainer *pChild = pContainer->GetChildContainer(i);
+			const CContainer *pChild = pContainer->GetChildContainer(i);
 
 			if (pChild != nullptr) {
 				rc = pChild->GetPosition();

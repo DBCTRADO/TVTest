@@ -202,10 +202,10 @@ bool CNotificationBar::SetFont(const Style::Font &Font)
 
 void CNotificationBar::CalcBarHeight()
 {
-	int FontHeight = Style::GetFontHeight(
+	const int FontHeight = Style::GetFontHeight(
 		m_hwnd, m_Font.GetHandle(), m_Style.TextExtraHeight);
-	int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
-	int TextHeight = FontHeight + m_Style.TextMargin.Vert();
+	const int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
+	const int TextHeight = FontHeight + m_Style.TextMargin.Vert();
 
 	m_BarHeight = std::max(IconHeight, TextHeight) + m_Style.Padding.Vert();
 }
@@ -228,7 +228,7 @@ void CNotificationBar::GetAnimatedBarPosition(RECT *pRect, int Frame, int NumFra
 void CNotificationBar::SetHideTimer()
 {
 	if (!m_MessageQueue.empty()) {
-		DWORD Timeout = m_MessageQueue.front().Timeout;
+		const DWORD Timeout = m_MessageQueue.front().Timeout;
 		if (Timeout != 0)
 			BeginTimer(TIMER_ID_HIDE, Timeout);
 		else
@@ -355,7 +355,7 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 	case WM_MOUSEMOVE:
 		{
 			POINT pt;
-			HWND hwndParent = ::GetParent(hwnd);
+			const HWND hwndParent = ::GetParent(hwnd);
 
 			pt.x = GET_X_LPARAM(lParam);
 			pt.y = GET_Y_LPARAM(lParam);

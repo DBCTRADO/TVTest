@@ -157,7 +157,7 @@ CPanelForm::CPage *CPanelForm::GetPageByIndex(int Index)
 
 CPanelForm::CPage *CPanelForm::GetPageByID(int ID)
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return nullptr;
@@ -226,7 +226,7 @@ int CPanelForm::GetCurPageID() const
 
 bool CPanelForm::SetCurPageByID(int ID)
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return false;
@@ -236,7 +236,7 @@ bool CPanelForm::SetCurPageByID(int ID)
 
 bool CPanelForm::SetTabVisible(int ID, bool fVisible)
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return false;
@@ -249,7 +249,7 @@ bool CPanelForm::SetTabVisible(int ID, bool fVisible)
 		if (!fVisible && m_CurTab == Index) {
 			int CurTab = -1;
 			if (m_PrevActivePageID >= 0) {
-				int i = IDToIndex(m_PrevActivePageID);
+				const int i = IDToIndex(m_PrevActivePageID);
 				if (i >= 0 && m_WindowList[i]->m_fVisible)
 					CurTab = i;
 			}
@@ -277,7 +277,7 @@ bool CPanelForm::SetTabVisible(int ID, bool fVisible)
 
 bool CPanelForm::GetTabVisible(int ID) const
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return false;
@@ -338,7 +338,7 @@ bool CPanelForm::GetTabTitle(int ID, String *pTitle) const
 	if (pTitle == nullptr)
 		return false;
 
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 	if (Index < 0) {
 		pTitle->clear();
 		return false;
@@ -492,7 +492,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_LBUTTONDOWN:
 		{
-			int Index = HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			const int Index = HitTest(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
 			if (Index >= 0) {
 				if (Index != m_CurTab)
@@ -507,11 +507,9 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_RBUTTONUP:
 		if (m_pEventHandler != nullptr) {
-			POINT pt;
+			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			RECT rc;
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			GetClientRect(&rc);
 			if (::PtInRect(&rc, pt)) {
 				if (pt.y < m_TabHeight)
@@ -529,7 +527,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			::GetCursorPos(&pt);
 			::ScreenToClient(hwnd, &pt);
-			int Index = HitTest(pt.x, pt.y);
+			const int Index = HitTest(pt.x, pt.y);
 			if (Index >= 0) {
 				::SetCursor(GetActionCursor());
 				return TRUE;
@@ -574,16 +572,12 @@ void CPanelForm::RealizeStyle()
 
 void CPanelForm::CalcTabSize()
 {
-	HDC hdc;
-	HFONT hfontOld;
-	int IconHeight, LabelHeight;
-
-	hdc = ::GetDC(m_hwnd);
-	IconHeight = m_Style.TabIconSize.Height + m_Style.TabIconMargin.Vert();
-	LabelHeight = m_Font.GetHeight(hdc) + m_Style.TabLabelMargin.Vert();
+	const HDC hdc = ::GetDC(m_hwnd);
+	const int IconHeight = m_Style.TabIconSize.Height + m_Style.TabIconMargin.Vert();
+	const int LabelHeight = m_Font.GetHeight(hdc) + m_Style.TabLabelMargin.Vert();
 	m_TabLineWidth = GetHairlineWidth();
 	m_TabHeight = std::max(IconHeight, LabelHeight) + m_Style.TabPadding.Vert();
-	hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	m_TabWidth = m_Style.TabPadding.Horz();
 
@@ -623,7 +617,7 @@ int CPanelForm::GetRealTabWidth() const
 		RECT rc;
 		GetClientRect(&rc);
 		if (NumVisibleTabs * m_TabWidth > rc.right) {
-			int Width = rc.right / NumVisibleTabs;
+			const int Width = rc.right / NumVisibleTabs;
 			int MinWidth = m_Style.TabPadding.Horz();
 			if (m_TabStyle != TabStyle::TextOnly)
 				MinWidth += m_Style.TabIconSize.Width;
@@ -642,13 +636,11 @@ int CPanelForm::HitTest(int x, int y) const
 		return -1;
 
 	const int TabWidth = GetRealTabWidth();
-	POINT pt;
+	const POINT pt = {x, y};
 	RECT rc;
 
-	pt.x = x;
-	pt.y = y;
 	::SetRect(&rc, 0, 0, TabWidth, m_TabHeight);
-	for (int Index : m_TabOrder) {
+	for (const int Index : m_TabOrder) {
 		if (m_WindowList[Index]->m_fVisible) {
 			if (::PtInRect(&rc, pt))
 				return Index;
@@ -664,22 +656,17 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 	if (PaintRect.top < m_TabHeight) {
 		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		const int TabWidth = GetRealTabWidth();
-		COLORREF crOldTextColor;
-		int OldBkMode;
-		HFONT hfontOld;
+		const COLORREF crOldTextColor = ::GetTextColor(hdc);
+		const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+		const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+		const HBRUSH hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
 		RECT rc;
-		HBRUSH hbrOld;
-
-		crOldTextColor = ::GetTextColor(hdc);
-		OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-		hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-		hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
 		rc.left = 0;
 		rc.top = 0;
 		rc.right = TabWidth;
 		rc.bottom = m_TabHeight;
 
-		for (int Index : m_TabOrder) {
+		for (const int Index : m_TabOrder) {
 			const CWindowInfo *pWindow = m_WindowList[Index].get();
 
 			if (!pWindow->m_fVisible)
@@ -710,7 +697,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 				RECT rcIcon = rcContent;
 				Style::Subtract(&rcIcon, m_Style.TabIconMargin);
 				int x = rcIcon.left;
-				int y = rcIcon.top + ((rcIcon.bottom - rcIcon.top) - m_Style.TabIconSize.Height) / 2;
+				const int y = rcIcon.top + ((rcIcon.bottom - rcIcon.top) - m_Style.TabIconSize.Height) / 2;
 				if (m_TabStyle == TabStyle::IconOnly)
 					x += ((rcIcon.right - rcIcon.left) - m_Style.TabIconSize.Width) / 2;
 				bool fIcon;
@@ -764,12 +751,12 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 	}
 
 	if (PaintRect.bottom > m_TabHeight) {
-		RECT rc;
-
-		rc.left = PaintRect.left;
-		rc.top = std::max(PaintRect.top, (long)m_TabHeight);
-		rc.right = PaintRect.right;
-		rc.bottom = PaintRect.bottom;
+		const RECT rc = {
+			PaintRect.left,
+			std::max(PaintRect.top, (long)m_TabHeight),
+			PaintRect.right,
+			PaintRect.bottom
+		};
 		DrawUtil::Fill(hdc, &rc, m_Theme.BackColor);
 	}
 }
@@ -785,7 +772,7 @@ void CPanelForm::UpdateTooltip()
 		return;
 	}
 
-	int ToolCount = m_Tooltip.NumTools();
+	const int ToolCount = m_Tooltip.NumTools();
 	int TabCount = 0;
 	RECT rc;
 
@@ -793,7 +780,7 @@ void CPanelForm::UpdateTooltip()
 	rc.top = 0;
 	rc.bottom = m_TabHeight;
 
-	for (int Index : m_TabOrder) {
+	for (const int Index : m_TabOrder) {
 		const CWindowInfo *pInfo = m_WindowList[Index].get();
 
 		if (pInfo->m_fVisible) {

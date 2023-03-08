@@ -256,13 +256,13 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 					break;
 
 				LPTSTR p = szText;
-				WORD NetworkID = (WORD)std::_tcstoul(p, &p, 0);
+				const WORD NetworkID = (WORD)std::_tcstoul(p, &p, 0);
 				if (!CSVNextValue(&p))
 					continue;
-				WORD TransportStreamID = (WORD)std::_tcstoul(p, &p, 0);
+				const WORD TransportStreamID = (WORD)std::_tcstoul(p, &p, 0);
 				if (!CSVNextValue(&p))
 					continue;
-				WORD ServiceID = (WORD)std::_tcstoul(p, &p, 0);
+				const WORD ServiceID = (WORD)std::_tcstoul(p, &p, 0);
 				if (ServiceID == 0)
 					continue;
 
@@ -371,7 +371,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("InfoPopupWidth"), Width);
 		Settings.Write(TEXT("InfoPopupHeight"), Height);
 
-		int NumSearchKeywords = pProgramSearch->GetOptions().GetKeywordHistoryCount();
+		const int NumSearchKeywords = pProgramSearch->GetOptions().GetKeywordHistoryCount();
 		Settings.Write(TEXT("NumSearchKeywords"), NumSearchKeywords);
 		for (int i = 0; i < NumSearchKeywords; i++) {
 			TCHAR szName[32];
@@ -539,8 +539,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			m_Tooltip.SetFont(GetWindowFont(hDlg));
 
 			{
-				HDC hdc = ::GetDC(hDlg);
-				HDC hdcMem = ::CreateCompatibleDC(hdc);
+				const HDC hdc = ::GetDC(hDlg);
+				const HDC hdcMem = ::CreateCompatibleDC(hdc);
 				RECT rc;
 				::GetClientRect(::GetDlgItem(hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST), &rc);
 				int IconSize;
@@ -555,8 +555,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					DlgCheckBox_Check(
 						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
 						(m_VisibleEventIcons & CEpgIcons::IconFlag(i)) != 0);
-					HBITMAP hbm = ::CreateCompatibleBitmap(hdc, IconSize, IconSize);
-					HGDIOBJ hOldBmp = ::SelectObject(hdcMem, hbm);
+					const HBITMAP hbm = ::CreateCompatibleBitmap(hdc, IconSize, IconSize);
+					const HGDIOBJ hOldBmp = ::SelectObject(hdcMem, hbm);
 					EpgIcons.DrawIcon(hdcMem, 0, 0, IconSize, IconSize, i);
 					::SelectObject(hdcMem, hOldBmp);
 					::SendDlgItemMessage(
@@ -594,7 +594,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 							szCommand, TEXT("{}:{}"),
 							::PathFindFileName(pPlugin->GetFileName()),
 							CommandInfo.pszText);
-						LRESULT Index = DlgComboBox_AddString(
+						const LRESULT Index = DlgComboBox_AddString(
 							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
 							CommandInfo.pszName);
 						DlgComboBox_SetItemData(
@@ -610,8 +610,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				DlgComboBox_SetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, Sel);
 
 			CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
-			HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-			HIMAGELIST himl = ::ImageList_Create(
+			const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+			const HIMAGELIST himl = ::ImageList_Create(
 				GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI),
 				GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI),
 				ILC_COLOR32 | ILC_MASK, 1, 4);
@@ -778,7 +778,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 				pTool = new CProgramGuideTool;
 				if (pTool->ShowDialog(hDlg)) {
-					HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+					const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 					LV_ITEM lvi;
 
 					lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
@@ -807,7 +807,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case IDC_PROGRAMGUIDETOOL_EDIT:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 				CProgramGuideTool *pTool;
 
@@ -835,7 +835,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case IDC_PROGRAMGUIDETOOL_UP:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 				CProgramGuideTool *pTool;
 
@@ -863,7 +863,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case IDC_PROGRAMGUIDETOOL_DOWN:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 				CProgramGuideTool *pTool;
 
@@ -892,7 +892,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case IDC_PROGRAMGUIDETOOL_REMOVE:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LV_ITEM lvi;
 
 				lvi.mask = LVIF_PARAM;
@@ -910,7 +910,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case IDC_PROGRAMGUIDETOOL_REMOVEALL:
 			{
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 
 				DeleteAllTools();
 				ListView_DeleteAllItems(hwndList);
@@ -928,8 +928,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case NM_RCLICK:
 			{
-				LPNMITEMACTIVATE pnmia = (LPNMITEMACTIVATE)lParam;
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const NMITEMACTIVATE *pnmia = (const NMITEMACTIVATE*)lParam;
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 
 				if (pnmia->hdr.hwndFrom == hwndList
 						&& ListView_GetNextItem(hwndList, -1, LVNI_SELECTED) >= 0) {
@@ -987,7 +987,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					m_pProgramGuide->SetFont(m_Font);
 				}
 
-				bool fUseDirectWrite =
+				const bool fUseDirectWrite =
 					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEDIRECTWRITE);
 				if (m_fUseDirectWrite != fUseDirectWrite) {
 					m_fUseDirectWrite = fUseDirectWrite;
@@ -997,7 +997,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 							CTextDrawClient::TextDrawEngine::GDI);
 				}
 
-				bool fUseARIBSymbol =
+				const bool fUseARIBSymbol =
 					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_USEARIBSYMBOL);
 				if (m_fUseARIBSymbol != fUseARIBSymbol) {
 					m_fUseARIBSymbol = fUseARIBSymbol;
@@ -1019,7 +1019,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				m_WheelScrollLines = ::GetDlgItemInt(hDlg, IDC_PROGRAMGUIDEOPTIONS_WHEELSCROLLLINES, nullptr, TRUE);
 				m_pProgramGuide->SetWheelScrollLines(m_WheelScrollLines);
 
-				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
+				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK);
 				if (Sel >= 0) {
 					if (Sel == 0) {
 						m_ProgramLDoubleClickCommand.clear();
@@ -1033,7 +1033,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				}
 
 				CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
-				HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				int Items, i;
 
 				pToolList->Clear();
@@ -1068,7 +1068,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			}
 
 			for (int i = 0; i <= CEpgIcons::ICON_LAST; i++) {
-				HBITMAP hbm = reinterpret_cast<HBITMAP>(
+				const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 					::SendDlgItemMessage(
 						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
 						BM_SETIMAGE, IMAGE_BITMAP,
@@ -1095,11 +1095,10 @@ void CProgramGuideOptions::RealizeStyle()
 
 void CProgramGuideOptions::SetDlgItemState()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-	int Items, Sel;
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+	const int Items = ListView_GetItemCount(hwndList);
+	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
-	Items = ListView_GetItemCount(hwndList);
-	Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_EDIT, Sel >= 0);
 	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_UP, Sel > 0);
 	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_DOWN, Sel >= 0 && Sel + 1 < Items);
@@ -1110,10 +1109,9 @@ void CProgramGuideOptions::SetDlgItemState()
 
 void CProgramGuideOptions::DeleteAllTools()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-	int Items;
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOL_LIST);
+	const int Items = ListView_GetItemCount(hwndList);
 
-	Items = ListView_GetItemCount(hwndList);
 	if (Items > 0) {
 		LV_ITEM lvi;
 		CProgramGuideTool *pTool;
