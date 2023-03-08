@@ -67,7 +67,7 @@ namespace TVTest
 		bool IsOwnWindow(HWND hwnd) const;
 		void GetSize(int *pWidth, int *pHeight) const;
 		bool SetSize(int Width, int Height);
-		void SetTheme(const Theme::CThemeManager *pThemeManager);
+		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
 		bool SetFont(const Style::Font &Font);
 		void SetEventHandler(CEventHandler *pEventHandler);
 		bool IsSelected() const;

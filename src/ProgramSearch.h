@@ -349,7 +349,7 @@ namespace TVTest
 		CProgramSearchDialog(CEventSearchOptions &Options);
 		~CProgramSearchDialog();
 
-		bool Create(HWND hwndOwner);
+		bool Create(HWND hwndOwner) override;
 		bool SetEventHandler(CEventHandler *pHandler);
 		int GetColumnWidth(int Index) const;
 		bool SetColumnWidth(int Index, int Width);

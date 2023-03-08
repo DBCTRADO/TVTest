@@ -103,20 +103,20 @@ class CControllerPlugin
 
 public:
 	CControllerPlugin(CPlugin *pPlugin, const ControllerInfo *pInfo);
-	LPCTSTR GetName() const { return m_Name.c_str(); }
-	LPCTSTR GetText() const { return m_Text.c_str(); }
-	int NumButtons() const { return m_NumButtons; }
-	bool GetButtonInfo(int Index, ButtonInfo *pInfo) const;
-	bool Enable(bool fEnable) { return m_pPlugin->Enable(fEnable); }
-	bool IsEnabled() const { return m_pPlugin->IsEnabled(); }
-	bool IsActiveOnly() const { return (m_Flags & CONTROLLER_FLAG_ACTIVEONLY) != 0; }
-	bool SetTargetWindow(HWND hwnd) {
+	LPCTSTR GetName() const override { return m_Name.c_str(); }
+	LPCTSTR GetText() const override { return m_Text.c_str(); }
+	int NumButtons() const override { return m_NumButtons; }
+	bool GetButtonInfo(int Index, ButtonInfo *pInfo) const override;
+	bool Enable(bool fEnable) override { return m_pPlugin->Enable(fEnable); }
+	bool IsEnabled() const override { return m_pPlugin->IsEnabled(); }
+	bool IsActiveOnly() const override { return (m_Flags & CONTROLLER_FLAG_ACTIVEONLY) != 0; }
+	bool SetTargetWindow(HWND hwnd) override {
 		return m_pPlugin->SendEvent(EVENT_CONTROLLERFOCUS, (LPARAM)hwnd) != 0;
 	}
-	bool TranslateMessage(HWND hwnd, MSG *pMessage);
-	bool GetIniFileName(LPTSTR pszFileName, int MaxLength) const;
-	LPCTSTR GetIniFileSection() const;
-	HBITMAP GetImage(ImageType Type) const;
+	bool TranslateMessage(HWND hwnd, MSG *pMessage) override;
+	bool GetIniFileName(LPTSTR pszFileName, int MaxLength) const override;
+	LPCTSTR GetIniFileSection() const override;
+	HBITMAP GetImage(ImageType Type) const override;
 };
 
 

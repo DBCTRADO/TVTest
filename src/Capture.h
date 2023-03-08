@@ -148,8 +148,8 @@ namespace TVTest
 
 		public:
 			CPreviewEventHandler(CCaptureWindow *pCaptureWindow);
-			void OnRButtonUp(int x, int y);
-			bool OnKeyDown(UINT KeyCode, UINT Flags);
+			void OnRButtonUp(int x, int y) override;
+			bool OnKeyDown(UINT KeyCode, UINT Flags) override;
 		};
 
 		enum {

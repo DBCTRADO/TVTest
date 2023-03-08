@@ -182,8 +182,8 @@ namespace TVTest
 		public:
 			CEventInfoPopupHandler(CProgramListPanel *pPanel);
 
-			bool HitTest(int x, int y, LPARAM *pParam);
-			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
+			bool HitTest(int x, int y, LPARAM *pParam) override;
+			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 		};
 		CEventInfoPopupHandler m_EventInfoPopupHandler;
 		CFeaturedEventsMatcher m_FeaturedEventsMatcher;

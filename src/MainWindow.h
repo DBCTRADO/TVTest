@@ -110,7 +110,7 @@ namespace TVTest
 		CMainWindow(CAppMain &App);
 		~CMainWindow();
 
-		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0);
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 		bool Show(int CmdShow, bool fForce = false);
 		void CreatePanel();
 		void AdjustWindowSize(int Width, int Height, bool fScreenSize = true);

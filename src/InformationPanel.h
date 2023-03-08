@@ -258,7 +258,7 @@ namespace TVTest
 			CProgramInfoItem(CInformationPanel *pPanel, bool fVisible);
 
 			LPCTSTR GetName() const override { return TEXT("ProgramInfo"); }
-			bool IsSingleRow() const { return false; }
+			bool IsSingleRow() const override { return false; }
 			void Reset() override;
 			bool Update() override;
 			void Draw(HDC hdc, const RECT &Rect) override;
@@ -270,7 +270,7 @@ namespace TVTest
 			bool GetButtonRect(int Button, RECT *pRect) const override;
 			bool IsButtonEnabled(int Button) const override;
 			bool OnButtonPushed(int Button) override;
-			bool GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const;
+			bool GetButtonTipText(int Button, LPTSTR pszText, int MaxText) const override;
 			const String &GetInfoText() const { return m_InfoText; }
 			void SetNext(bool fNext);
 			bool IsNext() const { return m_fNext; }

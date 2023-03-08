@@ -228,8 +228,8 @@ namespace TVTest
 			CChannelPanel *m_pChannelPanel;
 		public:
 			CEventInfoPopupHandler(CChannelPanel *pChannelPanel);
-			bool HitTest(int x, int y, LPARAM *pParam);
-			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
+			bool HitTest(int x, int y, LPARAM *pParam) override;
+			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 		};
 		CEventInfoPopupHandler m_EventInfoPopupHandler;
 		CLogoManager *m_pLogoManager;

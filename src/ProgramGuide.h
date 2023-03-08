@@ -536,12 +536,12 @@ namespace TVTest
 			CProgramGuide *m_pProgramGuide;
 
 		// CEventInfoPopupManager::CEventHandler
-			bool HitTest(int x, int y, LPARAM *pParam);
-			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
+			bool HitTest(int x, int y, LPARAM *pParam) override;
+			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 
 		// CEventInfoPopup::CEventHandler
-			bool OnMenuPopup(HMENU hmenu);
-			void OnMenuSelected(int Command);
+			bool OnMenuPopup(HMENU hmenu) override;
+			void OnMenuSelected(int Command) override;
 
 		public:
 			CEventInfoPopupHandler(CProgramGuide *pProgramGuide);
@@ -660,7 +660,7 @@ namespace TVTest
 			int Chevron, bool fLeftAlign = false);
 		void DrawDayHeader(int Day, HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw) const;
 		void DrawTimeBar(HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw, bool fRight);
-		void Draw(HDC hdc, const RECT &PaintRect);
+		void Draw(HDC hdc, const RECT &PaintRect) override;
 		void DrawMessage(HDC hdc, const RECT &ClientRect) const;
 		bool CreateFonts();
 		void CalcFontMetrics();
