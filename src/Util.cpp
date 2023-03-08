@@ -581,7 +581,7 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 
 	const BOOL fRet = SHGetPathFromIDList(pidl, pszDirectory);
 	CoTaskMemFree(pidl);
-	return fRet == TRUE;
+	return fRet != FALSE;
 }
 
 
