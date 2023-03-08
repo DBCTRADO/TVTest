@@ -728,14 +728,16 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				const HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
 				const int Count = ListView_GetItemCount(hwndList);
 				std::vector<int> ItemList;
-				LVITEM lvi;
-
-				lvi.mask = LVIF_PARAM;
-				lvi.iSubItem = 0;
-				for (int i = 0; i < Count; i++) {
-					lvi.iItem = i;
-					ListView_GetItem(hwndList, &lvi);
-					ItemList.push_back((int)lvi.lParam);
+				if (Count > 0) {
+					ItemList.resize(Count);
+					LVITEM lvi;
+					lvi.mask = LVIF_PARAM;
+					lvi.iSubItem = 0;
+					for (int i = 0; i < Count; i++) {
+						lvi.iItem = i;
+						ListView_GetItem(hwndList, &lvi);
+						ItemList[i] = static_cast<int>(lvi.lParam);
+					}
 				}
 				if (ItemList != m_ItemList) {
 					m_ItemList = ItemList;
