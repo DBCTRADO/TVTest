@@ -111,17 +111,16 @@ void CProgramGuideFavorites::FavoriteInfo::SetDefaultColors()
 		SPACE_FAVORITES   = 0x8U
 	};
 	unsigned int Space = 0;
-	const LPCTSTR pszLabel = Label.c_str();
 
-	if (::StrStr(pszLabel, TEXT("地")) != 0
-			|| ::StrStrI(pszLabel, TEXT("UHF")) != 0
-			|| ::StrStrI(pszLabel, TEXT("VHF")) != 0)
+	if (Label.find(TEXT("地")) != String::npos
+			|| Label.find(TEXT("UHF")) != String::npos
+			|| Label.find(TEXT("VHF")) != String::npos)
 		Space |= SPACE_TERRESTRIAL;
-	if (::StrStr(pszLabel, TEXT("BS")) != 0)
+	if (Label.find(TEXT("BS")) != String::npos)
 		Space |= SPACE_BS;
-	if (::StrStr(pszLabel, TEXT("CS")) != 0)
+	if (Label.find(TEXT("CS")) != String::npos)
 		Space |= SPACE_CS;
-	if (::StrStr(pszLabel, TEXT("お気に入り")) != 0)
+	if (Label.find(TEXT("お気に入り")) != String::npos)
 		Space |= SPACE_FAVORITES;
 
 	switch (Space) {
