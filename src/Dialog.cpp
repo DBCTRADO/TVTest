@@ -1409,7 +1409,7 @@ void CBasicDialog::DrawDarkModeGroupBox(HWND hwnd, HDC hdc)
 		if ((::SendMessage(hwnd, WM_QUERYUISTATE, 0, 0) & UISF_HIDEACCEL) != 0)
 			TextFormat |= DT_HIDEPREFIX;
 		::DrawText(hdc, szText, TextLength, &rcText, TextFormat | DT_CALCRECT);
-		const int Margin = 2;
+		constexpr int Margin = 2;
 		::OffsetRect(&rcText, rcBox.top + Margin, rc.top);
 		if (rcText.right > rc.right - Margin)
 			rcText.right = rc.right - Margin;
@@ -1449,7 +1449,7 @@ void CBasicDialog::DrawDarkModeTab(HWND hwnd, HDC hdc, const RECT &PaintRect)
 	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 	const HFONT hfont = GetWindowFont(hwnd);
 	const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
-	const int IconTextMargin = 3;
+	constexpr int IconTextMargin = 3;
 	const int BorderWidth = ::MulDiv(1, m_CurrentDPI, 96);
 	int TabBottom = 0;
 

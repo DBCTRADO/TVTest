@@ -67,7 +67,7 @@ const LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix CAudioOption
 	}
 };
 
-static const double PSQR = 1.0 / 1.4142135623730950488016887242097;
+static constexpr double PSQR = 1.0 / 1.4142135623730950488016887242097;
 const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix CAudioOptions::m_DefaultDownMixMatrix = {
 	{
 		{1.0, 0.0, PSQR, PSQR, PSQR, 0.0},

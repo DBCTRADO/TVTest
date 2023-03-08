@@ -676,7 +676,7 @@ int CDisplayView::GetDefaultFontSize(int Width, int Height) const
 	int Size = std::min(Width / m_Style.TextSizeRatioHorz, Height / m_Style.TextSizeRatioVert);
 	const double DPI = (double)m_pStyleScaling->GetDPI();
 	double Points = (double)Size * 72.0 / DPI;
-	const double BasePoints = 9.0;
+	constexpr double BasePoints = 9.0;
 	if (Points > BasePoints && m_Style.TextSizeScaleBase > 0) {
 		Points = (int)
 			(std::log(Points - (BasePoints - 1.0)) /

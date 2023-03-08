@@ -623,7 +623,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 
 			bool fUseIcon = true;
 			const DWORD MapKey = ChannelIconMapKey(NetworkID, ServiceID);
-			const BYTE LogoType = CLogoManager::LOGOTYPE_48x24;
+			constexpr BYTE LogoType = CLogoManager::LOGOTYPE_48x24;
 			CLogoManager::LogoInfo LogoInfo;
 			if (App.LogoManager.GetLogoInfo(NetworkID, ServiceID, LogoType, &LogoInfo)) {
 				bool fSave;
