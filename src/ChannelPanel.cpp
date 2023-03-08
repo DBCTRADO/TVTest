@@ -825,11 +825,8 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				const int Channel = LOWORD(pnmtdi->lParam), Event = HIWORD(pnmtdi->lParam);
 
 				if (Channel >= 0 && (size_t)Channel < m_ChannelList.size()) {
-					static TCHAR szText[1024];
-
-					m_ChannelList[Channel]->FormatEventText(szText, lengthof(szText), Event);
-					RemoveTrailingWhitespace(szText);
-					pnmtdi->lpszText = szText;
+					m_ChannelList[Channel]->FormatEventText(Event, &m_TooltipText);
+					pnmtdi->lpszText = m_TooltipText.data();
 				} else {
 					pnmtdi->lpszText = pnmtdi->szText;
 				}
@@ -1505,22 +1502,24 @@ bool CChannelPanel::CChannelEventInfo::IsEventEnabled(int Index) const
 }
 
 
-int CChannelPanel::CChannelEventInfo::FormatEventText(LPTSTR pszText, int MaxLength, int Index) const
+bool CChannelPanel::CChannelEventInfo::FormatEventText(int Index, String *pText) const
 {
 	if (!IsEventEnabled(Index)) {
-		pszText[0] = '\0';
-		return 0;
+		pText->clear();
+		return false;
 	}
 
 	const LibISDB::EventInfo &Info = m_EventList[Index];
 	TCHAR szTime[EpgUtil::MAX_EVENT_TIME_LENGTH];
 	EpgUtil::FormatEventTime(Info, szTime, lengthof(szTime));
-	return static_cast<int>(StringFormat(
-		pszText, MaxLength, TEXT("{} {}{}{}"),
+	StringFormat(
+		pText, TEXT("{} {}{}{}"),
 		szTime,
 		Info.EventName,
 		!Info.EventText.empty() ? TEXT("\n\n") : TEXT(""),
-		Info.EventText));
+		Info.EventText);
+	StringUtility::Trim(*pText, TEXT(" \r\n"));
+	return true;
 }
 
 
