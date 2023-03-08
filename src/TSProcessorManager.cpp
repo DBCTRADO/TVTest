@@ -312,7 +312,7 @@ bool CTSProcessorManager::SaveTSProcessorProperties(CTSProcessor *pTSProcessor)
 		if (pSettings != nullptr) {
 			CPropertyBag *pPropBag = new CPropertyBag;
 
-			if (SUCCEEDED(pTSProcessor->SaveProperties(pPropBag))) {
+			if (pTSProcessor->SaveProperties(pPropBag)) {
 				pSettings->m_PropertyList.clear();
 				for (const auto &e : *pPropBag) {
 					pSettings->m_PropertyList.insert(e);
