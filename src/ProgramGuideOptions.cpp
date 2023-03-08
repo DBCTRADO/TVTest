@@ -616,7 +616,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI),
 				ILC_COLOR32 | ILC_MASK, 1, 4);
 			RECT rc;
-			LV_COLUMN lvc;
+			LVCOLUMN lvc;
 
 			ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
@@ -636,7 +636,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				ListView_SetItemCount(hwndList, pToolList->NumTools());
 				for (size_t i = 0; i < pToolList->NumTools(); i++) {
 					CProgramGuideTool *pTool = new CProgramGuideTool(*pToolList->GetTool(i));
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_TEXT | LVIF_PARAM;
 					lvi.iItem = (int)i;
@@ -779,7 +779,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				pTool = new CProgramGuideTool;
 				if (pTool->ShowDialog(hDlg)) {
 					const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_PARAM;
 					lvi.iItem = ListView_GetItemCount(hwndList);
@@ -808,7 +808,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case IDC_PROGRAMGUIDETOOL_EDIT:
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-				LV_ITEM lvi;
+				LVITEM lvi;
 				CProgramGuideTool *pTool;
 
 				lvi.mask = LVIF_PARAM;
@@ -836,7 +836,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case IDC_PROGRAMGUIDETOOL_UP:
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-				LV_ITEM lvi;
+				LVITEM lvi;
 				CProgramGuideTool *pTool;
 
 				lvi.mask = LVIF_IMAGE | LVIF_PARAM;
@@ -864,7 +864,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case IDC_PROGRAMGUIDETOOL_DOWN:
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-				LV_ITEM lvi;
+				LVITEM lvi;
 				CProgramGuideTool *pTool;
 
 				lvi.mask = LVIF_IMAGE | LVIF_PARAM;
@@ -893,7 +893,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		case IDC_PROGRAMGUIDETOOL_REMOVE:
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-				LV_ITEM lvi;
+				LVITEM lvi;
 
 				lvi.mask = LVIF_PARAM;
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
@@ -1039,7 +1039,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				pToolList->Clear();
 				Items = ListView_GetItemCount(hwndList);
 				if (Items > 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iSubItem = 0;
@@ -1113,7 +1113,7 @@ void CProgramGuideOptions::DeleteAllTools()
 	const int Items = ListView_GetItemCount(hwndList);
 
 	if (Items > 0) {
-		LV_ITEM lvi;
+		LVITEM lvi;
 		CProgramGuideTool *pTool;
 
 		lvi.mask = LVIF_PARAM;

@@ -5813,7 +5813,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	case WM_INITDIALOG:
 		{
 			const HWND hwndList = GetDlgItem(hDlg, IDC_PLUGIN_LIST);
-			LV_COLUMN lvc;
+			LVCOLUMN lvc;
 
 			ListView_SetExtendedListViewStyle(
 				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES);
@@ -5831,7 +5831,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			for (int i = 0; i < m_pPluginManager->NumPlugins(); i++) {
 				const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
-				LV_ITEM lvi;
+				LVITEM lvi;
 
 				lvi.mask = LVIF_TEXT | LVIF_PARAM;
 				lvi.iItem = i;
@@ -5869,7 +5869,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -5886,7 +5886,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -5911,7 +5911,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				const int Sel = ListView_GetNextItem(pnmlv->hdr.hwndFrom, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -5931,7 +5931,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->iItem >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = pnmia->iItem;
@@ -5948,7 +5948,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				const int Sel = ListView_GetNextItem(pnmh->hwndFrom, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;

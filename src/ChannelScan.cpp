@@ -546,7 +546,7 @@ bool CChannelScan::AutoUpdateChannelList(CTuningSpaceList *pTuningSpaceList, std
 void CChannelScan::InsertChannelInfo(int Index, const CChannelInfo *pChInfo, bool fServiceType)
 {
 	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CHANNELSCAN_CHANNELLIST);
-	LV_ITEM lvi;
+	LVITEM lvi;
 	TCHAR szText[256];
 
 	lvi.mask = LVIF_TEXT | LVIF_PARAM;
@@ -627,7 +627,7 @@ void CChannelScan::SetChannelList(int Space)
 CChannelInfo *CChannelScan::GetSelectedChannelInfo() const
 {
 	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_CHANNELSCAN_CHANNELLIST);
-	LV_ITEM lvi;
+	LVITEM lvi;
 
 	lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 	if (lvi.iItem >= 0) {
@@ -812,7 +812,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			::ReleaseDC(hwndList, hdc);
 			const int FontSize = tm.tmHeight - tm.tmInternalLeading;
 
-			LV_COLUMN lvc;
+			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 10 * FontSize;
@@ -1032,7 +1032,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_CHANNELSCAN_PROPERTIES:
 			{
 				const HWND hwndList = ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST);
-				LV_ITEM lvi;
+				LVITEM lvi;
 
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 				if (lvi.iItem >= 0) {
@@ -1062,7 +1062,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_CHANNELSCAN_DELETE:
 			{
 				const HWND hwndList = ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST);
-				LV_ITEM lvi;
+				LVITEM lvi;
 
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 				if (lvi.iItem >= 0) {
@@ -1134,7 +1134,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				BOOL fResult;
 
 				if (plvdi->item.pszText != nullptr && plvdi->item.pszText[0] != '\0') {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = plvdi->item.iItem;
@@ -1157,7 +1157,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				if (pnmlv->iItem >= 0
 						&& (pnmlv->uNewState & LVIS_STATEIMAGEMASK) != (pnmlv->uOldState & LVIS_STATEIMAGEMASK)) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = pnmlv->iItem;

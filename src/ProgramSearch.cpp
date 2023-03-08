@@ -2280,7 +2280,7 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 		return false;
 
 	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
-	LV_ITEM lvi;
+	LVITEM lvi;
 	TCHAR szText[256];
 
 	lvi.mask = LVIF_TEXT | LVIF_PARAM;

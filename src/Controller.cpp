@@ -387,7 +387,7 @@ void CControllerManager::InitDlgItems()
 		for (int i = 0; i < NumButtons; i++) {
 			CController::ButtonInfo Button;
 			const int Command = m_CurSettingsList[Sel].AssignList[i];
-			LV_ITEM lvi;
+			LVITEM lvi;
 
 			pController->GetButtonInfo(i, &Button);
 			lvi.mask = LVIF_TEXT | LVIF_PARAM;
@@ -451,7 +451,7 @@ void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 	if (CurController < 0)
 		return;
 
-	LV_ITEM lvi;
+	LVITEM lvi;
 	TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 	lvi.mask = LVIF_PARAM;
@@ -478,7 +478,7 @@ void CControllerManager::SetDlgItemStatus()
 	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 	if (Sel >= 0) {
-		LV_ITEM lvi;
+		LVITEM lvi;
 
 		lvi.mask = LVIF_PARAM;
 		lvi.iItem = Sel;
@@ -539,7 +539,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
 			SetListViewTooltipsTopMost(hwndList);
 
-			LV_COLUMN lvc;
+			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 120;
