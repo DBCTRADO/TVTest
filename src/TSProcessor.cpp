@@ -141,7 +141,7 @@ bool CTSProcessor::Initialize()
 	if (FAILED(m_pTSProcessor->Initialize(this)))
 		return false;
 	m_pTSProcessor->StartStreaming(this);
-	return S_OK;
+	return true;
 }
 
 
