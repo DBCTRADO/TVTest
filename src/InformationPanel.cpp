@@ -548,7 +548,7 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		return 0;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == hwnd) {
+		if (reinterpret_cast<HWND>(wParam) == hwnd) {
 			if (LOWORD(lParam) == HTCLIENT && m_HotButton.IsValid()) {
 				::SetCursor(GetActionCursor());
 				return TRUE;
@@ -886,7 +886,7 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 				DWORD Start, End;
 
 				::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
-				::SendMessage(hwnd, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
+				::SendMessage(hwnd, EM_GETSEL, reinterpret_cast<WPARAM>(&Start), reinterpret_cast<LPARAM>(&End));
 				if (Start == End)
 					::SendMessage(hwnd, EM_SETSEL, 0, -1);
 				::SendMessage(hwnd, WM_COPY, 0, 0);
@@ -1462,14 +1462,14 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 		TCHAR szText[256];
 		size_t Length;
 
-		const unsigned int RecordSec = (unsigned int)(m_RecordTime / 1000);
+		const unsigned int RecordSec = static_cast<unsigned int>(m_RecordTime / 1000);
 		Length = StringFormat(
 			szText,
 			TEXT("● {}:{:02}:{:02}"),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);
 		if (m_WroteSize >= 0) {
 			const unsigned int Size =
-				(unsigned int)(m_WroteSize / (ULONGLONG)(1024 * 1024 / 100));
+				static_cast<unsigned int>(m_WroteSize / static_cast<ULONGLONG>(1024 * 1024 / 100));
 			Length += StringFormat(
 				szText + Length, lengthof(szText) - Length,
 				TEXT(" / {}.{:02} MB"),
@@ -1477,7 +1477,7 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 		}
 		if (m_DiskFreeSpace >= 0) {
 			const unsigned int FreeSpace =
-				(unsigned int)(m_DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
+				static_cast<unsigned int>(m_DiskFreeSpace / static_cast<ULONGLONG>(1024 * 1024 * 1024 / 100));
 			StringFormat(
 				szText + Length, lengthof(szText) - Length,
 				TEXT(" / {}.{:02} GB空き"),

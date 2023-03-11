@@ -212,9 +212,9 @@ int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol)
 		if (!pEventName->empty()) {
 			pszText[Length++] = TEXT(' ');
 			if (fUseARIBSymbol)
-				Length += (int)EpgUtil::MapARIBSymbol(pEventName->c_str(), pszText + Length, MaxLength - Length);
+				Length += static_cast<int>(EpgUtil::MapARIBSymbol(pEventName->c_str(), pszText + Length, MaxLength - Length));
 			else
-				Length += (int)StringFormat(pszText + Length, MaxLength - Length, TEXT("{}"), *pEventName);
+				Length += static_cast<int>(StringFormat(pszText + Length, MaxLength - Length, TEXT("{}"), *pEventName));
 		}
 	}
 	return Length;
@@ -356,7 +356,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 	LastItem = -1;
 	EmptyCount = 0;
 	PrevTime = FirstTime;
-	for (int i = 0; i < (int)m_EventList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_EventList.size()); i++) {
 		pItem = m_EventList[i].get();
 		StartTime = pItem->GetStartTime();
 		EndTime = pItem->GetEndTime();
@@ -391,7 +391,7 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 					if (pPrevItem)
 						pPrevItem->SetEndTime(StartTime);
 				} else {
-					InsertItem(i, new CEventItem(PrevTime, (DWORD)Diff));
+					InsertItem(i, new CEventItem(PrevTime, static_cast<DWORD>(Diff)));
 					i++;
 					LastItem++;
 				}
@@ -472,7 +472,7 @@ HBITMAP CServiceInfo::GetStretchedLogo(int Width, int Height)
 
 LibISDB::EventInfo *CServiceInfo::GetEvent(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_EventList.size()) {
+	if (Index < 0 || static_cast<size_t>(Index) >= m_EventList.size()) {
 		TRACE(TEXT("CServiceInfo::GetEvent() : Out of range {}\n"), Index);
 		return nullptr;
 	}
@@ -482,7 +482,7 @@ LibISDB::EventInfo *CServiceInfo::GetEvent(int Index)
 
 const LibISDB::EventInfo *CServiceInfo::GetEvent(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_EventList.size()) {
+	if (Index < 0 || static_cast<size_t>(Index) >= m_EventList.size()) {
 		TRACE(TEXT("CServiceInfo::GetEvent() const : Out of range {}\n"), Index);
 		return nullptr;
 	}
@@ -530,7 +530,7 @@ void CServiceInfo::CalcLayout(
 	pEventList->Clear();
 
 	int FirstItem = -1, LastItem = -1;
-	for (int i = 0; i < (int)m_EventList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_EventList.size()); i++) {
 		const LibISDB::EventInfo *pEvent = m_EventList[i].get();
 		LibISDB::DateTime StartTime, EndTime;
 		pEvent->GetStartTime(&StartTime);
@@ -593,13 +593,13 @@ void CServiceInfo::CalcLayout(
 
 			const LibISDB::DateTime &Start = pEventList->GetItem(i)->GetStartTime();
 			if (Start > First) {
-				Offset = (int)(Start.DiffSeconds(First) * LinesPerHour / (60 * 60));
+				Offset = static_cast<int>(Start.DiffSeconds(First) * LinesPerHour / (60 * 60));
 				Lines -= Offset;
 			}
 			if (Lines > ProgramsPerHour) {
 				const LibISDB::DateTime &End = pEventList->GetItem(i + ProgramsPerHour - 1)->GetEndTime();
 				if (End < Last) {
-					Lines -= (int)(Last.DiffSeconds(End) * LinesPerHour / (60 * 60));
+					Lines -= static_cast<int>(Last.DiffSeconds(End) * LinesPerHour / (60 * 60));
 					if (Lines < ProgramsPerHour)
 						Lines = ProgramsPerHour;
 				}
@@ -630,7 +630,7 @@ void CServiceInfo::CalcLayout(
 							LibISDB::DateTime End = pItem->GetEndTime();
 							if (End > Last)
 								End = Last;
-							const DWORD Time = (DWORD)(End.DiffSeconds(Start) / ItemLines[j]);
+							const DWORD Time = static_cast<DWORD>(End.DiffSeconds(Start) / ItemLines[j]);
 							if (Time > MaxTime) {
 								MaxTime = Time;
 								MaxItem = j;
@@ -708,7 +708,7 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 		StringFormat(
 			szStation,
 			pszStationFormat, m_ServiceInfo.ServiceID);
-		Length = (DWORD)StringFormat(
+		Length = static_cast<DWORD>(StringFormat(
 			szText,
 			"Content-type: application/x-tv-program-digital-info; charset=shift_jis\r\n"
 			"version: 2\r\n"
@@ -725,9 +725,9 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 			StartTime.Year, StartTime.Month, StartTime.Day,
 			StartTime.Hour, StartTime.Minute,
 			EndTime.Hour, EndTime.Minute,
-			szEventName, pEventInfo->EventID);
+			szEventName, pEventInfo->EventID));
 	} else {
-		Length = (DWORD)StringFormat(
+		Length = static_cast<DWORD>(StringFormat(
 			szText,
 			"Content-type: application/x-tv-program-info; charset=shift_jis\r\n"
 			"version: 1\r\n"
@@ -742,7 +742,7 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 			StartTime.Year, StartTime.Month, StartTime.Day,
 			StartTime.Hour, StartTime.Minute,
 			EndTime.Hour, EndTime.Minute,
-			szEventName);
+			szEventName));
 	}
 	const bool fOK = ::WriteFile(hFile, szText, Length, &Write, nullptr) && Write == Length;
 	::FlushFileBuffers(hFile);
@@ -798,7 +798,7 @@ int CServiceList::FindItemByIDs(WORD TransportStreamID, WORD ServiceID) const
 
 		if (pInfo->GetTSID() == TransportStreamID
 				&& pInfo->GetServiceID() == ServiceID)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -860,7 +860,7 @@ bool CProgramGuideBaseChannelProvider::GetName(LPTSTR pszName, int MaxName) cons
 		return false;
 
 	size_t Length = m_BonDriverFileName.length();
-	if (Length >= (size_t)MaxName)
+	if (Length >= static_cast<size_t>(MaxName))
 		Length = MaxName - 1;
 	if (Length > 0)
 		m_BonDriverFileName.copy(pszName, Length);
@@ -893,7 +893,7 @@ bool CProgramGuideBaseChannelProvider::GetGroupName(size_t Group, LPTSTR pszName
 		Group--;
 	}
 
-	const LPCTSTR pszTuningSpaceName = m_TuningSpaceList.GetTuningSpaceName((int)Group);
+	const LPCTSTR pszTuningSpaceName = m_TuningSpaceList.GetTuningSpaceName(static_cast<int>(Group));
 	if (!IsStringEmpty(pszTuningSpaceName))
 		StringCopy(pszName, pszTuningSpaceName, MaxName);
 	else
@@ -937,7 +937,7 @@ size_t CProgramGuideBaseChannelProvider::GetChannelCount(size_t Group) const
 		Group--;
 	}
 
-	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo((int)Group);
+	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo(static_cast<int>(Group));
 	if (pSpaceInfo == nullptr)
 		return 0;
 
@@ -952,15 +952,15 @@ const CChannelInfo *CProgramGuideBaseChannelProvider::GetChannelInfo(size_t Grou
 
 	if (HasAllChannelGroup()) {
 		if (Group == 0)
-			return m_TuningSpaceList.GetAllChannelList()->GetChannelInfo((int)Channel);
+			return m_TuningSpaceList.GetAllChannelList()->GetChannelInfo(static_cast<int>(Channel));
 		Group--;
 	}
 
-	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo((int)Group);
+	const CTuningSpaceInfo *pSpaceInfo = m_TuningSpaceList.GetTuningSpaceInfo(static_cast<int>(Group));
 	if (pSpaceInfo == nullptr)
 		return nullptr;
 
-	return pSpaceInfo->GetChannelInfo((int)Channel);
+	return pSpaceInfo->GetChannelInfo(static_cast<int>(Channel));
 }
 
 
@@ -970,7 +970,7 @@ bool CProgramGuideBaseChannelProvider::GetBonDriver(LPTSTR pszFileName, int MaxL
 		return false;
 
 	const size_t Length = m_BonDriverFileName.length();
-	if ((size_t)MaxLength <= Length)
+	if (static_cast<size_t>(MaxLength) <= Length)
 		return false;
 	m_BonDriverFileName.copy(pszFileName, Length);
 	pszFileName[Length] = _T('\0');
@@ -1312,7 +1312,7 @@ bool CProgramGuide::UpdateList()
 			pService->SetLogo(hbmLogo);
 
 		if (m_ListMode == ListMode::Week && pService->GetServiceInfo() == CurServiceInfo)
-			m_WeekListService = (int)m_ServiceList.NumServices();
+			m_WeekListService = static_cast<int>(m_ServiceList.NumServices());
 
 		m_ServiceList.Add(pService);
 	}
@@ -2028,7 +2028,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
 				rc.top = rc.bottom;
 				rc.bottom += m_HeaderHeight;
-				for (int i = 0; i < (int)m_EventLayoutList.Length(); i++) {
+				for (int i = 0; i < static_cast<int>(m_EventLayoutList.Length()); i++) {
 					rc.right = rc.left + (m_ItemWidth + m_Style.ColumnMargin * 2);
 					if (rc.left < PaintRect.right && rc.right > PaintRect.left)
 						DrawDayHeader(i, hdc, rc, ThemeDraw);
@@ -2285,7 +2285,7 @@ int CProgramGuide::GetCurTimeLinePos() const
 	Span = m_CurTime.DiffSeconds(First) % (24 * 60 * 60);
 	if (Span < 0)
 		Span += 24 * 60 * 60;
-	return (int)(Span * (LONGLONG)(GetLineHeight() * m_LinesPerHour) / (60 * 60));
+	return static_cast<int>(Span * static_cast<LONGLONG>(GetLineHeight() * m_LinesPerHour) / (60 * 60));
 }
 
 
@@ -2302,7 +2302,7 @@ void CProgramGuide::GetProgramGuideRect(RECT *pRect) const
 
 void CProgramGuide::GetProgramGuideSize(SIZE *pSize) const
 {
-	pSize->cx = (m_ItemWidth + m_Style.ColumnMargin * 2) * (int)m_EventLayoutList.Length();
+	pSize->cx = (m_ItemWidth + m_Style.ColumnMargin * 2) * static_cast<int>(m_EventLayoutList.Length());
 	pSize->cy = m_LinesPerHour * m_Hours;
 }
 
@@ -2433,7 +2433,7 @@ void CProgramGuide::SetScrollBar()
 	si.nPage = (rc.bottom - rc.top) / GetLineHeight();
 	si.nPos = m_ScrollPos.y;
 	::SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
-	si.nMax = (int)m_EventLayoutList.Length() * (m_ItemWidth + m_Style.ColumnMargin * 2) - 1;
+	si.nMax = static_cast<int>(m_EventLayoutList.Length()) * (m_ItemWidth + m_Style.ColumnMargin * 2) - 1;
 	si.nPage = rc.right - rc.left;
 	si.nPos = m_ScrollPos.x;
 	::SetScrollInfo(m_hwnd, SB_HORZ, &si, TRUE);
@@ -2539,7 +2539,7 @@ void CProgramGuide::SetTooltip()
 
 	if (m_ListMode == ListMode::Services) {
 		int NumTools = m_Tooltip.NumTools();
-		const int NumServices = (int)m_ServiceList.NumServices();
+		const int NumServices = static_cast<int>(m_ServiceList.NumServices());
 
 		RECT rcClient, rcHeader;
 		GetClientRect(&rcClient);
@@ -2686,7 +2686,7 @@ bool CProgramGuide::SetChannelProvider(int Provider, LPCTSTR pszGroupID)
 bool CProgramGuide::SetCurrentChannelProvider(int Provider, int Group)
 {
 	if (m_pChannelProviderManager == nullptr
-			|| Provider < -1 || (size_t)Provider >= m_pChannelProviderManager->GetChannelProviderCount())
+			|| Provider < -1 || static_cast<size_t>(Provider) >= m_pChannelProviderManager->GetChannelProviderCount())
 		return false;
 
 	if (Provider >= 0) {
@@ -2708,7 +2708,7 @@ bool CProgramGuide::SetCurrentChannelProvider(int Provider, int Group)
 bool CProgramGuide::SetCurrentChannelProvider(int Provider, LPCTSTR pszGroupID)
 {
 	if (m_pChannelProviderManager == nullptr
-			|| Provider < -1 || (size_t)Provider >= m_pChannelProviderManager->GetChannelProviderCount())
+			|| Provider < -1 || static_cast<size_t>(Provider) >= m_pChannelProviderManager->GetChannelProviderCount())
 		return false;
 
 	if (Provider >= 0) {
@@ -2731,7 +2731,7 @@ int CProgramGuide::GetChannelGroupCount() const
 {
 	if (m_pChannelProvider == nullptr)
 		return 0;
-	return (int)m_pChannelProvider->GetGroupCount();
+	return static_cast<int>(m_pChannelProvider->GetGroupCount());
 }
 
 
@@ -2754,7 +2754,7 @@ int CProgramGuide::ParseChannelGroupID(LPCTSTR pszGroupID) const
 bool CProgramGuide::SetCurrentChannelGroup(int Group)
 {
 	if (m_pChannelProvider == nullptr
-			|| Group < -1 || (size_t)Group >= m_pChannelProvider->GetGroupCount())
+			|| Group < -1 || static_cast<size_t>(Group) >= m_pChannelProvider->GetGroupCount())
 		return false;
 
 	if (Group != m_CurrentChannelGroup) {
@@ -2986,7 +2986,7 @@ bool CProgramGuide::SetTimeRange(const LibISDB::DateTime &FirstTime, const LibIS
 	Last = LastTime;
 	Last.TruncateToHours();
 
-	const int Hours = (int)(Last.DiffSeconds(First) / (60 * 60));
+	const int Hours = static_cast<int>(Last.DiffSeconds(First) / (60 * 60));
 	if (Hours <= 0)
 		return false;
 
@@ -3071,7 +3071,7 @@ bool CProgramGuide::GetDayTimeRange(int Day, LibISDB::DateTime *pFirstTime, LibI
 
 						::GetSystemTime(&stUTC);
 						if (::SystemTimeToTzSpecificLocalTime(&tzi, &stUTC, &stJST)) {
-							Begin += (int)(DiffSystemTime(&stJST, &stUTC) / TimeConsts::SYSTEMTIME_MINUTE);
+							Begin += static_cast<int>(DiffSystemTime(&stJST, &stUTC) / TimeConsts::SYSTEMTIME_MINUTE);
 							fUTC = true;
 						}
 					}
@@ -3132,7 +3132,7 @@ bool CProgramGuide::GetDateInfo(int Day, DateInfo *pInfo) const
 			Time2 = pInfo->BeginningTime;
 			Time2.TruncateToDays();
 			pInfo->pszRelativeDayText =
-				GetRelativeDayText((int)(Time2.DiffSeconds(Time1) / (24 * 60 * 60)));
+				GetRelativeDayText(static_cast<int>(Time2.DiffSeconds(Time1) / (24 * 60 * 60)));
 		}
 	} else {
 		pInfo->pszRelativeDayText = nullptr;
@@ -3159,7 +3159,7 @@ bool CProgramGuide::ScrollToTime(const LibISDB::DateTime &Time, bool fHour)
 			t.OffsetDays(1);
 	}
 
-	const long Diff = (long)t.DiffSeconds(First);
+	const long Diff = static_cast<long>(t.DiffSeconds(First));
 	POINT Pos;
 	Pos.x = m_ScrollPos.x;
 	if (fHour)
@@ -3263,8 +3263,8 @@ bool CProgramGuide::JumpEvent(WORD NetworkID, WORD TSID, WORD ServiceID, WORD Ev
 		Pos.x = 0;
 	else if (Pos.x > std::max(Size.cx - Page.cx, 0L))
 		Pos.x = std::max(Size.cx - Page.cx, 0L);
-	Pos.y = (long)pEventInfo->StartTime.DiffSeconds(First) / 60 * m_LinesPerHour / 60;
-	const int YOffset = (Page.cy - (int)(pEventInfo->Duration * m_LinesPerHour / (60 * 60))) / 2;
+	Pos.y = static_cast<long>(pEventInfo->StartTime.DiffSeconds(First)) / 60 * m_LinesPerHour / 60;
+	const int YOffset = (Page.cy - static_cast<int>(pEventInfo->Duration * m_LinesPerHour / (60 * 60))) / 2;
 	if (YOffset > 0)
 		Pos.y -= YOffset;
 	if (Pos.y < 0)
@@ -3446,7 +3446,7 @@ bool CProgramGuide::SetDragScroll(bool fDragScroll)
 
 			::GetCursorPos(&pt);
 			SendMessage(
-				WM_SETCURSOR, (WPARAM)m_hwnd,
+				WM_SETCURSOR, reinterpret_cast<WPARAM>(m_hwnd),
 				MAKELPARAM(SendMessage(WM_NCHITTEST, 0, MAKELPARAM(pt.x, pt.y)), WM_MOUSEMOVE));
 		}
 	}
@@ -3638,7 +3638,7 @@ LPCTSTR CProgramGuide::GetRelativeDayText(int Day)
 
 ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int EventIndex)
 {
-	if (ListIndex < 0 || (size_t)ListIndex >= m_EventLayoutList.Length())
+	if (ListIndex < 0 || static_cast<size_t>(ListIndex) >= m_EventLayoutList.Length())
 		return nullptr;
 	return m_EventLayoutList[ListIndex]->GetItem(EventIndex);
 }
@@ -3646,7 +3646,7 @@ ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int EventIn
 
 const ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int EventIndex) const
 {
-	if (ListIndex < 0 || (size_t)ListIndex >= m_EventLayoutList.Length())
+	if (ListIndex < 0 || static_cast<size_t>(ListIndex) >= m_EventLayoutList.Length())
 		return nullptr;
 	return m_EventLayoutList[ListIndex]->GetItem(EventIndex);
 }
@@ -3711,7 +3711,7 @@ bool CProgramGuide::EventHitTest(int x, int y, int *pListIndex, int *pEventIndex
 				|| XPos % ServiceWidth >= m_Style.ColumnMargin + m_ItemWidth)
 			return false;
 		const int List = XPos / ServiceWidth;
-		if (List < (int)m_EventLayoutList.Length()) {
+		if (List < static_cast<int>(m_EventLayoutList.Length())) {
 			const ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[List];
 			const int LineHeight = GetLineHeight();
 			const int YOrigin = rc.top - m_ScrollPos.y * LineHeight;
@@ -3727,7 +3727,7 @@ bool CProgramGuide::EventHitTest(int x, int y, int *pListIndex, int *pEventIndex
 						if (pListIndex != nullptr)
 							*pListIndex = List;
 						if (pEventIndex != nullptr)
-							*pEventIndex = (int)i;
+							*pEventIndex = static_cast<int>(i);
 						if (pItemRect != nullptr) {
 							pItemRect->top = rc.top + YOrigin;
 							pItemRect->bottom = pItemRect->top + (rc.bottom - rc.top);
@@ -3781,8 +3781,8 @@ bool CProgramGuide::GetEventIndexByIDs(
 bool CProgramGuide::SelectEvent(int ListIndex, int EventIndex)
 {
 	bool fSelected;
-	if (ListIndex >= 0 && (size_t)ListIndex < m_EventLayoutList.Length()
-			&& EventIndex >= 0 && (size_t)EventIndex < m_EventLayoutList[ListIndex]->NumItems()) {
+	if (ListIndex >= 0 && static_cast<size_t>(ListIndex) < m_EventLayoutList.Length()
+			&& EventIndex >= 0 && static_cast<size_t>(EventIndex) < m_EventLayoutList[ListIndex]->NumItems()) {
 		fSelected = true;
 	} else {
 		fSelected = false;
@@ -3982,7 +3982,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 					const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 					const int x = pt.x + m_ScrollPos.x - m_TimeBarWidth;
 
-					if (x < (int)m_EventLayoutList.Length() * HeaderWidth) {
+					if (x < static_cast<int>(m_EventLayoutList.Length()) * HeaderWidth) {
 						const int Service = x / HeaderWidth;
 						const int ChevronArea =
 							m_Style.HeaderChevronSize.Width +
@@ -4117,7 +4117,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 						m_Style.HeaderChevronSize.Width +
 						m_Style.HeaderChevronMargin.Right + m_Style.HeaderPadding.Right;
 					const int x = pt.x + m_ScrollPos.x - m_TimeBarWidth;
-					if (x < (int)m_EventLayoutList.Length() * HeaderWidth
+					if (x < static_cast<int>(m_EventLayoutList.Length()) * HeaderWidth
 							&& (x % HeaderWidth < HeaderWidth - (m_Style.HeaderChevronMargin.Left + ChevronArea)
 								|| x % HeaderWidth >= HeaderWidth - ChevronArea)) {
 						::SetCursor(GetActionCursor());
@@ -4176,14 +4176,14 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			};
 
 			for (const auto &e : KeyMap) {
-				if (wParam == (WPARAM)e.KeyCode) {
+				if (wParam == static_cast<WPARAM>(e.KeyCode)) {
 					::SendMessage(hwnd, e.Message, e.Request, 0);
 					return 0;
 				}
 			}
 
 			if (m_pEventHandler != nullptr
-					&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+					&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 				return 0;
 		}
 		break;
@@ -4521,7 +4521,7 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 			MF_BYCOMMAND);
 	}
 	if (m_pChannelProviderManager != nullptr) {
-		int ProviderCount = (int)m_pChannelProviderManager->GetChannelProviderCount();
+		int ProviderCount = static_cast<int>(m_pChannelProviderManager->GetChannelProviderCount());
 		if (ProviderCount > 0) {
 			if (ProviderCount > MAX_CHANNEL_PROVIDER_MENU_ITEMS)
 				ProviderCount = MAX_CHANNEL_PROVIDER_MENU_ITEMS;
@@ -4654,7 +4654,7 @@ bool CProgramGuide::ExecuteiEpgAssociate(const ProgramGuide::CServiceInfo *pServ
 	if (!pServiceInfo->SaveiEpgFile(pEventInfo, szFileName, true))
 		return false;
 
-	return (INT_PTR)::ShellExecute(nullptr, nullptr, szFileName, nullptr, nullptr, SW_SHOWNORMAL) > 32;
+	return reinterpret_cast<INT_PTR>(::ShellExecute(nullptr, nullptr, szFileName, nullptr, nullptr, SW_SHOWNORMAL)) > 32;
 }
 
 
@@ -5016,7 +5016,7 @@ static int FindChannelFromChannelProvider(
 			if (pChInfo->GetNetworkID() == ChannelInfo.GetNetworkID()
 					&& pChInfo->GetTransportStreamID() == ChannelInfo.GetTransportStreamID()
 					&& pChInfo->GetServiceID() == ChannelInfo.GetServiceID()) {
-				return (int)i;
+				return static_cast<int>(i);
 			}
 		}
 	}
@@ -5047,14 +5047,14 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 
 			const size_t ProviderCount = m_pProgramGuide->m_pChannelProviderManager->GetChannelProviderCount();
 			for (size_t i = 0; i < ProviderCount; i++) {
-				if ((int)i != m_pProgramGuide->GetCurrentChannelProvider()) {
+				if (static_cast<int>(i) != m_pProgramGuide->GetCurrentChannelProvider()) {
 					CProgramGuideChannelProvider *pChannelProvider =
 						m_pProgramGuide->m_pChannelProviderManager->GetChannelProvider(i);
 					pChannelProvider->Update();
 					const int Group = FindChannelFromChannelProvider(
 						pChannelProvider, pEventInfo->GetChannelInfo());
 					if (Group >= 0) {
-						m_pProgramGuide->SetChannelProvider((int)i, Group);
+						m_pProgramGuide->SetChannelProvider(static_cast<int>(i), Group);
 						m_pProgramGuide->JumpEvent(*pEventInfo);
 						return;
 					}
@@ -5467,7 +5467,7 @@ public:
 		if (m_pProgramGuide->GetListMode() == CProgramGuide::ListMode::Services)
 			fEnabled = m_pProgramGuide->GetViewDay() < CProgramGuide::DAY_LAST;
 		else
-			fEnabled = m_pProgramGuide->GetWeekListService() + 1 < (int)m_pProgramGuide->GetServiceList().NumServices();
+			fEnabled = m_pProgramGuide->GetWeekListService() + 1 < static_cast<int>(m_pProgramGuide->GetServiceList().NumServices());
 
 		COLORREF OldTextColor;
 		if (!fEnabled)
@@ -5623,7 +5623,7 @@ bool CProgramGuideToolbar::SetBarVisible(bool fVisible)
 
 void CProgramGuideToolbar::GetBarSize(SIZE *pSize)
 {
-	if (m_hwnd != nullptr && (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0) > 0) {
+	if (m_hwnd != nullptr && static_cast<int>(::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0)) > 0) {
 		::SendMessage(m_hwnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(pSize));
 	} else {
 		pSize->cx = 0;
@@ -5713,7 +5713,7 @@ void CProgramGuideToolbar::SelectButton(int Button)
 void CProgramGuideToolbar::UnselectButton()
 {
 	if (m_hwnd != nullptr) {
-		const int ButtonCount = (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0);
+		const int ButtonCount = static_cast<int>(::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0));
 
 		for (int i = 0; i < ButtonCount; i++) {
 			TBBUTTON tbb;
@@ -5738,7 +5738,7 @@ void CProgramGuideToolbar::AdjustSize()
 void CProgramGuideToolbar::DeleteAllButtons()
 {
 	if (m_hwnd != nullptr) {
-		const int ButtonCount = (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0);
+		const int ButtonCount = static_cast<int>(::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0));
 
 		for (int i = ButtonCount - 1; i >= 0; i--)
 			::SendMessage(m_hwnd, TB_DELETEBUTTON, i, 0);
@@ -5974,7 +5974,7 @@ void CFavoritesToolbar::OnSpaceChanged()
 
 		if (CurChannelGroup >= 0) {
 			const CProgramGuideFavorites *pFavorites = m_pProgramGuide->GetFavorites();
-			const int ButtonCount = (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0);
+			const int ButtonCount = static_cast<int>(::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0));
 
 			for (int i = 0; i < ButtonCount; i++) {
 				TBBUTTON tbb;
@@ -6035,10 +6035,10 @@ void CFavoritesToolbar::SetButtons()
 	ButtonSize.cy = m_FontHeight + m_Padding.Horz();
 
 	if (pFavorites->GetFixedWidth()) {
-		const int ButtonCount = (int)::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0);
+		const int ButtonCount = static_cast<int>(::SendMessage(m_hwnd, TB_BUTTONCOUNT, 0, 0));
 		for (int i = 0; i < ButtonCount; i++) {
 			RECT rc;
-			::SendMessage(m_hwnd, TB_GETITEMRECT, i, (LPARAM)&rc);
+			::SendMessage(m_hwnd, TB_GETITEMRECT, i, reinterpret_cast<LPARAM>(&rc));
 			if (ButtonSize.cx < rc.right - rc.left)
 				ButtonSize.cx = rc.right - rc.left;
 		}
@@ -6224,7 +6224,7 @@ bool CDateToolbar::SetButtons(const LibISDB::DateTime *pDateList, int Days, int 
 			TEXT("{}/{}({})"),
 			Date.Month, Date.Day, GetDayOfWeekText(Date.DayOfWeek));
 		tbb.iString = reinterpret_cast<INT_PTR>(szText);
-		tbb.dwData = ((DWORD)Date.Month << 16) | ((DWORD)Date.Day << 8) | Date.DayOfWeek;
+		tbb.dwData = (static_cast<DWORD>(Date.Month) << 16) | (static_cast<DWORD>(Date.Day) << 8) | Date.DayOfWeek;
 		if (i == 0 && Days > 1 && Date.Day == pDateList[i + 1].Day)
 			tbb.dwData |= ITEM_FLAG_NOW;
 		::SendMessage(m_hwnd, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
@@ -6274,7 +6274,7 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	}
 	ThemeDraw.Draw(Style.Back, pnmtb->nmcd.rc);
 
-	const int DayOfWeek = (int)(pnmtb->nmcd.lItemlParam & 0xFF);
+	const int DayOfWeek = static_cast<int>(pnmtb->nmcd.lItemlParam & 0xFF);
 
 	const HFONT hfont = reinterpret_cast<HFONT>(::SendMessage(m_hwnd, WM_GETFONT, 0, 0));
 	const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
@@ -6441,7 +6441,7 @@ void CTimeToolbar::ChangeTime()
 					LibISDB::DateTime DispFirst;
 					EpgUtil::EpgTimeToDisplayTime(First, &DispFirst);
 					const int FirstHour = DispFirst.Hour;
-					const int LastHour = FirstHour + (int)Last.DiffSeconds(First) / (60 * 60);
+					const int LastHour = FirstHour + static_cast<int>(Last.DiffSeconds(First)) / (60 * 60);
 					size_t j = 0;
 					for (; j < Hours.size(); j++) {
 						if (Hours[j] >= FirstHour)
@@ -6464,10 +6464,10 @@ void CTimeToolbar::ChangeTime()
 						LibISDB::DateTime Time = DispFirst;
 						Time.OffsetHours(HourOffset);
 						if (EpgUtil::DisplayTimeToEpgTime(&Time)) {
-							const int Diff = (int)Time.DiffSeconds(First) / (60 * 60);
+							const int Diff = static_cast<int>(Time.DiffSeconds(First)) / (60 * 60);
 							if (Diff >= 0) {
-								TimeList[i].Hour = (WORD)Hour;
-								TimeList[i].Offset = (WORD)Diff;
+								TimeList[i].Hour = static_cast<WORD>(Hour);
+								TimeList[i].Offset = static_cast<WORD>(Diff);
 								TimeList[i].Command = CM_PROGRAMGUIDE_TIME_FIRST + (i - 1);
 								i++;
 							}

@@ -214,7 +214,7 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 			hmenu = hmenuRoot;
 		}
 
-		for (int j = 0; j < (int)Group.ParameterList.size(); j++) {
+		for (int j = 0; j < static_cast<int>(Group.ParameterList.size()); j++) {
 			const ParameterInfo &Param = Group.ParameterList[j];
 
 			TCHAR szText[128];
@@ -232,9 +232,9 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 
 	const int GroupIndex = Command >> 10;
 	const int ParamIndex = (Command & 0x3FF) - 1;
-	if (GroupIndex >= (int)GroupList.size()
+	if (GroupIndex >= static_cast<int>(GroupList.size())
 			|| ParamIndex < 0
-			|| ParamIndex >= (int)GroupList[GroupIndex].ParameterList.size())
+			|| ParamIndex >= static_cast<int>(GroupList[GroupIndex].ParameterList.size()))
 		return false;
 	String Param;
 	Param = L"%";

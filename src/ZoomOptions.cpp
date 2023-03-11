@@ -174,7 +174,7 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 		StringFormat(szText, TEXT("CustomZoom{}"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Rate.Rate);
 		StringFormat(szText, TEXT("CustomZoom{}_Type"), i + 1);
-		Settings.Write(szText, (int)m_ZoomList[j].Type);
+		Settings.Write(szText, static_cast<int>(m_ZoomList[j].Type));
 		StringFormat(szText, TEXT("CustomZoom{}_Width"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Width);
 		StringFormat(szText, TEXT("CustomZoom{}_Height"), i + 1);
@@ -272,7 +272,7 @@ int CZoomOptions::GetIndexByCommand(int Command) const
 
 void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, size_t MaxLength) const
 {
-	const int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, (int)MaxLength);
+	const int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, static_cast<int>(MaxLength));
 	if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
 		if (Info.Type == ZoomType::Rate)
 			StringFormat(pszText + Length, MaxLength - Length, TEXT(" : {}%"), Info.Rate.GetPercentage());
@@ -499,7 +499,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			if (!m_fChanging)
 				SetItemState(hDlg);

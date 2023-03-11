@@ -456,12 +456,12 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 		Buffer[FileSize.LowPart + 2] = 0;
 
 		if (Buffer[0] == 0xFF && Buffer[1] == 0xFE) {
-			pszBuffer = (LPWSTR)(Buffer.get() + 2);
+			pszBuffer = reinterpret_cast<LPWSTR>(Buffer.get() + 2);
 		} else {
-			const int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, nullptr, 0);
+			const int Length = ::MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char*>(Buffer.get()), FileSize.LowPart, nullptr, 0);
 			std::unique_ptr<BYTE[]> ConvertedBuffer(new BYTE[(Length + 1) * sizeof(WCHAR)]);
-			LPWSTR pszDst = (LPWSTR)ConvertedBuffer.get();
-			::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, pszDst, Length);
+			LPWSTR pszDst = reinterpret_cast<LPWSTR>(ConvertedBuffer.get());
+			::MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char*>(Buffer.get()), FileSize.LowPart, pszDst, Length);
 			pszDst[Length] = L'\0';
 			Buffer = std::move(ConvertedBuffer);
 			pszBuffer = pszDst;
@@ -509,9 +509,9 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 						::wcstol(Items[3].c_str(), nullptr, 0),
 						::wcstol(Items[4].c_str(), nullptr, 0),
 						PathItems[PathItems.size() - 1].c_str());
-					ChannelInfo.SetServiceID((WORD)::wcstol(Items[5].c_str(), nullptr, 0));
-					ChannelInfo.SetNetworkID((WORD)::wcstol(Items[6].c_str(), nullptr, 0));
-					ChannelInfo.SetTransportStreamID((WORD)::wcstol(Items[7].c_str(), nullptr, 0));
+					ChannelInfo.SetServiceID(static_cast<WORD>(::wcstol(Items[5].c_str(), nullptr, 0)));
+					ChannelInfo.SetNetworkID(static_cast<WORD>(::wcstol(Items[6].c_str(), nullptr, 0)));
+					ChannelInfo.SetTransportStreamID(static_cast<WORD>(::wcstol(Items[7].c_str(), nullptr, 0)));
 
 					CFavoriteChannel *pChannel = new CFavoriteChannel(ChannelInfo);
 					pChannel->SetName(PathItems[PathItems.size() - 1].c_str());
@@ -553,7 +553,7 @@ bool CFavoritesManager::Save(LPCTSTR pszFileName) const
 
 	DWORD Write;
 	static const WORD BOM = 0xFEFF;
-	const DWORD Size = (DWORD)(Buffer.length() * sizeof(String::value_type));
+	const DWORD Size = static_cast<DWORD>(Buffer.length() * sizeof(String::value_type));
 	if (!::WriteFile(hFile, &BOM, sizeof(BOM), &Write, nullptr)
 			|| Write != sizeof(BOM)
 			|| !::WriteFile(hFile, Buffer.data(), Size, &Write, nullptr)

@@ -59,14 +59,14 @@ bool CChannelHistory::SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInf
 			return true;
 	}
 
-	while ((int)m_ChannelList.size() - 1 > m_CurrentChannel) {
+	while (static_cast<int>(m_ChannelList.size()) - 1 > m_CurrentChannel) {
 		m_ChannelList.pop_back();
 	}
 
 	m_ChannelList.emplace_back(std::make_unique<CTunerChannelInfo>(*pChannelInfo, pszDriverName));
 	m_CurrentChannel++;
 
-	if ((int)m_ChannelList.size() > m_MaxChannelHistory) {
+	if (static_cast<int>(m_ChannelList.size()) > m_MaxChannelHistory) {
 		m_ChannelList.pop_front();
 		m_CurrentChannel--;
 	}
@@ -77,7 +77,7 @@ bool CChannelHistory::SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInf
 
 const CTunerChannelInfo *CChannelHistory::Forward()
 {
-	if (m_CurrentChannel + 1 >= (int)m_ChannelList.size())
+	if (m_CurrentChannel + 1 >= static_cast<int>(m_ChannelList.size()))
 		return nullptr;
 	return m_ChannelList[++m_CurrentChannel].get();
 }
@@ -103,7 +103,7 @@ CRecentChannelList::CRecentChannelList()
 
 int CRecentChannelList::NumChannels() const
 {
-	return (int)m_ChannelList.size();
+	return static_cast<int>(m_ChannelList.size());
 }
 
 
@@ -141,7 +141,7 @@ bool CRecentChannelList::Add(LPCTSTR pszDriverName, const CChannelInfo *pChannel
 
 	m_ChannelList.emplace_front(std::make_unique<CTunerChannelInfo>(*pChannelInfo, pszDriverName));
 
-	if ((int)m_ChannelList.size() > m_MaxChannelHistory) {
+	if (static_cast<int>(m_ChannelList.size()) > m_MaxChannelHistory) {
 		m_ChannelList.pop_back();
 	}
 

@@ -142,14 +142,13 @@ HIMAGELIST CreateImageListFromIcons(
 
 void SetWindowIcon(HWND hwnd, HINSTANCE hinst, LPCTSTR pszIcon)
 {
-	HICON hico = (HICON)::LoadImage(hinst, pszIcon, IMAGE_ICON,
-									0, 0, LR_DEFAULTSIZE | LR_SHARED);
+	HICON hico = static_cast<HICON>(::LoadImage(hinst, pszIcon, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
 	::SendMessage(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hico));
-	hico = (HICON)::LoadImage(
+	hico = static_cast<HICON>(::LoadImage(
 		hinst, pszIcon, IMAGE_ICON,
 		::GetSystemMetrics(SM_CXSMICON),
 		::GetSystemMetrics(SM_CYSMICON),
-		LR_SHARED);
+		LR_SHARED));
 	::SendMessage(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hico));
 }
 

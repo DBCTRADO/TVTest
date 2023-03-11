@@ -103,7 +103,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 		if (pDriverInfo != nullptr) {
 			if (CurChannelProvider
 					&& IsEqualFileName(DefaultTuner.c_str(), pDriverInfo->GetFileName())) {
-				m_CurChannelProvider = (int)m_ChannelProviderList.size();
+				m_CurChannelProvider = static_cast<int>(m_ChannelProviderList.size());
 				m_ChannelProviderList.emplace_back(std::move(CurChannelProvider));
 			} else {
 				CDriverManager::TunerSpec Spec;

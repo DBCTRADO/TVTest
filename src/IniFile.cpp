@@ -96,11 +96,11 @@ bool CIniFile::Open(LPCWSTR pszFileName, OpenFlag Flags)
 				Buffer[FileSize.LowPart + 2] = 0;
 
 				if (Buffer[0] == 0xFF && Buffer[1] == 0xFE) {
-					Parse((WCHAR*)(Buffer.get() + 2));
+					Parse(reinterpret_cast<WCHAR*>(Buffer.get() + 2));
 				} else {
-					const int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, nullptr, 0);
+					const int Length = ::MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char*>(Buffer.get()), FileSize.LowPart, nullptr, 0);
 					std::wstring Data(Length, L'\0');
-					::MultiByteToWideChar(CP_ACP, 0, (char*)Buffer.get(), FileSize.LowPart, Data.data(), Length);
+					::MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char*>(Buffer.get()), FileSize.LowPart, Data.data(), Length);
 					Parse(Data.c_str());
 				}
 			}
@@ -159,7 +159,7 @@ bool CIniFile::Close()
 
 		::SetFilePointer(m_hFile, 0, nullptr, FILE_BEGIN);
 
-		const DWORD Size = (DWORD)(Buffer.size() * sizeof(String::value_type));
+		const DWORD Size = static_cast<DWORD>(Buffer.size() * sizeof(String::value_type));
 		DWORD Write;
 		static const WORD BOM = 0xFEFF;
 		if (!::WriteFile(m_hFile, &BOM, sizeof(BOM), &Write, nullptr) || Write != sizeof(BOM)

@@ -154,7 +154,7 @@ namespace TVTest
 			bool SetEventInfo(int Index, const LibISDB::EventInfo *pInfo);
 			const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 			const LibISDB::EventInfo &GetEventInfo(int Index) const { return m_EventList[Index]; }
-			int NumEvents() const { return (int)m_EventList.size(); }
+			int NumEvents() const { return static_cast<int>(m_EventList.size()); }
 			void SetMaxEvents(int Events);
 			bool IsEventEnabled(int Index) const;
 			WORD GetNetworkID() const { return m_ChannelInfo.GetNetworkID(); }

@@ -168,7 +168,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 			}
 		}
 		if (!fDefault) {
-			Settings.Write(TEXT("ItemCount"), (int)m_MenuItemList.size());
+			Settings.Write(TEXT("ItemCount"), static_cast<int>(m_MenuItemList.size()));
 			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 			for (size_t i = 0; i < m_MenuItemList.size(); i++) {
 				const MenuItemInfo &Item = m_MenuItemList[i];
@@ -461,7 +461,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			if (!m_fChanging)
 				SetDlgItemState(hDlg);
@@ -486,7 +486,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_MenuItemList.resize(ItemCount);
 
 				for (int i = 0; i < ItemCount; i++) {
-					m_MenuItemList[i].ID = (int)m_ItemListView.GetItemParam(i);
+					m_MenuItemList[i].ID = static_cast<int>(m_ItemListView.GetItemParam(i));
 					m_MenuItemList[i].fVisible = m_ItemListView.IsItemChecked(i);
 				}
 			}

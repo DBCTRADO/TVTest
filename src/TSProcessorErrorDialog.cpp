@@ -97,7 +97,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					const LRESULT Index = DlgComboBox_AddString(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Name.c_str());
 					DlgComboBox_SetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Index, i);
 					if (StringUtility::CompareNoCase(m_Device, Name) == 0)
-						Sel = (int)Index;
+						Sel = static_cast<int>(Index);
 				}
 				DlgComboBox_SetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Sel);
 				fFound = SearchFilters();
@@ -159,15 +159,15 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		case IDOK:
 			{
 				if (DlgRadioButton_IsChecked(hDlg, IDC_TSPROCESSORERROR_RETRY)) {
-					const int DeviceSel = (int)DlgComboBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST);
-					const int FilterSel = (int)DlgListBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_FILTERLIST);
+					const int DeviceSel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST));
+					const int FilterSel = static_cast<int>(DlgListBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_FILTERLIST));
 
 					if (DeviceSel < 0 || FilterSel < 0) {
 						::MessageBox(hDlg, TEXT("フィルターを選択してください。"), TEXT("お願い"), MB_OK | MB_ICONINFORMATION);
 						return TRUE;
 					}
 
-					const int Device = (int)DlgComboBox_GetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel);
+					const int Device = static_cast<int>(DlgComboBox_GetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel));
 					m_pTSProcessor->GetDeviceName(Device, &m_Device);
 
 					const LRESULT Length = DlgListBox_GetStringLength(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel);
@@ -198,10 +198,10 @@ bool CTSProcessorErrorDialog::SearchFilters()
 {
 	DlgListBox_Clear(m_hDlg, IDC_TSPROCESSORERROR_FILTERLIST);
 
-	const int DeviceSel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST);
+	const int DeviceSel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST));
 	if (DeviceSel < 0)
 		return false;
-	const int Device = (int)DlgComboBox_GetItemData(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel);
+	const int Device = static_cast<int>(DlgComboBox_GetItemData(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel));
 
 	bool fFound = false;
 

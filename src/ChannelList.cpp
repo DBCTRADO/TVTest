@@ -197,7 +197,7 @@ bool CChannelList::AddChannel(CChannelInfo *pInfo)
 
 bool CChannelList::InsertChannel(int Index, const CChannelInfo &Info)
 {
-	if (Index < 0 || (size_t)Index > m_ChannelList.size()) {
+	if (Index < 0 || static_cast<size_t>(Index) > m_ChannelList.size()) {
 		TRACE(TEXT("CChannelList::InsertChannel() : Out of range [{}]\n"), Index);
 		return false;
 	}
@@ -213,7 +213,7 @@ bool CChannelList::InsertChannel(int Index, const CChannelInfo &Info)
 
 CChannelInfo *CChannelList::GetChannelInfo(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size()) {
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size()) {
 		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range {}\n"), Index);
 		return nullptr;
 	}
@@ -223,7 +223,7 @@ CChannelInfo *CChannelList::GetChannelInfo(int Index)
 
 const CChannelInfo *CChannelList::GetChannelInfo(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size()) {
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size()) {
 		//TRACE(TEXT("CChannelList::GetChannelInfo Out of range {}\n"), Index);
 		return nullptr;
 	}
@@ -233,7 +233,7 @@ const CChannelInfo *CChannelList::GetChannelInfo(int Index) const
 
 int CChannelList::GetSpace(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return -1;
 	return m_ChannelList[Index]->GetSpace();
 }
@@ -241,7 +241,7 @@ int CChannelList::GetSpace(int Index) const
 
 int CChannelList::GetChannelIndex(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return -1;
 	return m_ChannelList[Index]->GetChannelIndex();
 }
@@ -249,7 +249,7 @@ int CChannelList::GetChannelIndex(int Index) const
 
 int CChannelList::GetChannelNo(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return -1;
 	return m_ChannelList[Index]->GetChannelNo();
 }
@@ -257,7 +257,7 @@ int CChannelList::GetChannelNo(int Index) const
 
 int CChannelList::GetPhysicalChannel(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return -1;
 	return m_ChannelList[Index]->GetPhysicalChannel();
 }
@@ -265,7 +265,7 @@ int CChannelList::GetPhysicalChannel(int Index) const
 
 LPCTSTR CChannelList::GetName(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		//return nullptr;
 		return TEXT("");
 	return m_ChannelList[Index]->GetName();
@@ -274,7 +274,7 @@ LPCTSTR CChannelList::GetName(int Index) const
 
 bool CChannelList::IsEnabled(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return false;
 	return m_ChannelList[Index]->IsEnabled();
 }
@@ -282,7 +282,7 @@ bool CChannelList::IsEnabled(int Index) const
 
 bool CChannelList::DeleteChannel(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return false;
 
 	auto itr = m_ChannelList.begin();
@@ -304,7 +304,7 @@ int CChannelList::Find(const CChannelInfo *pInfo) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
 		if (m_ChannelList[i].get() == pInfo)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -330,7 +330,7 @@ int CChannelList::Find(const CChannelInfo &Info, bool fEnabledOnly) const
 					|| pChInfo->GetTransportStreamID() == Info.GetTransportStreamID())
 				&& (Info.GetServiceID() == 0
 					|| pChInfo->GetServiceID() == Info.GetServiceID()))
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -345,7 +345,7 @@ int CChannelList::FindByIndex(int Space, int ChannelIndex, int ServiceID, bool f
 				&& (Space < 0 || pChInfo->GetSpace() == Space)
 				&& (ChannelIndex < 0 || pChInfo->GetChannelIndex() == ChannelIndex)
 				&& (ServiceID <= 0 || pChInfo->GetServiceID() == ServiceID))
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -355,7 +355,7 @@ int CChannelList::FindPhysicalChannel(int Channel) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
 		if (m_ChannelList[i]->GetPhysicalChannel() == Channel)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -367,7 +367,7 @@ int CChannelList::FindChannelNo(int No, bool fEnabledOnly) const
 		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 		if (pChInfo->GetChannelNo() == No
 				&& (!fEnabledOnly || pChInfo->IsEnabled()))
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -377,7 +377,7 @@ int CChannelList::FindServiceID(WORD ServiceID) const
 {
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
 		if (m_ChannelList[i]->GetServiceID() == ServiceID)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -391,7 +391,7 @@ int CChannelList::FindByIDs(WORD NetworkID, WORD TransportStreamID, WORD Service
 				&& (NetworkID == 0 || pChannelInfo->GetNetworkID() == NetworkID)
 				&& (TransportStreamID == 0 || pChannelInfo->GetTransportStreamID() == TransportStreamID)
 				&& (ServiceID == 0 || pChannelInfo->GetServiceID() == ServiceID))
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -403,7 +403,7 @@ int CChannelList::FindByName(LPCTSTR pszName) const
 		return -1;
 	for (size_t i = 0; i < m_ChannelList.size(); i++) {
 		if (::lstrcmp(m_ChannelList[i]->GetName(), pszName) == 0)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -411,12 +411,12 @@ int CChannelList::FindByName(LPCTSTR pszName) const
 
 int CChannelList::GetNextChannel(int Index, bool fWrap) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return -1;
 
 	const int ChannelNo = GetChannelNo(Index);
 
-	for (int i = Index + 1; i < (int)m_ChannelList.size(); i++) {
+	for (int i = Index + 1; i < static_cast<int>(m_ChannelList.size()); i++) {
 		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo() == ChannelNo)
@@ -451,7 +451,7 @@ int CChannelList::GetNextChannel(int Index, bool fWrap) const
 
 int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 {
-	if (Index < 0 || (size_t)Index >= m_ChannelList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ChannelList.size())
 		return -1;
 
 	const int ChannelNo = GetChannelNo(Index);
@@ -486,7 +486,7 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 		Channel = Max;
 	}
 
-	for (int i = (int)m_ChannelList.size() - 1; i >= 0; i--) {
+	for (int i = static_cast<int>(m_ChannelList.size()) - 1; i >= 0; i--) {
 		const CChannelInfo *pChInfo = m_ChannelList[i].get();
 
 		if (pChInfo->IsEnabled() && pChInfo->GetChannelNo() == Channel)
@@ -1108,8 +1108,8 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 							if (p[Length] == _T(')') && p[Length + 1] == _T(')'))
 								Length++;
 							if (Length > 0) {
-								StringCopy(szName, p, std::min(Length + 1, (int)lengthof(szName)));
-								if ((int)m_TuningSpaceList.size() <= Space) {
+								StringCopy(szName, p, std::min<size_t>(Length + 1, lengthof(szName)));
+								if (static_cast<int>(m_TuningSpaceList.size()) <= Space) {
 									Reserve(Space + 1);
 									m_TuningSpaceList[Space]->SetName(szName);
 								}

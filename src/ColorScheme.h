@@ -502,7 +502,7 @@ namespace TVTest
 	class CColorSchemeList
 	{
 	public:
-		int NumColorSchemes() const { return (int)m_List.size(); }
+		int NumColorSchemes() const { return static_cast<int>(m_List.size()); }
 		bool Add(CColorScheme *pColorScheme);
 		bool Insert(int Index, CColorScheme *pColorScheme);
 		bool Load(LPCTSTR pszDirectory);

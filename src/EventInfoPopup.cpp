@@ -784,7 +784,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		break;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case EN_MSGFILTER:
 			{
 				MSGFILTER *pMsgFilter = reinterpret_cast<MSGFILTER*>(lParam);

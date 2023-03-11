@@ -216,7 +216,7 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				m_fRestoreMute =
@@ -268,7 +268,7 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 				m_fPacketBuffering = fBuffering;
 				m_PacketBufferPoolPercentage = PoolPercentage;
 
-				const int Priority = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_STREAMTHREADPRIORITY);
+				const int Priority = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_STREAMTHREADPRIORITY));
 				if (Priority >= 0 && Priority != m_StreamThreadPriority) {
 					m_StreamThreadPriority = Priority;
 					SetUpdateFlag(UPDATE_STREAMTHREADPRIORITY);

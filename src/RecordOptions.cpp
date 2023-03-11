@@ -372,7 +372,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				DlgComboBox_AddString(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN, pszFileName);
 				if (!m_Settings.m_WritePlugin.empty()
 						&& IsEqualFileName(pszFileName, m_Settings.m_WritePlugin.c_str()))
-					Sel = (int)i;
+					Sel = static_cast<int>(i);
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN, Sel + 1);
 			EnableDlgItem(hDlg, IDC_RECORDOPTIONS_WRITEPLUGINSETTING, Sel >= 0);
@@ -495,7 +495,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			{
 				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
 
-				if (Sel >= 0 && (size_t)Sel < m_WritePluginList.size()) {
+				if (Sel >= 0 && static_cast<size_t>(Sel) < m_WritePluginList.size()) {
 					CRecordManager::ShowWritePluginSetting(hDlg, m_WritePluginList[Sel].c_str());
 				}
 			}
@@ -504,7 +504,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				String SaveFolder, FileName;
@@ -557,12 +557,12 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				m_LowFreeSpaceThreshold =
 					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD, nullptr, FALSE);
 
-				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND);
+				int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND));
 				if (Sel >= 0 && Sel < lengthof(StatusBarCommandList))
 					m_StatusBarRecordCommand = StatusBarCommandList[Sel];
 
-				Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
-				if (Sel >= 0 && (size_t)Sel < m_WritePluginList.size())
+				Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN)) - 1;
+				if (Sel >= 0 && static_cast<size_t>(Sel) < m_WritePluginList.size())
 					m_Settings.m_WritePlugin = m_WritePluginList[Sel];
 				else
 					m_Settings.m_WritePlugin.clear();

@@ -68,10 +68,10 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.NetworkID"), i, j);
 					if (!Settings.Read(szKey, &Value))
 						break;
-					TunerDecInfo.NetworkID = (WORD)Value;
+					TunerDecInfo.NetworkID = static_cast<WORD>(Value);
 					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.TSID"), i, j);
 					if (Settings.Read(szKey, &Value))
-						TunerDecInfo.TransportStreamID = (WORD)Value;
+						TunerDecInfo.TransportStreamID = static_cast<WORD>(Value);
 					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.Enable"), i, j);
 					Settings.Read(szKey, &TunerDecInfo.fEnable);
 					StringFormat(szKey, TEXT("Processor{}.NetworkMap{}.EnableProcessing"), i, j);
@@ -107,13 +107,13 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 					Settings.Read(szKey, &TunerDecInfo.Tuner);
 					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.NetworkID"), i, j);
 					if (Settings.Read(szKey, &Value))
-						TunerDecInfo.NetworkID = (WORD)Value;
+						TunerDecInfo.NetworkID = static_cast<WORD>(Value);
 					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.TSID"), i, j);
 					if (Settings.Read(szKey, &Value))
-						TunerDecInfo.TransportStreamID = (WORD)Value;
+						TunerDecInfo.TransportStreamID = static_cast<WORD>(Value);
 					StringFormat(szKey, TEXT("Processor{}.TunerMap{}.ServiceID"), i, j);
 					if (Settings.Read(szKey, &Value))
-						TunerDecInfo.ServiceID = (WORD)Value;
+						TunerDecInfo.ServiceID = static_cast<WORD>(Value);
 
 					pTSProcessorSettings->m_TunerFilterMap.push_back(TunerDecInfo);
 				}
@@ -144,9 +144,9 @@ bool CTSProcessorManager::ReadSettings(CSettings &Settings)
 bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 {
 	Settings.Clear();
-	Settings.Write(TEXT("SettingsCount"), (int)m_SettingsList.size());
+	Settings.Write(TEXT("SettingsCount"), static_cast<int>(m_SettingsList.size()));
 
-	for (int i = 0; i < (int)m_SettingsList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_SettingsList.size()); i++) {
 		const CTSProcessorSettings *pTSProcessorSettings = m_SettingsList[i].get();
 		TCHAR szKey[64], szBuffer[256];
 
@@ -164,7 +164,7 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 		StringFormat(szKey, TEXT("Processor{}.DefaultFilter"), i);
 		Settings.Write(szKey, pTSProcessorSettings->m_DefaultFilter.Filter);
 
-		for (int j = 0; j < (int)pTSProcessorSettings->m_TunerFilterMap.size(); j++) {
+		for (int j = 0; j < static_cast<int>(pTSProcessorSettings->m_TunerFilterMap.size()); j++) {
 			const TunerFilterInfo &TunerDecInfo = pTSProcessorSettings->m_TunerFilterMap[j];
 
 			StringFormat(szKey, TEXT("Processor{}.TunerMap{}.Enable"), i, j);
@@ -181,15 +181,15 @@ bool CTSProcessorManager::WriteSettings(CSettings &Settings) const
 			Settings.Write(szKey, TunerDecInfo.Tuner);
 			if (TunerDecInfo.IsNetworkIDEnabled()) {
 				StringFormat(szKey, TEXT("Processor{}.TunerMap{}.NetworkID"), i, j);
-				Settings.Write(szKey, (unsigned int)TunerDecInfo.NetworkID);
+				Settings.Write(szKey, static_cast<unsigned int>(TunerDecInfo.NetworkID));
 			}
 			if (TunerDecInfo.IsTransportStreamIDEnabled()) {
 				StringFormat(szKey, TEXT("Processor{}.TunerMap{}.TSID"), i, j);
-				Settings.Write(szKey, (unsigned int)TunerDecInfo.TransportStreamID);
+				Settings.Write(szKey, static_cast<unsigned int>(TunerDecInfo.TransportStreamID));
 			}
 			if (TunerDecInfo.IsServiceIDEnabled()) {
 				StringFormat(szKey, TEXT("Processor{}.TunerMap{}.ServiceID"), i, j);
-				Settings.Write(szKey, (unsigned int)TunerDecInfo.ServiceID);
+				Settings.Write(szKey, static_cast<unsigned int>(TunerDecInfo.ServiceID));
 			}
 		}
 

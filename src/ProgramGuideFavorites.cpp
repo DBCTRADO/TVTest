@@ -182,7 +182,7 @@ bool CProgramGuideFavoritesDialog::Show(HWND hwndOwner)
 void CProgramGuideFavoritesDialog::AddNewItem(const CProgramGuideFavorites::FavoriteInfo &Info)
 {
 	m_Favorites.Add(Info);
-	m_CurItem = (int)m_Favorites.GetCount() - 1;
+	m_CurItem = static_cast<int>(m_Favorites.GetCount()) - 1;
 }
 
 
@@ -209,7 +209,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			for (size_t i = 0; i < m_Favorites.GetCount(); i++) {
 				const CProgramGuideFavorites::FavoriteInfo *pInfo = m_Favorites.Get(i);
 
-				lvi.iItem = (int)i;
+				lvi.iItem = static_cast<int>(i);
 				lvi.lParam = reinterpret_cast<LPARAM>(pInfo);
 				lvi.pszText = const_cast<LPTSTR>(pInfo->Label.c_str());
 				ListView_InsertItem(hwndList, &lvi);

@@ -451,7 +451,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == hwnd && LOWORD(lParam) == HTCLIENT && m_HotItem != ItemType::None) {
+		if (reinterpret_cast<HWND>(wParam) == hwnd && LOWORD(lParam) == HTCLIENT && m_HotItem != ItemType::None) {
 			::SetCursor(GetActionCursor());
 			return TRUE;
 		}
@@ -500,7 +500,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 	}
@@ -857,7 +857,7 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 

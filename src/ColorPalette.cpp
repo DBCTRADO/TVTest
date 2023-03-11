@@ -249,7 +249,7 @@ void CColorPalette::SetToolTip()
 
 void CColorPalette::SendNotify(int Code)
 {
-	::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(GetWindowLong(m_hwnd, GWL_ID), Code), (LPARAM)m_hwnd);
+	::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(GetWindowLong(m_hwnd, GWL_ID), Code), reinterpret_cast<LPARAM>(m_hwnd));
 }
 
 
@@ -360,11 +360,11 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return 0;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case TTN_NEEDTEXT:
 			{
 				LPNMTTDISPINFO pttdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
-				const int Index = (int)pttdi->hdr.idFrom;
+				const int Index = static_cast<int>(pttdi->hdr.idFrom);
 
 				pttdi->lpszText = pttdi->szText;
 				pttdi->hinst = nullptr;

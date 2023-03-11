@@ -398,11 +398,11 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 		const bool fRemain = m_fRemain && RecordManager.IsStopTimeSpecified();
 		int RecordSec;
 		if (fRemain) {
-			RecordSec = (int)(RecordManager.GetRemainTime() / 1000);
+			RecordSec = static_cast<int>(RecordManager.GetRemainTime() / 1000);
 			if (RecordSec < 0)
 				RecordSec = 0;
 		} else {
-			RecordSec = (int)(RecordManager.GetRecordTime() / 1000);
+			RecordSec = static_cast<int>(RecordManager.GetRecordTime() / 1000);
 		}
 		StringFormat(
 			szText, TEXT("{}{}:{:02}:{:02}"),
@@ -475,7 +475,7 @@ size_t CRecordStatusItem::GetTipText(LPTSTR pszText, size_t MaxLength)
 	if (RecordManager.IsRecording()) {
 		const CRecordTask *pRecordTask = RecordManager.GetRecordTask();
 
-		const unsigned int RecordSec = (unsigned int)(pRecordTask->GetRecordTime() / 1000);
+		const unsigned int RecordSec = static_cast<unsigned int>(pRecordTask->GetRecordTime() / 1000);
 		size_t Length = StringFormat(
 			pszText, MaxLength,
 			TEXT("● {}:{:02}:{:02}"),
@@ -483,7 +483,7 @@ size_t CRecordStatusItem::GetTipText(LPTSTR pszText, size_t MaxLength)
 
 		const LONGLONG WroteSize = pRecordTask->GetWroteSize();
 		if (WroteSize >= 0) {
-			const unsigned int Size = (unsigned int)(WroteSize / (1024 * 1024 / 100));
+			const unsigned int Size = static_cast<unsigned int>(WroteSize / (1024 * 1024 / 100));
 			Length += StringFormat(
 				pszText + Length, MaxLength - Length,
 				TEXT("\r\nサイズ: {}.{:02} MB"),
@@ -492,7 +492,7 @@ size_t CRecordStatusItem::GetTipText(LPTSTR pszText, size_t MaxLength)
 
 		const LONGLONG DiskFreeSpace = pRecordTask->GetFreeSpace();
 		if (DiskFreeSpace > 0) {
-			const unsigned int FreeSpace = (unsigned int)(DiskFreeSpace / (ULONGLONG)(1024 * 1024 * 1024 / 100));
+			const unsigned int FreeSpace = static_cast<unsigned int>(DiskFreeSpace / static_cast<ULONGLONG>(1024 * 1024 * 1024 / 100));
 			Length += StringFormat(
 				pszText + Length, MaxLength - Length,
 				TEXT("\r\n空き容量: {}.{:02} GB"),
@@ -885,7 +885,7 @@ void CProgramInfoStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dra
 			if (m_EventInfo.Duration > 0 && Elapsed < static_cast<long long>(m_EventInfo.Duration)) {
 				rcProgress.right =
 					rcProgress.left +
-					::MulDiv(rcProgress.right - rcProgress.left, (int)Elapsed, m_EventInfo.Duration);
+					::MulDiv(rcProgress.right - rcProgress.left, static_cast<int>(Elapsed), m_EventInfo.Duration);
 			}
 			ThemeDraw.Draw(m_ProgressElapsedStyle, rcProgress);
 		}

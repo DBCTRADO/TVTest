@@ -101,11 +101,11 @@ void CNotificationBar::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
 	pThemeManager->GetBackgroundStyle(Theme::CThemeManager::STYLE_NOTIFICATIONBAR, &m_BackStyle);
 
-	m_TextColor[(int)MessageType::Info] =
+	m_TextColor[static_cast<int>(MessageType::Info)] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARTEXT);
-	m_TextColor[(int)MessageType::Warning] =
+	m_TextColor[static_cast<int>(MessageType::Warning)] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARWARNINGTEXT);
-	m_TextColor[(int)MessageType::Error] =
+	m_TextColor[static_cast<int>(MessageType::Error)] =
 		pThemeManager->GetColor(CColorScheme::COLOR_NOTIFICATIONBARERRORTEXT);
 
 	if (m_hwnd != nullptr)
@@ -379,9 +379,9 @@ void CNotificationBar::ApplyStyle()
 	m_Icons[(int)MessageType::Info].Attach(
 		LoadSystemIcon(IDI_INFORMATION, m_Style.IconSize.Width, m_Style.IconSize.Height));
 	*/
-	m_Icons[(int)MessageType::Warning].Attach(
+	m_Icons[static_cast<int>(MessageType::Warning)].Attach(
 		LoadSystemIcon(IDI_WARNING, m_Style.IconSize.Width, m_Style.IconSize.Height));
-	m_Icons[(int)MessageType::Error].Attach(
+	m_Icons[static_cast<int>(MessageType::Error)].Attach(
 		LoadSystemIcon(IDI_ERROR, m_Style.IconSize.Width, m_Style.IconSize.Height));
 
 	CalcBarHeight();

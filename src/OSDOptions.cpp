@@ -336,7 +336,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				m_fShowOSD = DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOWOSD);
@@ -359,7 +359,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT))
 					EnabledOSD |= OSD_FLAG(OSDType::ChannelNoInput);
 				m_EnabledOSD = EnabledOSD;
-				m_ChannelChangeType = (ChannelChangeType)DlgComboBox_GetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE);
+				m_ChannelChangeType = static_cast<ChannelChangeType>(DlgComboBox_GetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE));
 				GetDlgItemString(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, &m_ChannelChangeText);
 
 				m_fEnableNotificationBar =

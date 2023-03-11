@@ -264,7 +264,7 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			RendererInfo Info;
 			for (int i = 0; GetRendererInfo(i, &Info); i++) {
 				DlgComboBox_AddString(hDlg, IDC_OPTIONS_RENDERER, Info.pszName);
-				DlgComboBox_SetItemData(hDlg, IDC_OPTIONS_RENDERER, i, (LPARAM)Info.Renderer);
+				DlgComboBox_SetItemData(hDlg, IDC_OPTIONS_RENDERER, i, static_cast<LPARAM>(Info.Renderer));
 				if (Info.Renderer == m_VideoRendererType)
 					Sel = i;
 			}
@@ -299,9 +299,9 @@ INT_PTR CVideoOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				bool f;
 
 				const LibISDB::DirectShow::VideoRenderer::RendererType Renderer =
-					(LibISDB::DirectShow::VideoRenderer::RendererType)
+					static_cast<LibISDB::DirectShow::VideoRenderer::RendererType>(
 					DlgComboBox_GetItemData(hDlg, IDC_OPTIONS_RENDERER,
-											DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_RENDERER));
+											DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_RENDERER)));
 				if (Renderer != m_VideoRendererType) {
 					if (!LibISDB::DirectShow::VideoRenderer::IsAvailable(Renderer)) {
 						SettingError();
@@ -421,7 +421,7 @@ void CVideoOptions::SetVideoDecoderList(
 
 		Text = TEXT("自動");
 		if (!DecoderName.empty()) {
-			Sel = (int)DlgComboBox_FindStringExact(m_hDlg, ID, -1, DecoderName.c_str()) + 1;
+			Sel = static_cast<int>(DlgComboBox_FindStringExact(m_hDlg, ID, -1, DecoderName.c_str())) + 1;
 		} else {
 			const LibISDB::ViewerFilter *pViewer =
 				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
@@ -444,7 +444,7 @@ void CVideoOptions::GetVideoDecoderSetting(
 	int ID, BYTE StreamType, String *pDecoderName)
 {
 	TCHAR szDecoder[MAX_VIDEO_DECODER_NAME];
-	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
+	const int Sel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, ID));
 	if (Sel > 0)
 		DlgComboBox_GetLBString(m_hDlg, ID, Sel, szDecoder);
 	else

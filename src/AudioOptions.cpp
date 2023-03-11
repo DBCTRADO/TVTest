@@ -117,7 +117,7 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("AudioFilter"), &m_AudioFilterName);
 	int SpdifMode;
 	if (Settings.Read(TEXT("SpdifMode"), &SpdifMode))
-		m_SPDIFOptions.Mode = (LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)SpdifMode;
+		m_SPDIFOptions.Mode = static_cast<LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode>(SpdifMode);
 	Settings.Read(TEXT("SpdifChannels"), &m_SPDIFOptions.PassthroughChannels);
 	Settings.Read(TEXT("DownMixSurround"), &m_fDownMixSurround);
 
@@ -178,7 +178,7 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("AudioDevice"), m_AudioDevice.FriendlyName);
 	Settings.Write(TEXT("AudioDeviceMoniker"), m_AudioDevice.MonikerName);
 	Settings.Write(TEXT("AudioFilter"), m_AudioFilterName);
-	Settings.Write(TEXT("SpdifMode"), (int)m_SPDIFOptions.Mode);
+	Settings.Write(TEXT("SpdifMode"), static_cast<int>(m_SPDIFOptions.Mode));
 	Settings.Write(TEXT("SpdifChannels"), m_SPDIFOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"), m_fDownMixSurround);
 
@@ -213,7 +213,7 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 		TCHAR szKey[32];
 		StringFormat(szKey, TEXT("LangPriority{}"), i);
 
-		if (i < (int)m_LanguagePriority.size()) {
+		if (i < static_cast<int>(m_LanguagePriority.size())) {
 			const DWORD Lang = m_LanguagePriority[i].Language;
 			TCHAR szValue[8];
 			StringFormat(
@@ -347,7 +347,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			};
 			for (LPCTSTR pszMode : SpdifModeList)
 				DlgComboBox_AddString(hDlg, IDC_OPTIONS_SPDIFMODE, pszMode);
-			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE, (int)m_SPDIFOptions.Mode);
+			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE, static_cast<int>(m_SPDIFOptions.Mode));
 			DlgCheckBox_Check(
 				hDlg, IDC_OPTIONS_SPDIF_CHANNELS_MONO,
 				(m_SPDIFOptions.PassthroughChannels & LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Mono) != 0);
@@ -384,10 +384,10 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			for (const DWORD Language : m_AudioLanguageList) {
 				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 				GetLanguageText(Language, false, szText, lengthof(szText));
-				int Index = (int)DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, szText);
+				int Index = static_cast<int>(DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, szText));
 				DlgComboBox_SetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, Index, Language);
 				GetLanguageText(Language, true, szText, lengthof(szText));
-				Index = (int)DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, szText);
+				Index = static_cast<int>(DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, szText));
 				DlgComboBox_SetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, Index, Language | LANGUAGE_FLAG_SUB);
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, 0);
@@ -409,7 +409,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					hDlg,
 					IDC_OPTIONS_SPDIF_CHANNELS_LABEL,
 					IDC_OPTIONS_SPDIF_CHANNELS_SURROUND,
-					(LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE) ==
+					static_cast<LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE)) ==
 						LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Auto);
 			}
 			return TRUE;
@@ -433,17 +433,17 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_ADD:
 			{
-				const int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST);
+				const int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST));
 
 				if (Sel >= 0) {
-					const DWORD Param = (DWORD)DlgComboBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, Sel);
+					const DWORD Param = static_cast<DWORD>(DlgComboBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, Sel));
 					TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 					GetLanguageText(
 						Param & 0x00FFFFFFUL, (Param & LANGUAGE_FLAG_SUB) != 0,
 						szText, lengthof(szText));
-					int Index = (int)DlgListBox_FindStringExact(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, 0, szText);
+					int Index = static_cast<int>(DlgListBox_FindStringExact(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, 0, szText));
 					if (Index < 0) {
-						Index = (int)DlgListBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, szText);
+						Index = static_cast<int>(DlgListBox_AddString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, szText));
 						DlgListBox_SetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, Index, Param);
 					}
 					DlgListBox_SetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, Index);
@@ -454,7 +454,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_REMOVE:
 			{
-				const int Sel = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				const int Sel = static_cast<int>(DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY));
 
 				if (Sel >= 0) {
 					DlgListBox_DeleteString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, Sel);
@@ -466,7 +466,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP:
 		case IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_DOWN:
 			{
-				const int From = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				const int From = static_cast<int>(DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY));
 				int To;
 
 				if (LOWORD(wParam) == IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP) {
@@ -474,14 +474,14 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						return TRUE;
 					To = From - 1;
 				} else {
-					if (From < 0 || From + 1 >= (int)DlgListBox_GetCount(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY))
+					if (From < 0 || From + 1 >= static_cast<int>(DlgListBox_GetCount(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY)))
 						return TRUE;
 					To = From + 1;
 				}
 
 				TCHAR szText[MAX_LANGUAGE_TEXT_LENGTH];
 				DlgListBox_GetString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From, szText);
-				const DWORD Param = (DWORD)DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From);
+				const DWORD Param = static_cast<DWORD>(DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From));
 				DlgListBox_DeleteString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, From);
 				DlgListBox_InsertString(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, To, szText);
 				DlgListBox_SetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, To, Param);
@@ -493,12 +493,12 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				FilterInfo AudioDevice;
-				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIODEVICE);
-				if (Sel > 0 && (unsigned int)Sel <= m_AudioDeviceList.size())
+				int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIODEVICE));
+				if (Sel > 0 && static_cast<unsigned int>(Sel) <= m_AudioDeviceList.size())
 					AudioDevice = m_AudioDeviceList[Sel - 1];
 				if (StringUtility::CompareNoCase(m_AudioDevice.FriendlyName, AudioDevice.FriendlyName) != 0
 						|| (m_AudioDevice.MonikerName.empty() && Sel >= 2
@@ -510,7 +510,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 
 				String AudioFilter;
-				Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOFILTER);
+				Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOFILTER));
 				if (Sel > 0)
 					GetDlgComboBoxItemString(hDlg, IDC_OPTIONS_AUDIOFILTER, Sel, &AudioFilter);
 				if (StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) != 0) {
@@ -519,8 +519,8 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 
 				LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions SPDIFOptions;
-				SPDIFOptions.Mode = (LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode)
-					DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE);
+				SPDIFOptions.Mode = static_cast<LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode>(
+					DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_SPDIFMODE));
 				SPDIFOptions.PassthroughChannels = 0;
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SPDIF_CHANNELS_MONO))
 					SPDIFOptions.PassthroughChannels |= LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Mono;
@@ -541,10 +541,10 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				m_fEnableLanguagePriority =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ENABLEAUDIOLANGUAGEPRIORITY);
 
-				const int LangCount = (int)DlgListBox_GetCount(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+				const int LangCount = static_cast<int>(DlgListBox_GetCount(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY));
 				m_LanguagePriority.resize(LangCount);
 				for (int i = 0; i < LangCount; i++) {
-					const DWORD Param = (DWORD)DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, i);
+					const DWORD Param = static_cast<DWORD>(DlgListBox_GetItemData(hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, i));
 					m_LanguagePriority[i].Language = Param & 0x00FFFFFFUL;
 					m_LanguagePriority[i].fSub = (Param & LANGUAGE_FLAG_SUB) != 0;
 				}
@@ -580,14 +580,14 @@ void CAudioOptions::UpdateLanguagePriorityControls()
 	int Sel;
 
 	if (fEnable)
-		Sel = (int)DlgListBox_GetCurSel(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY);
+		Sel = static_cast<int>(DlgListBox_GetCurSel(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY));
 	EnableDlgItem(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY, fEnable);
 	EnableDlgItem(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_ADD, fEnable);
 	EnableDlgItem(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_REMOVE, fEnable && Sel >= 0);
 	EnableDlgItem(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_UP, fEnable && Sel > 0);
 	EnableDlgItem(
 		m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY_DOWN,
-		fEnable && Sel >= 0 && Sel + 1 < (int)DlgListBox_GetCount(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY));
+		fEnable && Sel >= 0 && Sel + 1 < static_cast<int>(DlgListBox_GetCount(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGEPRIORITY)));
 	EnableDlgItem(m_hDlg, IDC_OPTIONS_AUDIOLANGUAGELIST, fEnable);
 }
 

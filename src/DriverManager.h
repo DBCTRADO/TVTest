@@ -86,7 +86,7 @@ namespace TVTest
 		void Clear();
 		bool Find(LPCTSTR pszDirectory);
 		LPCTSTR GetBaseDirectory() const { return m_BaseDirectory.c_str(); }
-		int NumDrivers() const { return (int)m_DriverList.size(); }
+		int NumDrivers() const { return static_cast<int>(m_DriverList.size()); }
 		CDriverInfo *GetDriverInfo(int Index);
 		const CDriverInfo *GetDriverInfo(int Index) const;
 		int FindByFileName(LPCTSTR pszFileName) const;

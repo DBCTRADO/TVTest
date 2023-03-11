@@ -177,7 +177,7 @@ bool Draw(HDC hdc, const RECT &Rect, const BorderStyle &Style)
 
 inline BYTE RGBIntensity(const ThemeColor &Color)
 {
-	return (BYTE)((Color.Red * 19672 + Color.Green * 38621 + Color.Blue * 7500) >> 16);
+	return static_cast<BYTE>((Color.Red * 19672 + Color.Green * 38621 + Color.Blue * 7500) >> 16);
 }
 
 inline ThemeColor GetHighlightColor(const ThemeColor &Color)

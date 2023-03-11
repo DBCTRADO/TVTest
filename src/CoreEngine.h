@@ -187,7 +187,7 @@ namespace TVTest
 		int GetSignalLevelText(LPTSTR pszText, int MaxLength) const;
 		int GetSignalLevelText(float SignalLevel, LPTSTR pszText, int MaxLength) const;
 		unsigned long GetBitRate() const { return m_BitRate; }
-		static float BitRateToFloat(unsigned long BitRate) { return (float)BitRate / (float)(1000 * 1000); }
+		static float BitRateToFloat(unsigned long BitRate) { return static_cast<float>(BitRate) / static_cast<float>(1000 * 1000); }
 		float GetBitRateFloat() const { return BitRateToFloat(m_BitRate); }
 		int GetBitRateText(LPTSTR pszText, int MaxLength) const;
 		int GetBitRateText(unsigned long BitRate, LPTSTR pszText, int MaxLength) const;

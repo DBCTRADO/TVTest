@@ -423,7 +423,7 @@ namespace TVTest
 
 		bool LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR> *pExcludePlugins = nullptr);
 		void FreePlugins();
-		int NumPlugins() const { return (int)m_PluginList.size(); }
+		int NumPlugins() const { return static_cast<int>(m_PluginList.size()); }
 		CPlugin *GetPlugin(int Index);
 		const CPlugin *GetPlugin(int Index) const;
 		bool EnablePlugins(bool fEnable = true);

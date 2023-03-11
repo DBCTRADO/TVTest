@@ -670,7 +670,7 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, i
 		LPCTSTR pszChannelName = ChannelInfo.GetName(), pszDelimiter;
 		if (pszChannelName[0] == _T('%')
 				&& (pszDelimiter = ::StrChr(pszChannelName + 1, _T(' '))) != nullptr) {
-			const int TSNameLength = (int)(pszDelimiter - pszChannelName) - 1;
+			const int TSNameLength = static_cast<int>(pszDelimiter - pszChannelName) - 1;
 			TCHAR szName[MAX_CHANNEL_NAME];
 			StringCopy(szName, pszChannelName + 1, TSNameLength + 1);
 			bool fFound = false;
@@ -678,20 +678,20 @@ bool CChannelScan::LoadPreset(LPCTSTR pszFileName, CChannelList *pChannelList, i
 				pszName = BonDriverChannelList[j].c_str();
 				LPCTSTR p = ::StrStrI(pszName, szName);
 				if (p != nullptr && !::IsCharAlphaNumeric(p[TSNameLength])) {
-					ChannelInfo.SetChannelIndex((int)j);
+					ChannelInfo.SetChannelIndex(static_cast<int>(j));
 					fFound = true;
 					break;
 				}
 			}
 			if (!fFound) {
-				if (ChannelInfo.GetChannelIndex() >= (int)BonDriverChannelList.size())
+				if (ChannelInfo.GetChannelIndex() >= static_cast<int>(BonDriverChannelList.size()))
 					continue;
 				fCorrupted = true;
 			}
 			StringCopy(szName, pszDelimiter + 1);
 			ChannelInfo.SetName(szName);
 		} else {
-			if (ChannelInfo.GetChannelIndex() >= (int)BonDriverChannelList.size()) {
+			if (ChannelInfo.GetChannelIndex() >= static_cast<int>(BonDriverChannelList.size())) {
 				fCorrupted = true;
 				continue;
 			}
@@ -864,7 +864,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		switch (LOWORD(wParam)) {
 		case IDC_CHANNELSCAN_SPACE:
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
-				const int Space = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCAN_SPACE);
+				const int Space = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCAN_SPACE));
 				if (Space < 0)
 					return TRUE;
 
@@ -906,7 +906,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_CHANNELSCAN_START:
 			{
-				const int Space = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCAN_SPACE);
+				const int Space = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCAN_SPACE));
 
 				if (Space >= 0) {
 					const LibISDB::BonDriverSourceFilter *pSourceFilter =
@@ -951,7 +951,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 									MissingChannels.push_back(pOldChannel);
 							}
 							if (!MissingChannels.empty()) {
-								const int Channels = (int)MissingChannels.size();
+								const int Channels = static_cast<int>(MissingChannels.size());
 								TCHAR szMessage[256 + (MAX_CHANNEL_NAME + 2) * 10];
 								CStaticStringFormatter Formatter(szMessage, lengthof(szMessage));
 
@@ -1086,7 +1086,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_COLUMNCLICK:
 			{
 				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
@@ -1105,7 +1105,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			return TRUE;
 
 		case NM_RCLICK:
-			if (((LPNMHDR)lParam)->hwndFrom == ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST)) {
+			if (reinterpret_cast<LPNMHDR>(lParam)->hwndFrom == ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST)) {
 				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->iItem >= 0) {
@@ -1120,7 +1120,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			break;
 
 		case NM_DBLCLK:
-			if (((LPNMHDR)lParam)->hwndFrom == ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST)) {
+			if (reinterpret_cast<LPNMHDR>(lParam)->hwndFrom == ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST)) {
 				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->iItem >= 0)
@@ -1358,7 +1358,7 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			::FillRect(pdis->hDC, &pdis->rcItem, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 			if (!m_BonDriverChannelList.empty()) {
-				const int ChannelCount = (int)m_BonDriverChannelList.size();
+				const int ChannelCount = static_cast<int>(m_BonDriverChannelList.size());
 				const int CellWidth = (pdis->rcItem.right - pdis->rcItem.left - 5) / ChannelCount;
 				const float SignalScale = std::max(m_MaxSignalLevel, 30.0f);
 				RECT rcGraph;
@@ -1376,13 +1376,13 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					::MoveToEx(pdis->hDC, x, rcGraph.top, nullptr);
 					::LineTo(pdis->hDC, x, rcGraph.bottom);
 
-					if (i < (int)m_ChannelSignalLevel.size()) {
+					if (i < static_cast<int>(m_ChannelSignalLevel.size())) {
 						const float SignalLevel = m_ChannelSignalLevel[i];
 						if (SignalLevel >= 0.0f) {
 							RECT rcFill;
 							rcFill.left = x + 1;
 							rcFill.right = x + CellWidth;
-							rcFill.top = rcGraph.bottom - 3 - (int)(SignalLevel * (float)(rcGraph.bottom - rcGraph.top - 4) / SignalScale);
+							rcFill.top = rcGraph.bottom - 3 - static_cast<int>(SignalLevel * static_cast<float>(rcGraph.bottom - rcGraph.top - 4) / SignalScale);
 							rcFill.bottom = rcGraph.bottom - 1;
 							DrawUtil::Fill(pdis->hDC, &rcFill, HSVToRGB(0.6 - SignalLevel / SignalScale * 0.6, 0.8, 1.0));
 						}
@@ -1400,8 +1400,8 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_APP_BEGINSCAN:
 		{
-			const int CurChannel = (int)wParam;
-			const int NumChannels = (int)m_BonDriverChannelList.size();
+			const int CurChannel = static_cast<int>(wParam);
+			const int NumChannels = static_cast<int>(m_BonDriverChannelList.size());
 			unsigned int EstimateRemain = (NumChannels - CurChannel) * m_ScanWait;
 			TCHAR szText[80];
 
@@ -1431,16 +1431,16 @@ INT_PTR CChannelScan::ScanDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_APP_ENDCHANNEL:
 		{
-			while ((int)m_ChannelSignalLevel.size() < (int)wParam)
+			while (static_cast<int>(m_ChannelSignalLevel.size()) < static_cast<int>(wParam))
 				m_ChannelSignalLevel.push_back(-1.0f);
-			m_ChannelSignalLevel.push_back((float)lParam / 100.0f);
+			m_ChannelSignalLevel.push_back(static_cast<float>(lParam) / 100.0f);
 			InvalidateDlgItem(hDlg, IDC_CHANNELSCAN_GRAPH, false);
 		}
 		return TRUE;
 
 	case WM_APP_ENDSCAN:
 		{
-			const ScanResult Result = (ScanResult)wParam;
+			const ScanResult Result = static_cast<ScanResult>(wParam);
 
 			::WaitForSingleObject(m_hScanThread, INFINITE);
 
@@ -1533,7 +1533,7 @@ void CChannelScan::Scan()
 		pSource->SetPurgeStreamOnChannelChange(true);
 
 	for (;; m_ScanChannel++) {
-		if (m_ScanChannel >= (int)m_BonDriverChannelList.size()) {
+		if (m_ScanChannel >= static_cast<int>(m_BonDriverChannelList.size())) {
 			if (Result == ScanResult::Cancelled)
 				Result = ScanResult::Succeeded;
 			break;
@@ -1546,7 +1546,7 @@ void CChannelScan::Scan()
 		if (!pSource->SetChannelAndPlay(m_ScanSpace, m_ScanChannel)) {
 			SetChannelErrorCount++;
 			if (pSource->GetLastErrorCode().category() == std::generic_category()
-					&& (std::errc)pSource->GetLastErrorCode().value() == std::errc::timed_out) {
+					&& static_cast<std::errc>(pSource->GetLastErrorCode().value()) == std::errc::timed_out) {
 				Result = ScanResult::SetChannelTimeout;
 				break;
 			} else {
@@ -1565,7 +1565,7 @@ void CChannelScan::Scan()
 				// SDTが来たら待ち時間終了
 				if (pAnalyzer->IsSDTUpdated())
 					break;
-				if (::WaitForSingleObject(m_hCancelEvent, std::min(Wait, (DWORD)1000)) != WAIT_TIMEOUT)
+				if (::WaitForSingleObject(m_hCancelEvent, std::min<DWORD>(Wait, 1000)) != WAIT_TIMEOUT)
 					goto End;
 				if (Wait <= 1000)
 					break;
@@ -1755,7 +1755,7 @@ void CChannelScan::Scan()
 		}
 #endif
 
-		::PostMessage(m_hScanDlg, WM_APP_ENDCHANNEL, m_ScanChannel, (LPARAM)(m_ChannelMaxSignalLevel * 100.0f));
+		::PostMessage(m_hScanDlg, WM_APP_ENDCHANNEL, m_ScanChannel, static_cast<LPARAM>(m_ChannelMaxSignalLevel * 100.0f));
 	}
 
 End:
@@ -1879,9 +1879,9 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 				}
 
 				m_pChannelScan->m_ScanWait =
-					((unsigned int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCANSETTINGS_SCANWAIT) + 1) * 1000;
+					(static_cast<unsigned int>(DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCANSETTINGS_SCANWAIT)) + 1) * 1000;
 				m_pChannelScan->m_RetryCount =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCANSETTINGS_RETRYCOUNT);
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CHANNELSCANSETTINGS_RETRYCOUNT));
 
 				m_pChannelScan->m_fDetectDataService =
 					DlgCheckBox_IsChecked(hDlg, IDC_CHANNELSCANSETTINGS_DETECTDATASERVICE);

@@ -380,7 +380,11 @@ bool ColorOverlay(HDC hdc, const RECT *pRect, COLORREF Color, BYTE Opacity)
 	if (hbm == nullptr)
 		return false;
 
-	const DWORD Pixel = 0xFF000000 | ((DWORD)GetRValue(Color) << 16) | ((DWORD)GetGValue(Color) << 8) | (DWORD)GetBValue(Color);
+	const DWORD Pixel =
+		0xFF000000 |
+		(static_cast<DWORD>(GetRValue(Color)) << 16) |
+		(static_cast<DWORD>(GetGValue(Color)) << 8) |
+		 static_cast<DWORD>(GetBValue(Color));
 	DWORD *p = static_cast<DWORD*>(pBits);
 	const DWORD *pEnd = p + Width * Height;
 	do {
@@ -580,7 +584,7 @@ HBITMAP CreateDIB(int Width, int Height, int BitCount, void **ppBits)
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = BitCount;
 	bmi.bmiHeader.biCompression = BI_RGB;
-	const HBITMAP hbm = ::CreateDIBSection(nullptr, (BITMAPINFO*)&bmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+	const HBITMAP hbm = ::CreateDIBSection(nullptr, reinterpret_cast<BITMAPINFO*>(&bmi), DIB_RGB_COLORS, &pBits, nullptr, 0);
 	if (hbm == nullptr)
 		return nullptr;
 	if (ppBits != nullptr)
@@ -1211,7 +1215,7 @@ bool CMonoColorBitmap::Create(HBITMAP hbmSrc)
 				q[0] = DIVIDE_BY_255(p[0] * Alpha);
 				q[1] = DIVIDE_BY_255(p[1] * Alpha);
 				q[2] = DIVIDE_BY_255(p[2] * Alpha);
-				q[3] = (BYTE)Alpha;
+				q[3] = static_cast<BYTE>(Alpha);
 				p += 4;
 				q += 4;
 			}

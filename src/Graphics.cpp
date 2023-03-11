@@ -447,10 +447,10 @@ bool CCanvas::FillGradient(
 {
 	if (m_Graphics) {
 		const Gdiplus::RectF rect(
-			Gdiplus::REAL(Rect.left) - 0.1f,
-			Gdiplus::REAL(Rect.top) - 0.1f,
-			Gdiplus::REAL(Rect.right - Rect.left) + 0.2f,
-			Gdiplus::REAL(Rect.bottom - Rect.top) + 0.2f);
+			static_cast<Gdiplus::REAL>(Rect.left) - 0.1f,
+			static_cast<Gdiplus::REAL>(Rect.top) - 0.1f,
+			static_cast<Gdiplus::REAL>(Rect.right - Rect.left) + 0.2f,
+			static_cast<Gdiplus::REAL>(Rect.bottom - Rect.top) + 0.2f);
 		const Gdiplus::LinearGradientBrush Brush(
 			rect,
 			GdiplusColor(Color1), GdiplusColor(Color2),
@@ -564,13 +564,13 @@ bool CCanvas::GetTextSize(
 	} else {
 		if (m_Graphics->MeasureString(
 					pszText, -1, Font.m_Font.get(),
-					Gdiplus::RectF(0.0f, 0.0f, (float)Size.cx, (float)Size.cy),
+					Gdiplus::RectF(0.0f, 0.0f, static_cast<float>(Size.cx), static_cast<float>(Size.cy)),
 					&Format, &Bounds) != Gdiplus::Ok)
 			return false;
 	}
 
-	pSize->cx = (int)(Bounds.GetRight() + 1.0f);
-	pSize->cy = (int)(Bounds.GetBottom() + 1.0f);
+	pSize->cx = static_cast<int>(Bounds.GetRight() + 1.0f);
+	pSize->cy = static_cast<int>(Bounds.GetBottom() + 1.0f);
 #endif
 
 	return true;
@@ -670,8 +670,8 @@ bool CCanvas::GetOutlineTextSize(
 		Size.cx, Size.cy, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, pszText);
 #endif
 
-	pSize->cx = (long)(Bounds.GetRight() + 1.0f);
-	pSize->cy = (long)(Bounds.GetBottom() + 1.0f);
+	pSize->cx = static_cast<long>(Bounds.GetRight() + 1.0f);
+	pSize->cy = static_cast<long>(Bounds.GetBottom() + 1.0f);
 
 	return true;
 }

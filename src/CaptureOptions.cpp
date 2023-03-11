@@ -607,7 +607,7 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				String SaveFolder;
@@ -637,13 +637,13 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				m_FileName = FileName;
 
 				SetPresetCaptureSize(
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE));
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE)));
 				m_SaveFormat =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT);
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT));
 				m_JPEGQuality =
-					(int)SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_JPEGQUALITY_TB, TBM_GETPOS, 0, 0);
+					static_cast<int>(SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_JPEGQUALITY_TB, TBM_GETPOS, 0, 0));
 				m_PNGCompressionLevel =
-					(int)SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_PNGLEVEL_TB, TBM_GETPOS, 0, 0);
+					static_cast<int>(SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_PNGLEVEL_TB, TBM_GETPOS, 0, 0));
 				m_fCaptureSaveToFile =
 					DlgCheckBox_IsChecked(hDlg, IDC_CAPTUREOPTIONS_ICONSAVEFILE);
 				m_fSetComment =

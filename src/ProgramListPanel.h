@@ -45,7 +45,7 @@ namespace TVTest
 		std::vector<std::unique_ptr<CProgramItemInfo>> m_ItemList;
 
 	public:
-		int NumItems() const { return (int)m_ItemList.size(); }
+		int NumItems() const { return static_cast<int>(m_ItemList.size()); }
 		CProgramItemInfo *GetItem(int Index);
 		const CProgramItemInfo *GetItem(int Index) const;
 		bool Add(CProgramItemInfo *pItem);

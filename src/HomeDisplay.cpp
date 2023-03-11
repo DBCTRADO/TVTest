@@ -132,7 +132,7 @@ CChannelListCategoryBase::CChannelListCategoryBase(CHomeDisplay *pHomeDisplay)
 void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC hdc, const RECT &ContentRect)
 {
 	m_ItemHeight = Style.FontHeight * 2 + Style.ItemMargins.Vert();
-	m_Height = (int)m_ItemList.size() * m_ItemHeight;
+	m_Height = static_cast<int>(m_ItemList.size()) * m_ItemHeight;
 	m_Rect = ContentRect;
 
 	m_LogoHeight = std::min(Style.FontHeight, 36);
@@ -291,7 +291,7 @@ bool CChannelListCategoryBase::OnCursorKey(WPARAM KeyCode)
 		else
 			HotItem = m_HotItem - 1;
 	} else if (KeyCode == VK_DOWN) {
-		if (m_ItemList.empty() || m_HotItem + 1 == (int)m_ItemList.size())
+		if (m_ItemList.empty() || m_HotItem + 1 == static_cast<int>(m_ItemList.size()))
 			return false;
 		if (m_HotItem < 0)
 			HotItem = 0;
@@ -379,7 +379,7 @@ bool CChannelListCategoryBase::GetItemRect(size_t Item, RECT *pRect) const
 		return false;
 
 	pRect->left = m_Rect.left;
-	pRect->top = m_Rect.top + (int)Item * m_ItemHeight - m_pHomeDisplay->GetScrollPos();
+	pRect->top = m_Rect.top + static_cast<int>(Item) * m_ItemHeight - m_pHomeDisplay->GetScrollPos();
 	pRect->right = m_Rect.right;
 	pRect->bottom = pRect->top + m_ItemHeight;
 
@@ -395,7 +395,7 @@ int CChannelListCategoryBase::GetItemByPosition(int x, int y) const
 		return -1;
 
 	const int Item = (y - m_Rect.top + m_pHomeDisplay->GetScrollPos()) / m_ItemHeight;
-	if ((size_t)Item >= m_ItemList.size())
+	if (static_cast<size_t>(Item) >= m_ItemList.size())
 		return -1;
 	return Item;
 }
@@ -415,7 +415,7 @@ bool CChannelListCategoryBase::SetHotItem(int Item)
 	int HotItem;
 
 	if (Item >= 0) {
-		if ((size_t)Item >= m_ItemList.size())
+		if (static_cast<size_t>(Item) >= m_ItemList.size())
 			return false;
 		HotItem = Item;
 	} else {
@@ -794,7 +794,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 	m_ItemHeight = ItemBaseHeight;
 	if (Settings.GetShowEventText())
 		m_ItemHeight += Settings.GetEventTextLines() * Style.FontHeight;
-	m_Height = (int)m_ItemList.size() * m_ItemHeight;
+	m_Height = static_cast<int>(m_ItemList.size()) * m_ItemHeight;
 	m_Rect = ContentRect;
 
 	m_LogoHeight = std::min(Style.FontHeight, 36);
@@ -1030,7 +1030,7 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 		hmenu,
 		CM_FEATUREDEVENTS_SORT_FIRST,
 		CM_FEATUREDEVENTS_SORT_LAST,
-		CM_FEATUREDEVENTS_SORT_FIRST + (int)Settings.GetSortType(),
+		CM_FEATUREDEVENTS_SORT_FIRST + static_cast<int>(Settings.GetSortType()),
 		MF_BYCOMMAND);
 
 	POINT pt;
@@ -1054,7 +1054,7 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 		if (Result >= CM_FEATUREDEVENTS_SORT_FIRST
 				&& Result <= CM_FEATUREDEVENTS_SORT_LAST) {
 			const CFeaturedEventsSettings::SortType SortType =
-				(CFeaturedEventsSettings::SortType)(Result - CM_FEATUREDEVENTS_SORT_FIRST);
+				static_cast<CFeaturedEventsSettings::SortType>(Result - CM_FEATUREDEVENTS_SORT_FIRST);
 			if (SortType != Settings.GetSortType()) {
 				Settings.SetSortType(SortType);
 				SortItems(SortType);
@@ -1081,7 +1081,7 @@ bool CFeaturedEventsCategory::OnCursorKey(WPARAM KeyCode)
 		else
 			HotItem = m_HotItem - 1;
 	} else if (KeyCode == VK_DOWN) {
-		if (m_ItemList.empty() || m_HotItem + 1 == (int)m_ItemList.size())
+		if (m_ItemList.empty() || m_HotItem + 1 == static_cast<int>(m_ItemList.size()))
 			return false;
 		if (m_HotItem < 0)
 			HotItem = 0;
@@ -1147,8 +1147,8 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 			Cmp = Item1.GetEventInfo().StartTime.Compare(Item2.GetEventInfo().StartTime);
 			if (Cmp == 0) {
 				Cmp =
-					(int)Item1.GetEventInfo().Duration -
-					(int)Item2.GetEventInfo().Duration;
+					static_cast<int>(Item1.GetEventInfo().Duration) -
+					static_cast<int>(Item2.GetEventInfo().Duration);
 			}
 			return Cmp;
 		}
@@ -1181,7 +1181,7 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 {
 	CEventItem *pCurItem = nullptr;
 
-	if (Item >= 0 && (size_t)Item < m_ItemList.size())
+	if (Item >= 0 && static_cast<size_t>(Item) < m_ItemList.size())
 		pCurItem = m_ItemList[Item].get();
 
 	int ScrollPos = m_pHomeDisplay->GetScrollPos();
@@ -1195,7 +1195,7 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 			if (pItem->IsExpanded()) {
 				pItem->SetExpanded(false);
 				const int ExtendedHeight = pItem->GetExpandedHeight() - m_ItemHeight;
-				if (pCurItem != nullptr && i < (size_t)Item) {
+				if (pCurItem != nullptr && i < static_cast<size_t>(Item)) {
 					ScrollPos -= ExtendedHeight;
 				}
 				m_Height -= ExtendedHeight;
@@ -1254,7 +1254,7 @@ int CFeaturedEventsCategory::GetItemByPosition(int x, int y) const
 			Bottom = Top + m_ItemHeight;
 		}
 		if (y >= Top && y < Bottom)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 
 	return -1;
@@ -1275,7 +1275,7 @@ bool CFeaturedEventsCategory::SetHotItem(int Item)
 	int HotItem;
 
 	if (Item >= 0) {
-		if ((size_t)Item >= m_ItemList.size())
+		if (static_cast<size_t>(Item) >= m_ItemList.size())
 			return false;
 		HotItem = Item;
 	} else {
@@ -1519,12 +1519,12 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("HomeDisplay"))) {
 		int CategoryCount;
 		if (Settings.Read(TEXT("CategoryCount"), &CategoryCount)
-				&& CategoryCount > 0 && (size_t)CategoryCount <= m_CategoryList.size()) {
+				&& CategoryCount > 0 && static_cast<size_t>(CategoryCount) <= m_CategoryList.size()) {
 			std::vector<CCategory*> CategoryOrder;
 
 			CategoryOrder.reserve(m_CategoryList.size());
 
-			for (size_t i = 0; i < (size_t)CategoryCount; i++) {
+			for (size_t i = 0; i < static_cast<size_t>(CategoryCount); i++) {
 				TCHAR szKey[32];
 				int ID;
 
@@ -1570,7 +1570,7 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 
 		int CurCategory;
 		if (Settings.Read(TEXT("CurCategory"), &CurCategory)
-				&& CurCategory >= 0 && (size_t)CurCategory < m_CategoryList.size())
+				&& CurCategory >= 0 && static_cast<size_t>(CurCategory) < m_CategoryList.size())
 			m_CurCategory = CurCategory;
 	}
 
@@ -1584,8 +1584,8 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 bool CHomeDisplay::SaveSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("HomeDisplay"))) {
-		if (Settings.Write(TEXT("CategoryCount"), (int)m_CategoryList.size())) {
-			for (int i = 0; i < (int)m_CategoryList.size(); i++) {
+		if (Settings.Write(TEXT("CategoryCount"), static_cast<int>(m_CategoryList.size()))) {
+			for (int i = 0; i < static_cast<int>(m_CategoryList.size()); i++) {
 				const CCategory *pCategory = m_CategoryList[i].get();
 				TCHAR szKey[32];
 
@@ -1684,7 +1684,7 @@ bool CHomeDisplay::SetScrollPos(int Pos, bool fScroll)
 bool CHomeDisplay::SetCurCategory(int Category)
 {
 	if (Category != m_CurCategory) {
-		if (Category < 0 || (size_t)Category >= m_CategoryList.size())
+		if (Category < 0 || static_cast<size_t>(Category) >= m_CategoryList.size())
 			return false;
 
 		if (m_CurCategory >= 0)
@@ -2071,7 +2071,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 		for (size_t i = 0; i < m_CategoryList.size(); i++) {
 			const CCategory *pCategory = m_CategoryList[i].get();
 			const Theme::Style *pStyle =
-				((int)i == m_CurCategory) ?
+				(static_cast<int>(i) == m_CurCategory) ?
 					(pCategory->IsFocused() ? &m_HomeDisplayStyle.CategoryItemSelStyle : &m_HomeDisplayStyle.CategoryItemCurStyle) :
 					(&m_HomeDisplayStyle.CategoryItemStyle);
 
@@ -2215,7 +2215,7 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x, int y, int *pCategoryIndex) 
 	rcCategories.left = m_Style.CategoriesMargin.Left;
 	rcCategories.top = m_Style.CategoriesMargin.Top;
 	rcCategories.right = rcCategories.left + m_CategoriesAreaWidth;
-	rcCategories.bottom = rcCategories.top + m_CategoryItemHeight * (int)m_CategoryList.size();
+	rcCategories.bottom = rcCategories.top + m_CategoryItemHeight * static_cast<int>(m_CategoryList.size());
 	if (::PtInRect(&rcCategories, pt)) {
 		if (pCategoryIndex != nullptr)
 			*pCategoryIndex = (pt.y - rcCategories.top) / m_CategoryItemHeight;
@@ -2261,7 +2261,7 @@ void CHomeDisplay::ScrollToCurItem()
 
 bool CHomeDisplay::GetCategoryItemRect(int Category, RECT *pRect) const
 {
-	if (Category < 0 || (size_t)Category >= m_CategoryList.size())
+	if (Category < 0 || static_cast<size_t>(Category) >= m_CategoryList.size())
 		return false;
 
 	pRect->left = m_Style.CategoriesMargin.Left;

@@ -158,7 +158,7 @@ CServiceUpdateInfo::CServiceUpdateInfo(LibISDB::TSEngine *pEngine, LibISDB::Anal
 		if (ServiceID != LibISDB::SERVICE_ID_INVALID) {
 			for (size_t i = 0; i < m_ServiceList.size(); i++) {
 				if (m_ServiceList[i].ServiceID == ServiceID) {
-					m_CurService = (int)i;
+					m_CurService = static_cast<int>(i);
 					break;
 				}
 			}

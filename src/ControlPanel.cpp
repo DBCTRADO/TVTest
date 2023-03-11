@@ -142,7 +142,7 @@ bool CControlPanel::AddItem(CControlPanelItem *pItem)
 
 CControlPanelItem *CControlPanel::GetItem(int Index) const
 {
-	if (Index < 0 || Index >= (int)m_ItemList.size())
+	if (Index < 0 || Index >= static_cast<int>(m_ItemList.size()))
 		return nullptr;
 	return m_ItemList[Index].get();
 }
@@ -152,7 +152,7 @@ bool CControlPanel::UpdateItem(int Index)
 {
 	RECT rc;
 
-	if (Index < 0 || Index >= (int)m_ItemList.size() || m_hwnd == nullptr)
+	if (Index < 0 || Index >= static_cast<int>(m_ItemList.size()) || m_hwnd == nullptr)
 		return false;
 	m_ItemList[Index]->GetPosition(&rc);
 	Invalidate(&rc);
@@ -162,7 +162,7 @@ bool CControlPanel::UpdateItem(int Index)
 
 bool CControlPanel::GetItemPosition(int Index, RECT *pRect) const
 {
-	if (Index < 0 || Index >= (int)m_ItemList.size())
+	if (Index < 0 || Index >= static_cast<int>(m_ItemList.size()))
 		return false;
 	m_ItemList[Index]->GetPosition(pRect);
 	return true;
@@ -232,7 +232,7 @@ void CControlPanel::SetSendMessageWindow(HWND hwnd)
 void CControlPanel::SendCommand(int Command)
 {
 	if (m_hwndMessage != nullptr)
-		::SendMessage(m_hwndMessage, WM_COMMAND, Command, (LPARAM)GetHandle());
+		::SendMessage(m_hwndMessage, WM_COMMAND, Command, reinterpret_cast<LPARAM>(GetHandle()));
 }
 
 
@@ -337,7 +337,7 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 
 	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdcOffscreen));
 
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		CControlPanelItem *pItem = m_ItemList[i].get();
 
 		if (!pItem->GetVisible())
@@ -435,7 +435,7 @@ LRESULT CControlPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				pt.x = x;
 				pt.y = y;
-				for (i = (int)m_ItemList.size() - 1; i >= 0; i--) {
+				for (i = static_cast<int>(m_ItemList.size()) - 1; i >= 0; i--) {
 					const CControlPanelItem *pItem = m_ItemList[i].get();
 
 					if (pItem->GetVisible() && pItem->GetEnable()) {

@@ -123,7 +123,7 @@ int RemoveTrailingWhitespace(LPTSTR pszString)
 	if (pSpace == nullptr)
 		return 0;
 	*pSpace = _T('\0');
-	return (int)(p - pSpace);
+	return static_cast<int>(p - pSpace);
 }
 
 
@@ -151,7 +151,7 @@ namespace StringUtility
 
 void Reserve(String &Str, size_t Size)
 {
-	if (Size > size_t(Str.max_size()))
+	if (Size > Str.max_size())
 		return;
 
 	if (Str.capacity() < Size)
@@ -202,7 +202,7 @@ int FormatV(String &Str, LPCWSTR pszFormat, va_list Args)
 	}
 	va_end(CopyArgs);
 
-	return (int)Str.length();
+	return static_cast<int>(Str.length());
 }
 
 int Compare(const String &String1, LPCWSTR pszString2)
@@ -234,7 +234,7 @@ int CompareNoCase(const String &String1, LPCWSTR pszString2)
 
 int CompareNoCase(const String &String1, const String &String2, String::size_type Length)
 {
-	return ::StrCmpNIW(String1.c_str(), String2.c_str(), (int)Length);
+	return ::StrCmpNIW(String1.c_str(), String2.c_str(), static_cast<int>(Length));
 }
 
 int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type Length)
@@ -245,7 +245,7 @@ int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type L
 		return 1;
 	}
 
-	return ::StrCmpNIW(String1.c_str(), pszString2, (int)Length);
+	return ::StrCmpNIW(String1.c_str(), pszString2, static_cast<int>(Length));
 }
 
 bool Trim(String &Str, LPCWSTR pszSpaces)
@@ -375,11 +375,11 @@ bool ToAnsi(const String &Src, AnsiString *pDst)
 	pDst->clear();
 
 	if (!Src.empty()) {
-		const int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), nullptr, 0, nullptr, nullptr);
+		const int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), static_cast<int>(Src.length()), nullptr, 0, nullptr, nullptr);
 		if (Length < 1)
 			return false;
 		pDst->resize(Length);
-		::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), pDst->data(), Length, nullptr, nullptr);
+		::WideCharToMultiByte(CP_ACP, 0, Src.data(), static_cast<int>(Src.length()), pDst->data(), Length, nullptr, nullptr);
 	}
 
 	return true;
@@ -476,7 +476,7 @@ bool Decode(LPCWSTR pszSrc, String *pDst)
 	while (*p != L'\0') {
 		if (*p == L'%') {
 			p++;
-			const WCHAR Code = (WCHAR)HexStringToUInt(p, 4, &p);
+			const WCHAR Code = static_cast<WCHAR>(HexStringToUInt(p, 4, &p));
 			pDst->push_back(Code);
 		} else {
 			pDst->push_back(*p);

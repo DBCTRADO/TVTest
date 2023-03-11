@@ -327,7 +327,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 	}
@@ -363,7 +363,7 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 		wc.hInstance = hinst;
 		wc.hIcon = nullptr;
 		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-		wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+		wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1);
 		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CAPTURE_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
@@ -555,7 +555,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 

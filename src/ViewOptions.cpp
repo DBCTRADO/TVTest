@@ -348,7 +348,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				CAppMain &App = GetAppClass();
@@ -365,7 +365,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_fZoomKeepAspectRatio =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ZOOMKEEPASPECTRATIO);
 				m_PanScanAdjustWindowMode =
-					(AdjustWindowMode)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW);
+					static_cast<AdjustWindowMode>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW));
 				m_fRemember1SegWindowSize =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE);
 				m_fMinimizeToTray =

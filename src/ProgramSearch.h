@@ -46,22 +46,22 @@ namespace TVTest
 
 		static ServiceKey GetServiceKey(WORD NetworkID, WORD TSID, WORD ServiceID)
 		{
-			return ((ULONGLONG)NetworkID << 32) | ((TSID << 16) | ServiceID);
+			return (static_cast<ULONGLONG>(NetworkID) << 32) | ((TSID << 16) | ServiceID);
 		};
 
 		static WORD ServiceKey_GetNetworkID(ServiceKey Key)
 		{
-			return (WORD)(Key >> 32);
+			return static_cast<WORD>(Key >> 32);
 		}
 
 		static WORD ServiceKey_GetTransportStreamID(ServiceKey Key)
 		{
-			return (WORD)((Key >> 16) & 0xFFFF);
+			return static_cast<WORD>((Key >> 16) & 0xFFFF);
 		}
 
 		static WORD ServiceKey_GetServiceID(ServiceKey Key)
 		{
-			return (WORD)(Key & 0xFFFF);
+			return static_cast<WORD>(Key & 0xFFFF);
 		}
 
 		typedef std::set<ServiceKey>::const_iterator Iterator;

@@ -347,7 +347,7 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 
 				::WriteFile(hFile, &BOM, 2, &Size, nullptr);
 			}
-			::WriteFile(hFile, Text.data(), (DWORD)(Text.length() * sizeof(WCHAR)), &Size, nullptr);
+			::WriteFile(hFile, Text.data(), static_cast<DWORD>(Text.length() * sizeof(WCHAR)), &Size, nullptr);
 		}
 	}
 
@@ -457,7 +457,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				lvi.mask = LVIF_TEXT | LVIF_IMAGE;
 				lvi.iSubItem = COLUMN_TEXT;
-				lvi.iImage = (int)e->GetType();
+				lvi.iImage = static_cast<int>(e->GetType());
 				lvi.pszText = const_cast<LPTSTR>(e->GetText());
 				ListView_SetItem(hwndList, &lvi);
 
@@ -510,7 +510,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case NM_CUSTOMDRAW:
 			// ダミーの列が描画されないようにする
 			{

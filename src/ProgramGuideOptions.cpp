@@ -256,13 +256,13 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 					break;
 
 				LPTSTR p = szText;
-				const WORD NetworkID = (WORD)std::_tcstoul(p, &p, 0);
+				const WORD NetworkID = static_cast<WORD>(std::_tcstoul(p, &p, 0));
 				if (!CSVNextValue(&p))
 					continue;
-				const WORD TransportStreamID = (WORD)std::_tcstoul(p, &p, 0);
+				const WORD TransportStreamID = static_cast<WORD>(std::_tcstoul(p, &p, 0));
 				if (!CSVNextValue(&p))
 					continue;
-				const WORD ServiceID = (WORD)std::_tcstoul(p, &p, 0);
+				const WORD ServiceID = static_cast<WORD>(std::_tcstoul(p, &p, 0));
 				if (ServiceID == 0)
 					continue;
 
@@ -406,7 +406,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		const CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
 
 		Settings.Clear();
-		Settings.Write(TEXT("ToolCount"), (unsigned int)pToolList->NumTools());
+		Settings.Write(TEXT("ToolCount"), static_cast<unsigned int>(pToolList->NumTools()));
 		for (size_t i = 0; i < pToolList->NumTools(); i++) {
 			const CProgramGuideTool *pTool = pToolList->GetTool(i);
 			TCHAR szName[32];
@@ -423,7 +423,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 
 		if (m_pProgramGuide->GetExcludeServiceList(&ExcludeServiceList)) {
 			Settings.Clear();
-			Settings.Write(TEXT("ExcludeServiceCount"), (unsigned int)ExcludeServiceList.size());
+			Settings.Write(TEXT("ExcludeServiceCount"), static_cast<unsigned int>(ExcludeServiceList.size()));
 			for (size_t i = 0; i < ExcludeServiceList.size(); i++) {
 				TCHAR szName[32], szText[64];
 				StringFormat(szName, TEXT("ExcludeService{}"), (unsigned int)i);
@@ -439,7 +439,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 
 	if (Settings.SetSection(TEXT("ProgramGuideFavorites"))) {
 		const CProgramGuideFavorites *pFavorites = m_pProgramGuide->GetFavorites();
-		const int FavoritesCount = (int)pFavorites->GetCount();
+		const int FavoritesCount = static_cast<int>(pFavorites->GetCount());
 
 		Settings.Clear();
 		Settings.Write(TEXT("FavoritesCount"), FavoritesCount);
@@ -602,7 +602,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 							Index, reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
 						if (Sel < 0 && !m_ProgramLDoubleClickCommand.empty()
 								&& StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, szCommand) == 0)
-							Sel = (int)Index;
+							Sel = static_cast<int>(Index);
 					}
 				}
 			}
@@ -639,7 +639,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					LVITEM lvi;
 
 					lvi.mask = LVIF_TEXT | LVIF_PARAM;
-					lvi.iItem = (int)i;
+					lvi.iItem = static_cast<int>(i);
 					lvi.iSubItem = 0;
 					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
 					lvi.lParam = reinterpret_cast<LPARAM>(pTool);
@@ -928,7 +928,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case NM_RCLICK:
 			{
-				const NMITEMACTIVATE *pnmia = (const NMITEMACTIVATE*)lParam;
+				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 
 				if (pnmia->hdr.hwndFrom == hwndList
@@ -956,7 +956,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_ONSCREEN);
 				m_fScrollToCurChannel =
 					DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEOPTIONS_SCROLLTOCURCHANNEL);
-				Value = (int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR) - 1;
+				Value = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDEOPTIONS_BEGINHOUR)) - 1;
 				if (m_BeginHour != Value) {
 					m_BeginHour = Value;
 					m_pProgramGuide->SetBeginHour(Value);

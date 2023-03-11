@@ -133,7 +133,7 @@ bool CCaptionPanel::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("CaptionPanel.HalfWidthEuroLanguagesOnly"), &m_fHalfWidthEuroLanguagesOnly);
 	if (Settings.Read(TEXT("CaptionPanel.SaveCharEncoding"), &Value)
 			&& Value >= CHARENCODING_FIRST && Value <= CHARENCODING_LAST)
-		m_SaveCharEncoding = (CharEncoding)Value;
+		m_SaveCharEncoding = static_cast<CharEncoding>(Value);
 	return true;
 }
 
@@ -204,7 +204,7 @@ void CCaptionPanel::AppendText(LPCTSTR pszText)
 		si.cbSize = sizeof(si);
 		si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
 		::GetScrollInfo(m_hwndEdit, SB_VERT, &si);
-		if (si.nPos >= si.nMax - (int)si.nPage)
+		if (si.nPos >= si.nMax - static_cast<int>(si.nPage))
 			fScroll = true;
 	}
 	::SendMessage(
@@ -309,7 +309,7 @@ void CCaptionPanel::OnCommand(int Command)
 			DWORD Start, End;
 
 			::SendMessage(hwndEdit, WM_SETREDRAW, FALSE, 0);
-			::SendMessage(hwndEdit, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
+			::SendMessage(hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&Start), reinterpret_cast<LPARAM>(&End));
 			if (Start == End)
 				::SendMessage(hwndEdit, EM_SETSEL, 0, -1);
 			::SendMessage(hwndEdit, WM_COPY, 0, 0);
@@ -340,7 +340,7 @@ void CCaptionPanel::OnCommand(int Command)
 				DWORD Start, End;
 
 				::GetWindowTextW(m_hwndEdit, Text.data(), Length + 1);
-				::SendMessageW(m_hwndEdit, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
+				::SendMessageW(m_hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&Start), reinterpret_cast<LPARAM>(&End));
 
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
@@ -358,7 +358,7 @@ void CCaptionPanel::OnCommand(int Command)
 				ofn.lpstrTitle = TEXT("字幕の保存");
 				ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
 				if (FileSaveDialog(&ofn)) {
-					m_SaveCharEncoding = (CharEncoding)(ofn.nFilterIndex - 1);
+					m_SaveCharEncoding = static_cast<CharEncoding>(ofn.nFilterIndex - 1);
 
 					bool fOK = false;
 					const HANDLE hFile = ::CreateFile(
@@ -390,7 +390,7 @@ void CCaptionPanel::OnCommand(int Command)
 								std::string EncodedText(EncodedLen, '\0');
 								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, EncodedText.data(), EncodedLen, nullptr, nullptr);
 								fOK = ::WriteFile(hFile, EncodedText.data(), EncodedLen, &Write, nullptr)
-									&& Write == (DWORD)EncodedLen;
+									&& Write == static_cast<DWORD>(EncodedLen);
 							}
 						}
 
@@ -441,7 +441,7 @@ void CCaptionPanel::OnCommand(int Command)
 
 	default:
 		if (Command >= CM_CAPTIONPANEL_LANGUAGE_FIRST && Command <= CM_CAPTIONPANEL_LANGUAGE_LAST) {
-			SetLanguage((BYTE)(Command - CM_CAPTIONPANEL_LANGUAGE_FIRST));
+			SetLanguage(static_cast<BYTE>(Command - CM_CAPTIONPANEL_LANGUAGE_FIRST));
 		}
 		break;
 	}
@@ -500,9 +500,9 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_APP_ADD_CAPTION:
 		{
 			BlockLock Lock(m_Lock);
-			const int LangIndex = (int)wParam;
+			const int LangIndex = static_cast<int>(wParam);
 
-			if (LangIndex >= 0 && (size_t)LangIndex < m_LanguageList.size()) {
+			if (LangIndex >= 0 && static_cast<size_t>(LangIndex) < m_LanguageList.size()) {
 				LanguageInfo &Lang = m_LanguageList[LangIndex];
 
 				if (!Lang.NextCaption.empty()) {
@@ -585,7 +585,7 @@ void CCaptionPanel::OnLanguageUpdate(LibISDB::CaptionFilter *pFilter, LibISDB::C
 	BlockLock Lock(m_Lock);
 
 	const int LanguageNum = pFilter->GetLanguageCount();
-	const int OldLanguageNum = (int)m_LanguageList.size();
+	const int OldLanguageNum = static_cast<int>(m_LanguageList.size());
 
 	m_LanguageList.resize(LanguageNum);
 
@@ -636,11 +636,11 @@ void CCaptionPanel::OnCaption(
 		String Buff(pText);
 
 		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
-			for (int i = (int)pFormatList->size() - 1; i >= 0; i--) {
+			for (int i = static_cast<int>(pFormatList->size()) - 1; i >= 0; i--) {
 				if ((*pFormatList)[i].Size == LibISDB::ARIBStringDecoder::CharSize::Small) {
 					const size_t Pos = (*pFormatList)[i].Pos;
 					if (Pos < Buff.length()) {
-						if (i + 1 < (int)pFormatList->size()) {
+						if (i + 1 < static_cast<int>(pFormatList->size())) {
 							const size_t NextPos = std::min(Buff.length(), (*pFormatList)[i + 1].Pos);
 							TRACE(TEXT("Caption exclude : {}\n"), StringView(&Buff[Pos], NextPos - Pos));
 							Buff.erase(Pos, NextPos - Pos);
@@ -710,7 +710,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 			m_pCaptionPanel->m_Lock.Lock();
 			if (!m_pCaptionPanel->m_LanguageList.empty()) {
 				Menu.AppendSeparator();
-				int LanguageNum = (int)m_pCaptionPanel->m_LanguageList.size();
+				int LanguageNum = static_cast<int>(m_pCaptionPanel->m_LanguageList.size());
 				if (LanguageNum > CM_CAPTIONPANEL_LANGUAGE_LAST - CM_CAPTIONPANEL_LANGUAGE_FIRST + 1)
 					LanguageNum = CM_CAPTIONPANEL_LANGUAGE_LAST - CM_CAPTIONPANEL_LANGUAGE_FIRST + 1;
 				for (int i = 0; i < LanguageNum; i++) {
@@ -923,7 +923,7 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 	const DWORD BitsSize = DIBRowBytes * pBitmap->Height;
 	BITMAPFILEHEADER bmfh;
 	bmfh.bfType = 0x4D42;
-	bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
+	bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (1UL << BitCount) * static_cast<DWORD>(sizeof(RGBQUAD));
 	bmfh.bfSize = bmfh.bfOffBits + BitsSize;
 	bmfh.bfReserved1 = 0;
 	bmfh.bfReserved2 = 0;
@@ -951,13 +951,13 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 
 	RGBQUAD Colormap[256];
 	for (int i = 0; i < 1 << BitCount; i++) {
-		const BYTE v = (BYTE)(i * 255 / ((1 << BitCount) - 1));
+		const BYTE v = static_cast<BYTE>(i * 255 / ((1 << BitCount) - 1));
 		Colormap[i].rgbBlue = v;
 		Colormap[i].rgbGreen = v;
 		Colormap[i].rgbRed = v;
 		Colormap[i].rgbReserved = 0;
 	}
-	const DWORD PalSize = (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
+	const DWORD PalSize = (1UL << BitCount) * static_cast<DWORD>(sizeof(RGBQUAD));
 	if (!::WriteFile(hFile, Colormap, PalSize, &Write, nullptr) || Write != PalSize) {
 		::CloseHandle(hFile);
 		return false;

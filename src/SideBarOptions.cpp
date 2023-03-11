@@ -211,9 +211,9 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowToolTips"), m_fShowToolTips);
 	Settings.Write(TEXT("ShowChannelLogo"), m_fShowChannelLogo);
 	Settings.Write(TEXT("PopupOpacity"), m_PopupOpacity);
-	Settings.Write(TEXT("Place"), (int)m_Place);
+	Settings.Write(TEXT("Place"), static_cast<int>(m_Place));
 
-	Settings.Write(TEXT("ItemCount"), (int)m_ItemNameList.size());
+	Settings.Write(TEXT("ItemCount"), static_cast<int>(m_ItemNameList.size()));
 	for (size_t i = 0; i < m_ItemNameList.size(); i++) {
 		TCHAR szName[32];
 		StringFormat(szName, TEXT("Item{}"), (int)i);
@@ -288,13 +288,13 @@ HBITMAP CSideBarOptions::CreateImage(IconSizeType SizeType, SIZE *pIconSize)
 	}
 
 	const HINSTANCE hinst = GetAppClass().GetResourceInstance();
-	const HBITMAP hbm = (HBITMAP)::LoadImage(
-		hinst, pszImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+	const HBITMAP hbm = static_cast<HBITMAP>(::LoadImage(
+		hinst, pszImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 
 	if (hbm != nullptr) {
 		// 表示倍率のアイコンを描画する
-		const HBITMAP hbmZoom = (HBITMAP)::LoadImage(
-			hinst, pszZoomImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+		const HBITMAP hbmZoom = static_cast<HBITMAP>(::LoadImage(
+			hinst, pszZoomImageName, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 
 		if (hbmZoom != nullptr) {
 			const HDC hdcDst = ::CreateCompatibleDC(nullptr);
@@ -516,7 +516,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			lvc.cx = rc.right;
 			lvc.iSubItem = 0;
 			ListView_InsertColumn(hwndList, 0, &lvc);
-			SetItemList(hwndList, &m_ItemList[0], (int)m_ItemList.size());
+			SetItemList(hwndList, &m_ItemList[0], static_cast<int>(m_ItemList.size()));
 
 			hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_COMMANDLIST);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
@@ -530,7 +530,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			List.resize(m_AvailItemList.size());
 			for (size_t i = 0; i < m_AvailItemList.size(); i++)
 				List[i] = m_AvailItemList[i].Command;
-			SetItemList(hwndList, List.data(), (int)List.size());
+			SetItemList(hwndList, List.data(), static_cast<int>(List.size()));
 
 			AddControl(IDC_SIDEBAR_ITEMLIST, AlignFlag::VertLeft | AlignFlag::RightHalf);
 			AddControl(IDC_SIDEBAR_COMMANDLIST_LABEL, AlignFlag::LeftHalf);
@@ -669,7 +669,7 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			{
 				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);

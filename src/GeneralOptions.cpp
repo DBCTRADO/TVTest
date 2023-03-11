@@ -292,7 +292,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				TCHAR szDirectory[MAX_PATH];
@@ -301,8 +301,8 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					szDirectory, lengthof(szDirectory));
 				m_BonDriverDirectory = szDirectory;
 
-				m_DefaultDriverType = (DefaultDriverType)
-					(GetCheckedRadioButton(
+				m_DefaultDriverType = static_cast<DefaultDriverType>(
+					GetCheckedRadioButton(
 						hDlg,
 						IDC_OPTIONS_DEFAULTDRIVER_NONE,
 						IDC_OPTIONS_DEFAULTDRIVER_CUSTOM) -

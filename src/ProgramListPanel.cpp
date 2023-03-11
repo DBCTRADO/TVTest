@@ -168,7 +168,7 @@ int CProgramItemInfo::GetEventTimeText(LPTSTR pszText, int MaxLength) const
 
 CProgramItemInfo *CProgramItemList::GetItem(int Index)
 {
-	if ((unsigned int)Index >= m_ItemList.size())
+	if (static_cast<unsigned int>(Index) >= m_ItemList.size())
 		return nullptr;
 	return m_ItemList[Index].get();
 }
@@ -176,7 +176,7 @@ CProgramItemInfo *CProgramItemList::GetItem(int Index)
 
 const CProgramItemInfo *CProgramItemList::GetItem(int Index) const
 {
-	if ((unsigned int)Index >= m_ItemList.size())
+	if (static_cast<unsigned int>(Index) >= m_ItemList.size())
 		return nullptr;
 	return m_ItemList[Index].get();
 }
@@ -1065,7 +1065,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		return 0;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == hwnd) {
+		if (reinterpret_cast<HWND>(wParam) == hwnd) {
 			if (LOWORD(lParam) == HTCLIENT && m_HotItem >= 0)
 				::SetCursor(GetActionCursor());
 			else

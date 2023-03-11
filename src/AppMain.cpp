@@ -1142,7 +1142,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		if (CoreEngine.IsNetworkDriver()) {
 			const int FirstPort = CoreEngine.IsUDPDriver() ? 1234 : 2230;
 			int Port = FirstPort;
-			if ((int)CmdLineOptions.m_UDPPort >= FirstPort && (int)CmdLineOptions.m_UDPPort < FirstPort + 10)
+			if (static_cast<int>(CmdLineOptions.m_UDPPort) >= FirstPort && static_cast<int>(CmdLineOptions.m_UDPPort) < FirstPort + 10)
 				Port = CmdLineOptions.m_UDPPort;
 			else if (RestoreChannelInfo.Channel >= 0 && RestoreChannelInfo.Channel < 10)
 				Port = FirstPort + RestoreChannelInfo.Channel;
@@ -1167,8 +1167,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			const LibISDB::BonDriverSourceFilter *pSourceFilter =
 				CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 			if (pSourceFilter != nullptr) {
-				const int CurSpace = (int)pSourceFilter->GetCurSpace();
-				const int CurChannel = (int)pSourceFilter->GetCurChannel();
+				const int CurSpace = static_cast<int>(pSourceFilter->GetCurSpace());
+				const int CurChannel = static_cast<int>(pSourceFilter->GetCurChannel());
 				if (CurSpace >= 0 && CurChannel >= 0) {
 					const CChannelList *pList = ChannelManager.GetCurrentChannelList();
 					const int i = pList->FindByIndex(CurSpace, CurChannel);

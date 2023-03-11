@@ -45,7 +45,7 @@ constexpr DWORD ANIMATION_INTERVAL = 50; // アニメーションの間隔
 
 static float GetOutlineWidth(int FontSize)
 {
-	return (float)FontSize / 5.0f;
+	return static_cast<float>(FontSize) / 5.0f;
 }
 
 
@@ -381,7 +381,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 			Format |= DT_WORDBREAK;
 		else
 			Format |= DT_SINGLELINE;
-		fResult = ::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, Format) != 0;
+		fResult = ::DrawText(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rc, Format) != 0;
 		if (fResult) {
 			pSize->cx = rc.right;
 			pSize->cy = rc.bottom;
@@ -513,7 +513,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 		const TextStyle VertAlign = m_TextStyle & TextStyle::VertAlignMask;
 		if ((VertAlign == TextStyle::Bottom) || (VertAlign == TextStyle::VertCenter)) {
 			RECT rcText = {0, 0, rc.right - rc.left, 0};
-			::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rcText, Format | DT_CALCRECT);
+			::DrawText(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rcText, Format | DT_CALCRECT);
 			if (rcText.bottom < rc.bottom - rc.top) {
 				if (VertAlign == TextStyle::Bottom)
 					rc.top = rc.bottom - rcText.bottom;
@@ -522,7 +522,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 			}
 		}
 
-		::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, Format);
+		::DrawText(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rc, Format);
 
 		::SetBkMode(hdc, OldBkMode);
 		::SetTextColor(hdc, crOldTextColor);

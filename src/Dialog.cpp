@@ -283,9 +283,9 @@ int CBasicDialog::ShowDialog(HWND hwndOwner, HINSTANCE hinst, LPCTSTR pszTemplat
 	if (m_hDlg != nullptr)
 		return -1;
 
-	return (int)::DialogBoxParam(
+	return static_cast<int>(::DialogBoxParam(
 		hinst, pszTemplate, hwndOwner, DialogProc,
-		reinterpret_cast<LPARAM>(this));
+		reinterpret_cast<LPARAM>(this)));
 }
 
 

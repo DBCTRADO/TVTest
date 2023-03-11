@@ -194,7 +194,7 @@ void COptionDialog::SetPagePos(int Page)
 
 COLORREF COptionDialog::GetTitleColor(int Page) const
 {
-	return HSVToRGB((double)Page / (double)NUM_PAGES, 0.4, 0.9);
+	return HSVToRGB(static_cast<double>(Page) / static_cast<double>(NUM_PAGES), 0.4, 0.9);
 }
 
 
@@ -249,7 +249,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					rc.left = rc.right;
 					rc.right = pdis->rcItem.right;
 					DrawUtil::FillGradient(
-						pdis->hDC, &rc, RGB(0, 0, 0), GetTitleColor((int)pdis->itemData));
+						pdis->hDC, &rc, RGB(0, 0, 0), GetTitleColor(static_cast<int>(pdis->itemData)));
 					crText = RGB(255, 255, 255);
 				} else {
 					DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(COLOR_WINDOW));
@@ -263,9 +263,9 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				int IconWidth, IconHeight;
 				::ImageList_GetIconSize(m_himlIcons, &IconWidth, &IconHeight);
 				if (IconWidth == m_IconWidth && IconHeight == m_IconHeight) {
-					::ImageList_Draw(m_himlIcons, (int)pdis->itemData, pdis->hDC, rc.left, y, ILD_TRANSPARENT);
+					::ImageList_Draw(m_himlIcons, static_cast<int>(pdis->itemData), pdis->hDC, rc.left, y, ILD_TRANSPARENT);
 					if (fSelected)
-						::ImageList_Draw(m_himlIcons, (int)pdis->itemData, pdis->hDC, rc.left, y, ILD_TRANSPARENT);
+						::ImageList_Draw(m_himlIcons, static_cast<int>(pdis->itemData), pdis->hDC, rc.left, y, ILD_TRANSPARENT);
 				} else {
 					const HICON hicon = ::ImageList_ExtractIcon(nullptr, m_himlIcons, (int)pdis->itemData);
 #if 0				// DrawIconEx で描画すると汚い
@@ -275,7 +275,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 #else
 					ICONINFO ii;
 					if (::GetIconInfo(hicon, &ii)) {
-						const HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+						const HBITMAP hbm = static_cast<HBITMAP>(::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 						::DeleteObject(ii.hbmColor);
 						::DeleteObject(ii.hbmMask);
 						Graphics::CImage Image;
@@ -330,7 +330,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		switch (LOWORD(wParam)) {
 		case IDC_OPTIONS_LIST:
 			if (HIWORD(wParam) == LBN_SELCHANGE) {
-				const int NewPage = (int)DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_LIST);
+				const int NewPage = static_cast<int>(DlgListBox_GetCurSel(hDlg, IDC_OPTIONS_LIST));
 
 				if (NewPage >= 0)
 					SetPage(NewPage);

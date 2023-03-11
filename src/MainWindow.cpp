@@ -87,7 +87,7 @@ bool CMainWindow::Initialize(HINSTANCE hinst)
 	wc.hInstance = hinst;
 	wc.hIcon = CAppMain::GetAppIcon();
 	wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+	wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1);
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = MAIN_WINDOW_CLASS;
 	wc.hIconSm = CAppMain::GetAppIconSmall();
@@ -230,9 +230,9 @@ void CMainWindow::CreatePanel()
 		pszIconImage = MAKEINTRESOURCE(IDB_PANELTABICONS32);
 		IconSize = 32;
 	}
-	const HBITMAP hbm = (HBITMAP)::LoadImage(
+	const HBITMAP hbm = static_cast<HBITMAP>(::LoadImage(
 		m_App.GetResourceInstance(), pszIconImage,
-		IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+		IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 	m_App.Panel.Form.SetIconImage(hbm, IconSize, IconSize);
 	::DeleteObject(hbm);
 
@@ -509,7 +509,7 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("FullscreenPanelHeight"), &Value))
 		m_Fullscreen.SetPanelHeight(Value);
 	if (Settings.Read(TEXT("FullscreenPanelPlace"), &Value))
-		m_Fullscreen.SetPanelPlace((CPanelFrame::DockingPlace)Value);
+		m_Fullscreen.SetPanelPlace(static_cast<CPanelFrame::DockingPlace>(Value));
 	if (Settings.Read(TEXT("ThinFrameWidth"), &Value))
 		m_ThinFrameWidth = std::max(Value, 1);
 	Value = FRAME_NORMAL;
@@ -551,7 +551,7 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelVerticalAlign"), m_fPanelVerticalAlign);
 	Settings.Write(TEXT("FullscreenPanelWidth"), m_Fullscreen.GetPanelWidth());
 	Settings.Write(TEXT("FullscreenPanelHeight"), m_Fullscreen.GetPanelHeight());
-	Settings.Write(TEXT("FullscreenPanelPlace"), (int)m_Fullscreen.GetPanelPlace());
+	Settings.Write(TEXT("FullscreenPanelPlace"), static_cast<int>(m_Fullscreen.GetPanelPlace()));
 	Settings.Write(
 		TEXT("FrameType"),
 		!m_fCustomFrame ? FRAME_NORMAL : (m_CustomFrameWidth == 0 ? FRAME_NONE : FRAME_CUSTOM));
@@ -994,11 +994,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_SIZE:
-		OnSizeChanged((UINT)wParam, LOWORD(lParam), HIWORD(lParam));
+		OnSizeChanged(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
 		return 0;
 
 	case WM_SIZING:
-		if (OnSizeChanging((UINT)wParam, reinterpret_cast<LPRECT>(lParam)))
+		if (OnSizeChanging(static_cast<UINT>(wParam), reinterpret_cast<LPRECT>(lParam)))
 			return TRUE;
 		break;
 
@@ -2661,7 +2661,7 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 	case CM_SIDEBAR_PLACE_TOP:
 	case CM_SIDEBAR_PLACE_BOTTOM:
 		{
-			const CSideBarOptions::PlaceType Place = (CSideBarOptions::PlaceType)(Params.ID - CM_SIDEBAR_PLACE_FIRST);
+			const CSideBarOptions::PlaceType Place = static_cast<CSideBarOptions::PlaceType>(Params.ID - CM_SIDEBAR_PLACE_FIRST);
 
 			if (Place != m_App.SideBarOptions.GetPlace()) {
 				const bool fVertical =
@@ -2923,7 +2923,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 				const LONGLONG FreeSpace = m_App.RecordManager.GetRecordTask()->GetFreeSpace();
 
 				if (FreeSpace >= 0
-						&& (ULONGLONG)FreeSpace <= m_App.RecordOptions.GetLowFreeSpaceThresholdBytes()) {
+						&& static_cast<ULONGLONG>(FreeSpace) <= m_App.RecordOptions.GetLowFreeSpaceThresholdBytes()) {
 					m_App.NotifyBalloonTip.Show(
 						APP_NAME TEXT("の録画ファイルの保存先の空き容量が少なくなっています。"),
 						TEXT("空き容量が少なくなっています。"),
@@ -3147,7 +3147,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				::InsertMenu(
 					hmenu, ItemCount - 2 + (UINT)i,
 					MF_BYPOSITION | MF_STRING | MF_ENABLED
-						| (AspectRatioType == CUICore::ASPECTRATIO_CUSTOM_FIRST + (int)i ? MF_CHECKED : MF_UNCHECKED),
+						| (AspectRatioType == CUICore::ASPECTRATIO_CUSTOM_FIRST + static_cast<int>(i) ? MF_CHECKED : MF_UNCHECKED),
 					CM_PANANDSCAN_PRESET_FIRST + i, szText);
 			}
 		}
@@ -3424,7 +3424,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.CoreEngine.GetSPDIFOptions(&SPDIFOptions);
 		Menu.CheckRadioItem(
 			CM_SPDIF_DISABLED, CM_SPDIF_AUTO,
-			CM_SPDIF_DISABLED + (int)SPDIFOptions.Mode);
+			CM_SPDIF_DISABLED + static_cast<int>(SPDIFOptions.Mode));
 		m_App.Accelerator.SetMenuAccel(hmenu);
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_VIDEO)) {
 		CPopupMenu Menu(hmenu);
@@ -4497,7 +4497,8 @@ bool CMainWindow::SetZoomRate(int Rate, int Factor)
 
 			m_Display.GetVideoContainer().GetClientSize(&ScreenSize);
 			if (ScreenSize.cx > 0 && ScreenSize.cy > 0) {
-				if ((double)ZoomWidth / (double)ScreenSize.cx <= (double)ZoomHeight / (double)ScreenSize.cy) {
+				if (static_cast<double>(ZoomWidth) / static_cast<double>(ScreenSize.cx) <=
+						static_cast<double>(ZoomHeight) / static_cast<double>(ScreenSize.cy)) {
 					ZoomWidth = CalcZoomSize(ScreenSize.cx, ZoomHeight, ScreenSize.cy);
 				} else {
 					ZoomHeight = CalcZoomSize(ScreenSize.cy, ZoomWidth, ScreenSize.cx);
@@ -4741,7 +4742,7 @@ bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const
 				if (pBaseChannelProvider != nullptr) {
 					if (pBaseChannelProvider->HasAllChannelGroup())
 						Space++;
-					if ((size_t)Space >= pBaseChannelProvider->GetGroupCount())
+					if (static_cast<size_t>(Space) >= pBaseChannelProvider->GetGroupCount())
 						Space = 0;
 				}
 			}
@@ -6612,7 +6613,7 @@ void CMainWindow::CSideBarManager::OnRButtonUp(int x, int y)
 	Menu.EnableItem(CM_SIDEBAR, !m_pMainWindow->m_pCore->GetFullscreen());
 	Menu.CheckRadioItem(
 		CM_SIDEBAR_PLACE_FIRST, CM_SIDEBAR_PLACE_LAST,
-		CM_SIDEBAR_PLACE_FIRST + (int)m_pMainWindow->m_App.SideBarOptions.GetPlace());
+		CM_SIDEBAR_PLACE_FIRST + static_cast<int>(m_pMainWindow->m_App.SideBarOptions.GetPlace()));
 	pt.x = x;
 	pt.y = y;
 	::ClientToScreen(m_pSideBar->GetHandle(), &pt);

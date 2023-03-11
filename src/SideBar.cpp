@@ -171,8 +171,8 @@ bool CSideBar::AddItems(const SideBarItem *pItemList, int NumItems)
 			if (pItemList[i].Command != ITEM_SEPARATOR) {
 				RECT rc;
 
-				GetItemRect((int)OldSize + i, &rc);
-				m_Tooltip.AddTool((UINT)OldSize + i, rc);
+				GetItemRect(static_cast<int>(OldSize) + i, &rc);
+				m_Tooltip.AddTool(static_cast<UINT>(OldSize) + i, rc);
 			}
 		}
 	}
@@ -194,13 +194,13 @@ bool CSideBar::AddSeparator()
 
 int CSideBar::GetItemCount() const
 {
-	return (int)m_ItemList.size();
+	return static_cast<int>(m_ItemList.size());
 }
 
 
 int CSideBar::GetItemCommand(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return -1;
 	return m_ItemList[Index].Command;
 }
@@ -210,7 +210,7 @@ int CSideBar::CommandToIndex(int Command) const
 {
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		if (m_ItemList[i].Command == Command)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -234,7 +234,7 @@ bool CSideBar::EnableItem(int Command, bool fEnable)
 
 bool CSideBar::EnableItemByIndex(int Index, bool fEnable)
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsEnabled() != fEnable) {
 		m_ItemList[Index].State ^= ItemState::Disabled;
@@ -272,7 +272,7 @@ bool CSideBar::CheckItem(int Command, bool fCheck)
 
 bool CSideBar::CheckItemByIndex(int Index, bool fCheck)
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsChecked() != fCheck) {
 		m_ItemList[Index].State ^= ItemState::Checked;
@@ -395,7 +395,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_Tooltip.Enable(m_fShowTooltips);
 			SetTooltipFont();
 
-			for (int i = 0; i < (int)m_ItemList.size(); i++) {
+			for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 				if (m_ItemList[i].Command != ITEM_SEPARATOR) {
 					RECT rc;
 					GetItemRect(i, &rc);
@@ -645,7 +645,7 @@ int CSideBar::HitTest(int x, int y) const
 {
 	const POINT pt = {x, y};
 
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		RECT rc;
 		GetItemRect(i, &rc);
 		if (::PtInRect(&rc, pt))
@@ -657,7 +657,7 @@ int CSideBar::HitTest(int x, int y) const
 
 void CSideBar::UpdateTooltipsRect()
 {
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		RECT rc;
 
 		GetItemRect(i, &rc);
@@ -701,7 +701,7 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 	const HDC hdcMemory = ::CreateCompatibleDC(hdc);
 	const HBITMAP hbmOld = static_cast<HBITMAP>(::GetCurrentObject(hdcMemory, OBJ_BITMAP));
 
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		GetItemRect(i, &rc);
 		if (m_ItemList[i].Command != ITEM_SEPARATOR
 				&& rc.left < PaintRect.right && rc.right > PaintRect.left

@@ -107,7 +107,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						} else {
 							pSettings = new CTSProcessorManager::CTSProcessorSettings(guid);
 						}
-						const int i = (int)DlgComboBox_AddString(hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST, Name.c_str());
+						const int i = static_cast<int>(DlgComboBox_AddString(hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST, Name.c_str()));
 						DlgComboBox_SetItemData(
 							hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST, i,
 							reinterpret_cast<LPARAM>(pSettings));
@@ -178,7 +178,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			if (m_pCurSettings != nullptr) {
 				const int Sel = m_TunerMapListView.GetSelectedItem();
 
-				if (Sel >= 0 && (size_t)Sel < m_pCurSettings->m_TunerFilterMap.size()) {
+				if (Sel >= 0 && static_cast<size_t>(Sel) < m_pCurSettings->m_TunerFilterMap.size()) {
 					CTSProcessorManager::TunerFilterInfo &Info =
 						m_pCurSettings->m_TunerFilterMap[Sel];
 					if (TunerMapDialog(&Info)) {
@@ -267,7 +267,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				if (pnmlv->hdr.hwndFrom == ::GetDlgItem(hDlg, IDC_TSPROCESSOR_TUNERMAP)) {
 					if (fCheckStateChanged) {
-						if (pnmlv->iItem >= 0 && (size_t)pnmlv->iItem < m_pCurSettings->m_TunerFilterMap.size()) {
+						if (pnmlv->iItem >= 0 && static_cast<size_t>(pnmlv->iItem) < m_pCurSettings->m_TunerFilterMap.size()) {
 							m_pCurSettings->m_TunerFilterMap[pnmlv->iItem].fEnable =
 								(pnmlv->uNewState & LVIS_STATEIMAGEMASK) == INDEXTOSTATEIMAGEMASK(2);
 						}
@@ -387,7 +387,7 @@ void CTSProcessorOptions::UpdateCurSettings()
 		GetDlgItemString(m_hDlg, IDC_TSPROCESSOR_DEFAULTFILTER, &m_pCurSettings->m_DefaultFilter.Filter);
 	}
 
-	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST);
+	const int Sel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_TSPROCESSOR_TSPROCESSORLIST));
 
 	if (Sel >= 0) {
 		CTSProcessorManager::CTSProcessorSettings *pSettings =
@@ -462,7 +462,7 @@ void CTSProcessorOptions::UpdateItemsState()
 			IDC_TSPROCESSOR_DEFAULTDEVICE,
 			IDC_TSPROCESSOR_DEFAULTFILTER);
 
-		for (int i = 0; i < (int)m_pCurSettings->m_TunerFilterMap.size(); i++) {
+		for (int i = 0; i < static_cast<int>(m_pCurSettings->m_TunerFilterMap.size()); i++) {
 			m_TunerMapListView.InsertItem(i, TEXT(""));
 			UpdateTunerMapItem(i);
 		}
@@ -491,8 +491,8 @@ void CTSProcessorOptions::UpdateDeviceFilterList(HWND hDlg, int ModuleID, int De
 	GetDlgItemString(hDlg, ModuleID, &ModuleName);
 	GetDlgItemString(hDlg, DeviceID, &DeviceName);
 	GetDlgItemString(hDlg, FilterID, &FilterName);
-	DeviceEditSel = (DWORD)::SendDlgItemMessage(hDlg, DeviceID, CB_GETEDITSEL, 0, 0);
-	FilterEditSel = (DWORD)::SendDlgItemMessage(hDlg, FilterID, CB_GETEDITSEL, 0, 0);
+	DeviceEditSel = static_cast<DWORD>(::SendDlgItemMessage(hDlg, DeviceID, CB_GETEDITSEL, 0, 0));
+	FilterEditSel = static_cast<DWORD>(::SendDlgItemMessage(hDlg, FilterID, CB_GETEDITSEL, 0, 0));
 	DlgComboBox_Clear(hDlg, DeviceID);
 	DlgComboBox_Clear(hDlg, FilterID);
 
@@ -507,9 +507,9 @@ void CTSProcessorOptions::UpdateDeviceFilterList(HWND hDlg, int ModuleID, int De
 				for (const String &Filter : Dev.FilterList) {
 					DlgComboBox_AddString(hDlg, FilterID, Filter.c_str());
 					if (StringUtility::CompareNoCase(FilterName, Filter) == 0)
-						FilterSel = (int)DlgComboBox_GetCount(hDlg, FilterID) - 1;
+						FilterSel = static_cast<int>(DlgComboBox_GetCount(hDlg, FilterID)) - 1;
 				}
-				DeviceSel = (int)DlgComboBox_GetCount(hDlg, DeviceID) - 1;
+				DeviceSel = static_cast<int>(DlgComboBox_GetCount(hDlg, DeviceID)) - 1;
 			}
 		}
 

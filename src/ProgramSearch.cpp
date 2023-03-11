@@ -142,7 +142,7 @@ bool CEventSearchServiceList::FromString(LPCTSTR pszString)
 			if (Key <= 0xFFFFULL)
 				Key |= PrevKey & 0xFFFFFFFF0000ULL;
 			else if (ServiceKey_GetNetworkID(Key) == 0)
-				Key |= (ULONGLONG)ServiceKey_GetTransportStreamID(Key) << 32;
+				Key |= static_cast<ULONGLONG>(ServiceKey_GetTransportStreamID(Key)) << 32;
 			m_ServiceList.insert(Key);
 			PrevKey = Key;
 			p += Length;
@@ -161,7 +161,7 @@ int CEventSearchServiceList::EncodeServiceKey(ServiceKey Key, LPTSTR pText)
 
 	int Length = 0;
 	for (int i = 0; i < 8; i++) {
-		const unsigned int Char = (unsigned int)((Key >> (42 - i * 6)) & 0x3F);
+		const unsigned int Char = static_cast<unsigned int>((Key >> (42 - i * 6)) & 0x3F);
 		if (Char != 0 || Length > 0) {
 			pText[Length++] = EncodeChars[Char];
 		}
@@ -326,7 +326,7 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 			break;
 
 		case 3:
-			Genre1 = (WORD)std::wcstoul(Value[i].c_str(), nullptr, 0);
+			Genre1 = static_cast<WORD>(std::wcstoul(Value[i].c_str(), nullptr, 0));
 			break;
 
 		case 4:
@@ -338,7 +338,7 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 					Hex[1] = *it++;
 					Hex[2] = *it++;
 					Hex[3] = *it++;
-					Genre2[j] = (WORD)HexStringToUInt(Hex, 4);
+					Genre2[j] = static_cast<WORD>(HexStringToUInt(Hex, 4));
 				}
 			} else {
 				::ZeroMemory(Genre2, sizeof(Genre2));
@@ -366,11 +366,11 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 			break;
 
 		case 10:
-			CA = (CAType)std::wcstoul(Value[i].c_str(), nullptr, 0);
+			CA = static_cast<CAType>(std::wcstoul(Value[i].c_str(), nullptr, 0));
 			break;
 
 		case 11:
-			Video = (VideoType)std::wcstoul(Value[i].c_str(), nullptr, 0);
+			Video = static_cast<VideoType>(std::wcstoul(Value[i].c_str(), nullptr, 0));
 			break;
 
 		case 12:
@@ -505,7 +505,7 @@ int CEventSearchSettingsList::FindByName(LPCTSTR pszName) const
 
 	for (size_t i = 0; i < m_List.size(); i++) {
 		if (::lstrcmpi(m_List[i]->Name.c_str(), pszName) == 0)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 
 	return -1;
@@ -837,13 +837,13 @@ bool CEventSearchOptions::SetKeywordHistory(const String *pKeywordList, size_t N
 
 int CEventSearchOptions::GetKeywordHistoryCount() const
 {
-	return (int)m_KeywordHistory.size();
+	return static_cast<int>(m_KeywordHistory.size());
 }
 
 
 LPCTSTR CEventSearchOptions::GetKeywordHistory(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_KeywordHistory.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_KeywordHistory.size())
 		return nullptr;
 	return m_KeywordHistory[Index].c_str();
 }
@@ -876,7 +876,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 
 bool CEventSearchOptions::DeleteKeywordHistory(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_KeywordHistory.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_KeywordHistory.size())
 		return false;
 
 	m_KeywordHistory.erase(m_KeywordHistory.begin() + Index);
@@ -898,7 +898,7 @@ bool CEventSearchOptions::SetMaxKeywordHistory(int Max)
 
 	m_MaxKeywordHistory = Max;
 
-	if (m_KeywordHistory.size() > (size_t)Max) {
+	if (m_KeywordHistory.size() > static_cast<size_t>(Max)) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin() + Max, m_KeywordHistory.end());
 	}
 
@@ -979,16 +979,16 @@ namespace
 
 constexpr UINT WM_PROGRAM_SEARCH_GENRE_CHANGED = WM_APP;
 
-constexpr LPARAM GENRE_LPARAM_PACK(int Level1, int Level2) { return (Level1 << 16) | (WORD)(SHORT)(Level2); }
-constexpr int GENRE_LPARAM_LEVEL1(LPARAM lParam) { return (int)(lParam >> 16); }
-constexpr int GENRE_LPARAM_LEVEL2(LPARAM lParam) { return (SHORT)(WORD)(lParam & 0xFFFF); }
+constexpr LPARAM GENRE_LPARAM_PACK(int Level1, int Level2) { return (Level1 << 16) | static_cast<WORD>(static_cast<SHORT>(Level2)); }
+constexpr int GENRE_LPARAM_LEVEL1(LPARAM lParam) { return static_cast<int>(lParam >> 16); }
+constexpr int GENRE_LPARAM_LEVEL2(LPARAM lParam) { return static_cast<SHORT>(static_cast<WORD>(lParam & 0xFFFF)); }
 
 
 static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
 {
-	return ((ULONGLONG)pEventInfo->NetworkID << 48)
-		| ((ULONGLONG)pEventInfo->TransportStreamID << 32)
-		| ((DWORD)pEventInfo->ServiceID << 16)
+	return (static_cast<ULONGLONG>(pEventInfo->NetworkID) << 48)
+		| (static_cast<ULONGLONG>(pEventInfo->TransportStreamID) << 32)
+		| (static_cast<DWORD>(pEventInfo->ServiceID) << 16)
 		| pEventInfo->EventID;
 }
 
@@ -1073,12 +1073,12 @@ bool CEventSearchSettingsDialog::GetSettings(CEventSearchSettings *pSettings) co
 		pSettings->fCA =
 			DlgCheckBox_IsChecked(m_hDlg, IDC_EVENTSEARCH_CA);
 		pSettings->CA =
-			(CEventSearchSettings::CAType)DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST);
+			static_cast<CEventSearchSettings::CAType>(DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST));
 
 		pSettings->fVideo =
 			DlgCheckBox_IsChecked(m_hDlg, IDC_EVENTSEARCH_VIDEO);
 		pSettings->Video =
-			(CEventSearchSettings::VideoType)DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST);
+			static_cast<CEventSearchSettings::VideoType>(DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST));
 	} else {
 		*pSettings = m_SearchSettings;
 	}
@@ -1164,12 +1164,12 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 
 		// CA
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_CA, Settings.fCA);
-		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST, (int)Settings.CA);
+		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST, static_cast<int>(Settings.CA));
 		EnableDlgItem(m_hDlg, IDC_EVENTSEARCH_CA_LIST, Settings.fCA);
 
 		// 映像
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_VIDEO, Settings.fVideo);
-		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST, (int)Settings.Video);
+		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST, static_cast<int>(Settings.Video));
 		EnableDlgItem(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST, Settings.fVideo);
 	} else {
 		m_SearchSettings = Settings;
@@ -1272,7 +1272,7 @@ void CEventSearchSettingsDialog::SetSearchTargetList(const LPCTSTR *ppszList, in
 
 bool CEventSearchSettingsDialog::SetSearchTarget(int Target)
 {
-	if (Target < 0 || (size_t)Target >= m_SearchTargetList.size())
+	if (Target < 0 || static_cast<size_t>(Target) >= m_SearchTargetList.size())
 		return false;
 	m_SearchTarget = Target;
 	return true;
@@ -1559,7 +1559,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case IDC_EVENTSEARCH_SEARCHTARGET:
 			if (HIWORD(wParam) == CBN_SELCHANGE)
-				m_SearchTarget = (int)DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_SEARCHTARGET);
+				m_SearchTarget = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_SEARCHTARGET));
 			return TRUE;
 
 		case IDC_EVENTSEARCH_KEYWORDMENU:
@@ -1586,12 +1586,12 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				int Index = -1;
 
 				if (DlgComboBox_GetDroppedState(hDlg, IDC_EVENTSEARCH_KEYWORD)) {
-					Index = (int)DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_KEYWORD);
+					Index = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_KEYWORD));
 				} else {
 					TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 
 					if (::GetDlgItemText(hDlg, IDC_EVENTSEARCH_KEYWORD, szKeyword, lengthof(szKeyword)) > 0) {
-						Index = (int)DlgComboBox_FindStringExact(hDlg, IDC_EVENTSEARCH_KEYWORD, -1, szKeyword);
+						Index = static_cast<int>(DlgComboBox_FindStringExact(hDlg, IDC_EVENTSEARCH_KEYWORD, -1, szKeyword));
 						if (Index >= 0)
 							::SetDlgItemText(hDlg, IDC_EVENTSEARCH_KEYWORD, TEXT(""));
 					}
@@ -1623,7 +1623,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 #endif
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case NM_CLICK:
 			{
 				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
@@ -1779,7 +1779,7 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 							hwnd, EM_GETSEL,
 							reinterpret_cast<WPARAM>(&Start),
 							reinterpret_cast<LPARAM>(&End));
-						if (Start == 0 && End == (DWORD)Length) {
+						if (Start == 0 && End == static_cast<DWORD>(Length)) {
 							TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 
 							if (::GetWindowText(hwnd, szKeyword, lengthof(szKeyword)) == Length
@@ -2058,7 +2058,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		break;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == hDlg && LOWORD(lParam) == HTCLIENT && m_fSplitterCursor) {
+		if (reinterpret_cast<HWND>(wParam) == hDlg && LOWORD(lParam) == HTCLIENT && m_fSplitterCursor) {
 			::SetCursor(::LoadCursor(nullptr, IDC_SIZENS));
 			::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
 			return TRUE;
@@ -2101,7 +2101,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case NM_RCLICK:
 		case NM_DBLCLK:
 			{
@@ -2458,7 +2458,7 @@ void CProgramSearchDialog::HighlightKeyword()
 	else
 		FirstLine = 3;
 	if (m_SearchSettings.fEventText)
-		LastLine = (int)::SendMessage(hwndInfo, EM_GETLINECOUNT, 0, 0) - 1;
+		LastLine = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINECOUNT, 0, 0)) - 1;
 	else
 		LastLine = 1;
 
@@ -2472,18 +2472,18 @@ void CProgramSearchDialog::HighlightKeyword()
 	::SendMessage(hwndInfo, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&crOld));
 
 	for (int i = FirstLine; i <= LastLine;) {
-		const int LineIndex = (int)::SendMessage(hwndInfo, EM_LINEINDEX, i, 0);
+		const int LineIndex = static_cast<int>(::SendMessage(hwndInfo, EM_LINEINDEX, i, 0));
 		TCHAR szText[2048], *q;
 		int TotalLength = 0, Length;
 
 		q = szText;
 		while (i <= LastLine) {
 #ifdef UNICODE
-			q[0] = (WORD)(lengthof(szText) - 2 - TotalLength);
+			q[0] = static_cast<WORD>(lengthof(szText) - 2 - TotalLength);
 #else
 			*(WORD*)q = (WORD)(sizeof(szText) - sizeof(WORD) - 1 - TotalLength);
 #endif
-			Length = (int)::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q));
+			Length = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q)));
 			i++;
 			if (Length < 1)
 				break;
@@ -2501,8 +2501,8 @@ void CProgramSearchDialog::HighlightKeyword()
 
 				while (*q != _T('\0') && m_Searcher.GetRegExp().Match(q, &Range)) {
 					q += Range.Start;
-					cr.cpMin = LineIndex + (LONG)(q - szText);
-					cr.cpMax = cr.cpMin + (LONG)Range.Length;
+					cr.cpMin = LineIndex + static_cast<LONG>(q - szText);
+					cr.cpMax = cr.cpMin + static_cast<LONG>(Range.Length);
 					::SendMessage(hwndInfo, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 					::SendMessage(hwndInfo, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cfHighlight));
 					q += Range.Length;
@@ -2533,7 +2533,7 @@ void CProgramSearchDialog::HighlightKeyword()
 					if (!fMinus && KeywordLength > 0) {
 						LPCTSTR q = szText;
 						while (SearchNextKeyword(&q, szWord, KeywordLength, &Length)) {
-							cr.cpMin = LineIndex + (LONG)(q - szText);
+							cr.cpMin = LineIndex + static_cast<LONG>(q - szText);
 							cr.cpMax = cr.cpMin + Length;
 							::SendMessage(hwndInfo, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 							::SendMessage(hwndInfo, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cfHighlight));

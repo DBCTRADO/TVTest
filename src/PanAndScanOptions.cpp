@@ -191,7 +191,7 @@ bool CPanAndScanOptions::ReadSettings(CSettings &Settings)
 bool CPanAndScanOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Clear();
-	Settings.Write(TEXT("PresetCount"), (unsigned int)m_PresetList.size());
+	Settings.Write(TEXT("PresetCount"), static_cast<unsigned int>(m_PresetList.size()));
 	for (size_t i = 0; i < m_PresetList.size(); i++) {
 		const PanAndScanInfo &Info = m_PresetList[i];
 		TCHAR szKey[32], szSettings[256];
@@ -248,7 +248,7 @@ int CPanAndScanOptions::FindPresetByID(UINT ID) const
 {
 	for (size_t i = 0; i < m_PresetList.size(); i++) {
 		if (m_PresetList[i].ID == ID)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -822,7 +822,7 @@ bool CPanAndScanOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxL
 		return false;
 	const int Index = Command - m_FirstID;
 	const size_t Length = StringFormat(pszText, MaxLength, TEXT("パン&スキャン{}"), Index + 1);
-	if ((size_t)Index < m_PresetList.size()) {
+	if (static_cast<size_t>(Index) < m_PresetList.size()) {
 		StringFormat(
 			pszText + Length, MaxLength - Length,
 			TEXT(" : {}"), m_PresetList[Index].szName);

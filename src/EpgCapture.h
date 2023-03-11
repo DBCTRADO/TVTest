@@ -73,7 +73,7 @@ namespace TVTest
 		bool IsCapturing() const { return m_fCapturing; }
 		bool ProcessCapture();
 		void SetEventHandler(CEventHandler *pEventHandler);
-		int GetChannelCount() const { return (int)m_ChannelList.size(); }
+		int GetChannelCount() const { return static_cast<int>(m_ChannelList.size()); }
 		int GetCurChannel() const { return m_CurChannel; }
 		DWORD GetRemainingTime() const;
 		bool IsChannelChanging() const { return m_fChannelChanging; }

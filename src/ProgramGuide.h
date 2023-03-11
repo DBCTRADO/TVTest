@@ -90,7 +90,7 @@ namespace TVTest
 			void SetLogo(HBITMAP hbm) { m_hbmLogo = hbm; }
 			HBITMAP GetLogo() const { return m_hbmLogo; }
 			HBITMAP GetStretchedLogo(int Width, int Height);
-			int NumEvents() const { return (int)m_EventList.size(); }
+			int NumEvents() const { return static_cast<int>(m_EventList.size()); }
 			LibISDB::EventInfo *GetEvent(int Index);
 			const LibISDB::EventInfo *GetEvent(int Index) const;
 			LibISDB::EventInfo *GetEventByEventID(WORD EventID);

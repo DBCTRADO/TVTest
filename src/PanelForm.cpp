@@ -149,7 +149,7 @@ bool CPanelForm::AddPage(const PageInfo &Info)
 
 CPanelForm::CPage *CPanelForm::GetPageByIndex(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_WindowList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_WindowList.size())
 		return nullptr;
 	return m_WindowList[Index]->m_pWindow;
 }
@@ -167,7 +167,7 @@ CPanelForm::CPage *CPanelForm::GetPageByID(int ID)
 
 bool CPanelForm::SetCurTab(int Index)
 {
-	if (Index < -1 || (size_t)Index >= m_WindowList.size())
+	if (Index < -1 || static_cast<size_t>(Index) >= m_WindowList.size())
 		return false;
 
 	if (!m_WindowList[Index]->m_fVisible)
@@ -208,7 +208,7 @@ bool CPanelForm::SetCurTab(int Index)
 
 int CPanelForm::IDToIndex(int ID) const
 {
-	for (int i = 0; i < (int)m_WindowList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_WindowList.size()); i++) {
 		if (m_WindowList[i]->m_ID == ID)
 			return i;
 	}
@@ -254,7 +254,7 @@ bool CPanelForm::SetTabVisible(int ID, bool fVisible)
 					CurTab = i;
 			}
 			if (CurTab < 0) {
-				for (int i = 0; i < (int)m_WindowList.size(); i++) {
+				for (int i = 0; i < static_cast<int>(m_WindowList.size()); i++) {
 					if (m_WindowList[i]->m_fVisible) {
 						CurTab = i;
 						break;
@@ -316,7 +316,7 @@ bool CPanelForm::SetTabOrder(const int *pOrder, int Count)
 
 bool CPanelForm::GetTabInfo(int Index, TabInfo *pInfo) const
 {
-	if (Index < 0 || (size_t)Index >= m_TabOrder.size() || pInfo == nullptr)
+	if (Index < 0 || static_cast<size_t>(Index) >= m_TabOrder.size() || pInfo == nullptr)
 		return false;
 	const CWindowInfo *pWindowInfo = m_WindowList[m_TabOrder[Index]].get();
 	pInfo->ID = pWindowInfo->m_ID;
@@ -327,7 +327,7 @@ bool CPanelForm::GetTabInfo(int Index, TabInfo *pInfo) const
 
 int CPanelForm::GetTabID(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_TabOrder.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_TabOrder.size())
 		return -1;
 	return m_WindowList[m_TabOrder[Index]]->m_ID;
 }
@@ -537,7 +537,7 @@ LRESULT CPanelForm::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 
@@ -587,7 +587,7 @@ void CPanelForm::CalcTabSize()
 
 		for (const auto &Window : m_WindowList) {
 			if (Window->m_fVisible) {
-				::GetTextExtentPoint32(hdc, Window->m_Title.data(), (int)Window->m_Title.length(), &sz);
+				::GetTextExtentPoint32(hdc, Window->m_Title.data(), static_cast<int>(Window->m_Title.length()), &sz);
 				if (sz.cx > MaxWidth)
 					MaxWidth = sz.cx;
 			}

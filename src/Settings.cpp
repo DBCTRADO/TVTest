@@ -31,7 +31,7 @@ namespace TVTest
 
 static unsigned int StrToUInt(LPCTSTR pszValue)
 {
-	return (unsigned int)std::_tcstoul(pszValue, nullptr, 0);
+	return static_cast<unsigned int>(std::_tcstoul(pszValue, nullptr, 0));
 }
 
 

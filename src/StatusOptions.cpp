@@ -132,7 +132,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 				const long IDNum = std::_tcstol(ID.c_str(), &p, 10);
 				if (*p == _T('\0')) {
 					if (IDNum >= STATUS_ITEM_FIRST && IDNum <= STATUS_ITEM_LAST) {
-						Item.ID = (int)IDNum;
+						Item.ID = static_cast<int>(IDNum);
 					} else {
 						continue;
 					}
@@ -215,8 +215,8 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 
 bool CStatusOptions::WriteSettings(CSettings &Settings)
 {
-	if (Settings.Write(TEXT("NumItems"), (int)m_ItemList.size())) {
-		for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	if (Settings.Write(TEXT("NumItems"), static_cast<int>(m_ItemList.size()))) {
+		for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 			const StatusItemInfo &Info = m_ItemList[i];
 			TCHAR szKey[32];
 
@@ -429,7 +429,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			switch (pdis->itemAction) {
 			case ODA_DRAWENTIRE:
 			case ODA_SELECT:
-				if ((INT)pdis->itemID >= 0) {
+				if (static_cast<INT>(pdis->itemID) >= 0) {
 					const StatusItemInfo *pItemInfo = reinterpret_cast<const StatusItemInfo*>(pdis->itemData);
 					CStatusItem *pItem = m_pStatusView->GetItemByID(pItemInfo->ID);
 					int TextColor, BackColor;
@@ -492,11 +492,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 					::SetBkMode(pdis->hDC, OldBkMode);
 					::SetTextColor(pdis->hDC, crOldTextColor);
-					if ((int)pdis->itemID == m_DropInsertPos
-							|| (int)pdis->itemID + 1 == m_DropInsertPos)
+					if (static_cast<int>(pdis->itemID) == m_DropInsertPos
+							|| static_cast<int>(pdis->itemID) + 1 == m_DropInsertPos)
 						::PatBlt(
 							pdis->hDC, pdis->rcItem.left,
-							(int)pdis->itemID == m_DropInsertPos ?
+							static_cast<int>(pdis->itemID) == m_DropInsertPos ?
 							pdis->rcItem.top : pdis->rcItem.bottom - 1,
 							pdis->rcItem.right - pdis->rcItem.left, 1, DSTINVERT);
 					if ((pdis->itemState & ODS_FOCUS) == 0)
@@ -570,7 +570,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				m_pStatusView->EnableSizeAdjustment(false);
@@ -960,7 +960,7 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 				if (TimerID != m_pStatusOptions->m_DragTimerID) {
 					if (m_pStatusOptions->m_DragTimerID != 0)
 						KillTimer(hwnd, m_pStatusOptions->m_DragTimerID);
-					m_pStatusOptions->m_DragTimerID = (UINT)SetTimer(hwnd, TimerID, 100, nullptr);
+					m_pStatusOptions->m_DragTimerID = static_cast<UINT>(SetTimer(hwnd, TimerID, 100, nullptr));
 				}
 				SetCursor(LoadCursor(nullptr, IDC_NO));
 			}

@@ -85,7 +85,7 @@ namespace TVTest
 
 	template<typename T> int StringCharLength(T pszString)
 	{
-		return (int)(StringNextChar(pszString) - pszString);
+		return static_cast<int>(StringNextChar(pszString) - pszString);
 	}
 
 

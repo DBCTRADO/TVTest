@@ -81,7 +81,7 @@ float LevelToDeciBel(int Level)
 	else if (Level >= 100)
 		Volume = 0.0f;
 	else
-		Volume = (float)(20.0 * log10((double)Level / 100.0));
+		Volume = static_cast<float>(20.0 * log10(static_cast<double>(Level) / 100.0));
 	return Volume;
 }
 
@@ -110,11 +110,11 @@ COLORREF HSVToRGB(double Hue, double Saturation, double Value)
 			h -= 6.0;
 		s = Saturation;
 		v = Value;
-		f = h - (int)h;
+		f = h - static_cast<int>(h);
 		p = v * (1.0 - s);
 		q = v * (1.0 - s * f);
 		t = v * (1.0 - s * (1.0 - f));
-		switch ((int)h) {
+		switch (static_cast<int>(h)) {
 		case 0: r = v; g = t; b = p; break;
 		case 1: r = q; g = v; b = p; break;
 		case 2: r = p; g = v; b = t; break;
@@ -123,7 +123,7 @@ COLORREF HSVToRGB(double Hue, double Saturation, double Value)
 		case 5: r = v; g = p; b = q; break;
 		}
 	}
-	return RGB((BYTE)(r * 255.0 + 0.5), (BYTE)(g * 255.0 + 0.5), (BYTE)(b * 255.0 + 0.5));
+	return RGB(static_cast<BYTE>(r * 255.0 + 0.5), static_cast<BYTE>(g * 255.0 + 0.5), static_cast<BYTE>(b * 255.0 + 0.5));
 }
 
 
@@ -131,7 +131,7 @@ void RGBToHSV(
 	BYTE Red, BYTE Green, BYTE Blue,
 	double *pHue, double *pSaturation, double *pValue)
 {
-	const double r = (double)Red / 255.0, g = (double)Green / 255.0, b = (double)Blue / 255.0;
+	const double r = static_cast<double>(Red) / 255.0, g = static_cast<double>(Green) / 255.0, b = static_cast<double>(Blue) / 255.0;
 	double h, s, v;
 	double Max, Min;
 
@@ -207,15 +207,15 @@ int CompareSystemTime(const SYSTEMTIME *pTime1, const SYSTEMTIME *pTime2)
 #else
 	DWORD Date1, Date2;
 
-	Date1 = ((DWORD)pTime1->wYear << 16) | ((DWORD)pTime1->wMonth << 8) | pTime1->wDay;
-	Date2 = ((DWORD)pTime2->wYear << 16) | ((DWORD)pTime2->wMonth << 8) | pTime2->wDay;
+	Date1 = (static_cast<DWORD>(pTime1->wYear) << 16) | (static_cast<DWORD>(pTime1->wMonth) << 8) | pTime1->wDay;
+	Date2 = (static_cast<DWORD>(pTime2->wYear) << 16) | (static_cast<DWORD>(pTime2->wMonth) << 8) | pTime2->wDay;
 	if (Date1 == Date2) {
 		Date1 =
-			((DWORD)pTime1->wHour << 24) | ((DWORD)pTime1->wMinute << 16) |
-			((DWORD)pTime1->wSecond << 10) | pTime1->wMilliseconds;
+			(static_cast<DWORD>(pTime1->wHour) << 24) | (static_cast<DWORD>(pTime1->wMinute) << 16) |
+			(static_cast<DWORD>(pTime1->wSecond) << 10) | pTime1->wMilliseconds;
 		Date2 =
-			((DWORD)pTime2->wHour << 24) | ((DWORD)pTime2->wMinute << 16) |
-			((DWORD)pTime2->wSecond << 10) | pTime2->wMilliseconds;
+			(static_cast<DWORD>(pTime2->wHour) << 24) | (static_cast<DWORD>(pTime2->wMinute) << 16) |
+			(static_cast<DWORD>(pTime2->wSecond) << 10) | pTime2->wMilliseconds;
 	}
 	if (Date1 < Date2)
 		return -1;
@@ -545,12 +545,16 @@ int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lpData, LPARAM lP
 {
 	switch (uMsg) {
 	case BFFM_INITIALIZED:
-		if (((LPTSTR)lParam)[0] != _T('\0')) {
-			TCHAR szDirectory[MAX_PATH];
+		{
+			const LPCTSTR pszFolder = reinterpret_cast<LPCTSTR>(lParam);
 
-			StringCopy(szDirectory, (LPTSTR)lParam);
-			PathRemoveBackslash(szDirectory);
-			SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)szDirectory);
+			if (pszFolder[0] != _T('\0')) {
+				TCHAR szDirectory[MAX_PATH];
+
+				StringCopy(szDirectory, pszFolder);
+				PathRemoveBackslash(szDirectory);
+				SendMessage(hwnd, BFFM_SETSELECTION, TRUE, reinterpret_cast<LPARAM>(szDirectory));
+			}
 		}
 		break;
 	}
@@ -569,7 +573,7 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 	bi.lpszTitle = pszTitle;
 	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
 	bi.lpfn = BrowseFolderCallback;
-	bi.lParam = (LPARAM)pszDirectory;
+	bi.lParam = reinterpret_cast<LPARAM>(pszDirectory);
 
 	{
 		CommonDialogDPIBlock SystemDPI;
@@ -1147,8 +1151,8 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 		const DWORD HeaderSize = BitsPerPixel == 32 ? sizeof(BITMAPV5HEADER) : sizeof(BITMAPINFOHEADER);
 		size_t PaletteSize = 0;
 		if (BitsPerPixel <= 8)
-			PaletteSize = ((size_t)1 << BitsPerPixel) * sizeof(RGBQUAD);
-		BITMAPINFO *pbmi = (BITMAPINFO*)std::malloc(HeaderSize + PaletteSize);
+			PaletteSize = (1_z << BitsPerPixel) * sizeof(RGBQUAD);
+		BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(std::malloc(HeaderSize + PaletteSize));
 		if (pbmi != nullptr) {
 			::ZeroMemory(pbmi, HeaderSize + PaletteSize);
 			pbmi->bmiHeader.biSize = HeaderSize;
@@ -1157,7 +1161,7 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 			pbmi->bmiHeader.biPlanes = 1;
 			pbmi->bmiHeader.biBitCount = BitsPerPixel;
 			if (BitsPerPixel == 32) {
-				BITMAPV5HEADER *pbV5 = (BITMAPV5HEADER*)&pbmi->bmiHeader;
+				BITMAPV5HEADER *pbV5 = reinterpret_cast<BITMAPV5HEADER*>(&pbmi->bmiHeader);
 				pbV5->bV5Compression = BI_BITFIELDS;
 				pbV5->bV5RedMask  = 0x00FF0000;
 				pbV5->bV5GreenMask = 0x0000FF00;
@@ -1230,7 +1234,7 @@ HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size)
 
 	GetStandardIconSize(Size, &Width, &Height);
 
-	return (HICON)::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR);
+	return static_cast<HICON>(::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR));
 }
 
 
@@ -1244,7 +1248,7 @@ HICON LoadIconSpecificSize(HINSTANCE hinst, LPCTSTR pszName, int Width, int Heig
 	if (SUCCEEDED(::LoadIconWithScaleDown(hinst, pszName, Width, Height, &hico)))
 		return hico;
 
-	return (HICON)::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR);
+	return static_cast<HICON>(::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR));
 }
 
 
@@ -1269,7 +1273,7 @@ HICON LoadSystemIcon(LPCTSTR pszName, IconSizeType Size)
 
 	hico = ::LoadIcon(nullptr, pszName);
 	if (hico != nullptr)
-		hico = (HICON)::CopyImage(hico, IMAGE_ICON, Width, Height, 0);
+		hico = static_cast<HICON>(::CopyImage(hico, IMAGE_ICON, Width, Height, 0));
 	return hico;
 }
 
@@ -1291,7 +1295,7 @@ HICON LoadSystemIcon(LPCTSTR pszName, int Width, int Height)
 
 	hico = ::LoadIcon(nullptr, pszName);
 	if (hico != nullptr)
-		hico = (HICON)::CopyImage(hico, IMAGE_ICON, Width, Height, 0);
+		hico = static_cast<HICON>(::CopyImage(hico, IMAGE_ICON, Width, Height, 0));
 	return hico;
 }
 

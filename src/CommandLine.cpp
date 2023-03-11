@@ -234,11 +234,11 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 			if (*p == L'/' || *p == L'-' || *p == L'T') {
 				if (DateCount == 3)
 					return false;
-				Date[DateCount++] = (WORD)Value;
+				Date[DateCount++] = static_cast<WORD>(Value);
 			} else if (*p == L':' || *p == L'\0') {
 				if (TimeCount == 3)
 					return false;
-				TimeValue[TimeCount++] = (WORD)Value;
+				TimeValue[TimeCount++] = static_cast<WORD>(Value);
 				if (*p == L'\0')
 					break;
 			}
@@ -331,9 +331,11 @@ bool CArgsParser::GetDurationValue(int *pValue) const
 
 	while (*p != L'\0') {
 		if (*p == L'-' || (*p >= L'0' && *p <= L'9')) {
-			Duration = wcstol(p, (wchar_t**)&p, 10);
+			wchar_t *pEnd;
+			Duration = wcstol(p, &pEnd, 10);
 			if (Duration == LONG_MAX || Duration == LONG_MIN)
 				return false;
+			p = pEnd;
 		} else {
 			switch (*p) {
 			case L'h': case L'H':

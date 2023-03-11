@@ -172,7 +172,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				m_FrameSettings.SetToolbarOrderList(OrderList);
 
 				m_FrameSettings.SetDateBarButtonCount(
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT) + 1);
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT)) + 1);
 
 				CProgramGuideFrameSettings::TimeBarSettings TimeBarSettings;
 				if (DlgRadioButton_IsChecked(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_INTERVAL))
@@ -180,11 +180,11 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				else if (DlgRadioButton_IsChecked(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_CUSTOM))
 					TimeBarSettings.Time = CProgramGuideFrameSettings::TimeBarSettings::TimeType::Custom;
 				TimeBarSettings.Interval =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL) +
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL)) +
 					CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MIN;
 				GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_CUSTOMTIME, &TimeBarSettings.CustomTime);
 				TimeBarSettings.MaxButtonCount =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_MAXBUTTONCOUNT) +
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_MAXBUTTONCOUNT)) +
 					CProgramGuideFrameSettings::TimeBarSettings::BUTTONCOUNT_MIN;
 				m_FrameSettings.SetTimeBarSettings(TimeBarSettings);
 			}

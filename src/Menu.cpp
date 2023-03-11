@@ -121,7 +121,7 @@ bool CMainMenu::Show(UINT Flags, int x, int y, HWND hwnd, bool fToggle, const st
 					// トップレベルの項目にあればコピー
 					int i;
 					for (i = 0; i < OrigItemCount; i++) {
-						if (::GetMenuItemID(m_hmenuPopup, i) == (UINT)ID)
+						if (::GetMenuItemID(m_hmenuPopup, i) == static_cast<UINT>(ID))
 							break;
 					}
 					if (i < OrigItemCount) {
@@ -1255,7 +1255,7 @@ bool CPopupMenu::CheckItem(UINT ID, bool fCheck)
 {
 	if (m_hmenu == nullptr)
 		return false;
-	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED)) != (DWORD)-1;
+	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED)) != static_cast<DWORD>(-1);
 }
 
 
@@ -1358,12 +1358,12 @@ bool CIconMenu::Initialize(HMENU hmenu, HINSTANCE hinst, const ItemInfo *pItemLi
 					ii.hbmColor は DDB になっていて、そのままメニューの画像に指定すると
 					アルファチャンネルが無視されるため、DIB に変換する
 				*/
-				const HBITMAP hbm = (HBITMAP)::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+				const HBITMAP hbm = static_cast<HBITMAP>(::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 				if (hbm != nullptr) {
 					m_BitmapList.push_back(hbm);
 					ItemIconInfo Item;
 					Item.ID = pItemList[i].ID;
-					Item.Icon = (int)m_BitmapList.size() - 1;
+					Item.Icon = static_cast<int>(m_BitmapList.size()) - 1;
 					m_ItemList.push_back(Item);
 				}
 				::DeleteObject(ii.hbmColor);
@@ -1541,7 +1541,7 @@ bool CDropDownMenu::AppendItem(CItem *pItem)
 
 bool CDropDownMenu::InsertItem(int Index, CItem *pItem)
 {
-	if (pItem == nullptr || Index < 0 || (size_t)Index > m_ItemList.size())
+	if (pItem == nullptr || Index < 0 || static_cast<size_t>(Index) > m_ItemList.size())
 		return false;
 	auto it = m_ItemList.begin();
 	std::advance(it, Index);
@@ -1604,7 +1604,7 @@ int CDropDownMenu::CommandToIndex(int Command) const
 		return -1;
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		if (m_ItemList[i]->GetCommand() == Command)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -1648,7 +1648,7 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 
 	const int HorzMargin = m_WindowMargin.cxLeftWidth + m_WindowMargin.cxRightWidth;
 	const int VertMargin = m_WindowMargin.cyTopHeight + m_WindowMargin.cyBottomHeight;
-	m_MaxRows = (int)m_ItemList.size();
+	m_MaxRows = static_cast<int>(m_ItemList.size());
 	int Columns = 1;
 	int x = pPos->x, y = pPos->y;
 	MONITORINFO mi;
@@ -1656,16 +1656,16 @@ bool CDropDownMenu::Show(HWND hwndOwner, HWND hwndMessage, const POINT *pPos, in
 	if (::GetMonitorInfo(hMonitor, &mi)) {
 		const int Rows = ((mi.rcMonitor.bottom - y) - VertMargin) / m_ItemHeight;
 
-		if ((int)m_ItemList.size() > Rows) {
+		if (static_cast<int>(m_ItemList.size()) > Rows) {
 			const int MaxColumns = ((mi.rcMonitor.right - mi.rcMonitor.left) - HorzMargin) / m_ItemWidth;
 			if (MaxColumns > 1) {
-				if (Rows * MaxColumns >= (int)m_ItemList.size()) {
-					Columns = ((int)m_ItemList.size() + Rows - 1) / Rows;
+				if (Rows * MaxColumns >= static_cast<int>(m_ItemList.size())) {
+					Columns = (static_cast<int>(m_ItemList.size()) + Rows - 1) / Rows;
 					m_MaxRows = Rows;
 				} else {
 					Columns = MaxColumns;
-					m_MaxRows = ((int)m_ItemList.size() + Columns - 1) / Columns;
-					if ((Columns - 1) * m_MaxRows >= (int)m_ItemList.size())
+					m_MaxRows = (static_cast<int>(m_ItemList.size()) + Columns - 1) / Columns;
+					if ((Columns - 1) * m_MaxRows >= static_cast<int>(m_ItemList.size()))
 						Columns--;
 				}
 			}
@@ -1707,7 +1707,7 @@ bool CDropDownMenu::GetPosition(RECT *pRect)
 
 bool CDropDownMenu::GetItemRect(int Index, RECT *pRect) const
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return false;
 	pRect->left = (Index / m_MaxRows) * m_ItemWidth;
 	pRect->top = (Index % m_MaxRows) * m_ItemHeight;
@@ -1722,7 +1722,7 @@ int CDropDownMenu::HitTest(int x, int y) const
 {
 	const POINT pt = {x, y};
 
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		RECT rc;
 
 		GetItemRect(i, &rc);
@@ -1757,7 +1757,7 @@ void CDropDownMenu::Draw(HDC hdc, const RECT *pPaintRect)
 	m_MenuPainter.DrawBackground(hdc, rc);
 	m_MenuPainter.DrawBorder(hdc, rc);
 
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		GetItemRect(i, &rc);
 		if (rc.bottom > pPaintRect->top && rc.top < pPaintRect->bottom) {
 			CItem *pItem = m_ItemList[i].get();
@@ -1915,7 +1915,7 @@ int CDropDownMenu::CItem::GetWidth(HDC hdc)
 	if (!m_Text.empty() && m_Width == 0) {
 		SIZE sz;
 
-		::GetTextExtentPoint32(hdc, m_Text.data(), (int)m_Text.length(), &sz);
+		::GetTextExtentPoint32(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &sz);
 		m_Width = sz.cx;
 	}
 	return m_Width;

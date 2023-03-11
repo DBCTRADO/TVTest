@@ -402,7 +402,7 @@ void CBasicWindow::OnDestroy()
 		&m_WindowPosition.Left, &m_WindowPosition.Top,
 		&m_WindowPosition.Width, &m_WindowPosition.Height);
 	m_WindowPosition.fMaximized = ::IsZoomed(m_hwnd) != FALSE;
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>((LPVOID)nullptr));
+	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));
 	m_hwnd = nullptr;
 }
 
@@ -456,7 +456,7 @@ bool CBasicWindow::SetOpacity(int Opacity, bool fClearLayered)
 	if (Opacity < 255) {
 		if ((ExStyle & WS_EX_LAYERED) == 0)
 			SetWindowExStyle(ExStyle | WS_EX_LAYERED);
-		if (!::SetLayeredWindowAttributes(m_hwnd, 0, (BYTE)Opacity, LWA_ALPHA))
+		if (!::SetLayeredWindowAttributes(m_hwnd, 0, static_cast<BYTE>(Opacity), LWA_ALPHA))
 			return false;
 	} else {
 		if ((ExStyle & WS_EX_LAYERED) != 0) {

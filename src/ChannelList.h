@@ -108,7 +108,7 @@ namespace TVTest
 
 		CChannelList &operator=(const CChannelList &Src);
 
-		int NumChannels() const { return (int)m_ChannelList.size(); }
+		int NumChannels() const { return static_cast<int>(m_ChannelList.size()); }
 		int NumEnableChannels() const;
 		bool AddChannel(const CChannelInfo &Info);
 		bool AddChannel(CChannelInfo *pInfo);
@@ -182,7 +182,7 @@ namespace TVTest
 
 		CTuningSpaceList &operator=(const CTuningSpaceList &List);
 
-		int NumSpaces() const { return (int)m_TuningSpaceList.size(); }
+		int NumSpaces() const { return static_cast<int>(m_TuningSpaceList.size()); }
 		bool IsEmpty() const { return m_TuningSpaceList.empty(); }
 		CTuningSpaceInfo *GetTuningSpaceInfo(int Space);
 		const CTuningSpaceInfo *GetTuningSpaceInfo(int Space) const;

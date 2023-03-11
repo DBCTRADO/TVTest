@@ -51,7 +51,7 @@ bool CAudioManager::GetAudioInfo(int Index, AudioInfo *pInfo) const
 {
 	LibISDB::BlockLock Lock(m_Lock);
 
-	if (Index < 0 || (size_t)Index >= m_AudioList.size() || pInfo == nullptr)
+	if (Index < 0 || static_cast<size_t>(Index) >= m_AudioList.size() || pInfo == nullptr)
 		return false;
 
 	*pInfo = m_AudioList[Index];

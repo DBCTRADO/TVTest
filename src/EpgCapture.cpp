@@ -284,7 +284,7 @@ bool CEpgCaptureManager::NextChannel()
 		const bool fOK = App.Core.SetChannelByIndex(ChGroup.Space, ChGroup.Channel);
 		m_fChannelChanging = false;
 		if (fOK) {
-			m_CurChannel = (int)i;
+			m_CurChannel = static_cast<int>(i);
 			m_AccumulateClock.Start();
 			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnChannelChanged();

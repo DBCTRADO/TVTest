@@ -228,7 +228,7 @@ End:
 				const HICON hico = ::ExtractIcon(
 					GetAppClass().GetInstance(),
 					pTunerInfo->szIconFile, pTunerInfo->Index);
-				if (hico != nullptr && hico != (HICON)1)
+				if (hico != nullptr && hico != reinterpret_cast<HICON>(1))
 					pTuner->SetIcon(hico);
 			}
 		}
@@ -1124,8 +1124,8 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			POINT pt;
 			HCURSOR hCursor;
 
-			pt.x = (SHORT)LOWORD(Pos);
-			pt.y = (SHORT)HIWORD(Pos);
+			pt.x = static_cast<SHORT>(LOWORD(Pos));
+			pt.y = static_cast<SHORT>(HIWORD(Pos));
 			::ScreenToClient(hwnd, &pt);
 			if (TunerItemHitTest(pt.x, pt.y) >= 0
 					|| ChannelItemHitTest(pt.x, pt.y) >= 0
@@ -1362,13 +1362,13 @@ void CChannelDisplay::CTuner::SetDisplayName(LPCTSTR pszName)
 
 int CChannelDisplay::CTuner::NumSpaces() const
 {
-	return (int)m_TuningSpaceList.size();
+	return static_cast<int>(m_TuningSpaceList.size());
 }
 
 
 CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_TuningSpaceList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_TuningSpaceList.size())
 		return nullptr;
 	return m_TuningSpaceList[Index].get();
 }
@@ -1376,7 +1376,7 @@ CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index)
 
 const CTuningSpaceInfo *CChannelDisplay::CTuner::GetTuningSpaceInfo(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_TuningSpaceList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_TuningSpaceList.size())
 		return nullptr;
 	return m_TuningSpaceList[Index].get();
 }

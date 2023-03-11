@@ -222,7 +222,7 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 
 CDriverInfo *CDriverManager::GetDriverInfo(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_DriverList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_DriverList.size())
 		return nullptr;
 	return m_DriverList[Index].get();
 }
@@ -230,7 +230,7 @@ CDriverInfo *CDriverManager::GetDriverInfo(int Index)
 
 const CDriverInfo *CDriverManager::GetDriverInfo(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_DriverList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_DriverList.size())
 		return nullptr;
 	return m_DriverList[Index].get();
 }
@@ -242,7 +242,7 @@ int CDriverManager::FindByFileName(LPCTSTR pszFileName) const
 		return -1;
 	for (size_t i = 0; i < m_DriverList.size(); i++) {
 		if (IsEqualFileName(m_DriverList[i]->GetFileName(), pszFileName))
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }

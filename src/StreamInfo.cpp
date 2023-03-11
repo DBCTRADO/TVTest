@@ -110,8 +110,8 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				//const HTREEITEM hItem = TreeView_GetSelection(pnmhdr->hwndFrom);
 				const DWORD Pos = ::GetMessagePos();
 				TVHITTESTINFO tvhti;
-				tvhti.pt.x = (SHORT)LOWORD(Pos);
-				tvhti.pt.y = (SHORT)HIWORD(Pos);
+				tvhti.pt.x = static_cast<SHORT>(LOWORD(Pos));
+				tvhti.pt.y = static_cast<SHORT>(HIWORD(Pos));
 				::ScreenToClient(pnmhdr->hwndFrom, &tvhti.pt);
 				const HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
 				if (hItem != nullptr) {
@@ -204,12 +204,12 @@ void CStreamInfoPage::SetService()
 	tvis.hInsertAfter = TVI_LAST;
 	tvis.item.mask = TVIF_STATE | TVIF_TEXT | TVIF_CHILDREN;
 	tvis.item.state = TVIS_EXPANDED;
-	tvis.item.stateMask = (UINT) - 1;
+	tvis.item.stateMask = ~0U;
 	tvis.item.pszText = const_cast<LPTSTR>(TEXT("サービス"));
 	tvis.item.cChildren = !ServiceList.empty() ? 1 : 0;
 	hItem = TreeView_InsertItem(hwndTree, &tvis);
 	if (hItem != nullptr) {
-		for (int i = 0; i < (int)ServiceList.size(); i++) {
+		for (int i = 0; i < static_cast<int>(ServiceList.size()); i++) {
 			const LibISDB::AnalyzerFilter::ServiceInfo &ServiceInfo = ServiceList[i];
 			WORD ServiceID, PID;
 
@@ -238,7 +238,7 @@ void CStreamInfoPage::SetService()
 			StringFormat(szText, TEXT("PMT : PID {0:#04x} ({0})"), PID);
 			TreeView_InsertItem(hwndTree, &tvis);
 
-			const int NumVideoStreams = (int)ServiceInfo.VideoESList.size();
+			const int NumVideoStreams = static_cast<int>(ServiceInfo.VideoESList.size());
 			for (int j = 0; j < NumVideoStreams; j++) {
 				FormatEsInfo(
 					TEXT("映像"), j, ServiceInfo.VideoESList[j],
@@ -246,7 +246,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			const int NumAudioStreams = (int)ServiceInfo.AudioESList.size();
+			const int NumAudioStreams = static_cast<int>(ServiceInfo.AudioESList.size());
 			for (int j = 0; j < NumAudioStreams; j++) {
 				FormatEsInfo(
 					TEXT("音声"), j, ServiceInfo.AudioESList[j],
@@ -254,7 +254,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			const int NumCaptionStreams = (int)ServiceInfo.CaptionESList.size();
+			const int NumCaptionStreams = static_cast<int>(ServiceInfo.CaptionESList.size());
 			for (int j = 0; j < NumCaptionStreams; j++) {
 				PID = ServiceInfo.CaptionESList[j].PID;
 				StringFormat(
@@ -264,7 +264,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			const int NumDataStreams = (int)ServiceInfo.DataCarrouselESList.size();
+			const int NumDataStreams = static_cast<int>(ServiceInfo.DataCarrouselESList.size());
 			for (int j = 0; j < NumDataStreams; j++) {
 				PID = ServiceInfo.DataCarrouselESList[j].PID;
 				StringFormat(
@@ -274,7 +274,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			const int NumOtherStreams = (int)ServiceInfo.OtherESList.size();
+			const int NumOtherStreams = static_cast<int>(ServiceInfo.OtherESList.size());
 			for (int j = 0; j < NumOtherStreams; j++) {
 				FormatEsInfo(
 					TEXT("その他"), j, ServiceInfo.OtherESList[j],
@@ -288,7 +288,7 @@ void CStreamInfoPage::SetService()
 				TreeView_InsertItem(hwndTree, &tvis);
 			}
 
-			const int NumEcmStreams = (int)ServiceInfo.ECMList.size();
+			const int NumEcmStreams = static_cast<int>(ServiceInfo.ECMList.size());
 			for (int j = 0; j < NumEcmStreams; j++) {
 				PID = ServiceInfo.ECMList[j].PID;
 				StringFormat(
@@ -314,7 +314,7 @@ void CStreamInfoPage::SetService()
 		if (hItem != nullptr) {
 			const int RemoteControlKeyID = pAnalyzer->GetRemoteControlKeyID();
 
-			for (int i = 0; i < (int)ServiceList.size(); i++) {
+			for (int i = 0; i < static_cast<int>(ServiceList.size()); i++) {
 				const LibISDB::AnalyzerFilter::ServiceInfo &ServiceInfo = ServiceList[i];
 
 				tvis.hParent = hItem;
@@ -436,7 +436,7 @@ void CStreamInfoPage::SetService()
 		tvis.item.cChildren = !TerrestrialList.empty() ? 1 : 0;
 		hItem = TreeView_InsertItem(hwndTree, &tvis);
 		if (hItem != nullptr) {
-			for (int i = 0; i < (int)TerrestrialList.size(); i++) {
+			for (size_t i = 0; i < TerrestrialList.size(); i++) {
 				const LibISDB::AnalyzerFilter::TerrestrialDeliverySystemInfo &Info = TerrestrialList[i];
 				const LPCTSTR pszArea = LibISDB::GetAreaText_ja(Info.AreaCode);
 
@@ -461,7 +461,7 @@ void CStreamInfoPage::SetService()
 				for (size_t j = 0; j < TerrestrialList[i].Frequency.size(); j++) {
 					StringFormat(
 						szText, TEXT("周波数{} : {} MHz"),
-						(int)j + 1, TerrestrialList[i].Frequency[j] / 7);
+						j + 1, TerrestrialList[i].Frequency[j] / 7);
 					TreeView_InsertItem(hwndTree, &tvis);
 				}
 			}
@@ -478,7 +478,7 @@ void CStreamInfoPage::SetService()
 			tvis.item.cChildren = !SatelliteList.empty() ? 1 : 0;
 			hItem = TreeView_InsertItem(hwndTree, &tvis);
 			if (hItem != nullptr) {
-				for (int i = 0; i < (int)SatelliteList.size(); i++) {
+				for (size_t i = 0; i < SatelliteList.size(); i++) {
 					const LibISDB::AnalyzerFilter::SatelliteDeliverySystemInfo &Info = SatelliteList[i];
 
 					StringFormat(
@@ -507,7 +507,7 @@ void CStreamInfoPage::SetService()
 				tvis.item.cChildren = !CableList.empty() ? 1 : 0;
 				hItem = TreeView_InsertItem(hwndTree, &tvis);
 				if (hItem != nullptr) {
-					for (int i = 0; i < (int)CableList.size(); i++) {
+					for (size_t i = 0; i < CableList.size(); i++) {
 						const LibISDB::AnalyzerFilter::CableDeliverySystemInfo& Info = CableList[i];
 
 						StringFormat(

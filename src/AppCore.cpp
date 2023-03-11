@@ -61,9 +61,9 @@ void CAppCore::OnError(const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTi
 	} else if (pErrorHandler->GetLastErrorCode()) {
 		std::string Message = pErrorHandler->GetLastErrorCode().message();
 		if (!Message.empty()) {
-			const int Length = ::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), nullptr, 0);
+			const int Length = ::MultiByteToWideChar(CP_ACP, 0, Message.data(), static_cast<int>(Message.length()), nullptr, 0);
 			String Text(Length, TEXT('\0'));
-			::MultiByteToWideChar(CP_ACP, 0, Message.data(), (int)Message.length(), &Text[0], Length);
+			::MultiByteToWideChar(CP_ACP, 0, Message.data(), static_cast<int>(Message.length()), &Text[0], Length);
 			m_App.AddLogRaw(CLogItem::LogType::Error, Text);
 		}
 	} else {
@@ -622,11 +622,11 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 	if (pCmdLine->m_TuningSpace >= 0)
 		FindChannel.SetSpace(pCmdLine->m_TuningSpace);
 	if (pCmdLine->m_ServiceID > 0)
-		FindChannel.SetServiceID((WORD)pCmdLine->m_ServiceID);
+		FindChannel.SetServiceID(static_cast<WORD>(pCmdLine->m_ServiceID));
 	if (pCmdLine->m_NetworkID > 0)
-		FindChannel.SetNetworkID((WORD)pCmdLine->m_NetworkID);
+		FindChannel.SetNetworkID(static_cast<WORD>(pCmdLine->m_NetworkID));
 	if (pCmdLine->m_TransportStreamID > 0)
-		FindChannel.SetTransportStreamID((WORD)pCmdLine->m_TransportStreamID);
+		FindChannel.SetTransportStreamID(static_cast<WORD>(pCmdLine->m_TransportStreamID));
 
 	const CChannelList *pChannelList;
 
@@ -843,7 +843,7 @@ bool CAppCore::GetCurrentStreamIDInfo(StreamIDInfo *pInfo) const
 	if (ServiceID == LibISDB::SERVICE_ID_INVALID) {
 		const int CurServiceID = m_App.ChannelManager.GetCurrentServiceID();
 		if (CurServiceID > 0)
-			ServiceID = (WORD)CurServiceID;
+			ServiceID = static_cast<WORD>(CurServiceID);
 	}
 	pInfo->ServiceID = ServiceID;
 
@@ -1518,7 +1518,7 @@ bool CAppCore::GetVariableStringEventInfo(
 			LibISDB::DateTime StartTime;
 			if (pAnalyzer->GetEventTime(Index, &StartTime, nullptr, true)) {
 				const long long Diff = StartTime.DiffMilliseconds(CurTime);
-				if (Diff >= 0 && Diff < (long long)NextEventMargin)
+				if (Diff >= 0 && Diff < static_cast<long long>(NextEventMargin))
 					fNext = true;
 			}
 		}

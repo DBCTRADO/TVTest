@@ -332,7 +332,7 @@ int CMouseWheelHandler::OnWheel(int Delta)
 {
 	const DWORD CurTime = ::GetTickCount();
 
-	if ((DWORD)(CurTime - m_LastTime) > 500
+	if (static_cast<DWORD>(CurTime - m_LastTime) > 500
 			|| (Delta > 0) != (m_LastDelta > 0)) {
 		m_DeltaSum = 0;
 	}

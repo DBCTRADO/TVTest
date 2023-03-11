@@ -162,8 +162,8 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		for (i = 0; i < nPasses; i++) {
 			for (y = 0; y < Height; y++) {
 				pbRow =
-					(png_bytep)pInfo->pBits +
-						(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes;
+					const_cast<png_bytep>(static_cast<const png_byte*>(pInfo->pBits) +
+						(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes);
 				if (Buff) {
 					int x;
 					const BYTE *p;
@@ -215,11 +215,11 @@ struct RGBA
 };
 
 #define CHUNK_TYPE(c1,c2,c3,c4) \
-	(((DWORD)(c1) << 24) | ((DWORD)(c2) << 16) | ((DWORD)(c3) << 8) | (DWORD)c4)
+	((static_cast<DWORD>(c1) << 24) | (static_cast<DWORD>(c2) << 16) | (static_cast<DWORD>(c3) << 8) | static_cast<DWORD>(c4))
 
 inline DWORD MSBFirst32(const BYTE *p)
 {
-	return ((DWORD)p[0] << 24) | ((DWORD)p[1] << 16) | ((DWORD)p[2] << 8) | (DWORD)p[3];
+	return (static_cast<DWORD>(p[0]) << 24) | (static_cast<DWORD>(p[1]) << 16) | (static_cast<DWORD>(p[2]) << 8) | static_cast<DWORD>(p[3]);
 }
 
 static const RGBA DefaultPalette[128] = {
@@ -458,10 +458,10 @@ Decode:
 	}
 	std::unique_ptr<BYTE[]> ImageData(new BYTE[ImageDataSize]);
 
-	uLongf DecompressSize = (uLongf)ImageDataSize;
+	uLongf DecompressSize = static_cast<uLongf>(ImageDataSize);
 	if (uncompress(
 				ImageData.get(), &DecompressSize,
-				pCompressedImageData, (uLongf)CompressedImageSize) != Z_OK) {
+				pCompressedImageData, static_cast<uLongf>(CompressedImageSize)) != Z_OK) {
 		return nullptr;
 	}
 
@@ -470,7 +470,7 @@ Decode:
 	if (hDIB == nullptr) {
 		return nullptr;
 	}
-	BITMAPINFOHEADER *pbmih = (BITMAPINFOHEADER*)::GlobalLock(hDIB);
+	BITMAPINFOHEADER *pbmih = static_cast<BITMAPINFOHEADER*>(::GlobalLock(hDIB));
 	pbmih->biSize = sizeof(BITMAPINFOHEADER);
 	pbmih->biWidth = ImageHeader.Width;
 	pbmih->biHeight = ImageHeader.Height;
@@ -482,7 +482,7 @@ Decode:
 	pbmih->biYPelsPerMeter = 0;
 	pbmih->biClrUsed = 0;
 	pbmih->biClrImportant = 0;
-	BYTE *pDIBBits = (BYTE*)(pbmih + 1);
+	BYTE *pDIBBits = reinterpret_cast<BYTE*>(pbmih + 1);
 
 	BYTE *q = ImageData.get();
 	const int SampleMask = (1 << ImageHeader.BitDepth) - 1;
@@ -498,7 +498,7 @@ Decode:
 				::GlobalFree(hDIB);
 				return nullptr;
 			}
-			for (x = 0; (size_t)x < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
+			for (x = 0; static_cast<size_t>(x) < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
 				const int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
 				const int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
 				const int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;

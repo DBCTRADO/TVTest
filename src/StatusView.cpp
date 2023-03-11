@@ -330,7 +330,7 @@ void CStatusView::SetTheme(const Theme::CThemeManager *pThemeManager)
 
 const CStatusItem *CStatusView::GetItem(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return nullptr;
 	return m_ItemList[Index].get();
 }
@@ -338,7 +338,7 @@ const CStatusItem *CStatusView::GetItem(int Index) const
 
 CStatusItem *CStatusView::GetItem(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return nullptr;
 	return m_ItemList[Index].get();
 }
@@ -389,7 +389,7 @@ int CStatusView::IDToIndex(int ID) const
 {
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		if (m_ItemList[i]->GetID() == ID)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -397,7 +397,7 @@ int CStatusView::IDToIndex(int ID) const
 
 int CStatusView::IndexToID(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return -1;
 	return m_ItemList[Index]->GetID();
 }
@@ -467,14 +467,14 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				const POINT pt = {x, y};
 				int i;
-				for (i = 0; i < (int)m_ItemList.size(); i++) {
+				for (i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 					if (!m_ItemList[i]->GetVisible())
 						continue;
 					GetItemRectByIndex(i, &rc);
 					if (::PtInRect(&rc, pt))
 						break;
 				}
-				if (i == (int)m_ItemList.size())
+				if (i == static_cast<int>(m_ItemList.size()))
 					i = -1;
 				if (i != m_HotItem)
 					SetHotItem(i);
@@ -696,7 +696,7 @@ bool CStatusView::GetItemRect(int ID, RECT *pRect) const
 
 bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return false;
 
 	RECT rc;
@@ -1084,7 +1084,7 @@ void CStatusView::EnableSizeAdjustment(bool fEnable)
 
 void CStatusView::SetHotItem(int Item)
 {
-	if (Item < 0 || (size_t)Item >= m_ItemList.size())
+	if (Item < 0 || static_cast<size_t>(Item) >= m_ItemList.size())
 		Item = -1;
 	if (m_HotItem != Item) {
 		const int OldHotItem = m_HotItem;
@@ -1171,7 +1171,7 @@ void CStatusView::Draw(HDC hdc, const RECT *pPaintRect)
 		int Row = 0;
 
 		rc.right = Left;
-		for (int i = 0; i < (int)m_ItemList.size(); i++) {
+		for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 			CStatusItem *pItem = m_ItemList[i].get();
 
 			if (pItem->GetVisible()) {

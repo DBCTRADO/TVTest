@@ -470,7 +470,7 @@ void CPropertyPageFrame::SetCurTab(int Tab)
 {
 	if (m_CurTab == Tab)
 		return;
-	if (Tab < 0 || (size_t)Tab >= m_PageList.size())
+	if (Tab < 0 || static_cast<size_t>(Tab) >= m_PageList.size())
 		return;
 
 	PageInfo &Page = m_PageList[Tab];

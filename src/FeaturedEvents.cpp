@@ -345,7 +345,7 @@ static BOOL ServiceListViewGetInfoTip(
 	if (!ListView_GetItem(pGetInfoTip->hdr.hwndFrom, &lvi))
 		return FALSE;
 
-	const CChannelInfo *pChannelInfo = ServiceList.GetChannelInfo((int)lvi.lParam);
+	const CChannelInfo *pChannelInfo = ServiceList.GetChannelInfo(static_cast<int>(lvi.lParam));
 	if (pChannelInfo == nullptr)
 		return FALSE;
 
@@ -550,7 +550,7 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 						if (ListView_GetCheckState(hwndList, i)) {
 							lvi.iItem = i;
 							ListView_GetItem(hwndList, &lvi);
-							const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo((int)lvi.lParam);
+							const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo(static_cast<int>(lvi.lParam));
 							if (pChannelInfo != nullptr) {
 								m_SearchSettings.ServiceList.Add(
 									pChannelInfo->GetNetworkID(),
@@ -676,7 +676,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			lvc.iSubItem = 2;
 			ListView_InsertColumn(hwndList, 2, &lvc);
 
-			for (int i = 0; i < (int)SettingsList.GetCount(); i++) {
+			for (int i = 0; i < static_cast<int>(SettingsList.GetCount()); i++) {
 				AddSearchSettingsItem(hDlg, *SettingsList.Get(i));
 			}
 
@@ -848,7 +848,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 					if (ListView_GetCheckState(hwndList, i)) {
 						lvi.iItem = i;
 						ListView_GetItem(hwndList, &lvi);
-						const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo((int)lvi.lParam);
+						const CChannelInfo *pChannelInfo = m_ServiceList.GetChannelInfo(static_cast<int>(lvi.lParam));
 						if (pChannelInfo != nullptr) {
 							DefaultServiceList.Add(
 								pChannelInfo->GetNetworkID(),

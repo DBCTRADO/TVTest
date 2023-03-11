@@ -139,7 +139,7 @@ bool CControllerManager::AddController(CController *pController)
 		CController::ButtonInfo Button;
 
 		if (pController->GetButtonInfo(i, &Button)) {
-			Info.Settings.AssignList[i] = (WORD)Button.DefaultCommand;
+			Info.Settings.AssignList[i] = static_cast<WORD>(Button.DefaultCommand);
 		}
 	}
 	return true;
@@ -301,7 +301,7 @@ bool CControllerManager::OnButtonDown(LPCTSTR pszName, int Button) const
 	const ControllerInfo &Info = m_ControllerList[Index];
 	if (!m_fActive && Info.Settings.fActiveOnly)
 		return false;
-	if (Button >= (int)Info.Settings.AssignList.size())
+	if (Button >= static_cast<int>(Info.Settings.AssignList.size()))
 		return false;
 	const WORD Command = Info.Settings.AssignList[Button];
 	if (Command != 0)
@@ -317,7 +317,7 @@ bool CControllerManager::OnButtonDown(CController *pController, int Index)
 
 	for (auto &e : m_ControllerList) {
 		if (e.Controller.get() == pController) {
-			if (Index >= (int)e.Settings.AssignList.size())
+			if (Index >= static_cast<int>(e.Settings.AssignList.size()))
 				return false;
 			const WORD Command = e.Settings.AssignList[Index];
 			if (Command != 0)
@@ -345,7 +345,7 @@ int CControllerManager::FindController(LPCTSTR pszName) const
 		return -1;
 	for (size_t i = 0; i < m_ControllerList.size(); i++) {
 		if (::lstrcmpi(m_ControllerList[i].Controller->GetName(), pszName) == 0)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -366,7 +366,7 @@ void CControllerManager::InitDlgItems()
 	}
 	m_Tooltip.DeleteAllTools();
 
-	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
+	const int Sel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST));
 	if (Sel >= 0) {
 		const CCommandManager &CommandManager = GetAppClass().CommandManager;
 		const ControllerInfo &Info = m_ControllerList[Sel];
@@ -447,7 +447,7 @@ void CControllerManager::InitDlgItems()
 
 void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 {
-	const int CurController = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
+	const int CurController = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST));
 	if (CurController < 0)
 		return;
 
@@ -468,7 +468,7 @@ void CControllerManager::SetButtonCommand(HWND hwndList, int Index, int Command)
 		szText[0] = TEXT('\0');
 	}
 	ListView_SetItem(hwndList, &lvi);
-	m_CurSettingsList[CurController].AssignList[Index] = (WORD)Command;
+	m_CurSettingsList[CurController].AssignList[Index] = static_cast<WORD>(Command);
 }
 
 
@@ -504,9 +504,9 @@ void CControllerManager::SetDlgItemStatus()
 
 CController *CControllerManager::GetCurController() const
 {
-	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST);
+	const int Sel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_CONTROLLER_LIST));
 
-	if (Sel < 0 || Sel >= (int)m_ControllerList.size())
+	if (Sel < 0 || Sel >= static_cast<int>(m_ControllerList.size()))
 		return nullptr;
 	return m_ControllerList[Sel].Controller.get();
 }
@@ -527,7 +527,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 					DlgComboBox_AddString(hDlg, IDC_CONTROLLER_LIST, Info.Controller->GetText());
 					if (!m_CurController.empty()
 							&& ::lstrcmpi(m_CurController.c_str(), Info.Controller->GetName()) == 0)
-						Sel = (int)i;
+						Sel = static_cast<int>(i);
 					m_CurSettingsList[i] = Info.Settings;
 				}
 				DlgComboBox_SetCurSel(hDlg, IDC_CONTROLLER_LIST, Sel);
@@ -710,7 +710,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 		case IDC_CONTROLLER_ACTIVEONLY:
 			{
-				const int CurController = (int)DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_LIST);
+				const int CurController = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_LIST));
 
 				if (CurController >= 0) {
 					m_CurSettingsList[CurController].fActiveOnly =
@@ -725,11 +725,11 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					const int Command = (int)DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_COMMAND);
+					const int Command = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CONTROLLER_COMMAND));
 
 					SetButtonCommand(
 						hwndList, Sel,
-						Command <= 0 ? 0 : (int)DlgComboBox_GetItemData(hDlg, IDC_CONTROLLER_COMMAND, Command));
+						Command <= 0 ? 0 : static_cast<int>(DlgComboBox_GetItemData(hDlg, IDC_CONTROLLER_COMMAND, Command)));
 				}
 			}
 			return TRUE;
@@ -755,7 +755,7 @@ INT_PTR CControllerManager::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			SetDlgItemStatus();
 			::InvalidateRect(hDlg, &m_ImageRect, FALSE);

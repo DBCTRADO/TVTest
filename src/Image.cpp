@@ -42,7 +42,7 @@ size_t CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
 
 	Size = sizeof(BITMAPINFOHEADER);
 	if (pbmih->biBitCount <= 8)
-		Size += ((size_t)1 << pbmih->biBitCount) * sizeof(RGBQUAD);
+		Size += (1_z << pbmih->biBitCount) * sizeof(RGBQUAD);
 	else if (pbmih->biCompression == BI_BITFIELDS)
 		Size += 3 * sizeof(DWORD);
 	return Size;
@@ -71,9 +71,9 @@ static void CropImage(
 	const BYTE *p;
 	BYTE *q;
 
-	q = (BYTE*)pDstData + (Height - 1) * DstRowBytes;
+	q = static_cast<BYTE*>(pDstData) + (Height - 1) * DstRowBytes;
 	for (y = 0; y < Height; y++) {
-		p = (const BYTE*)pSrcData +
+		p = static_cast<const BYTE*>(pSrcData) +
 			((pbmiSrc->bmiHeader.biHeight > 0) ?
 				(pbmiSrc->bmiHeader.biHeight - 1 - (Top + y)) : (Top + y)) * SrcRowBytes +
 			Left * pbmiSrc->bmiHeader.biBitCount / 8;
@@ -114,7 +114,7 @@ HGLOBAL ResizeImage(
 		sizeof(BITMAPINFOHEADER) + DIB_ROW_BYTES(Width, 24) * Height);
 	if (hGlobal == nullptr)
 		return nullptr;
-	pbmihDst = (BITMAPINFOHEADER*)GlobalLock(hGlobal);
+	pbmihDst = static_cast<BITMAPINFOHEADER*>(GlobalLock(hGlobal));
 	pbmihDst->biSize = sizeof(BITMAPINFOHEADER);
 	pbmihDst->biWidth = Width;
 	pbmihDst->biHeight = Height;
@@ -160,7 +160,7 @@ HGLOBAL ResizeImage(
 	if (SrcTop > 0)
 		pSrcData = static_cast<const BYTE*>(pSrcData) +
 			(pbmiSrc->bmiHeader.biHeight > 0 ? (pbmiSrc->bmiHeader.biHeight - (SrcHeight + SrcTop)) : SrcTop) * SrcRowBytes;
-	q = (BYTE*)pDstData;
+	q = static_cast<BYTE*>(pDstData);
 	for (y = 0; y < Height; y++) {
 		y1 = ((y << 8) - DstYCenter) * SrcHeight / Height + SrcYCenter;
 		if (y1 < 0)

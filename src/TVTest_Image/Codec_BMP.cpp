@@ -43,7 +43,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	const int BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
 	InfoBytes = sizeof(BITMAPINFOHEADER);
 	if (BitsPerPixel <= 8)
-		InfoBytes += ((size_t)1 << BitsPerPixel) * sizeof(RGBQUAD);
+		InfoBytes += (static_cast<size_t>(1) << BitsPerPixel) * sizeof(RGBQUAD);
 	else if (pInfo->pbmi->bmiHeader.biCompression == BI_BITFIELDS)
 		InfoBytes += 3 * sizeof(DWORD);
 	const size_t RowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
@@ -58,9 +58,9 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	BITMAPFILEHEADER bmfh;
 
 	bmfh.bfType = 0x4D42;
-	bmfh.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) + InfoBytes + BitsBytes);
+	bmfh.bfSize = static_cast<DWORD>(sizeof(BITMAPFILEHEADER) + InfoBytes + BitsBytes);
 	bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
-	bmfh.bfOffBits = (DWORD)(sizeof(BITMAPFILEHEADER) + InfoBytes);
+	bmfh.bfOffBits = static_cast<DWORD>(sizeof(BITMAPFILEHEADER) + InfoBytes);
 	if (!WriteFile(hFile, &bmfh, sizeof(BITMAPFILEHEADER), &dwWrite, nullptr)
 			|| dwWrite != sizeof(BITMAPFILEHEADER)) {
 		CloseHandle(hFile);
@@ -88,7 +88,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 		return false;
 	}
 	if (InfoBytes > sizeof(BITMAPINFOHEADER)) {
-		const DWORD PalBytes = (DWORD)(InfoBytes - sizeof(BITMAPINFOHEADER));
+		const DWORD PalBytes = static_cast<DWORD>(InfoBytes - sizeof(BITMAPINFOHEADER));
 
 		if (!WriteFile(
 					hFile, pInfo->pbmi->bmiColors, PalBytes,
@@ -99,7 +99,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	}
 	/* ビットデータを書き込む */
 	if (pInfo->pbmi->bmiHeader.biHeight > 0) {
-		if (!WriteFile(hFile, pInfo->pBits, (DWORD)BitsBytes, &dwWrite, nullptr)
+		if (!WriteFile(hFile, pInfo->pBits, static_cast<DWORD>(BitsBytes), &dwWrite, nullptr)
 				|| dwWrite != BitsBytes) {
 			CloseHandle(hFile);
 			return false;
@@ -110,7 +110,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 
 		p = static_cast<const BYTE*>(pInfo->pBits) + (Height - 1) * RowBytes;
 		for (y = 0; y < Height; y++) {
-			if (!WriteFile(hFile, p, (DWORD)RowBytes, &dwWrite, nullptr)
+			if (!WriteFile(hFile, p, static_cast<DWORD>(RowBytes), &dwWrite, nullptr)
 					|| dwWrite != RowBytes) {
 				CloseHandle(hFile);
 				return false;

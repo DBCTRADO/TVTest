@@ -205,7 +205,7 @@ namespace TVTest
 		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
 
 	// CStatusView
-		int NumItems() const { return (int)m_ItemList.size(); }
+		int NumItems() const { return static_cast<int>(m_ItemList.size()); }
 		const CStatusItem *GetItem(int Index) const;
 		CStatusItem *GetItem(int Index);
 		const CStatusItem *GetItemByID(int ID) const;

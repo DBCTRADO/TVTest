@@ -223,7 +223,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 			const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 			const COLORREF OldTextColor = ::GetTextColor(pdis->hDC);;
-			const HFONT hfontOld = (HFONT)::GetCurrentObject(pdis->hDC, OBJ_FONT);
+			const HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(pdis->hDC, OBJ_FONT));
 			TCHAR szText[MAX_INFO_TEXT];
 
 			if (pdis->CtlID == IDC_ABOUT_HEADER) {
@@ -326,7 +326,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == ::GetDlgItem(hDlg, IDC_ABOUT_LINK)) {
+		if (reinterpret_cast<HWND>(wParam) == ::GetDlgItem(hDlg, IDC_ABOUT_LINK)) {
 			::SetCursor(GetAppClass().UICore.GetLinkCursor());
 			::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
 			return TRUE;

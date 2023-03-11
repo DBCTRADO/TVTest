@@ -197,7 +197,7 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 	LogoFileHeader FileHeader;
 	std::memcpy(FileHeader.Type, LOGOFILEHEADER_TYPE, 8);
 	FileHeader.Version = LOGOFILEHEADER_VERSION;
-	FileHeader.NumImages = (DWORD)m_LogoMap.size();
+	FileHeader.NumImages = static_cast<DWORD>(m_LogoMap.size());
 	if (File.Write(&FileHeader, sizeof(FileHeader)) != sizeof(FileHeader))
 		goto OnError;
 
@@ -210,7 +210,7 @@ bool CLogoManager::SaveLogoFile(LPCTSTR pszFileName)
 		ImageHeader.LogoType = e.second->GetLogoType();
 		ImageHeader.DataSize = e.second->GetDataSize();
 		ImageHeader.Time = e.second->GetTime().GetLinearSeconds();
-		DWORD CRC = LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader, sizeof(ImageHeader));
+		DWORD CRC = LibISDB::CRC32MPEG2::Calc(reinterpret_cast<const uint8_t*>(&ImageHeader), sizeof(ImageHeader));
 		CRC = LibISDB::CRC32MPEG2::Calc(e.second->GetData(), ImageHeader.DataSize, CRC);
 		if (File.Write(&ImageHeader, sizeof(ImageHeader)) != sizeof(ImageHeader)
 				|| File.Write(e.second->GetData(), ImageHeader.DataSize) != ImageHeader.DataSize
@@ -272,7 +272,7 @@ bool CLogoManager::LoadLogoFile(LPCTSTR pszFileName)
 				|| File.Read(&CRC, sizeof(CRC)) != sizeof(CRC)
 				|| CRC != LibISDB::CRC32MPEG2::Calc(
 						Buffer, ImageHeader.DataSize,
-						LibISDB::CRC32MPEG2::Calc((const uint8_t*)&ImageHeader, ImageHeaderSize))) {
+						LibISDB::CRC32MPEG2::Calc(reinterpret_cast<const uint8_t*>(&ImageHeader), ImageHeaderSize))) {
 			return false;
 		}
 
@@ -700,9 +700,9 @@ CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID,
 	LibISDB::LogoDownloaderFilter::LogoData LogoData;
 	LogoData.NetworkID = NetworkID;
 	LogoData.LogoID = LogoID;
-	LogoData.LogoVersion = (uint16_t)NewerVersion;
+	LogoData.LogoVersion = static_cast<uint16_t>(NewerVersion);
 	LogoData.LogoType = LogoType;
-	LogoData.DataSize = (uint16_t)Read;
+	LogoData.DataSize = static_cast<uint16_t>(Read);
 	LogoData.pData = Data.get();
 	return new CLogoData(&LogoData);
 }
@@ -765,13 +765,13 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
-		BITMAPINFO *pbmi = (BITMAPINFO*)::GlobalLock(hDIB);
+		BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
 		void *pBits;
 		m_hbm = ::CreateDIBSection(nullptr, pbmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
 		if (m_hbm == nullptr)
 			return nullptr;
 		std::memcpy(
-			pBits, (BYTE*)pbmi + CalcDIBInfoSize(&pbmi->bmiHeader),
+			pBits, reinterpret_cast<BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader),
 			CalcDIBBitsSize(&pbmi->bmiHeader));
 		::GlobalUnlock(hDIB);
 		::GlobalFree(hDIB);
@@ -786,8 +786,8 @@ const Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
-		BITMAPINFO *pbmi = (BITMAPINFO*)::GlobalLock(hDIB);
-		const bool fResult = m_Image.CreateFromDIB(pbmi, (BYTE*)pbmi + CalcDIBInfoSize(&pbmi->bmiHeader));
+		BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
+		const bool fResult = m_Image.CreateFromDIB(pbmi, reinterpret_cast<BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader));
 		::GlobalUnlock(hDIB);
 		::GlobalFree(hDIB);
 		if (!fResult)
@@ -823,7 +823,7 @@ bool CLogoManager::CLogoData::SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFile
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 	const BITMAPINFOHEADER *pbmih = static_cast<BITMAPINFOHEADER*>(::GlobalLock(hDIB));
-	const DWORD InfoSize = (DWORD)CalcDIBInfoSize(pbmih), BitsSize = (DWORD)CalcDIBBitsSize(pbmih);
+	const DWORD InfoSize = static_cast<DWORD>(CalcDIBInfoSize(pbmih)), BitsSize = static_cast<DWORD>(CalcDIBBitsSize(pbmih));
 	DWORD Write;
 	BITMAPFILEHEADER bmfh;
 	bmfh.bfType = 0x4D42;

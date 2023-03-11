@@ -150,7 +150,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				for (int i = 0; CVideoOptions::GetRendererInfo(i, &Info); i++) {
 					DlgComboBox_AddString(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER, Info.pszName);
-					DlgComboBox_SetItemData(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER, i, (LPARAM)Info.Renderer);
+					DlgComboBox_SetItemData(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER, i, static_cast<LPARAM>(Info.Renderer));
 					if (Info.Renderer == m_VideoRenderer)
 						Sel = i;
 				}
@@ -250,10 +250,10 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					GetDecoderSetting(IDC_INITIALSETTINGS_H265DECODER, &H265DecoderName);
 
 				const LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer =
-					(LibISDB::DirectShow::VideoRenderer::RendererType)
+					static_cast<LibISDB::DirectShow::VideoRenderer::RendererType>(
 						DlgComboBox_GetItemData(
 							hDlg, IDC_INITIALSETTINGS_VIDEORENDERER,
-							DlgComboBox_GetCurSel(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER));
+							DlgComboBox_GetCurSel(hDlg, IDC_INITIALSETTINGS_VIDEORENDERER)));
 
 				// 相性の悪い組み合わせに対して注意を表示する
 				static const struct {
@@ -410,7 +410,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 		DlgComboBox_InsertString(m_hDlg, ID, 0, pszDefaultDecoderName);
 
 	if (!IsStringEmpty(pszDecoderName))
-		Sel = (int)DlgComboBox_FindStringExact(m_hDlg, ID, -1, pszDecoderName) + 1;
+		Sel = static_cast<int>(DlgComboBox_FindStringExact(m_hDlg, ID, -1, pszDecoderName)) + 1;
 
 	DlgComboBox_InsertString(
 		m_hDlg, ID,
@@ -421,7 +421,7 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 
 void CInitialSettings::GetDecoderSetting(int ID, String *pDecoderName) const
 {
-	const int Sel = (int)DlgComboBox_GetCurSel(m_hDlg, ID);
+	const int Sel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, ID));
 	if (Sel > 0) {
 		TCHAR szDecoder[MAX_DECODER_NAME];
 		DlgComboBox_GetLBString(m_hDlg, ID, Sel, szDecoder);

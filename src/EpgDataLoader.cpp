@@ -82,7 +82,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return false;
 	}
-	if (FileSize.QuadPart <= (LONGLONG)MAX_READ_SIZE) {
+	if (FileSize.QuadPart <= static_cast<LONGLONG>(MAX_READ_SIZE)) {
 		ReadSize = FileSize.LowPart;
 	} else {
 		ReadSize = MAX_READ_SIZE;
@@ -158,7 +158,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 			BYTE *p = Buffer.get();
 			while (p < pEnd) {
-				const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
+				const WORD PID = (static_cast<WORD>(p[1] & 0x1F) << 8) | static_cast<WORD>(p[2]);
 				if (PID == 0x0014) {
 					Packet.SetData(p, 188);
 					if (Packet.ParsePacket() == LibISDB::TSPacket::ParseResult::OK) {
@@ -177,7 +177,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 		BYTE *p = Buffer.get();
 		while (p < pEnd) {
-			const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
+			const WORD PID = (static_cast<WORD>(p[1] & 0x1F) << 8) | static_cast<WORD>(p[2]);
 			// H-EIT / TOT / M-EIT / L-EIT
 			if (PID == 0x0012 || PID == 0x0014 /*|| PID==0x0026*/ || PID == 0x0027) {
 				Packet.SetData(p, 188);
@@ -259,7 +259,7 @@ bool CEpgDataLoader::LoadAsync(LPCTSTR pszFolder, CEventHandler *pEventHandler)
 		m_hAbortEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	else
 		::ResetEvent(m_hAbortEvent);
-	m_hThread = (HANDLE)::_beginthreadex(nullptr, 0, LoadThread, this, 0, nullptr);
+	m_hThread = reinterpret_cast<HANDLE>(::_beginthreadex(nullptr, 0, LoadThread, this, 0, nullptr));
 	if (m_hThread == nullptr)
 		return false;
 

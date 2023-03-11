@@ -68,7 +68,7 @@ bool COperationOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("VolumeStep"), &m_VolumeStep);
 	Settings.Read(TEXT("AudioDelayStep"), &m_AudioDelayStep);
 	if (Settings.Read(TEXT("ChannelUpDownOrder"), &Value))
-		m_ChannelUpDownOrder = (CChannelManager::UpDownOrder)Value;
+		m_ChannelUpDownOrder = static_cast<CChannelManager::UpDownOrder>(Value);
 	Settings.Read(TEXT("ChannelUpDownSkipSubChannel"), &m_fChannelUpDownSkipSubChannel);
 
 	// ver.0.9.0 より前との互換用
@@ -229,7 +229,7 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 				m_pCommandManager->GetCommandText(Command, szText, lengthof(szText));
 				for (int j = IDC_OPTIONS_MOUSECOMMAND_FIRST; j <= IDC_OPTIONS_MOUSECOMMAND_LAST; j++) {
-					const int Index = (int)DlgComboBox_AddString(hDlg, j, szText);
+					const int Index = static_cast<int>(DlgComboBox_AddString(hDlg, j, szText));
 					DlgComboBox_SetItemData(hDlg, j, Index, Command);
 				}
 				if (Command == m_LeftDoubleClickCommand)
@@ -263,28 +263,28 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				m_fDisplayDragMove =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_DISPLAYDRAGMOVE);
 
 				m_WheelCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_WHEELMODE,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELMODE));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELMODE)));
 				m_WheelShiftCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_WHEELSHIFTMODE,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELSHIFTMODE));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELSHIFTMODE)));
 				m_WheelCtrlCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_WHEELCTRLMODE,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELCTRLMODE));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELCTRLMODE)));
 				m_WheelTiltCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_WHEELTILTMODE,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELTILTMODE));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_WHEELTILTMODE)));
 
 				m_fWheelVolumeReverse = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_WHEELVOLUMEREVERSE);
 				m_fWheelChannelReverse = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_WHEELCHANNELREVERSE);
@@ -294,24 +294,24 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 				m_fStatusBarWheel = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_STATUSBARWHEEL);
 
 				m_LeftDoubleClickCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_LEFTDOUBLECLICKCOMMAND,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_LEFTDOUBLECLICKCOMMAND));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_LEFTDOUBLECLICKCOMMAND)));
 				m_RightClickCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_RIGHTCLICKCOMMAND,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_RIGHTCLICKCOMMAND));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_RIGHTCLICKCOMMAND)));
 				m_MiddleClickCommand =
-					(int)DlgComboBox_GetItemData(
+					static_cast<int>(DlgComboBox_GetItemData(
 						hDlg, IDC_OPTIONS_MIDDLECLICKCOMMAND,
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_MIDDLECLICKCOMMAND));
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_MIDDLECLICKCOMMAND)));
 
 				m_VolumeStep = DlgEdit_GetInt(hDlg, IDC_OPTIONS_VOLUMESTEP);
 				m_AudioDelayStep = DlgEdit_GetInt(hDlg, IDC_OPTIONS_AUDIODELAYSTEP);
 
 				m_ChannelUpDownOrder =
-					(CChannelManager::UpDownOrder)
-						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER);
+					static_cast<CChannelManager::UpDownOrder>(
+						DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER));
 				m_fChannelUpDownSkipSubChannel =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SKIPSUBCHANNEL);
 

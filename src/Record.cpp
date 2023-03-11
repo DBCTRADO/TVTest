@@ -663,7 +663,7 @@ LONGLONG CRecordManager::GetRemainTime() const
 	case TimeSpecType::Duration:
 		Remain =
 			m_StopTimeSpec.Time.Duration -
-			(LONGLONG)TickTimeSpan(m_RecordTask.GetStartTime(), Util::GetTickCount());
+			static_cast<LONGLONG>(TickTimeSpan(m_RecordTask.GetStartTime(), Util::GetTickCount()));
 		break;
 	default:
 		Remain = -1;
@@ -693,7 +693,7 @@ bool CRecordManager::QueryStart(int Offset) const
 			ULONGLONG Span = TickTimeSpan(m_ReserveTime.GetTickTime(), Util::GetTickCount());
 
 			if (Offset != 0) {
-				if ((LONGLONG)Offset <= -(LONGLONG)Span)
+				if (static_cast<LONGLONG>(Offset) <= -static_cast<LONGLONG>(Span))
 					return true;
 				Span += Offset;
 			}
@@ -728,7 +728,7 @@ bool CRecordManager::QueryStop(int Offset) const
 
 			Span = TickTimeSpan(m_RecordTask.GetStartTime(), Util::GetTickCount());
 			if (Offset != 0) {
-				if ((LONGLONG)Offset <= -(LONGLONG)Span)
+				if (static_cast<LONGLONG>(Offset) <= -static_cast<LONGLONG>(Span))
 					return true;
 				Span += Offset;
 			}
@@ -841,7 +841,7 @@ bool CRecordManager::ShowWritePluginSetting(HWND hwndOwner, LPCTSTR pszPlugin)
 	const HMODULE hLib = ::LoadLibrary(pszPlugin);
 	if (hLib != nullptr) {
 		typedef void (WINAPI * Setting)(HWND parentWnd);
-		Setting pSetting = (Setting)::GetProcAddress(hLib, "Setting");
+		Setting pSetting = reinterpret_cast<Setting>(::GetProcAddress(hLib, "Setting"));
 		if (pSetting != nullptr) {
 			pSetting(hwndOwner);
 			fOK = true;
@@ -925,14 +925,14 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					::GetSystemTime(&st);
 					const LONGLONG Diff = DiffSystemTime(&m_pRecManager->m_StartTimeSpec.Time.DateTime, &st);
 					if (Diff > 0) {
-						Delay = (DWORD)Diff;
+						Delay = static_cast<DWORD>(Diff);
 					} else {
 						Delay = 0;
 					}
 				}
 				break;
 			case TimeSpecType::Duration:
-				Delay = (DWORD)m_pRecManager->m_StartTimeSpec.Time.Duration;
+				Delay = static_cast<DWORD>(m_pRecManager->m_StartTimeSpec.Time.Duration);
 				stStart = stLocal;
 				stStart.wSecond = 0;
 				stStart.wMilliseconds = 0;
@@ -988,13 +988,13 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					::GetSystemTime(&st);
 					const LONGLONG Diff = DiffSystemTime(&st, &m_pRecManager->m_StopTimeSpec.Time.DateTime);
 					if (Diff > 0)
-						Duration = (DWORD)Diff;
+						Duration = static_cast<DWORD>(Diff);
 					else
 						Duration = 0;
 				}
 				break;
 			case TimeSpecType::Duration:
-				Duration = (DWORD)m_pRecManager->m_StopTimeSpec.Time.Duration;
+				Duration = static_cast<DWORD>(m_pRecManager->m_StopTimeSpec.Time.Duration);
 				stStop = stLocal;
 				stStop.wSecond = 0;
 				stStop.wMilliseconds = 0;
@@ -1053,7 +1053,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					DlgComboBox_AddString(hDlg, IDC_RECORD_WRITEPLUGIN, pszFileName);
 					if (!m_pSettings->m_WritePlugin.empty()
 							&& IsEqualFileName(pszFileName, m_pSettings->m_WritePlugin.c_str()))
-						Sel = (int)i;
+						Sel = static_cast<int>(i);
 				}
 				DlgComboBox_SetCurSel(hDlg, IDC_RECORD_WRITEPLUGIN, Sel + 1);
 				EnableDlgItem(hDlg, IDC_RECORD_WRITEPLUGINSETTING, Sel >= 0);
@@ -1195,7 +1195,7 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 			{
 				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORD_WRITEPLUGIN) - 1;
 
-				if (Sel >= 0 && (size_t)Sel < m_pRecManager->m_WritePluginList.size()) {
+				if (Sel >= 0 && static_cast<size_t>(Sel) < m_pRecManager->m_WritePluginList.size()) {
 					ShowWritePluginSetting(hDlg, m_pRecManager->m_WritePluginList[Sel].c_str());
 				}
 			}
@@ -1323,8 +1323,8 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 					m_pSettings->SetSaveDataCarrousel(
 						DlgCheckBox_IsChecked(hDlg, IDC_RECORD_SAVEDATACARROUSEL));
 
-					const int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
-					if (Sel >= 0 && (size_t)Sel < m_pRecManager->m_WritePluginList.size())
+					const int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN)) - 1;
+					if (Sel >= 0 && static_cast<size_t>(Sel) < m_pRecManager->m_WritePluginList.size())
 						m_pSettings->m_WritePlugin = m_pRecManager->m_WritePluginList[Sel];
 					else
 						m_pSettings->m_WritePlugin.clear();

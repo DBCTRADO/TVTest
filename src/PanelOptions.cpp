@@ -186,7 +186,7 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 bool CPanelOptions::WriteSettings(CSettings &Settings)
 {
 	const int CurPage = GetAppClass().Panel.Form.GetCurPageID();
-	if (CurPage >= 0 && (size_t)CurPage < m_AvailItemList.size())
+	if (CurPage >= 0 && static_cast<size_t>(CurPage) < m_AvailItemList.size())
 		Settings.Write(TEXT("InfoCurTab"), m_AvailItemList[CurPage].ID);
 	Settings.Write(TEXT("PanelFirstTab"), m_InitialTab);
 	Settings.Write(TEXT("PanelSnapAtMainWindow"), m_fSnapAtMainWindow);
@@ -200,8 +200,8 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CaptionPanelFontSpec"), m_fSpecCaptionFont);
 
 	// アイテムリスト
-	Settings.Write(TEXT("PanelTabCount"), (int)m_ItemList.size());
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	Settings.Write(TEXT("PanelTabCount"), static_cast<int>(m_ItemList.size()));
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		const PanelItemInfo &Item = m_ItemList[i];
 		TCHAR szName[32];
 
@@ -235,7 +235,7 @@ int CPanelOptions::GetInitialTab() const
 		LPTSTR p;
 		const long IDNum = std::_tcstol(m_InitialTab.c_str(), &p, 10);
 		if (*p == _T('\0')) {
-			if (IDNum >= 0 && (size_t)IDNum < m_AvailItemList.size())
+			if (IDNum >= 0 && static_cast<size_t>(IDNum) < m_AvailItemList.size())
 				ID = IDNum;
 		} else {
 			ID = GetItemIDFromIDText(m_InitialTab);
@@ -245,7 +245,7 @@ int CPanelOptions::GetInitialTab() const
 		LPTSTR p;
 		const long IDNum = std::_tcstol(m_LastTab.c_str(), &p, 10);
 		if (*p == _T('\0')) {
-			if (IDNum >= 0 && (size_t)IDNum < m_AvailItemList.size())
+			if (IDNum >= 0 && static_cast<size_t>(IDNum) < m_AvailItemList.size())
 				ID = IDNum;
 		} else {
 			ID = GetItemIDFromIDText(m_LastTab);
@@ -284,7 +284,7 @@ int CPanelOptions::RegisterPanelItem(LPCTSTR pszID, LPCTSTR pszTitle)
 
 bool CPanelOptions::SetPanelItemVisibility(int ID, bool fVisible)
 {
-	if (ID < 0 || ID >= (int)m_AvailItemList.size())
+	if (ID < 0 || ID >= static_cast<int>(m_AvailItemList.size()))
 		return false;
 
 	m_AvailItemList[ID].fVisible = fVisible;
@@ -305,7 +305,7 @@ bool CPanelOptions::SetPanelItemVisibility(int ID, bool fVisible)
 
 bool CPanelOptions::GetPanelItemVisibility(int ID) const
 {
-	if (ID < 0 || ID >= (int)m_AvailItemList.size())
+	if (ID < 0 || ID >= static_cast<int>(m_AvailItemList.size()))
 		return false;
 
 	const String &IDText = m_AvailItemList[ID].ID;
@@ -336,7 +336,7 @@ bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 	}
 
 	if (TabOrder.size() < m_AvailItemList.size()) {
-		for (int i = 0; i < (int)m_AvailItemList.size(); i++) {
+		for (int i = 0; i < static_cast<int>(m_AvailItemList.size()); i++) {
 			if (std::find(TabOrder.begin(), TabOrder.end(), i) == TabOrder.end()) {
 				TabOrder.push_back(i);
 				pPanelForm->SetTabVisible(i, m_AvailItemList[i].fVisible);
@@ -344,7 +344,7 @@ bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 		}
 	}
 
-	pPanelForm->SetTabOrder(TabOrder.data(), (int)TabOrder.size());
+	pPanelForm->SetTabOrder(TabOrder.data(), static_cast<int>(TabOrder.size()));
 
 	return true;
 }
@@ -422,14 +422,14 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				LPTSTR p;
 				const long IDNum = std::_tcstol(m_InitialTab.c_str(), &p, 10);
 				if (*p == _T('\0')) {
-					if (IDNum >= 0 && (size_t)IDNum < m_AvailItemList.size())
+					if (IDNum >= 0 && static_cast<size_t>(IDNum) < m_AvailItemList.size())
 						Sel = IDNum + 1;
 				}
 			}
 			for (size_t i = 0; i < m_AvailItemList.size(); i++) {
 				DlgComboBox_AddString(hDlg, IDC_PANELOPTIONS_FIRSTTAB, m_AvailItemList[i].Title.c_str());
 				if (Sel == 0 && CompareID(m_AvailItemList[i].ID, m_InitialTab))
-					Sel = (int)i + 1;
+					Sel = static_cast<int>(i) + 1;
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_PANELOPTIONS_FIRSTTAB, Sel);
 
@@ -497,7 +497,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				CMainPanel &Panel = GetAppClass().Panel;
@@ -545,14 +545,14 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				ApplyItemList(&Panel.Form);
 
-				const int InitialTab = (int)DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_FIRSTTAB);
+				const int InitialTab = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_FIRSTTAB));
 				if (InitialTab == 0) {
 					m_InitialTab.clear();
 				} else if (InitialTab > 0) {
 					m_InitialTab = m_AvailItemList[InitialTab - 1].ID;
 				}
 
-				const int TabStyleSel = (int)DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE);
+				const int TabStyleSel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE));
 				if (TabStyleSel >= 0) {
 					m_TabStyle = static_cast<CPanelForm::TabStyle>(TabStyleSel);
 					Panel.Form.SetTabStyle(m_TabStyle);
@@ -594,7 +594,7 @@ void CPanelOptions::UpdateItemListControlsState()
 
 int CPanelOptions::GetItemIDFromIDText(const String &IDText) const
 {
-	for (int i = 0; i < (int)m_AvailItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_AvailItemList.size()); i++) {
 		if (CompareID(m_AvailItemList[i].ID, IDText))
 			return i;
 	}

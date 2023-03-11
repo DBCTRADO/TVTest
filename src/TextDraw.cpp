@@ -193,7 +193,7 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag
 			LPWSTR pszCur = pszBuffer + Fit;
 			for (;;) {
 				StringCopy(pszCur, szEllipses);
-				Length = (int)(pszCur - pszBuffer) + (lengthof(szEllipses) - 1);
+				Length = static_cast<int>(pszCur - pszBuffer) + (lengthof(szEllipses) - 1);
 				Fit = GetFitCharCount(pszBuffer, Length, Width);
 				if (Fit >= Length || pszCur == pszBuffer)
 					break;
@@ -267,7 +267,7 @@ int CTextDraw::GetLineLength(LPCWSTR pszText)
 	LPCWSTR p = pszText;
 	while (*p != L'\0' && *p != L'\r' && *p != '\n')
 		p++;
-	return (int)(p - pszText);
+	return static_cast<int>(p - pszText);
 }
 
 
@@ -283,7 +283,7 @@ int CTextDraw::AdjustLineLength(LPCWSTR pszText, int Length)
 			p--;
 			while (p >= pszText) {
 				if (!IsEndProhibitChar(*p)) {
-					Length = (int)(p - pszText) + 1;
+					Length = static_cast<int>(p - pszText) + 1;
 					break;
 				}
 				p--;
@@ -295,13 +295,13 @@ int CTextDraw::AdjustLineLength(LPCWSTR pszText, int Length)
 						p--;
 						while (p >= pszText) {
 							if (!IsEndProhibitChar(*p)) {
-								Length = (int)(p - pszText) + 1;
+								Length = static_cast<int>(p - pszText) + 1;
 								break;
 							}
 							p--;
 						}
 					} else {
-						Length = (int)(p - pszText);
+						Length = static_cast<int>(p - pszText);
 					}
 					break;
 				}

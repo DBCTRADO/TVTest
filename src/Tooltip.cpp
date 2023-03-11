@@ -82,7 +82,7 @@ void CTooltip::Destroy()
 void CTooltip::DeleteAllTools()
 {
 	if (m_hwndTooltip != nullptr) {
-		const int Count = (int)::SendMessage(m_hwndTooltip, TTM_GETTOOLCOUNT, 0, 0);
+		const int Count = static_cast<int>(::SendMessage(m_hwndTooltip, TTM_GETTOOLCOUNT, 0, 0));
 		TOOLINFO ti;
 
 		ti.cbSize = TTTOOLINFO_V1_SIZE;
@@ -134,7 +134,7 @@ int CTooltip::NumTools() const
 {
 	if (m_hwndTooltip == nullptr)
 		return 0;
-	return (int)::SendMessage(m_hwndTooltip, TTM_GETTOOLCOUNT, 0, 0);
+	return static_cast<int>(::SendMessage(m_hwndTooltip, TTM_GETTOOLCOUNT, 0, 0));
 }
 
 
@@ -314,7 +314,7 @@ bool CBalloonTip::Initialize(HWND hwnd)
 	ti.uId = 0;
 	ti.hinst = nullptr;
 	ti.lpszText = const_cast<LPTSTR>(TEXT(""));
-	::SendMessage(m_hwndToolTips, TTM_ADDTOOL, 0, (LPARAM)&ti);
+	::SendMessage(m_hwndToolTips, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&ti));
 
 	m_hwndOwner = hwnd;
 
@@ -340,8 +340,8 @@ bool CBalloonTip::Show(LPCTSTR pszText, LPCTSTR pszTitle, const POINT *pPos, int
 	ti.hwnd = m_hwndOwner;
 	ti.uId = 0;
 	ti.lpszText = const_cast<LPTSTR>(pszText);
-	::SendMessage(m_hwndToolTips, TTM_UPDATETIPTEXT, 0, (LPARAM)&ti);
-	::SendMessage(m_hwndToolTips, TTM_SETTITLE, Icon, (LPARAM)(pszTitle != nullptr ? pszTitle : TEXT("")));
+	::SendMessage(m_hwndToolTips, TTM_UPDATETIPTEXT, 0, reinterpret_cast<LPARAM>(&ti));
+	::SendMessage(m_hwndToolTips, TTM_SETTITLE, Icon, reinterpret_cast<LPARAM>(pszTitle != nullptr ? pszTitle : TEXT("")));
 	POINT pt;
 	if (pPos != nullptr) {
 		pt = *pPos;
@@ -352,7 +352,7 @@ bool CBalloonTip::Show(LPCTSTR pszText, LPCTSTR pszTitle, const POINT *pPos, int
 		pt.y = rc.bottom;
 	}
 	::SendMessage(m_hwndToolTips, TTM_TRACKPOSITION, 0, MAKELPARAM(pt.x, pt.y));
-	::SendMessage(m_hwndToolTips, TTM_TRACKACTIVATE, TRUE, (LPARAM)&ti);
+	::SendMessage(m_hwndToolTips, TTM_TRACKACTIVATE, TRUE, reinterpret_cast<LPARAM>(&ti));
 	return true;
 }
 
@@ -364,7 +364,7 @@ bool CBalloonTip::Hide()
 	ti.cbSize = TTTOOLINFO_V1_SIZE;
 	ti.hwnd = m_hwndOwner;
 	ti.uId = 0;
-	::SendMessage(m_hwndToolTips, TTM_TRACKACTIVATE, FALSE, (LPARAM)&ti);
+	::SendMessage(m_hwndToolTips, TTM_TRACKACTIVATE, FALSE, reinterpret_cast<LPARAM>(&ti));
 	return true;
 }
 

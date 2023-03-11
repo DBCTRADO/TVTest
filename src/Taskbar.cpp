@@ -142,11 +142,11 @@ bool CTaskbarManager::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		for (int i = 0; i < lengthof(tb); i++) {
 			const int Command = ButtonList[i];
 
-			tb[i].dwMask = (THUMBBUTTONMASK)(THB_ICON | THB_TOOLTIP | THB_FLAGS);
+			tb[i].dwMask = static_cast<THUMBBUTTONMASK>(THB_ICON | THB_TOOLTIP | THB_FLAGS);
 			tb[i].iId = Command;
 			tb[i].hIcon = ::LoadIcon(hinst, MAKEINTRESOURCE(GetCommandIcon(Command)));
 			App.CommandManager.GetCommandText(Command, tb[i].szTip, lengthof(tb[0].szTip));
-			tb[i].dwFlags = (THUMBBUTTONFLAGS)(THBF_ENABLED | THBF_DISMISSONCLICK);
+			tb[i].dwFlags = static_cast<THUMBBUTTONFLAGS>(THBF_ENABLED | THBF_DISMISSONCLICK);
 		}
 
 		m_pTaskbarList->ThumbBarAddButtons(m_hwnd, lengthof(tb), tb);

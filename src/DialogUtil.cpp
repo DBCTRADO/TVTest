@@ -139,8 +139,8 @@ bool AdjustDialogPos(HWND hwndOwner, HWND hDlg)
 
 void SyncTrackBarWithEdit(HWND hDlg, int EditID, int TrackbarID)
 {
-	const int Min = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMIN, 0, 0);
-	const int Max = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMAX, 0, 0);
+	const int Min = static_cast<int>(SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMIN, 0, 0));
+	const int Max = static_cast<int>(SendDlgItemMessage(hDlg, TrackbarID, TBM_GETRANGEMAX, 0, 0));
 	const int Val = GetDlgItemInt(hDlg, EditID, nullptr, TRUE);
 	SendDlgItemMessage(hDlg, TrackbarID, TBM_SETPOS, TRUE, std::clamp(Val, Min, Max));
 }
@@ -148,7 +148,7 @@ void SyncTrackBarWithEdit(HWND hDlg, int EditID, int TrackbarID)
 
 void SyncEditWithTrackBar(HWND hDlg, int TrackbarID, int EditID)
 {
-	const int Val = (int)SendDlgItemMessage(hDlg, TrackbarID, TBM_GETPOS, 0, 0);
+	const int Val = static_cast<int>(SendDlgItemMessage(hDlg, TrackbarID, TBM_GETPOS, 0, 0));
 	SetDlgItemInt(hDlg, EditID, Val, TRUE);
 }
 
@@ -158,7 +158,7 @@ void SetComboBoxList(HWND hDlg, int ID, LPCTSTR pszList)
 	LPCTSTR p;
 
 	for (p = pszList; *p != '\0'; p += lstrlen(p) + 1)
-		SendDlgItemMessage(hDlg, ID, CB_ADDSTRING, 0, (LPARAM)p);
+		SendDlgItemMessage(hDlg, ID, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(p));
 }
 
 
@@ -171,9 +171,9 @@ void SetComboBoxList(HWND hDlg, int ID, const LPCTSTR *ppszList, int Length)
 
 bool SetDlgButtonBitmap(HWND hDlg, int ID, HINSTANCE hinst, LPCTSTR pszName)
 {
-	const HBITMAP hbm = (HBITMAP)LoadImage(
+	const HBITMAP hbm = static_cast<HBITMAP>(LoadImage(
 		hinst, pszName, IMAGE_BITMAP, 0, 0,
-		LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS);
+		LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS));
 	if (hbm == nullptr)
 		return false;
 	SendDlgItemMessage(hDlg, ID, BM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>(hbm));
@@ -186,12 +186,12 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 	const HWND hwnd = GetDlgItem(hDlg, ID);
 	int MaxWidth = 0;
 
-	const int Count = (int)SendMessage(hwnd, LB_GETCOUNT, 0, 0);
+	const int Count = static_cast<int>(SendMessage(hwnd, LB_GETCOUNT, 0, 0));
 	if (Count >= 1) {
 		TCHAR szText[MAX_PATH];
 		SIZE sz;
 
-		const HFONT hfont = (HFONT)(UINT_PTR)SendMessage(hwnd, WM_GETFONT, 0, 0);
+		const HFONT hfont = reinterpret_cast<HFONT>(SendMessage(hwnd, WM_GETFONT, 0, 0));
 		if (hfont == nullptr)
 			return false;
 		const HDC hdc = GetDC(hwnd);
@@ -199,7 +199,7 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 			return false;
 		const HFONT hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
 		for (int i = 0; i < Count; i++) {
-			SendMessage(hwnd, LB_GETTEXT, i, (LPARAM)szText);
+			SendMessage(hwnd, LB_GETTEXT, i, reinterpret_cast<LPARAM>(szText));
 			GetTextExtentPoint32(hdc, szText, lstrlen(szText), &sz);
 			if (sz.cx > MaxWidth)
 				MaxWidth = sz.cx;
@@ -247,10 +247,10 @@ bool GetDlgListBoxItemString(HWND hDlg, int ID, int Index, String *pString)
 	if (hDlg == nullptr || pString == nullptr)
 		return false;
 
-	int Length = (int)DlgListBox_GetStringLength(hDlg, ID, Index);
+	int Length = static_cast<int>(DlgListBox_GetStringLength(hDlg, ID, Index));
 	if (Length > 0) {
 		pString->resize(Length + 1);
-		Length = (int)DlgListBox_GetString(hDlg, ID, Index, pString->data());
+		Length = static_cast<int>(DlgListBox_GetString(hDlg, ID, Index, pString->data()));
 		pString->resize(std::max(Length, 0));
 	} else {
 		pString->clear();
@@ -265,10 +265,10 @@ bool GetDlgComboBoxItemString(HWND hDlg, int ID, int Index, String *pString)
 	if (hDlg == nullptr || pString == nullptr)
 		return false;
 
-	int Length = (int)DlgComboBox_GetLBStringLength(hDlg, ID, Index);
+	int Length = static_cast<int>(DlgComboBox_GetLBStringLength(hDlg, ID, Index));
 	if (Length > 0) {
 		pString->resize(Length + 1);
-		Length = (int)DlgComboBox_GetLBString(hDlg, ID, Index, pString->data());
+		Length = static_cast<int>(DlgComboBox_GetLBString(hDlg, ID, Index, pString->data()));
 		pString->resize(std::max(Length, 0));
 	} else {
 		pString->clear();
@@ -303,7 +303,7 @@ BOOL SetDlgItemInt64(HWND hDlg, int ID, ULONGLONG Value, BOOL fSigned)
 	if (fSigned)
 		UInt64ToString(Value, szText, lengthof(szText));
 	else
-		Int64ToString((LONGLONG)Value, szText, lengthof(szText));
+		Int64ToString(static_cast<LONGLONG>(Value), szText, lengthof(szText));
 	return SetDlgItemText(hDlg, ID, szText);
 }
 
@@ -328,7 +328,7 @@ ULONGLONG GetDlgItemInt64(HWND hDlg, int ID, BOOL *pfTranslated, BOOL fSigned)
 	if (GetDlgItemText(hDlg, ID, szText, lengthof(szText)) == 0)
 		return 0;
 	if (fSigned)
-		Value = (ULONGLONG)StringToInt64(szText);
+		Value = static_cast<ULONGLONG>(StringToInt64(szText));
 	else
 		Value = StringToUInt64(szText);
 	if (pfTranslated != nullptr)
@@ -453,7 +453,7 @@ bool SetListViewSortMark(HWND hwndList, int Column, bool fAscending)
 	if (hLib == nullptr)
 		return false;
 
-	const DLLGETVERSIONPROC pDllGetVersion = (DLLGETVERSIONPROC)::GetProcAddress(hLib, "DllGetVersion");
+	const DLLGETVERSIONPROC pDllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(hLib, "DllGetVersion"));
 
 	if (pDllGetVersion == nullptr)
 		return false;
