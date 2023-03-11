@@ -39,7 +39,7 @@ namespace TVTest
 		std::vector<std::unique_ptr<CDriverSettings>> m_SettingList;
 
 	public:
-		CDriverSettingList();
+		CDriverSettingList() = default;
 		CDriverSettingList(const CDriverSettingList &Src);
 
 		CDriverSettingList &operator=(const CDriverSettingList &Src);

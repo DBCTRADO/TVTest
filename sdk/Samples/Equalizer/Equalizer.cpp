@@ -13,6 +13,9 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <windowsx.h>
 #include <shlwapi.h>
@@ -20,10 +23,13 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
+#include <algorithm>
 #include <crtdbg.h>
 #if defined(_MSC_VER) && defined(_M_X64)
 #include <emmintrin.h>
 #endif
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "resource.h"
@@ -440,7 +446,7 @@ bool CEqualizer::ReadPreset(LPCTSTR pszSection, LPCTSTR pszKeyName, EqualizerSet
 		if (*p == _T('\0'))
 			break;
 		LPTSTR pEnd;
-		int Value = (int)::_tcstol(p, &pEnd, 10);
+		int Value = (int)std::_tcstol(p, &pEnd, 10);
 		if (pEnd == p)
 			break;
 		p = pEnd;
@@ -869,7 +875,7 @@ void CEqualizer::Draw(HDC hdc, const RECT &rcPaint)
 	rcText.right = rc.right + m_SliderMargin;
 	rcText.top = rc.bottom + m_SliderTextMargin;
 	rcText.bottom = rcText.top + m_TextHeight;
-	rcText.top -= min(tm.tmInternalLeading, m_SliderTextMargin);
+	rcText.top -= std::min<LONG>(tm.tmInternalLeading, m_SliderTextMargin);
 	::DrawText(hdc, TEXT("Pre"), -1, &rcText, DT_CENTER | DT_SINGLELINE);
 
 	// 目盛

@@ -37,11 +37,6 @@ CTSProcessorErrorDialog::CTSProcessorErrorDialog(CTSProcessor *pTSProcessor)
 }
 
 
-CTSProcessorErrorDialog::~CTSProcessorErrorDialog()
-{
-}
-
-
 bool CTSProcessorErrorDialog::Show(HWND hwndOwner)
 {
 	return ShowDialog(
@@ -99,10 +94,10 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 				for (int i = 0; i < DeviceCount; i++) {
 					String Name;
 					m_pTSProcessor->GetDeviceName(i, &Name);
-					LRESULT Index = DlgComboBox_AddString(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Name.c_str());
+					const LRESULT Index = DlgComboBox_AddString(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Name.c_str());
 					DlgComboBox_SetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Index, i);
 					if (StringUtility::CompareNoCase(m_Device, Name) == 0)
-						Sel = (int)Index;
+						Sel = static_cast<int>(Index);
 				}
 				DlgComboBox_SetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Sel);
 				fFound = SearchFilters();
@@ -138,10 +133,11 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		case IDC_TSPROCESSORERROR_DEVICELIST:
 			if (HIWORD(wParam) != CBN_SELCHANGE)
 				return TRUE;
+			[[fallthrough]];
 		case IDC_TSPROCESSORERROR_SEARCH:
 			{
-				HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
-				bool fFound = SearchFilters();
+				const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
+				const bool fFound = SearchFilters();
 				::SetCursor(hcurOld);
 				if (fFound) {
 					DlgListBox_SetCurSel(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, 0);
@@ -164,18 +160,18 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		case IDOK:
 			{
 				if (DlgRadioButton_IsChecked(hDlg, IDC_TSPROCESSORERROR_RETRY)) {
-					int DeviceSel = (int)DlgComboBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST);
-					int FilterSel = (int)DlgListBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_FILTERLIST);
+					const int DeviceSel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST));
+					const int FilterSel = static_cast<int>(DlgListBox_GetCurSel(hDlg, IDC_TSPROCESSORERROR_FILTERLIST));
 
 					if (DeviceSel < 0 || FilterSel < 0) {
 						::MessageBox(hDlg, TEXT("フィルターを選択してください。"), TEXT("お願い"), MB_OK | MB_ICONINFORMATION);
 						return TRUE;
 					}
 
-					int Device = (int)DlgComboBox_GetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel);
+					const int Device = static_cast<int>(DlgComboBox_GetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel));
 					m_pTSProcessor->GetDeviceName(Device, &m_Device);
 
-					LRESULT Length = DlgListBox_GetStringLength(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel);
+					const LRESULT Length = DlgListBox_GetStringLength(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel);
 					if (Length > 0) {
 						m_Filter.resize(Length + 1);
 						DlgListBox_GetString(hDlg, IDC_TSPROCESSORERROR_FILTERLIST, FilterSel, m_Filter.data());
@@ -188,6 +184,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					m_Filter.clear();
 				}
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -203,10 +200,10 @@ bool CTSProcessorErrorDialog::SearchFilters()
 {
 	DlgListBox_Clear(m_hDlg, IDC_TSPROCESSORERROR_FILTERLIST);
 
-	int DeviceSel = (int)DlgComboBox_GetCurSel(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST);
+	const int DeviceSel = static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST));
 	if (DeviceSel < 0)
 		return false;
-	int Device = (int)DlgComboBox_GetItemData(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel);
+	const int Device = static_cast<int>(DlgComboBox_GetItemData(m_hDlg, IDC_TSPROCESSORERROR_DEVICELIST, DeviceSel));
 
 	bool fFound = false;
 

@@ -59,7 +59,7 @@ bool CTotTimeAdjuster::AdjustTime()
 		return false;
 	}
 
-	LibISDB::AnalyzerFilter *pAnalyzer =
+	const LibISDB::AnalyzerFilter *pAnalyzer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 	if (pAnalyzer == nullptr)
 		return false;
@@ -90,7 +90,7 @@ bool CTotTimeAdjuster::AdjustTime()
 				OffsetSystemTime(&st, -2 * TimeConsts::SYSTEMTIME_SECOND);
 				if (::SetLocalTime(&st)) {
 					GetAppClass().AddLog(
-						TEXT("TOTで時刻合わせを行いました。(%d/%d/%d %d:%02d:%02d)"),
+						TEXT("TOTで時刻合わせを行いました。({}/{}/{} {}:{:02}:{:02})"),
 						st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 					fOK = true;
 				}
@@ -154,11 +154,11 @@ CServiceUpdateInfo::CServiceUpdateInfo(LibISDB::TSEngine *pEngine, LibISDB::Anal
 	pEngine->GetSelectableServiceList(&m_ServiceList);
 	m_CurService = -1;
 	if (!m_ServiceList.empty()) {
-		WORD ServiceID = pEngine->GetServiceID();
+		const WORD ServiceID = pEngine->GetServiceID();
 		if (ServiceID != LibISDB::SERVICE_ID_INVALID) {
 			for (size_t i = 0; i < m_ServiceList.size(); i++) {
 				if (m_ServiceList[i].ServiceID == ServiceID) {
-					m_CurService = (int)i;
+					m_CurService = static_cast<int>(i);
 					break;
 				}
 			}
@@ -217,7 +217,7 @@ int APIENTRY _tWinMain(
 		);
 #ifdef _MSC_FULL_VER
 	App.AddLog(
-		TEXT("Compiled with MSVC %d.%d.%d.%d"),
+		TEXT("Compiled with MSVC {}.{}.{}.{}"),
 		_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD);
 #endif
 

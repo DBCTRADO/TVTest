@@ -45,12 +45,14 @@ namespace TVTest
 			Outline        = 0x0010U,
 			FillBackground = 0x0020U,
 			MultiLine      = 0x0040U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class ImageEffect : unsigned int {
 			None  = 0x0000U,
 			Gloss = 0x0001U,
 			Dark  = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		static bool Initialize(HINSTANCE hinst);
@@ -106,9 +108,6 @@ namespace TVTest
 		static CPseudoOSD *GetThis(HWND hwnd);
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
-
-	TVTEST_ENUM_FLAGS(CPseudoOSD::TextStyle)
-	TVTEST_ENUM_FLAGS(CPseudoOSD::ImageEffect)
 
 }	// namespace TVTest
 

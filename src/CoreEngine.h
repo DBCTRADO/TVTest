@@ -163,6 +163,7 @@ namespace TVTest
 			EventInfo          = 0x0020U,
 			EventID            = 0x0040U,
 			TOT                = 0x0080U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 		StatusFlag UpdateAsyncStatus();
 		void SetAsyncStatusUpdatedFlag(StatusFlag Status);
@@ -175,6 +176,7 @@ namespace TVTest
 			BitRate                    = 0x0010U,
 			StreamRemain               = 0x0020U,
 			PacketBufferRate           = 0x0040U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 		StatisticsFlag UpdateStatistics();
 		unsigned long long GetErrorPacketCount() const { return m_ErrorPacketCount; }
@@ -185,7 +187,7 @@ namespace TVTest
 		int GetSignalLevelText(LPTSTR pszText, int MaxLength) const;
 		int GetSignalLevelText(float SignalLevel, LPTSTR pszText, int MaxLength) const;
 		unsigned long GetBitRate() const { return m_BitRate; }
-		static float BitRateToFloat(unsigned long BitRate) { return (float)BitRate / (float)(1000 * 1000); }
+		static float BitRateToFloat(unsigned long BitRate) { return static_cast<float>(BitRate) / static_cast<float>(1000 * 1000); }
 		float GetBitRateFloat() const { return BitRateToFloat(m_BitRate); }
 		int GetBitRateText(LPTSTR pszText, int MaxLength) const;
 		int GetBitRateText(unsigned long BitRate, LPTSTR pszText, int MaxLength) const;
@@ -294,9 +296,6 @@ namespace TVTest
 	// RecorderFilter::EventListener
 		void OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::RecorderFilter::RecordingTask *pTask) override;
 	};
-
-	TVTEST_ENUM_FLAGS(CCoreEngine::StatusFlag)
-	TVTEST_ENUM_FLAGS(CCoreEngine::StatisticsFlag)
 
 }	// namespace TVTest
 

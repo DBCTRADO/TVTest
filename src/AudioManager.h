@@ -34,7 +34,7 @@ namespace TVTest
 	public:
 		typedef WORD IDType;
 
-		static const IDType ID_INVALID = 0xFFFF;
+		static constexpr IDType ID_INVALID = 0xFFFF;
 
 		enum class DualMonoMode {
 			Invalid,
@@ -74,11 +74,11 @@ namespace TVTest
 		static inline IDType MakeID(int Index, BYTE ComponentTag)
 		{
 			return ComponentTag != LibISDB::COMPONENT_TAG_INVALID ?
-					ComponentTag :
-					(IDType)(((BYTE)(INT8)Index << 8) | LibISDB::COMPONENT_TAG_INVALID);
+					static_cast<IDType>(ComponentTag) :
+					static_cast<IDType>((static_cast<BYTE>(static_cast<INT8>(Index)) << 8) | LibISDB::COMPONENT_TAG_INVALID);
 		}
-		static inline BYTE IDToComponentTag(IDType ID) { return (BYTE)(ID & 0xFF); }
-		static inline int IDToStreamIndex(IDType ID) { return (INT8)(BYTE)(ID >> 8); }
+		static inline BYTE IDToComponentTag(IDType ID) { return static_cast<BYTE>(ID & 0xFF); }
+		static inline int IDToStreamIndex(IDType ID) { return static_cast<INT8>(static_cast<BYTE>(ID >> 8)); }
 
 		CAudioManager();
 		int GetAudioCount() const;
@@ -115,7 +115,7 @@ namespace TVTest
 		std::unordered_map<DWORD, ServiceAudioSelectInfo> m_ServiceAudioSelectMap;
 
 		static DWORD ServiceMapKey(WORD TSID, WORD ServiceID) {
-			return ((DWORD)TSID << 16) | ServiceID;
+			return (static_cast<DWORD>(TSID) << 16) | ServiceID;
 		}
 
 		void MakeAudioList();

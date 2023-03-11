@@ -60,17 +60,15 @@ CCaptureImage::CCaptureImage(HGLOBAL hData)
 
 CCaptureImage::CCaptureImage(const BITMAPINFO *pbmi, const void *pBits)
 {
-	SIZE_T InfoSize, BitsSize;
-
-	InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
-	BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
+	const size_t InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
+	const size_t BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
 	m_hData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, InfoSize + BitsSize);
 	if (m_hData != nullptr) {
 		BYTE *pData = static_cast<BYTE*>(::GlobalLock(m_hData));
 
 		if (pData != nullptr) {
-			::CopyMemory(pData, pbmi, InfoSize);
-			::CopyMemory(pData + InfoSize, pBits, BitsSize);
+			std::memcpy(pData, pbmi, InfoSize);
+			std::memcpy(pData + InfoSize, pBits, BitsSize);
 			::GlobalUnlock(m_hData);
 		} else {
 			::GlobalFree(m_hData);
@@ -97,14 +95,11 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 	if (m_hData == nullptr || m_fLocked)
 		return false;
 
-	HGLOBAL hCopy;
-	SIZE_T Size;
-
-	Size = ::GlobalSize(m_hData);
-	hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
+	const SIZE_T Size = ::GlobalSize(m_hData);
+	const HGLOBAL hCopy = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
 	if (hCopy == nullptr)
 		return false;
-	::CopyMemory(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
+	std::memcpy(::GlobalLock(hCopy), ::GlobalLock(m_hData), Size);
 	::GlobalUnlock(hCopy);
 	::GlobalUnlock(m_hData);
 	if (!::OpenClipboard(hwnd)) {
@@ -112,7 +107,7 @@ bool CCaptureImage::SetClipboard(HWND hwnd)
 		return false;
 	}
 	::EmptyClipboard();
-	bool fOK = ::SetClipboardData(CF_DIB, hCopy) != nullptr;
+	const bool fOK = ::SetClipboardData(CF_DIB, hCopy) != nullptr;
 	::CloseClipboard();
 	return fOK;
 }
@@ -123,7 +118,7 @@ bool CCaptureImage::GetBitmapInfoHeader(BITMAPINFOHEADER *pbmih) const
 	if (m_hData == nullptr || m_fLocked)
 		return false;
 
-	BITMAPINFOHEADER *pbmihSrc = static_cast<BITMAPINFOHEADER*>(::GlobalLock(m_hData));
+	const BITMAPINFOHEADER *pbmihSrc = static_cast<const BITMAPINFOHEADER*>(::GlobalLock(m_hData));
 
 	if (pbmihSrc == nullptr)
 		return false;
@@ -289,21 +284,19 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			::BeginPaint(hwnd, &ps);
 			GetClientRect(&rc);
 			if (m_Image && m_Image->LockData(&pbmi, &pBits)) {
-				int DstX, DstY, DstWidth, DstHeight;
+				int DstWidth, DstHeight;
 				RECT rcDest;
 
-				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / abs(pbmi->bmiHeader.biHeight);
+				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / std::abs(pbmi->bmiHeader.biHeight);
 				if (DstWidth > rc.right)
 					DstWidth = rc.right;
 				DstHeight = pbmi->bmiHeader.biHeight * rc.right / pbmi->bmiHeader.biWidth;
 				if (DstHeight > rc.bottom)
 					DstHeight = rc.bottom;
-				DstX = (rc.right - DstWidth) / 2;
-				DstY = (rc.bottom - DstHeight) / 2;
+				const int DstX = (rc.right - DstWidth) / 2;
+				const int DstY = (rc.bottom - DstHeight) / 2;
 				if (DstWidth > 0 && DstHeight > 0) {
-					int OldStretchBltMode;
-
-					OldStretchBltMode = ::SetStretchBltMode(ps.hdc, STRETCH_HALFTONE);
+					const int OldStretchBltMode = ::SetStretchBltMode(ps.hdc, STRETCH_HALFTONE);
 					::StretchDIBits(ps.hdc, DstX, DstY, DstWidth, DstHeight,
 									0, 0, pbmi->bmiHeader.biWidth, pbmi->bmiHeader.biHeight,
 									pBits, pbmi, DIB_RGB_COLORS, SRCCOPY);
@@ -334,7 +327,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 	}
@@ -370,7 +363,7 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 		wc.hInstance = hinst;
 		wc.hIcon = nullptr;
 		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-		wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+		wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1);
 		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = CAPTURE_WINDOW_CLASS;
 		if (::RegisterClass(&wc) == 0)
@@ -500,10 +493,10 @@ void CCaptureWindow::SetTitle()
 			BITMAPINFOHEADER bmih;
 
 			if (m_Image->GetBitmapInfoHeader(&bmih)) {
-				StringPrintf(
+				StringFormat(
 					szTitle,
-					TEXT("%s - %d x %d (%d bpp)"),
-					CAPTURE_TITLE_TEXT, bmih.biWidth, abs(bmih.biHeight), bmih.biBitCount);
+					TEXT("{} - {} x {} ({} bpp)"),
+					CAPTURE_TITLE_TEXT, bmih.biWidth, std::abs(bmih.biHeight), bmih.biBitCount);
 			}
 		}
 		::SetWindowText(m_hwnd, szTitle);
@@ -530,7 +523,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					{MAKEINTRESOURCE(IDB_CAPTURE16), 16, 16},
 					{MAKEINTRESOURCE(IDB_CAPTURE32), 32, 32},
 				};
-				Style::Size IconSize = m_Status.GetIconSize();
+				const Style::Size IconSize = m_Status.GetIconSize();
 				m_StatusIcons.Load(
 					GetAppClass().GetResourceInstance(),
 					IconSize.Width, IconSize.Height,
@@ -549,7 +542,8 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_SIZE:
 		{
-			int Width = LOWORD(lParam), Height = HIWORD(lParam);
+			const int Width = LOWORD(lParam);
+			int Height = HIWORD(lParam);
 
 			if (m_fShowStatusBar) {
 				Height -= m_Status.GetHeight();
@@ -561,7 +555,7 @@ LRESULT CCaptureWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_KEYDOWN:
 		if (m_pEventHandler != nullptr
-				&& m_pEventHandler->OnKeyDown((UINT)wParam, (UINT)lParam))
+				&& m_pEventHandler->OnKeyDown(static_cast<UINT>(wParam), static_cast<UINT>(lParam)))
 			return 0;
 		break;
 
@@ -658,7 +652,7 @@ CCaptureWindow::CCaptureStatusItem::CCaptureStatusItem(
 {
 }
 
-void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureWindow::CCaptureStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_CAPTURE);
 }
@@ -688,7 +682,7 @@ CCaptureWindow::CSaveStatusItem::CSaveStatusItem(
 {
 }
 
-void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureWindow::CSaveStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_SAVE);
 }
@@ -707,7 +701,7 @@ CCaptureWindow::CCopyStatusItem::CCopyStatusItem(
 {
 }
 
-void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+void CCaptureWindow::CCopyStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	DrawIcon(hdc, DrawRect, m_Icons, CAPTURE_ICON_COPY);
 }

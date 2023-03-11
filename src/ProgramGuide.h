@@ -90,7 +90,7 @@ namespace TVTest
 			void SetLogo(HBITMAP hbm) { m_hbmLogo = hbm; }
 			HBITMAP GetLogo() const { return m_hbmLogo; }
 			HBITMAP GetStretchedLogo(int Width, int Height);
-			int NumEvents() const { return (int)m_EventList.size(); }
+			int NumEvents() const { return static_cast<int>(m_EventList.size()); }
 			LibISDB::EventInfo *GetEvent(int Index);
 			const LibISDB::EventInfo *GetEvent(int Index) const;
 			LibISDB::EventInfo *GetEventByEventID(WORD EventID);
@@ -144,9 +144,8 @@ namespace TVTest
 		: public CProgramGuideChannelProvider
 	{
 	public:
-		CProgramGuideBaseChannelProvider();
+		CProgramGuideBaseChannelProvider() = default;
 		CProgramGuideBaseChannelProvider(const CTuningSpaceList *pSpaceList, LPCTSTR pszBonDriver);
-		~CProgramGuideBaseChannelProvider();
 
 	// CProgramGuideChannelProvider
 		virtual bool GetName(LPTSTR pszName, int MaxName) const override;
@@ -223,26 +222,28 @@ namespace TVTest
 		static constexpr int MAX_ITEM_WIDTH = 500;
 		static constexpr int TIME_BAR_BACK_COLORS = 8;
 
-		enum {
-			FILTER_FREE         = 0x00000001U,
-			FILTER_NEWPROGRAM   = 0x00000002U,
-			FILTER_ORIGINAL     = 0x00000004U,
-			FILTER_RERUN        = 0x00000008U,
-			FILTER_NOT_SHOPPING = 0x00000010U,
-			FILTER_GENRE_FIRST  = 0x00000100U,
-			FILTER_GENRE_MASK   = 0x000FFF00U,
-			FILTER_NEWS         = 0x00000100U,
-			FILTER_SPORTS       = 0x00000200U,
-			FILTER_INFORMATION  = 0x00000400U,
-			FILTER_DRAMA        = 0x00000800U,
-			FILTER_MUSIC        = 0x00001000U,
-			FILTER_VARIETY      = 0x00002000U,
-			FILTER_MOVIE        = 0x00004000U,
-			FILTER_ANIME        = 0x00008000U,
-			FILTER_DOCUMENTARY  = 0x00010000U,
-			FILTER_THEATER      = 0x00020000U,
-			FILTER_EDUCATION    = 0x00040000U,
-			FILTER_WELFARE      = 0x00080000U
+		enum class FilterFlag : unsigned int {
+			None        = 0x00000000U,
+			Free        = 0x00000001U,
+			NewProgram  = 0x00000002U,
+			Original    = 0x00000004U,
+			Rerun       = 0x00000008U,
+			NotShopping = 0x00000010U,
+			GenreFirst  = 0x00000100U,
+			GenreMask   = 0x000FFF00U,
+			News        = 0x00000100U,
+			Sports      = 0x00000200U,
+			Information = 0x00000400U,
+			Drama       = 0x00000800U,
+			Music       = 0x00001000U,
+			Variety     = 0x00002000U,
+			Movie       = 0x00004000U,
+			Anime       = 0x00008000U,
+			Documentary = 0x00010000U,
+			Theater     = 0x00020000U,
+			Education   = 0x00040000U,
+			Welfare     = 0x00080000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct ServiceInfo
@@ -415,8 +416,8 @@ namespace TVTest
 		void SetWheelScrollLines(int Lines) { m_WheelScrollLines = Lines; }
 		bool GetDragScroll() const { return m_fDragScroll; }
 		bool SetDragScroll(bool fDragScroll);
-		bool SetFilter(unsigned int Filter);
-		unsigned int GetFilter() const { return m_Filter; }
+		bool SetFilter(FilterFlag Filter);
+		FilterFlag GetFilter() const { return m_Filter; }
 		void SetUseARIBSymbol(bool fUseARIBSymbol);
 		bool GetUseARIBSymbol() const { return m_fUseARIBSymbol; }
 		void SetVisibleEventIcons(UINT VisibleIcons);
@@ -535,12 +536,12 @@ namespace TVTest
 			CProgramGuide *m_pProgramGuide;
 
 		// CEventInfoPopupManager::CEventHandler
-			bool HitTest(int x, int y, LPARAM *pParam);
-			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
+			bool HitTest(int x, int y, LPARAM *pParam) override;
+			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 
 		// CEventInfoPopup::CEventHandler
-			bool OnMenuPopup(HMENU hmenu);
-			void OnMenuSelected(int Command);
+			bool OnMenuPopup(HMENU hmenu) override;
+			void OnMenuSelected(int Command) override;
 
 		public:
 			CEventInfoPopupHandler(CProgramGuide *pProgramGuide);
@@ -583,7 +584,7 @@ namespace TVTest
 		Theme::BackgroundStyle m_FeaturedMarkStyle;
 		CProgramGuideToolList m_ToolList;
 		int m_WheelScrollLines;
-		unsigned int m_Filter;
+		FilterFlag m_Filter;
 
 		bool m_fEpgUpdating;
 		struct {
@@ -633,13 +634,15 @@ namespace TVTest
 		bool UpdateService(ProgramGuide::CServiceInfo *pService);
 		void UpdateServiceList();
 		void CalcLayout();
-		enum {
-			EVENT_ITEM_STATUS_CURRENT     = 0x0001U,
-			EVENT_ITEM_STATUS_HIGHLIGHTED = 0x0002U,
-			EVENT_ITEM_STATUS_FILTERED    = 0x0004U,
-			EVENT_ITEM_STATUS_COMMON      = 0x0008U
+		enum class EventItemStatus : unsigned int {
+			None        = 0x0000U,
+			Current     = 0x0001U,
+			Highlighted = 0x0002U,
+			Filtered    = 0x0004U,
+			Common      = 0x0008U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
-		unsigned int GetEventItemStatus(const ProgramGuide::CEventItem *pItem, unsigned int Mask) const;
+		EventItemStatus GetEventItemStatus(const ProgramGuide::CEventItem *pItem, EventItemStatus Mask) const;
 		void DrawEventBackground(
 			ProgramGuide::CEventItem *pItem, HDC hdc, const RECT &Rect,
 			Theme::CThemeDraw &ThemeDraw, CTextDraw &TextDraw, int LineHeight, int CurTimePos);
@@ -657,7 +660,7 @@ namespace TVTest
 			int Chevron, bool fLeftAlign = false);
 		void DrawDayHeader(int Day, HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw) const;
 		void DrawTimeBar(HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw, bool fRight);
-		void Draw(HDC hdc, const RECT &PaintRect);
+		void Draw(HDC hdc, const RECT &PaintRect) override;
 		void DrawMessage(HDC hdc, const RECT &ClientRect) const;
 		bool CreateFonts();
 		void CalcFontMetrics();
@@ -746,7 +749,7 @@ namespace TVTest
 			};
 
 			CProgramGuideBar(CProgramGuide * pProgramGuide);
-			virtual ~CProgramGuideBar();
+			virtual ~CProgramGuideBar() = default;
 
 			virtual bool CreateBar(HWND hwndParent, DWORD Style) = 0;
 			virtual bool IsBarCreated() const = 0;
@@ -790,7 +793,7 @@ namespace TVTest
 		};
 
 		CProgramGuideFrameBase(CProgramGuide * pProgramGuide, CProgramGuideFrameSettings * pSettings);
-		virtual ~CProgramGuideFrameBase();
+		virtual ~CProgramGuideFrameBase() = default;
 		bool SetToolbarVisible(int Toolbar, bool fVisible);
 		bool GetToolbarVisible(int Toolbar) const;
 		void SetTheme(const Theme::CThemeManager * pThemeManager);
@@ -814,7 +817,7 @@ namespace TVTest
 
 		CProgramGuide * m_pProgramGuide;
 		CProgramGuideFrameSettings * m_pSettings;
-		ProgramGuideBar::CProgramGuideBar * m_ToolbarList[TOOLBAR_NUM];
+		std::unique_ptr<ProgramGuideBar::CProgramGuideBar> m_ToolbarList[TOOLBAR_NUM];
 		FrameStyle m_FrameStyle;
 		int m_ToolbarRightMargin;
 		bool m_fNoUpdateLayout;

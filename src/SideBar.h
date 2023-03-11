@@ -47,6 +47,7 @@ namespace TVTest
 			Disabled = 0x0001U,
 			Checked  = 0x0002U,
 			Hot      = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct SideBarItem
@@ -168,8 +169,8 @@ namespace TVTest
 		CEventHandler *m_pEventHandler;
 		const CCommandManager *m_pCommandManager;
 
-		static const int ICON_WIDTH;
-		static const int ICON_HEIGHT;
+		static constexpr int ICON_WIDTH = 16;
+		static constexpr int ICON_HEIGHT = 16;
 		static const LPCTSTR CLASS_NAME;
 		static HINSTANCE m_hinst;
 
@@ -186,8 +187,6 @@ namespace TVTest
 	// CUIBase
 		void RealizeStyle() override;
 	};
-
-	TVTEST_ENUM_FLAGS(CSideBar::ItemState)
 
 }	// namespace TVTest
 

@@ -419,11 +419,11 @@ namespace TVTest
 			None      = 0x0000U,
 			NoDefault = 0x0001U,	// デフォルトと同じ設定を保存しない
 			NoName    = 0x0002U,	// 名前を保存しない
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CColorScheme();
 		CColorScheme(const CColorScheme &ColorScheme);
-		~CColorScheme();
 
 		COLORREF GetColor(int Type) const;
 		COLORREF GetColor(LPCTSTR pszText) const;
@@ -499,12 +499,10 @@ namespace TVTest
 		static const Theme::BorderType m_CustomDefaultBorderList[NUM_BORDERS];
 	};
 
-	TVTEST_ENUM_FLAGS(CColorScheme::SaveFlag)
-
 	class CColorSchemeList
 	{
 	public:
-		int NumColorSchemes() const { return (int)m_List.size(); }
+		int NumColorSchemes() const { return static_cast<int>(m_List.size()); }
 		bool Add(CColorScheme *pColorScheme);
 		bool Insert(int Index, CColorScheme *pColorScheme);
 		bool Load(LPCTSTR pszDirectory);

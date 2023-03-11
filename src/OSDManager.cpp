@@ -38,11 +38,6 @@ COSDManager::COSDManager(const COSDOptions *pOptions)
 }
 
 
-COSDManager::~COSDManager()
-{
-}
-
-
 bool COSDManager::Initialize()
 {
 	InitializeUI();
@@ -86,9 +81,9 @@ bool COSDManager::ShowOSD(LPCTSTR pszText, ShowFlag Flags)
 	if (IsStringEmpty(pszText))
 		return false;
 
-	CAppMain &App = GetAppClass();
-	CCoreEngine &CoreEngine = App.CoreEngine;
-	LibISDB::ViewerFilter *pViewer = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const CAppMain &App = GetAppClass();
+	const CCoreEngine &CoreEngine = App.CoreEngine;
+	const LibISDB::ViewerFilter *pViewer = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (pViewer == nullptr)
 		return false;
@@ -132,8 +127,8 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 		return false;
 
 	CAppMain &App = GetAppClass();
-	CCoreEngine &CoreEngine = App.CoreEngine;
-	LibISDB::ViewerFilter *pViewer = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const CCoreEngine &CoreEngine = App.CoreEngine;
+	const LibISDB::ViewerFilter *pViewer = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (pViewer == nullptr)
 		return false;
@@ -146,7 +141,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 	if (!m_Style.fChannelAnimation || m_OSD.IsVisible())
 		ClientInfo.fAnimation = false;
 
-	COSDOptions::ChannelChangeType ChangeType = m_pOptions->GetChannelChangeType();
+	const COSDOptions::ChannelChangeType ChangeType = m_pOptions->GetChannelChangeType();
 
 	HBITMAP hbmLogo = nullptr;
 	CPseudoOSD::ImageEffect ImageEffect = CPseudoOSD::ImageEffect::None;
@@ -218,8 +213,8 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 	if (m_pEventHandler == nullptr)
 		return false;
 
-	CAppMain &App = GetAppClass();
-	CCoreEngine &CoreEngine = App.CoreEngine;
+	const CAppMain &App = GetAppClass();
+	const CCoreEngine &CoreEngine = App.CoreEngine;
 	LibISDB::ViewerFilter *pViewer = CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (pViewer == nullptr)
@@ -239,16 +234,16 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 		Formatter.Append(m_Style.VolumeTextFill.c_str());
 	for (; i < VolumeSteps; i++)
 		Formatter.Append(m_Style.VolumeTextRemain.c_str());
-	Formatter.AppendFormat(TEXT(" %d"), Volume);
+	Formatter.AppendFormat(TEXT(" {}"), Volume);
 
 	LOGFONT lf = *m_pOptions->GetOSDFont();
 	lf.lfWidth = 0;
 
 	if (m_VolumeOSDMaxWidth == 0) {
 		lf.lfHeight = -m_Style.VolumeTextSizeMax;
-		HFONT hfont = ::CreateFontIndirect(&lf);
-		HDC hdc = ::GetDC(ClientInfo.hwndParent);
-		HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
+		const HFONT hfont = ::CreateFontIndirect(&lf);
+		const HDC hdc = ::GetDC(ClientInfo.hwndParent);
+		const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
 
 		RECT rcFill = {};
 		::DrawText(
@@ -287,7 +282,7 @@ bool COSDManager::ShowVolumeOSD(int Volume)
 				m_Style.VolumeTextSizeMin, m_Style.VolumeTextSizeMax);
 			lf.lfHeight = -FontSize;
 			lf.lfQuality = NONANTIALIASED_QUALITY;
-			HFONT hfont = ::CreateFontIndirect(&lf);
+			const HFONT hfont = ::CreateFontIndirect(&lf);
 			rcSrc.left +=
 				m_Style.VolumeMargin.Left * (rcSrc.right - rcSrc.left) /
 				(ClientInfo.ClientRect.right - ClientInfo.ClientRect.left);
@@ -351,7 +346,7 @@ void COSDManager::OnOSDFontChanged()
 bool COSDManager::CompositeText(
 	LPCTSTR pszText, const RECT &rcClient, int LeftOffset, DWORD FadeTime)
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	LibISDB::ViewerFilter *pViewer = App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (pViewer == nullptr)
@@ -368,7 +363,7 @@ bool COSDManager::CompositeText(
 	lf.lfHeight = -FontSize;
 	lf.lfWidth = 0;
 	lf.lfQuality = NONANTIALIASED_QUALITY;
-	HFONT hfont = ::CreateFontIndirect(&lf);
+	const HFONT hfont = ::CreateFontIndirect(&lf);
 
 	int Rate, Factor;
 	if (!App.UICore.GetZoomRate(&Rate, &Factor)) {
@@ -432,7 +427,7 @@ bool COSDManager::CreateTextOSD(LPCTSTR pszText, const OSDClientInfo &ClientInfo
 	};
 	m_OSD.CalcTextSize(&sz);
 
-	bool fSingleLine = (sz.cy < FontSize * 3 / 2);
+	const bool fSingleLine = (sz.cy < FontSize * 3 / 2);
 	if (fSingleLine) {
 		// 単一行(のはず)
 		m_OSD.SetTextStyle(

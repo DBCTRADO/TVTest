@@ -14,9 +14,14 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
+#include <algorithm>
 #include <vector>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 
@@ -435,7 +440,7 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 			::GetWindowRect(pThis->m_hwndChannelList, &rc);
 			::MoveWindow(pThis->m_hwndChannelList, 0, y, Width, rc.bottom - rc.top, TRUE);
 			y += rc.bottom - rc.top;
-			::MoveWindow(pThis->m_hwndEventList, 0, y, Width, max(Height - y, 0), TRUE);
+			::MoveWindow(pThis->m_hwndEventList, 0, y, Width, std::max(Height - y, 0), TRUE);
 			::InvalidateRect(pThis->m_hwndEventList, nullptr, TRUE);
 		}
 		return 0;

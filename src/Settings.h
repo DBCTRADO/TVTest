@@ -37,6 +37,7 @@ namespace TVTest
 			Read          = 0x0001U,
 			Write         = 0x0002U,
 			WriteVolatile = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		typedef CIniFile::CEntry CEntry;
@@ -72,12 +73,24 @@ namespace TVTest
 		bool Read(LPCTSTR pszValueName, LOGFONT *pFont);
 		bool Write(LPCTSTR pszValueName, const LOGFONT *pFont);
 
+		template<Concept::EnumFlags T> bool Read(LPCTSTR pszValueName, T *pData)
+		{
+			std::underlying_type_t<T> Flags;
+			if (!Read(pszValueName, &Flags))
+				return false;
+			*pData = static_cast<T>(Flags) & T::AllFlags_;
+			return true;
+		}
+
+		template<Concept::EnumFlags T> bool Write(LPCTSTR pszValueName, T Data)
+		{
+			return Write(pszValueName, static_cast<std::underlying_type_t<T>>(Data));
+		}
+
 	private:
 		CIniFile m_IniFile;
 		OpenFlag m_OpenFlags;
 	};
-
-	TVTEST_ENUM_FLAGS(CSettings::OpenFlag)
 
 	class ABSTRACT_CLASS(CSettingsBase)
 	{

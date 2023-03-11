@@ -40,7 +40,7 @@ bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit)
 		COMMAND_SELECTALL,
 		COMMAND_SEARCH
 	};
-	HMENU hmenu = ::CreatePopupMenu();
+	const HMENU hmenu = ::CreatePopupMenu();
 
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("コピー(&C)"));
 	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
@@ -55,7 +55,7 @@ bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit)
 
 	POINT pt;
 	::GetCursorPos(&pt);
-	int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwndParent, nullptr);
+	const int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwndParent, nullptr);
 	::DestroyMenu(hmenu);
 
 	switch (Command) {

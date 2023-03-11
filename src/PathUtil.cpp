@@ -35,7 +35,7 @@ bool RemoveExtension(String *pPath)
 	if (pPath == nullptr)
 		return false;
 
-	String::size_type Pos = pPath->find_last_of(L'.');
+	const String::size_type Pos = pPath->find_last_of(L'.');
 	if ((Pos != String::npos) && (pPath->find_first_of(L"\\/" ,Pos + 1) == String::npos))
 		pPath->resize(Pos);
 
@@ -61,7 +61,7 @@ bool GetExtension(const String &Path, String *pExtension)
 	if (pExtension == nullptr)
 		return false;
 
-	String::size_type Pos = Path.find_last_of(L'.');
+	const String::size_type Pos = Path.find_last_of(L'.');
 	if ((Pos != String::npos) && (Path.find_first_of(L"\\/", Pos + 1) == String::npos))
 		*pExtension = Path.substr(Pos);
 	else
@@ -130,7 +130,7 @@ bool GetFileName(const String &Path, String *pFileName)
 	if (pFileName == nullptr)
 		return false;
 
-	String::size_type Pos = Path.find_last_of(L"\\/");
+	const String::size_type Pos = Path.find_last_of(L"\\/");
 	if (Pos == String::npos)
 		*pFileName = Path;
 	else
@@ -254,7 +254,7 @@ bool Canonicalize(String *pPath)
 			} else if (Item.compare(L"..") == 0) {
 				if (Next < 2)
 					return false;
-				String::size_type Prev = pPath->rfind(L'\\', Next - 2);
+				const String::size_type Prev = pPath->rfind(L'\\', Next - 2);
 				if (Prev == String::npos)
 					return false;
 				pPath->erase(Prev, Pos - Prev);

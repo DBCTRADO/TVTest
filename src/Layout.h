@@ -76,7 +76,6 @@ namespace TVTest
 
 		public:
 			CWindowContainer(int ID);
-			~CWindowContainer();
 
 		// CContainer
 			void SetPosition(const RECT &Pos) override;
@@ -98,6 +97,7 @@ namespace TVTest
 				Horz  = 0x0000U,
 				Vert  = 0x0001U,
 				Fixed = 0x0002U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
 		private:
@@ -150,8 +150,6 @@ namespace TVTest
 			int GetBarPos() const { return m_BarPos; }
 			int GetBarWidth() const { return m_BarWidth; }
 		};
-
-		TVTEST_ENUM_FLAGS(CSplitter::StyleFlag)
 
 
 		class CLayoutBase

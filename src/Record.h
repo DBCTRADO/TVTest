@@ -34,9 +34,9 @@ namespace TVTest
 	class CRecordingSettings
 	{
 	public:
-		static const DWORD WRITE_CACHE_SIZE_DEFAULT = 0x100000;
-		static const DWORD MAX_PENDING_SIZE_DEFAULT = 0x10000000;
-		static const DWORD TIMESHIFT_BUFFER_SIZE_DEFAULT = 32 * 0x100000;
+		static constexpr DWORD WRITE_CACHE_SIZE_DEFAULT = 0x100000;
+		static constexpr DWORD MAX_PENDING_SIZE_DEFAULT = 0x10000000;
+		static constexpr DWORD TIMESHIFT_BUFFER_SIZE_DEFAULT = 32 * 0x100000;
 
 		bool m_fCurServiceOnly = false;
 		LibISDB::StreamSelector::StreamFlag m_SaveStream = LibISDB::StreamSelector::StreamFlag::All;

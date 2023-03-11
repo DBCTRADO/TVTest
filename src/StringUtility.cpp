@@ -32,13 +32,13 @@ namespace TVTest
 
 LONGLONG StringToInt64(LPCTSTR pszString)
 {
-	return _tcstoi64(pszString, nullptr, 0);
+	return std::_tcstoll(pszString, nullptr, 0);
 }
 
 
 ULONGLONG StringToUInt64(LPCTSTR pszString)
 {
-	return _tcstoui64(pszString, nullptr, 0);
+	return std::_tcstoull(pszString, nullptr, 0);
 }
 
 
@@ -81,8 +81,8 @@ bool StringIsDigit(LPCTSTR pszString)
 		return nullptr;
 
 	const size_t Length = lstrlenA(pszString) + 1;
-	LPSTR pszNewString = new char[Length];
-	::CopyMemory(pszNewString, pszString, Length);
+	const LPSTR pszNewString = new char[Length];
+	std::memcpy(pszNewString, pszString, Length);
 	return pszNewString;
 }
 
@@ -93,8 +93,8 @@ bool StringIsDigit(LPCTSTR pszString)
 		return nullptr;
 
 	const size_t Length = lstrlenW(pszString) + 1;
-	LPWSTR pszNewString = new WCHAR[Length];
-	::CopyMemory(pszNewString, pszString, Length * sizeof(WCHAR));
+	const LPWSTR pszNewString = new WCHAR[Length];
+	std::memcpy(pszNewString, pszString, Length * sizeof(WCHAR));
 	return pszNewString;
 }
 
@@ -123,7 +123,7 @@ int RemoveTrailingWhitespace(LPTSTR pszString)
 	if (pSpace == nullptr)
 		return 0;
 	*pSpace = _T('\0');
-	return (int)(p - pSpace);
+	return static_cast<int>(p - pSpace);
 }
 
 
@@ -151,7 +151,7 @@ namespace StringUtility
 
 void Reserve(String &Str, size_t Size)
 {
-	if (Size > size_t(Str.max_size()))
+	if (Size > Str.max_size())
 		return;
 
 	if (Str.capacity() < Size)
@@ -177,7 +177,7 @@ int Format(String &Str, LPCWSTR pszFormat, ...)
 {
 	va_list Args;
 	va_start(Args, pszFormat);
-	int Length = FormatV(Str, pszFormat, Args);
+	const int Length = FormatV(Str, pszFormat, Args);
 	va_end(Args);
 
 	return Length;
@@ -202,7 +202,7 @@ int FormatV(String &Str, LPCWSTR pszFormat, va_list Args)
 	}
 	va_end(CopyArgs);
 
-	return (int)Str.length();
+	return static_cast<int>(Str.length());
 }
 
 int Compare(const String &String1, LPCWSTR pszString2)
@@ -234,7 +234,7 @@ int CompareNoCase(const String &String1, LPCWSTR pszString2)
 
 int CompareNoCase(const String &String1, const String &String2, String::size_type Length)
 {
-	return ::StrCmpNIW(String1.c_str(), String2.c_str(), (int)Length);
+	return ::StrCmpNIW(String1.c_str(), String2.c_str(), static_cast<int>(Length));
 }
 
 int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type Length)
@@ -245,7 +245,7 @@ int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type L
 		return 1;
 	}
 
-	return ::StrCmpNIW(String1.c_str(), pszString2, (int)Length);
+	return ::StrCmpNIW(String1.c_str(), pszString2, static_cast<int>(Length));
 }
 
 bool Trim(String &Str, LPCWSTR pszSpaces)
@@ -317,7 +317,7 @@ bool ToHalfWidthNoKatakana(LPCWSTR pSrc, String::size_type SrcLength, String *pD
 		if (::GetStringTypeExW(LOCALE_USER_DEFAULT, CT_CTYPE3, &pSrc[i], 1, &Type)
 				&& (Type & (C3_FULLWIDTH | C3_KATAKANA)) == C3_FULLWIDTH) {
 			WCHAR Buff[4];
-			int Length = ::LCMapStringW(
+			const int Length = ::LCMapStringW(
 				LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH,
 				&pSrc[i], 1, Buff, _countof(Buff));
 			if (Length > 0) {
@@ -375,11 +375,11 @@ bool ToAnsi(const String &Src, AnsiString *pDst)
 	pDst->clear();
 
 	if (!Src.empty()) {
-		int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), nullptr, 0, nullptr, nullptr);
+		const int Length = ::WideCharToMultiByte(CP_ACP, 0, Src.data(), static_cast<int>(Src.length()), nullptr, 0, nullptr, nullptr);
 		if (Length < 1)
 			return false;
 		pDst->resize(Length);
-		::WideCharToMultiByte(CP_ACP, 0, Src.data(), (int)Src.length(), pDst->data(), Length, nullptr, nullptr);
+		::WideCharToMultiByte(CP_ACP, 0, Src.data(), static_cast<int>(Src.length()), pDst->data(), Length, nullptr, nullptr);
 	}
 
 	return true;
@@ -445,7 +445,7 @@ bool Encode(LPCWSTR pszSrc, String *pDst, LPCWSTR pszEncodeChars)
 			fEncode = ::StrChr(pszEncodeChars, *p) != nullptr;
 		if (fEncode) {
 			WCHAR szCode[8];
-			StringPrintf(szCode, L"%%%04X", *p);
+			StringFormat(szCode, L"%{:04X}", *p);
 			*pDst += szCode;
 		} else {
 			pDst->push_back(*p);
@@ -476,7 +476,7 @@ bool Decode(LPCWSTR pszSrc, String *pDst)
 	while (*p != L'\0') {
 		if (*p == L'%') {
 			p++;
-			WCHAR Code = (WCHAR)HexStringToUInt(p, 4, &p);
+			const WCHAR Code = static_cast<WCHAR>(HexStringToUInt(p, 4, &p));
 			pDst->push_back(Code);
 		} else {
 			pDst->push_back(*p);
@@ -498,10 +498,10 @@ String Decode(const String &Src)
 
 
 // FNV hash parameters
-static const UINT32 FNV_PRIME_32 = 16777619UL;
-static const UINT32 FNV_OFFSET_BASIS_32 = 2166136261UL;
-static const UINT64 FNV_PRIME_64 = 1099511628211ULL;
-static const UINT64 FNV_OFFSET_BASIS_64 = 14695981039346656037ULL;
+static constexpr UINT32 FNV_PRIME_32 = 16777619UL;
+static constexpr UINT32 FNV_OFFSET_BASIS_32 = 2166136261UL;
+static constexpr UINT64 FNV_PRIME_64 = 1099511628211ULL;
+static constexpr UINT64 FNV_OFFSET_BASIS_64 = 14695981039346656037ULL;
 
 template<typename TIterator, typename THash> THash FNVHash(
 	const TIterator &begin, const TIterator &end,

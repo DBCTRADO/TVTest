@@ -65,16 +65,15 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 	if (pszFileName == nullptr)
 		return false;
 
-	static const DWORD MAX_READ_SIZE = 0x1000000UL;	// 16MiB
-	static const DWORD BUFFER_SIZE = 188 * 4096;
-	HANDLE hFile;
+	static constexpr DWORD MAX_READ_SIZE = 0x1000000UL;	// 16MiB
+	static constexpr DWORD BUFFER_SIZE = 188 * 4096;
 	LARGE_INTEGER FileSize;
 	DWORD ReadSize, RemainSize;
-	BYTE *pBuffer;
+	std::unique_ptr<BYTE[]> Buffer;
 	DWORD Size, Read;
 	LibISDB::TSPacket Packet;
 
-	hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -83,7 +82,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return false;
 	}
-	if (FileSize.QuadPart <= (LONGLONG)MAX_READ_SIZE) {
+	if (FileSize.QuadPart <= static_cast<LONGLONG>(MAX_READ_SIZE)) {
 		ReadSize = FileSize.LowPart;
 	} else {
 		ReadSize = MAX_READ_SIZE;
@@ -92,7 +91,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 		::SetFilePointerEx(hFile, Offset, nullptr, FILE_BEGIN);
 	}
 	try {
-		pBuffer = new BYTE[std::min(BUFFER_SIZE, ReadSize)];
+		Buffer.reset(new BYTE[std::min(BUFFER_SIZE, ReadSize)]);
 	} catch (...) {
 		::CloseHandle(hFile);
 		return false;
@@ -103,10 +102,10 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 	for (RemainSize = ReadSize; RemainSize >= 188; RemainSize -= Size) {
 		Size = std::min(RemainSize, BUFFER_SIZE);
-		if (!::ReadFile(hFile, pBuffer, Size, &Read, nullptr))
+		if (!::ReadFile(hFile, Buffer.get(), Size, &Read, nullptr))
 			break;
 
-		BYTE *pEnd = pBuffer + Read / 188 * 188;
+		const BYTE *pEnd = Buffer.get() + Read / 188 * 188;
 
 		// 最初に TOT を渡すようにする
 		if (RemainSize == ReadSize) {
@@ -157,9 +156,9 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 
 			TOTFilter TOT;
 
-			BYTE *p = pBuffer;
+			BYTE *p = Buffer.get();
 			while (p < pEnd) {
-				const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
+				const WORD PID = (static_cast<WORD>(p[1] & 0x1F) << 8) | static_cast<WORD>(p[2]);
 				if (PID == 0x0014) {
 					Packet.SetData(p, 188);
 					if (Packet.ParsePacket() == LibISDB::TSPacket::ParseResult::OK) {
@@ -176,9 +175,9 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 			}
 		}
 
-		BYTE *p = pBuffer;
+		BYTE *p = Buffer.get();
 		while (p < pEnd) {
-			const WORD PID = ((WORD)(p[1] & 0x1F) << 8) | (WORD)p[2];
+			const WORD PID = (static_cast<WORD>(p[1] & 0x1F) << 8) | static_cast<WORD>(p[2]);
 			// H-EIT / TOT / M-EIT / L-EIT
 			if (PID == 0x0012 || PID == 0x0014 /*|| PID==0x0026*/ || PID == 0x0027) {
 				Packet.SetData(p, 188);
@@ -194,9 +193,8 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 			break;
 	}
 
-	delete [] pBuffer;
 	::CloseHandle(hFile);
-	TRACE(TEXT("EPG data loaded %s\n"), pszFileName);
+	TRACE(TEXT("EPG data loaded {}\n"), pszFileName);
 	return true;
 }
 
@@ -208,12 +206,11 @@ bool CEpgDataLoader::Load(LPCTSTR pszFolder, HANDLE hAbortEvent, CEventHandler *
 
 	FILETIME ftCurrent;
 	TCHAR szFileMask[MAX_PATH];
-	HANDLE hFind;
 	WIN32_FIND_DATA fd;
 
 	::GetSystemTimeAsFileTime(&ftCurrent);
 	::PathCombine(szFileMask, pszFolder, TEXT("*_epg.dat"));
-	hFind = ::FindFirstFileEx(
+	const HANDLE hFind = ::FindFirstFileEx(
 		szFileMask, FindExInfoBasic, &fd,
 		FindExSearchNameMatch, nullptr, FIND_FIRST_EX_LARGE_FETCH);
 	if (hFind == INVALID_HANDLE_VALUE)
@@ -262,7 +259,7 @@ bool CEpgDataLoader::LoadAsync(LPCTSTR pszFolder, CEventHandler *pEventHandler)
 		m_hAbortEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	else
 		::ResetEvent(m_hAbortEvent);
-	m_hThread = (HANDLE)::_beginthreadex(nullptr, 0, LoadThread, this, 0, nullptr);
+	m_hThread = reinterpret_cast<HANDLE>(::_beginthreadex(nullptr, 0, LoadThread, this, 0, nullptr));
 	if (m_hThread == nullptr)
 		return false;
 
@@ -306,7 +303,7 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 	if (pThis->m_pEventHandler != nullptr)
 		pThis->m_pEventHandler->OnStart();
 	::SetThreadPriority(::GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-	bool fSuccess = pThis->Load(pThis->m_Folder.c_str(), pThis->m_hAbortEvent);
+	const bool fSuccess = pThis->Load(pThis->m_Folder.c_str(), pThis->m_hAbortEvent);
 	if (pThis->m_pEventHandler != nullptr)
 		pThis->m_pEventHandler->OnEnd(fSuccess, &pThis->m_EPGDatabase);
 	pThis->m_EPGDatabase.Clear();

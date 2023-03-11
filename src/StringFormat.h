@@ -18,4 +18,24 @@
 */
 
 
-#include "stdafx.h"
+#ifndef TVTEST_STRING_FORMAT_H
+#define TVTEST_STRING_FORMAT_H
+
+
+#include "LibISDB/LibISDB/Utilities/StringFormat.hpp"
+
+
+namespace TVTest
+{
+
+	using LibISDB::StringFormat;
+	using LibISDB::StringVFormat;
+	using LibISDB::StringVFormatArgs;
+	using LibISDB::FormatArgs;
+	using LibISDB::FormatContext;
+	using LibISDB::MakeFormatArgs;
+
+}	// namespace TVTest
+
+
+#endif

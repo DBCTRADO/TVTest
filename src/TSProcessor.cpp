@@ -38,11 +38,6 @@ CTSPacketInterface::CTSPacketInterface()
 }
 
 
-CTSPacketInterface::~CTSPacketInterface()
-{
-}
-
-
 STDMETHODIMP CTSPacketInterface::QueryInterface(REFIID riid, void **ppvObject)
 {
 	if (ppvObject == nullptr)
@@ -146,7 +141,7 @@ bool CTSProcessor::Initialize()
 	if (FAILED(m_pTSProcessor->Initialize(this)))
 		return false;
 	m_pTSProcessor->StartStreaming(this);
-	return S_OK;
+	return true;
 }
 
 
@@ -239,7 +234,7 @@ bool CTSProcessor::LoadProperties(IPropertyBag *pPropBag)
 	if (FAILED(m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&pPersistPropBag))))
 		return false;
 
-	HRESULT hr = pPersistPropBag->Load(pPropBag, nullptr);
+	const HRESULT hr = pPersistPropBag->Load(pPropBag, nullptr);
 
 	pPersistPropBag->Release();
 
@@ -254,7 +249,7 @@ bool CTSProcessor::SaveProperties(IPropertyBag *pPropBag)
 	if (FAILED(m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&pPersistPropBag))))
 		return false;
 
-	HRESULT hr = pPersistPropBag->Save(pPropBag, FALSE, TRUE);
+	const HRESULT hr = pPersistPropBag->Save(pPropBag, FALSE, TRUE);
 
 	pPersistPropBag->Release();
 
@@ -290,19 +285,18 @@ bool CTSProcessor::ShowPropertyPage(HWND hwndOwner, HINSTANCE hinst)
 		if (Pages.cElems > 0) {
 			ISpecifyPropertyPages2 *pSpecifyPropPages2;
 			if (SUCCEEDED(pSpecifyPropPages->QueryInterface(IID_PPV_ARGS(&pSpecifyPropPages2)))) {
-				IPropertyPage **ppPropPages = new IPropertyPage*[Pages.cElems];
+				std::vector<IPropertyPage *> PropPages(Pages.cElems);
 				ULONG PageCount = 0;
 				for (ULONG i = 0; i < Pages.cElems; i++) {
 					IPropertyPage *pPropPage;
 					if (SUCCEEDED(pSpecifyPropPages2->CreatePage(Pages.pElems[i], &pPropPage)))
-						ppPropPages[PageCount++] = pPropPage;
+						PropPages[PageCount++] = pPropPage;
 				}
 				if (PageCount > 0) {
-					hr = ShowPropertyPageFrame(ppPropPages, PageCount, m_pTSProcessor, hwndOwner, hinst);
+					hr = ShowPropertyPageFrame(PropPages.data(), PageCount, m_pTSProcessor, hwndOwner, hinst);
 				}
 				for (ULONG i = 0; i < PageCount; i++)
-					ppPropPages[i]->Release();
-				delete [] ppPropPages;
+					PropPages[i]->Release();
 				pSpecifyPropPages2->Release();
 			} else {
 				IUnknown *pObject;
@@ -542,7 +536,7 @@ bool CTSProcessor::GetDeviceInfo(int Device, FilterDeviceInfo *pInfo) const
 
 		if (SUCCEEDED(m_pFilterModule->GetDevice(Device, &pDevice))) {
 			Interface::FilterDeviceInfo Info;
-			HRESULT hr = pDevice->GetDeviceInfo(&Info);
+			const HRESULT hr = pDevice->GetDeviceInfo(&Info);
 			pDevice->Release();
 			if (SUCCEEDED(hr)) {
 				pInfo->DeviceID = Info.DeviceID;
@@ -585,7 +579,7 @@ bool CTSProcessor::GetDeviceList(std::vector<String> *pList) const
 
 	pList->clear();
 
-	int Count = GetDeviceCount();
+	const int Count = GetDeviceCount();
 
 	for (int i = 0; i < Count; i++) {
 		String Name;
@@ -749,7 +743,7 @@ bool CTSProcessor::OpenFilter(int Device, LPCWSTR pszName)
 
 bool CTSProcessor::OpenFilter(LPCWSTR pszDevice, LPCWSTR pszName)
 {
-	int Device = GetDeviceByName(pszDevice);
+	const int Device = GetDeviceByName(pszDevice);
 	if (Device < 0)
 		return false;
 

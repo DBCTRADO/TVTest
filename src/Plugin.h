@@ -171,7 +171,7 @@ namespace TVTest
 		// CStatusItem
 			LPCTSTR GetIDText() const override { return m_IDText.c_str(); }
 			LPCTSTR GetName() const override { return m_pItem->Name.c_str(); }
-			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override;
 			void OnLButtonDown(int x, int y) override;
 			void OnLButtonUp(int x, int y) override;
 			void OnLButtonDoubleClick(int x, int y) override;
@@ -202,7 +202,7 @@ namespace TVTest
 		// CUIBase
 			void RealizeStyle() override;
 
-			void NotifyDraw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags);
+			void NotifyDraw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags);
 			LRESULT NotifyMouseEvent(UINT Action, int x, int y, int WheelDelta = 0);
 		};
 
@@ -419,12 +419,11 @@ namespace TVTest
 		void OnProgramGuideDarkModeChanged(bool fDarkMode) override;
 
 	public:
-		CPluginManager();
 		~CPluginManager();
 
 		bool LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR> *pExcludePlugins = nullptr);
 		void FreePlugins();
-		int NumPlugins() const { return (int)m_PluginList.size(); }
+		int NumPlugins() const { return static_cast<int>(m_PluginList.size()); }
 		CPlugin *GetPlugin(int Index);
 		const CPlugin *GetPlugin(int Index) const;
 		bool EnablePlugins(bool fEnable = true);

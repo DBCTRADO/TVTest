@@ -150,17 +150,17 @@ namespace TVTest
 
 		public:
 			CChannelEventInfo(const CChannelInfo *pChannelInfo, int OriginalIndex);
-			~CChannelEventInfo();
+
 			bool SetEventInfo(int Index, const LibISDB::EventInfo *pInfo);
 			const CChannelInfo &GetChannelInfo() const { return m_ChannelInfo; }
 			const LibISDB::EventInfo &GetEventInfo(int Index) const { return m_EventList[Index]; }
-			int NumEvents() const { return (int)m_EventList.size(); }
+			int NumEvents() const { return static_cast<int>(m_EventList.size()); }
 			void SetMaxEvents(int Events);
 			bool IsEventEnabled(int Index) const;
 			WORD GetNetworkID() const { return m_ChannelInfo.GetNetworkID(); }
 			WORD GetTransportStreamID() const { return m_ChannelInfo.GetTransportStreamID(); }
 			WORD GetServiceID() const { return m_ChannelInfo.GetServiceID(); }
-			int FormatEventText(LPTSTR pszText, int MaxLength, int Index) const;
+			bool FormatEventText(int Index, String *pText) const;
 			void DrawChannelName(HDC hdc, const RECT *pRect, const Style::Margins &LogoMargins);
 			void DrawEventName(int Index, CTextDraw &TextDraw, const RECT &Rect, int LineHeight, bool fUseARIBSymbol);
 			int GetOriginalChannelIndex() const { return m_OriginalChannelIndex; }
@@ -219,6 +219,7 @@ namespace TVTest
 		int m_CurChannel;
 		CEventHandler *m_pEventHandler;
 		CTooltip m_Tooltip;
+		String m_TooltipText;
 		bool m_fDetailToolTip;
 		CEventInfoPopup m_EventInfoPopup;
 		CEventInfoPopupManager m_EventInfoPopupManager;
@@ -228,8 +229,8 @@ namespace TVTest
 			CChannelPanel *m_pChannelPanel;
 		public:
 			CEventInfoPopupHandler(CChannelPanel *pChannelPanel);
-			bool HitTest(int x, int y, LPARAM *pParam);
-			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup);
+			bool HitTest(int x, int y, LPARAM *pParam) override;
+			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 		};
 		CEventInfoPopupHandler m_EventInfoPopupHandler;
 		CLogoManager *m_pLogoManager;

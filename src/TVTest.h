@@ -38,6 +38,10 @@
 
 
 #include "LibISDB/LibISDB/LibISDB.hpp"
+#include "LibISDB/LibISDB/Base/Debug.hpp"
+
+
+#define TRACE LIBISDB_TRACE
 
 
 namespace TVTest
@@ -45,7 +49,13 @@ namespace TVTest
 	using namespace LibISDB::Literals;
 	using namespace LibISDB::EnumFlags;
 
-#define TVTEST_ENUM_FLAGS LIBISDB_ENUM_FLAGS
+	namespace Concept
+	{
+		using namespace LibISDB::Concept;
+	}
+
+#define TVTEST_ENUM_FLAGS_TRAILER_ LIBISDB_ENUM_FLAGS_TRAILER_
+#define TVTEST_ENUM_FLAGS_TRAILER LIBISDB_ENUM_FLAGS_TRAILER
 
 #define TVTEST_ENUM_CLASS_TRAILER_(first) \
 	Trailer_, \

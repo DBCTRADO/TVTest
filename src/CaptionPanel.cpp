@@ -133,7 +133,7 @@ bool CCaptionPanel::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("CaptionPanel.HalfWidthEuroLanguagesOnly"), &m_fHalfWidthEuroLanguagesOnly);
 	if (Settings.Read(TEXT("CaptionPanel.SaveCharEncoding"), &Value)
 			&& Value >= CHARENCODING_FIRST && Value <= CHARENCODING_LAST)
-		m_SaveCharEncoding = (CharEncoding)Value;
+		m_SaveCharEncoding = static_cast<CharEncoding>(Value);
 	return true;
 }
 
@@ -204,7 +204,7 @@ void CCaptionPanel::AppendText(LPCTSTR pszText)
 		si.cbSize = sizeof(si);
 		si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
 		::GetScrollInfo(m_hwndEdit, SB_VERT, &si);
-		if (si.nPos >= si.nMax - (int)si.nPage)
+		if (si.nPos >= si.nMax - static_cast<int>(si.nPage))
 			fScroll = true;
 	}
 	::SendMessage(
@@ -275,20 +275,19 @@ bool CCaptionPanel::SetLanguage(BYTE Language)
 
 		if (Length > 0) {
 			LanguageInfo &Lang = m_LanguageList[m_CurLanguage];
-			LPTSTR pszBuffer = new TCHAR[Length + 1];
+			String Buffer(Length + 1, _T('\0'));
 			int End;
 
-			::GetWindowText(m_hwndEdit, pszBuffer, Length + 1);
+			::GetWindowText(m_hwndEdit, Buffer.data(), Length + 1);
 			End = Length - 1;
 			for (int i = Length - 2; Lang.CaptionList.size() < MAX_QUEUE_TEXT; i--) {
-				if (i < 0 || pszBuffer[i] == _T('\n')) {
-					Lang.CaptionList.emplace_front(pszBuffer + (i + 1), End - i);
+				if (i < 0 || Buffer[i] == _T('\n')) {
+					Lang.CaptionList.emplace_front(Buffer.substr(i + 1, End - i));
 					if (i < 0)
 						break;
 					End = i;
 				}
 			}
-			delete [] pszBuffer;
 		}
 	}
 
@@ -306,11 +305,11 @@ void CCaptionPanel::OnCommand(int Command)
 	switch (Command) {
 	case CM_CAPTIONPANEL_COPY:
 		{
-			HWND hwndEdit = m_hwndEdit;
+			const HWND hwndEdit = m_hwndEdit;
 			DWORD Start, End;
 
 			::SendMessage(hwndEdit, WM_SETREDRAW, FALSE, 0);
-			::SendMessage(hwndEdit, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
+			::SendMessage(hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&Start), reinterpret_cast<LPARAM>(&End));
 			if (Start == End)
 				::SendMessage(hwndEdit, EM_SETSEL, 0, -1);
 			::SendMessage(hwndEdit, WM_COPY, 0, 0);
@@ -335,13 +334,13 @@ void CCaptionPanel::OnCommand(int Command)
 
 	case CM_CAPTIONPANEL_SAVE:
 		{
-			int Length = ::GetWindowTextLengthW(m_hwndEdit);
+			const int Length = ::GetWindowTextLengthW(m_hwndEdit);
 			if (Length > 0) {
-				LPWSTR pszText = new WCHAR[Length + 1];
+				std::wstring Text(Length + 1, L'\0');
 				DWORD Start, End;
 
-				::GetWindowTextW(m_hwndEdit, pszText, Length + 1);
-				::SendMessageW(m_hwndEdit, EM_GETSEL, (WPARAM)&Start, (LPARAM)&End);
+				::GetWindowTextW(m_hwndEdit, Text.data(), Length + 1);
+				::SendMessageW(m_hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&Start), reinterpret_cast<LPARAM>(&End));
 
 				OPENFILENAME ofn;
 				TCHAR szFileName[MAX_PATH];
@@ -359,10 +358,10 @@ void CCaptionPanel::OnCommand(int Command)
 				ofn.lpstrTitle = TEXT("字幕の保存");
 				ofn.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_EXPLORER;
 				if (FileSaveDialog(&ofn)) {
-					m_SaveCharEncoding = (CharEncoding)(ofn.nFilterIndex - 1);
+					m_SaveCharEncoding = static_cast<CharEncoding>(ofn.nFilterIndex - 1);
 
 					bool fOK = false;
-					HANDLE hFile = ::CreateFile(
+					const HANDLE hFile = ::CreateFile(
 						szFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 					if (hFile != INVALID_HANDLE_VALUE) {
@@ -371,10 +370,10 @@ void CCaptionPanel::OnCommand(int Command)
 						DWORD Write;
 
 						if (Start < End) {
-							pSrcText = pszText + Start;
+							pSrcText = Text.c_str() + Start;
 							SrcLength = End - Start;
 						} else {
-							pSrcText = pszText;
+							pSrcText = Text.c_str();
 							SrcLength = Length;
 						}
 						if (m_SaveCharEncoding == CHARENCODING_UTF16) {
@@ -386,13 +385,12 @@ void CCaptionPanel::OnCommand(int Command)
 						} else {
 							const UINT CodePage =
 								m_SaveCharEncoding == CHARENCODING_UTF8 ? CP_UTF8 : 932;
-							int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
+							const int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
 							if (EncodedLen > 0) {
-								char *pEncodedText = new char[EncodedLen];
-								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, pEncodedText, EncodedLen, nullptr, nullptr);
-								fOK = ::WriteFile(hFile, pEncodedText, EncodedLen, &Write, nullptr)
-									&& Write == (DWORD)EncodedLen;
-								delete [] pEncodedText;
+								std::string EncodedText(EncodedLen, '\0');
+								::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, EncodedText.data(), EncodedLen, nullptr, nullptr);
+								fOK = ::WriteFile(hFile, EncodedText.data(), EncodedLen, &Write, nullptr)
+									&& Write == static_cast<DWORD>(EncodedLen);
 							}
 						}
 
@@ -405,8 +403,6 @@ void CCaptionPanel::OnCommand(int Command)
 							MB_OK | MB_ICONEXCLAMATION);
 					}
 				}
-
-				delete [] pszText;
 			}
 		}
 		break;
@@ -445,7 +441,7 @@ void CCaptionPanel::OnCommand(int Command)
 
 	default:
 		if (Command >= CM_CAPTIONPANEL_LANGUAGE_FIRST && Command <= CM_CAPTIONPANEL_LANGUAGE_LAST) {
-			SetLanguage((BYTE)(Command - CM_CAPTIONPANEL_LANGUAGE_FIRST));
+			SetLanguage(static_cast<BYTE>(Command - CM_CAPTIONPANEL_LANGUAGE_FIRST));
 		}
 		break;
 	}
@@ -494,7 +490,7 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_CTLCOLORSTATIC:
 		{
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 
 			::SetTextColor(hdc, m_TextColor);
 			::SetBkColor(hdc, m_BackColor);
@@ -504,9 +500,9 @@ LRESULT CCaptionPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_APP_ADD_CAPTION:
 		{
 			BlockLock Lock(m_Lock);
-			const int LangIndex = (int)wParam;
+			const int LangIndex = static_cast<int>(wParam);
 
-			if (LangIndex >= 0 && (size_t)LangIndex < m_LanguageList.size()) {
+			if (LangIndex >= 0 && static_cast<size_t>(LangIndex) < m_LanguageList.size()) {
 				LanguageInfo &Lang = m_LanguageList[LangIndex];
 
 				if (!Lang.NextCaption.empty()) {
@@ -589,7 +585,7 @@ void CCaptionPanel::OnLanguageUpdate(LibISDB::CaptionFilter *pFilter, LibISDB::C
 	BlockLock Lock(m_Lock);
 
 	const int LanguageNum = pFilter->GetLanguageCount();
-	const int OldLanguageNum = (int)m_LanguageList.size();
+	const int OldLanguageNum = static_cast<int>(m_LanguageList.size());
 
 	m_LanguageList.resize(LanguageNum);
 
@@ -616,7 +612,7 @@ void CCaptionPanel::OnCaption(
 	if (Language >= m_LanguageList.size() || m_hwnd == nullptr || !m_fEnable)
 		return;
 
-	int Length = ::lstrlen(pText);
+	const int Length = ::lstrlen(pText);
 
 	if (Length > 0) {
 		LanguageInfo &Lang = m_LanguageList[Language];
@@ -637,62 +633,51 @@ void CCaptionPanel::OnCaption(
 			Lang.fClearLast = false;
 		}
 
-		LPTSTR pszBuff = new TCHAR[Length + 2];
-		StringCopy(pszBuff, pText);
-		DWORD DstLength = Length;
+		String Buff(pText);
 
 		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
-			for (int i = (int)pFormatList->size() - 1; i >= 0; i--) {
+			for (int i = static_cast<int>(pFormatList->size()) - 1; i >= 0; i--) {
 				if ((*pFormatList)[i].Size == LibISDB::ARIBStringDecoder::CharSize::Small) {
-					DWORD Pos = (DWORD)(*pFormatList)[i].Pos;
-					if (Pos < DstLength) {
-						if (i + 1 < (int)pFormatList->size()) {
-							DWORD NextPos = std::min(DstLength, (DWORD)(*pFormatList)[i + 1].Pos);
-#ifdef _DEBUG
-							TCHAR szTrace[1024];
-							StringCopy(szTrace, &pszBuff[Pos], NextPos - Pos + 1);
-							TRACE(TEXT("Caption exclude : %s\n"), szTrace);
-#endif
-							memmove(
-								&pszBuff[Pos], &pszBuff[NextPos],
-								(DstLength - NextPos + 1) * sizeof(TCHAR));
-							DstLength -= NextPos - Pos;
+					const size_t Pos = (*pFormatList)[i].Pos;
+					if (Pos < Buff.length()) {
+						if (i + 1 < static_cast<int>(pFormatList->size())) {
+							const size_t NextPos = std::min(Buff.length(), (*pFormatList)[i + 1].Pos);
+							TRACE(TEXT("Caption exclude : {}\n"), StringView(&Buff[Pos], NextPos - Pos));
+							Buff.erase(Pos, NextPos - Pos);
 						} else {
-							pszBuff[Pos] = '\0';
-							DstLength = Pos;
+							Buff.erase(Pos);
 						}
 					}
 				}
 			}
 		}
 
-		for (DWORD i = 0; i < DstLength; i++) {
-			if (pszBuff[i] == '\f') {
+		for (size_t i = 0; i < Buff.length(); i++) {
+			if (Buff[i] == '\f') {
 				if (i == 0 && !Lang.fContinue) {
-					memmove(&pszBuff[2], &pszBuff[1], DstLength * sizeof(TCHAR));
-					pszBuff[0] = '\r';
-					pszBuff[1] = '\n';
+					Buff.replace(0, 1, TEXT("\r\n"));
 					i++;
-					DstLength++;
 				} else {
-					memmove(&pszBuff[i], &pszBuff[i + 1], (DstLength - i) * sizeof(TCHAR));
-					DstLength--;
+					Buff.erase(i);
 				}
 			}
 		}
 		Lang.fContinue =
 #ifdef UNICODE
-			DstLength > 1 && pszBuff[DstLength - 1] == L'→';
+			Buff.length() > 1 && Buff.back() == L'→';
 #else
-			DstLength > 2 && pszBuff[DstLength - 2] == "→"[0] && pszBuff[DstLength - 1] == "→"[1];
+			Buff.length() > 2 && Buff[Buff.length() - 2] == "→"[0] && Buff[Buff.length() - 1] == "→"[1];
 #endif
 		if (Lang.fContinue)
-			pszBuff[DstLength - (3 - sizeof(TCHAR))] = '\0';
-		if (DstLength > 0) {
-			Lang.NextCaption += pszBuff;
+#ifdef UNICODE
+			Buff.pop_back();
+#else
+			Buff.erase(Buff.length() - 2);
+#endif
+		if (!Buff.empty()) {
+			Lang.NextCaption += Buff;
 			AddNextCaption(Language);
 		}
-		delete [] pszBuff;
 	}
 }
 
@@ -725,7 +710,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 			m_pCaptionPanel->m_Lock.Lock();
 			if (!m_pCaptionPanel->m_LanguageList.empty()) {
 				Menu.AppendSeparator();
-				int LanguageNum = (int)m_pCaptionPanel->m_LanguageList.size();
+				int LanguageNum = static_cast<int>(m_pCaptionPanel->m_LanguageList.size());
 				if (LanguageNum > CM_CAPTIONPANEL_LANGUAGE_LAST - CM_CAPTIONPANEL_LANGUAGE_FIRST + 1)
 					LanguageNum = CM_CAPTIONPANEL_LANGUAGE_LAST - CM_CAPTIONPANEL_LANGUAGE_FIRST + 1;
 				for (int i = 0; i < LanguageNum; i++) {
@@ -734,7 +719,7 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 						m_pCaptionPanel->m_LanguageList[i].LanguageCode,
 						szText, lengthof(szText));
 					if (szText[0] == _T('\0'))
-						StringPrintf(szText, TEXT("言語%d"), i + 1);
+						StringFormat(szText, TEXT("言語{}"), i + 1);
 					Menu.Append(CM_CAPTIONPANEL_LANGUAGE_FIRST + i, szText);
 				}
 				Menu.CheckRadioItem(
@@ -845,7 +830,7 @@ bool CCaptionDRCSMap::Load(LPCTSTR pszFileName)
 				m_HashMap.emplace(MD5, Entry.Value);
 				/*
 				TRACE(
-					TEXT("DRCS map : %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X = %s\n"),
+					TEXT("DRCS map : {:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X} = {}\n"),
 					MD5.Value[0], MD5.Value[1], MD5.Value[2], MD5.Value[3], MD5.Value[4], MD5.Value[5], MD5.Value[6], MD5.Value[7],
 					MD5.Value[8], MD5.Value[9], MD5.Value[10], MD5.Value[11], MD5.Value[12], MD5.Value[13], MD5.Value[14], MD5.Value[15],
 					Entry.Value.c_str());
@@ -864,7 +849,7 @@ LPCTSTR CCaptionDRCSMap::GetString(WORD Code)
 	CodeMap::iterator itr = m_CodeMap.find(Code);
 
 	if (itr != m_CodeMap.end()) {
-		TRACE(TEXT("DRCS : Code %d %s\n"), Code, itr->second.c_str());
+		TRACE(TEXT("DRCS : Code {} {}\n"), Code, itr->second);
 		return itr->second.c_str();
 	}
 	return nullptr;
@@ -887,13 +872,13 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 
 	const LibISDB::MD5Value MD5 = LibISDB::CalcMD5(pBitmap->pData, pBitmap->DataSize);
 	TRACE(
-		TEXT("DRCS : Code %d, %d x %d (%d), MD5 %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n"),
+		TEXT("DRCS : Code {}, {} x {} ({}), MD5 {:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}\n"),
 		Code, pBitmap->Width, pBitmap->Height, pBitmap->Depth,
 		MD5.Value[0], MD5.Value[1], MD5.Value[2], MD5.Value[3], MD5.Value[4], MD5.Value[5], MD5.Value[6], MD5.Value[7],
 		MD5.Value[8], MD5.Value[9], MD5.Value[10], MD5.Value[11], MD5.Value[12], MD5.Value[13], MD5.Value[14], MD5.Value[15]);
 	HashMap::iterator itr = m_HashMap.find(MD5);
 	if (itr != m_HashMap.end()) {
-		TRACE(TEXT("DRCS assign %d = %s\n"), Code, itr->second.c_str());
+		TRACE(TEXT("DRCS assign {} = {}\n"), Code, itr->second);
 		m_CodeMap[Code] = itr->second;
 	}
 
@@ -926,7 +911,7 @@ bool CCaptionDRCSMap::SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap)
 
 bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -938,7 +923,7 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 	const DWORD BitsSize = DIBRowBytes * pBitmap->Height;
 	BITMAPFILEHEADER bmfh;
 	bmfh.bfType = 0x4D42;
-	bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
+	bmfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (1UL << BitCount) * static_cast<DWORD>(sizeof(RGBQUAD));
 	bmfh.bfSize = bmfh.bfOffBits + BitsSize;
 	bmfh.bfReserved1 = 0;
 	bmfh.bfReserved2 = 0;
@@ -966,26 +951,26 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 
 	RGBQUAD Colormap[256];
 	for (int i = 0; i < 1 << BitCount; i++) {
-		BYTE v = (BYTE)(i * 255 / ((1 << BitCount) - 1));
+		const BYTE v = static_cast<BYTE>(i * 255 / ((1 << BitCount) - 1));
 		Colormap[i].rgbBlue = v;
 		Colormap[i].rgbGreen = v;
 		Colormap[i].rgbRed = v;
 		Colormap[i].rgbReserved = 0;
 	}
-	DWORD PalSize = (1UL << BitCount) * (DWORD)sizeof(RGBQUAD);
+	const DWORD PalSize = (1UL << BitCount) * static_cast<DWORD>(sizeof(RGBQUAD));
 	if (!::WriteFile(hFile, Colormap, PalSize, &Write, nullptr) || Write != PalSize) {
 		::CloseHandle(hFile);
 		return false;
 	}
 
-	BYTE *pDIBBits = new BYTE[BitsSize];
+	std::unique_ptr<BYTE[]> DIBBits(new BYTE[BitsSize]);
 	const BYTE *p = static_cast<const BYTE*>(pBitmap->pData);
-	BYTE *q = pDIBBits + (pBitmap->Height - 1) * DIBRowBytes;
+	BYTE *q = DIBBits.get() + (pBitmap->Height - 1) * DIBRowBytes;
 	int x, y;
 	if (BitCount == 1) {
 		BYTE Mask;
 
-		::ZeroMemory(pDIBBits, BitsSize);
+		::ZeroMemory(DIBBits.get(), BitsSize);
 		Mask = 0x80;
 		for (y = 0; y < pBitmap->Height; y++) {
 			for (x = 0; x < pBitmap->Width; x++) {
@@ -1000,14 +985,15 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 			q -= DIBRowBytes;
 		}
 	} else {
+		const unsigned int Max = pBitmap->Depth + 1;
+		unsigned int Mask;
 		int Shift;
-		unsigned int Mask, Pixel, Max = pBitmap->Depth + 1;
 
 		Shift = 16 - pBitmap->BitsPerPixel;
 		Mask = (1 << pBitmap->BitsPerPixel) - 1;
 		for (y = 0; y < pBitmap->Height; y++) {
 			for (x = 0; x < pBitmap->Width; x++) {
-				Pixel = *p;
+				unsigned int Pixel = *p;
 				if (Shift < 8)
 					Pixel = (Pixel << (8 - Shift)) | (*p >> Shift);
 				else
@@ -1027,12 +1013,10 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 			q -= DIBRowBytes;
 		}
 	}
-	if (!::WriteFile(hFile, pDIBBits, BitsSize, &Write, nullptr) || Write != BitsSize) {
-		delete [] pDIBBits;
+	if (!::WriteFile(hFile, DIBBits.get(), BitsSize, &Write, nullptr) || Write != BitsSize) {
 		::CloseHandle(hFile);
 		return false;
 	}
-	delete [] pDIBBits;
 
 	::CloseHandle(hFile);
 	return true;
@@ -1041,7 +1025,7 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 
 bool CCaptionDRCSMap::SaveRaw(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 {
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)

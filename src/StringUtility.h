@@ -85,16 +85,15 @@ namespace TVTest
 
 	template<typename T> int StringCharLength(T pszString)
 	{
-		return (int)(StringNextChar(pszString) - pszString);
+		return static_cast<int>(StringNextChar(pszString) - pszString);
 	}
 
 
 	typedef std::wstring String;
 	typedef std::string AnsiString;
+	typedef std::wstring_view StringView;
 
 	using LibISDB::StringLength;
-	using LibISDB::StringPrintf;
-	using LibISDB::StringPrintfV;
 	using LibISDB::StringCopy;
 	using LibISDB::StringCompare;
 	using LibISDB::StringCompareI;

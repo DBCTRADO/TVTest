@@ -86,7 +86,7 @@ namespace TVTest
 		, public COSDManager::CEventHandler
 	{
 	public:
-		static const DWORD HIDE_CURSOR_DELAY = 1000UL;
+		static constexpr DWORD HIDE_CURSOR_DELAY = 1000UL;
 
 		struct ResumeInfo
 		{
@@ -96,6 +96,7 @@ namespace TVTest
 				Standby   = 0x0002U,
 				Suspend   = 0x0004U,
 				EPGUpdate = 0x0008U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
 			CChannelSpec Channel;
@@ -109,7 +110,7 @@ namespace TVTest
 		CMainWindow(CAppMain &App);
 		~CMainWindow();
 
-		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0);
+		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
 		bool Show(int CmdShow, bool fForce = false);
 		void CreatePanel();
 		void AdjustWindowSize(int Width, int Height, bool fScreenSize = true);
@@ -167,6 +168,7 @@ namespace TVTest
 			None     = 0x0000U,
 			OnScreen = 0x0001U,
 			Popup    = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 		struct ProgramGuideSpaceInfo
 		{
@@ -716,9 +718,6 @@ namespace TVTest
 			HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	};
-
-	TVTEST_ENUM_FLAGS(CMainWindow::ResumeInfo::ViewerSuspendFlag)
-	TVTEST_ENUM_FLAGS(CMainWindow::ShowProgramGuideFlag)
 
 }	// namespace TVTest
 

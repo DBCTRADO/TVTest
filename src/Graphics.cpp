@@ -147,17 +147,17 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 {
 	Free();
 
-	HRSRC hRes = ::FindResource(hinst, pszName, pszType);
+	const HRSRC hRes = ::FindResource(hinst, pszName, pszType);
 	if (hRes == nullptr)
 		return false;
-	DWORD Size = ::SizeofResource(hinst, hRes);
+	const DWORD Size = ::SizeofResource(hinst, hRes);
 	if (Size == 0)
 		return false;
-	HGLOBAL hData = ::LoadResource(hinst, hRes);
+	const HGLOBAL hData = ::LoadResource(hinst, hRes);
 	const void *pData = ::LockResource(hData);
 	if (pData == nullptr)
 		return false;
-	HGLOBAL hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, Size);
+	const HGLOBAL hBuffer = ::GlobalAlloc(GMEM_MOVEABLE, Size);
 	if (hBuffer == nullptr)
 		return false;
 	void *pBuffer = ::GlobalLock(hBuffer);
@@ -165,7 +165,7 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 		::GlobalFree(hBuffer);
 		return false;
 	}
-	::CopyMemory(pBuffer, pData, Size);
+	std::memcpy(pBuffer, pData, Size);
 	::GlobalUnlock(hBuffer);
 	IStream *pStream;
 	if (::CreateStreamOnHGlobal(hBuffer, TRUE, &pStream) != S_OK) {
@@ -213,7 +213,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 		if (!Create(bm.bmWidth, bm.bmHeight, 32))
 			return false;
 
-		Gdiplus::Rect rc(0, 0, bm.bmWidth, bm.bmHeight);
+		const Gdiplus::Rect rc(0, 0, bm.bmWidth, bm.bmHeight);
 		Gdiplus::BitmapData Data;
 
 		if (m_Bitmap->LockBits(
@@ -225,7 +225,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 		const BYTE *p = static_cast<const BYTE*>(bm.bmBits) + (bm.bmHeight - 1) * bm.bmWidthBytes;
 		BYTE *q = static_cast<BYTE*>(Data.Scan0);
 		for (UINT y = 0; y < Data.Height; y++) {
-			::CopyMemory(q, p, bm.bmWidth * 4);
+			std::memcpy(q, p, bm.bmWidth * 4);
 			p -= bm.bmWidthBytes;
 			q += Data.Stride;
 		}
@@ -270,7 +270,7 @@ int CImage::GetHeight() const
 void CImage::Clear()
 {
 	if (m_Bitmap) {
-		Gdiplus::Rect rc(0, 0, m_Bitmap->GetWidth(), m_Bitmap->GetHeight());
+		const Gdiplus::Rect rc(0, 0, m_Bitmap->GetWidth(), m_Bitmap->GetHeight());
 		Gdiplus::BitmapData Data;
 
 		if (m_Bitmap->LockBits(
@@ -278,7 +278,7 @@ void CImage::Clear()
 					m_Bitmap->GetPixelFormat(), &Data) == Gdiplus::Ok) {
 			BYTE *pBits = static_cast<BYTE*>(Data.Scan0);
 			for (UINT y = 0; y < Data.Height; y++) {
-				::ZeroMemory(pBits, abs(Data.Stride));
+				::ZeroMemory(pBits, std::abs(Data.Stride));
 				pBits += Data.Stride;
 			}
 			m_Bitmap->UnlockBits(&Data);
@@ -309,7 +309,7 @@ void CBrush::Free()
 
 bool CBrush::CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a)
 {
-	Gdiplus::Color Color(a, r, g, b);
+	const Gdiplus::Color Color(a, r, g, b);
 
 	if (m_Brush) {
 		m_Brush->SetColor(Color);
@@ -344,7 +344,7 @@ CFont::CFont(const LOGFONT &lf)
 	m_Font.reset(
 		new Gdiplus::Font(
 			lf.lfFaceName,
-			(Gdiplus::REAL)abs(lf.lfHeight),
+			(Gdiplus::REAL)std::abs(lf.lfHeight),
 			FontStyle,
 			Gdiplus::UnitPixel));
 }
@@ -446,12 +446,12 @@ bool CCanvas::FillGradient(
 	const RECT &Rect, GradientDirection Direction)
 {
 	if (m_Graphics) {
-		Gdiplus::RectF rect(
-			Gdiplus::REAL(Rect.left) - 0.1f,
-			Gdiplus::REAL(Rect.top) - 0.1f,
-			Gdiplus::REAL(Rect.right - Rect.left) + 0.2f,
-			Gdiplus::REAL(Rect.bottom - Rect.top) + 0.2f);
-		Gdiplus::LinearGradientBrush Brush(
+		const Gdiplus::RectF rect(
+			static_cast<Gdiplus::REAL>(Rect.left) - 0.1f,
+			static_cast<Gdiplus::REAL>(Rect.top) - 0.1f,
+			static_cast<Gdiplus::REAL>(Rect.right - Rect.left) + 0.2f,
+			static_cast<Gdiplus::REAL>(Rect.bottom - Rect.top) + 0.2f);
+		const Gdiplus::LinearGradientBrush Brush(
 			rect,
 			GdiplusColor(Color1), GdiplusColor(Color2),
 			Direction == GradientDirection::Horz ?
@@ -490,7 +490,7 @@ bool CCanvas::DrawText(
 					GdiplusRect(Rect), &Format) != Gdiplus::Ok)
 			return false;
 
-		Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
+		const Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
 		m_Graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
 		m_Graphics->FillPath(pBrush->m_Brush.get(), &Path);
@@ -564,13 +564,13 @@ bool CCanvas::GetTextSize(
 	} else {
 		if (m_Graphics->MeasureString(
 					pszText, -1, Font.m_Font.get(),
-					Gdiplus::RectF(0.0f, 0.0f, (float)Size.cx, (float)Size.cy),
+					Gdiplus::RectF(0.0f, 0.0f, static_cast<float>(Size.cx), static_cast<float>(Size.cy)),
 					&Format, &Bounds) != Gdiplus::Ok)
 			return false;
 	}
 
-	pSize->cx = (int)(Bounds.GetRight() + 1.0f);
-	pSize->cy = (int)(Bounds.GetBottom() + 1.0f);
+	pSize->cx = static_cast<int>(Bounds.GetRight() + 1.0f);
+	pSize->cy = static_cast<int>(Bounds.GetBottom() + 1.0f);
 #endif
 
 	return true;
@@ -605,7 +605,7 @@ bool CCanvas::DrawOutlineText(
 			GdiplusRect(Rect), &Format) != Gdiplus::Ok)
 		return false;
 
-	Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
+	const Gdiplus::SmoothingMode OldSmoothingMode = m_Graphics->GetSmoothingMode();
 	m_Graphics->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
 	Gdiplus::Pen Pen(GdiplusColor(OutlineColor), OutlineWidth);
@@ -666,12 +666,12 @@ bool CCanvas::GetOutlineTextSize(
 
 #if 0
 	TRACE(
-		TEXT("Outline text bounds : [%d x %d] [%f %f %f %f] \"%s\"\n"),
+		TEXT("Outline text bounds : [{} x {}] [{} {} {} {}] \"{}\"\n"),
 		Size.cx, Size.cy, Bounds.X, Bounds.Y, Bounds.Width, Bounds.Height, pszText);
 #endif
 
-	pSize->cx = (long)(Bounds.GetRight() + 1.0f);
-	pSize->cy = (long)(Bounds.GetBottom() + 1.0f);
+	pSize->cx = static_cast<long>(Bounds.GetRight() + 1.0f);
+	pSize->cy = static_cast<long>(Bounds.GetBottom() + 1.0f);
 
 	return true;
 }

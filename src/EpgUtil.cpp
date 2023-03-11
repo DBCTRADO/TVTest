@@ -96,15 +96,15 @@ int FormatEventTime(
 
 	TCHAR szDate[32];
 	if (!!(Flags & FormatEventTimeFlag::Date)) {
-		int Length = 0;
+		size_t Length = 0;
 		if (!!(Flags & FormatEventTimeFlag::Year)) {
-			Length = StringPrintf(
-				szDate, TEXT("%d/"),
+			Length = StringFormat(
+				szDate, TEXT("{}/"),
 				stStart.wYear);
 		}
-		StringPrintf(
+		StringFormat(
 			szDate + Length, lengthof(szDate) - Length,
-			TEXT("%d/%d(%s) "),
+			TEXT("{}/{}({}) "),
 			stStart.wMonth,
 			stStart.wDay,
 			GetDayOfWeekText(stStart.wDayOfWeek));
@@ -112,11 +112,11 @@ int FormatEventTime(
 		szDate[0] = _T('\0');
 	}
 
-	LPCTSTR pszTimeFormat =
-		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("%02d:%02d") : TEXT("%d:%02d");
+	const LPCTSTR pszTimeFormat =
+		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("{:02}:{:02}") : TEXT("{}:{:02}");
 	TCHAR szStartTime[32], szEndTime[32];
 
-	StringPrintf(
+	StringFormat(
 		szStartTime,
 		pszTimeFormat,
 		stStart.wHour,
@@ -127,7 +127,7 @@ int FormatEventTime(
 		if (Duration > 0) {
 			SYSTEMTIME EndTime = stStart;
 			if (OffsetSystemTime(&EndTime, Duration * TimeConsts::SYSTEMTIME_SECOND)) {
-				StringPrintf(
+				StringFormat(
 					szEndTime, pszTimeFormat,
 					EndTime.wHour, EndTime.wMinute);
 			}
@@ -137,12 +137,12 @@ int FormatEventTime(
 		}
 	}
 
-	return StringPrintf(
-		pszTime, MaxLength, TEXT("%s%s%s%s"),
+	return static_cast<int>(StringFormat(
+		pszTime, MaxLength, TEXT("{}{}{}{}"),
 		szDate,
 		szStartTime,
 		!(Flags & FormatEventTimeFlag::StartOnly) ? TEXT("～") : TEXT(""),
-		szEndTime);
+		szEndTime));
 }
 
 
@@ -886,7 +886,7 @@ bool CEpgIcons::DrawIcon(
 		IconWidth = m_IconWidth;
 		IconHeight = m_IconHeight;
 		if ((m_StretchedIcons & IconFlag(Icon)) == 0) {
-			int OldStretchMode = ::SetStretchBltMode(hdcSrc, STRETCH_HALFTONE);
+			const int OldStretchMode = ::SetStretchBltMode(hdcSrc, STRETCH_HALFTONE);
 			::StretchBlt(
 				hdcSrc, Icon * IconWidth, 0, IconWidth, IconHeight,
 				m_hdc, Icon * ICON_WIDTH, 0, ICON_WIDTH, ICON_HEIGHT,
@@ -910,10 +910,10 @@ bool CEpgIcons::DrawIcon(
 		::SetRect(&rcDraw, DstX, DstY, DstX + Width, DstY + Height);
 	}
 
-	int DstWidth = rcDraw.right - rcDraw.left;
-	int DstHeight = rcDraw.bottom - rcDraw.top;
-	int SrcX = (IconWidth * (rcDraw.left - DstX) + Width / 2) / Width;
-	int SrcY = (IconHeight * (rcDraw.top - DstY) + Height / 2) / Height;
+	const int DstWidth = rcDraw.right - rcDraw.left;
+	const int DstHeight = rcDraw.bottom - rcDraw.top;
+	const int SrcX = (IconWidth * (rcDraw.left - DstX) + Width / 2) / Width;
+	const int SrcY = (IconHeight * (rcDraw.top - DstY) + Height / 2) / Height;
 	int SrcWidth = (IconWidth * (rcDraw.right - DstX) + Width / 2) / Width - SrcX;
 	if (SrcWidth < 1)
 		SrcWidth = 1;
@@ -927,7 +927,7 @@ bool CEpgIcons::DrawIcon(
 				hdcDst, rcDraw.left, rcDraw.top, DstWidth, DstHeight,
 				hdcSrc, Icon * IconWidth + SrcX, SrcY, SRCCOPY);
 		} else {
-			int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
+			const int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
 			::StretchBlt(
 				hdcDst, rcDraw.left, rcDraw.top, DstWidth, DstHeight,
 				hdcSrc, Icon * IconWidth + SrcX, SrcY, SrcWidth, SrcHeight,
@@ -935,7 +935,7 @@ bool CEpgIcons::DrawIcon(
 			::SetStretchBltMode(hdcDst, OldStretchMode);
 		}
 	} else {
-		BLENDFUNCTION bf = {AC_SRC_OVER, 0, Opacity, 0};
+		const BLENDFUNCTION bf = {AC_SRC_OVER, 0, Opacity, 0};
 		::GdiAlphaBlend(
 			hdcDst, rcDraw.left, rcDraw.top, DstWidth, DstHeight,
 			hdcSrc, Icon * IconWidth + SrcX, SrcY, SrcWidth, SrcHeight,
@@ -979,7 +979,7 @@ unsigned int CEpgIcons::GetEventIcons(const LibISDB::EventInfo *pEventInfo)
 	unsigned int ShowIcons = 0;
 
 	if (!pEventInfo->VideoList.empty()) {
-		EpgUtil::VideoType Video = EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType);
+		const EpgUtil::VideoType Video = EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType);
 		if (Video == EpgUtil::VideoType::HD)
 			ShowIcons |= IconFlag(ICON_HD);
 		else if (Video == EpgUtil::VideoType::SD)
@@ -1141,7 +1141,6 @@ Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 		BackStyle.Fill.Solid = Theme::SolidStyle(Color);
 	} else {
 		double h, s, v, s1, v1;
-		Theme::ThemeColor Color1, Color2;
 		RGBToHSV(Color.Red, Color.Green, Color.Blue, &h, &s, &v);
 		s1 = s;
 		v1 = v;
@@ -1154,7 +1153,7 @@ Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 			if (s1 < 0.0)
 				s1 = 0.0;
 		}
-		Color1 = HSVToRGB(h, s1, v1);
+		const Theme::ThemeColor Color1 = HSVToRGB(h, s1, v1);
 		s1 = s;
 		v1 = v;
 		if (s1 >= 0.1 && s1 <= 0.9) {
@@ -1166,7 +1165,7 @@ Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 			if (v1 < 0.0)
 				v1 = 0.0;
 		}
-		Color2 = HSVToRGB(h, s1, v1);
+		const Theme::ThemeColor Color2 = HSVToRGB(h, s1, v1);
 		BackStyle.Fill.Type = Theme::FillType::Gradient;
 		BackStyle.Fill.Gradient = Theme::GradientStyle(
 			Theme::GradientType::Normal,

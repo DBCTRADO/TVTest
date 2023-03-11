@@ -29,8 +29,6 @@ namespace TVTest
 {
 
 
-const int CSideBar::ICON_WIDTH = 16;
-const int CSideBar::ICON_HEIGHT = 16;
 const LPCTSTR CSideBar::CLASS_NAME = APP_NAME TEXT(" Side Bar");
 HINSTANCE CSideBar::m_hinst = nullptr;
 
@@ -164,17 +162,17 @@ bool CSideBar::AddItems(const SideBarItem *pItemList, int NumItems)
 	if (pItemList == nullptr || NumItems <= 0)
 		return false;
 
-	size_t OldSize = m_ItemList.size();
+	const size_t OldSize = m_ItemList.size();
 	m_ItemList.resize(OldSize + NumItems);
-	::CopyMemory(&m_ItemList[OldSize], pItemList, NumItems * sizeof(SideBarItem));
+	std::memcpy(&m_ItemList[OldSize], pItemList, NumItems * sizeof(SideBarItem));
 
 	if (m_Tooltip.IsCreated()) {
 		for (int i = 0; i < NumItems; i++) {
 			if (pItemList[i].Command != ITEM_SEPARATOR) {
 				RECT rc;
 
-				GetItemRect((int)OldSize + i, &rc);
-				m_Tooltip.AddTool((UINT)OldSize + i, rc);
+				GetItemRect(static_cast<int>(OldSize) + i, &rc);
+				m_Tooltip.AddTool(static_cast<UINT>(OldSize) + i, rc);
 			}
 		}
 	}
@@ -196,13 +194,13 @@ bool CSideBar::AddSeparator()
 
 int CSideBar::GetItemCount() const
 {
-	return (int)m_ItemList.size();
+	return static_cast<int>(m_ItemList.size());
 }
 
 
 int CSideBar::GetItemCommand(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return -1;
 	return m_ItemList[Index].Command;
 }
@@ -212,7 +210,7 @@ int CSideBar::CommandToIndex(int Command) const
 {
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		if (m_ItemList[i].Command == Command)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -220,7 +218,7 @@ int CSideBar::CommandToIndex(int Command) const
 
 bool CSideBar::EnableItem(int Command, bool fEnable)
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -236,7 +234,7 @@ bool CSideBar::EnableItem(int Command, bool fEnable)
 
 bool CSideBar::EnableItemByIndex(int Index, bool fEnable)
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsEnabled() != fEnable) {
 		m_ItemList[Index].State ^= ItemState::Disabled;
@@ -250,7 +248,7 @@ bool CSideBar::EnableItemByIndex(int Index, bool fEnable)
 
 bool CSideBar::IsItemEnabled(int Command) const
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -260,7 +258,7 @@ bool CSideBar::IsItemEnabled(int Command) const
 
 bool CSideBar::CheckItem(int Command, bool fCheck)
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -274,7 +272,7 @@ bool CSideBar::CheckItem(int Command, bool fCheck)
 
 bool CSideBar::CheckItemByIndex(int Index, bool fCheck)
 {
-	if (Index < 0 || (size_t)Index >= m_ItemList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ItemList.size())
 		return false;
 	if (m_ItemList[Index].IsChecked() != fCheck) {
 		m_ItemList[Index].State ^= ItemState::Checked;
@@ -296,7 +294,7 @@ bool CSideBar::CheckRadioItem(int First, int Last, int Check)
 
 bool CSideBar::IsItemChecked(int Command) const
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -306,7 +304,7 @@ bool CSideBar::IsItemChecked(int Command) const
 
 bool CSideBar::RedrawItem(int Command)
 {
-	int Index = CommandToIndex(Command);
+	const int Index = CommandToIndex(Command);
 
 	if (Index < 0)
 		return false;
@@ -327,7 +325,7 @@ bool CSideBar::SetSideBarTheme(const SideBarTheme &Theme)
 
 	if (m_hwnd != nullptr) {
 		if (m_pEventHandler != nullptr) {
-			int NewBarWidth = GetBarWidth();
+			const int NewBarWidth = GetBarWidth();
 			if (NewBarWidth != OldBarWidth)
 				m_pEventHandler->OnBarWidthChanged(NewBarWidth);
 		}
@@ -391,13 +389,13 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			InitializeUI();
 
-			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			const CREATESTRUCT *pcs = reinterpret_cast<const CREATESTRUCT*>(lParam);
 
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.Enable(m_fShowTooltips);
 			SetTooltipFont();
 
-			for (int i = 0; i < (int)m_ItemList.size(); i++) {
+			for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 				if (m_ItemList[i].Command != ITEM_SEPARATOR) {
 					RECT rc;
 					GetItemRect(i, &rc);
@@ -430,7 +428,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEMOVE:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			int HotItem = HitTest(x, y);
 
 			if (HotItem >= 0
@@ -441,9 +439,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (HotItem != m_ClickItem)
 					HotItem = -1;
 				if (HotItem != m_HotItem) {
-					int OldHotItem;
-
-					OldHotItem = m_HotItem;
+					const int OldHotItem = m_HotItem;
 					m_HotItem = HotItem;
 					if (OldHotItem >= 0)
 						UpdateItem(OldHotItem);
@@ -452,9 +448,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			} else {
 				if (HotItem != m_HotItem) {
-					int OldHotItem;
-
-					OldHotItem = m_HotItem;
+					const int OldHotItem = m_HotItem;
 					m_HotItem = HotItem;
 					if (OldHotItem >= 0)
 						UpdateItem(OldHotItem);
@@ -540,9 +534,9 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case TTN_SHOW:
 			if (m_fVertical) {
-				LPNMHDR pnmh = reinterpret_cast<LPNMHDR>(lParam);
+				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
 				RECT rcBar, rcTip;
-				int x, y;
+				int x;
 
 				::GetWindowRect(hwnd, &rcBar);
 				Theme::BorderStyle Border = m_Theme.Border;
@@ -550,8 +544,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				Theme::SubtractBorderRect(Border, &rcBar);
 				::GetWindowRect(pnmh->hwndFrom, &rcTip);
 				x = rcBar.right;
-				y = rcTip.top;
-				HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONULL);
+				const HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONULL);
 				if (hMonitor != nullptr) {
 					MONITORINFO mi;
 
@@ -563,7 +556,7 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				::SetWindowPos(
 					pnmh->hwndFrom, HWND_TOPMOST,
-					x, y, rcTip.right - rcTip.left, rcTip.bottom - rcTip.top,
+					x, rcTip.top, rcTip.right - rcTip.left, rcTip.bottom - rcTip.top,
 					SWP_NOACTIVATE);
 				return TRUE;
 			}
@@ -650,11 +643,9 @@ void CSideBar::UpdateItem(int Item)
 
 int CSideBar::HitTest(int x, int y) const
 {
-	POINT pt;
+	const POINT pt = {x, y};
 
-	pt.x = x;
-	pt.y = y;
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		RECT rc;
 		GetItemRect(i, &rc);
 		if (::PtInRect(&rc, pt))
@@ -666,7 +657,7 @@ int CSideBar::HitTest(int x, int y) const
 
 void CSideBar::UpdateTooltipsRect()
 {
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		RECT rc;
 
 		GetItemRect(i, &rc);
@@ -707,10 +698,10 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 		BackStyle.Fill.Gradient.Rotate(Theme::GradientStyle::RotateType::Right);
 	ThemeDraw.Draw(BackStyle, rc);
 
-	HDC hdcMemory = ::CreateCompatibleDC(hdc);
-	HBITMAP hbmOld = static_cast<HBITMAP>(::GetCurrentObject(hdcMemory, OBJ_BITMAP));
+	const HDC hdcMemory = ::CreateCompatibleDC(hdc);
+	const HBITMAP hbmOld = static_cast<HBITMAP>(::GetCurrentObject(hdcMemory, OBJ_BITMAP));
 
-	for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 		GetItemRect(i, &rc);
 		if (m_ItemList[i].Command != ITEM_SEPARATOR
 				&& rc.left < PaintRect.right && rc.right > PaintRect.left

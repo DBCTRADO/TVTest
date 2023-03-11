@@ -34,7 +34,6 @@ namespace TVTest
 	{
 	public:
 		CDriverInfo(LPCTSTR pszFileName);
-		~CDriverInfo();
 
 		LPCTSTR GetFileName() const { return m_FileName.c_str(); }
 		LPCTSTR GetTunerName() const { return m_TunerName.c_str(); }
@@ -78,6 +77,7 @@ namespace TVTest
 				Virtual       = 0x0004U,
 				Volatile      = 0x0008U,
 				NoEnumChannel = 0x0010U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
 			Flag Flags;
@@ -86,7 +86,7 @@ namespace TVTest
 		void Clear();
 		bool Find(LPCTSTR pszDirectory);
 		LPCTSTR GetBaseDirectory() const { return m_BaseDirectory.c_str(); }
-		int NumDrivers() const { return (int)m_DriverList.size(); }
+		int NumDrivers() const { return static_cast<int>(m_DriverList.size()); }
 		CDriverInfo *GetDriverInfo(int Index);
 		const CDriverInfo *GetDriverInfo(int Index) const;
 		int FindByFileName(LPCTSTR pszFileName) const;
@@ -106,8 +106,6 @@ namespace TVTest
 		String m_BaseDirectory;
 		std::vector<TunerSpecInfo> m_TunerSpecList;
 	};
-
-	TVTEST_ENUM_FLAGS(CDriverManager::TunerSpec::Flag)
 
 }	// namespace TVTest
 

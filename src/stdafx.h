@@ -97,18 +97,6 @@
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "ShLwApi.lib")
 
-// トレース出力
-namespace TVTest
-{
-	void DebugTrace(LPCTSTR szFormat, ...);
-}
-#ifdef _DEBUG
-#undef TRACE
-#define TRACE TVTest::DebugTrace
-#else
-#define TRACE __noop
-#endif
-
 #ifndef _DEBUG
 #define _SECURE_SCL 0
 #endif

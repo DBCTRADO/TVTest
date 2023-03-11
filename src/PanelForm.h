@@ -118,7 +118,7 @@ namespace TVTest
 
 	// CPanelForm
 		bool AddPage(const PageInfo &Info);
-		int NumPages() const { return (int)m_WindowList.size(); }
+		int NumPages() const { return static_cast<int>(m_WindowList.size()); }
 		CPage *GetPageByIndex(int Index);
 		CPage *GetPageByID(int ID);
 		int IDToIndex(int ID) const;
@@ -150,8 +150,8 @@ namespace TVTest
 			int m_ID;
 			int m_Icon;
 			bool m_fVisible;
+
 			CWindowInfo(const PageInfo &Info);
-			~CWindowInfo();
 		};
 
 		struct PanelFormStyle

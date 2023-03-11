@@ -34,8 +34,8 @@ void CopyToRGB24(
 	BYTE *q, *pbEnd;
 	int i;
 
-	p = (BYTE*)pSrcBits;
-	q = (BYTE*)pDstBits;
+	p = static_cast<const BYTE*>(pSrcBits);
+	q = static_cast<BYTE*>(pDstBits);
 	pbEnd = q + nLength * 3;
 
 	switch (nSrcBitsPerPixel) {

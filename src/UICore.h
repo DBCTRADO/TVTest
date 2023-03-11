@@ -47,6 +47,7 @@ namespace TVTest
 		enum class PopupMenuFlag : unsigned int {
 			None    = 0x0000U,
 			Default = 0x0001U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class MenuType {
@@ -91,7 +92,6 @@ namespace TVTest
 		};
 
 		CUICore(CAppMain &App);
-		~CUICore();
 
 		CUICore(const CUICore &) = delete;
 		CUICore &operator=(const CUICore &) = delete;
@@ -276,8 +276,6 @@ namespace TVTest
 	// LibISDB::Logger
 		void OnLog(LibISDB::Logger::LogType Type, LPCTSTR pszOutput) override;
 	};
-
-	TVTEST_ENUM_FLAGS(CUICore::PopupMenuFlag)
 
 }	// namespace TVTest
 

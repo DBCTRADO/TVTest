@@ -95,7 +95,6 @@ namespace TVTest
 
 	public:
 		CMenuPainter();
-		~CMenuPainter();
 
 		CMenuPainter(const CMenuPainter &) = delete;
 		CMenuPainter &operator=(const CMenuPainter &) = delete;
@@ -127,6 +126,7 @@ namespace TVTest
 		enum class InitializeFlag : unsigned int {
 			None    = 0x0000U,
 			NoFrame = 0x0001U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CChannelMenuLogo();
@@ -143,8 +143,6 @@ namespace TVTest
 		Graphics::CImage m_FrameImage;
 	};
 
-	TVTEST_ENUM_FLAGS(CChannelMenuLogo::InitializeFlag)
-
 	class CChannelMenu
 	{
 	public:
@@ -156,6 +154,7 @@ namespace TVTest
 			SpaceBreak      = 0x0008U,
 			CurrentServices = 0x0010U,
 			Shared          = 0x1000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 	private:
@@ -203,8 +202,6 @@ namespace TVTest
 		bool OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam);
 		bool HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult);
 	};
-
-	TVTEST_ENUM_FLAGS(CChannelMenu::CreateFlag)
 
 	class CPopupMenu
 	{
@@ -310,7 +307,8 @@ namespace TVTest
 		{
 		public:
 			CItem(int Command, LPCTSTR pszText);
-			virtual ~CItem();
+			virtual ~CItem() = default;
+
 			int GetCommand() const { return m_Command; }
 			LPCTSTR GetText() const { return m_Text.c_str(); }
 			void SetText(LPCTSTR pszText);

@@ -359,7 +359,7 @@ void CAppCommand::RegisterDynamicCommands()
 		LPCTSTR pszFileName = ::PathFindFileName(pDriverInfo->GetFileName());
 		TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
-		StringPrintf(szText, TEXT("BonDriver切替 : %s"), pszFileName);
+		StringFormat(szText, TEXT("BonDriver切替 : {}"), pszFileName);
 		m_App.CommandManager.RegisterCommand(
 			CM_DRIVER_FIRST + i, pszFileName,
 			CCommandManager::BindHandler(&CAppCommand::SelectDriver, this),
@@ -371,14 +371,14 @@ void CAppCommand::RegisterDynamicCommands()
 		const CPlugin *pPlugin = m_App.PluginManager.GetPlugin(i);
 		TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
-		StringPrintf(
+		StringFormat(
 			szText,
-			TEXT("プラグイン有効/無効 : %s"), pPlugin->GetPluginName());
+			TEXT("プラグイン有効/無効 : {}"), pPlugin->GetPluginName());
 		/*
 		TCHAR szShortText[CCommandManager::MAX_COMMAND_TEXT];
-		StringPrintf(
+		StringFormat(
 			szShortText,
-			TEXT("%s 有効/無効"), pPlugin->GetPluginName());
+			TEXT("{} 有効/無効"), pPlugin->GetPluginName());
 		*/
 		m_App.CommandManager.RegisterCommand(
 			CM_PLUGIN_FIRST + i,
@@ -409,8 +409,8 @@ void CAppCommand::RegisterDynamicCommands()
 			IDText += pInfo->GetText();
 
 			TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
-			StringPrintf(
-				szText, TEXT("%s : %s"),
+			StringFormat(
+				szText, TEXT("{} : {}"),
 				pPlugin->GetPluginName(), pInfo->GetName());
 
 			CCommandManager::CommandState State = CCommandManager::CommandState::None;
@@ -684,7 +684,7 @@ bool CAppCommand::AudioDelay(CCommandManager::InvokeParameters &Params)
 	if (pViewer == nullptr)
 		return true;
 
-	static const LONGLONG MaxDelay = 10000000LL;
+	static constexpr LONGLONG MaxDelay = 10000000LL;
 	const LONGLONG Step = m_App.OperationOptions.GetAudioDelayStep() * 10000LL;
 	LONGLONG Delay;
 
@@ -772,7 +772,7 @@ bool CAppCommand::CaptureCopySave(CCommandManager::InvokeParameters &Params)
 	if (!m_App.UICore.IsViewerEnabled())
 		return true;
 
-	HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
+	const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 	LibISDB::COMMemoryPointer<> Image(m_App.CoreEngine.GetCurrentImage());
 
 	if (!Image) {
@@ -785,7 +785,7 @@ bool CAppCommand::CaptureCopySave(CCommandManager::InvokeParameters &Params)
 		return true;
 	}
 
-	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	const LibISDB::DirectShow::VideoRenderer::RendererType VideoRenderer = pViewer->GetVideoRendererType();
 	const std::uint8_t *pDib = Image.get();
 	const BITMAPINFOHEADER *pbmih = reinterpret_cast<const BITMAPINFOHEADER*>(pDib);
@@ -860,7 +860,7 @@ bool CAppCommand::CaptureCopySave(CCommandManager::InvokeParameters &Params)
 		break;
 	}
 
-	HGLOBAL hGlobal = ResizeImage(
+	const HGLOBAL hGlobal = ResizeImage(
 		reinterpret_cast<const BITMAPINFO*>(pbmih),
 		pDib + CalcDIBInfoSize(pbmih), &rc, Width, Height);
 	Image.reset();
@@ -920,7 +920,7 @@ bool CAppCommand::CapturePreview(CCommandManager::InvokeParameters &Params)
 
 bool CAppCommand::CaptureOptions(CCommandManager::InvokeParameters &Params)
 {
-	HWND hwnd = m_App.UICore.GetDialogOwner();
+	const HWND hwnd = m_App.UICore.GetDialogOwner();
 
 	if (::IsWindowEnabled(hwnd))
 		m_App.ShowOptionDialog(hwnd, COptionDialog::PAGE_CAPTURE);
@@ -1017,7 +1017,7 @@ bool CAppCommand::RecordPauseResume(CCommandManager::InvokeParameters &Params)
 
 bool CAppCommand::RecordOptions(CCommandManager::InvokeParameters &Params)
 {
-	HWND hwnd = m_App.UICore.GetDialogOwner();
+	const HWND hwnd = m_App.UICore.GetDialogOwner();
 
 	if (!::IsWindowEnabled(hwnd))
 		return true;
@@ -1074,7 +1074,7 @@ bool CAppCommand::ExitOnRecordingStop(CCommandManager::InvokeParameters &Params)
 
 bool CAppCommand::OptionsRecordPage(CCommandManager::InvokeParameters &Params)
 {
-	HWND hwnd = m_App.UICore.GetDialogOwner();
+	const HWND hwnd = m_App.UICore.GetDialogOwner();
 
 	if (::IsWindowEnabled(hwnd))
 		m_App.ShowOptionDialog(hwnd, COptionDialog::PAGE_RECORD);
@@ -1125,7 +1125,7 @@ bool CAppCommand::StatusBarRecord(CCommandManager::InvokeParameters &Params)
 
 bool CAppCommand::Options(CCommandManager::InvokeParameters &Params)
 {
-	HWND hwndOwner = m_App.UICore.GetDialogOwner();
+	const HWND hwndOwner = m_App.UICore.GetDialogOwner();
 
 	if (hwndOwner == nullptr || ::IsWindowEnabled(hwndOwner))
 		m_App.ShowOptionDialog(hwndOwner);
@@ -1226,7 +1226,7 @@ bool CAppCommand::UpdateChannelList(CCommandManager::InvokeParameters &Params)
 		if (m_App.ChannelScan.AutoUpdateChannelList(&TuningSpaceList, &MessageList)) {
 			m_App.AddLog(TEXT("チャンネルリストの自動更新を行いました。"));
 			for (const String &e : MessageList)
-				m_App.AddLog(TEXT("%s"), e.c_str());
+				m_App.AddLog(TEXT("{}"), e);
 
 			TuningSpaceList.MakeAllChannelList();
 			m_App.Core.UpdateCurrentChannelList(&TuningSpaceList);
@@ -1239,9 +1239,9 @@ bool CAppCommand::UpdateChannelList(CCommandManager::InvokeParameters &Params)
 				::PathRenameExtension(szFileName, CHANNEL_FILE_EXTENSION);
 			}
 			if (TuningSpaceList.SaveToFile(szFileName))
-				m_App.AddLog(TEXT("チャンネルファイルを \"%s\" に保存しました。"), szFileName);
+				m_App.AddLog(TEXT("チャンネルファイルを \"{}\" に保存しました。"), szFileName);
 			else
-				m_App.AddLog(CLogItem::LogType::Error, TEXT("チャンネルファイル \"%s\" を保存できません。"), szFileName);
+				m_App.AddLog(CLogItem::LogType::Error, TEXT("チャンネルファイル \"{}\" を保存できません。"), szFileName);
 		}
 	}
 
@@ -1374,7 +1374,7 @@ bool CAppCommand::AdjustTOTTime(CCommandManager::InvokeParameters &Params)
 
 bool CAppCommand::SideBarOptions(CCommandManager::InvokeParameters &Params)
 {
-	HWND hwnd = m_App.UICore.GetDialogOwner();
+	const HWND hwnd = m_App.UICore.GetDialogOwner();
 
 	if (::IsWindowEnabled(hwnd))
 		m_App.ShowOptionDialog(hwnd, COptionDialog::PAGE_SIDEBAR);
@@ -1652,7 +1652,7 @@ bool CAppCommand::SelectAudio(CCommandManager::InvokeParameters &Params)
 bool CAppCommand::MultiView(CCommandManager::InvokeParameters &Params)
 {
 	const int ServiceIndex = m_App.CoreEngine.GetServiceIndex();
-	LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+	const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 	LibISDB::AnalyzerFilter::EventComponentGroupInfo GroupInfo;
 
 	if (ServiceIndex >= 0
@@ -1665,13 +1665,13 @@ bool CAppCommand::MultiView(CCommandManager::InvokeParameters &Params)
 				const std::uint8_t ComponentTag = GroupInfo.CAUnitList[i].ComponentTag[j];
 
 				if (VideoIndex < 0) {
-					int Index = pAnalyzer->GetVideoIndexByComponentTag(ServiceIndex, ComponentTag);
+					const int Index = pAnalyzer->GetVideoIndexByComponentTag(ServiceIndex, ComponentTag);
 					if (Index >= 0)
 						VideoIndex = Index;
 				}
 
 				if (AudioIndex < 0) {
-					int Index = pAnalyzer->GetAudioIndexByComponentTag(ServiceIndex, ComponentTag);
+					const int Index = pAnalyzer->GetAudioIndexByComponentTag(ServiceIndex, ComponentTag);
 					if (Index >= 0)
 						AudioIndex = Index;
 				}

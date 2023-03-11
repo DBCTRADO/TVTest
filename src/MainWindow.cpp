@@ -87,7 +87,7 @@ bool CMainWindow::Initialize(HINSTANCE hinst)
 	wc.hInstance = hinst;
 	wc.hIcon = CAppMain::GetAppIcon();
 	wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+	wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_3DFACE + 1);
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = MAIN_WINDOW_CLASS;
 	wc.hIconSm = CAppMain::GetAppIconSmall();
@@ -167,9 +167,9 @@ CMainWindow::CMainWindow(CAppMain &App)
 
 	// 適当にデフォルトサイズを設定
 #ifndef TVTEST_FOR_1SEG
-	static const int DefaultWidth = 960, DefaultHeight = 540;
+	static constexpr int DefaultWidth = 960, DefaultHeight = 540;
 #else
-	static const int DefaultWidth = 640, DefaultHeight = 360;
+	static constexpr int DefaultWidth = 640, DefaultHeight = 360;
 #endif
 	m_WindowPosition.Width = ::MulDiv(DefaultWidth, DPI, 96);
 	m_WindowPosition.Height = ::MulDiv(DefaultHeight, DPI, 96);
@@ -230,9 +230,9 @@ void CMainWindow::CreatePanel()
 		pszIconImage = MAKEINTRESOURCE(IDB_PANELTABICONS32);
 		IconSize = 32;
 	}
-	HBITMAP hbm = (HBITMAP)::LoadImage(
+	const HBITMAP hbm = static_cast<HBITMAP>(::LoadImage(
 		m_App.GetResourceInstance(), pszIconImage,
-		IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+		IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 	m_App.Panel.Form.SetIconImage(hbm, IconSize, IconSize);
 	::DeleteObject(hbm);
 
@@ -446,11 +446,11 @@ void CMainWindow::AdjustWindowSize(int Width, int Height, bool fScreenSize)
 	::GetMonitorInfo(hMonitor, &mi);
 
 	if (m_App.ViewOptions.GetNearCornerResizeOrigin()) {
-		if (abs(rcOld.left - mi.rcWork.left) > abs(rcOld.right - mi.rcWork.right)) {
+		if (std::abs(rcOld.left - mi.rcWork.left) > std::abs(rcOld.right - mi.rcWork.right)) {
 			rc.left = rcOld.right - (rc.right - rc.left);
 			rc.right = rcOld.right;
 		}
-		if (abs(rcOld.top - mi.rcWork.top) > abs(rcOld.bottom - mi.rcWork.bottom)) {
+		if (std::abs(rcOld.top - mi.rcWork.top) > std::abs(rcOld.bottom - mi.rcWork.bottom)) {
 			rc.top = rcOld.bottom - (rc.bottom - rc.top);
 			rc.bottom = rcOld.bottom;
 		}
@@ -509,7 +509,7 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 	if (Settings.Read(TEXT("FullscreenPanelHeight"), &Value))
 		m_Fullscreen.SetPanelHeight(Value);
 	if (Settings.Read(TEXT("FullscreenPanelPlace"), &Value))
-		m_Fullscreen.SetPanelPlace((CPanelFrame::DockingPlace)Value);
+		m_Fullscreen.SetPanelPlace(static_cast<CPanelFrame::DockingPlace>(Value));
 	if (Settings.Read(TEXT("ThinFrameWidth"), &Value))
 		m_ThinFrameWidth = std::max(Value, 1);
 	Value = FRAME_NORMAL;
@@ -551,7 +551,7 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelVerticalAlign"), m_fPanelVerticalAlign);
 	Settings.Write(TEXT("FullscreenPanelWidth"), m_Fullscreen.GetPanelWidth());
 	Settings.Write(TEXT("FullscreenPanelHeight"), m_Fullscreen.GetPanelHeight());
-	Settings.Write(TEXT("FullscreenPanelPlace"), (int)m_Fullscreen.GetPanelPlace());
+	Settings.Write(TEXT("FullscreenPanelPlace"), static_cast<int>(m_Fullscreen.GetPanelPlace()));
 	Settings.Write(
 		TEXT("FrameType"),
 		!m_fCustomFrame ? FRAME_NORMAL : (m_CustomFrameWidth == 0 ? FRAME_NONE : FRAME_CUSTOM));
@@ -658,9 +658,9 @@ bool CMainWindow::ShowStatusBarItem(int ID, bool fShow)
 	if (m_fShowStatusBar)
 		LockLayout();
 
-	int OldHeight = m_App.StatusView.GetHeight();
+	const int OldHeight = m_App.StatusView.GetHeight();
 	m_App.StatusView.AdjustSize();
-	int NewHeight = m_App.StatusView.GetHeight();
+	const int NewHeight = m_App.StatusView.GetHeight();
 
 	if (OldHeight != NewHeight) {
 		const int Offset = NewHeight - OldHeight;
@@ -716,7 +716,7 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 	if (m_fShowTitleBar != fVisible) {
 		m_fShowTitleBar = fVisible;
 		if (m_hwnd != nullptr) {
-			bool fMaximize = GetMaximize();
+			const bool fMaximize = GetMaximize();
 			RECT rc;
 
 			LockLayout();
@@ -902,7 +902,7 @@ bool CMainWindow::OnBarMouseLeave(HWND hwnd)
 
 int CMainWindow::GetPanelPaneIndex() const
 {
-	Layout::CSplitter *pSplitter =
+	const Layout::CSplitter *pSplitter =
 		dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 
 	if (pSplitter == nullptr)
@@ -994,11 +994,11 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_SIZE:
-		OnSizeChanged((UINT)wParam, LOWORD(lParam), HIWORD(lParam));
+		OnSizeChanged(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
 		return 0;
 
 	case WM_SIZING:
-		if (OnSizeChanging((UINT)wParam, reinterpret_cast<LPRECT>(lParam)))
+		if (OnSizeChanging(static_cast<UINT>(wParam), reinterpret_cast<LPRECT>(lParam)))
 			return TRUE;
 		break;
 
@@ -1018,7 +1018,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			::DefWindowProc(hwnd, uMsg, wParam, lParam);
 
-			WINDOWPOS *pPos = reinterpret_cast<WINDOWPOS*>(lParam);
+			const WINDOWPOS *pPos = reinterpret_cast<const WINDOWPOS*>(lParam);
 			RECT rcOld, rcNew;
 
 			::GetWindowRect(hwnd, &rcOld);
@@ -1128,6 +1128,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_SYSKEYDOWN:
 		if (wParam != VK_F10)
 			break;
+		[[fallthrough]];
 	case WM_KEYDOWN:
 		if (OnKeyDown(wParam))
 			return 0;
@@ -1136,7 +1137,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHWHEEL:
 		{
-			bool fHorz = uMsg == WM_MOUSEHWHEEL;
+			const bool fHorz = uMsg == WM_MOUSEHWHEEL;
 
 			OnMouseWheel(wParam, lParam, fHorz);
 			// WM_MOUSEHWHEEL は 1を返さないと繰り返し送られて来ないらしい
@@ -1145,7 +1146,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_MEASUREITEM:
 		{
-			LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
+			const MEASUREITEMSTRUCT *pmis = reinterpret_cast<const MEASUREITEMSTRUCT*>(lParam);
 
 			if (pmis->itemID >= CM_ASPECTRATIO_FIRST && pmis->itemID <= CM_ASPECTRATIO_3D_LAST) {
 				if (m_App.AspectRatioIconMenu.OnMeasureItem(hwnd, wParam, lParam))
@@ -1184,7 +1185,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				// 最大化状態で起動された際、最初にここに来る時 NCCALCSIZE_PARAMS::rgrc[0] が
 				// デフォルトのウィンドウ枠の分大きくされたサイズになっている
 				if (::IsZoomed(hwnd)) {
-					HMONITOR hMonitor = ::MonitorFromRect(&pnccsp->rgrc[0], MONITOR_DEFAULTTONEAREST);
+					const HMONITOR hMonitor = ::MonitorFromRect(&pnccsp->rgrc[0], MONITOR_DEFAULTTONEAREST);
 					MONITORINFO mi;
 					mi.cbSize = sizeof(MONITORINFO);
 					::GetMonitorInfo(hMonitor, &mi);
@@ -1206,8 +1207,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_NCHITTEST:
 		if (m_fCustomFrame && !::IsZoomed(hwnd)) {
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-			int BorderWidth = m_CustomFrameWidth;
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int BorderWidth = m_CustomFrameWidth;
 			RECT rc;
 			int Code = HTNOWHERE;
 
@@ -1283,7 +1284,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_APPCOMMAND:
 		{
-			int Command = m_App.Accelerator.TranslateAppCommand(wParam, lParam);
+			const int Command = m_App.Accelerator.TranslateAppCommand(wParam, lParam);
 
 			if (Command != 0) {
 				SendCommand(Command);
@@ -1297,7 +1298,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_HOTKEY:
 		{
-			int Command = m_App.Accelerator.TranslateHotKey(wParam, lParam);
+			const int Command = m_App.Accelerator.TranslateHotKey(wParam, lParam);
 
 			if (Command > 0)
 				PostMessage(WM_COMMAND, Command, 0);
@@ -1376,10 +1377,9 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (!m_App.Core.IsChannelScanning()
 					&& !pInfo->m_ServiceList.empty() && pInfo->m_CurService >= 0) {
 				const CChannelInfo *pChInfo = m_App.ChannelManager.GetCurrentChannelInfo();
-				WORD ServiceID, TransportStreamID;
+				const WORD TransportStreamID = pInfo->m_TransportStreamID;
+				const WORD ServiceID = pInfo->m_ServiceList[pInfo->m_CurService].ServiceID;
 
-				TransportStreamID = pInfo->m_TransportStreamID;
-				ServiceID = pInfo->m_ServiceList[pInfo->m_CurService].ServiceID;
 				if (/*pInfo->m_fStreamChanged
 						&& */TransportStreamID != 0 && ServiceID != 0
 						&& !m_App.CoreEngine.IsNetworkDriver()
@@ -1422,7 +1422,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_APP_SERVICECHANGED:
 		TRACE(TEXT("WM_APP_SERVICECHANGED\n"));
-		m_App.AddLog(TEXT("サービスを変更しました。(SID %d)"), static_cast<int>(wParam));
+		m_App.AddLog(TEXT("サービスを変更しました。(SID {})"), static_cast<int>(wParam));
 		m_pCore->UpdateTitle();
 		m_App.StatusView.UpdateItem(STATUS_ITEM_CHANNEL);
 		m_App.Panel.InfoPanel.UpdateItem(CInformationPanel::ITEM_SERVICE);
@@ -1483,7 +1483,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// 使っているポートを返す
 		TRACE(TEXT("WM_APP_QUERYPORT\n"));
 		if (!m_fClosing && m_App.CoreEngine.IsNetworkDriver()) {
-			WORD Port =
+			const WORD Port =
 				m_App.ChannelManager.GetCurrentChannel() +
 				(m_App.CoreEngine.IsUDPDriver() ? 1234 : 2230);
 			return MAKELRESULT(Port, 0);
@@ -1502,7 +1502,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (m_fEnablePlayback
 				&& !m_Resume.ViewerSuspendFlags
 				&& !IsMessageInQueue(hwnd, WM_APP_VIDEOSTREAMTYPECHANGED)) {
-			BYTE StreamType = static_cast<BYTE>(wParam);
+			const BYTE StreamType = static_cast<BYTE>(wParam);
 
 			if (StreamType == m_App.CoreEngine.GetVideoStreamType())
 				m_pCore->EnableViewer(true);
@@ -1575,7 +1575,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// S/PDIFパススルー出力のエラー
 		TRACE(TEXT("WM_APP_SPDIFPASSTHROUGHERROR\n"));
 		{
-			//HRESULT hr = static_cast<HRESULT>(wParam);
+			//const HRESULT hr = static_cast<HRESULT>(wParam);
 			LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions Options;
 
 			m_App.CoreEngine.GetSPDIFOptions(&Options);
@@ -1598,7 +1598,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	case WM_ACTIVATEAPP:
 		{
-			bool fActive = wParam != FALSE;
+			const bool fActive = wParam != FALSE;
 
 			m_App.ControllerManager.OnActiveChange(hwnd, fActive);
 			if (fActive)
@@ -1656,6 +1656,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (!wParam)
 			break;
 		m_App.Core.SetSilent(true);
+		[[fallthrough]];
 	case WM_DESTROY:
 		OnDestroy();
 		return 0;
@@ -1758,7 +1759,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 	m_App.StatusView.AddItem(new CTunerStatusItem);
 	m_App.StatusView.AddItem(new CMediaBitRateStatusItem);
 	m_App.StatusView.AddItem(new CFavoritesStatusItem);
-	Theme::CThemeManager ThemeManager(m_pCore->GetCurrentColorScheme());
+	const Theme::CThemeManager ThemeManager(m_pCore->GetCurrentColorScheme());
 	m_App.StatusView.SetItemTheme(&ThemeManager);
 	m_App.StatusView.Create(
 		m_LayoutBase.GetHandle(),
@@ -1782,11 +1783,11 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 
 	Layout::CWindowContainer *pWindowContainer;
 	Layout::CSplitter *pSideBarSplitter = new Layout::CSplitter(CONTAINER_ID_SIDEBARSPLITTER);
-	CSideBarOptions::PlaceType SideBarPlace = m_App.SideBarOptions.GetPlace();
-	bool fSideBarVertical =
+	const CSideBarOptions::PlaceType SideBarPlace = m_App.SideBarOptions.GetPlace();
+	const bool fSideBarVertical =
 		SideBarPlace == CSideBarOptions::PlaceType::Left ||
 		SideBarPlace == CSideBarOptions::PlaceType::Right;
-	int SideBarWidth = m_App.SideBar.GetBarWidth();
+	const int SideBarWidth = m_App.SideBar.GetBarWidth();
 	pSideBarSplitter->SetStyle(
 		Layout::CSplitter::StyleFlag::Fixed |
 			(fSideBarVertical ? Layout::CSplitter::StyleFlag::Horz : Layout::CSplitter::StyleFlag::Vert));
@@ -1881,7 +1882,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		m_pCore->SetCommandEnabledState(e.Command, false);
 	}
 
-	HMENU hSysMenu = ::GetSystemMenu(m_hwnd, FALSE);
+	const HMENU hSysMenu = ::GetSystemMenu(m_hwnd, FALSE);
 	::InsertMenu(
 		hSysMenu, 0, MF_BYPOSITION | MF_STRING | MF_ENABLED,
 		SC_ABOUT, TEXT("バージョン情報(&A)"));
@@ -1900,7 +1901,7 @@ bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 		{CM_FRAMECUT,               MAKEINTRESOURCE(IDI_PANSCAN_TOUCHOUTSIDE)},
 		{CM_PANANDSCANOPTIONS,      MAKEINTRESOURCE(IDI_PANSCAN_OPTIONS)},
 	};
-	HMENU hmenuAspectRatio = m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ASPECTRATIO);
+	const HMENU hmenuAspectRatio = m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ASPECTRATIO);
 	m_App.AspectRatioIconMenu.Initialize(
 		hmenuAspectRatio, m_App.GetInstance(),
 		AspectRatioMenuItems, lengthof(AspectRatioMenuItems));
@@ -1958,7 +1959,7 @@ void CMainWindow::OnDestroy()
 	m_App.SetEnablePlaybackOnStart(m_fEnablePlayback);
 	m_PanelPaneIndex = GetPanelPaneIndex();
 
-	CProgramInfoStatusItem *pProgramInfoStatusItem =
+	const CProgramInfoStatusItem *pProgramInfoStatusItem =
 		dynamic_cast<CProgramInfoStatusItem*>(m_App.StatusView.GetItemByID(STATUS_ITEM_PROGRAMINFO));
 	if (pProgramInfoStatusItem != nullptr) {
 		int Width, Height;
@@ -2079,7 +2080,6 @@ bool CMainWindow::OnSizeChanging(UINT Edge, RECT *pRect)
 
 		if (pViewer != nullptr && pViewer->GetEffectiveAspectRatio(&XAspect, &YAspect)) {
 			RECT rcWindow, rcClient;
-			int XMargin, YMargin, Width, Height;
 
 			GetPosition(&rcWindow);
 			GetClientRect(&rcClient);
@@ -2101,10 +2101,10 @@ bool CMainWindow::OnSizeChanging(UINT Edge, RECT *pRect)
 			::OffsetRect(&rcClient, -rcClient.left, -rcClient.top);
 			if (rcClient.right <= 0 || rcClient.bottom <= 0)
 				return false;
-			XMargin = (rcWindow.right - rcWindow.left) - rcClient.right;
-			YMargin = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
-			Width = (pRect->right - pRect->left) - XMargin;
-			Height = (pRect->bottom - pRect->top) - YMargin;
+			const int XMargin = (rcWindow.right - rcWindow.left) - rcClient.right;
+			const int YMargin = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
+			int Width = (pRect->right - pRect->left) - XMargin;
+			int Height = (pRect->bottom - pRect->top) - YMargin;
 			if (Width <= 0 || Height <= 0)
 				return false;
 			if (Edge == WMSZ_LEFT || Edge == WMSZ_RIGHT)
@@ -2148,7 +2148,7 @@ void CMainWindow::OnGetMinMaxInfo(HWND hwnd, LPMINMAXINFO pmmi)
 		wp.length = sizeof(WINDOWPLACEMENT);
 		::GetWindowPlacement(m_hwnd, &wp);
 
-		HMONITOR hMonitor = ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONEAREST);
+		const HMONITOR hMonitor = ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO mi;
 
 		mi.cbSize = sizeof(MONITORINFO);
@@ -2386,7 +2386,7 @@ bool CMainWindow::OnSetCursor(HWND hwndCursor, int HitTestCode, int MouseMessage
 
 bool CMainWindow::OnKeyDown(WPARAM KeyCode)
 {
-	CChannelInput::KeyDownResult Result = m_ChannelInput.OnKeyDown(KeyCode);
+	const CChannelInput::KeyDownResult Result = m_ChannelInput.OnKeyDown(KeyCode);
 
 	if (Result != CChannelInput::KeyDownResult::NotProcessed) {
 		switch (Result) {
@@ -2480,7 +2480,7 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 	case CM_AUDIORENDERERPROPERTY:
 	case CM_DEMULTIPLEXERPROPERTY:
 		{
-			HWND hwndOwner = GetVideoHostWindow();
+			const HWND hwndOwner = GetVideoHostWindow();
 
 			if (hwndOwner == nullptr || ::IsWindowEnabled(hwndOwner)) {
 				for (const auto &e : m_DirectShowFilterPropertyList) {
@@ -2491,7 +2491,7 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 						if (e.Filter == LibISDB::ViewerFilter::PropertyFilterType::VideoDecoder) {
 							LibISDB::COMPointer<IBaseFilter> Decoder(pViewer->GetVideoDecoderFilter());
 							if (Decoder) {
-								HRESULT hr = ShowPropertyPageFrame(Decoder.Get(), hwndOwner, m_App.GetResourceInstance());
+								const HRESULT hr = ShowPropertyPageFrame(Decoder.Get(), hwndOwner, m_App.GetResourceInstance());
 								if (SUCCEEDED(hr)) {
 									pViewer->SaveVideoDecoderSettings();
 									CVideoDecoderOptions::VideoDecoderSettings Settings;
@@ -2540,7 +2540,7 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 
 	case CM_ACTIVATE:
 		{
-			HWND hwndHost = GetVideoHostWindow();
+			const HWND hwndHost = GetVideoHostWindow();
 
 			if (hwndHost != nullptr)
 				ForegroundWindow(hwndHost);
@@ -2644,7 +2644,7 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 	case CM_PLUGINMENU:
 	case CM_FILTERPROPERTYMENU:
 		{
-			int SubMenu = m_App.MenuOptions.GetSubMenuPosByCommand(Params.ID);
+			const int SubMenu = m_App.MenuOptions.GetSubMenuPosByCommand(Params.ID);
 			POINT pt;
 
 			if (!!(Params.Flags & CCommandManager::InvokeFlag::Mouse)) {
@@ -2663,19 +2663,19 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 	case CM_SIDEBAR_PLACE_TOP:
 	case CM_SIDEBAR_PLACE_BOTTOM:
 		{
-			CSideBarOptions::PlaceType Place = (CSideBarOptions::PlaceType)(Params.ID - CM_SIDEBAR_PLACE_FIRST);
+			const CSideBarOptions::PlaceType Place = static_cast<CSideBarOptions::PlaceType>(Params.ID - CM_SIDEBAR_PLACE_FIRST);
 
 			if (Place != m_App.SideBarOptions.GetPlace()) {
-				bool fVertical =
+				const bool fVertical =
 					Place == CSideBarOptions::PlaceType::Left || Place == CSideBarOptions::PlaceType::Right;
-				int Pane =
+				const int Pane =
 					Place == CSideBarOptions::PlaceType::Left || Place == CSideBarOptions::PlaceType::Top ? 0 : 1;
 
 				m_App.SideBarOptions.SetPlace(Place);
 				m_App.SideBar.SetVertical(fVertical);
 				Layout::CSplitter *pSplitter =
 					dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_SIDEBARSPLITTER));
-				bool fSwap = pSplitter->IDToIndex(CONTAINER_ID_SIDEBAR) != Pane;
+				const bool fSwap = pSplitter->IDToIndex(CONTAINER_ID_SIDEBAR) != Pane;
 				pSplitter->SetStyle(
 					(fVertical ? Layout::CSplitter::StyleFlag::Horz : Layout::CSplitter::StyleFlag::Vert) |
 						Layout::CSplitter::StyleFlag::Fixed,
@@ -2689,10 +2689,10 @@ bool CMainWindow::HandleCommand(CCommandManager::InvokeParameters &Params)
 	case CM_CHANNELNO_2DIGIT:
 	case CM_CHANNELNO_3DIGIT:
 		{
-			int Digits = Params.ID == CM_CHANNELNO_2DIGIT ? 2 : 3;
+			const int Digits = Params.ID == CM_CHANNELNO_2DIGIT ? 2 : 3;
 
 			if (m_ChannelInput.IsInputting()) {
-				bool fCancel = Digits == m_ChannelInput.GetMaxDigits();
+				const bool fCancel = Digits == m_ChannelInput.GetMaxDigits();
 				EndChannelNoInput(false);
 				if (fCancel)
 					return true;
@@ -2769,8 +2769,8 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 	case TIMER_ID_UPDATE:
 		// 情報更新
 		{
-			CCoreEngine::StatusFlag UpdateStatus = m_App.CoreEngine.UpdateAsyncStatus();
-			CCoreEngine::StatisticsFlag UpdateStatistics = m_App.CoreEngine.UpdateStatistics();
+			const CCoreEngine::StatusFlag UpdateStatus = m_App.CoreEngine.UpdateAsyncStatus();
+			const CCoreEngine::StatisticsFlag UpdateStatistics = m_App.CoreEngine.UpdateStatistics();
 
 			// 映像サイズの変化
 			if (!!(UpdateStatus & CCoreEngine::StatusFlag::VideoSize)) {
@@ -2922,10 +2922,10 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 			if (m_App.RecordOptions.GetAlertLowFreeSpace()
 					&& !m_fAlertedLowFreeSpace
 					&& m_App.RecordManager.IsRecording()) {
-				LONGLONG FreeSpace = m_App.RecordManager.GetRecordTask()->GetFreeSpace();
+				const LONGLONG FreeSpace = m_App.RecordManager.GetRecordTask()->GetFreeSpace();
 
 				if (FreeSpace >= 0
-						&& (ULONGLONG)FreeSpace <= m_App.RecordOptions.GetLowFreeSpaceThresholdBytes()) {
+						&& static_cast<ULONGLONG>(FreeSpace) <= m_App.RecordOptions.GetLowFreeSpaceThresholdBytes()) {
 					m_App.NotifyBalloonTip.Show(
 						APP_NAME TEXT("の録画ファイルの保存先の空き容量が少なくなっています。"),
 						TEXT("空き容量が少なくなっています。"),
@@ -3006,7 +3006,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 
 			if (m_App.CoreEngine.GetVideoViewSize(&Width, &Height)
 					&& Width > 0 && Height > 0) {
-				WindowSizeMode Mode =
+				const WindowSizeMode Mode =
 					Height <= 240 ? WindowSizeMode::OneSeg : WindowSizeMode::HD;
 
 				if (m_WindowSizeMode != Mode) {
@@ -3087,7 +3087,7 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 {
 	if (m_App.MainMenu.IsMainMenu(hmenu)) {
-		bool fView = IsViewerEnabled();
+		const bool fView = IsViewerEnabled();
 
 		m_App.MainMenu.EnableItem(CM_COPYIMAGE, fView);
 		m_App.MainMenu.EnableItem(CM_SAVEIMAGE, fView);
@@ -3136,7 +3136,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			}
 		}
 
-		size_t PresetCount = m_App.PanAndScanOptions.GetPresetCount();
+		const size_t PresetCount = m_App.PanAndScanOptions.GetPresetCount();
 		if (PresetCount > 0) {
 			::InsertMenu(hmenu, ItemCount - 2, MF_BYPOSITION | MF_SEPARATOR, 0, nullptr);
 			const int AspectRatioType = m_pCore->GetAspectRatioType();
@@ -3149,7 +3149,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				::InsertMenu(
 					hmenu, ItemCount - 2 + (UINT)i,
 					MF_BYPOSITION | MF_STRING | MF_ENABLED
-						| (AspectRatioType == CUICore::ASPECTRATIO_CUSTOM_FIRST + (int)i ? MF_CHECKED : MF_UNCHECKED),
+						| (AspectRatioType == CUICore::ASPECTRATIO_CUSTOM_FIRST + static_cast<int>(i) ? MF_CHECKED : MF_UNCHECKED),
 					CM_PANANDSCAN_PRESET_FIRST + i, szText);
 			}
 		}
@@ -3185,7 +3185,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					pChInfo->SetName(ServiceInfo.ServiceName.c_str());
 				} else {
 					TCHAR szName[32];
-					StringPrintf(szName, TEXT("サービス%d"), i + 1);
+					StringFormat(szName, TEXT("サービス{}"), i + 1);
 					pChInfo->SetName(szName);
 				}
 				pChInfo->SetServiceID(ServiceInfo.ServiceID);
@@ -3208,17 +3208,17 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();
 
-		LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+		const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 		CAudioManager::AudioList AudioList;
 		const LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode CurDualMonoMode = m_pCore->GetDualMonoMode();
 		bool fDualMono = false;
 
 		if (m_App.AudioManager.GetAudioList(&AudioList) && !AudioList.empty()) {
-			auto GetAudioInfoText = [](
+			const auto GetAudioInfoText = [](
 					const CAudioManager::AudioInfo & Info, int StreamNumber,
 					LPTSTR pszText, int MaxText)
 				{
-					int Length;
+					size_t Length;
 					if (!Info.Text.empty()) {
 						Length = CopyToMenuText(Info.Text.c_str(), pszText, MaxText);
 					} else if (Info.Language != 0 && (!Info.IsDualMono() || Info.fMultiLingual)) {
@@ -3227,10 +3227,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 						if (Info.DualMono == CAudioManager::DualMonoMode::Both) {
 							TCHAR szLang2[LibISDB::MAX_LANGUAGE_TEXT_LENGTH];
 							LibISDB::GetLanguageText_ja(Info.Language2, szLang2, lengthof(szLang2));
-							Length += StringPrintf(pszText + Length, MaxText - Length, TEXT("+%s"), szLang2);
+							Length += StringFormat(pszText + Length, MaxText - Length, TEXT("+{}"), szLang2);
 						}
 					} else if (Info.IsDualMono()) {
-						Length = StringPrintf(
+						Length = StringFormat(
 							pszText, MaxText,
 							Info.DualMono == CAudioManager::DualMonoMode::Main ?
 								TEXT("主音声") :
@@ -3238,14 +3238,14 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 								TEXT("副音声") :
 								TEXT("主+副音声"));
 					} else {
-						Length = StringPrintf(pszText, MaxText, TEXT("音声%d"), StreamNumber + 1);
+						Length = StringFormat(pszText, MaxText, TEXT("音声{}"), StreamNumber + 1);
 					}
 					if (Info.ComponentType != LibISDB::COMPONENT_TYPE_INVALID) {
 						LPCTSTR pszComponentType = LibISDB::GetAudioComponentTypeText_ja(Info.ComponentType);
 						if (pszComponentType != nullptr) {
-							StringPrintf(
+							StringFormat(
 								pszText + Length, MaxText - Length,
-								TEXT(" [%s]"), pszComponentType);
+								TEXT(" [{}]"), pszComponentType);
 						}
 					}
 				};
@@ -3274,15 +3274,15 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 								if (AudioInfo.ComponentTag == ComponentTag) {
 									TCHAR szText[80];
-									int Length;
+									size_t Length;
 
 									if (!GroupInfo.Text.empty()) {
 										Length = CopyToMenuText(GroupInfo.Text.c_str(), szText, lengthof(szText));
 									} else {
 										if (GroupInfo.ComponentGroupID == 0)
-											Length = StringPrintf(szText, TEXT("メイン"));
+											Length = StringFormat(szText, TEXT("メイン"));
 										else
-											Length = StringPrintf(szText, TEXT("サブ%d"), SubGroupCount + 1);
+											Length = StringFormat(szText, TEXT("サブ{}"), SubGroupCount + 1);
 									}
 
 									if (!AudioInfo.IsDualMono() || AudioInfo.DualMono == CAudioManager::DualMonoMode::Main)
@@ -3290,9 +3290,9 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 
 									TCHAR szAudio[64];
 									GetAudioInfoText(AudioInfo, StreamNumber, szAudio, lengthof(szAudio));
-									StringPrintf(
+									StringFormat(
 										szText + Length, lengthof(szText) - Length,
-										TEXT(": %s"), szAudio);
+										TEXT(": {}"), szAudio);
 									Menu.Append(CM_AUDIO_FIRST + AudioIndex, szText);
 									AudioInfo.ID = CAudioManager::ID_INVALID;
 
@@ -3337,12 +3337,12 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					StreamNumber++;
 
 				TCHAR szText[80];
-				int Length;
+				size_t Length;
 
-				Length = StringPrintf(
-					szText, TEXT("%s%d: "),
+				Length = StringFormat(
+					szText, TEXT("{}{}: "),
 					i < 9 ? TEXT("&") : TEXT(""), i + 1);
-				GetAudioInfoText(AudioInfo, StreamNumber, szText + Length, lengthof(szText) - Length);
+				GetAudioInfoText(AudioInfo, StreamNumber, szText + Length, static_cast<int>(lengthof(szText) - Length));
 				Menu.Append(CM_AUDIO_FIRST + i, szText);
 
 				if (AudioInfo.ID == CurAudioID) {
@@ -3372,10 +3372,10 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			}
 		}
 
-		HINSTANCE hinstRes = m_App.GetResourceInstance();
+		const HINSTANCE hinstRes = m_App.GetResourceInstance();
 
 		if (!fDualMono) {
-			LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+			const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 			const int Channels = pViewer->GetAudioChannelCount();
 
 			if (Channels == LibISDB::ViewerFilter::AudioChannelCount_DualMono) {
@@ -3386,7 +3386,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					CM_DUALMONO_SUB,
 					CM_DUALMONO_BOTH
 				};
-				for (int Command : DualMonoMenuList) {
+				for (const int Command : DualMonoMenuList) {
 					TCHAR szText[64];
 					::LoadString(hinstRes, Command, szText, lengthof(szText));
 					Menu.Append(Command, szText);
@@ -3413,7 +3413,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			CM_AUDIODELAY_PLUS,
 			CM_AUDIODELAY_RESET,
 		};
-		for (int Command : AdditionalMenuList) {
+		for (const int Command : AdditionalMenuList) {
 			if (Command != 0) {
 				TCHAR szText[64];
 				::LoadString(hinstRes, Command, szText, lengthof(szText));
@@ -3426,13 +3426,13 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 		m_App.CoreEngine.GetSPDIFOptions(&SPDIFOptions);
 		Menu.CheckRadioItem(
 			CM_SPDIF_DISABLED, CM_SPDIF_AUTO,
-			CM_SPDIF_DISABLED + (int)SPDIFOptions.Mode);
+			CM_SPDIF_DISABLED + static_cast<int>(SPDIFOptions.Mode));
 		m_App.Accelerator.SetMenuAccel(hmenu);
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_VIDEO)) {
 		CPopupMenu Menu(hmenu);
 		Menu.Clear();
 
-		LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+		const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 		const int ServiceIndex = m_App.CoreEngine.GetServiceIndex();
 		LibISDB::AnalyzerFilter::EventComponentGroupList GroupList;
 
@@ -3454,7 +3454,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					if (GroupInfo.ComponentGroupID == 0)
 						StringCopy(szText, TEXT("メイン"));
 					else
-						StringPrintf(szText, TEXT("サブ%d"), SubGroupCount + 1);
+						StringFormat(szText, TEXT("サブ{}"), SubGroupCount + 1);
 					GroupInfo.Text = szText;
 				}
 				if (GroupInfo.ComponentGroupID != 0)
@@ -3502,7 +3502,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 									TCHAR szText[80];
 									VideoCount++;
 									int Length = CopyToMenuText(GroupInfo.Text.c_str(), szText, lengthof(szText));
-									StringPrintf(szText + Length, lengthof(szText) - Length, TEXT(": 映像%d"), VideoCount);
+									StringFormat(szText + Length, lengthof(szText) - Length, TEXT(": 映像{}"), VideoCount);
 									Menu.Append(CM_VIDEOSTREAM_FIRST + EsIndex, szText);
 									if (ComponentTag == CurVideoComponentTag)
 										CurVideoIndex = EsIndex;
@@ -3520,7 +3520,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					if (EsList[i].ComponentTag != LibISDB::COMPONENT_TAG_INVALID) {
 						TCHAR szText[64];
 						VideoCount++;
-						int Length = StringPrintf(szText, TEXT("映像%d"), VideoCount);
+						const size_t Length = StringFormat(szText, TEXT("映像{}"), VideoCount);
 						if (EsList[i].QualityLevel == 0)
 							StringCopy(szText + Length, TEXT(" (降雨対応放送)"), lengthof(szText) - Length);
 						Menu.Append(CM_VIDEOSTREAM_FIRST + i, szText);
@@ -3543,8 +3543,8 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					&& !EsList.empty()) {
 				for (int i = 0; i < static_cast<int>(EsList.size()) && CM_VIDEOSTREAM_FIRST + i <= CM_VIDEOSTREAM_LAST; i++) {
 					TCHAR szText[64];
-					int Length = StringPrintf(
-						szText, TEXT("%s%d: 映像%d"),
+					const size_t Length = StringFormat(
+						szText, TEXT("{}{}: 映像{}"),
 						i < 9 ? TEXT("&") : TEXT(""), i + 1, i + 1);
 					if (EsList[i].QualityLevel == 0)
 						StringCopy(szText + Length, TEXT(" (降雨対応放送)"), lengthof(szText) - Length);
@@ -3560,7 +3560,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			}
 		}
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_FILTERPROPERTY)) {
-		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		for (const auto &e : m_DirectShowFilterPropertyList) {
 			m_App.MainMenu.EnableItem(
 				e.Command,
@@ -3624,7 +3624,7 @@ void CMainWindow::OnTunerChanged()
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_SERVICE);
 	m_App.Panel.InfoPanel.ResetItem(CInformationPanel::ITEM_PROGRAMINFO);
 
-	bool fNoSignalLevel = m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName());
+	const bool fNoSignalLevel = m_App.DriverOptions.IsNoSignalLevel(m_App.CoreEngine.GetDriverFileName());
 	m_App.Panel.InfoPanel.GetItem<CInformationPanel::CSignalLevelItem>()->ShowSignalLevel(!fNoSignalLevel);
 	CSignalLevelStatusItem *pItem = dynamic_cast<CSignalLevelStatusItem*>(
 		m_App.StatusView.GetItemByID(STATUS_ITEM_SIGNALLEVEL));
@@ -3774,7 +3774,7 @@ void CMainWindow::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 	m_App.Panel.CaptionPanel.Reset();
 	m_App.Panel.UpdateControlPanel();
 
-	LPCTSTR pszDriverFileName = m_App.CoreEngine.GetDriverFileName();
+	const LPCTSTR pszDriverFileName = m_App.CoreEngine.GetDriverFileName();
 	pCurChannel = m_App.ChannelManager.GetCurrentChannelInfo();
 	if (pCurChannel != nullptr) {
 		m_App.RecentChannelList.Add(pszDriverFileName, pCurChannel);
@@ -3888,7 +3888,7 @@ void CMainWindow::AdjustWindowSizeOnDockPanel(bool fDock)
 
 void CMainWindow::GetPanelDockingAdjustedPos(bool fDock, RECT *pPos) const
 {
-	Layout::CSplitter *pSplitter =
+	const Layout::CSplitter *pSplitter =
 		dynamic_cast<Layout::CSplitter*>(m_LayoutBase.GetContainerByID(CONTAINER_ID_PANELSPLITTER));
 	int Width = m_App.Panel.Frame.GetDockingWidth() + pSplitter->GetBarWidth();
 	int Height = m_App.Panel.Frame.GetDockingHeight() + pSplitter->GetBarWidth();
@@ -3910,7 +3910,7 @@ void CMainWindow::GetPanelDockingAdjustedPos(bool fDock, RECT *pPos) const
 	}
 
 	if (fDock) {
-		HMONITOR hMonitor = ::MonitorFromRect(pPos, MONITOR_DEFAULTTONEAREST);
+		const HMONITOR hMonitor = ::MonitorFromRect(pPos, MONITOR_DEFAULTTONEAREST);
 		MONITORINFO mi;
 
 		mi.cbSize = sizeof(MONITORINFO);
@@ -3971,7 +3971,7 @@ void CMainWindow::SetFixedPaneSize(int SplitterID, int ContainerID, int Width, i
 void CMainWindow::ShowPopupTitleBar(bool fShow)
 {
 	if (fShow) {
-		CViewWindow &ViewWindow = GetCurrentViewWindow();
+		const CViewWindow &ViewWindow = GetCurrentViewWindow();
 		RECT rcClient, rcTitle;
 
 		ViewWindow.GetClientRect(&rcClient);
@@ -3989,7 +3989,7 @@ void CMainWindow::ShowPopupTitleBar(bool fShow)
 void CMainWindow::ShowPopupStatusBar(bool fShow)
 {
 	if (fShow) {
-		CViewWindow &ViewWindow = GetCurrentViewWindow();
+		const CViewWindow &ViewWindow = GetCurrentViewWindow();
 		RECT rc;
 
 		ViewWindow.GetClientRect(&rc);
@@ -4070,7 +4070,7 @@ void CMainWindow::ShowChannelOSD()
 void CMainWindow::OnServiceChanged()
 {
 	int CurService = 0;
-	WORD ServiceID = m_App.CoreEngine.GetServiceID();
+	const WORD ServiceID = m_App.CoreEngine.GetServiceID();
 	if (ServiceID != LibISDB::SERVICE_ID_INVALID)
 		CurService = m_App.CoreEngine.GetSelectableServiceIndexByID(ServiceID);
 	m_App.MainMenu.CheckRadioItem(
@@ -4222,9 +4222,7 @@ void CMainWindow::On1SegModeChanged(bool f1SegMode)
 
 void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 {
-	POINT pt;
-	pt.x = GET_X_LPARAM(lParam);
-	pt.y = GET_Y_LPARAM(lParam);
+	const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
 	if (m_Display.GetDisplayBase().IsVisible()) {
 		CDisplayView *pDisplayView = m_Display.GetDisplayBase().GetDisplayView();
@@ -4258,7 +4256,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 
 		m_App.StatusView.GetScreenPosition(&rc);
 		if (::PtInRect(&rc, pt)) {
-			int ItemID = m_App.StatusView.GetCurItem();
+			const int ItemID = m_App.StatusView.GetCurItem();
 
 			if (ItemID >= 0) {
 				CStatusItem *pItem = m_App.StatusView.GetItemByID(ItemID);
@@ -4315,7 +4313,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 				fUp = Delta > 0;
 			else
 				fUp = Delta < 0;
-			int Channel = m_pCore->GetNextChannel(fUp);
+			const int Channel = m_pCore->GetNextChannel(fUp);
 			if (Channel >= 0) {
 				if (m_fWheelChannelChanging
 						&& m_WheelCount < 5
@@ -4381,7 +4379,7 @@ void CMainWindow::OnMouseWheel(WPARAM wParam, LPARAM lParam, bool fHorz)
 
 bool CMainWindow::EnableViewer(bool fEnable)
 {
-	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
 	if (fEnable) {
 		bool fInit;
@@ -4389,7 +4387,7 @@ bool CMainWindow::EnableViewer(bool fEnable)
 		if (!pViewer->IsOpen()) {
 			fInit = true;
 		} else {
-			BYTE VideoStreamType = m_App.CoreEngine.GetVideoStreamType();
+			const BYTE VideoStreamType = m_App.CoreEngine.GetVideoStreamType();
 			fInit =
 				VideoStreamType != LibISDB::STREAM_TYPE_UNINITIALIZED &&
 				VideoStreamType != pViewer->GetVideoStreamType();
@@ -4501,7 +4499,8 @@ bool CMainWindow::SetZoomRate(int Rate, int Factor)
 
 			m_Display.GetVideoContainer().GetClientSize(&ScreenSize);
 			if (ScreenSize.cx > 0 && ScreenSize.cy > 0) {
-				if ((double)ZoomWidth / (double)ScreenSize.cx <= (double)ZoomHeight / (double)ScreenSize.cy) {
+				if (static_cast<double>(ZoomWidth) / static_cast<double>(ScreenSize.cx) <=
+						static_cast<double>(ZoomHeight) / static_cast<double>(ScreenSize.cy)) {
 					ZoomWidth = CalcZoomSize(ScreenSize.cx, ZoomHeight, ScreenSize.cy);
 				} else {
 					ZoomHeight = CalcZoomSize(ScreenSize.cy, ZoomWidth, ScreenSize.cx);
@@ -4530,7 +4529,7 @@ bool CMainWindow::GetZoomRate(int *pRate, int *pFactor)
 		Rate = sz.cy;
 		Factor = Height;
 		*/
-		LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+		const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 		int DstWidth, DstHeight;
 		if (pViewer != nullptr && pViewer->GetDestSize(&DstWidth, &DstHeight)) {
 			Rate = DstHeight;
@@ -4578,7 +4577,7 @@ void CMainWindow::OnPanAndScanChanged()
 						CalcZoomSize(Width, ZoomRate, ZoomFactor),
 						CalcZoomSize(Height, ZoomRate, ZoomFactor));
 				} else {
-					LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+					const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 					int DstWidth, DstHeight;
 
 					if (pViewer != nullptr && pViewer->GetDestSize(&DstWidth, &DstHeight))
@@ -4613,8 +4612,8 @@ void CMainWindow::OnAspectRatioTypeChanged(int Type)
 
 void CMainWindow::SetTitleText(LPCTSTR pszTitleText, LPCTSTR pszWindowText)
 {
-	LPCTSTR pszWindow = m_fCustomTitleBar ? pszWindowText : pszTitleText;
-	int Length = ::GetWindowTextLength(m_hwnd) + 1;
+	const LPCTSTR pszWindow = m_fCustomTitleBar ? pszWindowText : pszTitleText;
+	const int Length = ::GetWindowTextLength(m_hwnd) + 1;
 	Util::CTempBuffer<TCHAR, 256> OldText(Length);
 	::GetWindowText(m_hwnd, OldText.GetBuffer(), Length);
 	if (::lstrcmp(pszWindow, OldText.GetBuffer()) != 0)
@@ -4719,12 +4718,12 @@ bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const
 			m_App.Epg.ProgramGuide.SetMessage(nullptr);
 		}
 
-		CEpg::CChannelProviderManager *pChannelProviderManager =
+		const CEpg::CChannelProviderManager *pChannelProviderManager =
 			m_App.Epg.CreateChannelProviderManager(pSpaceInfo != nullptr ? pSpaceInfo->pszTuner : nullptr);
-		int Provider = pChannelProviderManager->GetCurChannelProvider();
+		const int Provider = pChannelProviderManager->GetCurChannelProvider();
 		int Space;
 		if (Provider >= 0) {
-			CProgramGuideChannelProvider *pChannelProvider =
+			const CProgramGuideChannelProvider *pChannelProvider =
 				pChannelProviderManager->GetChannelProvider(Provider);
 			bool fGroupID = false;
 			if (pSpaceInfo != nullptr && pSpaceInfo->pszSpace != nullptr) {
@@ -4740,12 +4739,12 @@ bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const
 			if (Space < 0) {
 				Space = 0;
 			} else if (!fGroupID) {
-				CProgramGuideBaseChannelProvider *pBaseChannelProvider =
-					dynamic_cast<CProgramGuideBaseChannelProvider*>(pChannelProvider);
+				const CProgramGuideBaseChannelProvider *pBaseChannelProvider =
+					dynamic_cast<const CProgramGuideBaseChannelProvider*>(pChannelProvider);
 				if (pBaseChannelProvider != nullptr) {
 					if (pBaseChannelProvider->HasAllChannelGroup())
 						Space++;
-					if ((size_t)Space >= pBaseChannelProvider->GetGroupCount())
+					if (static_cast<size_t>(Space) >= pBaseChannelProvider->GetGroupCount())
 						Space = 0;
 				}
 			}
@@ -4839,7 +4838,7 @@ void CMainWindow::HookChildWindow(HWND hwnd)
 	{
 		TCHAR szClass[256];
 		::GetClassName(hwnd, szClass, lengthof(szClass));
-		TRACE(TEXT("Hook window %p \"%s\"\n"), hwnd, szClass);
+		TRACE(TEXT("Hook window {} \"{}\"\n"), static_cast<void *>(hwnd), szClass);
 	}
 #endif
 	::SetWindowSubclass(hwnd, ChildSubclassProc, SubclassID, reinterpret_cast<DWORD_PTR>(this));
@@ -4869,8 +4868,8 @@ LRESULT CALLBACK CMainWindow::ChildSubclassProc(
 					FrameWidth.Right = pThis->m_CustomFrameWidth;
 				if (FrameWidth.Bottom < pThis->m_CustomFrameWidth)
 					FrameWidth.Bottom = pThis->m_CustomFrameWidth;
-				int CornerMarginLeft = FrameWidth.Left * 2;
-				int CornerMarginRight = FrameWidth.Right * 2;
+				const int CornerMarginLeft = FrameWidth.Left * 2;
+				const int CornerMarginRight = FrameWidth.Right * 2;
 				RECT rcFrame = rc;
 				Style::Subtract(&rcFrame, FrameWidth);
 				int Code = HTNOWHERE;
@@ -4928,7 +4927,7 @@ LRESULT CALLBACK CMainWindow::ChildSubclassProc(
 		{
 			TCHAR szClass[256];
 			::GetClassName(hwnd, szClass, lengthof(szClass));
-			TRACE(TEXT("Unhook window %p \"%s\"\n"), hwnd, szClass);
+			TRACE(TEXT("Unhook window {} \"{}\"\n"), static_cast<void *>(hwnd), szClass);
 		}
 #endif
 		::RemoveWindowSubclass(hwnd, ChildSubclassProc, reinterpret_cast<UINT_PTR>(pThis));
@@ -4951,7 +4950,7 @@ void CMainWindow::SetMaximizedRegion(bool fSet)
 		MapWindowRect(m_hwnd, nullptr, &rcClient);
 		if (rcWindow != rcClient) {
 			::OffsetRect(&rcClient, -rcWindow.left, -rcWindow.top);
-			HRGN hrgn = ::CreateRectRgnIndirect(&rcClient);
+			const HRGN hrgn = ::CreateRectRgnIndirect(&rcClient);
 			if (::SetWindowRgn(m_hwnd, hrgn, TRUE))
 				m_fWindowRegionSet = true;
 			else
@@ -5036,7 +5035,7 @@ void CMainWindow::ShowFloatingWindows(bool fShow, bool fNoProgramGuide)
 
 void CMainWindow::DrawCustomFrame(bool fActive)
 {
-	HDC hdc = ::GetWindowDC(m_hwnd);
+	const HDC hdc = ::GetWindowDC(m_hwnd);
 	{
 		Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 		const Theme::BackgroundStyle &Style =
@@ -5098,7 +5097,7 @@ bool CMainWindow::SetStandby(bool fStandby)
 		SetWindowVisible();
 		Util::CWaitCursor WaitCursor;
 		if (m_fStandbyInit) {
-			bool fSetChannel = m_Resume.fSetChannel;
+			const bool fSetChannel = m_Resume.fSetChannel;
 			m_Resume.fSetChannel = false;
 			ResumeTuner();
 			m_Resume.fSetChannel = fSetChannel;
@@ -5141,10 +5140,10 @@ bool CMainWindow::InitStandby()
 		m_Resume.fOpenTuner = true;
 
 	if (m_App.RestoreChannelInfo.Space >= 0 && m_App.RestoreChannelInfo.Channel >= 0) {
-		int Space = m_App.RestoreChannelInfo.fAllChannels ? CChannelManager::SPACE_ALL : m_App.RestoreChannelInfo.Space;
+		const int Space = m_App.RestoreChannelInfo.fAllChannels ? CChannelManager::SPACE_ALL : m_App.RestoreChannelInfo.Space;
 		const CChannelList *pList = m_App.ChannelManager.GetChannelList(Space);
 		if (pList != nullptr) {
-			int Index = pList->FindByIndex(
+			const int Index = pList->FindByIndex(
 				m_App.RestoreChannelInfo.Space,
 				m_App.RestoreChannelInfo.Channel,
 				m_App.RestoreChannelInfo.ServiceID);
@@ -5286,7 +5285,7 @@ bool CMainWindow::BeginChannelNoInput(int Digits)
 	if (Digits < 0 || Digits > 5)
 		return false;
 
-	TRACE(TEXT("チャンネル番号%d桁入力開始\n"), Digits);
+	TRACE(TEXT("チャンネル番号{}桁入力開始\n"), Digits);
 
 	m_ChannelInput.BeginInput(Digits);
 
@@ -5319,7 +5318,7 @@ void CMainWindow::OnChannelNoInput()
 {
 	if (m_App.OSDOptions.IsOSDEnabled(COSDOptions::OSDType::ChannelNoInput)) {
 		TCHAR szText[16];
-		int MaxDigits = m_ChannelInput.GetMaxDigits();
+		const int MaxDigits = m_ChannelInput.GetMaxDigits();
 		int Number = m_ChannelInput.GetNumber();
 		if (MaxDigits > 0) {
 			for (int i = MaxDigits - 1; i >= 0; i--) {
@@ -5332,7 +5331,7 @@ void CMainWindow::OnChannelNoInput()
 			}
 			szText[MaxDigits] = _T('\0');
 		} else {
-			StringPrintf(szText, TEXT("%d"), Number);
+			StringFormat(szText, TEXT("{}"), Number);
 		}
 		m_App.OSDManager.ShowOSD(szText, COSDManager::ShowFlag::NoFade);
 	}
@@ -5434,7 +5433,7 @@ LRESULT CALLBACK CMainWindow::HookProc(int nCode, WPARAM wParam, LPARAM lParam)
 		const CWPSTRUCT *pcwp = reinterpret_cast<const CWPSTRUCT *>(lParam);
 		if (pcwp->message == WM_CREATE) {
 			if (TVTest::IsDarkMode()) {
-				HWND hwnd = pcwp->hwnd;
+				const HWND hwnd = pcwp->hwnd;
 				TCHAR szClass[32];
 				if (::GetClassName(hwnd, szClass, lengthof(szClass)) == 6
 						&& ::lstrcmp(szClass, TEXT("#32768")) == 0) {
@@ -5480,13 +5479,13 @@ LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 	case WM_PRINT:
 		// メニューの描画は WM_PAINT / WM_NCPAINT ではなく WM_PRINT で行われる模様。
 		{
-			HMENU hmenu = reinterpret_cast<HMENU>(::SendMessage(hwnd, MN_GETHMENU, 0, 0));
+			const HMENU hmenu = reinterpret_cast<HMENU>(::SendMessage(hwnd, MN_GETHMENU, 0, 0));
 			if (hmenu == nullptr || !IsMenuNeedCustomErase(hmenu))
 				break;
 
 			::DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 
 			RECT rcClient, rcWindow;
 			::GetClientRect(hwnd, &rcClient);
@@ -5500,10 +5499,10 @@ LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 			if (it != pThis->m_MenuPainter.end() && it->second.IsThemed()) {
 				it->second.DrawBorder(hdc, rcWindow);
 			} else {
-				HPEN hpen = ::CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
-				HBRUSH hbr = ::CreateSolidBrush(RGB(43, 43, 43));
-				HGDIOBJ hOldPen = ::SelectObject(hdc, hpen);
-				HGDIOBJ hOldBrush = ::SelectObject(hdc, hbr);
+				const HPEN hpen = ::CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
+				const HBRUSH hbr = ::CreateSolidBrush(RGB(43, 43, 43));
+				const HGDIOBJ hOldPen = ::SelectObject(hdc, hpen);
+				const HGDIOBJ hOldBrush = ::SelectObject(hdc, hbr);
 
 				::Rectangle(hdc, rcWindow.left, rcWindow.top, rcWindow.right, rcWindow.bottom);
 
@@ -5518,11 +5517,11 @@ LRESULT CALLBACK CMainWindow::MenuSubclassProc(
 	case WM_ERASEBKGND:
 		// セパレータの背景や、複数列のメニューの余白部分は WM_ERASEBKGND で塗り潰される。
 		{
-			HMENU hmenu = reinterpret_cast<HMENU>(::SendMessage(hwnd, MN_GETHMENU, 0, 0));
+			const HMENU hmenu = reinterpret_cast<HMENU>(::SendMessage(hwnd, MN_GETHMENU, 0, 0));
 			if (hmenu == nullptr || !IsMenuNeedCustomErase(hmenu))
 				break;
 
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 			RECT rc;
 			::GetClientRect(hwnd, &rc);
 
@@ -5636,7 +5635,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 	case WM_SETCURSOR:
 		if (LOWORD(lParam) == HTCLIENT) {
-			HWND hwndCursor = reinterpret_cast<HWND>(wParam);
+			const HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 
 			if (hwndCursor == hwnd
 					|| hwndCursor == m_pDisplay->GetVideoContainer().GetHandle()
@@ -5651,7 +5650,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHWHEEL:
 		{
-			bool fHorz = uMsg == WM_MOUSEHWHEEL;
+			const bool fHorz = uMsg == WM_MOUSEHWHEEL;
 
 			m_MainWindow.OnMouseWheel(wParam, lParam, fHorz);
 			return fHorz;
@@ -5670,11 +5669,13 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 	case WM_SYSKEYDOWN:
 		if (wParam != VK_F10)
 			break;
+		[[fallthrough]];
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE) {
 			m_App.UICore.SetFullscreen(false);
 			return 0;
 		}
+		[[fallthrough]];
 	case WM_COMMAND:
 		return m_MainWindow.SendMessage(uMsg, wParam, lParam);
 
@@ -5696,7 +5697,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 	case WM_APPCOMMAND:
 		{
-			int Command = m_App.Accelerator.TranslateAppCommand(wParam, lParam);
+			const int Command = m_App.Accelerator.TranslateAppCommand(wParam, lParam);
 
 			if (Command != 0) {
 				m_MainWindow.SendCommand(Command);
@@ -5751,10 +5752,9 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner, CMainDisplay *pDisplay)
 {
 	m_ScreenMargin = m_MainWindow.m_Style.FullscreenMargin;
 
-	HMONITOR hMonitor;
 	int x, y, Width, Height;
 
-	hMonitor = ::MonitorFromWindow(m_MainWindow.GetHandle(), MONITOR_DEFAULTTONEAREST);
+	const HMONITOR hMonitor = ::MonitorFromWindow(m_MainWindow.GetHandle(), MONITOR_DEFAULTTONEAREST);
 	if (hMonitor != nullptr) {
 		MONITORINFOEX mi;
 
@@ -5773,7 +5773,7 @@ bool CMainWindow::CFullscreen::Create(HWND hwndOwner, CMainDisplay *pDisplay)
 				if (::lstrcmpi(dd.DeviceName, mi.szDevice) == 0) {
 					const Style::CStyleManager *pStyleManager = GetStyleManager();
 					TCHAR szKey[64];
-					StringPrintf(szKey, TEXT("fullscreen.monitor%d.margin"), MonitorNo);
+					StringFormat(szKey, TEXT("fullscreen.monitor{}.margin"), MonitorNo);
 					Style::Margins Margin;
 					if (pStyleManager->Get(szKey, &Margin)) {
 						m_pStyleScaling->ToPixels(&Margin);
@@ -5837,7 +5837,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 			m_PanelPlace = CPanelFrame::DockingPlace::Right;
 		}
 	}
-	int PanelPaneIndex =
+	const int PanelPaneIndex =
 		m_PanelPlace == CPanelFrame::DockingPlace::Left || m_PanelPlace == CPanelFrame::DockingPlace::Top ? 0 : 1;
 	Layout::CWindowContainer *pViewContainer = new Layout::CWindowContainer(CONTAINER_ID_VIEW);
 	pViewContainer->SetWindow(&m_ViewWindow);
@@ -5956,7 +5956,7 @@ void CMainWindow::CFullscreen::RestorePanel(bool fPreventForeground)
 			RECT rc;
 			if (fPreventForeground && m_App.Panel.IsFloating()) {
 				m_App.Panel.Frame.GetPosition(&rc);
-				int Width = rc.right - rc.left, Height = rc.bottom - rc.top;
+				const int Width = rc.right - rc.left, Height = rc.bottom - rc.top;
 				m_App.Panel.Frame.SetPosition(
 					::GetSystemMetrics(SM_XVIRTUALSCREEN) - Width - 64, 0, Width, Height);
 			}
@@ -6588,7 +6588,7 @@ const CChannelInfo *CMainWindow::CSideBarManager::GetChannelInfoByCommand(int Co
 {
 	const CChannelList *pList = m_pMainWindow->m_App.ChannelManager.GetCurrentChannelList();
 	if (pList != nullptr) {
-		int No = Command - CM_CHANNELNO_FIRST;
+		const int No = Command - CM_CHANNELNO_FIRST;
 		int Index;
 
 		if (pList->HasRemoteControlKeyID()) {
@@ -6617,7 +6617,7 @@ void CMainWindow::CSideBarManager::OnRButtonUp(int x, int y)
 	Menu.EnableItem(CM_SIDEBAR, !m_pMainWindow->m_pCore->GetFullscreen());
 	Menu.CheckRadioItem(
 		CM_SIDEBAR_PLACE_FIRST, CM_SIDEBAR_PLACE_LAST,
-		CM_SIDEBAR_PLACE_FIRST + (int)m_pMainWindow->m_App.SideBarOptions.GetPlace());
+		CM_SIDEBAR_PLACE_FIRST + static_cast<int>(m_pMainWindow->m_App.SideBarOptions.GetPlace()));
 	pt.x = x;
 	pt.y = y;
 	::ClientToScreen(m_pSideBar->GetHandle(), &pt);
@@ -6643,8 +6643,8 @@ bool CMainWindow::CSideBarManager::GetTooltipText(int Command, LPTSTR pszText, i
 	if (Command >= CM_CHANNELNO_FIRST && Command <= CM_CHANNELNO_LAST) {
 		const CChannelInfo *pChInfo = GetChannelInfoByCommand(Command);
 		if (pChInfo != nullptr) {
-			StringPrintf(
-				pszText, MaxText, TEXT("%d: %s"),
+			StringFormat(
+				pszText, MaxText, TEXT("{}: {}"),
 				(Command - CM_CHANNELNO_FIRST) + 1, pChInfo->GetName());
 			return true;
 		}
@@ -6660,15 +6660,15 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 			// TODO: 新しくロゴが取得された時に再描画する
 			const CChannelInfo *pChannel = GetChannelInfoByCommand(pInfo->Command);
 			if (pChannel != nullptr) {
-				HBITMAP hbmLogo = m_pMainWindow->m_App.LogoManager.GetAssociatedLogoBitmap(
+				const HBITMAP hbmLogo = m_pMainWindow->m_App.LogoManager.GetAssociatedLogoBitmap(
 					pChannel->GetNetworkID(), pChannel->GetServiceID(),
 					CLogoManager::LOGOTYPE_SMALL);
 				if (hbmLogo != nullptr) {
 					const int Width = pInfo->IconRect.right - pInfo->IconRect.left;
 					const int Height = pInfo->IconRect.bottom - pInfo->IconRect.top;
 					const int IconHeight = Height * 10 / 16;	// 本来の比率より縦長にしている(見栄えのため)
-					HBITMAP hbmOld = SelectBitmap(pInfo->hdcBuffer, hbmLogo);
-					int OldStretchMode = ::SetStretchBltMode(pInfo->hdc, STRETCH_HALFTONE);
+					const HBITMAP hbmOld = SelectBitmap(pInfo->hdcBuffer, hbmLogo);
+					const int OldStretchMode = ::SetStretchBltMode(pInfo->hdc, STRETCH_HALFTONE);
 					BITMAP bm;
 					::GetObject(hbmLogo, sizeof(bm), &bm);
 					::StretchBlt(
@@ -6881,7 +6881,7 @@ bool CMainWindow::CCursorTracker::OnCursorMove(int x, int y)
 	m_LastCursorPos.x = x;
 	m_LastCursorPos.y = y;
 
-	if (abs(m_LastMovePos.x - x) >= m_MoveDelta || abs(m_LastMovePos.y - y) >= m_MoveDelta) {
+	if (std::abs(m_LastMovePos.x - x) >= m_MoveDelta || std::abs(m_LastMovePos.y - y) >= m_MoveDelta) {
 		m_LastMovePos.x = x;
 		m_LastMovePos.y = y;
 		return true;

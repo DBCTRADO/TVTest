@@ -113,6 +113,7 @@ namespace TVTest
 				ClearTypeLevel   = 0x0004U,
 				PixelGeometry    = 0x0008U,
 				RenderingMode    = 0x0010U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
 			ParamFlag Mask = ParamFlag::None;
@@ -144,6 +145,7 @@ namespace TVTest
 			Align_Justified  = 0x0004U,
 			Align_VertCenter = 0x0008U,
 			Align_Bottom     = 0x0010U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CDirectWriteRenderer(CDirectWriteSystem &System);
@@ -185,9 +187,6 @@ namespace TVTest
 		RenderingParams m_RenderingParams;
 		bool m_fNeedRecreate;
 	};
-
-	TVTEST_ENUM_FLAGS(CDirectWriteRenderer::DrawTextFlag)
-	TVTEST_ENUM_FLAGS(CDirectWriteRenderer::RenderingParams::ParamFlag)
 
 }	// namespace TVTest
 

@@ -69,12 +69,12 @@ static void JPEGErrorMessage(j_common_ptr cinfo)
 
 static void JPEGInitDestination(j_compress_ptr cinfo)
 {
-	JPEGDestinationInfo *pInfo = (JPEGDestinationInfo*)cinfo->dest;
+	JPEGDestinationInfo *pInfo = reinterpret_cast<JPEGDestinationInfo*>(cinfo->dest);
 
 	pInfo->pBuffer =
-		(JOCTET*)(*cinfo->mem->alloc_small)(
-			(j_common_ptr)cinfo,
-			JPOOL_IMAGE, JPEG_OUTPUT_BUFFER_SIZE * sizeof(JOCTET));
+		static_cast<JOCTET*>((*cinfo->mem->alloc_small)(
+			reinterpret_cast<j_common_ptr>(cinfo),
+			JPOOL_IMAGE, JPEG_OUTPUT_BUFFER_SIZE * sizeof(JOCTET)));
 	pInfo->dest.next_output_byte = pInfo->pBuffer;
 	pInfo->dest.free_in_buffer = JPEG_OUTPUT_BUFFER_SIZE;
 }
@@ -82,7 +82,7 @@ static void JPEGInitDestination(j_compress_ptr cinfo)
 
 static boolean JPEGEmptyOutputBuffer(j_compress_ptr cinfo)
 {
-	JPEGDestinationInfo *pInfo = (JPEGDestinationInfo*)cinfo->dest;
+	JPEGDestinationInfo *pInfo = reinterpret_cast<JPEGDestinationInfo*>(cinfo->dest);
 	DWORD Write;
 
 	if (!WriteFile(pInfo->hFile, pInfo->pBuffer, JPEG_OUTPUT_BUFFER_SIZE, &Write, nullptr)
@@ -96,8 +96,8 @@ static boolean JPEGEmptyOutputBuffer(j_compress_ptr cinfo)
 
 static void JPEGTermDestination(j_compress_ptr cinfo)
 {
-	JPEGDestinationInfo *pInfo = (JPEGDestinationInfo*)cinfo->dest;
-	DWORD Size = JPEG_OUTPUT_BUFFER_SIZE - (DWORD)pInfo->dest.free_in_buffer;
+	JPEGDestinationInfo *pInfo = reinterpret_cast<JPEGDestinationInfo*>(cinfo->dest);
+	const DWORD Size = JPEG_OUTPUT_BUFFER_SIZE - static_cast<DWORD>(pInfo->dest.free_in_buffer);
 
 	if (Size > 0) {
 		DWORD Write;
@@ -113,7 +113,7 @@ static void JPEGTermDestination(j_compress_ptr cinfo)
 
 bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 {
-	HANDLE hFile = CreateFile(
+	const HANDLE hFile = CreateFile(
 		pInfo->pszFileName, GENERIC_WRITE, 0, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -128,13 +128,13 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 
 	try {
 		jpeg_create_compress(&jcomp);
-		jcomp.dest = (jpeg_destination_mgr*)(jcomp.mem->alloc_small)(
-			(j_common_ptr)&jcomp, JPOOL_IMAGE, sizeof(JPEGDestinationInfo));
+		jcomp.dest = static_cast<jpeg_destination_mgr*>((jcomp.mem->alloc_small)(
+			reinterpret_cast<j_common_ptr>(&jcomp), JPOOL_IMAGE, sizeof(JPEGDestinationInfo)));
 		jcomp.dest->init_destination = JPEGInitDestination;
 		jcomp.dest->empty_output_buffer = JPEGEmptyOutputBuffer;
 		jcomp.dest->term_destination = JPEGTermDestination;
 
-		JPEGDestinationInfo *pDstInfo = (JPEGDestinationInfo*)jcomp.dest;
+		JPEGDestinationInfo *pDstInfo = reinterpret_cast<JPEGDestinationInfo*>(jcomp.dest);
 		pDstInfo->hFile = hFile;
 
 		const int Width = pInfo->pbmi->bmiHeader.biWidth;
@@ -155,13 +155,13 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 			/* コメントの書き込み */
 #ifndef UNICODE
 			jpeg_write_marker(
-				&jcomp, JPEG_COM, (JOCTET*)pInfo->pszComment,
+				&jcomp, JPEG_COM, reinterpret_cast<JOCTET*>(pInfo->pszComment),
 				lstrlen(pInfo->pszComment));
 #else
 			const int Length = WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
 			std::unique_ptr<char[]> Comment(new char[Length]);
 			WideCharToMultiByte(CP_ACP, 0, pInfo->pszComment, -1, Comment.get(), Length, nullptr, nullptr);
-			jpeg_write_marker(&jcomp, JPEG_COM, (JOCTET*)Comment.get(), Length - 1);
+			jpeg_write_marker(&jcomp, JPEG_COM, reinterpret_cast<JOCTET*>(Comment.get()), Length - 1);
 #endif
 		}
 

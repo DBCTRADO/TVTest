@@ -51,8 +51,8 @@ namespace TVTest
 
 		COptions();
 		COptions(LPCTSTR pszSection);
+		virtual ~COptions() = default;
 
-		virtual ~COptions();
 		DWORD GetUpdateFlags() const { return m_UpdateFlags; }
 		DWORD SetUpdateFlag(DWORD Flag);
 		void ClearUpdateFlags() { m_UpdateFlags = 0; }

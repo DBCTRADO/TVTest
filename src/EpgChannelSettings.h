@@ -36,7 +36,6 @@ namespace TVTest
 	{
 	public:
 		CEpgChannelSettings(CProgramGuide *pProgramGuide);
-		~CEpgChannelSettings();
 
 		bool Show(HWND hwndOwner) override;
 

@@ -21,6 +21,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <cstdlib>
+#include <memory>
+#include <string>
 #include "libpng/png.h"
 #include "zlib/zlib.h"
 #include "ImageLib.h"
@@ -35,134 +38,160 @@ namespace ImageLib
 {
 
 
+static void PNGError(png_structp png_ptr, png_const_charp error_msg)
+{
+#ifdef _DEBUG
+	char Text[256];
+	std::snprintf(Text, sizeof(Text), "libpng error: %s\n", error_msg != nullptr ? error_msg : "(undefined)");
+	::OutputDebugStringA(Text);
+#endif
+	throw PNGError;
+}
+
+
+static void PNGWarning(png_structp png_ptr, png_const_charp warning_msg)
+{
+#ifdef _DEBUG
+	char Text[256];
+	std::snprintf(Text, sizeof(Text), "libpng warning: %s\n", warning_msg);
+	::OutputDebugStringA(Text);
+#endif
+}
+
+
 // PNG をファイルに保存する
 bool SavePNGFile(const ImageSaveInfo *pInfo)
 {
 	FILE *fp;
-	int Width, Height, BitsPerPixel;
-	png_structp pPNG;
-	png_infop pPNGInfo;
-	int i, nPasses, y;
-	int nSrcRowBytes;
-	png_bytep pbRow;
-	BYTE *pBuff = nullptr;
-
 	if (_tfopen_s(&fp, pInfo->pszFileName, TEXT("wbN")) != 0)
 		return false;
 	// 書き込み単位がとても小さく保存先によってはバッファリングの効果が大きいため
-	setvbuf(fp, nullptr, _IOFBF, 64 * 1024);
+	std::setvbuf(fp, nullptr, _IOFBF, 64 * 1024);
 
-	pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-	if (pPNG == nullptr) {
-		fclose(fp);
-		return false;
-	}
-	pPNGInfo = png_create_info_struct(pPNG);
-	if (pPNGInfo == nullptr) {
-		png_destroy_write_struct(&pPNG, nullptr);
-		fclose(fp);
-		return false;
-	}
-	if (setjmp(png_jmpbuf(pPNG))) {
-		png_destroy_write_struct(&pPNG, &pPNGInfo);
-		if (pBuff != nullptr)
-			delete [] pBuff;
-		fclose(fp);
-		return false;
-	}
-	png_init_io(pPNG, fp);
-	png_set_compression_level(pPNG, _ttoi(pInfo->pszOption));
-	Width = pInfo->pbmi->bmiHeader.biWidth;
-	Height = abs(pInfo->pbmi->bmiHeader.biHeight);
-	BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
-	png_set_IHDR(
-		pPNG, pPNGInfo, Width, Height,
-		BitsPerPixel < 8 ? BitsPerPixel : 8,
-		BitsPerPixel <= 8 ? PNG_COLOR_TYPE_PALETTE : PNG_COLOR_TYPE_RGB,
-		//fInterlace ? PNG_INTERLACE_NONE : PNG_INTERLACE_ADAM7,
-		PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-	if (BitsPerPixel <= 8) {
-		int nColors = 1 << BitsPerPixel;
-		png_color PNGPalette[256];
-		const RGBQUAD *prgb;
+	png_structp pPNG = nullptr;
+	png_infop pPNGInfo = nullptr;
 
-		prgb = pInfo->pbmi->bmiColors;
-		for (i = 0; i < nColors; i++) {
-			PNGPalette[i].red = prgb->rgbRed;
-			PNGPalette[i].green = prgb->rgbGreen;
-			PNGPalette[i].blue = prgb->rgbBlue;
-			prgb++;
+	try {
+		int i, y;
+		png_bytep pbRow;
+
+		pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, PNGError, PNGWarning);
+		if (pPNG == nullptr) {
+			std::fclose(fp);
+			return false;
 		}
-		png_set_PLTE(pPNG, pPNGInfo, PNGPalette, nColors);
-	}
-	if (pInfo->pszComment != nullptr) {
-		png_text PNGText;
+		pPNGInfo = png_create_info_struct(pPNG);
+		if (pPNGInfo == nullptr) {
+			png_destroy_write_struct(&pPNG, nullptr);
+			std::fclose(fp);
+			return false;
+		}
+
+		png_init_io(pPNG, fp);
+		png_set_compression_level(pPNG, _ttoi(pInfo->pszOption));
+
+		const int Width = pInfo->pbmi->bmiHeader.biWidth;
+		const int Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
+		const int BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
+		png_set_IHDR(
+			pPNG, pPNGInfo, Width, Height,
+			BitsPerPixel < 8 ? BitsPerPixel : 8,
+			BitsPerPixel <= 8 ? PNG_COLOR_TYPE_PALETTE : PNG_COLOR_TYPE_RGB,
+			//fInterlace ? PNG_INTERLACE_NONE : PNG_INTERLACE_ADAM7,
+			PNG_INTERLACE_NONE,
+			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+		if (BitsPerPixel <= 8) {
+			const int nColors = 1 << BitsPerPixel;
+			png_color PNGPalette[256];
+			const RGBQUAD *prgb;
+
+			prgb = pInfo->pbmi->bmiColors;
+			for (i = 0; i < nColors; i++) {
+				PNGPalette[i].red = prgb->rgbRed;
+				PNGPalette[i].green = prgb->rgbGreen;
+				PNGPalette[i].blue = prgb->rgbBlue;
+				prgb++;
+			}
+			png_set_PLTE(pPNG, pPNGInfo, PNGPalette, nColors);
+		}
+
+		if (pInfo->pszComment != nullptr) {
+			png_text PNGText;
+			std::string Text;
 
 #ifndef UNICODE
-		int Length = MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0);
-		LPWSTR pszComment = new WCHAR[Length];
-		MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, pszComment, Length);
-		Length = WideCharToMultiByte(CP_UTF8, 0, pszComment, -1, nullptr, 0, nullptr, nullptr);
-		PNGText.text = new char[Length];
-		WideCharToMultiByte(CP_UTF8, 0, pszComment, -1, PNGText.text, Length, nullptr, nullptr);
-		delete [] pszComment;
+			int Length = MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, nullptr, 0);
+			std::wstring Comment(Length);
+			MultiByteToWideChar(CP_ACP, 0, pInfo->pszComment, -1, Comment.data(), Length);
+			Length = WideCharToMultiByte(CP_UTF8, 0, Comment.c_str(), -1, nullptr, 0, nullptr, nullptr);
+			Text.resize(Length);
+			WideCharToMultiByte(CP_UTF8, 0, Comment.c_str(), -1, Text.data(), Length, nullptr, nullptr);
 #else
-		int Length = WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
-		PNGText.text = new char[Length];
-		WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, PNGText.text, Length, nullptr, nullptr);
+			const int Length = WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, nullptr, 0, nullptr, nullptr);
+			Text.resize(Length);
+			WideCharToMultiByte(CP_UTF8, 0, pInfo->pszComment, -1, Text.data(), Length, nullptr, nullptr);
 #endif
-		PNGText.compression = PNG_ITXT_COMPRESSION_NONE;
-		PNGText.key = const_cast<png_charp>("Comment");
-		PNGText.text_length = 0;
-		PNGText.itxt_length =::lstrlenA(PNGText.text);
-		PNGText.lang = nullptr;
-		PNGText.lang_key = nullptr;
-		png_set_text(pPNG, pPNGInfo, &PNGText, 1);
-		delete [] PNGText.text;
-	}
-	png_write_info(pPNG, pPNGInfo);
-	if (BitsPerPixel > 8)
-		png_set_bgr(pPNG);
-	/*if (fInterlace)
-		nPasses = png_set_interlace_handling(pPNG);
-	else
-		nPasses = 1;
-	 */
-	nPasses = 1;
-	nSrcRowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
-	if (BitsPerPixel == 32)
-		pBuff = new BYTE[Width * 3];
-	for (i = 0; i < nPasses; i++) {
-		for (y = 0; y < Height; y++) {
-			pbRow =
-				(png_bytep)pInfo->pBits +
-					(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes;
-			if (pBuff != nullptr) {
-				int x;
-				const BYTE *p;
-				BYTE *q;
-
-				p = pbRow;
-				q = pBuff;
-				for (x = 0; x < Width; x++) {
-					*q++ = p[0];
-					*q++ = p[1];
-					*q++ = p[2];
-					p += 4;
-				}
-				pbRow = pBuff;
-			}
-			png_write_rows(pPNG, &pbRow, 1);
+			PNGText.compression = PNG_ITXT_COMPRESSION_NONE;
+			PNGText.key = const_cast<png_charp>("Comment");
+			PNGText.text = Text.data();
+			PNGText.text_length = 0;
+			PNGText.itxt_length = ::lstrlenA(PNGText.text);
+			PNGText.lang = nullptr;
+			PNGText.lang_key = nullptr;
+			png_set_text(pPNG, pPNGInfo, &PNGText, 1);
 		}
+
+		png_write_info(pPNG, pPNGInfo);
+
+		if (BitsPerPixel > 8)
+			png_set_bgr(pPNG);
+
+		/*if (fInterlace)
+			nPasses = png_set_interlace_handling(pPNG);
+		else
+			nPasses = 1;
+		*/
+		constexpr int nPasses = 1;
+		const int nSrcRowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
+
+		std::unique_ptr<BYTE[]> Buff;
+		if (BitsPerPixel == 32)
+			Buff.reset(new BYTE[Width * 3]);
+
+		for (i = 0; i < nPasses; i++) {
+			for (y = 0; y < Height; y++) {
+				pbRow =
+					const_cast<png_bytep>(static_cast<const png_byte*>(pInfo->pBits) +
+						(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes);
+				if (Buff) {
+					int x;
+					const BYTE *p;
+					BYTE *q;
+
+					p = pbRow;
+					q = Buff.get();
+					for (x = 0; x < Width; x++) {
+						*q++ = p[0];
+						*q++ = p[1];
+						*q++ = p[2];
+						p += 4;
+					}
+					pbRow = Buff.get();
+				}
+				png_write_rows(pPNG, &pbRow, 1);
+			}
+		}
+
+		png_write_end(pPNG, pPNGInfo);
+		png_destroy_write_struct(&pPNG, &pPNGInfo);
+		std::fclose(fp);
+	} catch (...) {
+		png_destroy_write_struct(&pPNG, &pPNGInfo);
+		std::fclose(fp);
+		return false;
 	}
-	if (pBuff != nullptr) {
-		delete [] pBuff;
-		pBuff = nullptr;
-	}
-	png_write_end(pPNG, pPNGInfo);
-	png_destroy_write_struct(&pPNG, &pPNGInfo);
-	fclose(fp);
+
 	return true;
 }
 
@@ -186,11 +215,11 @@ struct RGBA
 };
 
 #define CHUNK_TYPE(c1,c2,c3,c4) \
-	(((DWORD)(c1) << 24) | ((DWORD)(c2) << 16) | ((DWORD)(c3) << 8) | (DWORD)c4)
+	((static_cast<DWORD>(c1) << 24) | (static_cast<DWORD>(c2) << 16) | (static_cast<DWORD>(c3) << 8) | static_cast<DWORD>(c4))
 
 inline DWORD MSBFirst32(const BYTE *p)
 {
-	return ((DWORD)p[0] << 24) | ((DWORD)p[1] << 16) | ((DWORD)p[2] << 8) | (DWORD)p[3];
+	return (static_cast<DWORD>(p[0]) << 24) | (static_cast<DWORD>(p[1]) << 16) | (static_cast<DWORD>(p[2]) << 8) | static_cast<DWORD>(p[3]);
 }
 
 static const RGBA DefaultPalette[128] = {
@@ -325,7 +354,7 @@ static const RGBA DefaultPalette[128] = {
 };
 
 // ARIB 形式の PNG を読み込む
-HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
+HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 {
 	static const BYTE Adam7[8][2][2] = {
 		{{ 1, 0}, { 1, 0}},	// No interlace
@@ -338,20 +367,20 @@ HGLOBAL LoadAribPng(const void *pData, SIZE_T DataSize)
 		{{ 1, 0}, { 2, 1}},	// Interlaced image 7
 	};
 	const BYTE *p;
-	SIZE_T Pos;
+	size_t Pos;
 	IHDR ImageHeader;
 	const BYTE *pCompressedImageData = nullptr;
-	SIZE_T CompressedImageSize = 0;
+	size_t CompressedImageSize = 0;
 
 	if (pData == nullptr || DataSize <= 8)
 		return nullptr;
 	p = static_cast<const BYTE*>(pData);
-	if (memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
+	if (std::memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
 		return nullptr;
 	Pos = 8;
 	while (Pos + 8 < DataSize) {
-		DWORD ChunkSize = MSBFirst32(&p[Pos]);
-		DWORD ChunkType = MSBFirst32(&p[Pos + 4]);
+		const DWORD ChunkSize = MSBFirst32(&p[Pos]);
+		const DWORD ChunkType = MSBFirst32(&p[Pos + 4]);
 		if (Pos + 8 + ChunkSize + 4 > DataSize)
 			return nullptr;
 		if (crc32(crc32(0, Z_NULL, 0), &p[Pos + 4], ChunkSize + 4) != MSBFirst32(&p[Pos + 8 + ChunkSize]))
@@ -398,11 +427,10 @@ Decode:
 	struct {
 		int Width;
 		int Height;
-		SIZE_T BytesPerLine;
+		size_t BytesPerLine;
 	} InterlacedImage[8];
 	int i;
-	SIZE_T ImageDataSize;
-	BYTE *pImageData;
+	size_t ImageDataSize;
 
 	switch (ImageHeader.ColorType) {
 	case 0: // Grayscale
@@ -428,23 +456,21 @@ Decode:
 		if (i == 0)
 			break;
 	}
-	pImageData = new BYTE[ImageDataSize];
+	std::unique_ptr<BYTE[]> ImageData(new BYTE[ImageDataSize]);
 
-	uLongf DecompressSize = (uLongf)ImageDataSize;
+	uLongf DecompressSize = static_cast<uLongf>(ImageDataSize);
 	if (uncompress(
-				pImageData, &DecompressSize,
-				pCompressedImageData, (uLongf)CompressedImageSize) != Z_OK) {
-		delete [] pImageData;
+				ImageData.get(), &DecompressSize,
+				pCompressedImageData, static_cast<uLongf>(CompressedImageSize)) != Z_OK) {
 		return nullptr;
 	}
 
 	// 常に32ビットDIBに変換する
-	HGLOBAL hDIB =::GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + ImageHeader.Width * 4 * ImageHeader.Height);
+	const HGLOBAL hDIB =::GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + ImageHeader.Width * 4 * ImageHeader.Height);
 	if (hDIB == nullptr) {
-		delete [] pImageData;
 		return nullptr;
 	}
-	BITMAPINFOHEADER *pbmih = (BITMAPINFOHEADER*)::GlobalLock(hDIB);
+	BITMAPINFOHEADER *pbmih = static_cast<BITMAPINFOHEADER*>(::GlobalLock(hDIB));
 	pbmih->biSize = sizeof(BITMAPINFOHEADER);
 	pbmih->biWidth = ImageHeader.Width;
 	pbmih->biHeight = ImageHeader.Height;
@@ -456,27 +482,26 @@ Decode:
 	pbmih->biYPelsPerMeter = 0;
 	pbmih->biClrUsed = 0;
 	pbmih->biClrImportant = 0;
-	BYTE *pDIBBits = (BYTE*)(pbmih + 1);
+	BYTE *pDIBBits = reinterpret_cast<BYTE*>(pbmih + 1);
 
-	BYTE *q = pImageData;
-	int SampleMask = (1 << ImageHeader.BitDepth) - 1;
-	int PixelBytes = (ImageHeader.BitDepth * PlanesPerPixel + 7) / 8;
+	BYTE *q = ImageData.get();
+	const int SampleMask = (1 << ImageHeader.BitDepth) - 1;
+	const int PixelBytes = (ImageHeader.BitDepth * PlanesPerPixel + 7) / 8;
 	int x, y, z;
 
 	for (i = ImageHeader.InterlaceMethod; i < 8; i++) {
 		for (y = 0; y < InterlacedImage[i].Height; y++) {
-			int FilterType = *q++;
+			const int FilterType = *q++;
 			BYTE *r = q;
 
 			if (FilterType > 4) {
 				::GlobalFree(hDIB);
-				delete [] pImageData;
 				return nullptr;
 			}
-			for (x = 0; (SIZE_T)x < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
-				int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
-				int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
-				int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;
+			for (x = 0; static_cast<size_t>(x) < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
+				const int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
+				const int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
+				const int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;
 				switch (FilterType) {
 				case 0: // None
 					break;
@@ -491,9 +516,9 @@ Decode:
 					break;
 				case 4: // Paeth
 					{
-						int pa = abs(a + b - c - a);
-						int pb = abs(a + b - c - b);
-						int pc = abs(a + b - c - c);
+						const int pa = std::abs(a + b - c - a);
+						const int pb = std::abs(a + b - c - b);
+						const int pc = std::abs(a + b - c - c);
 						*q += (pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c;
 					}
 					break;
@@ -514,7 +539,7 @@ Decode:
 						Sample[z] = (t[0] >> s)&SampleMask;
 					}
 				}
-				int x1 = x * Adam7[i][0][0] + Adam7[i][0][1];
+				const int x1 = x * Adam7[i][0][0] + Adam7[i][0][1];
 				switch (ImageHeader.ColorType) {
 				case 0:	// Grayscale
 					pDestLine[x1 * 4 + 0] = Sample[0];
@@ -555,7 +580,6 @@ Decode:
 		if (i == 0)
 			break;
 	}
-	delete [] pImageData;
 
 	return hDIB;
 }

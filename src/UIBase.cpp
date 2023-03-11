@@ -313,7 +313,7 @@ void CUIBase::InitStyleScaling(HWND hwnd, bool fNonClientScaling)
 
 void CUIBase::OnDPIChanged(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-	TRACE(TEXT("DPI changed : %dx%d\n"), LOWORD(wParam), HIWORD(wParam));
+	TRACE(TEXT("DPI changed : {}x{}\n"), LOWORD(wParam), HIWORD(wParam));
 
 	if (GetStyleManager()->IsHandleDPIChanged() && m_pStyleScaling != nullptr) {
 		m_pStyleScaling->SetDPI(HIWORD(wParam));

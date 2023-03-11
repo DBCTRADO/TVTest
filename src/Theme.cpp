@@ -157,8 +157,8 @@ bool Draw(HDC hdc, const RECT &Rect, const ForegroundStyle &Style, LPCTSTR pszTe
 		return false;
 	}
 
-	COLORREF OldTextColor = ::SetTextColor(hdc, c);
-	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+	const COLORREF OldTextColor = ::SetTextColor(hdc, c);
+	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 	RECT rc = Rect;
 	::DrawText(hdc, pszText, -1, &rc, Flags);
 	::SetBkMode(hdc, OldBkMode);
@@ -177,7 +177,7 @@ bool Draw(HDC hdc, const RECT &Rect, const BorderStyle &Style)
 
 inline BYTE RGBIntensity(const ThemeColor &Color)
 {
-	return (BYTE)((Color.Red * 19672 + Color.Green * 38621 + Color.Blue * 7500) >> 16);
+	return static_cast<BYTE>((Color.Red * 19672 + Color.Green * 38621 + Color.Blue * 7500) >> 16);
 }
 
 inline ThemeColor GetHighlightColor(const ThemeColor &Color)
@@ -193,7 +193,7 @@ inline ThemeColor GetShadowColor(const ThemeColor &Color)
 inline void FillBorder(HDC hdc, const RECT &Area, int Left, int Top, int Right, int Bottom, const ThemeColor &Color)
 {
 	if (Area.left < Area.right && Area.top < Area.bottom) {
-		RECT rcBorder = {Left, Top, Right, Bottom};
+		const RECT rcBorder = {Left, Top, Right, Bottom};
 		RECT rcDraw;
 		if (::IntersectRect(&rcDraw, &Area, &rcBorder))
 			DrawUtil::Fill(hdc, &rcDraw, Color);
@@ -211,9 +211,9 @@ bool Draw(HDC hdc, RECT *pRect, const BorderStyle &Style)
 	RECT rc = *pRect;
 
 	if (Style.Width.Left == 1 && Style.Width.Top == 1 && Style.Width.Right == 1 && Style.Width.Bottom == 1) {
-		HPEN hpenOld = static_cast<HPEN>(::SelectObject(hdc, ::GetStockObject(DC_PEN)));
-		COLORREF OldDCPenColor = ::GetDCPenColor(hdc);
-		HBRUSH hbrOld = static_cast<HBRUSH>(::SelectObject(hdc, ::GetStockObject(NULL_BRUSH)));
+		const HPEN hpenOld = static_cast<HPEN>(::SelectObject(hdc, ::GetStockObject(DC_PEN)));
+		const COLORREF OldDCPenColor = ::GetDCPenColor(hdc);
+		const HBRUSH hbrOld = static_cast<HBRUSH>(::SelectObject(hdc, ::GetStockObject(NULL_BRUSH)));
 
 		switch (Style.Type) {
 		case BorderType::Solid:

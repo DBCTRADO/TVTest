@@ -84,11 +84,6 @@ CZoomOptions::CZoomOptions()
 }
 
 
-CZoomOptions::~CZoomOptions()
-{
-}
-
-
 bool CZoomOptions::Show(HWND hwndOwner)
 {
 	return ShowDialog(
@@ -105,16 +100,16 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 	for (int i = 0; i <= CM_CUSTOMZOOM_LAST - CM_CUSTOMZOOM_FIRST; i++, j++) {
 		int Type, Rate, Width, Height;
 
-		StringPrintf(szText, TEXT("CustomZoom%d"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}"), i + 1);
 		if (Settings.Read(szText, &Rate) && Rate > 0 && Rate <= MAX_RATE)
 			m_ZoomList[j].Rate.Rate = Rate;
-		StringPrintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Type"), i + 1);
 		if (Settings.Read(szText, &Type) && CheckEnumRange(static_cast<ZoomType>(Type)))
 			m_ZoomList[j].Type = static_cast<ZoomType>(Type);
-		StringPrintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Width"), i + 1);
 		if (Settings.Read(szText, &Width) && Width > 0)
 			m_ZoomList[j].Size.Width = Width;
-		StringPrintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Height"), i + 1);
 		if (Settings.Read(szText, &Height) && Height > 0)
 			m_ZoomList[j].Size.Height = Height;
 	}
@@ -129,14 +124,14 @@ bool CZoomOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < ListCount; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("ZoomList%d"), i);
+			StringFormat(szName, TEXT("ZoomList{}"), i);
 			if (Settings.Read(szName, szText, lengthof(szText))) {
 				LPTSTR p = szText;
 				while (*p != _T('\0') && *p != _T(','))
 					p++;
 				if (*p == _T(','))
 					*p++ = _T('\0');
-				int Command = pCommandManager->ParseIDText(szText);
+				const int Command = pCommandManager->ParseIDText(szText);
 				if (Command != 0) {
 					j = GetIndexByCommand(Command);
 					if (j >= 0) {
@@ -176,13 +171,13 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 
 	int j = CM_ZOOM_LAST - CM_ZOOM_FIRST + 1;
 	for (int i = 0; i <= CM_CUSTOMZOOM_LAST - CM_CUSTOMZOOM_FIRST; i++, j++) {
-		StringPrintf(szText, TEXT("CustomZoom%d"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Rate.Rate);
-		StringPrintf(szText, TEXT("CustomZoom%d_Type"), i + 1);
-		Settings.Write(szText, (int)m_ZoomList[j].Type);
-		StringPrintf(szText, TEXT("CustomZoom%d_Width"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Type"), i + 1);
+		Settings.Write(szText, static_cast<int>(m_ZoomList[j].Type));
+		StringFormat(szText, TEXT("CustomZoom{}_Width"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Width);
-		StringPrintf(szText, TEXT("CustomZoom%d_Height"), i + 1);
+		StringFormat(szText, TEXT("CustomZoom{}_Height"), i + 1);
 		Settings.Write(szText, m_ZoomList[j].Size.Height);
 	}
 
@@ -193,10 +188,10 @@ bool CZoomOptions::WriteSettings(CSettings &Settings)
 		const ZoomInfo &Info = m_ZoomList[Index];
 		TCHAR szName[32];
 
-		StringPrintf(szName, TEXT("ZoomList%d"), i);
-		StringPrintf(
-			szText, TEXT("%s,%d"),
-			pCommandManager->GetCommandIDText(m_DefaultZoomList[Index].Command).c_str(),
+		StringFormat(szName, TEXT("ZoomList{}"), i);
+		StringFormat(
+			szText, TEXT("{},{}"),
+			pCommandManager->GetCommandIDText(m_DefaultZoomList[Index].Command),
 			Info.fVisible ? 1 : 0);
 		Settings.Write(szName, szText);
 	}
@@ -220,12 +215,12 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 			UINT Flags = MF_BYPOSITION | MF_STRING | MF_ENABLED;
 
 			if (Info.Type == ZoomType::Rate) {
-				int Length = StringPrintf(
-					szText, TEXT("%d%%"),
+				const size_t Length = StringFormat(
+					szText, TEXT("{}%"),
 					Info.Rate.GetPercentage());
 				if (Info.Rate.Rate * 100 % Info.Rate.Factor != 0) {
-					StringPrintf(
-						szText + Length, lengthof(szText) - Length, TEXT(" (%d/%d)"),
+					StringFormat(
+						szText + Length, lengthof(szText) - Length, TEXT(" ({}/{})"),
 						Info.Rate.Rate, Info.Rate.Factor);
 				}
 				if (!fRateCheck
@@ -235,8 +230,8 @@ bool CZoomOptions::SetMenu(HMENU hmenu, const ZoomInfo *pCurZoom) const
 					fRateCheck = true;
 				}
 			} else {
-				StringPrintf(
-					szText, TEXT("%d x %d"),
+				StringFormat(
+					szText, TEXT("{} x {}"),
 					Info.Size.Width, Info.Size.Height);
 				if (!fSizeCheck
 						&& pCurZoom != nullptr
@@ -277,19 +272,19 @@ int CZoomOptions::GetIndexByCommand(int Command) const
 
 void CZoomOptions::FormatCommandText(int Command, const ZoomInfo &Info, LPTSTR pszText, size_t MaxLength) const
 {
-	int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, (int)MaxLength);
+	const int Length = ::LoadString(GetAppClass().GetResourceInstance(), Command, pszText, static_cast<int>(MaxLength));
 	if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
 		if (Info.Type == ZoomType::Rate)
-			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d%%"), Info.Rate.GetPercentage());
+			StringFormat(pszText + Length, MaxLength - Length, TEXT(" : {}%"), Info.Rate.GetPercentage());
 		else if (Info.Type == ZoomType::Size)
-			StringPrintf(pszText + Length, MaxLength - Length, TEXT(" : %d x %d"), Info.Size.Width, Info.Size.Height);
+			StringFormat(pszText + Length, MaxLength - Length, TEXT(" : {} x {}"), Info.Size.Width, Info.Size.Height);
 	}
 }
 
 
 void CZoomOptions::SetItemState(HWND hDlg)
 {
-	int Sel = m_ItemListView.GetSelectedItem();
+	const int Sel = m_ItemListView.GetSelectedItem();
 
 	if (Sel >= 0) {
 		const int Index = GetItemIndex(Sel);
@@ -380,7 +375,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					const int Command = m_DefaultZoomList[Index].Command;
 
 					if (Command >= CM_CUSTOMZOOM_FIRST && Command <= CM_CUSTOMZOOM_LAST) {
-						ZoomType Type = ::IsDlgButtonChecked(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE) ? ZoomType::Rate : ZoomType::Size;
+						const ZoomType Type = ::IsDlgButtonChecked(hDlg, IDC_ZOOMOPTIONS_TYPE_RATE) ? ZoomType::Rate : ZoomType::Size;
 						ZoomInfo &Info = m_ZoomSettingList[Index];
 
 						if (Type != Info.Type) {
@@ -397,7 +392,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ZOOMOPTIONS_RATE:
 			if (HIWORD(wParam) == EN_CHANGE && !m_fChanging) {
-				int Rate = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_RATE, nullptr, TRUE);
+				const int Rate = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_RATE, nullptr, TRUE);
 
 				if (Rate > 0 && Rate <= MAX_RATE) {
 					const int Sel = m_ItemListView.GetSelectedItem();
@@ -422,8 +417,8 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_ZOOMOPTIONS_WIDTH:
 		case IDC_ZOOMOPTIONS_HEIGHT:
 			if (HIWORD(wParam) == EN_CHANGE && !m_fChanging) {
-				int Width = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_WIDTH, nullptr, TRUE);
-				int Height = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_HEIGHT, nullptr, TRUE);
+				const int Width = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_WIDTH, nullptr, TRUE);
+				const int Height = ::GetDlgItemInt(hDlg, IDC_ZOOMOPTIONS_HEIGHT, nullptr, TRUE);
 
 				if (Width > 0 && Height > 0) {
 					const int Sel = m_ItemListView.GetSelectedItem();
@@ -447,7 +442,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ZOOMOPTIONS_GETCURSIZE:
 			{
-				HWND hwndViewer = GetAppClass().UICore.GetViewerWindow();
+				const HWND hwndViewer = GetAppClass().UICore.GetViewerWindow();
 
 				if (hwndViewer != nullptr) {
 					RECT rc;
@@ -462,7 +457,8 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_ZOOMOPTIONS_UP:
 		case IDC_ZOOMOPTIONS_DOWN:
 			{
-				int From = m_ItemListView.GetSelectedItem(), To;
+				const int From = m_ItemListView.GetSelectedItem();
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_ZOOMOPTIONS_UP) {
@@ -487,7 +483,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDOK:
 			{
 				for (int i = 0; i < NUM_ZOOM_COMMANDS; i++) {
-					int Index = GetItemIndex(i);
+					const int Index = GetItemIndex(i);
 					m_Order[i] = Index;
 					if (m_DefaultZoomList[Index].Command >= CM_CUSTOMZOOM_FIRST
 							&& m_DefaultZoomList[Index].Command <= CM_CUSTOMZOOM_LAST) {
@@ -496,6 +492,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					m_ZoomList[Index].fVisible = m_ItemListView.IsItemChecked(i);
 				}
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -503,7 +500,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			if (!m_fChanging)
 				SetItemState(hDlg);

@@ -39,10 +39,10 @@ namespace
 constexpr LPARAM MAKE_ACCEL_PARAM(WORD key, BYTE mod, bool global, BYTE appcommand) {
 	return (key << 16) | (mod << 8) | (global ? 0x80 : 0x00) | appcommand;
 }
-constexpr WORD GET_ACCEL_KEY(LPARAM param) { return (WORD)(param >> 16); }
-constexpr BYTE GET_ACCEL_MOD(LPARAM param) { return (BYTE)((param >> 8) & 0xFF); }
+constexpr WORD GET_ACCEL_KEY(LPARAM param) { return static_cast<WORD>(param >> 16); }
+constexpr BYTE GET_ACCEL_MOD(LPARAM param) { return static_cast<BYTE>((param >> 8) & 0xFF); }
 constexpr bool GET_ACCEL_GLOBAL(LPARAM param) { return (param & 0x80) != 0; }
-constexpr BYTE GET_ACCEL_APPCOMMAND(LPARAM param) { return (BYTE)(param & 0x7F); }
+constexpr BYTE GET_ACCEL_APPCOMMAND(LPARAM param) { return static_cast<BYTE>(param & 0x7F); }
 
 
 static const struct {
@@ -296,9 +296,9 @@ void CAccelerator::FormatAccelText(LPTSTR pszText, size_t MaxText, int Key, int 
 		}
 	}
 
-	StringPrintf(
+	StringFormat(
 		pszText, MaxText,
-		TEXT("%s%s%s%s%s"),
+		TEXT("{}{}{}{}{}"),
 		((Modifiers & MOD_SHIFT  ) != 0) ? TEXT("Shift+") : TEXT(""),
 		((Modifiers & MOD_CONTROL) != 0) ? TEXT("Ctrl+")  : TEXT(""),
 		((Modifiers & MOD_ALT    ) != 0) ? TEXT("Alt+")   : TEXT(""),
@@ -346,10 +346,9 @@ HACCEL CAccelerator::CreateAccel()
 	if (m_KeyList.size() == 0)
 		return nullptr;
 
-	LPACCEL paccl;
+	std::unique_ptr<ACCEL[]> paccl(new ACCEL[m_KeyList.size()]);
 	int j;
 
-	paccl = new ACCEL[m_KeyList.size()];
 	j = 0;
 	for (size_t i = 0; i < m_KeyList.size(); i++) {
 		if (!m_KeyList[i].fGlobal) {
@@ -365,11 +364,11 @@ HACCEL CAccelerator::CreateAccel()
 			j++;
 		}
 	}
-	HACCEL hAccel = nullptr;
-	if (j > 0)
-		hAccel = ::CreateAcceleratorTable(paccl, j);
-	delete [] paccl;
-	return hAccel;
+
+	if (j == 0)
+		return nullptr;
+
+	return ::CreateAcceleratorTable(paccl.get(), j);
 }
 
 
@@ -423,7 +422,7 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			TCHAR szKey[32];
 			int Value;
 
-			StringPrintf(szKey, TEXT("ChInputKeyMode%d"), i);
+			StringFormat(szKey, TEXT("ChInputKeyMode{}"), i);
 			if (Settings.Read(szKey, &Value)) {
 				m_ChannelInputOptions.KeyInputMode[i] =
 					static_cast<CChannelInputOptions::KeyInputModeType>(Value);
@@ -463,20 +462,20 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 				TCHAR szName[64];
 				int Command;
 
-				StringPrintf(szName, TEXT("Accel%d_Command"), i);
+				StringFormat(szName, TEXT("Accel{}_Command"), i);
 				if (Settings.Read(szName, &CommandText)
 						&& !CommandText.empty()
 						&& (Command = m_pCommandManager->ParseIDText(CommandText)) != 0) {
 					unsigned int Key, Modifiers;
 
-					StringPrintf(szName, TEXT("Accel%d_Key"), i);
+					StringFormat(szName, TEXT("Accel{}_Key"), i);
 					if (Settings.Read(szName, &Key) && Key != 0) {
 						KeyInfo Info;
 
 						Info.Command = Command;
 						Info.KeyCode = Key;
 						Modifiers = 0;
-						StringPrintf(szName, TEXT("Accel%d_Mod"), i);
+						StringFormat(szName, TEXT("Accel{}_Mod"), i);
 						Settings.Read(szName, &Modifiers);
 						Info.Modifiers = Modifiers & 0x7F;
 						Info.fGlobal = (Modifiers & 0x80) != 0;
@@ -500,21 +499,21 @@ bool CAccelerator::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < NumCommands; i++) {
 				TCHAR szName[64];
 
-				StringPrintf(szName, TEXT("Button%d_Command"), i);
+				StringFormat(szName, TEXT("Button{}_Command"), i);
 				if (Settings.Read(szName, &CommandText) && !CommandText.empty()) {
 					int Type;
 					unsigned int AppCommand;
 
-					StringPrintf(szName, TEXT("Button%d_Type"), i);
+					StringFormat(szName, TEXT("Button{}_Type"), i);
 					if (!Settings.Read(szName, &Type) || (Type != 0 && Type != 1))
 						continue;
-					StringPrintf(szName, TEXT("Button%d_AppCommand"), i);
+					StringFormat(szName, TEXT("Button{}_AppCommand"), i);
 					if (Settings.Read(szName, &AppCommand) && AppCommand != 0) {
 						AppCommandInfo Info;
 
 						Info.Command = m_pCommandManager->ParseIDText(CommandText);
 						if (Info.Command != 0) {
-							Info.Type = (MediaKeyType)Type;
+							Info.Type = static_cast<MediaKeyType>(Type);
 							Info.AppCommand = AppCommand;
 							m_AppCommandList.push_back(Info);
 						}
@@ -533,8 +532,8 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("Settings"))) {
 		for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
 			TCHAR szKey[32];
-			StringPrintf(szKey, TEXT("ChInputKeyMode%d"), i);
-			Settings.Write(szKey, (int)m_ChannelInputOptions.KeyInputMode[i]);
+			StringFormat(szKey, TEXT("ChInputKeyMode{}"), i);
+			Settings.Write(szKey, static_cast<int>(m_ChannelInputOptions.KeyInputMode[i]));
 		}
 		Settings.Write(TEXT("ChInputKeyTimeout"), m_ChannelInputOptions.KeyTimeout);
 		Settings.Write(TEXT("ChInputKeyTimeoutCancel"), m_ChannelInputOptions.fKeyTimeoutCancel);
@@ -567,17 +566,17 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 		} else
 #endif
 		{
-			Settings.Write(TEXT("AccelCount"), (int)m_KeyList.size());
+			Settings.Write(TEXT("AccelCount"), static_cast<int>(m_KeyList.size()));
 			for (size_t i = 0; i < m_KeyList.size(); i++) {
 				TCHAR szName[64];
 
-				StringPrintf(szName, TEXT("Accel%d_Command"), i);
+				StringFormat(szName, TEXT("Accel{}_Command"), i);
 				Settings.Write(
 					szName, m_pCommandManager->GetCommandIDText(m_KeyList[i].Command));
-				StringPrintf(szName, TEXT("Accel%d_Key"), i);
-				Settings.Write(szName, (int)m_KeyList[i].KeyCode);
-				StringPrintf(szName, TEXT("Accel%d_Mod"), i);
-				Settings.Write(szName, (int)(m_KeyList[i].Modifiers | (m_KeyList[i].fGlobal ? 0x80 : 0x00)));
+				StringFormat(szName, TEXT("Accel{}_Key"), i);
+				Settings.Write(szName, static_cast<int>(m_KeyList[i].KeyCode));
+				StringFormat(szName, TEXT("Accel{}_Mod"), i);
+				Settings.Write(szName, static_cast<int>(m_KeyList[i].Modifiers | (m_KeyList[i].fGlobal ? 0x80 : 0x00)));
 			}
 		}
 	}
@@ -606,16 +605,16 @@ bool CAccelerator::SaveSettings(CSettings &Settings)
 		} else
 #endif
 		{
-			Settings.Write(TEXT("NumCommands"), (int)m_AppCommandList.size());
+			Settings.Write(TEXT("NumCommands"), static_cast<int>(m_AppCommandList.size()));
 			for (size_t i = 0; i < m_AppCommandList.size(); i++) {
 				TCHAR szName[64];
 
-				StringPrintf(szName, TEXT("Button%d_Command"), i);
+				StringFormat(szName, TEXT("Button{}_Command"), i);
 				Settings.Write(
 					szName, m_pCommandManager->GetCommandIDText(m_AppCommandList[i].Command));
-				StringPrintf(szName, TEXT("Button%d_Type"), i);
-				Settings.Write(szName, (int)m_AppCommandList[i].Type);
-				StringPrintf(szName, TEXT("Button%d_AppCommand"), i);
+				StringFormat(szName, TEXT("Button{}_Type"), i);
+				Settings.Write(szName, static_cast<int>(m_AppCommandList[i].Type));
+				StringFormat(szName, TEXT("Button{}_AppCommand"), i);
 				Settings.Write(szName, m_AppCommandList[i].AppCommand);
 			}
 		}
@@ -696,16 +695,14 @@ int CAccelerator::TranslateAppCommand(WPARAM wParam, LPARAM lParam) const
 
 void CAccelerator::SetMenuAccel(HMENU hmenu)
 {
-	int Count, i;
-	unsigned int State;
+	const int Count = ::GetMenuItemCount(hmenu);
 
-	Count = ::GetMenuItemCount(hmenu);
-	for (i = 0; i < Count; i++) {
-		State = ::GetMenuState(hmenu, i, MF_BYPOSITION);
+	for (int i = 0; i < Count; i++) {
+		const unsigned int State = ::GetMenuState(hmenu, i, MF_BYPOSITION);
 		if ((State & MF_POPUP) != 0) {
 			SetMenuAccel(::GetSubMenu(hmenu, i));
 		} else if ((State & MF_SEPARATOR) == 0) {
-			SetMenuAccelText(hmenu, (int)::GetMenuItemID(hmenu, i));
+			SetMenuAccelText(hmenu, static_cast<int>(::GetMenuItemID(hmenu, i)));
 		}
 	}
 }
@@ -716,7 +713,7 @@ int CAccelerator::CheckAccelKey(BYTE Mod, WORD Key)
 	const int Count = m_ListView.GetItemCount();
 
 	for (int i = 0; i < Count; i++) {
-		LPARAM Param = m_ListView.GetItemParam(i);
+		const LPARAM Param = m_ListView.GetItemParam(i);
 		if (GET_ACCEL_KEY(Param) == Key && GET_ACCEL_MOD(Param) == Mod)
 			return i;
 	}
@@ -730,7 +727,7 @@ int CAccelerator::CheckAppCommand(int AppCommand)
 	const int Count = m_ListView.GetItemCount();
 
 	for (int i = 0; i < Count; i++) {
-		LPARAM Param = m_ListView.GetItemParam(i);
+		const LPARAM Param = m_ListView.GetItemParam(i);
 		if (GET_ACCEL_APPCOMMAND(Param) == AppCommand)
 			return i;
 	}
@@ -761,14 +758,14 @@ void CAccelerator::SetAccelItem(int Index, BYTE Mod, WORD Key, bool fGlobal, BYT
 
 void CAccelerator::SetDlgItemStatus(HWND hDlg)
 {
-	int Sel = m_ListView.GetSelectedItem();
+	const int Sel = m_ListView.GetSelectedItem();
 
 	if (Sel >= 0) {
-		LPARAM Param = m_ListView.GetItemParam(Sel);
-		WORD Key = GET_ACCEL_KEY(Param);
-		BYTE Mod = GET_ACCEL_MOD(Param);
+		const LPARAM Param = m_ListView.GetItemParam(Sel);
+		const WORD Key = GET_ACCEL_KEY(Param);
+		const BYTE Mod = GET_ACCEL_MOD(Param);
 		for (int i = 0; i < lengthof(AccelKeyList); i++) {
-			if (AccelKeyList[i].KeyCode == (unsigned)Key) {
+			if (AccelKeyList[i].KeyCode == static_cast<unsigned>(Key)) {
 				::SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_SETCURSEL, i + 1, 0);
 				break;
 			}
@@ -820,7 +817,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						for (size_t k = 0; k < m_MediaKeyList.size(); k++) {
 							if (m_MediaKeyList[k].Type == m_AppCommandList[j].Type
 									&& m_MediaKeyList[k].Command == m_AppCommandList[j].AppCommand) {
-								AppCommand = (int)(k + 1);
+								AppCommand = static_cast<int>(k + 1);
 								break;
 							}
 						}
@@ -833,7 +830,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					Param = MAKE_ACCEL_PARAM(pKey->KeyCode, pKey->Modifiers, pKey->fGlobal, AppCommand);
 				else
 					Param = MAKE_ACCEL_PARAM(0, 0, false, AppCommand);
-				int Index = m_ListView.InsertItem(i, szText, Param);
+				const int Index = m_ListView.InsertItem(i, szText, Param);
 				if (pKey != nullptr) {
 					FormatAccelText(szText, lengthof(szText), pKey->KeyCode, pKey->Modifiers, pKey->fGlobal);
 					m_ListView.SetItemText(Index, COLUMN_KEY, szText);
@@ -876,17 +873,18 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_ACCELERATOR_KEY:
 			if (HIWORD(wParam) != CBN_SELCHANGE)
 				break;
+			[[fallthrough]];
 		case IDC_ACCELERATOR_SHIFT:
 		case IDC_ACCELERATOR_CONTROL:
 		case IDC_ACCELERATOR_ALT:
 		case IDC_ACCELERATOR_GLOBAL:
 			{
-				int Sel = m_ListView.GetSelectedItem();
+				const int Sel = m_ListView.GetSelectedItem();
 				if (Sel < 0)
 					return TRUE;
 
 				LPARAM Param = m_ListView.GetItemParam(Sel);
-				int Key = (int)SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_GETCURSEL, 0, 0);
+				const int Key = static_cast<int>(SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_GETCURSEL, 0, 0));
 				if (Key > 0) {
 					BYTE Mod;
 					int i;
@@ -903,9 +901,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
 						m_ListView.GetItemText(i, 0, szCommand, lengthof(szCommand));
-						StringPrintf(
+						StringFormat(
 							szText,
-							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
+							TEXT("既に [{}] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
@@ -935,11 +933,11 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_ACCELERATOR_APPCOMMAND:
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
-				int Sel = m_ListView.GetSelectedItem();
+				const int Sel = m_ListView.GetSelectedItem();
 				if (Sel < 0)
 					return TRUE;
 
-				int AppCommand = (int)DlgComboBox_GetCurSel(hDlg, IDC_ACCELERATOR_APPCOMMAND);
+				const int AppCommand = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_ACCELERATOR_APPCOMMAND));
 				if (AppCommand > 0) {
 					int i;
 
@@ -948,13 +946,13 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
 						m_ListView.GetItemText(i, 0, szCommand, lengthof(szCommand));
-						StringPrintf(
+						StringFormat(
 							szText,
-							TEXT("既に [%s] に割り当てられています。\n割り当て直しますか?"),
+							TEXT("既に [{}] に割り当てられています。\n割り当て直しますか?"),
 							szCommand);
 						if (::MessageBox(hDlg, szText, TEXT("確認"), MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
 							return TRUE;
-						LPARAM Param = m_ListView.GetItemParam(i);
+						const LPARAM Param = m_ListView.GetItemParam(i);
 						SetAccelItem(i, GET_ACCEL_MOD(Param), GET_ACCEL_KEY(Param), GET_ACCEL_GLOBAL(Param), 0);
 					}
 				}
@@ -994,14 +992,14 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							for (size_t k = 0; k < m_MediaKeyList.size(); k++) {
 								if (m_MediaKeyList[k].Type == MediaKeyType::AppCommand
 										&& m_MediaKeyList[k].Command == m_DefaultAppCommandList[j].AppCommand) {
-									AppCommand = (int)(k + 1);
+									AppCommand = static_cast<int>(k + 1);
 									break;
 								}
 							}
 							break;
 						}
 					}
-					LPARAM Param = m_ListView.GetItemParam(i);
+					const LPARAM Param = m_ListView.GetItemParam(i);
 					if (GET_ACCEL_KEY(Param) != Key
 							|| GET_ACCEL_MOD(Param) != Mod
 							|| GET_ACCEL_APPCOMMAND(Param) != AppCommand)
@@ -1024,7 +1022,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_APPCOMMAND:
 		{
-			int Sel = m_ListView.GetSelectedItem();
+			const int Sel = m_ListView.GetSelectedItem();
 
 			if (Sel >= 0) {
 				const WORD Command = GET_APPCOMMAND_LPARAM(lParam);
@@ -1047,10 +1045,10 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_APP:
 		{
-			int Sel = m_ListView.GetSelectedItem();
+			const int Sel = m_ListView.GetSelectedItem();
 
 			if (Sel >= 0) {
-				int Index = m_RawInput.KeyDataToIndex((int)wParam);
+				int Index = m_RawInput.KeyDataToIndex(static_cast<int>(wParam));
 
 				if (Index >= 0) {
 					Index += 1 + lengthof(AppCommandList);
@@ -1064,18 +1062,18 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			SetDlgItemStatus(hDlg);
 			break;
 
 		case NM_CLICK:
 			{
-				LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
-				HWND hwndList = pnmia->hdr.hwndFrom;
-				HWND hwndAppCommand = ::GetDlgItem(hDlg, IDC_ACCELERATOR_APPCOMMAND);
+				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
+				const HWND hwndList = pnmia->hdr.hwndFrom;
+				const HWND hwndAppCommand = ::GetDlgItem(hDlg, IDC_ACCELERATOR_APPCOMMAND);
 				LVHITTESTINFO lvhi;
-				DWORD Pos = ::GetMessagePos();
+				const DWORD Pos = ::GetMessagePos();
 
 				lvhi.pt.x = GET_X_LPARAM(Pos);
 				lvhi.pt.y = GET_Y_LPARAM(Pos);
@@ -1085,7 +1083,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					RECT rc;
 
 					ListView_GetSubItemRect(hwndList, lvhi.iItem, lvhi.iSubItem, LVIR_BOUNDS, &rc);
-					::MapWindowPoints(hwndList, hDlg, (LPPOINT)&rc, 2);
+					::MapWindowPoints(hwndList, hDlg, reinterpret_cast<LPPOINT>(&rc), 2);
 					::MoveWindow(hwndAppCommand, rc.left, rc.top, rc.right - rc.left, 240, TRUE);
 					ComboBox_SetCurSel(hwndAppCommand, GET_ACCEL_APPCOMMAND(m_ListView.GetItemParam(lvhi.iItem)));
 					::ShowWindow(hwndAppCommand, SW_SHOW);
@@ -1102,10 +1100,10 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case LVN_KEYDOWN:
 			{
-				LPNMLVKEYDOWN pnmlvk = reinterpret_cast<LPNMLVKEYDOWN>(lParam);
+				const NMLVKEYDOWN *pnmlvk = reinterpret_cast<const NMLVKEYDOWN*>(lParam);
 
 				if (pnmlvk->wVKey == VK_BACK || pnmlvk->wVKey == VK_DELETE) {
-					int Sel = m_ListView.GetSelectedItem();
+					const int Sel = m_ListView.GetSelectedItem();
 
 					if (Sel >= 0)
 						SetAccelItem(Sel, 0, 0, false, 0);
@@ -1122,7 +1120,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				CCommandManager::CCommandLister CommandLister(*m_pCommandManager);
 				int Command;
 				for (int i = 0; (Command = CommandLister.Next()) != 0; i++) {
-					LPARAM Param = m_ListView.GetItemParam(i);
+					const LPARAM Param = m_ListView.GetItemParam(i);
 					if (GET_ACCEL_KEY(Param) != 0) {
 						KeyInfo Info;
 
@@ -1133,7 +1131,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						m_KeyList.push_back(Info);
 					}
 
-					int AppCommand = GET_ACCEL_APPCOMMAND(Param);
+					const int AppCommand = GET_ACCEL_APPCOMMAND(Param);
 					if (AppCommand != 0) {
 						AppCommandInfo Info;
 
@@ -1144,7 +1142,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 				}
 
-				HACCEL hAccel = CreateAccel();
+				const HACCEL hAccel = CreateAccel();
 				if (m_hAccel != nullptr)
 					::DestroyAcceleratorTable(m_hAccel);
 				m_hAccel = hAccel;
@@ -1179,7 +1177,7 @@ void CAccelerator::RealizeStyle()
 // CRawInput::CEventHandler
 void CAccelerator::OnInput(int Type)
 {
-	int Data = m_RawInput.GetKeyData(Type);
+	const int Data = m_RawInput.GetKeyData(Type);
 
 	if (m_hDlg == nullptr || !::IsWindowVisible(m_hDlg)) {
 		for (size_t i = 0; i < m_AppCommandList.size(); i++) {

@@ -20,6 +20,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <memory>
 #include "ImageLib.h"
 #include "Codec_BMP.h"
 #include "Codec_JPEG.h"
@@ -54,7 +55,7 @@ bool SaveImage(const ImageSaveInfo *pInfo)
 }
 
 
-HGLOBAL LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
+HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize)
 {
 	return LoadAribPng(pData, DataSize);
 }
@@ -62,7 +63,7 @@ HGLOBAL LoadAribPngFromMemory(const void *pData, SIZE_T DataSize)
 
 HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName)
 {
-	HANDLE hFile =::CreateFile(
+	const HANDLE hFile =::CreateFile(
 		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, 0, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -76,17 +77,14 @@ HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName)
 		::CloseHandle(hFile);
 		return nullptr;
 	}
-	BYTE *pData = new BYTE[FileSize.LowPart];
+	std::unique_ptr<BYTE[]> Data(new BYTE[FileSize.LowPart]);
 	DWORD Read;
-	if (!::ReadFile(hFile, pData, FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
-		delete [] pData;
+	if (!::ReadFile(hFile, Data.get(), FileSize.LowPart, &Read, nullptr) || Read != FileSize.LowPart) {
 		::CloseHandle(hFile);
 		return nullptr;
 	}
 	::CloseHandle(hFile);
-	HGLOBAL hDIB = LoadAribPng(pData, FileSize.LowPart);
-	delete [] pData;
-	return hDIB;
+	return LoadAribPng(Data.get(), FileSize.LowPart);
 }
 
 

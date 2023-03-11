@@ -50,7 +50,7 @@ namespace TVTest
 			DWORD MaxRecentChannels;
 			DWORD RecentChannelCount;
 
-			static const DWORD VERSION_CURRENT = 0;
+			static constexpr DWORD VERSION_CURRENT = 0;
 		};
 
 		struct RecentChannelInfo
@@ -72,7 +72,7 @@ namespace TVTest
 		SharedInfoHeader *m_pHeader;
 		DWORD m_LockTimeout;
 
-		static const DWORD MAX_RECENT_CHANNELS = 20;
+		static constexpr DWORD MAX_RECENT_CHANNELS = 20;
 
 		bool ValidateHeader(const SharedInfoHeader *pHeader) const;
 		void ReadRecentChannelList(

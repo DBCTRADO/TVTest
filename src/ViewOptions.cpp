@@ -213,7 +213,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					TEXT("幅のみ変える"),
 					TEXT("幅と高さを変える"),
 				};
-				for (LPCTSTR e : AdjustWindowModeList) {
+				for (const LPCTSTR e : AdjustWindowModeList) {
 					DlgComboBox_AddString(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW, e);
 				}
 				DlgComboBox_SetCurSel(
@@ -265,11 +265,9 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CUICore::CTitleStringMap StrMap(GetAppClass());
 				StrMap.InputParameter(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, pt);
 			}
@@ -279,13 +277,13 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				RECT rc;
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PRESETS), &rc);
-				HMENU hmenu = ::CreatePopupMenu();
+				const HMENU hmenu = ::CreatePopupMenu();
 				for (int i = 0; i < lengthof(TitleTextFormatPresets); i++) {
 					::AppendMenu(
 						hmenu, MF_STRING | MF_ENABLED, i + 1,
 						TitleTextFormatPresets[i].pszDescript);
 				}
-				int Result = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, rc.left, rc.bottom, 0, hDlg, nullptr);
+				const int Result = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, rc.left, rc.bottom, 0, hDlg, nullptr);
 				if (Result > 0 && Result <= lengthof(TitleTextFormatPresets)) {
 					::SetDlgItemText(
 						hDlg, IDC_OPTIONS_TITLETEXTFORMAT,
@@ -350,7 +348,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				CAppMain &App = GetAppClass();
@@ -367,7 +365,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_fZoomKeepAspectRatio =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_ZOOMKEEPASPECTRATIO);
 				m_PanScanAdjustWindowMode =
-					(AdjustWindowMode)DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW);
+					static_cast<AdjustWindowMode>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_PANSCANADJUSTWINDOW));
 				m_fRemember1SegWindowSize =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_REMEMBER1SEGWINDOWSIZE);
 				m_fMinimizeToTray =
@@ -390,7 +388,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					}
 				}
 				{
-					bool fLogo = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SHOWLOGO);
+					const bool fLogo = DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_SHOWLOGO);
 					String FileName;
 
 					GetDlgItemString(hDlg, IDC_OPTIONS_LOGOFILENAME, &FileName);
@@ -402,7 +400,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 
 				bool fTitleBarFontChanged = false;
-				bool fEnableTitleBarFont =
+				const bool fEnableTitleBarFont =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_TITLEBARFONT_ENABLE);
 				if (m_fEnableTitleBarFont != fEnableTitleBarFont) {
 					m_fEnableTitleBarFont = fEnableTitleBarFont;

@@ -96,7 +96,7 @@ bool CCommandManager::InvokeCommand(int ID, InvokeFlag Flags) const
 	const int Index = IDToIndex(ID);
 
 	if (Index < 0) {
-		TRACE(TEXT("CCommandManager::InvokeCommand() : Invalid command ID %d\n"), ID);
+		TRACE(TEXT("CCommandManager::InvokeCommand() : Invalid command ID {}\n"), ID);
 		return false;
 	}
 
@@ -105,7 +105,7 @@ bool CCommandManager::InvokeCommand(int ID, InvokeFlag Flags) const
 	if (!Info.Handler)
 		return false;
 
-	TRACE(TEXT("CCommandManager::InvokeCommand() : %d %s\n"), ID, GetCommandIDText(ID).c_str());
+	TRACE(TEXT("CCommandManager::InvokeCommand() : {} {}\n"), ID, GetCommandIDText(ID));
 
 	InvokeParameters Params;
 
@@ -124,7 +124,7 @@ bool CCommandManager::IsCommandValid(int ID) const
 
 String CCommandManager::GetCommandIDText(int ID) const
 {
-	int Index = IDToIndex(ID);
+	const int Index = IDToIndex(ID);
 
 	if (Index < 0)
 		return String();
@@ -251,8 +251,8 @@ bool CCommandManager::SetCommandState(int ID, CommandState Mask, CommandState St
 
 	const size_t Index = ID - CM_COMMAND_FIRST;
 
-	CommandState OldState = m_CommandStateList[Index];
-	CommandState NewState = (OldState & ~Mask) | (State & Mask);
+	const CommandState OldState = m_CommandStateList[Index];
+	const CommandState NewState = (OldState & ~Mask) | (State & Mask);
 	if (OldState != NewState) {
 		m_CommandStateList[Index] = NewState;
 
@@ -355,7 +355,7 @@ String CCommandManager::GetNumberedText(const String &Text, int Number) const
 {
 	TCHAR szNumber[5];
 
-	StringPrintf(szNumber, TEXT("%d"), Number + 1);
+	StringFormat(szNumber, TEXT("{}"), Number + 1);
 
 	return Text + szNumber;
 }

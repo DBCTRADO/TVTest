@@ -38,9 +38,10 @@ namespace TVTest
 	class CProgramGuideTool
 	{
 	public:
-		CProgramGuideTool();
+		CProgramGuideTool() = default;
 		CProgramGuideTool(const String &Name, const String &Command);
 		CProgramGuideTool(LPCTSTR pszName, LPCTSTR pszCommand);
+
 		LPCTSTR GetName() const { return m_Name.c_str(); }
 		LPCTSTR GetCommand() const { return m_Command.c_str(); }
 		bool GetPath(LPTSTR pszPath, int MaxLength) const;
@@ -74,9 +75,10 @@ namespace TVTest
 	class CProgramGuideToolList
 	{
 	public:
-		CProgramGuideToolList();
+		CProgramGuideToolList() = default;
 		CProgramGuideToolList(const CProgramGuideToolList &Src);
 		CProgramGuideToolList &operator=(const CProgramGuideToolList &Src);
+
 		void Clear();
 		bool Add(CProgramGuideTool *pTool);
 		CProgramGuideTool *GetTool(size_t Index);

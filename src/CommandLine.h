@@ -83,7 +83,7 @@ namespace TVTest
 		int m_WindowTop;
 		int m_WindowWidth;
 		int m_WindowHeight;
-		static const int INVALID_WINDOW_POS = INT_MIN;
+		static constexpr int INVALID_WINDOW_POS = INT_MIN;
 
 		int m_Volume;
 		bool m_fMute;

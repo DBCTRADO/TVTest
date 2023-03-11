@@ -70,12 +70,12 @@ void SetFontInfoItem(HWND hDlg, int ID, const Style::Font &Font)
 	if (Font.Size.Unit == Style::UnitType::Point && Font.Size.Value != 0) {
 		Size = Font.Size.Value;
 	} else {
-		HDC hdc = ::GetDC(hDlg);
+		const HDC hdc = ::GetDC(hDlg);
 		Size = CalcFontPointHeight(hdc, &Font.LogFont);
 		::ReleaseDC(hDlg, hdc);
 	}
-	StringPrintf(
-		szText, TEXT("%s, %d pt"),
+	StringFormat(
+		szText, TEXT("{}, {} pt"),
 		Font.LogFont.lfFaceName, Size);
 	SetDlgItemText(hDlg, ID, szText);
 }

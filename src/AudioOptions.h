@@ -85,7 +85,7 @@ namespace TVTest
 		static const LibISDB::DirectShow::AudioDecoderFilter::SurroundMixingMatrix m_DefaultSurroundMixingMatrix;
 		static const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix m_DefaultDownMixMatrix;
 		static const DWORD m_AudioLanguageList[];
-		static const DWORD LANGUAGE_FLAG_SUB = 0x01000000;
+		static constexpr DWORD LANGUAGE_FLAG_SUB = 0x01000000;
 
 		using FilterInfo = LibISDB::DirectShow::FilterInfo;
 

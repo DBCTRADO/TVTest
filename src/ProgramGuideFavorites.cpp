@@ -111,17 +111,16 @@ void CProgramGuideFavorites::FavoriteInfo::SetDefaultColors()
 		SPACE_FAVORITES   = 0x8U
 	};
 	unsigned int Space = 0;
-	LPCTSTR pszLabel = Label.c_str();
 
-	if (::StrStr(pszLabel, TEXT("地")) != 0
-			|| ::StrStrI(pszLabel, TEXT("UHF")) != 0
-			|| ::StrStrI(pszLabel, TEXT("VHF")) != 0)
+	if (Label.find(TEXT("地")) != String::npos
+			|| Label.find(TEXT("UHF")) != String::npos
+			|| Label.find(TEXT("VHF")) != String::npos)
 		Space |= SPACE_TERRESTRIAL;
-	if (::StrStr(pszLabel, TEXT("BS")) != 0)
+	if (Label.find(TEXT("BS")) != String::npos)
 		Space |= SPACE_BS;
-	if (::StrStr(pszLabel, TEXT("CS")) != 0)
+	if (Label.find(TEXT("CS")) != String::npos)
 		Space |= SPACE_CS;
-	if (::StrStr(pszLabel, TEXT("お気に入り")) != 0)
+	if (Label.find(TEXT("お気に入り")) != String::npos)
 		Space |= SPACE_FAVORITES;
 
 	switch (Space) {
@@ -183,7 +182,7 @@ bool CProgramGuideFavoritesDialog::Show(HWND hwndOwner)
 void CProgramGuideFavoritesDialog::AddNewItem(const CProgramGuideFavorites::FavoriteInfo &Info)
 {
 	m_Favorites.Add(Info);
-	m_CurItem = (int)m_Favorites.GetCount() - 1;
+	m_CurItem = static_cast<int>(m_Favorites.GetCount()) - 1;
 }
 
 
@@ -192,7 +191,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
 
 			m_fChanging = true;
 
@@ -208,9 +207,9 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 			lvi.mask = LVIF_TEXT | LVIF_PARAM;
 			lvi.iSubItem = 0;
 			for (size_t i = 0; i < m_Favorites.GetCount(); i++) {
-				CProgramGuideFavorites::FavoriteInfo *pInfo = m_Favorites.Get(i);
+				const CProgramGuideFavorites::FavoriteInfo *pInfo = m_Favorites.Get(i);
 
-				lvi.iItem = (int)i;
+				lvi.iItem = static_cast<int>(i);
 				lvi.lParam = reinterpret_cast<LPARAM>(pInfo);
 				lvi.pszText = const_cast<LPTSTR>(pInfo->Label.c_str());
 				ListView_InsertItem(hwndList, &lvi);
@@ -237,8 +236,8 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 		switch (LOWORD(wParam)) {
 		case IDC_PROGRAMGUIDEFAVORITES_NAME:
 			if (HIWORD(wParam) == EN_CHANGE) {
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
 					LVITEM lvi;
@@ -291,8 +290,9 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 		case IDC_PROGRAMGUIDEFAVORITES_UP:
 		case IDC_PROGRAMGUIDEFAVORITES_DOWN:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
-				int From = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED), To;
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+				const int From = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_PROGRAMGUIDEFAVORITES_UP) {
@@ -325,8 +325,8 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 		case IDC_PROGRAMGUIDEFAVORITES_DELETE:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0)
 					ListView_DeleteItem(hwndList, Sel);
@@ -335,7 +335,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 		case IDOK:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
 				const int ItemCount = ListView_GetItemCount(hwndList);
 				CProgramGuideFavorites Favorites;
 				LVITEM lvi;
@@ -353,6 +353,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 				m_Favorites.SetFixedWidth(DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEFAVORITES_FIXEDWIDTH));
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -384,8 +385,8 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 					Theme::CThemeDraw ThemeDraw(BeginThemeDraw(pdis->hDC));
 					ThemeDraw.Draw(Style, &pdis->rcItem);
 
-					COLORREF OldTextColor = ::SetTextColor(pdis->hDC, pInfo->TextColor);
-					int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+					const COLORREF OldTextColor = ::SetTextColor(pdis->hDC, pInfo->TextColor);
+					const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 					::DrawText(
 						pdis->hDC, pInfo->Label.c_str(), -1, &pdis->rcItem,
 						DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
@@ -414,8 +415,8 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 void CProgramGuideFavoritesDialog::SetItemState(HWND hDlg)
 {
-	HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
-	int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+	const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 	if (Sel >= 0) {
 		LVITEM lvi;
@@ -451,8 +452,8 @@ void CProgramGuideFavoritesDialog::SetItemState(HWND hDlg)
 
 CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavoritesDialog::GetCurItemInfo()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
-	int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMGUIDEFAVORITES_LIST);
+	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 	if (Sel >= 0) {
 		LVITEM lvi;

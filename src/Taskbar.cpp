@@ -83,8 +83,8 @@ bool CTaskbarManager::Initialize(HWND hwnd)
 				m_fAppIDInvalid = true;
 				App.AddLog(
 					CLogItem::LogType::Error,
-					TEXT("AppID \"%s\" を設定できません。(%08x)"),
-					m_AppID.c_str(), hr);
+					TEXT("AppID \"{}\" を設定できません。({:08x})"),
+					m_AppID, hr);
 			}
 		}
 		if (SUCCEEDED(hr)) {
@@ -137,16 +137,16 @@ bool CTaskbarManager::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		};
 		THUMBBUTTON tb[lengthof(ButtonList)];
 		const CAppMain &App = GetAppClass();
-		HINSTANCE hinst = App.GetResourceInstance();
+		const HINSTANCE hinst = App.GetResourceInstance();
 
 		for (int i = 0; i < lengthof(tb); i++) {
 			const int Command = ButtonList[i];
 
-			tb[i].dwMask = (THUMBBUTTONMASK)(THB_ICON | THB_TOOLTIP | THB_FLAGS);
+			tb[i].dwMask = static_cast<THUMBBUTTONMASK>(THB_ICON | THB_TOOLTIP | THB_FLAGS);
 			tb[i].iId = Command;
 			tb[i].hIcon = ::LoadIcon(hinst, MAKEINTRESOURCE(GetCommandIcon(Command)));
 			App.CommandManager.GetCommandText(Command, tb[i].szTip, lengthof(tb[0].szTip));
-			tb[i].dwFlags = (THUMBBUTTONFLAGS)(THBF_ENABLED | THBF_DISMISSONCLICK);
+			tb[i].dwFlags = static_cast<THUMBBUTTONFLAGS>(THBF_ENABLED | THBF_DISMISSONCLICK);
 		}
 
 		m_pTaskbarList->ThumbBarAddButtons(m_hwnd, lengthof(tb), tb);
@@ -162,7 +162,7 @@ bool CTaskbarManager::SetRecordingStatus(bool fRecording)
 {
 	if (m_pTaskbarList != nullptr) {
 		if (fRecording) {
-			HICON hico = static_cast<HICON>(
+			const HICON hico = static_cast<HICON>(
 				::LoadImage(
 					GetAppClass().GetResourceInstance(),
 					MAKEINTRESOURCE(IDI_TASKBAR_RECORDING),
@@ -210,7 +210,7 @@ bool CTaskbarManager::ReinitializeJumpList()
 	if (m_fAppIDInvalid)
 		return false;
 	if (GetAppClass().TaskbarOptions.IsJumpListEnabled()) {
-		HRESULT hr = InitializeJumpList();
+		const HRESULT hr = InitializeJumpList();
 		if (FAILED(hr))
 			return false;
 		m_fJumpListInitialized = true;
@@ -292,13 +292,13 @@ HRESULT CTaskbarManager::InitializeJumpList()
 
 		if (m_AppID.empty()) {
 			TCHAR szAppPath[MAX_PATH];
-			DWORD Length = ::GetModuleFileName(nullptr, szAppPath, lengthof(szAppPath));
+			const DWORD Length = ::GetModuleFileName(nullptr, szAppPath, lengthof(szAppPath));
 			::CharLowerBuff(szAppPath, Length);
 			LibISDB::MD5Value Hash =
 				LibISDB::CalcMD5(reinterpret_cast<const uint8_t *>(szAppPath), Length * sizeof(TCHAR));
-			StringUtility::Format(
-				PropName,
-				APP_NAME TEXT("_%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x_TaskbarProp"),
+			StringFormat(
+				&PropName,
+				APP_NAME TEXT("_{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}_TaskbarProp"),
 				Hash.Value[ 0], Hash.Value[ 1], Hash.Value[ 2], Hash.Value[ 3], Hash.Value[ 4], Hash.Value[ 5], Hash.Value[ 6], Hash.Value[ 7],
 				Hash.Value[ 8], Hash.Value[ 9], Hash.Value[10], Hash.Value[11], Hash.Value[12], Hash.Value[13], Hash.Value[14], Hash.Value[15]);
 		} else {
@@ -347,7 +347,7 @@ HRESULT CTaskbarManager::InitializeJumpList()
 
 HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 {
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	const CTaskbarOptions::TaskList &TaskList = App.TaskbarOptions.GetTaskList();
 
 	if (TaskList.empty())
@@ -376,12 +376,12 @@ HRESULT CTaskbarManager::AddTaskList(ICustomDestinationList *pcdl)
 				if (Command == CM_PROGRAMGUIDE) {
 					StringCopy(szArgs, L"/jumplist /s /epgonly");
 				} else {
-					StringPrintf(
-						szArgs, L"/jumplist /s /command %s",
-						App.CommandManager.GetCommandIDText(Command).c_str());
+					StringFormat(
+						szArgs, L"/jumplist /s /command {}",
+						App.CommandManager.GetCommandIDText(Command));
 				}
 				App.CommandManager.GetCommandText(Command, szTitle, lengthof(szTitle));
-				int Icon = GetCommandIcon(Command);
+				const int Icon = GetCommandIcon(Command);
 				hr = CreateAppShellLink(szArgs, szTitle, nullptr, Icon != 0 ? szIconPath : nullptr, -Icon, &pShellLink);
 			}
 
@@ -411,7 +411,7 @@ HRESULT CTaskbarManager::CreateAppShellLink(
 	IShellLink **ppShellLink)
 {
 	WCHAR szAppPath[MAX_PATH];
-	DWORD Length = ::GetModuleFileNameW(nullptr, szAppPath, lengthof(szAppPath));
+	const DWORD Length = ::GetModuleFileNameW(nullptr, szAppPath, lengthof(szAppPath));
 	if (Length == 0 || Length >= lengthof(szAppPath) - 1)
 		return E_FAIL;
 
@@ -507,7 +507,7 @@ HRESULT CTaskbarManager::AddJumpListCategory(
 		CLSID_EnumerableObjectCollection, nullptr,
 		CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pCollection));
 	if (SUCCEEDED(hr)) {
-		CAppMain &App = GetAppClass();
+		const CAppMain &App = GetAppClass();
 
 		for (const auto &e : ItemList) {
 			IShellLink *pShellLink;
@@ -563,17 +563,17 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 					App.TaskbarOptions.GetIconDirectory().c_str(),
 					szIconDir, lengthof(szIconDir) - 13)) {
 			if (!::PathIsDirectory(szIconDir)) {
-				int Result = ::SHCreateDirectoryEx(nullptr, szIconDir, nullptr);
+				const int Result = ::SHCreateDirectoryEx(nullptr, szIconDir, nullptr);
 				if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 					App.AddLog(
 						CLogItem::LogType::Error,
-						TEXT("ジャンプリストアイコンフォルダ \"%s\" が作成できません。"),
+						TEXT("ジャンプリストアイコンフォルダ \"{}\" が作成できません。"),
 						szIconDir);
 					fShowIcon = false;
 				} else if (Result == ERROR_SUCCESS) {
 					App.AddLog(
 						CLogItem::LogType::Information,
-						TEXT("ジャンプリストアイコンフォルダ \"%s\" を作成しました。"),
+						TEXT("ジャンプリストアイコンフォルダ \"{}\" を作成しました。"),
 						szIconDir);
 				}
 			}
@@ -588,7 +588,7 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 		const CTunerChannelInfo *pChannel = pRecentChannels->GetChannelInfo(i);
 		const WORD NetworkID = pChannel->GetNetworkID();
 		const WORD ServiceID = pChannel->GetServiceID();
-		LPCWSTR pszTunerName = pChannel->GetTunerName();
+		const LPCWSTR pszTunerName = pChannel->GetTunerName();
 		JumpListItem Item;
 		String Driver;
 		WCHAR szTuner[MAX_PATH];
@@ -599,16 +599,16 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			Driver += pszTunerName;
 			Driver += L'"';
 		}
-		StringUtility::Format(
-			Item.Args, L"/jumplist /d %s /chspace %d /chi %d /nid %d /sid %d",
+		StringFormat(
+			&Item.Args, L"/jumplist /d {} /chspace {} /chi {} /nid {} /sid {}",
 			!Driver.empty() ? Driver.c_str() : pszTunerName,
 			pChannel->GetSpace(),
 			pChannel->GetChannelIndex(),
 			NetworkID, ServiceID);
 		StringCopy(szTuner, pszTunerName);
 		::PathRemoveExtensionW(szTuner);
-		StringUtility::Format(
-			Item.Description, L"%s (%s)",
+		StringFormat(
+			&Item.Description, L"{} ({})",
 			pChannel->GetName(),
 			::StrCmpNIW(szTuner, L"BonDriver_", 10) == 0 ? szTuner + 10 : szTuner);
 
@@ -616,14 +616,14 @@ HRESULT CTaskbarManager::AddRecentChannelsCategory(ICustomDestinationList *pcdl)
 			TCHAR szIconPath[MAX_PATH];
 			TCHAR szFileName[16];
 
-			StringPrintf(
+			StringFormat(
 				szFileName,
-				TEXT("%04x%04x.ico"), NetworkID, ServiceID);
+				TEXT("{:04x}{:04x}.ico"), NetworkID, ServiceID);
 			::PathCombine(szIconPath, szIconDir, szFileName);
 
 			bool fUseIcon = true;
 			const DWORD MapKey = ChannelIconMapKey(NetworkID, ServiceID);
-			const BYTE LogoType = CLogoManager::LOGOTYPE_48x24;
+			constexpr BYTE LogoType = CLogoManager::LOGOTYPE_48x24;
 			CLogoManager::LogoInfo LogoInfo;
 			if (App.LogoManager.GetLogoInfo(NetworkID, ServiceID, LogoType, &LogoInfo)) {
 				bool fSave;

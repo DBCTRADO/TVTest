@@ -46,22 +46,22 @@ namespace TVTest
 
 		static ServiceKey GetServiceKey(WORD NetworkID, WORD TSID, WORD ServiceID)
 		{
-			return ((ULONGLONG)NetworkID << 32) | ((TSID << 16) | ServiceID);
+			return (static_cast<ULONGLONG>(NetworkID) << 32) | ((TSID << 16) | ServiceID);
 		};
 
 		static WORD ServiceKey_GetNetworkID(ServiceKey Key)
 		{
-			return (WORD)(Key >> 32);
+			return static_cast<WORD>(Key >> 32);
 		}
 
 		static WORD ServiceKey_GetTransportStreamID(ServiceKey Key)
 		{
-			return (WORD)((Key >> 16) & 0xFFFF);
+			return static_cast<WORD>((Key >> 16) & 0xFFFF);
 		}
 
 		static WORD ServiceKey_GetServiceID(ServiceKey Key)
 		{
-			return (WORD)(Key & 0xFFFF);
+			return static_cast<WORD>(Key & 0xFFFF);
 		}
 
 		typedef std::set<ServiceKey>::const_iterator Iterator;
@@ -138,20 +138,22 @@ namespace TVTest
 		bool FromString(LPCTSTR pszString);
 
 	private:
-		enum {
-			FLAG_REG_EXP      = 0x00000001U,
-			FLAG_IGNORE_CASE  = 0x00000002U,
-			FLAG_IGNORE_WIDTH = 0x00000004U,
-			FLAG_GENRE        = 0x00000008U,
-			FLAG_DAY_OF_WEEK  = 0x00000010U,
-			FLAG_TIME         = 0x00000020U,
-			FLAG_DURATION     = 0x00000040U,
-			FLAG_CA           = 0x00000080U,
-			FLAG_VIDEO        = 0x00000100U,
-			FLAG_SERVICE_LIST = 0x00000200U,
-			FLAG_DISABLED     = 0x00000400U,
-			FLAG_EVENT_NAME   = 0x00000800U,
-			FLAG_EVENT_TEXT   = 0x00001000U
+		enum class ConditionFlag : unsigned int {
+			None        = 0x00000000U,
+			RegExp      = 0x00000001U,
+			IgnoreCase  = 0x00000002U,
+			IgnoreWidth = 0x00000004U,
+			Genre       = 0x00000008U,
+			DayOfWeek   = 0x00000010U,
+			Time        = 0x00000020U,
+			Duration    = 0x00000040U,
+			CA          = 0x00000080U,
+			Video       = 0x00000100U,
+			ServiceList = 0x00000200U,
+			Disabled    = 0x00000400U,
+			EventName   = 0x00000800U,
+			EventText   = 0x00001000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		static void ParseTime(LPCWSTR pszString, TimeInfo *pTime);
@@ -160,7 +162,7 @@ namespace TVTest
 	class CEventSearchSettingsList
 	{
 	public:
-		CEventSearchSettingsList();
+		CEventSearchSettingsList() = default;
 		CEventSearchSettingsList(const CEventSearchSettingsList &Src);
 		CEventSearchSettingsList &operator=(const CEventSearchSettingsList &Src);
 
@@ -246,7 +248,6 @@ namespace TVTest
 		};
 
 		CEventSearchSettingsDialog(CEventSearchOptions &Options);
-		~CEventSearchSettingsDialog();
 
 	// CBasicDialog
 		bool Create(HWND hwndOwner) override;
@@ -348,7 +349,7 @@ namespace TVTest
 		CProgramSearchDialog(CEventSearchOptions &Options);
 		~CProgramSearchDialog();
 
-		bool Create(HWND hwndOwner);
+		bool Create(HWND hwndOwner) override;
 		bool SetEventHandler(CEventHandler *pHandler);
 		int GetColumnWidth(int Index) const;
 		bool SetColumnWidth(int Index, int Width);
@@ -382,7 +383,7 @@ namespace TVTest
 		CRichEditLinkHandler m_RichEditLink;
 		CHARFORMAT m_InfoTextFormat;
 
-		static const int MIN_PANE_HEIGHT = 16;
+		static constexpr int MIN_PANE_HEIGHT = 16;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -396,7 +397,7 @@ namespace TVTest
 		void SortSearchResult();
 		void UpdateEventInfoText();
 		void SetEventInfoText(const LibISDB::EventInfo *pEventInfo);
-		int FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const;
+		size_t FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, size_t MaxLength) const;
 		void FormatEventInfoText(const LibISDB::EventInfo *pEventInfo, String *pText) const;
 		void HighlightKeyword();
 		bool SearchNextKeyword(LPCTSTR *ppszText, LPCTSTR pKeyword, int KeywordLength, int *pLength) const;

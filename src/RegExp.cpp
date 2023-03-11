@@ -57,12 +57,11 @@ inline bool CharToHalfWidth(WCHAR &Char)
 void StringToHalfWidth(String &Text)
 {
 #if 0
-	int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), nullptr, 0);
+	const int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), nullptr, 0);
 	if (MapLength > 0) {
-		pMapText = new TCHAR[MapLength];
-		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), pMapText, MapLength);
-		Text.assign(pMapText, MapLength);
-		delete [] pMapText;
+		String MapText(MapLength, L'\0');
+		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), MapText.data(), MapLength);
+		Text = std::move(MapText);
 	}
 #else
 	// 変換前後で長さが変わると面倒なので、ASCIIの範囲のみにしておく
@@ -101,7 +100,7 @@ void CRegExpEngine::MapPatternString()
 				i++;
 			} else if (CharToHalfWidth(m_Pattern[i])) {
 				// 記号をエスケープ
-				WCHAR c = m_Pattern[i];
+				const WCHAR c = m_Pattern[i];
 				if ((c >= L'!' && c <= L'/')
 						|| (c >= L':' && c <= L'?')
 						|| (c >= L'[' && c <= L'^')
@@ -214,8 +213,10 @@ bool CRegExpEngine_ECMAScript::SetPattern(LPCTSTR pszPattern, CRegExp::PatternFl
 	try {
 		m_RegEx.assign(m_Pattern, RegExFlags);
 #ifdef _DEBUG
-	} catch (std::regex_error &e) {
-		TRACE(TEXT("std::regex::assign() error %d\n"), e.code());
+	} catch (const std::regex_error &e) {
+		TRACE(
+			TEXT("std::regex::assign() error {}\n"),
+			static_cast<std::underlying_type_t<std::regex_constants::error_type>>(e.code()));
 #else
 	} catch (...) {
 #endif
@@ -303,7 +304,7 @@ bool CRegExpEngine_VBScript::GetName(LPTSTR pszName, size_t MaxLength) const
 bool CRegExpEngine_VBScript::Initialize()
 {
 	if (m_pRegExp == nullptr) {
-		HRESULT hr = m_pRegExp.CreateInstance(CLSID_RegExp);
+		const HRESULT hr = m_pRegExp.CreateInstance(CLSID_RegExp);
 		if (FAILED(hr))
 			return false;
 	}
@@ -532,7 +533,7 @@ bool CRegExpEngine_Bregonig::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 		return false;
 
 	LPCTSTR pSrcText = pText;
-	size_t SrcLength = Length;
+	const size_t SrcLength = Length;
 
 	String MapText;
 
@@ -544,7 +545,7 @@ bool CRegExpEngine_Bregonig::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 
 	TCHAR szMessage[BREGEXP_MAX_ERROR_MESSAGE_LEN];
 
-	int Result = m_pBoMatch(
+	const int Result = m_pBoMatch(
 		m_Pattern.c_str(),
 		!!(m_Flags & CRegExp::PatternFlag::IgnoreCase) ? TEXT("i") : nullptr,
 		pSrcText, pSrcText, pSrcText + SrcLength,

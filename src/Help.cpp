@@ -49,14 +49,14 @@ bool CHtmlHelp::Initialize()
 	m_hLib = Util::LoadSystemLibrary(TEXT("hhctrl.ocx"));
 	if (m_hLib == nullptr)
 		return false;
-	m_pHtmlHelp = (HtmlHelpFunc)::GetProcAddress(
+	m_pHtmlHelp = reinterpret_cast<HtmlHelpFunc>(::GetProcAddress(
 		m_hLib,
 #ifndef UNICODE
 		"HtmlHelpA"
 #else
 		"HtmlHelpW"
 #endif
-		);
+		));
 	if (m_pHtmlHelp == nullptr) {
 		::FreeLibrary(m_hLib);
 		m_hLib = nullptr;

@@ -37,11 +37,6 @@ CEpgCaptureManager::CEpgCaptureManager()
 }
 
 
-CEpgCaptureManager::~CEpgCaptureManager()
-{
-}
-
-
 bool CEpgCaptureManager::BeginCapture(
 	LPCTSTR pszTuner, const CChannelList *pChannelList, BeginFlag Flags)
 {
@@ -185,8 +180,8 @@ bool CEpgCaptureManager::ProcessCapture()
 	if (!m_fCapturing)
 		return true;
 
-	CAppMain &App = GetAppClass();
-	LibISDB::EPGDatabase &EPGDatabase = App.EPGDatabase;
+	const CAppMain &App = GetAppClass();
+	const LibISDB::EPGDatabase &EPGDatabase = App.EPGDatabase;
 
 	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
 	const CChannelInfo *pCurChannelInfo = App.ChannelManager.GetCurrentChannelInfo();
@@ -232,7 +227,7 @@ bool CEpgCaptureManager::ProcessCapture()
 	if (fComplete) {
 		TRACE(TEXT("EPG schedule complete\n"));
 	} else {
-		WORD NetworkID = App.CoreEngine.GetNetworkID();
+		const WORD NetworkID = App.CoreEngine.GetNetworkID();
 		DWORD Timeout;
 
 		// 真面目に判定する場合BITから周期を取ってくる必要がある
@@ -263,11 +258,11 @@ void CEpgCaptureManager::SetEventHandler(CEventHandler *pEventHandler)
 DWORD CEpgCaptureManager::GetRemainingTime() const
 {
 	// TODO: 残り時間をちゃんと算出する
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	DWORD Time = 0;
 
 	for (size_t i = m_CurChannel; i < m_ChannelList.size(); i++) {
-		WORD NetworkID = m_ChannelList[i].ChannelList.GetChannelInfo(0)->GetNetworkID();
+		const WORD NetworkID = m_ChannelList[i].ChannelList.GetChannelInfo(0)->GetNetworkID();
 		if (App.NetworkDefinition.IsSatelliteNetworkID(NetworkID))
 			Time += 180000;
 		else
@@ -286,10 +281,10 @@ bool CEpgCaptureManager::NextChannel()
 		const ChannelGroup &ChGroup = m_ChannelList[i];
 
 		m_fChannelChanging = true;
-		bool fOK = App.Core.SetChannelByIndex(ChGroup.Space, ChGroup.Channel);
+		const bool fOK = App.Core.SetChannelByIndex(ChGroup.Space, ChGroup.Channel);
 		m_fChannelChanging = false;
 		if (fOK) {
-			m_CurChannel = (int)i;
+			m_CurChannel = static_cast<int>(i);
 			m_AccumulateClock.Start();
 			if (m_pEventHandler != nullptr)
 				m_pEventHandler->OnChannelChanged();

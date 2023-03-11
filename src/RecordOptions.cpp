@@ -32,19 +32,19 @@ namespace TVTest
 {
 
 
-static const UINT MEGA_BYTES = 1024 * 1024;
+static constexpr UINT MEGA_BYTES = 1024 * 1024;
 
 // 書き出しバッファサイズの制限(バイト単位)
-static const UINT WRITE_BUFFER_SIZE_MIN = 1024;
-static const UINT WRITE_BUFFER_SIZE_MAX = 32 * MEGA_BYTES;
+static constexpr UINT WRITE_BUFFER_SIZE_MIN = 1024;
+static constexpr UINT WRITE_BUFFER_SIZE_MAX = 32 * MEGA_BYTES;
 
 // さかのぼり録画バッファサイズの制限(バイト単位)
-static const UINT TIMESHIFT_BUFFER_SIZE_MIN = 1 * MEGA_BYTES;
-static const UINT TIMESHIFT_BUFFER_SIZE_MAX = 1024 * MEGA_BYTES;
+static constexpr UINT TIMESHIFT_BUFFER_SIZE_MIN = 1 * MEGA_BYTES;
+static constexpr UINT TIMESHIFT_BUFFER_SIZE_MAX = 1024 * MEGA_BYTES;
 
 // 書き出し待ちバッファの制限(バイト単位)
-static const UINT MAX_PENDING_SIZE_MIN = 32 * MEGA_BYTES;
-static const UINT MAX_PENDING_SIZE_MAX = 1024 * MEGA_BYTES;
+static constexpr UINT MAX_PENDING_SIZE_MIN = 32 * MEGA_BYTES;
+static constexpr UINT MAX_PENDING_SIZE_MAX = 1024 * MEGA_BYTES;
 
 // ステータスバーからの録画のコマンド
 static const int StatusBarCommandList[] = {
@@ -145,7 +145,7 @@ bool CRecordOptions::ReadSettings(CSettings &Settings)
 	String CommandText;
 	if (Settings.Read(TEXT("StatusBarRecordCommand"), &CommandText)) {
 		if (!CommandText.empty()) {
-			int Command = GetAppClass().CommandManager.ParseIDText(CommandText);
+			const int Command = GetAppClass().CommandManager.ParseIDText(CommandText);
 			if (Command != 0)
 				m_StatusBarRecordCommand = Command;
 		} else {
@@ -372,7 +372,7 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				DlgComboBox_AddString(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN, pszFileName);
 				if (!m_Settings.m_WritePlugin.empty()
 						&& IsEqualFileName(pszFileName, m_Settings.m_WritePlugin.c_str()))
-					Sel = (int)i;
+					Sel = static_cast<int>(i);
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN, Sel + 1);
 			EnableDlgItem(hDlg, IDC_RECORDOPTIONS_WRITEPLUGINSETTING, Sel >= 0);
@@ -462,11 +462,9 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case IDC_RECORDOPTIONS_FILENAMEFORMAT:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORDOPTIONS_FILENAMEFORMAT), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CEventVariableStringMap EventVarStrMap;
 				EventVarStrMap.InputParameter(hDlg, IDC_RECORDOPTIONS_FILENAME, pt);
 			}
@@ -495,9 +493,9 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case IDC_RECORDOPTIONS_WRITEPLUGINSETTING:
 			{
-				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
+				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
 
-				if (Sel >= 0 && (size_t)Sel < m_WritePluginList.size()) {
+				if (Sel >= 0 && static_cast<size_t>(Sel) < m_WritePluginList.size()) {
 					CRecordManager::ShowWritePluginSetting(hDlg, m_WritePluginList[Sel].c_str());
 				}
 			}
@@ -506,16 +504,16 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				String SaveFolder, FileName;
 
 				GetDlgItemString(hDlg, IDC_RECORDOPTIONS_SAVEFOLDER, &SaveFolder);
-				CAppMain::CreateDirectoryResult CreateDirResult =
+				const CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
 						hDlg, SaveFolder.c_str(),
-						TEXT("録画ファイルの保存先フォルダ \"%s\" がありません。\n")
+						TEXT("録画ファイルの保存先フォルダ \"{}\" がありません。\n")
 						TEXT("作成しますか?"));
 				if (CreateDirResult == CAppMain::CreateDirectoryResult::Error) {
 					SettingError();
@@ -559,12 +557,12 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 				m_LowFreeSpaceThreshold =
 					::GetDlgItemInt(hDlg, IDC_RECORDOPTIONS_LOWFREESPACETHRESHOLD, nullptr, FALSE);
 
-				int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND);
+				int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_STATUSBARCOMMAND));
 				if (Sel >= 0 && Sel < lengthof(StatusBarCommandList))
 					m_StatusBarRecordCommand = StatusBarCommandList[Sel];
 
-				Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN) - 1;
-				if (Sel >= 0 && (size_t)Sel < m_WritePluginList.size())
+				Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_RECORDOPTIONS_WRITEPLUGIN)) - 1;
+				if (Sel >= 0 && static_cast<size_t>(Sel) < m_WritePluginList.size())
 					m_Settings.m_WritePlugin = m_WritePluginList[Sel];
 				else
 					m_Settings.m_WritePlugin.clear();

@@ -159,7 +159,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 		if (Result == WAIT_TIMEOUT) {
 			pThis->m_App.AddLog(
 				CLogItem::LogType::Warning,
-				TEXT("終了処理がタイムアウトしました(%ums)。プロセスを強制的に終了させます。"),
+				TEXT("終了処理がタイムアウトしました({}ms)。プロセスを強制的に終了させます。"),
 				pThis->m_Timeout);
 
 			if (pThis->m_hMainThread != nullptr) {
@@ -253,7 +253,7 @@ bool CAppMain::GetAppFilePath(String *pPath) const
 		return false;
 
 	TCHAR szPath[MAX_PATH];
-	DWORD Length = ::GetModuleFileName(nullptr, szPath, MAX_PATH);
+	const DWORD Length = ::GetModuleFileName(nullptr, szPath, MAX_PATH);
 	if ((Length == 0) || (Length >= MAX_PATH)) {
 		pPath->clear();
 		return false;
@@ -271,7 +271,7 @@ bool CAppMain::GetAppDirectory(String *pDirectory) const
 		return false;
 
 	TCHAR szDir[MAX_PATH];
-	DWORD Length = ::GetModuleFileName(nullptr, szDir, MAX_PATH);
+	const DWORD Length = ::GetModuleFileName(nullptr, szDir, MAX_PATH);
 	if ((Length == 0) || (Length >= MAX_PATH)) {
 		pDirectory->clear();
 		return false;
@@ -290,7 +290,7 @@ bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 	if (pszDirectory == nullptr)
 		return false;
 
-	DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MAX_PATH);
+	const DWORD Length = ::GetModuleFileName(nullptr, pszDirectory, MAX_PATH);
 	if ((Length == 0) || (Length >= MAX_PATH)) {
 		pszDirectory[0] = _T('\0');
 		return false;
@@ -299,26 +299,6 @@ bool CAppMain::GetAppDirectory(LPTSTR pszDirectory) const
 	::PathRemoveFileSpec(pszDirectory);
 
 	return true;
-}
-
-
-void CAppMain::AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...)
-{
-	va_list Args;
-
-	va_start(Args, pszText);
-	Logger.AddLogV(Type, pszText, Args);
-	va_end(Args);
-}
-
-
-void CAppMain::AddLog(LPCTSTR pszText, ...)
-{
-	va_list Args;
-
-	va_start(Args, pszText);
-	Logger.AddLogV(CLogItem::LogType::Information, pszText, Args);
-	va_end(Args);
 }
 
 
@@ -351,7 +331,7 @@ void CAppMain::Initialize()
 	m_FavoritesFileName = szModuleFileName;
 	m_FavoritesFileName.RenameExtension(TEXT(".tvfavorites"));
 
-	bool fExists = m_IniFileName.IsFileExists();
+	const bool fExists = m_IniFileName.IsFileExists();
 	m_fFirstExecute = !fExists && CmdLineOptions.m_IniFileName.empty();
 	if (fExists) {
 		AddLog(TEXT("設定を読み込んでいます..."));
@@ -433,15 +413,15 @@ bool CAppMain::LoadSettings()
 	CSettings &Settings = m_Settings;
 
 	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OpenFlag::Read | CSettings::OpenFlag::WriteVolatile)) {
-		AddLog(CLogItem::LogType::Error, TEXT("設定ファイル \"%s\" を開けません。"), m_IniFileName.c_str());
+		AddLog(CLogItem::LogType::Error, TEXT("設定ファイル \"{}\" を開けません。"), m_IniFileName);
 		return false;
 	}
 
 	if (!CmdLineOptions.m_IniValueList.empty()) {
 		for (const auto &Entry : CmdLineOptions.m_IniValueList) {
 			TRACE(
-				TEXT("Override INI entry : [%s] %s=%s\n"),
-				Entry.Section.c_str(), Entry.Name.c_str(), Entry.Value.c_str());
+				TEXT("Override INI entry : [{}] {}={}\n"),
+				Entry.Section, Entry.Name, Entry.Value);
 			if (Settings.SetSection(Entry.Section.empty() ? TEXT("Settings") : Entry.Section.c_str())) {
 				Settings.Write(Entry.Name.c_str(), Entry.Value);
 			}
@@ -586,11 +566,11 @@ bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 	CSettings Settings;
 	if (!Settings.Open(m_IniFileName.c_str(), CSettings::OpenFlag::Write)) {
 		TCHAR szMessage[64 + MAX_PATH];
-		StringPrintf(
+		StringFormat(
 			szMessage,
-			TEXT("設定ファイル \"%s\" を開けません。"),
-			m_IniFileName.c_str());
-		AddLog(CLogItem::LogType::Error, TEXT("%s"), szMessage);
+			TEXT("設定ファイル \"{}\" を開けません。"),
+			m_IniFileName);
+		AddLogRaw(CLogItem::LogType::Error, szMessage);
 		if (!Core.IsSilent())
 			UICore.GetSkin()->ShowErrorMessage(szMessage);
 		return false;
@@ -737,7 +717,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 
 	// コマンドラインの解析
 	if (pszCmdLine[0] != _T('\0')) {
-		AddLog(TEXT("コマンドラインオプション : %s"), pszCmdLine);
+		AddLog(TEXT("コマンドラインオプション : {}"), pszCmdLine);
 
 		CmdLineOptions.Parse(pszCmdLine);
 
@@ -768,7 +748,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			&& (GeneralOptions.GetKeepSingleTask() || CmdLineOptions.m_fSingleTask)) {
 		AddLog(TEXT("複数起動が禁止されています。"));
 		CTVTestWindowFinder Finder;
-		HWND hwnd = Finder.FindCommandLineTarget();
+		const HWND hwnd = Finder.FindCommandLineTarget();
 		if (::IsWindow(hwnd)) {
 			if (!SendInterprocessMessage(
 						hwnd, PROCESS_MESSAGE_EXECUTE,
@@ -822,7 +802,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		::GetModuleFileName(nullptr, szTunerSpecFileName, lengthof(szTunerSpecFileName));
 		::PathRenameExtension(szTunerSpecFileName, TEXT(".tuner.ini"));
 		if (::PathFileExists(szTunerSpecFileName)) {
-			AddLog(TEXT("チューナー仕様定義を \"%s\" から読み込みます..."), szTunerSpecFileName);
+			AddLog(TEXT("チューナー仕様定義を \"{}\" から読み込みます..."), szTunerSpecFileName);
 			DriverManager.LoadTunerSpec(szTunerSpecFileName);
 		}
 	}
@@ -838,7 +818,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			::PathRenameExtension(szStyleFileName, TEXT(".style.ini"));
 		}
 		if (::PathFileExists(szStyleFileName)) {
-			AddLog(TEXT("スタイル設定を \"%s\" から読み込みます..."), szStyleFileName);
+			AddLog(TEXT("スタイル設定を \"{}\" から読み込みます..."), szStyleFileName);
 			StyleManager.Load(szStyleFileName);
 		}
 	}
@@ -1003,7 +983,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			GetAppDirectory(szPluginDir);
 			::PathAppend(szPluginDir, TEXT("Plugins"));
 		}
-		AddLog(TEXT("プラグインを \"%s\" から読み込みます..."), szPluginDir);
+		AddLog(TEXT("プラグインを \"{}\" から読み込みます..."), szPluginDir);
 		if (CmdLineOptions.m_NoLoadPlugins.size() > 0) {
 			for (const String &Plugin : CmdLineOptions.m_NoLoadPlugins)
 				ExcludePlugins.push_back(Plugin.c_str());
@@ -1162,7 +1142,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		if (CoreEngine.IsNetworkDriver()) {
 			const int FirstPort = CoreEngine.IsUDPDriver() ? 1234 : 2230;
 			int Port = FirstPort;
-			if ((int)CmdLineOptions.m_UDPPort >= FirstPort && (int)CmdLineOptions.m_UDPPort < FirstPort + 10)
+			if (static_cast<int>(CmdLineOptions.m_UDPPort) >= FirstPort && static_cast<int>(CmdLineOptions.m_UDPPort) < FirstPort + 10)
 				Port = CmdLineOptions.m_UDPPort;
 			else if (RestoreChannelInfo.Channel >= 0 && RestoreChannelInfo.Channel < 10)
 				Port = FirstPort + RestoreChannelInfo.Channel;
@@ -1187,11 +1167,11 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 			const LibISDB::BonDriverSourceFilter *pSourceFilter =
 				CoreEngine.GetFilter<LibISDB::BonDriverSourceFilter>();
 			if (pSourceFilter != nullptr) {
-				const int CurSpace = (int)pSourceFilter->GetCurSpace();
-				const int CurChannel = (int)pSourceFilter->GetCurChannel();
+				const int CurSpace = static_cast<int>(pSourceFilter->GetCurSpace());
+				const int CurChannel = static_cast<int>(pSourceFilter->GetCurChannel());
 				if (CurSpace >= 0 && CurChannel >= 0) {
 					const CChannelList *pList = ChannelManager.GetCurrentChannelList();
-					int i = pList->FindByIndex(CurSpace, CurChannel);
+					const int i = pList->FindByIndex(CurSpace, CurChannel);
 					if (i >= 0)
 						Core.SwitchChannel(i);
 				}
@@ -1230,7 +1210,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	::SetFocus(MainWindow.GetHandle());
 
 	{
-		HWND hwndForeground = ::GetForegroundWindow();
+		const HWND hwndForeground = ::GetForegroundWindow();
 		if (hwndForeground != nullptr) {
 			DWORD ProcessID = 0;
 			::GetWindowThreadProcessId(hwndForeground, &ProcessID);
@@ -1263,7 +1243,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 // アクセラレータにしないメッセージの判定
 bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 {
-	HWND hwnd = ::GetFocus();
+	const HWND hwnd = ::GetFocus();
 
 	if (hwnd != nullptr && ::IsWindowVisible(hwnd)) {
 		if (MainWindow.IsNoAcceleratorMessage(pmsg))
@@ -1273,7 +1253,7 @@ bool CAppMain::IsNoAcceleratorMessage(const MSG *pmsg)
 		if (pDisplayView != nullptr && hwnd == pDisplayView->GetHandle()) {
 			return pDisplayView->IsMessageNeed(pmsg);
 		} else if (pmsg->message == WM_KEYDOWN || pmsg->message == WM_KEYUP) {
-			LRESULT Result = ::SendMessage(hwnd, WM_GETDLGCODE, pmsg->wParam, reinterpret_cast<LPARAM>(pmsg));
+			const LRESULT Result = ::SendMessage(hwnd, WM_GETDLGCODE, pmsg->wParam, reinterpret_cast<LPARAM>(pmsg));
 			if ((Result & (DLGC_WANTALLKEYS | DLGC_WANTCHARS)) != 0)
 				return true;
 			if ((Result & DLGC_WANTARROWS) != 0) {
@@ -1302,8 +1282,8 @@ bool CAppMain::ShowOptionDialog(HWND hwndOwner, int StartPage)
 		if (pViewer != nullptr
 				&& (pViewer->IsOpen()
 					|| UICore.IsViewerInitializeError())) {
-			bool fOldError = UICore.IsViewerInitializeError();
-			bool fResult = UICore.InitializeViewer();
+			const bool fOldError = UICore.IsViewerInitializeError();
+			const bool fResult = UICore.InitializeViewer();
 			// エラーで再生オフになっていた場合はオンにする
 			if (fResult && fOldError && !UICore.IsViewerEnabled())
 				UICore.EnableViewer(true);
@@ -1341,31 +1321,31 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 	TCHAR szMessage[MAX_PATH + 80];
 
 	if (!GetAbsolutePath(pszDirectory, szPath)) {
-		StringPrintf(
+		StringFormat(
 			szMessage,
-			TEXT("フォルダ \"%s\" のパスが長過ぎます。"), szPath);
+			TEXT("フォルダ \"{}\" のパスが長過ぎます。"), szPath);
 		::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return CreateDirectoryResult::Error;
 	}
 
 	if (!::PathIsDirectory(szPath)) {
-		StringPrintf(szMessage, pszMessage, szPath);
+		StringFormat(szMessage, pszMessage, szPath);
 		if (::MessageBox(
 					hwnd, szMessage, TEXT("フォルダ作成の確認"),
 					MB_YESNO | MB_ICONINFORMATION) != IDYES)
 			return CreateDirectoryResult::Cancelled;
 
-		int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
+		const int Result = ::SHCreateDirectoryEx(hwnd, szPath, nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
-			StringPrintf(
+			StringFormat(
 				szMessage,
-				TEXT("フォルダ \"%s\" を作成できません。(エラーコード %#x)"), szPath, Result);
+				TEXT("フォルダ \"{}\" を作成できません。(エラーコード {{:#x})"), szPath, Result);
 			AddLog(CLogItem::LogType::Error, szMessage);
 			::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return CreateDirectoryResult::Error;
 		}
 
-		AddLog(CLogItem::LogType::Information, TEXT("フォルダ \"%s\" を作成しました。"), szPath);
+		AddLog(CLogItem::LogType::Information, TEXT("フォルダ \"{}\" を作成しました。"), szPath);
 	}
 
 	return CreateDirectoryResult::Success;
@@ -1403,7 +1383,7 @@ LRESULT CAppMain::ReceiveInterprocessMessage(HWND hwnd, WPARAM wParam, LPARAM lP
 		break;
 
 	default:
-		AddLog(CLogItem::LogType::Warning, TEXT("未知のメッセージ %Ix を受信しました。"), pcds->dwData);
+		AddLog(CLogItem::LogType::Warning, TEXT("未知のメッセージ {} を受信しました。"), pcds->dwData);
 		break;
 	}
 
@@ -1475,7 +1455,7 @@ bool CAppMain::GetAbsolutePath(LPCTSTR pszPath, LPTSTR pszAbsolutePath) const
 bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 {
 	AddLog(TEXT("新しいコマンドラインオプションを受信しました。"));
-	AddLog(TEXT("コマンドラインオプション : %s"), pszCmdLine);
+	AddLog(TEXT("コマンドラインオプション : {}"), pszCmdLine);
 
 	CCommandLineOptions CmdLine;
 
@@ -1538,14 +1518,14 @@ bool CAppMain::ProcessCommandLine(LPCTSTR pszCmdLine)
 		UICore.DoCommandAsync(CM_CHANNELDISPLAY);
 
 	if (!CmdLine.m_Command.empty()) {
-		int Command = CommandManager.ParseIDText(CmdLine.m_Command);
+		const int Command = CommandManager.ParseIDText(CmdLine.m_Command);
 		if (Command != 0) {
 			UICore.DoCommand(Command);
 		} else {
 			AddLog(
 				CLogItem::LogType::Error,
-				TEXT("指定されたコマンド \"%s\" は無効です。"),
-				CmdLine.m_Command.c_str());
+				TEXT("指定されたコマンド \"{}\" は無効です。"),
+				CmdLine.m_Command);
 		}
 	}
 
@@ -1659,7 +1639,7 @@ void CAppMain::CEngineEventListener::OnVideoSizeChanged(LibISDB::ViewerFilter *p
 
 void CAppMain::CEngineEventListener::OnEventChanged(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t EventID)
 {
-	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id 0x%04x\n"), EventID);
+	TRACE(TEXT("CEngineEventListener::OnEventChanged() : event_id {:#04x}\n"), EventID);
 	if (EventID != LibISDB::EVENT_ID_INVALID) {
 		m_App.CoreEngine.SetAsyncStatusUpdatedFlag(CCoreEngine::StatusFlag::EventID);
 		if (m_App.AudioManager.OnEventUpdated())

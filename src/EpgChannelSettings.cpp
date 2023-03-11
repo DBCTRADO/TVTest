@@ -40,11 +40,6 @@ CEpgChannelSettings::CEpgChannelSettings(CProgramGuide *pProgramGuide)
 }
 
 
-CEpgChannelSettings::~CEpgChannelSettings()
-{
-}
-
-
 bool CEpgChannelSettings::Show(HWND hwndOwner)
 {
 	return ShowDialog(
@@ -61,7 +56,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 		{
 			m_pProgramGuide->GetChannelList(&m_ChannelList, false);
 
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
 			::SetWindowTheme(hwndList, L"explorer", nullptr);
 			ListView_SetExtendedListViewStyle(
 				hwndList,
@@ -70,10 +65,10 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
 			const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
-			HIMAGELIST himl = ::ImageList_Create(
+			const HIMAGELIST himl = ::ImageList_Create(
 				IconWidth, IconHeight, ILC_COLOR24 | ILC_MASK,
 				m_ChannelList.NumChannels() + 1, 100);
-			HICON hico = CreateEmptyIcon(IconWidth, IconHeight);
+			const HICON hico = CreateEmptyIcon(IconWidth, IconHeight);
 			ImageList_AddIcon(himl, hico);
 			::DestroyIcon(hico);
 			ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
@@ -96,7 +91,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				const CChannelInfo *pChannelInfo = m_ChannelList.GetChannelInfo(i);
 				lvi.iItem = i;
 				lvi.pszText = const_cast<LPTSTR>(pChannelInfo->GetName());
-				HICON hico = LogoManager.CreateLogoIcon(
+				const HICON hico = LogoManager.CreateLogoIcon(
 					pChannelInfo->GetNetworkID(),
 					pChannelInfo->GetServiceID(),
 					IconWidth, IconHeight);
@@ -138,7 +133,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 		case IDC_EPGCHANNELSETTINGS_CHECKALL:
 		case IDC_EPGCHANNELSETTINGS_UNCHECKALL:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
 				const int ItemCount = ListView_GetItemCount(hwndList);
 				const BOOL fCheck = LOWORD(wParam) == IDC_EPGCHANNELSETTINGS_CHECKALL;
 
@@ -150,7 +145,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 		case IDC_EPGCHANNELSETTINGS_INVERTCHECK:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
 				const int ItemCount = ListView_GetItemCount(hwndList);
 
 				for (int i = 0; i < ItemCount; i++) {
@@ -161,7 +156,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 		case IDOK:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_EPGCHANNELSETTINGS_CHANNELLIST);
 				const int ItemCount = ListView_GetItemCount(hwndList);
 
 				LVITEM lvi;
@@ -184,6 +179,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				m_pProgramGuide->SetExcludeNoEventServices(
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT));
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

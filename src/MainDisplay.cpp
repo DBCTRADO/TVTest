@@ -112,12 +112,12 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 		EnableViewer(false);
 
 	m_App.AddLog(
-		TEXT("DirectShowの初期化を行います(%s)..."),
+		TEXT("DirectShowの初期化を行います({})..."),
 		VideoStreamType == LibISDB::STREAM_TYPE_INVALID ?
 			TEXT("映像なし") :
 			LibISDB::GetStreamTypeText(VideoStreamType));
 
-	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer == nullptr)
 		return false;
 

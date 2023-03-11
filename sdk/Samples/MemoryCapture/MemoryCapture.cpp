@@ -18,16 +18,22 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <windowsx.h>
 #include <tchar.h>
 #include <shlwapi.h>
 #include <shlobj.h>
+#include <commdlg.h>
 #include <process.h>
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <new>
 #include <strsafe.h>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
 #include "VideoDecoder.h"
@@ -753,17 +759,17 @@ void CMemoryCapture::InputStream(DWORD Format, const void *pData, SIZE_T Size)
 
 		// リングバッファに保存する
 		if (Size >= m_StreamSize) {
-			::CopyMemory(m_pStreamBuffer, static_cast<const BYTE*>(pData) + (Size - m_StreamSize), Size);
+			std::memcpy(m_pStreamBuffer, static_cast<const BYTE*>(pData) + (Size - m_StreamSize), Size);
 			m_StreamPos = 0;
 			m_StreamAvail = Size;
 		} else {
 			std::size_t EndPos = (m_StreamPos + m_StreamAvail) % m_StreamSize;
-			std::size_t Remain = min(m_StreamSize - EndPos, Size);
+			std::size_t Remain = std::min(m_StreamSize - EndPos, Size);
 
 			if (Remain > 0)
-				::CopyMemory(m_pStreamBuffer + EndPos, pData, Remain);
+				std::memcpy(m_pStreamBuffer + EndPos, pData, Remain);
 			if (Remain < Size)
-				::CopyMemory(m_pStreamBuffer, static_cast<const BYTE*>(pData) + Remain, Size - Remain);
+				std::memcpy(m_pStreamBuffer, static_cast<const BYTE*>(pData) + Remain, Size - Remain);
 
 			if (m_StreamAvail + Size <= m_StreamSize) {
 				m_StreamAvail += Size;
@@ -817,10 +823,10 @@ bool CMemoryCapture::StartCapture(bool fAdd)
 		}
 		m_DecodeSize = m_StreamAvail;
 
-		std::size_t Size = min(m_StreamSize - m_StreamPos, m_StreamAvail);
-		::CopyMemory(m_pDecodeBuffer, m_pStreamBuffer + m_StreamPos, Size);
+		std::size_t Size = std::min(m_StreamSize - m_StreamPos, m_StreamAvail);
+		std::memcpy(m_pDecodeBuffer, m_pStreamBuffer + m_StreamPos, Size);
 		if (Size < m_StreamAvail)
-			::CopyMemory(m_pDecodeBuffer + Size, m_pStreamBuffer, m_StreamAvail - Size);
+			std::memcpy(m_pDecodeBuffer + Size, m_pStreamBuffer, m_StreamAvail - Size);
 	}
 
 	// 前回デコードできなかった場合
@@ -1085,11 +1091,11 @@ void CMemoryCapture::AdjustWindowSize()
 	rc.bottom = rc.top + Height;
 	if (rc.right > mi.rcWork.right) {
 		rc.right = mi.rcWork.right;
-		rc.left = max(rc.right - Width, mi.rcWork.left);
+		rc.left = std::max(rc.right - Width, mi.rcWork.left);
 	}
 	if (rc.bottom > mi.rcWork.bottom) {
 		rc.bottom = mi.rcWork.bottom;
-		rc.top = max(rc.bottom - Height, mi.rcWork.top);
+		rc.top = std::max(rc.bottom - Height, mi.rcWork.top);
 	}
 
 	::SetWindowPos(
@@ -1213,7 +1219,7 @@ bool CMemoryCapture::GetSaveFileName(
 				DWORD Size = (::lstrlenW(szTemp) + 1) * sizeof(WCHAR);
 				*ppszString = static_cast<LPWSTR>(pParam->pApp->MemoryAlloc(Size));
 				if (*ppszString != nullptr)
-					::CopyMemory(*ppszString, szTemp, Size);
+					std::memcpy(*ppszString, szTemp, Size);
 				return TRUE;
 			}
 
@@ -1542,14 +1548,14 @@ void CMemoryCapture::OnCommand(int Command, int NotifyCode)
 
 	case CM_SKIP_BACKWARD_FRAME:
 		// フレームを後方にスキップ
-		SetCurFrame(max(m_CurFrame - m_SkipFrames, 0));
+		SetCurFrame(std::max(m_CurFrame - m_SkipFrames, 0));
 		return;
 
 	case CM_SKIP_FORWARD_FRAME:
 		// フレームを前方にスキップ
 		{
 			CBlockLock Lock(m_ImageLock);
-			SetCurFrame(min(m_CurFrame + m_SkipFrames, (int)m_ImageList.size() - 1));
+			SetCurFrame(std::min(m_CurFrame + m_SkipFrames, (int)m_ImageList.size() - 1));
 		}
 		return;
 
@@ -1749,7 +1755,7 @@ bool CMemoryCapture::OnFrame(const CVideoDecoder::FrameInfo &Frame)
 	std::size_t RowBytes = (Frame.Width * Frame.BitsPerPixel + 7) / 8;
 
 	for (int y = 0; y < Frame.Height; y++) {
-		::CopyMemory(pImage->GetRowPixels(y), Frame.Buffer + y * Frame.Pitch, RowBytes);
+		std::memcpy(pImage->GetRowPixels(y), Frame.Buffer + y * Frame.Pitch, RowBytes);
 	}
 
 	std::size_t FrameIndex;
@@ -1991,7 +1997,7 @@ LRESULT CALLBACK CMemoryCapture::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 			else
 				pThis->m_WheelDelta += Delta;
 
-			if (abs(pThis->m_WheelDelta) >= WHEEL_DELTA) {
+			if (std::abs(pThis->m_WheelDelta) >= WHEEL_DELTA) {
 				CBlockLock Lock(pThis->m_ImageLock);
 				int Delta = pThis->m_WheelDelta / WHEEL_DELTA;
 				int Frame = pThis->m_CurFrame - Delta;

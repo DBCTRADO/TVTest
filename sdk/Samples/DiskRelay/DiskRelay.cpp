@@ -11,10 +11,14 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <tchar.h>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 #include "resource.h"

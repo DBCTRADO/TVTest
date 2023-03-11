@@ -31,7 +31,7 @@ namespace TVTest
 
 static unsigned int StrToUInt(LPCTSTR pszValue)
 {
-	return (unsigned int)_tcstoul(pszValue, nullptr, 0);
+	return static_cast<unsigned int>(std::_tcstoul(pszValue, nullptr, 0));
 }
 
 
@@ -56,13 +56,13 @@ bool CSettings::Open(LPCTSTR pszFileName, OpenFlag Flags)
 			|| (Flags & (OpenFlag::Write | OpenFlag::WriteVolatile)) == (OpenFlag::Write | OpenFlag::WriteVolatile))
 		return false;
 
-	UINT IniFlags = 0;
+	CIniFile::OpenFlag IniFlags = CIniFile::OpenFlag::None;
 	if (!!(Flags & OpenFlag::Read))
-		IniFlags |= CIniFile::OPEN_READ;
+		IniFlags |= CIniFile::OpenFlag::Read;
 	if (!!(Flags & OpenFlag::Write))
-		IniFlags |= CIniFile::OPEN_WRITE;
+		IniFlags |= CIniFile::OpenFlag::Write;
 	if (!!(Flags & OpenFlag::WriteVolatile))
-		IniFlags |= CIniFile::OPEN_WRITE_VOLATILE;
+		IniFlags |= CIniFile::OpenFlag::WriteVolatile;
 	if (!m_IniFile.Open(pszFileName, IniFlags))
 		return false;
 
@@ -147,7 +147,7 @@ bool CSettings::Write(LPCTSTR pszValueName, int Data)
 {
 	TCHAR szValue[16];
 
-	StringPrintf(szValue, TEXT("%d"), Data);
+	StringFormat(szValue, TEXT("{}"), Data);
 	return Write(pszValueName, szValue);
 }
 
@@ -167,7 +167,7 @@ bool CSettings::Write(LPCTSTR pszValueName, unsigned int Data)
 {
 	TCHAR szValue[16];
 
-	StringPrintf(szValue, TEXT("%u"), Data);
+	StringFormat(szValue, TEXT("{}"), Data);
 	return Write(pszValueName, szValue);
 }
 
@@ -280,7 +280,7 @@ bool CSettings::Write(LPCTSTR pszValueName, double Data, int Digits)
 {
 	TCHAR szText[64];
 
-	StringPrintf(szText, TEXT("%.*f"), Digits, Data);
+	StringFormat(szText, TEXT("{:.{}f}"), Data, Digits);
 	return Write(pszValueName, szText);
 }
 
@@ -319,8 +319,8 @@ bool CSettings::WriteColor(LPCTSTR pszValueName, COLORREF crData)
 {
 	TCHAR szText[8];
 
-	StringPrintf(
-		szText, TEXT("#%02x%02x%02x"),
+	StringFormat(
+		szText, TEXT("#{:02x}{:02x}{:02x}"),
 		GetRValue(crData), GetGValue(crData), GetBValue(crData));
 	return Write(pszValueName, szText);
 }
@@ -374,7 +374,7 @@ bool CSettings::Read(LPCTSTR pszValueName, LOGFONT *pFont)
 				break;
 			case 3:
 				{
-					unsigned int Flags = StrToUInt(q);
+					const unsigned int Flags = StrToUInt(q);
 					pFont->lfItalic = (Flags & FONT_FLAG_ITALIC) != 0;
 					pFont->lfUnderline = (Flags & FONT_FLAG_UNDERLINE) != 0;
 					pFont->lfStrikeOut = (Flags & FONT_FLAG_STRIKEOUT) != 0;
@@ -400,8 +400,8 @@ bool CSettings::Write(LPCTSTR pszValueName, const LOGFONT *pFont)
 		Flags |= FONT_FLAG_UNDERLINE;
 	if (pFont->lfStrikeOut)
 		Flags |= FONT_FLAG_STRIKEOUT;
-	StringPrintf(
-		szData, TEXT("%s,%d,%d,%u"),
+	StringFormat(
+		szData, TEXT("{},{},{},{}"),
 		pFont->lfFaceName, pFont->lfHeight, pFont->lfWeight, Flags);
 	return Write(pszValueName, szData);
 }

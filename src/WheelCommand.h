@@ -31,8 +31,8 @@ namespace TVTest
 	class CWheelCommandManager
 	{
 	public:
-		static const int MAX_COMMAND_PARSABLE_NAME = 32;
-		static const int MAX_COMMAND_TEXT = 64;
+		static constexpr int MAX_COMMAND_PARSABLE_NAME = 32;
+		static constexpr int MAX_COMMAND_TEXT = 64;
 
 		CWheelCommandManager();
 

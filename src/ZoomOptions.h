@@ -69,7 +69,6 @@ namespace TVTest
 		static constexpr int MAX_RATE = 1000;
 
 		CZoomOptions();
-		~CZoomOptions();
 
 	//CBasicDialog
 		bool Show(HWND hwndOwner) override;

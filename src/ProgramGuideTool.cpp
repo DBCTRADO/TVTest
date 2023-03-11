@@ -38,7 +38,7 @@ class CEpgVariableStringMap
 	: public CEventVariableStringMap
 {
 public:
-	CEpgVariableStringMap();
+	CEpgVariableStringMap() = default;
 	CEpgVariableStringMap(const EventInfo &Info);
 	bool NormalizeString(String *pString) const override { return false; }
 	bool GetParameterList(ParameterGroupList *pList) const override;
@@ -64,11 +64,6 @@ const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameter
 };
 
 
-CEpgVariableStringMap::CEpgVariableStringMap()
-{
-}
-
-
 CEpgVariableStringMap::CEpgVariableStringMap(const EventInfo &Info)
 	: CEventVariableStringMap(Info)
 {
@@ -87,17 +82,17 @@ bool CEpgVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 		}
 		*pString = m_iEpgFileName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("eid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.EventID);
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("nid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetNetworkID());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetNetworkID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("tsid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetTransportStreamID());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetTransportStreamID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("sid")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetServiceID());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetServiceID());
 	} else if (::lstrcmpi(pszKeyword, TEXT("duration-sec")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Event.Duration);
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Event.Duration);
 	} else if (::lstrcmpi(pszKeyword, TEXT("duration-min")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), (m_EventInfo.Event.Duration + 59) / 60);
+		StringFormat(pString, TEXT("{}"), (m_EventInfo.Event.Duration + 59) / 60);
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword, pString);
 	}
@@ -121,11 +116,6 @@ bool CEpgVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 }
 
 
-
-
-CProgramGuideTool::CProgramGuideTool()
-{
-}
 
 
 CProgramGuideTool::CProgramGuideTool(const String &Name, const String &Command)
@@ -204,7 +194,7 @@ bool CProgramGuideTool::Execute(
 		}
 	}
 
-	TRACE(TEXT("外部ツール実行 : %s, %s\n"), szFileName, Parameter.c_str());
+	TRACE(TEXT("外部ツール実行 : {}, {}\n"), szFileName, Parameter);
 
 	return ::ShellExecute(nullptr, nullptr, szFileName, Parameter.c_str(), nullptr, SW_SHOWNORMAL) >= (HINSTANCE)32;
 }
@@ -234,7 +224,7 @@ bool CProgramGuideTool::GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileN
 	}
 	int Length = 0;
 	while (*p != _T('\0') && *p != cDelimiter) {
-		int CharLength = StringCharLength(p);
+		const int CharLength = StringCharLength(p);
 		if (CharLength == 0 || Length + CharLength >= MaxFileName) {
 			pszFileName[0] = _T('\0');
 			return false;
@@ -354,6 +344,7 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 			GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_NAME, &m_pTool->m_Name);
 			GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, &m_pTool->m_Command);
 			m_pTool->m_Icon.Destroy();
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -365,11 +356,6 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 }
 
 
-
-
-CProgramGuideToolList::CProgramGuideToolList()
-{
-}
 
 
 CProgramGuideToolList::CProgramGuideToolList(const CProgramGuideToolList &Src)

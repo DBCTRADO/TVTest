@@ -33,7 +33,7 @@ namespace TVTest
 {
 
 
-static const size_t MAX_INFO_TEXT = 256;
+static constexpr size_t MAX_INFO_TEXT = 256;
 
 
 CAboutDialog::CAboutDialog()
@@ -79,16 +79,16 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HWND hwndHeader = ::GetDlgItem(hDlg, IDC_ABOUT_HEADER);
-			HWND hwndInfo = ::GetDlgItem(hDlg, IDC_ABOUT_INFO);
-			HWND hwndLogo = ::GetDlgItem(hDlg, IDC_ABOUT_LOGO);
-			HWND hwndLink = ::GetDlgItem(hDlg, IDC_ABOUT_LINK);
+			const HWND hwndHeader = ::GetDlgItem(hDlg, IDC_ABOUT_HEADER);
+			const HWND hwndInfo = ::GetDlgItem(hDlg, IDC_ABOUT_INFO);
+			const HWND hwndLogo = ::GetDlgItem(hDlg, IDC_ABOUT_LOGO);
+			const HWND hwndLink = ::GetDlgItem(hDlg, IDC_ABOUT_LINK);
 
-			HDC hdc = ::GetDC(hDlg);
-			HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+			const HDC hdc = ::GetDC(hDlg);
+			const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 			TCHAR szText[MAX_INFO_TEXT];
 
-			StringPrintf(
+			StringCopy(
 				szText,
 				ABOUT_VERSION_TEXT
 #ifdef VERSION_HASH
@@ -108,7 +108,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			RECT rcHeaderText = {0, 0, 0, 0};
 			::DrawText(hdc, szText, -1, &rcHeaderText, DT_CALCRECT | DT_NOPREFIX);
 
-			int Length = StringPrintf(
+			const size_t Length = StringFormat(
 				szText,
 				TEXT("Work with LibISDB ver.") LIBISDB_VERSION_STRING
 #ifdef LIBISDB_VERSION_HASH
@@ -116,11 +116,11 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 #endif
 				TEXT("\r\n")
 #ifdef _MSC_FULL_VER
-				TEXT("Compiled with MSVC %d.%d.%d.%d\r\n"),
+				TEXT("Compiled with MSVC {}.{}.{}.{}\r\n"),
 				_MSC_FULL_VER / 10000000, (_MSC_FULL_VER / 100000) % 100, _MSC_FULL_VER % 100000, _MSC_BUILD
 #endif
 				);
-			::GetWindowText(hwndInfo, szText + Length, lengthof(szText) - Length);
+			::GetWindowText(hwndInfo, szText + Length, static_cast<int>(lengthof(szText) - Length));
 			::SetWindowText(hwndInfo, szText);
 			RECT rcText = {0, 0, 0, 0};
 			::DrawText(hdc, szText, -1, &rcText, DT_CALCRECT | DT_NOPREFIX);
@@ -148,9 +148,9 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 			if (rcInfo.bottom < rcText.bottom || rcInfo.right < rcText.right
 					|| rcLink.bottom - rcLink.top < rcLinkText.bottom) {
-				int Width = std::max(rcInfo.right, rcText.right);
-				int Height = std::max(rcInfo.bottom, rcText.bottom);
-				int XDiff = Width - rcInfo.right;
+				const int Width = std::max(rcInfo.right, rcText.right);
+				const int Height = std::max(rcInfo.bottom, rcText.bottom);
+				const int XDiff = Width - rcInfo.right;
 				int YDiff = Height - rcInfo.bottom;
 
 				::SetWindowPos(
@@ -196,7 +196,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					MAKEINTRESOURCE(IDB_LOGO32), TEXT("PNG"));
 				::ShowWindow(hwndLogo, SW_HIDE);
 			} else {
-				HBITMAP hbm = static_cast<HBITMAP>(
+				const HBITMAP hbm = static_cast<HBITMAP>(
 					::LoadImage(GetAppClass().GetResourceInstance(),
 						MAKEINTRESOURCE(IDB_LOGO),
 						IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR));
@@ -221,9 +221,9 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_DRAWITEM:
 		{
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-			int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-			COLORREF OldTextColor = ::GetTextColor(pdis->hDC);;
-			HFONT hfontOld = (HFONT)::GetCurrentObject(pdis->hDC, OBJ_FONT);
+			const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+			const COLORREF OldTextColor = ::GetTextColor(pdis->hDC);;
+			const HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(pdis->hDC, OBJ_FONT));
 			TCHAR szText[MAX_INFO_TEXT];
 
 			if (pdis->CtlID == IDC_ABOUT_HEADER) {
@@ -326,7 +326,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == ::GetDlgItem(hDlg, IDC_ABOUT_LINK)) {
+		if (reinterpret_cast<HWND>(wParam) == ::GetDlgItem(hDlg, IDC_ABOUT_LINK)) {
 			::SetCursor(GetAppClass().UICore.GetLinkCursor());
 			::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
 			return TRUE;
@@ -335,7 +335,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 	case WM_DESTROY:
 		{
-			HBITMAP hbm = reinterpret_cast<HBITMAP>(
+			const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_ABOUT_LOGO,
 					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));

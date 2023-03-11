@@ -46,6 +46,7 @@ namespace TVTest
 			VariableWidth = 0x0001U,
 			FullRow       = 0x0002U,
 			ForceFullRow  = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class SizeUnit {
@@ -53,7 +54,7 @@ namespace TVTest
 			EM,
 		};
 
-		static const int EM_FACTOR = 1000;
+		static constexpr int EM_FACTOR = 1000;
 
 		struct SizeValue
 		{
@@ -63,10 +64,12 @@ namespace TVTest
 			SizeValue(int v, SizeUnit u) : Value(v), Unit(u) {}
 		};
 
-		enum {
-			DRAW_HIGHLIGHT = 0x00000001U,
-			DRAW_BOTTOM    = 0x00000002U,
-			DRAW_PREVIEW   = 0x00000004U
+		enum class DrawFlag : unsigned int {
+			None      = 0x0000U,
+			Highlight = 0x0001U,
+			Bottom    = 0x0002U,
+			Preview   = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CStatusItem(int ID, const SizeValue &DefaultWidth);
@@ -97,7 +100,7 @@ namespace TVTest
 		virtual LPCTSTR GetIDText() const = 0;
 		virtual LPCTSTR GetName() const = 0;
 		virtual bool UpdateContent() { return true; }
-		virtual void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) = 0;
+		virtual void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) = 0;
 		virtual void OnLButtonDown(int x, int y) {}
 		virtual void OnLButtonUp(int x, int y) {}
 		virtual void OnLButtonDoubleClick(int x, int y) { OnLButtonDown(x, y); }
@@ -134,17 +137,17 @@ namespace TVTest
 		StyleFlag m_Style;
 
 		bool GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect);
-		enum {
-			DRAWTEXT_HCENTER       = 0x00000001UL,
-			DRAWTEXT_NOENDELLIPSIS = 0x00000002UL
+		enum class DrawTextFlag : unsigned int {
+			None             = 0x0000U,
+			HorizontalCenter = 0x0001U,
+			NoEndEllipsis    = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
-		void DrawText(HDC hdc, const RECT &Rect, LPCTSTR pszText, DWORD Flags = 0) const;
+		void DrawText(HDC hdc, const RECT &Rect, LPCTSTR pszText, DrawTextFlag Flags = DrawTextFlag::None) const;
 		void DrawIcon(
 			HDC hdc, const RECT &Rect, DrawUtil::CMonoColorIconList &IconList,
 			int IconIndex = 0, bool fEnabled = true) const;
 	};
-
-	TVTEST_ENUM_FLAGS(CStatusItem::StyleFlag)
 
 	class CIconStatusItem
 		: public CStatusItem
@@ -202,7 +205,7 @@ namespace TVTest
 		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
 
 	// CStatusView
-		int NumItems() const { return (int)m_ItemList.size(); }
+		int NumItems() const { return static_cast<int>(m_ItemList.size()); }
 		const CStatusItem *GetItem(int Index) const;
 		CStatusItem *GetItem(int Index);
 		const CStatusItem *GetItemByID(int ID) const;

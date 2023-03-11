@@ -37,11 +37,6 @@ CProgramGuideToolbarOptions::CProgramGuideToolbarOptions(CProgramGuideFrameSetti
 }
 
 
-CProgramGuideToolbarOptions::~CProgramGuideToolbarOptions()
-{
-}
-
-
 bool CProgramGuideToolbarOptions::Show(HWND hwndOwner)
 {
 	return ShowDialog(
@@ -71,7 +66,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 			for (int i = 1; i <= CProgramGuideFrameSettings::DATEBAR_MAXBUTTONCOUNT; i++) {
 				TCHAR szText[4];
-				StringPrintf(szText, TEXT("%d"), i);
+				StringFormat(szText, TEXT("{}"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT, szText);
 			}
 			DlgComboBox_SetCurSel(
@@ -100,7 +95,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 					i <= CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MAX;
 					i++) {
 				TCHAR szText[4];
-				StringPrintf(szText, TEXT("%d"), i);
+				StringFormat(szText, TEXT("{}"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL, szText);
 			}
 			DlgComboBox_SetCurSel(
@@ -115,7 +110,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 					i <= CProgramGuideFrameSettings::TimeBarSettings::BUTTONCOUNT_MAX;
 					i++) {
 				TCHAR szText[4];
-				StringPrintf(szText, TEXT("%d"), i);
+				StringFormat(szText, TEXT("{}"), i);
 				DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_MAXBUTTONCOUNT, szText);
 			}
 			DlgComboBox_SetCurSel(
@@ -129,7 +124,8 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 		case IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_UP:
 		case IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_DOWN:
 			{
-				int From = m_ItemListView.GetSelectedItem(), To;
+				const int From = m_ItemListView.GetSelectedItem();
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_UP) {
@@ -167,7 +163,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				int OrderList[CProgramGuideFrameSettings::TOOLBAR_NUM];
 
 				for (int i = 0; i < CProgramGuideFrameSettings::TOOLBAR_NUM; i++) {
-					int ID = static_cast<int>(m_ItemListView.GetItemParam(i));
+					const int ID = static_cast<int>(m_ItemListView.GetItemParam(i));
 
 					OrderList[i] = ID;
 					m_FrameSettings.SetToolbarVisible(ID, m_ItemListView.IsItemChecked(i));
@@ -176,7 +172,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				m_FrameSettings.SetToolbarOrderList(OrderList);
 
 				m_FrameSettings.SetDateBarButtonCount(
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT) + 1);
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_DATEBAR_BUTTONCOUNT)) + 1);
 
 				CProgramGuideFrameSettings::TimeBarSettings TimeBarSettings;
 				if (DlgRadioButton_IsChecked(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_INTERVAL))
@@ -184,14 +180,15 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 				else if (DlgRadioButton_IsChecked(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_TIME_CUSTOM))
 					TimeBarSettings.Time = CProgramGuideFrameSettings::TimeBarSettings::TimeType::Custom;
 				TimeBarSettings.Interval =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL) +
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_INTERVAL)) +
 					CProgramGuideFrameSettings::TimeBarSettings::INTERVAL_MIN;
 				GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_CUSTOMTIME, &TimeBarSettings.CustomTime);
 				TimeBarSettings.MaxButtonCount =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_MAXBUTTONCOUNT) +
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_PROGRAMGUIDETOOLBAR_TIMEBAR_MAXBUTTONCOUNT)) +
 					CProgramGuideFrameSettings::TimeBarSettings::BUTTONCOUNT_MIN;
 				m_FrameSettings.SetTimeBarSettings(TimeBarSettings);
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -217,7 +214,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 
 void CProgramGuideToolbarOptions::UpdateItemState()
 {
-	int Sel = m_ItemListView.GetSelectedItem();
+	const int Sel = m_ItemListView.GetSelectedItem();
 
 	EnableDlgItem(m_hDlg, IDC_PROGRAMGUIDETOOLBAR_ITEMLIST_UP, Sel > 0);
 	EnableDlgItem(

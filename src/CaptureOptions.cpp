@@ -82,9 +82,9 @@ CCaptureVariableStringMap::CCaptureVariableStringMap(
 bool CCaptureVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString)
 {
 	if (::lstrcmpi(pszKeyword, TEXT("width")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_ImageWidth);
+		StringFormat(pString, TEXT("{}"), m_ImageWidth);
 	} else if (::lstrcmpi(pszKeyword, TEXT("height")) == 0) {
-		StringUtility::Format(*pString, TEXT("%d"), m_ImageHeight);
+		StringFormat(pString, TEXT("{}"), m_ImageHeight);
 	} else {
 		return CEventVariableStringMap::GetLocalString(pszKeyword, pString);
 	}
@@ -177,7 +177,7 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 	}
 	TCHAR szFormat[32];
 	if (Settings.Read(TEXT("CaptureSaveFormat"), szFormat, lengthof(szFormat))) {
-		int Format = m_ImageCodec.FormatNameToIndex(szFormat);
+		const int Format = m_ImageCodec.FormatNameToIndex(szFormat);
 		if (Format >= 0)
 			m_SaveFormat = Format;
 	}
@@ -339,12 +339,12 @@ bool CCaptureOptions::GenerateFileName(
 	if (SaveFolder.length() >= MAX_PATH)
 		return false;
 	if (!::PathIsDirectory(SaveFolder.c_str())) {
-		int Result = ::SHCreateDirectoryEx(nullptr, SaveFolder.c_str(), nullptr);
+		const int Result = ::SHCreateDirectoryEx(nullptr, SaveFolder.c_str(), nullptr);
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			GetAppClass().AddLog(
 				CLogItem::LogType::Error,
-				TEXT("キャプチャの保存先フォルダ \"%s\" を作成できません。"),
-				SaveFolder.c_str());
+				TEXT("キャプチャの保存先フォルダ \"{}\" を作成できません。"),
+				SaveFolder);
 			return false;
 		}
 	}
@@ -366,11 +366,11 @@ bool CCaptureOptions::GetOptionText(LPTSTR pszOption, int MaxLength) const
 	if (::lstrcmpi(pszFormatName, TEXT("JPEG")) == 0) {
 		if (MaxLength < 4)
 			return false;
-		StringPrintf(pszOption, MaxLength, TEXT("%d"), m_JPEGQuality);
+		StringFormat(pszOption, MaxLength, TEXT("{}"), m_JPEGQuality);
 	} else if (::lstrcmpi(pszFormatName, TEXT("PNG")) == 0) {
 		if (MaxLength < 2)
 			return false;
-		StringPrintf(pszOption, MaxLength, TEXT("%d"), m_PNGCompressionLevel);
+		StringFormat(pszOption, MaxLength, TEXT("{}"), m_PNGCompressionLevel);
 	} else {
 		if (MaxLength < 1)
 			return false;
@@ -402,14 +402,13 @@ bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 	TCHAR szOption[16];
 	BITMAPINFO *pbmi;
 	BYTE *pBits;
-	bool fOK;
 
 	if (!GenerateFileName(&FileName, pImage))
 		return false;
 	GetOptionText(szOption, lengthof(szOption));
 	if (!pImage->LockData(&pbmi, &pBits))
 		return false;
-	fOK = m_ImageCodec.SaveImage(
+	const bool fOK = m_ImageCodec.SaveImage(
 		FileName.c_str(), m_SaveFormat, szOption,
 		pbmi, pBits, m_fSetComment ? pImage->GetComment() : nullptr);
 	pImage->UnlockData();
@@ -459,19 +458,19 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, pszText);
 			for (int i = 0; i <= PERCENTAGE_LAST; i++) {
 				const PercentageType &Ratio = m_PercentageList[i];
-				int Length = StringPrintf(
-					szText, TEXT("%d %%"),
+				const size_t Length = StringFormat(
+					szText, TEXT("{} %"),
 					::MulDiv(Ratio.Num, 100, Ratio.Denom));
 				if (Ratio.Num * 100 % Ratio.Denom != 0) {
-					StringPrintf(
-						szText + Length, lengthof(szText) - Length, TEXT(" (%d/%d)"),
+					StringFormat(
+						szText + Length, lengthof(szText) - Length, TEXT(" ({}/{})"),
 						Ratio.Num, Ratio.Denom);
 				}
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, szText);
 			}
 			for (int i = 0; i <= SIZE_LAST; i++) {
-				StringPrintf(
-					szText, TEXT("%ld x %ld"),
+				StringFormat(
+					szText, TEXT("{} x {}"),
 					m_SizeList[i].cx, m_SizeList[i].cy);
 				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_SIZE, szText);
 			}
@@ -563,11 +562,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CCaptureVariableStringMap VarStrMap;
 				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_FILENAME, pt);
 			}
@@ -599,11 +596,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CCaptureVariableStringMap VarStrMap;
 				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_COMMENT, pt);
 			}
@@ -612,15 +607,15 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				String SaveFolder;
 				GetDlgItemString(hDlg, IDC_CAPTUREOPTIONS_SAVEFOLDER, &SaveFolder);
-				CAppMain::CreateDirectoryResult CreateDirResult =
+				const CAppMain::CreateDirectoryResult CreateDirResult =
 					GetAppClass().CreateDirectory(
 						hDlg, SaveFolder.c_str(),
-						TEXT("キャプチャ画像の保存先フォルダ \"%s\" がありません。\n")
+						TEXT("キャプチャ画像の保存先フォルダ \"{}\" がありません。\n")
 						TEXT("作成しますか?"));
 				if (CreateDirResult == CAppMain::CreateDirectoryResult::Error) {
 					SettingError();
@@ -642,13 +637,13 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				m_FileName = FileName;
 
 				SetPresetCaptureSize(
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE));
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE)));
 				m_SaveFormat =
-					(int)DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT);
+					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT));
 				m_JPEGQuality =
-					(int)SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_JPEGQUALITY_TB, TBM_GETPOS, 0, 0);
+					static_cast<int>(SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_JPEGQUALITY_TB, TBM_GETPOS, 0, 0));
 				m_PNGCompressionLevel =
-					(int)SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_PNGLEVEL_TB, TBM_GETPOS, 0, 0);
+					static_cast<int>(SendDlgItemMessage(hDlg, IDC_CAPTUREOPTIONS_PNGLEVEL_TB, TBM_GETPOS, 0, 0));
 				m_fCaptureSaveToFile =
 					DlgCheckBox_IsChecked(hDlg, IDC_CAPTUREOPTIONS_ICONSAVEFILE);
 				m_fSetComment =

@@ -234,11 +234,11 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 			if (*p == L'/' || *p == L'-' || *p == L'T') {
 				if (DateCount == 3)
 					return false;
-				Date[DateCount++] = (WORD)Value;
+				Date[DateCount++] = static_cast<WORD>(Value);
 			} else if (*p == L':' || *p == L'\0') {
 				if (TimeCount == 3)
 					return false;
-				TimeValue[TimeCount++] = (WORD)Value;
+				TimeValue[TimeCount++] = static_cast<WORD>(Value);
 				if (*p == L'\0')
 					break;
 			}
@@ -331,9 +331,11 @@ bool CArgsParser::GetDurationValue(int *pValue) const
 
 	while (*p != L'\0') {
 		if (*p == L'-' || (*p >= L'0' && *p <= L'9')) {
-			Duration = wcstol(p, (wchar_t**)&p, 10);
+			wchar_t *pEnd;
+			Duration = wcstol(p, &pEnd, 10);
 			if (Duration == LONG_MAX || Duration == LONG_MIN)
 				return false;
+			p = pEnd;
 		} else {
 			switch (*p) {
 			case L'h': case L'H':
@@ -595,9 +597,9 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 				}
 #ifdef _DEBUG
 				else {
-					TRACE(TEXT("Unknown command line option %s\n"), Args.GetText());
+					TRACE(TEXT("Unknown command line option {}\n"), Args.GetText());
 					// プラグインで解釈するオプションもあるので…
-					//GetAppClass().AddLong(TEXT("不明なコマンドラインオプション %s を無視します。"), Args.GetText());
+					//GetAppClass().AddLong(TEXT("不明なコマンドラインオプション {} を無視します。"), Args.GetText());
 				}
 #endif
 			}
@@ -622,11 +624,11 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 				SYSTEMTIME Time;
 				if (Args.GetDurationOption(L"d", &Duration)) {
 					TRACE(
-						L"Commandline parse test : \"%s\" %d\n",
+						L"Commandline parse test : \"{}\" {}\n",
 						Args.GetText(), Duration);
 				} else if (Args.GetOption(L"t", &Time)) {
 					TRACE(
-						L"Commandline parse test : \"%s\" %d/%d/%d %d:%d:%d\n",
+						L"Commandline parse test : \"{}\" {}/{}/{} {}:{}:{}\n",
 						Args.GetText(),
 						Time.wYear, Time.wMonth, Time.wDay, Time.wHour, Time.wMinute, Time.wSecond);
 				}

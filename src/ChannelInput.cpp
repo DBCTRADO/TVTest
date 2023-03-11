@@ -76,21 +76,21 @@ CChannelInput::KeyDownResult CChannelInput::OnKeyDown(WPARAM wParam)
 
 	if (wParam >= '0' && wParam <= '9') {
 		KeyType = CChannelInputOptions::KeyType::Digit;
-		Number = (int)wParam - '0';
+		Number = static_cast<int>(wParam) - '0';
 	} else if (wParam >= VK_NUMPAD0 && wParam <= VK_NUMPAD9) {
 		KeyType = CChannelInputOptions::KeyType::NumPad;
-		Number = (int)wParam - VK_NUMPAD0;
+		Number = static_cast<int>(wParam) - VK_NUMPAD0;
 	} else if (wParam >= VK_F1 && wParam <= VK_F12) {
 		KeyType = CChannelInputOptions::KeyType::Function;
-		Number = ((int)wParam - VK_F1) + 1;
+		Number = (static_cast<int>(wParam) - VK_F1) + 1;
 	}
 
 	if (Number >= 0) {
-		if (m_Options.KeyInputMode[(int)KeyType] == CChannelInputOptions::KeyInputModeType::Disabled)
+		if (m_Options.KeyInputMode[static_cast<int>(KeyType)] == CChannelInputOptions::KeyInputModeType::Disabled)
 			return KeyDownResult::NotProcessed;
 
 		if (!m_fInputting) {
-			if (m_Options.KeyInputMode[(int)KeyType] == CChannelInputOptions::KeyInputModeType::SingleKey) {
+			if (m_Options.KeyInputMode[static_cast<int>(KeyType)] == CChannelInputOptions::KeyInputModeType::SingleKey) {
 				m_fInputting = true;
 				m_Number = Number == 0 ? 10 : Number;
 				m_MaxDigits = m_Number <= 9 ? 1 : 2;
@@ -179,8 +179,8 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			};
 
 			for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
-				int ID = IDC_CHANNELINPUT_DIGITKEYMODE + i;
-				for (LPCTSTR pszMode : KeyModeList)
+				const int ID = IDC_CHANNELINPUT_DIGITKEYMODE + i;
+				for (const LPCTSTR pszMode : KeyModeList)
 					DlgComboBox_AddString(hDlg, ID, pszMode);
 				DlgComboBox_SetCurSel(hDlg, ID, static_cast<int>(m_Options.KeyInputMode[i]));
 			}
@@ -202,7 +202,7 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 		case IDOK:
 			{
 				for (int i = 0; i <= static_cast<int>(CChannelInputOptions::KeyType::Last_); i++) {
-					int Sel = (int)DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_DIGITKEYMODE + i);
+					const int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_DIGITKEYMODE + i));
 					if (Sel >= 0) {
 						m_Options.KeyInputMode[i] =
 							static_cast<CChannelInputOptions::KeyInputModeType>(Sel);
@@ -214,6 +214,7 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				m_Options.fKeyTimeoutCancel =
 					DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_TIMEOUTMODE) == 1;
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

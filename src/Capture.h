@@ -148,8 +148,8 @@ namespace TVTest
 
 		public:
 			CPreviewEventHandler(CCaptureWindow *pCaptureWindow);
-			void OnRButtonUp(int x, int y);
-			bool OnKeyDown(UINT KeyCode, UINT Flags);
+			void OnRButtonUp(int x, int y) override;
+			bool OnKeyDown(UINT KeyCode, UINT Flags) override;
 		};
 
 		enum {
@@ -170,7 +170,7 @@ namespace TVTest
 
 			LPCTSTR GetIDText() const override { return TEXT("Capture"); }
 			LPCTSTR GetName() const override { return TEXT("キャプチャ"); }
-			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override;
 			void OnLButtonDown(int x, int y) override;
 			void OnRButtonDown(int x, int y) override;
 		};
@@ -186,7 +186,7 @@ namespace TVTest
 
 			LPCTSTR GetIDText() const override { return TEXT("Save"); }
 			LPCTSTR GetName() const override { return TEXT("保存"); }
-			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override;
 			void OnLButtonDown(int x, int y) override;
 		};
 
@@ -201,7 +201,7 @@ namespace TVTest
 
 			LPCTSTR GetIDText() const override { return TEXT("Copy"); }
 			LPCTSTR GetName() const override { return TEXT("コピー"); }
-			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags) override;
+			void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override;
 			void OnLButtonDown(int x, int y) override;
 		};
 

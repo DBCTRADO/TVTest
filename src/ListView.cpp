@@ -36,11 +36,6 @@ CListView::CListView()
 }
 
 
-CListView::~CListView()
-{
-}
-
-
 bool CListView::Attach(HWND hwnd)
 {
 	if (hwnd == nullptr)
@@ -281,7 +276,7 @@ bool CListView::MoveItem(int From, int To)
 	lvi.cchTextMax = lengthof(szText);
 	if (!ListView_GetItem(m_hwnd, &lvi))
 		return false;
-	BOOL fChecked = ListView_GetCheckState(m_hwnd, From);
+	const BOOL fChecked = ListView_GetCheckState(m_hwnd, From);
 	ListView_DeleteItem(m_hwnd, From);
 	lvi.iItem = To;
 	ListView_InsertItem(m_hwnd, &lvi);

@@ -85,7 +85,7 @@ void CIcon::Attach(HICON hico)
 
 HICON CIcon::Detach()
 {
-	HICON hico = m_hico;
+	const HICON hico = m_hico;
 
 	m_hico = nullptr;
 
@@ -110,7 +110,7 @@ HIMAGELIST CreateImageListFromIcons(
 	if (ppszIcons == nullptr || IconCount <= 0)
 		return nullptr;
 
-	HIMAGELIST himl = ::ImageList_Create(Width, Height, ILC_COLOR32 | ILC_MASK, IconCount, 1);
+	const HIMAGELIST himl = ::ImageList_Create(Width, Height, ILC_COLOR32 | ILC_MASK, IconCount, 1);
 	if (himl == nullptr)
 		return nullptr;
 
@@ -142,14 +142,13 @@ HIMAGELIST CreateImageListFromIcons(
 
 void SetWindowIcon(HWND hwnd, HINSTANCE hinst, LPCTSTR pszIcon)
 {
-	HICON hico = (HICON)::LoadImage(hinst, pszIcon, IMAGE_ICON,
-									0, 0, LR_DEFAULTSIZE | LR_SHARED);
+	HICON hico = static_cast<HICON>(::LoadImage(hinst, pszIcon, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
 	::SendMessage(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hico));
-	hico = (HICON)::LoadImage(
+	hico = static_cast<HICON>(::LoadImage(
 		hinst, pszIcon, IMAGE_ICON,
 		::GetSystemMetrics(SM_CXSMICON),
 		::GetSystemMetrics(SM_CYSMICON),
-		LR_SHARED);
+		LR_SHARED));
 	::SendMessage(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hico));
 }
 

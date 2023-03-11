@@ -100,9 +100,9 @@ bool FormatVariableString(CVariableStringMap *pVariableMap, LPCWSTR pszFormat, S
 				pString->begin() +
 				(i + 1 < static_cast<int>(SeparatorList.size()) ? SeparatorList[i + 1].Pos : pString->length());
 			auto itCur = pString->begin() + SeparatorList[i].Pos;
-			bool fPrev =
+			const bool fPrev =
 				std::find_if(itBegin, itCur, [](WCHAR c) -> bool { return c != L' '; }) != itCur;
-			bool fNext =
+			const bool fNext =
 				std::find_if(itCur, itEnd, [](WCHAR c) -> bool { return c != L' '; }) != itEnd;
 			if ((fPrev && fNext) || (fPrev && !fLast))
 				pString->insert(SeparatorList[i].Pos, SeparatorList[i].pszSeparator);
@@ -198,7 +198,7 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 	if (!GetParameterList(&GroupList) || GroupList.empty())
 		return false;
 
-	HMENU hmenuRoot = ::CreatePopupMenu();
+	const HMENU hmenuRoot = ::CreatePopupMenu();
 
 	for (size_t i = 0; i < GroupList.size(); i++) {
 		const ParameterGroup &Group = GroupList[i];
@@ -214,27 +214,27 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 			hmenu = hmenuRoot;
 		}
 
-		for (int j = 0; j < (int)Group.ParameterList.size(); j++) {
+		for (int j = 0; j < static_cast<int>(Group.ParameterList.size()); j++) {
 			const ParameterInfo &Param = Group.ParameterList[j];
 
 			TCHAR szText[128];
-			StringPrintf(
-				szText, TEXT("%s\t%%%s%%"),
+			StringFormat(
+				szText, TEXT("{}\t%{}%"),
 				Param.pszText, Param.pszParameter);
 			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, (i << 10) | (j + 1), szText);
 		}
 	}
 
-	int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
+	const int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
 	::DestroyMenu(hmenuRoot);
 	if (Command <= 0)
 		return false;
 
 	const int GroupIndex = Command >> 10;
 	const int ParamIndex = (Command & 0x3FF) - 1;
-	if (GroupIndex >= (int)GroupList.size()
+	if (GroupIndex >= static_cast<int>(GroupList.size())
 			|| ParamIndex < 0
-			|| ParamIndex >= (int)GroupList[GroupIndex].ParameterList.size())
+			|| ParamIndex >= static_cast<int>(GroupList[GroupIndex].ParameterList.size()))
 		return false;
 	String Param;
 	Param = L"%";
@@ -261,33 +261,33 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 bool CVariableStringMap::GetTimeString(LPCWSTR pszKeyword, const LibISDB::DateTime &Time, String *pString) const
 {
 	if (::lstrcmpiW(pszKeyword, L"date") == 0) {
-		StringUtility::Format(*pString, L"%d%02d%02d", Time.Year, Time.Month, Time.Day);
+		StringFormat(pString, L"{}{:02}{:02}", Time.Year, Time.Month, Time.Day);
 	} else if (::lstrcmpiW(pszKeyword, L"time") == 0) {
-		StringUtility::Format(*pString, L"%02d%02d%02d", Time.Hour, Time.Minute, Time.Second);
+		StringFormat(pString, L"{:02}{:02}{:02}", Time.Hour, Time.Minute, Time.Second);
 	} else if (::lstrcmpiW(pszKeyword, L"year") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Year);
+		StringFormat(pString, L"{}", Time.Year);
 	} else if (::lstrcmpiW(pszKeyword, L"year2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Year % 100);
+		StringFormat(pString, L"{:02}", Time.Year % 100);
 	} else if (::lstrcmpiW(pszKeyword, L"month") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Month);
+		StringFormat(pString, L"{}", Time.Month);
 	} else if (::lstrcmpiW(pszKeyword, L"month2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Month);
+		StringFormat(pString, L"{:02}", Time.Month);
 	} else if (::lstrcmpiW(pszKeyword, L"day") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Day);
+		StringFormat(pString, L"{}", Time.Day);
 	} else if (::lstrcmpiW(pszKeyword, L"day2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Day);
+		StringFormat(pString, L"{:02}", Time.Day);
 	} else if (::lstrcmpiW(pszKeyword, L"hour") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Hour);
+		StringFormat(pString, L"{}", Time.Hour);
 	} else if (::lstrcmpiW(pszKeyword, L"hour2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Hour);
+		StringFormat(pString, L"{:02}", Time.Hour);
 	} else if (::lstrcmpiW(pszKeyword, L"minute") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Minute);
+		StringFormat(pString, L"{}", Time.Minute);
 	} else if (::lstrcmpiW(pszKeyword, L"minute2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Minute);
+		StringFormat(pString, L"{:02}", Time.Minute);
 	} else if (::lstrcmpiW(pszKeyword, L"second") == 0) {
-		StringUtility::Format(*pString, L"%d", Time.Second);
+		StringFormat(pString, L"{}", Time.Second);
 	} else if (::lstrcmpiW(pszKeyword, L"second2") == 0) {
-		StringUtility::Format(*pString, L"%02d", Time.Second);
+		StringFormat(pString, L"{:02}", Time.Second);
 	} else if (::lstrcmpiW(pszKeyword, L"day-of-week") == 0) {
 		*pString = GetDayOfWeekText(Time.DayOfWeek);
 	} else {
@@ -318,7 +318,7 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 		TEXT("day-of-week"),
 	};
 
-	for (LPCTSTR e : ParameterList) {
+	for (const LPCTSTR e : ParameterList) {
 		if (::lstrcmpi(e, pszKeyword) == 0)
 			return true;
 	}
@@ -360,15 +360,15 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no")) == 0) {
 		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString, TEXT("%d"), m_EventInfo.Channel.GetChannelNo());
+		StringFormat(pString, TEXT("{}"), m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no2")) == 0) {
 		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString, TEXT("%02d"), m_EventInfo.Channel.GetChannelNo());
+		StringFormat(pString, TEXT("{:02}"), m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword, TEXT("channel-no3")) == 0) {
 		if (m_EventInfo.Channel.GetChannelNo() == 0)
 			return false;
-		StringUtility::Format(*pString, TEXT("%03d"), m_EventInfo.Channel.GetChannelNo());
+		StringFormat(pString, TEXT("{:03}"), m_EventInfo.Channel.GetChannelNo());
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-name")) == 0) {
 		*pString = m_EventInfo.Event.EventName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-title")) == 0) {
@@ -376,11 +376,11 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-mark")) == 0) {
 		GetEventMark(m_EventInfo.Event.EventName, pString);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-id")) == 0) {
-		StringUtility::Format(*pString, TEXT("%04X"), m_EventInfo.Event.EventID);
+		StringFormat(pString, TEXT("{:04X}"), m_EventInfo.Event.EventID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("service-name")) == 0) {
 		*pString = m_EventInfo.ServiceName;
 	} else if (::lstrcmpi(pszKeyword, TEXT("service-id")) == 0) {
-		StringUtility::Format(*pString, TEXT("%04X"), m_EventInfo.Event.ServiceID);
+		StringFormat(pString, TEXT("{:04X}"), m_EventInfo.Event.ServiceID);
 	} else if (::lstrcmpi(pszKeyword, TEXT("tuner-filename")) == 0) {
 		*pString = m_EventInfo.Channel.GetTunerName();
 	} else if (::lstrcmpi(pszKeyword, TEXT("tuner-name")) == 0) {
@@ -389,28 +389,28 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 			pszTuner += 10;
 		pString->assign(pszTuner, ::PathFindExtension(pszTuner) - pszTuner);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%d"),
+		StringFormat(
+			pString, TEXT("{}"),
 			(int)(m_EventInfo.Event.Duration / (60 * 60)));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour2")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%02d"),
+		StringFormat(
+			pString, TEXT("{:02}"),
 			(int)(m_EventInfo.Event.Duration / (60 * 60)));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%d"),
+		StringFormat(
+			pString, TEXT("{}"),
 			(int)(m_EventInfo.Event.Duration / 60 % 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min2")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%02d"),
+		StringFormat(
+			pString, TEXT("{:02}"),
 			(int)(m_EventInfo.Event.Duration / 60 % 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%d"),
+		StringFormat(
+			pString, TEXT("{}"),
 			(int)(m_EventInfo.Event.Duration % 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec2")) == 0) {
-		StringUtility::Format(
-			*pString, TEXT("%02d"),
+		StringFormat(
+			pString, TEXT("{:02}"),
 			(int)(m_EventInfo.Event.Duration % 60));
 	} else if (IsDateTimeParameter(pszKeyword)) {
 		if (!!(m_Flags & Flag::NoCurrentTime))
@@ -690,13 +690,13 @@ void CEventVariableStringMap::GetEventTitle(const String &EventName, String *pTi
 	String::size_type Next = 0;
 
 	while (Next < EventName.length()) {
-		String::size_type Left = EventName.find(L'[', Next);
+		const String::size_type Left = EventName.find(L'[', Next);
 		if (Left == String::npos) {
 			pTitle->append(EventName.substr(Next));
 			break;
 		}
 
-		String::size_type Right = EventName.find(L']', Left + 1);
+		const String::size_type Right = EventName.find(L']', Left + 1);
 		if (Right == String::npos) {
 			pTitle->append(EventName.substr(Next));
 			break;
@@ -724,15 +724,15 @@ void CEventVariableStringMap::GetEventMark(const String &EventName, String *pMar
 	String::size_type Next = 0;
 
 	while (Next < EventName.length()) {
-		String::size_type Left = EventName.find(L'[', Next);
+		const String::size_type Left = EventName.find(L'[', Next);
 		if (Left == String::npos)
 			break;
 
-		String::size_type Right = EventName.find(L']', Left + 1);
+		const String::size_type Right = EventName.find(L']', Left + 1);
 		if (Right == String::npos)
 			break;
 
-		String::size_type Length = Right - Left + 1;
+		const String::size_type Length = Right - Left + 1;
 		if (Length > 2 && Length <= MAX_MARK_LENGTH + 2)
 			pMarks->append(EventName.substr(Left, Length));
 

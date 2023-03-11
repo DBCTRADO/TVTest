@@ -148,9 +148,9 @@ void CTitleBar::SetTheme(const Theme::CThemeManager *pThemeManager)
 
 int CTitleBar::CalcHeight() const
 {
-	int LabelHeight = m_FontHeight + m_Style.LabelMargin.Vert();
-	int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
-	int ButtonHeight = GetButtonHeight();
+	const int LabelHeight = m_FontHeight + m_Style.LabelMargin.Vert();
+	const int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
+	const int ButtonHeight = GetButtonHeight();
 	int Height = std::max(LabelHeight, IconHeight);
 	if (Height < ButtonHeight)
 		Height = ButtonHeight;
@@ -284,7 +284,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			InitializeUI();
 
-			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			const CREATESTRUCT *pcs = reinterpret_cast<const CREATESTRUCT*>(lParam);
 			RECT rc;
 
 			rc.left = 0;
@@ -326,7 +326,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEMOVE:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			int HotItem = HitTest(x, y);
 
 			if (GetCapture() == hwnd) {
@@ -378,7 +378,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		m_ClickItem = m_HotItem;
 		if (m_ClickItem == ITEM_LABEL) {
 			if (m_pEventHandler != nullptr) {
-				int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+				const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 				if (PtInIcon(x, y))
 					m_pEventHandler->OnIconLButtonDown(x, y);
@@ -431,7 +431,7 @@ LRESULT CTitleBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_LBUTTONDBLCLK:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			if (m_HotItem < 0 && HitTest(x, y) == ITEM_LABEL)
 				m_HotItem = ITEM_LABEL;
@@ -603,12 +603,10 @@ bool CTitleBar::UpdateItem(int Item)
 
 int CTitleBar::HitTest(int x, int y) const
 {
-	POINT pt;
+	const POINT pt = {x, y};
 	int i;
 	RECT rc;
 
-	pt.x = x;
-	pt.y = y;
 	for (i = ITEM_LAST; i >= 0; i--) {
 		GetItemRect(i, &rc);
 		if (::PtInRect(&rc, pt))
@@ -622,7 +620,7 @@ bool CTitleBar::PtInIcon(int x, int y) const
 {
 	RECT Border;
 	GetBorderWidthsInPixels(m_Theme.Border, &Border);
-	int IconLeft = Border.left + m_Style.Padding.Left + m_Style.IconMargin.Left;
+	const int IconLeft = Border.left + m_Style.Padding.Left + m_Style.IconMargin.Left;
 	if (x >= IconLeft && x < IconLeft + m_Style.IconSize.Width)
 		return true;
 	return false;
@@ -643,10 +641,10 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 {
 	RECT rc;
 
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-	COLORREF crOldTextColor = ::GetTextColor(hdc);
-	COLORREF crOldBkColor = ::GetBkColor(hdc);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+	const COLORREF crOldTextColor = ::GetTextColor(hdc);
+	const COLORREF crOldBkColor = ::GetBkColor(hdc);
 
 	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
@@ -665,11 +663,11 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 		if (rc.right > rc.left
 				&& rc.left < PaintRect.right && rc.right > PaintRect.left
 				&& rc.top < PaintRect.bottom && rc.bottom > PaintRect.top) {
-			bool fHighlight = i == m_HotItem && i != ITEM_LABEL;
+			const bool fHighlight = i == m_HotItem && i != ITEM_LABEL;
 
 			if (i == ITEM_LABEL) {
 				if (m_hIcon != nullptr) {
-					int Height = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
+					const int Height = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
 					rc.left += m_Style.IconMargin.Left;
 					::DrawIconEx(
 						hdc,

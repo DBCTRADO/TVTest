@@ -35,6 +35,7 @@ namespace TVTest
 		enum class VariableFlag : unsigned int {
 			None     = 0x0000U,
 			Override = 0x0001U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		struct VariableInfo
@@ -75,8 +76,6 @@ namespace TVTest
 
 		std::set<VariableEntry> m_VariableList;
 	};
-
-	TVTEST_ENUM_FLAGS(CVariableManager::VariableFlag)
 
 }
 

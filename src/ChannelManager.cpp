@@ -35,11 +35,6 @@ CChannelManager::CChannelManager()
 }
 
 
-CChannelManager::~CChannelManager()
-{
-}
-
-
 void CChannelManager::Reset()
 {
 	m_CurrentSpace = SPACE_INVALID;
@@ -109,7 +104,7 @@ Break:
 				CChannelInfo *pChInfo = pTuningSpace->GetChannelInfo(j);
 
 				if (pChInfo->GetPhysicalChannel() == 0) {
-					int Channel = pDriverChannelList->GetPhysicalChannel(pChInfo->GetChannelIndex());
+					const int Channel = pDriverChannelList->GetPhysicalChannel(pChInfo->GetChannelIndex());
 
 					if (Channel > 0)
 						pChInfo->SetPhysicalChannel(Channel);
@@ -398,7 +393,7 @@ bool CChannelManager::GetChannelFileName(LPTSTR pszFileName, int MaxLength) cons
 {
 	if (pszFileName == nullptr
 			|| m_ChannelFileName.empty()
-			|| MaxLength <= (int)m_ChannelFileName.length())
+			|| MaxLength <= static_cast<int>(m_ChannelFileName.length()))
 		return false;
 
 	StringCopy(pszFileName, m_ChannelFileName.c_str());
@@ -413,11 +408,6 @@ CChannelSpec::CChannelSpec()
 	: m_Space(CChannelManager::SPACE_INVALID)
 	, m_Channel(-1)
 	, m_ServiceID(-1)
-{
-}
-
-
-CChannelSpec::~CChannelSpec()
 {
 }
 

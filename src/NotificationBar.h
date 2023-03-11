@@ -47,7 +47,6 @@ namespace TVTest
 		};
 
 		CNotificationBar();
-		~CNotificationBar();
 
 	// CBasicWindow
 		bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
@@ -98,10 +97,10 @@ namespace TVTest
 			TIMER_ID_HIDE          = 0x0004U
 		};
 
-		static const int SHOW_ANIMATION_COUNT = 4;
-		static const DWORD SHOW_ANIMATION_INTERVAL = 50;
-		static const int FADE_ANIMATION_COUNT = 4;
-		static const DWORD FADE_ANIMATION_INTERVAL = 50;
+		static constexpr int SHOW_ANIMATION_COUNT = 4;
+		static constexpr DWORD SHOW_ANIMATION_INTERVAL = 50;
+		static constexpr int FADE_ANIMATION_COUNT = 4;
+		static constexpr DWORD FADE_ANIMATION_INTERVAL = 50;
 
 		NotificationBarStyle m_Style;
 		Theme::BackgroundStyle m_BackStyle;

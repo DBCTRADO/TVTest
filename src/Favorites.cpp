@@ -231,10 +231,6 @@ CFavoriteChannel::CFavoriteChannel(const CChannelInfo &ChannelInfo)
 	m_Name = ChannelInfo.GetName();
 }
 
-CFavoriteChannel::~CFavoriteChannel()
-{
-}
-
 CFavoriteChannel *CFavoriteChannel::Duplicate() const
 {
 	return new CFavoriteChannel(*this);
@@ -304,10 +300,6 @@ CFavoritesManager::CFavoritesManager()
 {
 }
 
-CFavoritesManager::~CFavoritesManager()
-{
-}
-
 bool CFavoritesManager::AddChannel(const CChannelInfo *pChannelInfo, LPCTSTR pszBonDriverFileName)
 {
 	CFavoriteChannel *pItem = new CFavoriteChannel(*pChannelInfo);
@@ -354,7 +346,7 @@ void CFavoritesManager::SetFolderMenu(HMENU hmenu, int MenuPos, int *pCommand, c
 					dynamic_cast<const CFavoriteFolder*>(pItem);
 
 				if (pSubFolder != nullptr) {
-					HMENU hmenuSub = ::CreatePopupMenu();
+					const HMENU hmenuSub = ::CreatePopupMenu();
 
 					::InsertMenu(
 						hmenu, MenuPos, MF_BYPOSITION | MF_POPUP | MF_ENABLED,
@@ -439,13 +431,13 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 	if (IsStringEmpty(pszFileName))
 		return false;
 
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		OPEN_EXISTING, 0, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return false;
 
-	BYTE *pBuffer = nullptr;
+	std::unique_ptr<BYTE[]> Buffer;
 	LPWSTR pszBuffer;
 
 	try {
@@ -454,28 +446,27 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 				|| FileSize.QuadPart <= 4 || FileSize.QuadPart > 1024 * 1024)
 			throw __LINE__;
 
-		pBuffer = new BYTE[FileSize.LowPart + 3];
+		Buffer.reset(new BYTE[FileSize.LowPart + 3]);
 		DWORD Read;
-		if (!::ReadFile(hFile, pBuffer, FileSize.LowPart, &Read, nullptr)
+		if (!::ReadFile(hFile, Buffer.get(), FileSize.LowPart, &Read, nullptr)
 				|| Read != FileSize.LowPart)
 			throw __LINE__;
-		pBuffer[FileSize.LowPart + 0] = 0;
-		pBuffer[FileSize.LowPart + 1] = 0;
-		pBuffer[FileSize.LowPart + 2] = 0;
+		Buffer[FileSize.LowPart + 0] = 0;
+		Buffer[FileSize.LowPart + 1] = 0;
+		Buffer[FileSize.LowPart + 2] = 0;
 
-		if (pBuffer[0] == 0xFF && pBuffer[1] == 0xFE) {
-			pszBuffer = (LPWSTR)(pBuffer + 2);
+		if (Buffer[0] == 0xFF && Buffer[1] == 0xFE) {
+			pszBuffer = reinterpret_cast<LPWSTR>(Buffer.get() + 2);
 		} else {
-			BYTE *pSrc = pBuffer;
-			int Length = ::MultiByteToWideChar(CP_ACP, 0, (char*)pSrc, FileSize.LowPart, nullptr, 0);
-			pBuffer = new BYTE[(Length + 1) * sizeof(WCHAR)];
-			pszBuffer = (LPWSTR)pBuffer;
-			::MultiByteToWideChar(CP_ACP, 0, (char*)pSrc, FileSize.LowPart, pszBuffer, Length);
-			pszBuffer[Length] = L'\0';
-			delete [] pSrc;
+			const int Length = ::MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char*>(Buffer.get()), FileSize.LowPart, nullptr, 0);
+			std::unique_ptr<BYTE[]> ConvertedBuffer(new BYTE[(Length + 1) * sizeof(WCHAR)]);
+			LPWSTR pszDst = reinterpret_cast<LPWSTR>(ConvertedBuffer.get());
+			::MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char*>(Buffer.get()), FileSize.LowPart, pszDst, Length);
+			pszDst[Length] = L'\0';
+			Buffer = std::move(ConvertedBuffer);
+			pszBuffer = pszDst;
 		}
 	} catch (...) {
-		delete [] pBuffer;
 		::CloseHandle(hFile);
 		return false;
 	}
@@ -518,16 +509,16 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 						::wcstol(Items[3].c_str(), nullptr, 0),
 						::wcstol(Items[4].c_str(), nullptr, 0),
 						PathItems[PathItems.size() - 1].c_str());
-					ChannelInfo.SetServiceID((WORD)::wcstol(Items[5].c_str(), nullptr, 0));
-					ChannelInfo.SetNetworkID((WORD)::wcstol(Items[6].c_str(), nullptr, 0));
-					ChannelInfo.SetTransportStreamID((WORD)::wcstol(Items[7].c_str(), nullptr, 0));
+					ChannelInfo.SetServiceID(static_cast<WORD>(::wcstol(Items[5].c_str(), nullptr, 0)));
+					ChannelInfo.SetNetworkID(static_cast<WORD>(::wcstol(Items[6].c_str(), nullptr, 0)));
+					ChannelInfo.SetTransportStreamID(static_cast<WORD>(::wcstol(Items[7].c_str(), nullptr, 0)));
 
 					CFavoriteChannel *pChannel = new CFavoriteChannel(ChannelInfo);
 					pChannel->SetName(PathItems[PathItems.size() - 1].c_str());
 					pChannel->SetBonDriverFileName(Items[1].c_str());
 
 					if (Items.size() >= 9) {
-						unsigned long Flags = ::wcstoul(Items[8].c_str(), nullptr, 0);
+						const unsigned long Flags = ::wcstoul(Items[8].c_str(), nullptr, 0);
 						pChannel->SetForceBonDriverChange((Flags & CHANNEL_FLAG_FORCEBONDRIVERCHANGE) != 0);
 					}
 
@@ -542,8 +533,6 @@ bool CFavoritesManager::Load(LPCTSTR pszFileName)
 			p++;
 	}
 
-	delete [] pBuffer;
-
 	return true;
 }
 
@@ -556,7 +545,7 @@ bool CFavoritesManager::Save(LPCTSTR pszFileName) const
 
 	SaveFolder(&m_RootFolder, String(), &Buffer);
 
-	HANDLE hFile = ::CreateFile(
+	const HANDLE hFile = ::CreateFile(
 		pszFileName, GENERIC_WRITE, 0, nullptr,
 		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -564,7 +553,7 @@ bool CFavoritesManager::Save(LPCTSTR pszFileName) const
 
 	DWORD Write;
 	static const WORD BOM = 0xFEFF;
-	const DWORD Size = (DWORD)(Buffer.length() * sizeof(String::value_type));
+	const DWORD Size = static_cast<DWORD>(Buffer.length() * sizeof(String::value_type));
 	if (!::WriteFile(hFile, &BOM, sizeof(BOM), &Write, nullptr)
 			|| Write != sizeof(BOM)
 			|| !::WriteFile(hFile, Buffer.data(), Size, &Write, nullptr)
@@ -612,8 +601,8 @@ void CFavoritesManager::SaveFolder(const CFavoriteFolder *pFolder, const String 
 					unsigned int Flags = 0;
 					if (pChannel->GetForceBonDriverChange())
 						Flags |= CHANNEL_FLAG_FORCEBONDRIVERCHANGE;
-					StringUtility::Format(
-						ChannelSpec, TEXT(",%s,%d,%d,%d,%d,%d,%d,%u"),
+					StringFormat(
+						&ChannelSpec, TEXT(",{},{},{},{},{},{},{},{}"),
 						pChannel->GetBonDriverFileName(),
 						ChannelInfo.GetSpace(),
 						ChannelInfo.GetChannelIndex(),
@@ -798,15 +787,15 @@ bool CFavoritesMenu::Create(
 	if (m_Margins.cxRightWidth < 2)
 		m_Margins.cxRightWidth = 2;
 
-	HDC hdc = ::GetDC(hwnd);
+	const HDC hdc = ::GetDC(hwnd);
 
 	CreateFont(hdc);
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	m_ItemHeight = m_TextHeight;
 	if (!!(Flags & CreateFlag::ShowLogo)) {
 		m_Logo.Initialize(m_IconHeight);
-		int Height = std::max(m_Logo.GetLogoHeight(), m_IconHeight);
+		const int Height = std::max(m_Logo.GetLogoHeight(), m_IconHeight);
 		if (Height > m_ItemHeight)
 			m_ItemHeight = Height;
 	}
@@ -822,7 +811,7 @@ bool CFavoritesMenu::Create(
 		ClearMenu(hmenu);
 	}
 
-	HINSTANCE hinstRes = GetAppClass().GetResourceInstance();
+	const HINSTANCE hinstRes = GetAppClass().GetResourceInstance();
 	TCHAR szText[64];
 
 	if (pFolder->GetItemCount() > 0) {
@@ -856,7 +845,7 @@ bool CFavoritesMenu::Create(
 			::InsertMenuItem(m_hmenu, MenuPos, TRUE, &mii);
 			MenuPos++;
 
-			int Length = ::LoadString(hinstRes, e.TextID, szText, lengthof(szText));
+			const int Length = ::LoadString(hinstRes, e.TextID, szText, lengthof(szText));
 			RECT rc;
 			m_MenuPainter.GetItemTextExtent(hdc, 0, szText, &rc);
 			if (rc.right > m_TextWidth)
@@ -901,7 +890,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 			const CFavoriteChannel *pChannel = dynamic_cast<const CFavoriteChannel*>(pItem);
 
 			if (pChannel != nullptr) {
-				LPCTSTR pszChannelName = pChannel->GetName();
+				const LPCTSTR pszChannelName = pChannel->GetName();
 				m_MenuPainter.GetItemTextExtent(
 					hdc, 0, pszChannelName, &rc,
 					DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
@@ -929,7 +918,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 					CFolderItem *pMenuItem = new CFolderItem(pSubFolder);
 					m_ItemList.emplace_back(pMenuItem);
 
-					HMENU hmenuSub = ::CreatePopupMenu();
+					const HMENU hmenuSub = ::CreatePopupMenu();
 					mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_DATA;
 					mii.wID = CM_FAVORITESSUBMENU;
 					mii.hSubMenu = hmenuSub;
@@ -938,7 +927,7 @@ void CFavoritesMenu::SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCom
 					SetFolderMenu(hmenuSub, 0, hdc, pCommand, pSubFolder);
 					MenuPos++;
 
-					LPCTSTR pszName = pSubFolder->GetName();
+					const LPCTSTR pszName = pSubFolder->GetName();
 					m_MenuPainter.GetItemTextExtent(
 						hdc, 0, pszName, &rc,
 						DT_LEFT | DT_SINGLELINE | DT_NOPREFIX);
@@ -1064,10 +1053,10 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	TCHAR szText[256];
 
 	m_MenuPainter.DrawItemBackground(pdis->hDC, pdis->rcItem, pdis->itemState);
-	COLORREF crTextColor = m_MenuPainter.GetTextColor(pdis->itemState);
-	COLORREF crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
-	int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-	HFONT hfontOld = DrawUtil::SelectObject(pdis->hDC, m_Font);
+	const COLORREF crTextColor = m_MenuPainter.GetTextColor(pdis->itemState);
+	const COLORREF crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
+	const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+	const HFONT hfontOld = DrawUtil::SelectObject(pdis->hDC, m_Font);
 
 	RECT rc;
 	rc.left = pdis->rcItem.left + m_Margins.cxLeftWidth;
@@ -1147,8 +1136,8 @@ bool CFavoritesMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 bool CFavoritesMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-	HMENU hmenu = reinterpret_cast<HMENU>(lParam);
-	UINT Command = LOWORD(wParam);
+	const HMENU hmenu = reinterpret_cast<HMENU>(lParam);
+	const UINT Command = LOWORD(wParam);
 
 	if (hmenu == nullptr || hmenu != m_hmenu || hwnd != m_hwnd || HIWORD(wParam) == 0xFFFF
 			|| Command < m_FirstCommand || Command > m_LastCommand) {
@@ -1216,9 +1205,9 @@ int CFavoritesMenu::GetEventText(
 	EpgUtil::FormatEventTime(
 		*pEventInfo, szTime, lengthof(szTime), EpgUtil::FormatEventTimeFlag::Hour2Digits);
 
-	return StringPrintf(
-		pszText, MaxLength, TEXT("%s %s"),
-		szTime, pEventInfo->EventName.c_str());
+	return static_cast<int>(StringFormat(
+		pszText, MaxLength, TEXT("{} {}"),
+		szTime, pEventInfo->EventName));
 }
 
 void CFavoritesMenu::CreateFont(HDC hdc)
@@ -1230,7 +1219,7 @@ void CFavoritesMenu::CreateFont(HDC hdc)
 	if (hdc != nullptr)
 		m_TextHeight = m_Font.GetHeight(hdc);
 	else
-		m_TextHeight = abs(lf.lfHeight);
+		m_TextHeight = std::abs(lf.lfHeight);
 }
 
 void CFavoritesMenu::GetBaseTime(LibISDB::DateTime *pTime)
@@ -1290,19 +1279,16 @@ INT_PTR CFavoritePropertiesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, 
 
 			DlgCheckBox_Check(hDlg, IDC_FAVORITEPROP_FORCEBONDRIVERCHANGE, m_pChannel->GetForceBonDriverChange());
 
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				ChannelInfo.GetServiceID(),
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
 				ChannelInfo.GetServiceID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_SERVICEID, szText);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				ChannelInfo.GetNetworkID(),
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
 				ChannelInfo.GetNetworkID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_NETWORKID, szText);
-			StringPrintf(
-				szText, TEXT("%d (0x%04x)"),
-				ChannelInfo.GetTransportStreamID(),
+			StringFormat(
+				szText, TEXT("{0} ({0:#04x})"),
 				ChannelInfo.GetTransportStreamID());
 			::SetDlgItemText(hDlg, IDC_FAVORITEPROP_TRANSPORTSTREAMID, szText);
 		}
@@ -1321,6 +1307,7 @@ INT_PTR CFavoritePropertiesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, 
 				m_pChannel->SetForceBonDriverChange(
 					DlgCheckBox_IsChecked(hDlg, IDC_FAVORITEPROP_FORCEBONDRIVERCHANGE));
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -1355,12 +1342,12 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HINSTANCE hinstRes = GetAppClass().GetResourceInstance();
-			HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
+			const HINSTANCE hinstRes = GetAppClass().GetResourceInstance();
+			const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
 
 			m_IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);
 			m_IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, m_CurrentDPI);
-			HIMAGELIST himl = CreateFavoritesIconImageList(hinstRes, m_IconWidth, m_IconHeight);
+			const HIMAGELIST himl = CreateFavoritesIconImageList(hinstRes, m_IconWidth, m_IconHeight);
 			ImageList_SetBkColor(himl, TreeView_GetBkColor(hwndTree));
 			TreeView_SetImageList(hwndTree, himl, TVSIL_NORMAL);
 
@@ -1385,7 +1372,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 	case WM_MOUSEMOVE:
 		if (m_fItemDragging) {
-			HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
+			const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
 			POINT pt;
 
 			pt.x = GET_X_LPARAM(lParam);
@@ -1450,7 +1437,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 	case WM_LBUTTONUP:
 		if (m_fItemDragging) {
-			HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
+			const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
 
 			ImageList_DragLeave(nullptr);
 			ImageList_EndDrag();
@@ -1462,7 +1449,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 				TreeView_SelectDropTarget(hwndTree, nullptr);
 				TreeView_SetInsertMark(hwndTree, nullptr, FALSE);
 				if (m_fDropToFolder) {
-					HTREEITEM hItem = CopyTreeItems(hwndTree, m_hDraggingItem, m_hDropTargetItem, TVI_LAST);
+					const HTREEITEM hItem = CopyTreeItems(hwndTree, m_hDraggingItem, m_hDropTargetItem, TVI_LAST);
 					if (hItem != nullptr) {
 						TreeView_DeleteItem(hwndTree, m_hDraggingItem);
 						TVITEM tvi;
@@ -1481,7 +1468,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 						if (hInsertAfter == nullptr)
 							hInsertAfter = TVI_FIRST;
 					}
-					HTREEITEM hItem = CopyTreeItems(
+					const HTREEITEM hItem = CopyTreeItems(
 						hwndTree, m_hDraggingItem,
 						TreeView_GetParent(hwndTree, m_hDropTargetItem),
 						hInsertAfter);
@@ -1498,7 +1485,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case TVN_BEGINDRAG:
 			{
-				NMTREEVIEW *pnmtv = reinterpret_cast<NMTREEVIEW*>(lParam);
+				const NMTREEVIEW *pnmtv = reinterpret_cast<const NMTREEVIEW*>(lParam);
 
 				m_hDraggingItem = pnmtv->itemNew.hItem;
 				m_himlDrag = TreeView_CreateDragImage(pnmtv->hdr.hwndFrom, m_hDraggingItem);
@@ -1514,7 +1501,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 		case TVN_DELETEITEM:
 			{
-				NMTREEVIEW *pnmtv = reinterpret_cast<NMTREEVIEW*>(lParam);
+				const NMTREEVIEW *pnmtv = reinterpret_cast<const NMTREEVIEW*>(lParam);
 
 				delete reinterpret_cast<CFavoriteItem*>(pnmtv->itemOld.lParam);
 			}
@@ -1522,8 +1509,8 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 		case TVN_BEGINLABELEDIT:
 			{
-				NMTVDISPINFO *pnmtvdi = reinterpret_cast<NMTVDISPINFO*>(lParam);
-				HWND hwndEdit = TreeView_GetEditControl(pnmtvdi->hdr.hwndFrom);
+				const NMTVDISPINFO *pnmtvdi = reinterpret_cast<const NMTVDISPINFO*>(lParam);
+				const HWND hwndEdit = TreeView_GetEditControl(pnmtvdi->hdr.hwndFrom);
 				::SetProp(hwndEdit, TEXT("FavoritesThis"), this);
 				m_pOldEditProc = reinterpret_cast<WNDPROC>(
 					::SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(EditHookProc)));
@@ -1532,7 +1519,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 		case TVN_ENDLABELEDIT:
 			{
-				NMTVDISPINFO *pnmtvdi = reinterpret_cast<NMTVDISPINFO*>(lParam);
+				const NMTVDISPINFO *pnmtvdi = reinterpret_cast<const NMTVDISPINFO*>(lParam);
 
 				if (pnmtvdi->item.pszText != nullptr) {
 					LRESULT Result = FALSE;
@@ -1564,24 +1551,24 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 		case NM_RCLICK:
 			{
-				NMHDR *pnmh = reinterpret_cast<NMHDR*>(lParam);
+				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
 				POINT pt;
 				TVHITTESTINFO tvhti;
 
 				::GetCursorPos(&pt);
 				tvhti.pt = pt;
 				::ScreenToClient(pnmh->hwndFrom, &tvhti.pt);
-				HTREEITEM hItem = TreeView_HitTest(pnmh->hwndFrom, &tvhti);
+				const HTREEITEM hItem = TreeView_HitTest(pnmh->hwndFrom, &tvhti);
 				if (hItem != nullptr && (tvhti.flags & TVHT_ONITEM) != 0) {
 					CFavoriteItem *pItem = GetItem(pnmh->hwndFrom, hItem);
 					if (pItem == nullptr)
 						break;
-					HMENU hmenu = ::CreatePopupMenu();
+					const HMENU hmenu = ::CreatePopupMenu();
 					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_DELETE, TEXT("削除(&D)"));
 					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_RENAME, TEXT("名前の変更(&R)"));
 					if (pItem->GetType() == CFavoriteItem::ItemType::Channel)
 						::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_PROPERTIES, TEXT("プロパティ(&P)..."));
-					int Result = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr);
+					const int Result = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr);
 					::DestroyMenu(hmenu);
 					switch (Result) {
 					case IDC_FAVORITES_DELETE:
@@ -1606,14 +1593,14 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 		case NM_DBLCLK:
 			{
-				NMHDR *pnmh = reinterpret_cast<NMHDR*>(lParam);
+				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
 				POINT pt;
 				TVHITTESTINFO tvhti;
 
 				::GetCursorPos(&pt);
 				tvhti.pt = pt;
 				::ScreenToClient(pnmh->hwndFrom, &tvhti.pt);
-				HTREEITEM hItem = TreeView_HitTest(pnmh->hwndFrom, &tvhti);
+				const HTREEITEM hItem = TreeView_HitTest(pnmh->hwndFrom, &tvhti);
 				if (hItem != nullptr && (tvhti.flags & TVHT_ONITEM) != 0) {
 					CFavoriteItem *pItem = GetItem(pnmh->hwndFrom, hItem);
 					if (pItem != nullptr) {
@@ -1633,8 +1620,8 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 		switch (LOWORD(wParam)) {
 		case IDC_FAVORITES_NEWFOLDER:
 			{
-				HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
-				HTREEITEM hSelItem = TreeView_GetSelection(hwndTree);
+				const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
+				const HTREEITEM hSelItem = TreeView_GetSelection(hwndTree);
 
 				CFavoriteFolder *pNewFolder = new CFavoriteFolder;
 				pNewFolder->SetName(TEXT("新規フォルダ"));
@@ -1656,7 +1643,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 				tvis.item.iSelectedImage = FAVORITES_ICON_FOLDER;
 				tvis.item.cChildren = 0;
 				tvis.item.lParam = reinterpret_cast<LPARAM>(pNewFolder);
-				HTREEITEM hItem = TreeView_InsertItem(hwndTree, &tvis);
+				const HTREEITEM hItem = TreeView_InsertItem(hwndTree, &tvis);
 				::SetFocus(hwndTree);
 				TreeView_SelectItem(hwndTree, hItem);
 				TreeView_EditLabel(hwndTree, hItem);
@@ -1665,10 +1652,10 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 		case IDOK:
 			{
-				HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
+				const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
 
 				// TreeViewのEditからもIDOKと同じIDで通知が送られてくるという罠
-				HWND hwndEdit = TreeView_GetEditControl(hwndTree);
+				const HWND hwndEdit = TreeView_GetEditControl(hwndTree);
 				if (hwndEdit != nullptr && reinterpret_cast<HWND>(lParam) == hwndEdit)
 					break;
 
@@ -1678,6 +1665,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 				m_pManager->GetRootFolder() = Root;
 				m_pManager->SetModified(true);
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -1686,9 +1674,9 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 	case WM_DESTROY:
 		{
-			HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
+			const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
 			TreeView_DeleteAllItems(hwndTree);
-			HIMAGELIST himl = TreeView_SetImageList(hwndTree, nullptr, TVSIL_NORMAL);
+			const HIMAGELIST himl = TreeView_SetImageList(hwndTree, nullptr, TVSIL_NORMAL);
 			if (himl != nullptr)
 				ImageList_Destroy(himl);
 		}
@@ -1721,7 +1709,7 @@ void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree, HTREEITEM hParent,
 					tvis.item.iSelectedImage = FAVORITES_ICON_FOLDER;
 					tvis.item.cChildren = pSubFolder->GetItemCount() > 0;
 					tvis.item.lParam = reinterpret_cast<LPARAM>(pNewFolder);
-					HTREEITEM hItem = TreeView_InsertItem(hwndTree, &tvis);
+					const HTREEITEM hItem = TreeView_InsertItem(hwndTree, &tvis);
 					InsertTreeItems(hwndTree, hItem, pSubFolder);
 				}
 			}
@@ -1742,7 +1730,7 @@ void COrganizeFavoritesDialog::InsertTreeItems(HWND hwndTree, HTREEITEM hParent,
 
 					const CChannelInfo &ChannelInfo = pChannel->GetChannelInfo();
 					if (ChannelInfo.GetNetworkID() != 0 && ChannelInfo.GetServiceID() != 0) {
-						HICON hico = GetAppClass().LogoManager.CreateLogoIcon(
+						const HICON hico = GetAppClass().LogoManager.CreateLogoIcon(
 							ChannelInfo.GetNetworkID(), ChannelInfo.GetServiceID(),
 							m_IconWidth, m_IconHeight);
 						if (hico != nullptr) {
@@ -1777,7 +1765,7 @@ HTREEITEM COrganizeFavoritesDialog::CopyTreeItems(HWND hwndTree, HTREEITEM hSrcI
 	tvis.item.mask |= TVIF_TEXT;
 	tvis.item.pszText = const_cast<LPTSTR>(pNewItem->GetName());
 	tvis.item.lParam = reinterpret_cast<LPARAM>(pNewItem);
-	HTREEITEM hItem = TreeView_InsertItem(hwndTree, &tvis);
+	const HTREEITEM hItem = TreeView_InsertItem(hwndTree, &tvis);
 	if (hItem == nullptr) {
 		delete pNewItem;
 		return nullptr;
@@ -1824,7 +1812,7 @@ CFavoriteItem *COrganizeFavoritesDialog::GetItem(HWND hwndTree, HTREEITEM hItem)
 
 LRESULT CALLBACK COrganizeFavoritesDialog::EditHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	COrganizeFavoritesDialog *pThis = static_cast<COrganizeFavoritesDialog*>(::GetProp(hwnd, TEXT("FavoritesThis")));
+	const COrganizeFavoritesDialog *pThis = static_cast<COrganizeFavoritesDialog*>(::GetProp(hwnd, TEXT("FavoritesThis")));
 	if (pThis == nullptr)
 		return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 

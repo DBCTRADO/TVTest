@@ -47,7 +47,7 @@ unsigned int HexStringToUInt(LPCTSTR pszString, int Length, LPCTSTR *ppszEnd)
 	unsigned int Value = 0;
 	int i;
 	for (i = 0; i < Length; i++) {
-		TCHAR Code = pszString[i];
+		const TCHAR Code = pszString[i];
 		unsigned int v;
 		if (Code >= _T('0') && Code <= _T('9'))
 			v = Code - _T('0');
@@ -81,7 +81,7 @@ float LevelToDeciBel(int Level)
 	else if (Level >= 100)
 		Volume = 0.0f;
 	else
-		Volume = (float)(20.0 * log10((double)Level / 100.0));
+		Volume = static_cast<float>(20.0 * log10(static_cast<double>(Level) / 100.0));
 	return Volume;
 }
 
@@ -110,11 +110,11 @@ COLORREF HSVToRGB(double Hue, double Saturation, double Value)
 			h -= 6.0;
 		s = Saturation;
 		v = Value;
-		f = h - (int)h;
+		f = h - static_cast<int>(h);
 		p = v * (1.0 - s);
 		q = v * (1.0 - s * f);
 		t = v * (1.0 - s * (1.0 - f));
-		switch ((int)h) {
+		switch (static_cast<int>(h)) {
 		case 0: r = v; g = t; b = p; break;
 		case 1: r = q; g = v; b = p; break;
 		case 2: r = p; g = v; b = t; break;
@@ -123,7 +123,7 @@ COLORREF HSVToRGB(double Hue, double Saturation, double Value)
 		case 5: r = v; g = p; b = q; break;
 		}
 	}
-	return RGB((BYTE)(r * 255.0 + 0.5), (BYTE)(g * 255.0 + 0.5), (BYTE)(b * 255.0 + 0.5));
+	return RGB(static_cast<BYTE>(r * 255.0 + 0.5), static_cast<BYTE>(g * 255.0 + 0.5), static_cast<BYTE>(b * 255.0 + 0.5));
 }
 
 
@@ -131,7 +131,7 @@ void RGBToHSV(
 	BYTE Red, BYTE Green, BYTE Blue,
 	double *pHue, double *pSaturation, double *pValue)
 {
-	const double r = (double)Red / 255.0, g = (double)Green / 255.0, b = (double)Blue / 255.0;
+	const double r = static_cast<double>(Red) / 255.0, g = static_cast<double>(Green) / 255.0, b = static_cast<double>(Blue) / 255.0;
 	double h, s, v;
 	double Max, Min;
 
@@ -145,7 +145,7 @@ void RGBToHSV(
 	v = Max;
 	if (Max > Min) {
 		s = (Max - Min) / Max;
-		double Delta = Max - Min;
+		const double Delta = Max - Min;
 		if (r == Max)
 			h = (g - b) / Delta;
 		else if (g == Max)
@@ -207,15 +207,15 @@ int CompareSystemTime(const SYSTEMTIME *pTime1, const SYSTEMTIME *pTime2)
 #else
 	DWORD Date1, Date2;
 
-	Date1 = ((DWORD)pTime1->wYear << 16) | ((DWORD)pTime1->wMonth << 8) | pTime1->wDay;
-	Date2 = ((DWORD)pTime2->wYear << 16) | ((DWORD)pTime2->wMonth << 8) | pTime2->wDay;
+	Date1 = (static_cast<DWORD>(pTime1->wYear) << 16) | (static_cast<DWORD>(pTime1->wMonth) << 8) | pTime1->wDay;
+	Date2 = (static_cast<DWORD>(pTime2->wYear) << 16) | (static_cast<DWORD>(pTime2->wMonth) << 8) | pTime2->wDay;
 	if (Date1 == Date2) {
 		Date1 =
-			((DWORD)pTime1->wHour << 24) | ((DWORD)pTime1->wMinute << 16) |
-			((DWORD)pTime1->wSecond << 10) | pTime1->wMilliseconds;
+			(static_cast<DWORD>(pTime1->wHour) << 24) | (static_cast<DWORD>(pTime1->wMinute) << 16) |
+			(static_cast<DWORD>(pTime1->wSecond) << 10) | pTime1->wMilliseconds;
 		Date2 =
-			((DWORD)pTime2->wHour << 24) | ((DWORD)pTime2->wMinute << 16) |
-			((DWORD)pTime2->wSecond << 10) | pTime2->wMilliseconds;
+			(static_cast<DWORD>(pTime2->wHour) << 24) | (static_cast<DWORD>(pTime2->wMinute) << 16) |
+			(static_cast<DWORD>(pTime2->wSecond) << 10) | pTime2->wMilliseconds;
 	}
 	if (Date1 < Date2)
 		return -1;
@@ -363,12 +363,12 @@ bool CopyTextToClipboard(HWND hwndOwner, LPCTSTR pszText)
 		return false;
 
 	bool fOK = false;
-	SIZE_T Size = (::lstrlen(pszText) + 1) * sizeof(TCHAR);
-	HGLOBAL hData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
+	const SIZE_T Size = (::lstrlen(pszText) + 1) * sizeof(TCHAR);
+	const HGLOBAL hData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, Size);
 	if (hData != nullptr) {
 		LPTSTR pBuffer = static_cast<LPTSTR>(::GlobalLock(hData));
 		if (pBuffer != nullptr) {
-			::CopyMemory(pBuffer, pszText, Size);
+			std::memcpy(pBuffer, pszText, Size);
 			::GlobalUnlock(hData);
 
 			if (::OpenClipboard(hwndOwner)) {
@@ -394,10 +394,9 @@ bool CopyTextToClipboard(HWND hwndOwner, LPCTSTR pszText)
 
 void ClearMenu(HMENU hmenu)
 {
-	int Count, i;
+	const int Count = GetMenuItemCount(hmenu);
 
-	Count = GetMenuItemCount(hmenu);
-	for (i = Count - 1; i >= 0; i--)
+	for (int i = Count - 1; i >= 0; i--)
 		DeleteMenu(hmenu, i, MF_BYPOSITION);
 }
 
@@ -415,7 +414,7 @@ int CopyToMenuText(LPCTSTR pszSrcText, LPTSTR pszDstText, int MaxLength)
 			pszDstText[DstPos++] = _T('&');
 			SrcPos++;
 		} else {
-			int Length = StringCharLength(&pszSrcText[SrcPos]);
+			const int Length = StringCharLength(&pszSrcText[SrcPos]);
 			if (Length == 0 || DstPos + Length >= MaxLength)
 				break;
 			for (int i = 0; i < Length; i++)
@@ -480,10 +479,8 @@ bool FileSaveDialog(OPENFILENAME *pofn)
 
 void ForegroundWindow(HWND hwnd)
 {
-	int TargetID, ForegroundID;
-
-	ForegroundID = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
-	TargetID = GetWindowThreadProcessId(hwnd, nullptr);
+	const int ForegroundID = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
+	const int TargetID = GetWindowThreadProcessId(hwnd, nullptr);
 	AttachThreadInput(TargetID, ForegroundID, TRUE);
 	SetForegroundWindow(hwnd);
 	AttachThreadInput(TargetID, ForegroundID, FALSE);
@@ -548,12 +545,16 @@ int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lpData, LPARAM lP
 {
 	switch (uMsg) {
 	case BFFM_INITIALIZED:
-		if (((LPTSTR)lParam)[0] != _T('\0')) {
-			TCHAR szDirectory[MAX_PATH];
+		{
+			const LPCTSTR pszFolder = reinterpret_cast<LPCTSTR>(lParam);
 
-			StringCopy(szDirectory, (LPTSTR)lParam);
-			PathRemoveBackslash(szDirectory);
-			SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)szDirectory);
+			if (pszFolder[0] != _T('\0')) {
+				TCHAR szDirectory[MAX_PATH];
+
+				StringCopy(szDirectory, pszFolder);
+				PathRemoveBackslash(szDirectory);
+				SendMessage(hwnd, BFFM_SETSELECTION, TRUE, reinterpret_cast<LPARAM>(szDirectory));
+			}
 		}
 		break;
 	}
@@ -565,7 +566,6 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 {
 	BROWSEINFO bi;
 	PIDLIST_ABSOLUTE pidl;
-	BOOL fRet;
 
 	bi.hwndOwner = hwndOwner;
 	bi.pidlRoot = nullptr;
@@ -573,7 +573,7 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 	bi.lpszTitle = pszTitle;
 	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
 	bi.lpfn = BrowseFolderCallback;
-	bi.lParam = (LPARAM)pszDirectory;
+	bi.lParam = reinterpret_cast<LPARAM>(pszDirectory);
 
 	{
 		CommonDialogDPIBlock SystemDPI;
@@ -583,25 +583,25 @@ bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 			return false;
 	}
 
-	fRet = SHGetPathFromIDList(pidl, pszDirectory);
+	const BOOL fRet = SHGetPathFromIDList(pidl, pszDirectory);
 	CoTaskMemFree(pidl);
-	return fRet == TRUE;
+	return fRet != FALSE;
 }
 
 
 bool CompareLogFont(const LOGFONT *pFont1, const LOGFONT *pFont2)
 {
-	return memcmp(pFont1, pFont2, 28/*offsetof(LOGFONT, lfFaceName)*/) == 0
+	return std::memcmp(pFont1, pFont2, 28/*offsetof(LOGFONT, lfFaceName)*/) == 0
 		&& lstrcmp(pFont1->lfFaceName, pFont2->lfFaceName) == 0;
 }
 
 
 int PixelsToPoints(int Pixels)
 {
-	HDC hIC = ::CreateIC(TEXT("DISPLAY"), nullptr, nullptr, nullptr);
+	const HDC hIC = ::CreateIC(TEXT("DISPLAY"), nullptr, nullptr, nullptr);
 	if (hIC == nullptr)
 		return 0;
-	int Resolution = ::GetDeviceCaps(hIC, LOGPIXELSY);
+	const int Resolution = ::GetDeviceCaps(hIC, LOGPIXELSY);
 	int Points;
 	if (Resolution != 0)
 		Points = ::MulDiv(Pixels, 72, Resolution);
@@ -614,10 +614,10 @@ int PixelsToPoints(int Pixels)
 
 int PointsToPixels(int Points)
 {
-	HDC hIC = ::CreateIC(TEXT("DISPLAY"), nullptr, nullptr, nullptr);
+	const HDC hIC = ::CreateIC(TEXT("DISPLAY"), nullptr, nullptr, nullptr);
 	if (hIC == nullptr)
 		return 0;
-	int Resolution = ::GetDeviceCaps(hIC, LOGPIXELSY);
+	const int Resolution = ::GetDeviceCaps(hIC, LOGPIXELSY);
 	int Pixels;
 	if (Resolution != 0)
 		Pixels = ::MulDiv(Points, Resolution, 72);
@@ -633,16 +633,15 @@ int CalcFontPointHeight(HDC hdc, const LOGFONT *pFont)
 	if (hdc == nullptr || pFont == nullptr)
 		return 0;
 
-	HFONT hfont = CreateFontIndirect(pFont), hfontOld;
+	const HFONT hfont = CreateFontIndirect(pFont);
 	if (hfont == nullptr)
 		return 0;
 
 	TEXTMETRIC tm;
-	int PixelsPerInch;
 
-	hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
+	const HFONT hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
 	GetTextMetrics(hdc, &tm);
-	PixelsPerInch = GetDeviceCaps(hdc, LOGPIXELSY);
+	const int PixelsPerInch = GetDeviceCaps(hdc, LOGPIXELSY);
 	SelectObject(hdc, hfontOld);
 	DeleteObject(hfont);
 	if (PixelsPerInch == 0)
@@ -656,7 +655,7 @@ int GetErrorText(DWORD ErrorCode, LPTSTR pszText, int MaxLength)
 	if (pszText == nullptr || MaxLength < 1)
 		return 0;
 
-	int Length = ::FormatMessage(
+	const int Length = ::FormatMessage(
 		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
 		ErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		pszText, MaxLength, nullptr);
@@ -679,7 +678,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 			*pMessage = TEXT("ファイル名が指定されていません。");
 		return false;
 	}
-	int Length = lstrlen(pszFileName);
+	const int Length = lstrlen(pszFileName);
 	if (Length >= MAX_PATH) {
 		if (pMessage != nullptr)
 			*pMessage = TEXT("ファイル名が長すぎます。");
@@ -689,7 +688,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 		static const LPCTSTR pszNGList[] = {
 			TEXT("CON"), TEXT("PRN"), TEXT("AUX"), TEXT("NUL")
 		};
-		for (LPCTSTR e : pszNGList) {
+		for (const LPCTSTR e : pszNGList) {
 			if (lstrcmpi(e, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -700,7 +699,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 		TCHAR szName[5];
 
 		for (int i = 1; i <= 9; i++) {
-			StringPrintf(szName, TEXT("COM%d"), i);
+			StringFormat(szName, TEXT("COM{}"), i);
 			if (lstrcmpi(szName, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -708,7 +707,7 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 			}
 		}
 		for (int i = 1; i <= 9; i++) {
-			StringPrintf(szName, TEXT("LPT%d"), i);
+			StringFormat(szName, TEXT("LPT{}"), i);
 			if (lstrcmpi(szName, pszFileName) == 0) {
 				if (pMessage != nullptr)
 					*pMessage = TEXT("仮想デバイス名はファイル名に使用できません。");
@@ -728,13 +727,13 @@ bool IsValidFileName(LPCTSTR pszFileName, FileNameValidateFlag Flags, String *pM
 				|| (!fAllowDelimiter && *p == _T('\\'))) {
 			if (pMessage != nullptr) {
 				if (*p <= 31) {
-					StringUtility::Format(
-						*pMessage,
-						TEXT("ファイル名に使用できない文字 0x%02x が含まれています。"), *p);
+					StringFormat(
+						pMessage,
+						TEXT("ファイル名に使用できない文字 {:#02x} が含まれています。"), *p);
 				} else {
-					StringUtility::Format(
-						*pMessage,
-						TEXT("ファイル名に使用できない文字 %c が含まれています。"), *p);
+					StringFormat(
+						pMessage,
+						TEXT("ファイル名に使用できない文字 {:c} が含まれています。"), *p);
 				}
 			}
 			return false;
@@ -766,16 +765,16 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 	if (pFileName == nullptr || pFileName->empty())
 		return false;
 
-	LPCTSTR pszFileName = pFileName->c_str();
-	size_t DirLength = ::PathFindFileName(pszFileName) - pszFileName;
+	const LPCTSTR pszFileName = pFileName->c_str();
+	const size_t DirLength = ::PathFindFileName(pszFileName) - pszFileName;
 	if (DirLength == 0 || DirLength > MaxLength - 1)
 		return false;
 
 	String Path(*pFileName);
 
-	LPCTSTR pszExtension = ::PathFindExtension(pszFileName);
-	size_t ExtensionLength = ::lstrlen(pszExtension);
-	size_t MaxFileName = MaxLength - DirLength;
+	const LPCTSTR pszExtension = ::PathFindExtension(pszFileName);
+	const size_t ExtensionLength = ::lstrlen(pszExtension);
+	const size_t MaxFileName = MaxLength - DirLength;
 	if (Path.length() > MaxLength) {
 		if (ExtensionLength < MaxFileName) {
 			Path.resize(MaxLength - ExtensionLength);
@@ -786,13 +785,13 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 	}
 
 	if (::PathFileExists(Path.c_str())) {
-		static const int MAX_NUMBER = 1000;
+		static constexpr int MAX_NUMBER = 1000;
 		String BaseName(
 			pFileName->substr(DirLength, pFileName->length() - DirLength - ExtensionLength));
 		String Name;
 
 		if (IsStringEmpty(pszNumberFormat))
-			pszNumberFormat = TEXT("-%d");
+			pszNumberFormat = TEXT("-{}");
 
 		for (int i = 2;; i++) {
 			if (i == MAX_NUMBER)
@@ -800,7 +799,7 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 
 			TCHAR szNumber[16];
 
-			StringPrintf(szNumber, pszNumberFormat, i);
+			StringFormat(szNumber, pszNumberFormat, i);
 			Name = BaseName;
 			Name += szNumber;
 			Name += pszExtension;
@@ -873,24 +872,19 @@ bool GetAbsolutePath(const String &FilePath, String *pAbsolutePath)
 static HBITMAP CreateIconMaskBitmap(
 	int IconWidth, int IconHeight, int ImageWidth, int ImageHeight)
 {
-	SIZE_T BytesPerLine, BitsBytes;
-	BYTE *pBits;
-	int Top;
-	HBITMAP hbm;
-
-	BytesPerLine = (IconWidth + 15) / 16 * 2;
-	BitsBytes = BytesPerLine * IconHeight;
-	pBits = new BYTE[BitsBytes];
-	::FillMemory(pBits, BitsBytes, 0xFF);
-	Top = (IconHeight - ImageHeight) / 2;
+	const size_t BytesPerLine = (IconWidth + 15) / 16 * 2;
+	const size_t BitsBytes = BytesPerLine * IconHeight;
+	std::unique_ptr<BYTE[]> Bits(new BYTE[BitsBytes]);
+	::FillMemory(Bits.get(), BitsBytes, 0xFF);
+	const int Top = (IconHeight - ImageHeight) / 2;
 	if (ImageWidth == IconWidth) {
-		::ZeroMemory(pBits + Top * BytesPerLine, ImageHeight * BytesPerLine);
+		::ZeroMemory(Bits.get() + Top * BytesPerLine, ImageHeight * BytesPerLine);
 	} else {
-		int Left, x, y;
+		const int Left = (IconWidth - ImageWidth) / 2;
+		int x, y;
 		BYTE *p;
 
-		Left = (IconWidth - ImageWidth) / 2;
-		p = pBits + Top * BytesPerLine;
+		p = Bits.get() + Top * BytesPerLine;
 		for (y = 0; y < ImageHeight; y++) {
 			for (x = Left; x < Left + ImageWidth; x++)
 				//p[x / 8] &= ~(0x80 >> (x % 8));
@@ -898,33 +892,29 @@ static HBITMAP CreateIconMaskBitmap(
 			p += BytesPerLine;
 		}
 	}
-	hbm = ::CreateBitmap(IconWidth, IconHeight, 1, 1, pBits);
-	delete [] pBits;
-	return hbm;
+
+	return ::CreateBitmap(IconWidth, IconHeight, 1, 1, Bits.get());
 }
 
 static HBITMAP CreateIconColorBitmap(
 	HBITMAP hbm, int IconWidth, int IconHeight, int ImageWidth, int ImageHeight)
 {
-	HDC hdc;
-	HBITMAP hbmIcon;
-
-	hdc = ::GetDC(nullptr);
-	hbmIcon = ::CreateCompatibleBitmap(hdc, IconWidth, IconHeight);
+	const HDC hdc = ::GetDC(nullptr);
+	const HBITMAP hbmIcon = ::CreateCompatibleBitmap(hdc, IconWidth, IconHeight);
 	if (hbmIcon != nullptr) {
 		BITMAP bm;
 		::GetObject(hbm, sizeof(bm), &bm);
-		HDC hdcSrc = ::CreateCompatibleDC(hdc);
-		HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbm));
-		HDC hdcDest = ::CreateCompatibleDC(hdc);
-		HBITMAP hbmDestOld = static_cast<HBITMAP>(::SelectObject(hdcDest, hbmIcon));
+		const HDC hdcSrc = ::CreateCompatibleDC(hdc);
+		const HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbm));
+		const HDC hdcDest = ::CreateCompatibleDC(hdc);
+		const HBITMAP hbmDestOld = static_cast<HBITMAP>(::SelectObject(hdcDest, hbmIcon));
 
 		if (ImageWidth < IconWidth || ImageHeight < IconHeight) {
 			RECT rc = {0, 0, IconWidth, IconHeight};
 
 			::FillRect(hdcDest, &rc, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 		}
-		int OldStretchMode = ::SetStretchBltMode(hdcDest, STRETCH_HALFTONE);
+		const int OldStretchMode = ::SetStretchBltMode(hdcDest, STRETCH_HALFTONE);
 		::StretchBlt(
 			hdcDest,
 			(IconWidth - ImageWidth) / 2, (IconHeight - ImageHeight) / 2,
@@ -977,7 +967,7 @@ HICON CreateIconFromBitmap(HBITMAP hbm, int IconWidth, int IconHeight, int Image
 	ii.fIcon = TRUE;
 	ii.xHotspot = 0;
 	ii.yHotspot = 0;
-	HICON hico = ::CreateIconIndirect(&ii);
+	const HICON hico = ::CreateIconIndirect(&ii);
 	::DeleteObject(ii.hbmMask);
 	::DeleteObject(ii.hbmColor);
 	return hico;
@@ -1040,11 +1030,11 @@ bool SaveIconFromBitmap(
 		}
 	}
 
-	int BitCount = 24;
-	DWORD PixelRowBytes = (IconWidth * BitCount + 31) / 32 * 4;
-	DWORD PixelBytes = PixelRowBytes * IconHeight;
-	DWORD MaskRowBytes = (IconWidth + 31) / 32 * 4;
-	DWORD MaskBytes = MaskRowBytes * IconHeight;
+	constexpr int BitCount = 24;
+	const DWORD PixelRowBytes = (IconWidth * BitCount + 31) / 32 * 4;
+	const DWORD PixelBytes = PixelRowBytes * IconHeight;
+	const DWORD MaskRowBytes = (IconWidth + 31) / 32 * 4;
+	const DWORD MaskBytes = MaskRowBytes * IconHeight;
 
 	ICONDIR id;
 	id.idReserved = 0;
@@ -1074,19 +1064,19 @@ bool SaveIconFromBitmap(
 
 	bool fOK = false;
 	void *pColorBits;
-	HBITMAP hbmColor = ::CreateDIBSection(
+	const HBITMAP hbmColor = ::CreateDIBSection(
 		nullptr, reinterpret_cast<BITMAPINFO*>(&bmih), DIB_RGB_COLORS, &pColorBits, nullptr, 0);
 	if (hbmColor != nullptr) {
-		HDC hdcSrc = ::CreateCompatibleDC(nullptr);
-		HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbm));
-		HDC hdcDst = ::CreateCompatibleDC(nullptr);
-		HBITMAP hbmDstOld = static_cast<HBITMAP>(::SelectObject(hdcDst, hbmColor));
+		const HDC hdcSrc = ::CreateCompatibleDC(nullptr);
+		const HBITMAP hbmSrcOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbm));
+		const HDC hdcDst = ::CreateCompatibleDC(nullptr);
+		const HBITMAP hbmDstOld = static_cast<HBITMAP>(::SelectObject(hdcDst, hbmColor));
 
 		if (ImageWidth < IconWidth || ImageHeight < IconHeight) {
 			RECT rc = {0, 0, IconWidth, IconHeight};
 			::FillRect(hdcDst, &rc, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 		}
-		int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
+		const int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
 		::StretchBlt(
 			hdcDst,
 			(IconWidth - ImageWidth) / 2, (IconHeight - ImageHeight) / 2,
@@ -1096,19 +1086,19 @@ bool SaveIconFromBitmap(
 		::SelectObject(hdcDst, hbmDstOld);
 		::SelectObject(hdcSrc, hbmSrcOld);
 
-		HBITMAP hbmMask = CreateIconMaskBitmap(IconWidth, IconHeight, ImageWidth, ImageHeight);
+		const HBITMAP hbmMask = CreateIconMaskBitmap(IconWidth, IconHeight, ImageWidth, ImageHeight);
 		if (hbmMask != nullptr) {
 			BYTE MaskInfoBuff[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
 			BITMAPINFO *pbmiMask = reinterpret_cast<BITMAPINFO*>(MaskInfoBuff);
-			::CopyMemory(pbmiMask, &bmih, sizeof(BITMAPINFOHEADER));
+			std::memcpy(pbmiMask, &bmih, sizeof(BITMAPINFOHEADER));
 			pbmiMask->bmiHeader.biBitCount = 1;
 			static const RGBQUAD Palette[2] = {{0, 0, 0, 0}, {255, 255, 255, 0}};
 			pbmiMask->bmiColors[0] = Palette[0];
 			pbmiMask->bmiColors[1] = Palette[1];
-			BYTE *pMaskBits = new BYTE[MaskBytes];
-			::GetDIBits(hdcSrc, hbmMask, 0, IconHeight, pMaskBits, pbmiMask, DIB_RGB_COLORS);
+			std::unique_ptr<BYTE[]> MaskBits(new BYTE[MaskBytes]);
+			::GetDIBits(hdcSrc, hbmMask, 0, IconHeight, MaskBits.get(), pbmiMask, DIB_RGB_COLORS);
 
-			HANDLE hFile = ::CreateFile(
+			const HANDLE hFile = ::CreateFile(
 				pszFileName, GENERIC_WRITE, 0, nullptr,
 				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hFile != INVALID_HANDLE_VALUE) {
@@ -1121,13 +1111,12 @@ bool SaveIconFromBitmap(
 						&& Write == sizeof(BITMAPINFOHEADER)
 						&& ::WriteFile(hFile, pColorBits, PixelBytes, &Write, nullptr)
 						&& Write == PixelBytes
-						&& ::WriteFile(hFile, pMaskBits, MaskBytes, &Write, nullptr)
+						&& ::WriteFile(hFile, MaskBits.get(), MaskBytes, &Write, nullptr)
 						&& Write == MaskBytes)
 					fOK = true;
 				::CloseHandle(hFile);
 			}
 
-			delete [] pMaskBits;
 			::DeleteObject(hbmMask);
 		}
 
@@ -1148,21 +1137,22 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 	ICONINFO ii = {TRUE, 0, 0, nullptr, nullptr};
 	HICON hicon = nullptr;
 
-	const int Planes = BitsPerPixel == 1 ? 2 : 1;
-	const size_t Size = (Width + 15) / 16 * 2 * Height;
-	BYTE *pMaskBits = new BYTE[Size * Planes];
-	::FillMemory(pMaskBits, Size, 0xFF);
-	if (BitsPerPixel == 1)
-		::FillMemory(pMaskBits + Size, Size, 0x00);
-	ii.hbmMask = ::CreateBitmap(Width, Height * Planes, 1, 1, pMaskBits);
-	delete [] pMaskBits;
+	{
+		const int Planes = BitsPerPixel == 1 ? 2 : 1;
+		const size_t Size = (Width + 15) / 16 * 2 * Height;
+		std::unique_ptr<BYTE[]> MaskBits(new BYTE[Size * Planes]);
+		::FillMemory(MaskBits.get(), Size, 0xFF);
+		if (BitsPerPixel == 1)
+			::FillMemory(MaskBits.get() + Size, Size, 0x00);
+		ii.hbmMask = ::CreateBitmap(Width, Height * Planes, 1, 1, MaskBits.get());
+	}
 
 	if (BitsPerPixel != 1) {
 		const DWORD HeaderSize = BitsPerPixel == 32 ? sizeof(BITMAPV5HEADER) : sizeof(BITMAPINFOHEADER);
 		size_t PaletteSize = 0;
 		if (BitsPerPixel <= 8)
-			PaletteSize = ((size_t)1 << BitsPerPixel) * sizeof(RGBQUAD);
-		BITMAPINFO *pbmi = (BITMAPINFO*)std::malloc(HeaderSize + PaletteSize);
+			PaletteSize = (1_z << BitsPerPixel) * sizeof(RGBQUAD);
+		BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(std::malloc(HeaderSize + PaletteSize));
 		if (pbmi != nullptr) {
 			::ZeroMemory(pbmi, HeaderSize + PaletteSize);
 			pbmi->bmiHeader.biSize = HeaderSize;
@@ -1171,7 +1161,7 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 			pbmi->bmiHeader.biPlanes = 1;
 			pbmi->bmiHeader.biBitCount = BitsPerPixel;
 			if (BitsPerPixel == 32) {
-				BITMAPV5HEADER *pbV5 = (BITMAPV5HEADER*)&pbmi->bmiHeader;
+				BITMAPV5HEADER *pbV5 = reinterpret_cast<BITMAPV5HEADER*>(&pbmi->bmiHeader);
 				pbV5->bV5Compression = BI_BITFIELDS;
 				pbV5->bV5RedMask  = 0x00FF0000;
 				pbV5->bV5GreenMask = 0x0000FF00;
@@ -1244,7 +1234,7 @@ HICON LoadIconStandardSize(HINSTANCE hinst, LPCTSTR pszName, IconSizeType Size)
 
 	GetStandardIconSize(Size, &Width, &Height);
 
-	return (HICON)::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR);
+	return static_cast<HICON>(::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR));
 }
 
 
@@ -1258,7 +1248,7 @@ HICON LoadIconSpecificSize(HINSTANCE hinst, LPCTSTR pszName, int Width, int Heig
 	if (SUCCEEDED(::LoadIconWithScaleDown(hinst, pszName, Width, Height, &hico)))
 		return hico;
 
-	return (HICON)::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR);
+	return static_cast<HICON>(::LoadImage(hinst, pszName, IMAGE_ICON, Width, Height, LR_DEFAULTCOLOR));
 }
 
 
@@ -1283,7 +1273,7 @@ HICON LoadSystemIcon(LPCTSTR pszName, IconSizeType Size)
 
 	hico = ::LoadIcon(nullptr, pszName);
 	if (hico != nullptr)
-		hico = (HICON)::CopyImage(hico, IMAGE_ICON, Width, Height, 0);
+		hico = static_cast<HICON>(::CopyImage(hico, IMAGE_ICON, Width, Height, 0));
 	return hico;
 }
 
@@ -1305,7 +1295,7 @@ HICON LoadSystemIcon(LPCTSTR pszName, int Width, int Height)
 
 	hico = ::LoadIcon(nullptr, pszName);
 	if (hico != nullptr)
-		hico = (HICON)::CopyImage(hico, IMAGE_ICON, Width, Height, 0);
+		hico = static_cast<HICON>(::CopyImage(hico, IMAGE_ICON, Width, Height, 0));
 	return hico;
 }
 
@@ -1328,29 +1318,16 @@ void CStaticStringFormatter::Clear()
 void CStaticStringFormatter::Append(LPCTSTR pszString)
 {
 	if (pszString != nullptr && m_Length + 1 < m_BufferLength) {
-		size_t Length = StringLength(pszString, m_BufferLength - m_Length - 1);
+		const size_t Length = StringLength(pszString, m_BufferLength - m_Length - 1);
 		StringCopy(m_pBuffer + m_Length, pszString, Length + 1);
 		m_Length += Length;
 	}
 }
 
-void CStaticStringFormatter::AppendFormat(LPCTSTR pszFormat, ...)
+void CStaticStringFormatter::AppendFormatV(StringView Format, FormatArgs Args)
 {
-	if (pszFormat != nullptr && m_Length + 1 < m_BufferLength) {
-		va_list Args;
-
-		va_start(Args, pszFormat);
-		AppendFormatV(pszFormat, Args);
-		va_end(Args);
-	}
-}
-
-void CStaticStringFormatter::AppendFormatV(LPCTSTR pszFormat, va_list Args)
-{
-	if (pszFormat != nullptr && m_Length + 1 < m_BufferLength) {
-		int Length = StringPrintfV(m_pBuffer + m_Length, m_BufferLength - m_Length, pszFormat, Args);
-		if (Length >= 0)
-			m_Length += Length;
+	if (!Format.empty() && m_Length + 1 < m_BufferLength) {
+		m_Length += StringVFormatArgs(m_pBuffer + m_Length, m_BufferLength - m_Length, Format, Args);
 	}
 }
 
@@ -1595,7 +1572,7 @@ namespace Util
 HMODULE LoadSystemLibrary(LPCTSTR pszName)
 {
 	TCHAR szPath[MAX_PATH];
-	UINT Length = ::GetSystemDirectory(szPath, _countof(szPath));
+	const UINT Length = ::GetSystemDirectory(szPath, _countof(szPath));
 	if (Length < 1 || Length + 1 + ::lstrlen(pszName) >= _countof(szPath))
 		return nullptr;
 	::PathAppend(szPath, pszName);

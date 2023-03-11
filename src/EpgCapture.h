@@ -36,18 +36,21 @@ namespace TVTest
 			None    = 0x0000U,
 			NoUI    = 0x0001U,
 			Standby = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class BeginStatus : unsigned int {
 			None               = 0x0000U,
 			Standby            = 0x0001U,
 			TunerAlreadyOpened = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		enum class EndFlag : unsigned int  {
 			None       = 0x0000U,
 			CloseTuner = 0x0001U,
 			Resume     = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER,
 			Default    = CloseTuner | Resume,
 		};
 
@@ -61,7 +64,6 @@ namespace TVTest
 		};
 
 		CEpgCaptureManager();
-		~CEpgCaptureManager();
 
 		bool BeginCapture(
 			LPCTSTR pszTuner = nullptr,
@@ -71,7 +73,7 @@ namespace TVTest
 		bool IsCapturing() const { return m_fCapturing; }
 		bool ProcessCapture();
 		void SetEventHandler(CEventHandler *pEventHandler);
-		int GetChannelCount() const { return (int)m_ChannelList.size(); }
+		int GetChannelCount() const { return static_cast<int>(m_ChannelList.size()); }
 		int GetCurChannel() const { return m_CurChannel; }
 		DWORD GetRemainingTime() const;
 		bool IsChannelChanging() const { return m_fChannelChanging; }
@@ -94,10 +96,6 @@ namespace TVTest
 		bool m_fChannelChanging;
 		CEventHandler *m_pEventHandler;
 	};
-
-	TVTEST_ENUM_FLAGS(CEpgCaptureManager::BeginFlag)
-	TVTEST_ENUM_FLAGS(CEpgCaptureManager::BeginStatus)
-	TVTEST_ENUM_FLAGS(CEpgCaptureManager::EndFlag)
 
 }	// namespace TVTest
 

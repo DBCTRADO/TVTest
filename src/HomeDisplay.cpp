@@ -40,7 +40,7 @@ namespace TVTest
 {
 
 
-static const int CATEGORY_ICON_WIDTH = 32, CATEGORY_ICON_HEIGHT = 32;
+static constexpr int CATEGORY_ICON_WIDTH = 32, CATEGORY_ICON_HEIGHT = 32;
 
 enum {
 	CATEGORY_ICON_FAVORITES,
@@ -132,7 +132,7 @@ CChannelListCategoryBase::CChannelListCategoryBase(CHomeDisplay *pHomeDisplay)
 void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC hdc, const RECT &ContentRect)
 {
 	m_ItemHeight = Style.FontHeight * 2 + Style.ItemMargins.Vert();
-	m_Height = (int)m_ItemList.size() * m_ItemHeight;
+	m_Height = static_cast<int>(m_ItemList.size()) * m_ItemHeight;
 	m_Rect = ContentRect;
 
 	m_LogoHeight = std::min(Style.FontHeight, 36);
@@ -140,7 +140,7 @@ void CChannelListCategoryBase::LayOut(const CHomeDisplay::StyleInfo &Style, HDC 
 
 	m_ChannelNameWidth = Style.FontHeight * 8;
 	for (const auto &e : m_ItemList) {
-		LPCTSTR pszName = e->GetName();
+		const LPCTSTR pszName = e->GetName();
 		SIZE sz;
 
 		if (::GetTextExtentPoint32(hdc, pszName, ::lstrlen(pszName), &sz)
@@ -173,7 +173,7 @@ void CChannelListCategoryBase::Draw(
 		rc.top += Style.ItemMargins.Top;
 		rc.right = rc.left + m_ChannelNameWidth;
 		rc.bottom -= Style.ItemMargins.Bottom;
-		HBITMAP hbmLogo = pItem->GetStretchedLogo(m_LogoWidth, m_LogoHeight);
+		const HBITMAP hbmLogo = pItem->GetStretchedLogo(m_LogoWidth, m_LogoHeight);
 		if (hbmLogo != nullptr) {
 			DrawUtil::DrawBitmap(
 				hdc, rc.left, rc.top + (Style.FontHeight - m_LogoHeight) / 2,
@@ -195,17 +195,17 @@ void CChannelListCategoryBase::Draw(
 
 			if (pEventInfo != nullptr) {
 				TCHAR szText[1024];
-				int Length;
+				size_t Length;
 
 				Length = EpgUtil::FormatEventTime(
 					*pEventInfo, szText, lengthof(szText),
 					EpgUtil::FormatEventTimeFlag::Hour2Digits | EpgUtil::FormatEventTimeFlag::StartOnly);
 				if (!pEventInfo->EventName.empty()) {
-					Length += StringPrintf(
+					Length += StringFormat(
 						szText + Length, lengthof(szText) - Length,
-						TEXT("%s%s"),
+						TEXT("{}{}"),
 						Length > 0 ? TEXT(" ") : TEXT(""),
-						pEventInfo->EventName.c_str());
+						pEventInfo->EventName);
 				}
 				if (Length > 0) {
 					ThemeDraw.Draw(
@@ -291,7 +291,7 @@ bool CChannelListCategoryBase::OnCursorKey(WPARAM KeyCode)
 		else
 			HotItem = m_HotItem - 1;
 	} else if (KeyCode == VK_DOWN) {
-		if (m_ItemList.empty() || m_HotItem + 1 == (int)m_ItemList.size())
+		if (m_ItemList.empty() || m_HotItem + 1 == static_cast<int>(m_ItemList.size()))
 			return false;
 		if (m_HotItem < 0)
 			HotItem = 0;
@@ -319,7 +319,7 @@ void CChannelListCategoryBase::Clear()
 
 void CChannelListCategoryBase::UpdateChannelInfo()
 {
-	LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
+	const LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
 	CLogoManager &LogoManager = GetAppClass().LogoManager;
 	LibISDB::DateTime CurTime;
 
@@ -379,7 +379,7 @@ bool CChannelListCategoryBase::GetItemRect(size_t Item, RECT *pRect) const
 		return false;
 
 	pRect->left = m_Rect.left;
-	pRect->top = m_Rect.top + (int)Item * m_ItemHeight - m_pHomeDisplay->GetScrollPos();
+	pRect->top = m_Rect.top + static_cast<int>(Item) * m_ItemHeight - m_pHomeDisplay->GetScrollPos();
 	pRect->right = m_Rect.right;
 	pRect->bottom = pRect->top + m_ItemHeight;
 
@@ -389,13 +389,13 @@ bool CChannelListCategoryBase::GetItemRect(size_t Item, RECT *pRect) const
 
 int CChannelListCategoryBase::GetItemByPosition(int x, int y) const
 {
-	POINT pt = {x, y};
+	const POINT pt = {x, y};
 
 	if (!::PtInRect(&m_Rect, pt))
 		return -1;
 
-	int Item = (y - m_Rect.top + m_pHomeDisplay->GetScrollPos()) / m_ItemHeight;
-	if ((size_t)Item >= m_ItemList.size())
+	const int Item = (y - m_Rect.top + m_pHomeDisplay->GetScrollPos()) / m_ItemHeight;
+	if (static_cast<size_t>(Item) >= m_ItemList.size())
 		return -1;
 	return Item;
 }
@@ -415,7 +415,7 @@ bool CChannelListCategoryBase::SetHotItem(int Item)
 	int HotItem;
 
 	if (Item >= 0) {
-		if ((size_t)Item >= m_ItemList.size())
+		if (static_cast<size_t>(Item) >= m_ItemList.size())
 			return false;
 		HotItem = Item;
 	} else {
@@ -445,7 +445,7 @@ CChannelListCategoryBase::CChannelItemBase::CChannelItemBase(const CChannelInfo 
 
 HBITMAP CChannelListCategoryBase::CChannelItemBase::GetStretchedLogo(int Width, int Height) const
 {
-	HBITMAP hbmLogo =
+	const HBITMAP hbmLogo =
 		(Height <= 14 || m_hbmBigLogo == nullptr) ? m_hbmSmallLogo : m_hbmBigLogo;
 	if (hbmLogo == nullptr)
 		return nullptr;
@@ -456,7 +456,7 @@ HBITMAP CChannelListCategoryBase::CChannelItemBase::GetStretchedLogo(int Width, 
 			m_StretchedLogo.Destroy();
 	}
 	if (!m_StretchedLogo.IsCreated()) {
-		HBITMAP hbm = DrawUtil::ResizeBitmap(hbmLogo, Width, Height);
+		const HBITMAP hbm = DrawUtil::ResizeBitmap(hbmLogo, Width, Height);
 		if (hbm != nullptr)
 			m_StretchedLogo.Attach(hbm);
 	}
@@ -624,7 +624,7 @@ bool CRecentChannelsCategory::Create()
 {
 	Clear();
 
-	CRecentChannelList &RecentChannelList = GetAppClass().RecentChannelList;
+	const CRecentChannelList &RecentChannelList = GetAppClass().RecentChannelList;
 	int NumChannels = RecentChannelList.NumChannels();
 	if (NumChannels > m_MaxChannels)
 		NumChannels = m_MaxChannels;
@@ -769,7 +769,7 @@ bool CFeaturedEventsCategory::Create()
 	const size_t EventCount = Searcher.GetEventCount();
 	for (size_t i = 0; i < EventCount; i++) {
 		const LibISDB::EventInfo *pEventInfo = Searcher.GetEventInfo(i);
-		int Index = ServiceList.FindByIDs(
+		const int Index = ServiceList.FindByIDs(
 			pEventInfo->NetworkID, pEventInfo->TransportStreamID, pEventInfo->ServiceID);
 
 		if (Index >= 0)
@@ -790,11 +790,11 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 	DrawText.Begin(hdc, rc, CTextDraw::Flag::JapaneseHyphnation);
 
 	const CFeaturedEventsSettings &Settings = GetAppClass().FeaturedEvents.GetSettings();
-	int ItemBaseHeight = 2 * Style.FontHeight + Style.ItemMargins.Vert();
+	const int ItemBaseHeight = 2 * Style.FontHeight + Style.ItemMargins.Vert();
 	m_ItemHeight = ItemBaseHeight;
 	if (Settings.GetShowEventText())
 		m_ItemHeight += Settings.GetEventTextLines() * Style.FontHeight;
-	m_Height = (int)m_ItemList.size() * m_ItemHeight;
+	m_Height = static_cast<int>(m_ItemList.size()) * m_ItemHeight;
 	m_Rect = ContentRect;
 
 	m_LogoHeight = std::min(Style.FontHeight, 36);
@@ -808,7 +808,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 	m_ChannelNameWidth = 0;
 
 	for (const auto &Item : m_ItemList) {
-		LPCTSTR pszName = Item->GetChannelInfo().GetName();
+		const LPCTSTR pszName = Item->GetChannelInfo().GetName();
 		SIZE sz;
 		if (::GetTextExtentPoint32(hdc, pszName, ::lstrlen(pszName), &sz)
 				&& sz.cx > m_ChannelNameWidth)
@@ -822,7 +822,7 @@ void CFeaturedEventsCategory::LayOut(const CHomeDisplay::StyleInfo &Style, HDC h
 
 		int Height = m_ItemHeight;
 		if (Item->GetEventText(&Text)) {
-			int Lines = DrawText.CalcLineCount(Text.c_str(), EventTextWidth);
+			const int Lines = DrawText.CalcLineCount(Text.c_str(), EventTextWidth);
 			if (!Settings.GetShowEventText()
 					|| Lines > Settings.GetEventTextLines()) {
 				Height = ItemBaseHeight + Lines * Style.FontHeight;
@@ -866,11 +866,11 @@ void CFeaturedEventsCategory::Draw(
 		CTextDraw::Flag::EndEllipsis |
 		CTextDraw::Flag::JapaneseHyphnation);
 
-	HFONT hfontText = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
+	const HFONT hfontText = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
 	LOGFONT lf;
 	::GetObject(hfontText, sizeof(lf), &lf);
 	lf.lfWeight = FW_BOLD;
-	HFONT hfontTitle = ::CreateFontIndirect(&lf);
+	const HFONT hfontTitle = ::CreateFontIndirect(&lf);
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		RECT rcItem, rc;
@@ -892,7 +892,7 @@ void CFeaturedEventsCategory::Draw(
 		rc.left += Style.ItemMargins.Left;
 		rc.top += Style.ItemMargins.Top;
 		rc.bottom = rc.top + Style.FontHeight;
-		HBITMAP hbmLogo = pItem->GetStretchedLogo(m_LogoWidth, m_LogoHeight);
+		const HBITMAP hbmLogo = pItem->GetStretchedLogo(m_LogoWidth, m_LogoHeight);
 		if (hbmLogo != nullptr) {
 			DrawUtil::DrawBitmap(
 				hdc, rc.left, rc.top + (Style.FontHeight - m_LogoHeight) / 2,
@@ -910,7 +910,7 @@ void CFeaturedEventsCategory::Draw(
 
 		const LibISDB::EventInfo &EventInfo = pItem->GetEventInfo();
 		TCHAR szText[1024];
-		int Length = EpgUtil::FormatEventTime(
+		const int Length = EpgUtil::FormatEventTime(
 			EventInfo, szText, lengthof(szText), EpgUtil::FormatEventTimeFlag::Date);
 		if (Length > 0) {
 			::DrawText(
@@ -1019,7 +1019,7 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 {
 	CFeaturedEvents &FeaturedEvents = GetAppClass().FeaturedEvents;
 	CFeaturedEventsSettings &Settings = FeaturedEvents.GetSettings();
-	HMENU hmenu = ::LoadMenu(
+	const HMENU hmenu = ::LoadMenu(
 		GetAppClass().GetResourceInstance(),
 		MAKEINTRESOURCE(IDM_FEATUREDEVENTS));
 
@@ -1030,12 +1030,12 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 		hmenu,
 		CM_FEATUREDEVENTS_SORT_FIRST,
 		CM_FEATUREDEVENTS_SORT_LAST,
-		CM_FEATUREDEVENTS_SORT_FIRST + (int)Settings.GetSortType(),
+		CM_FEATUREDEVENTS_SORT_FIRST + static_cast<int>(Settings.GetSortType()),
 		MF_BYCOMMAND);
 
 	POINT pt;
 	::GetCursorPos(&pt);
-	int Result = ::TrackPopupMenu(
+	const int Result = ::TrackPopupMenu(
 		::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON | TPM_RETURNCMD,
 		pt.x, pt.y, 0, m_pHomeDisplay->GetHandle(), nullptr);
 	::DestroyMenu(hmenu);
@@ -1053,8 +1053,8 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 	default:
 		if (Result >= CM_FEATUREDEVENTS_SORT_FIRST
 				&& Result <= CM_FEATUREDEVENTS_SORT_LAST) {
-			CFeaturedEventsSettings::SortType SortType =
-				(CFeaturedEventsSettings::SortType)(Result - CM_FEATUREDEVENTS_SORT_FIRST);
+			const CFeaturedEventsSettings::SortType SortType =
+				static_cast<CFeaturedEventsSettings::SortType>(Result - CM_FEATUREDEVENTS_SORT_FIRST);
 			if (SortType != Settings.GetSortType()) {
 				Settings.SetSortType(SortType);
 				SortItems(SortType);
@@ -1081,7 +1081,7 @@ bool CFeaturedEventsCategory::OnCursorKey(WPARAM KeyCode)
 		else
 			HotItem = m_HotItem - 1;
 	} else if (KeyCode == VK_DOWN) {
-		if (m_ItemList.empty() || m_HotItem + 1 == (int)m_ItemList.size())
+		if (m_ItemList.empty() || m_HotItem + 1 == static_cast<int>(m_ItemList.size()))
 			return false;
 		if (m_HotItem < 0)
 			HotItem = 0;
@@ -1147,8 +1147,8 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 			Cmp = Item1.GetEventInfo().StartTime.Compare(Item2.GetEventInfo().StartTime);
 			if (Cmp == 0) {
 				Cmp =
-					(int)Item1.GetEventInfo().Duration -
-					(int)Item2.GetEventInfo().Duration;
+					static_cast<int>(Item1.GetEventInfo().Duration) -
+					static_cast<int>(Item2.GetEventInfo().Duration);
 			}
 			return Cmp;
 		}
@@ -1181,7 +1181,7 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 {
 	CEventItem *pCurItem = nullptr;
 
-	if (Item >= 0 && (size_t)Item < m_ItemList.size())
+	if (Item >= 0 && static_cast<size_t>(Item) < m_ItemList.size())
 		pCurItem = m_ItemList[Item].get();
 
 	int ScrollPos = m_pHomeDisplay->GetScrollPos();
@@ -1194,8 +1194,8 @@ void CFeaturedEventsCategory::ExpandItem(int Item)
 			CEventItem *pItem = m_ItemList[i].get();
 			if (pItem->IsExpanded()) {
 				pItem->SetExpanded(false);
-				int ExtendedHeight = pItem->GetExpandedHeight() - m_ItemHeight;
-				if (pCurItem != nullptr && i < (size_t)Item) {
+				const int ExtendedHeight = pItem->GetExpandedHeight() - m_ItemHeight;
+				if (pCurItem != nullptr && i < static_cast<size_t>(Item)) {
 					ScrollPos -= ExtendedHeight;
 				}
 				m_Height -= ExtendedHeight;
@@ -1238,7 +1238,7 @@ bool CFeaturedEventsCategory::GetItemRect(size_t Item, RECT *pRect) const
 
 int CFeaturedEventsCategory::GetItemByPosition(int x, int y) const
 {
-	POINT pt = {x, y};
+	const POINT pt = {x, y};
 
 	if (!::PtInRect(&m_Rect, pt))
 		return -1;
@@ -1254,7 +1254,7 @@ int CFeaturedEventsCategory::GetItemByPosition(int x, int y) const
 			Bottom = Top + m_ItemHeight;
 		}
 		if (y >= Top && y < Bottom)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 
 	return -1;
@@ -1275,7 +1275,7 @@ bool CFeaturedEventsCategory::SetHotItem(int Item)
 	int HotItem;
 
 	if (Item >= 0) {
-		if ((size_t)Item >= m_ItemList.size())
+		if (static_cast<size_t>(Item) >= m_ItemList.size())
 			return false;
 		HotItem = Item;
 	} else {
@@ -1331,7 +1331,7 @@ HBITMAP CFeaturedEventsCategory::CEventItem::GetStretchedLogo(int Width, int Hei
 			m_StretchedLogo.Destroy();
 	}
 	if (!m_StretchedLogo.IsCreated()) {
-		HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, Width, Height);
+		const HBITMAP hbm = DrawUtil::ResizeBitmap(m_hbmLogo, Width, Height);
 		if (hbm != nullptr)
 			m_StretchedLogo.Attach(hbm);
 	}
@@ -1503,7 +1503,7 @@ bool CHomeDisplay::IsMessageNeed(const MSG *pMsg) const
 bool CHomeDisplay::OnMouseWheel(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	if (Msg == WM_MOUSEWHEEL && m_hwnd != nullptr) {
-		int Delta = m_MouseWheel.OnMouseWheel(
+		const int Delta = m_MouseWheel.OnMouseWheel(
 			wParam, m_HomeDisplayStyle.FontHeight * m_MouseWheel.GetDefaultScrollLines());
 		if (Delta != 0)
 			SetScrollPos(m_ScrollPos - Delta, true);
@@ -1519,16 +1519,16 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 	if (Settings.SetSection(TEXT("HomeDisplay"))) {
 		int CategoryCount;
 		if (Settings.Read(TEXT("CategoryCount"), &CategoryCount)
-				&& CategoryCount > 0 && (size_t)CategoryCount <= m_CategoryList.size()) {
+				&& CategoryCount > 0 && static_cast<size_t>(CategoryCount) <= m_CategoryList.size()) {
 			std::vector<CCategory*> CategoryOrder;
 
 			CategoryOrder.reserve(m_CategoryList.size());
 
-			for (size_t i = 0; i < (size_t)CategoryCount; i++) {
+			for (size_t i = 0; i < static_cast<size_t>(CategoryCount); i++) {
 				TCHAR szKey[32];
 				int ID;
 
-				StringPrintf(szKey, TEXT("Category%d_ID"), i);
+				StringFormat(szKey, TEXT("Category{}_ID"), i);
 				if (Settings.Read(szKey, &ID)) {
 					size_t j;
 					for (j = 0; j < i; j++) {
@@ -1570,7 +1570,7 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 
 		int CurCategory;
 		if (Settings.Read(TEXT("CurCategory"), &CurCategory)
-				&& CurCategory >= 0 && (size_t)CurCategory < m_CategoryList.size())
+				&& CurCategory >= 0 && static_cast<size_t>(CurCategory) < m_CategoryList.size())
 			m_CurCategory = CurCategory;
 	}
 
@@ -1584,12 +1584,12 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 bool CHomeDisplay::SaveSettings(CSettings &Settings)
 {
 	if (Settings.SetSection(TEXT("HomeDisplay"))) {
-		if (Settings.Write(TEXT("CategoryCount"), (int)m_CategoryList.size())) {
-			for (int i = 0; i < (int)m_CategoryList.size(); i++) {
+		if (Settings.Write(TEXT("CategoryCount"), static_cast<int>(m_CategoryList.size()))) {
+			for (int i = 0; i < static_cast<int>(m_CategoryList.size()); i++) {
 				const CCategory *pCategory = m_CategoryList[i].get();
 				TCHAR szKey[32];
 
-				StringPrintf(szKey, TEXT("Category%d_ID"), i);
+				StringFormat(szKey, TEXT("Category{}_ID"), i);
 				Settings.Write(szKey, pCategory->GetID());
 			}
 		}
@@ -1684,7 +1684,7 @@ bool CHomeDisplay::SetScrollPos(int Pos, bool fScroll)
 bool CHomeDisplay::SetCurCategory(int Category)
 {
 	if (Category != m_CurCategory) {
-		if (Category < 0 || (size_t)Category >= m_CategoryList.size())
+		if (Category < 0 || static_cast<size_t>(Category) >= m_CategoryList.size())
 			return false;
 
 		if (m_CurCategory >= 0)
@@ -1792,23 +1792,23 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_LBUTTONDOWN:
 		{
-			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
 			::SetFocus(hwnd);
 			m_fHitCloseButton = CloseButtonHitTest(pt.x, pt.y);
 		}
-		// Fall through
+		[[fallthrough]];
 	case WM_MOUSEMOVE:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			int CategoryIndex = -1;
-			PartType Part = HitTest(x, y, &CategoryIndex);
+			const PartType Part = HitTest(x, y, &CategoryIndex);
 
 			m_CursorPart = Part;
 			if (Part == PartType::Content) {
 				if (m_CurCategory >= 0) {
 					CCategory *pCategory = m_CategoryList[m_CurCategory].get();
-					bool fFocused = pCategory->IsFocused();
+					const bool fFocused = pCategory->IsFocused();
 					if (uMsg == WM_LBUTTONDOWN)
 						pCategory->OnLButtonDown(x, y);
 					else
@@ -1820,7 +1820,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				/*
 				if (m_CurCategory >= 0) {
 					CCategory *pCategory = m_CategoryList[m_CurCategory].get();
-					bool fFocused = pCategory->IsFocused();
+					const bool fFocused = pCategory->IsFocused();
 					pCategory->OnCursorLeave();
 					if (pCategory->IsFocused() != fFocused)
 						RedrawCategoryItem(m_CurCategory);
@@ -1837,7 +1837,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_LBUTTONUP:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			if (m_fHitCloseButton) {
 				if (CloseButtonHitTest(x, y)) {
@@ -1845,7 +1845,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 				}
 			} else {
 				int Category;
-				PartType Part = HitTest(x, y, &Category);
+				const PartType Part = HitTest(x, y, &Category);
 
 				switch (Part) {
 				case PartType::Category:
@@ -1864,7 +1864,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 	case WM_RBUTTONUP:
 		{
-			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			RECT rc;
 
 			GetContentAreaRect(&rc);
@@ -1899,7 +1899,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			int Pos = m_ScrollPos;
 			RECT rcContent;
 			GetContentAreaRect(&rcContent);
-			int PageSize = rcContent.bottom - rcContent.top;
+			const int PageSize = rcContent.bottom - rcContent.top;
 
 			switch (LOWORD(wParam)) {
 			case SB_LINEUP:        Pos--;                                         break;
@@ -2048,9 +2048,9 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 	RECT rcClient;
 	GetClientRect(&rcClient);
 
-	int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
-	COLORREF OldTextColor = ::GetTextColor(hdc);
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+	const COLORREF OldTextColor = ::GetTextColor(hdc);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	const CCategory *pCategory = nullptr;
 	if (m_CurCategory >= 0)
@@ -2071,7 +2071,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 		for (size_t i = 0; i < m_CategoryList.size(); i++) {
 			const CCategory *pCategory = m_CategoryList[i].get();
 			const Theme::Style *pStyle =
-				((int)i == m_CurCategory) ?
+				(static_cast<int>(i) == m_CurCategory) ?
 					(pCategory->IsFocused() ? &m_HomeDisplayStyle.CategoryItemSelStyle : &m_HomeDisplayStyle.CategoryItemCurStyle) :
 					(&m_HomeDisplayStyle.CategoryItemStyle);
 
@@ -2098,7 +2098,7 @@ void CHomeDisplay::Draw(HDC hdc, const RECT &PaintRect)
 		if (pCategory != nullptr) {
 			Style::Subtract(&rcContent, m_Style.ContentMargin);
 			if (rcContent.left < rcContent.right) {
-				HRGN hrgn = ::CreateRectRgnIndirect(&rcContent);
+				const HRGN hrgn = ::CreateRectRgnIndirect(&rcContent);
 				::SelectClipRgn(hdc, hrgn);
 
 				::OffsetRect(&rcContent, 0, -m_ScrollPos);
@@ -2130,8 +2130,8 @@ void CHomeDisplay::LayOut()
 		m_Font.Create(&lf);
 	}
 
-	HDC hdc = ::GetDC(m_hwnd);
-	HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+	const HDC hdc = ::GetDC(m_hwnd);
+	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 
 	m_HomeDisplayStyle.FontHeight = m_Font.GetHeight(hdc);
 
@@ -2167,7 +2167,7 @@ void CHomeDisplay::SetScrollBar()
 {
 	RECT rcContent;
 	GetContentAreaRect(&rcContent);
-	int ContentAreaHeight = rcContent.bottom - rcContent.top;
+	const int ContentAreaHeight = rcContent.bottom - rcContent.top;
 
 	if (ContentAreaHeight < m_ContentHeight) {
 		SCROLLINFO si;
@@ -2181,7 +2181,7 @@ void CHomeDisplay::SetScrollBar()
 		si.nPage = ContentAreaHeight;
 		si.nPos = m_ScrollPos;
 		::SetScrollInfo(m_hwndScroll, SB_CTL, &si, TRUE);
-		int ScrollWidth = m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
+		const int ScrollWidth = m_pStyleScaling->GetScaledSystemMetrics(SM_CXVSCROLL);
 		::MoveWindow(
 			m_hwndScroll,
 			rcContent.right, rcContent.top,
@@ -2215,7 +2215,7 @@ CHomeDisplay::PartType CHomeDisplay::HitTest(int x, int y, int *pCategoryIndex) 
 	rcCategories.left = m_Style.CategoriesMargin.Left;
 	rcCategories.top = m_Style.CategoriesMargin.Top;
 	rcCategories.right = rcCategories.left + m_CategoriesAreaWidth;
-	rcCategories.bottom = rcCategories.top + m_CategoryItemHeight * (int)m_CategoryList.size();
+	rcCategories.bottom = rcCategories.top + m_CategoryItemHeight * static_cast<int>(m_CategoryList.size());
 	if (::PtInRect(&rcCategories, pt)) {
 		if (pCategoryIndex != nullptr)
 			*pCategoryIndex = (pt.y - rcCategories.top) / m_CategoryItemHeight;
@@ -2261,7 +2261,7 @@ void CHomeDisplay::ScrollToCurItem()
 
 bool CHomeDisplay::GetCategoryItemRect(int Category, RECT *pRect) const
 {
-	if (Category < 0 || (size_t)Category >= m_CategoryList.size())
+	if (Category < 0 || static_cast<size_t>(Category) >= m_CategoryList.size())
 		return false;
 
 	pRect->left = m_Style.CategoriesMargin.Left;

@@ -59,14 +59,14 @@ bool CChannelHistory::SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInf
 			return true;
 	}
 
-	while ((int)m_ChannelList.size() - 1 > m_CurrentChannel) {
+	while (static_cast<int>(m_ChannelList.size()) - 1 > m_CurrentChannel) {
 		m_ChannelList.pop_back();
 	}
 
 	m_ChannelList.emplace_back(std::make_unique<CTunerChannelInfo>(*pChannelInfo, pszDriverName));
 	m_CurrentChannel++;
 
-	if ((int)m_ChannelList.size() > m_MaxChannelHistory) {
+	if (static_cast<int>(m_ChannelList.size()) > m_MaxChannelHistory) {
 		m_ChannelList.pop_front();
 		m_CurrentChannel--;
 	}
@@ -77,7 +77,7 @@ bool CChannelHistory::SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInf
 
 const CTunerChannelInfo *CChannelHistory::Forward()
 {
-	if (m_CurrentChannel + 1 >= (int)m_ChannelList.size())
+	if (m_CurrentChannel + 1 >= static_cast<int>(m_ChannelList.size()))
 		return nullptr;
 	return m_ChannelList[++m_CurrentChannel].get();
 }
@@ -103,7 +103,7 @@ CRecentChannelList::CRecentChannelList()
 
 int CRecentChannelList::NumChannels() const
 {
-	return (int)m_ChannelList.size();
+	return static_cast<int>(m_ChannelList.size());
 }
 
 
@@ -141,7 +141,7 @@ bool CRecentChannelList::Add(LPCTSTR pszDriverName, const CChannelInfo *pChannel
 
 	m_ChannelList.emplace_front(std::make_unique<CTunerChannelInfo>(*pChannelInfo, pszDriverName));
 
-	if ((int)m_ChannelList.size() > m_MaxChannelHistory) {
+	if (static_cast<int>(m_ChannelList.size()) > m_MaxChannelHistory) {
 		m_ChannelList.pop_back();
 	}
 
@@ -165,12 +165,12 @@ bool CRecentChannelList::SetMenu(HMENU hmenu, bool fClear) const
 			break;
 
 		TCHAR szText[64];
-		int Length = 0;
+		size_t Length = 0;
 		if (i < 36)
-			Length = StringPrintf(szText, TEXT("&%c: "), i < 10 ? i + _T('0') : (i - 10) + _T('A'));
+			Length = StringFormat(szText, TEXT("&{:c}: "), i < 10 ? i + _T('0') : (i - 10) + _T('A'));
 		CopyToMenuText(
 			pChannelInfo->GetName(),
-			szText + Length, lengthof(szText) - Length);
+			szText + Length, static_cast<int>(lengthof(szText) - Length));
 		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CM_CHANNELHISTORY_FIRST + i, szText);
 	}
 
@@ -199,24 +199,24 @@ bool CRecentChannelList::ReadSettings(CSettings &Settings)
 		TCHAR szName[32], szDriverName[MAX_PATH], szChannelName[MAX_CHANNEL_NAME];
 		int Space, Channel, ServiceID, NetworkID;
 
-		StringPrintf(szName, TEXT("History%d_Driver"), i);
+		StringFormat(szName, TEXT("History{}_Driver"), i);
 		if (!Settings.Read(szName, szDriverName, lengthof(szDriverName))
 				|| szDriverName[0] == '\0')
 			break;
-		StringPrintf(szName, TEXT("History%d_Name"), i);
+		StringFormat(szName, TEXT("History{}_Name"), i);
 		if (!Settings.Read(szName, szChannelName, lengthof(szChannelName))
 				|| szChannelName[0] == '\0')
 			break;
-		StringPrintf(szName, TEXT("History%d_Space"), i);
+		StringFormat(szName, TEXT("History{}_Space"), i);
 		if (!Settings.Read(szName, &Space))
 			break;
-		StringPrintf(szName, TEXT("History%d_Channel"), i);
+		StringFormat(szName, TEXT("History{}_Channel"), i);
 		if (!Settings.Read(szName, &Channel))
 			break;
-		StringPrintf(szName, TEXT("History%d_ServiceID"), i);
+		StringFormat(szName, TEXT("History{}_ServiceID"), i);
 		if (!Settings.Read(szName, &ServiceID))
 			break;
-		StringPrintf(szName, TEXT("History%d_NetworkID"), i);
+		StringFormat(szName, TEXT("History{}_NetworkID"), i);
 		if (!Settings.Read(szName, &NetworkID))
 			NetworkID = 0;
 		CChannelInfo ChannelInfo(Space, Channel, 0, szChannelName);
@@ -239,17 +239,17 @@ bool CRecentChannelList::WriteSettings(CSettings &Settings)
 		const CTunerChannelInfo *pChannelInfo = m_ChannelList[i].get();
 		TCHAR szName[64];
 
-		StringPrintf(szName, TEXT("History%d_Driver"), i);
+		StringFormat(szName, TEXT("History{}_Driver"), i);
 		Settings.Write(szName, pChannelInfo->GetTunerName());
-		StringPrintf(szName, TEXT("History%d_Name"), i);
+		StringFormat(szName, TEXT("History{}_Name"), i);
 		Settings.Write(szName, pChannelInfo->GetName());
-		StringPrintf(szName, TEXT("History%d_Space"), i);
+		StringFormat(szName, TEXT("History{}_Space"), i);
 		Settings.Write(szName, pChannelInfo->GetSpace());
-		StringPrintf(szName, TEXT("History%d_Channel"), i);
+		StringFormat(szName, TEXT("History{}_Channel"), i);
 		Settings.Write(szName, pChannelInfo->GetChannelIndex());
-		StringPrintf(szName, TEXT("History%d_ServiceID"), i);
+		StringFormat(szName, TEXT("History{}_ServiceID"), i);
 		Settings.Write(szName, pChannelInfo->GetServiceID());
-		StringPrintf(szName, TEXT("History%d_NetworkID"), i);
+		StringFormat(szName, TEXT("History{}_NetworkID"), i);
 		Settings.Write(szName, pChannelInfo->GetNetworkID());
 	}
 	return true;

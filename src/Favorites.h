@@ -84,7 +84,6 @@ namespace TVTest
 	{
 	public:
 		CFavoriteChannel(const CChannelInfo &ChannelInfo);
-		~CFavoriteChannel();
 
 		CFavoriteChannel *Duplicate() const override;
 		LPCTSTR GetBonDriverFileName() const { return m_BonDriverFileName.c_str(); }
@@ -119,6 +118,7 @@ namespace TVTest
 			ShowLogo      = 0x0002U,
 			ShowToolTip   = 0x0004U,
 			Shared        = 0x1000U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CFavoritesMenu();
@@ -175,8 +175,6 @@ namespace TVTest
 		static void GetBaseTime(LibISDB::DateTime *pTime);
 	};
 
-	TVTEST_ENUM_FLAGS(CFavoritesMenu::CreateFlag)
-
 	class COrganizeFavoritesDialog
 		: public CResizableDialog
 	{
@@ -220,7 +218,6 @@ namespace TVTest
 		};
 
 		CFavoritesManager();
-		~CFavoritesManager();
 
 		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
 		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }

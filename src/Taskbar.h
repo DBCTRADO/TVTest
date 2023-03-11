@@ -70,12 +70,12 @@ namespace TVTest
 		{
 			FILETIME UpdatedTime;
 
-			ChannelIconInfo() {}
+			ChannelIconInfo() = default;
 			ChannelIconInfo(const FILETIME &Time) : UpdatedTime(Time) {}
 		};
 
 		static DWORD ChannelIconMapKey(WORD NetworkID, WORD ServiceID) {
-			return ((DWORD)NetworkID << 16) | ServiceID;
+			return (static_cast<DWORD>(NetworkID) << 16) | ServiceID;
 		}
 
 		struct CommandIconInfo

@@ -51,7 +51,7 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 	if (IsStringEmpty(pszFileName))
 		return false;
 
-	TRACE(TEXT("CStyleManager::Load() : \"%s\"\n"), pszFileName);
+	TRACE(TEXT("CStyleManager::Load() : \"{}\"\n"), pszFileName);
 
 	CSettings Settings;
 
@@ -96,7 +96,7 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 					}
 #ifdef _DEBUG
 					else {
-						TRACE(TEXT("Invalid style : %s=%s\n"), e.Name.c_str(), e.Value.c_str());
+						TRACE(TEXT("Invalid style : {}={}\n"), e.Name, e.Value);
 					}
 #endif
 				}
@@ -277,10 +277,10 @@ bool CStyleManager::Get(LPCTSTR pszName, Size *pValue) const
 
 	Name = pszName;
 	Name += TEXT(".width");
-	bool fWidth = Get(Name.c_str(), &pValue->Width);
+	const bool fWidth = Get(Name.c_str(), &pValue->Width);
 	Name = pszName;
 	Name += TEXT(".height");
-	bool fHeight = Get(Name.c_str(), &pValue->Height);
+	const bool fHeight = Get(Name.c_str(), &pValue->Height);
 
 	return fWidth || fHeight;
 }
@@ -362,7 +362,7 @@ bool CStyleManager::InitStyleScaling(CStyleScaling *pScaling, HMONITOR hMonitor)
 		DPI = SystemDPI;
 
 		if (hMonitor != nullptr) {
-			int MonitorDPI = GetMonitorDPI(hMonitor);
+			const int MonitorDPI = GetMonitorDPI(hMonitor);
 			if (MonitorDPI != 0) {
 				DPI = MonitorDPI;
 			}
@@ -430,7 +430,7 @@ bool CStyleManager::AssignFontSizeFromLogFont(Font *pFont)
 	if (pFont == nullptr)
 		return false;
 
-	pFont->Size.Value = ::MulDiv(abs(pFont->LogFont.lfHeight), 72, TVTest::GetSystemDPI());
+	pFont->Size.Value = ::MulDiv(std::abs(pFont->LogFont.lfHeight), 72, TVTest::GetSystemDPI());
 	if (pFont->Size.Value != 0)
 		pFont->Size.Unit = Style::UnitType::Point;
 	else
@@ -449,8 +449,8 @@ bool CStyleManager::ParseValue(LPCTSTR pszText, IntValue *pValue)
 		return false;
 
 	LPTSTR pEnd;
-	int Value = static_cast<int>(std::_tcstol(pszText, &pEnd, 10));
-	UnitType Unit = ParseUnit(pEnd);
+	const int Value = static_cast<int>(std::_tcstol(pszText, &pEnd, 10));
+	const UnitType Unit = ParseUnit(pEnd);
 	if (Unit == UnitType::Undefined)
 		return false;
 
@@ -650,7 +650,7 @@ bool CStyleScaling::RealizeFontSize(Font *pFont) const
 	if (!m_fScaleFont)
 		return false;
 
-	int Size = ToPixels(pFont->Size.Value, pFont->Size.Unit);
+	const int Size = ToPixels(pFont->Size.Value, pFont->Size.Unit);
 	if (Size == 0)
 		return false;
 
@@ -707,7 +707,7 @@ int GetFontHeight(HDC hdc, HFONT hfont, const IntValue &Extra, TEXTMETRIC *pText
 	if (hdc == nullptr || hfont == nullptr)
 		return 0;
 
-	HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
+	const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
 	TEXTMETRIC tm;
 	::GetTextMetrics(hdc, &tm);
 	::SelectObject(hdc, hOldFont);
@@ -727,10 +727,10 @@ int GetFontHeight(HWND hwnd, HFONT hfont, const IntValue &Extra, TEXTMETRIC *pTe
 	if (hwnd == nullptr || hfont == nullptr)
 		return 0;
 
-	HDC hdc = ::GetDC(hwnd);
+	const HDC hdc = ::GetDC(hwnd);
 	if (hdc == nullptr)
 		return 0;
-	int Height = GetFontHeight(hdc, hfont, Extra, pTextMetric);
+	const int Height = GetFontHeight(hdc, hfont, Extra, pTextMetric);
 	::ReleaseDC(hwnd, hdc);
 
 	return Height;

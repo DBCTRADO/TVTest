@@ -103,7 +103,7 @@ bool CEpg::CChannelProviderManager::Create(LPCTSTR pszDefaultTuner)
 		if (pDriverInfo != nullptr) {
 			if (CurChannelProvider
 					&& IsEqualFileName(DefaultTuner.c_str(), pDriverInfo->GetFileName())) {
-				m_CurChannelProvider = (int)m_ChannelProviderList.size();
+				m_CurChannelProvider = static_cast<int>(m_ChannelProviderList.size());
 				m_ChannelProviderList.emplace_back(std::move(CurChannelProvider));
 			} else {
 				CDriverManager::TunerSpec Spec;
@@ -227,7 +227,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriver(
 			|| m_GroupList.front()->ChannelList.empty())
 		return false;
 
-	LPCTSTR pszBonDriver = m_GroupList.front()->ChannelList.front().GetBonDriverFileName();
+	const LPCTSTR pszBonDriver = m_GroupList.front()->ChannelList.front().GetBonDriverFileName();
 	if (IsStringEmpty(pszBonDriver))
 		return false;
 
@@ -252,7 +252,7 @@ bool CEpg::CChannelProviderManager::CFavoritesChannelProvider::GetBonDriverFileN
 			|| pszFileName == nullptr || MaxLength < 1)
 		return false;
 
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 	const CFavoriteChannel &FavoriteChannel = m_GroupList[Group]->ChannelList[Channel];
 	const CChannelInfo &ChannelInfo = FavoriteChannel.GetChannelInfo();
 
@@ -400,7 +400,7 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 
 	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
 	if (pChannelList != nullptr) {
-		int Index = FindChannel(pChannelList, pServiceInfo);
+		const int Index = FindChannel(pChannelList, pServiceInfo);
 		if (Index >= 0) {
 			App.Core.SetChannel(App.ChannelManager.GetCurrentSpace(), Index);
 			return;
@@ -409,7 +409,7 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 	for (int i = 0; i < App.ChannelManager.NumSpaces(); i++) {
 		pChannelList = App.ChannelManager.GetChannelList(i);
 		if (pChannelList != nullptr) {
-			int Index = FindChannel(pChannelList, pServiceInfo);
+			const int Index = FindChannel(pChannelList, pServiceInfo);
 			if (Index >= 0) {
 				App.Core.SetChannel(i, Index);
 				return;
@@ -513,7 +513,7 @@ bool CEpg::CProgramGuideProgramCustomizer::OnLButtonDoubleClick(
 	LPCTSTR pszCommand = App.ProgramGuideOptions.GetProgramLDoubleClickCommand();
 	if (IsStringEmpty(pszCommand))
 		return false;
-	int Command = App.ProgramGuideOptions.ParseCommand(pszCommand);
+	const int Command = App.ProgramGuideOptions.ParseCommand(pszCommand);
 	if (Command > 0) {
 		m_pProgramGuide->SendMessage(WM_COMMAND, Command, 0);
 		return true;

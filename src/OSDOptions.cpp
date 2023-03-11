@@ -310,11 +310,9 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS:
 			{
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.left, rc.bottom};
 				CUICore::CTitleStringMap StrMap(GetAppClass());
 				StrMap.InputParameter(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, pt);
 			}
@@ -338,7 +336,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				m_fShowOSD = DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOWOSD);
@@ -361,7 +359,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (DlgCheckBox_IsChecked(hDlg, IDC_OSDOPTIONS_SHOW_CHANNELNOINPUT))
 					EnabledOSD |= OSD_FLAG(OSDType::ChannelNoInput);
 				m_EnabledOSD = EnabledOSD;
-				m_ChannelChangeType = (ChannelChangeType)DlgComboBox_GetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE);
+				m_ChannelChangeType = static_cast<ChannelChangeType>(DlgComboBox_GetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE));
 				GetDlgItemString(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, &m_ChannelChangeText);
 
 				m_fEnableNotificationBar =
@@ -395,7 +393,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 					case CDDS_POSTPAINT:
 						{
-							HDC hdc = pnmcd->hdc;
+							const HDC hdc = pnmcd->hdc;
 							RECT rc = pnmcd->rc;
 
 							bool fMargins = false;
@@ -415,7 +413,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							}
 							if (!fMargins)
 								::InflateRect(&rc, -6, -4);
-							HGDIOBJ hOldPen = ::SelectObject(hdc, ::GetStockObject(BLACK_PEN));
+							const HGDIOBJ hOldPen = ::SelectObject(hdc, ::GetStockObject(BLACK_PEN));
 							::Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
 							::InflateRect(&rc, -1, -1);
 							::SelectObject(hdc, ::GetStockObject(WHITE_PEN));

@@ -103,20 +103,20 @@ class CControllerPlugin
 
 public:
 	CControllerPlugin(CPlugin *pPlugin, const ControllerInfo *pInfo);
-	LPCTSTR GetName() const { return m_Name.c_str(); }
-	LPCTSTR GetText() const { return m_Text.c_str(); }
-	int NumButtons() const { return m_NumButtons; }
-	bool GetButtonInfo(int Index, ButtonInfo *pInfo) const;
-	bool Enable(bool fEnable) { return m_pPlugin->Enable(fEnable); }
-	bool IsEnabled() const { return m_pPlugin->IsEnabled(); }
-	bool IsActiveOnly() const { return (m_Flags & CONTROLLER_FLAG_ACTIVEONLY) != 0; }
-	bool SetTargetWindow(HWND hwnd) {
-		return m_pPlugin->SendEvent(EVENT_CONTROLLERFOCUS, (LPARAM)hwnd) != 0;
+	LPCTSTR GetName() const override { return m_Name.c_str(); }
+	LPCTSTR GetText() const override { return m_Text.c_str(); }
+	int NumButtons() const override { return m_NumButtons; }
+	bool GetButtonInfo(int Index, ButtonInfo *pInfo) const override;
+	bool Enable(bool fEnable) override { return m_pPlugin->Enable(fEnable); }
+	bool IsEnabled() const override { return m_pPlugin->IsEnabled(); }
+	bool IsActiveOnly() const override { return (m_Flags & CONTROLLER_FLAG_ACTIVEONLY) != 0; }
+	bool SetTargetWindow(HWND hwnd) override {
+		return m_pPlugin->SendEvent(EVENT_CONTROLLERFOCUS, reinterpret_cast<LPARAM>(hwnd)) != 0;
 	}
-	bool TranslateMessage(HWND hwnd, MSG *pMessage);
-	bool GetIniFileName(LPTSTR pszFileName, int MaxLength) const;
-	LPCTSTR GetIniFileSection() const;
-	HBITMAP GetImage(ImageType Type) const;
+	bool TranslateMessage(HWND hwnd, MSG *pMessage) override;
+	bool GetIniFileName(LPTSTR pszFileName, int MaxLength) const override;
+	LPCTSTR GetIniFileSection() const override;
+	HBITMAP GetImage(ImageType Type) const override;
 };
 
 
@@ -182,7 +182,7 @@ bool CControllerPlugin::GetIniFileName(LPTSTR pszFileName, int MaxLength) const
 {
 	if (m_IniFileName.empty())
 		return CController::GetIniFileName(pszFileName, MaxLength);
-	if (m_IniFileName.length() >= (String::size_type)MaxLength)
+	if (m_IniFileName.length() >= static_cast<String::size_type>(MaxLength))
 		return false;
 	StringCopy(pszFileName, m_IniFileName.c_str());
 	return true;
@@ -247,7 +247,7 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo, ChannelInfo *pChanne
 class CEpgDataConverter
 {
 	static void GetEventInfoSize(
-		const LibISDB::EventInfo &EventInfo, SIZE_T *pInfoSize, SIZE_T *pStringSize);
+		const LibISDB::EventInfo &EventInfo, size_t *pInfoSize, size_t *pStringSize);
 	static void ConvertEventInfo(
 		const LibISDB::EventInfo &EventData,
 		EpgEventInfo **ppEventInfo, LPWSTR *ppStringBuffer);
@@ -272,10 +272,10 @@ public:
 
 
 void CEpgDataConverter::GetEventInfoSize(const LibISDB::EventInfo &EventInfo,
-		SIZE_T *pInfoSize, SIZE_T *pStringSize)
+		size_t *pInfoSize, size_t *pStringSize)
 {
-	SIZE_T InfoSize = sizeof(EpgEventInfo);
-	SIZE_T StringSize = 0;
+	size_t InfoSize = sizeof(EpgEventInfo);
+	size_t StringSize = 0;
 
 	if (!EventInfo.EventName.empty())
 		StringSize += EventInfo.EventName.length() + 1;
@@ -316,10 +316,10 @@ void CEpgDataConverter::ConvertEventInfo(
 	pEventInfo->Reserved = 0;
 	pEventInfo->StartTime = EventData.StartTime.ToSYSTEMTIME();
 	pEventInfo->Duration = EventData.Duration;
-	pEventInfo->VideoListLength = (BYTE)EventData.VideoList.size();
-	pEventInfo->AudioListLength = (BYTE)EventData.AudioList.size();
-	pEventInfo->ContentListLength = (BYTE)EventData.ContentNibble.NibbleCount;
-	pEventInfo->EventGroupListLength = (BYTE)EventData.EventGroupList.size();
+	pEventInfo->VideoListLength = static_cast<BYTE>(EventData.VideoList.size());
+	pEventInfo->AudioListLength = static_cast<BYTE>(EventData.AudioList.size());
+	pEventInfo->ContentListLength = static_cast<BYTE>(EventData.ContentNibble.NibbleCount);
+	pEventInfo->EventGroupListLength = static_cast<BYTE>(EventData.EventGroupList.size());
 	if (!EventData.EventName.empty()) {
 		pEventInfo->pszEventName = pString;
 		pString = CopyString(pString, EventData.EventName.c_str());
@@ -341,14 +341,14 @@ void CEpgDataConverter::ConvertEventInfo(
 		pEventInfo->pszEventExtendedText = nullptr;
 	}
 
-	BYTE *p = (BYTE*)(pEventInfo + 1);
+	BYTE *p = reinterpret_cast<BYTE*>(pEventInfo + 1);
 
 	if (!EventData.VideoList.empty()) {
-		pEventInfo->VideoList = (EpgEventVideoInfo**)p;
+		pEventInfo->VideoList = reinterpret_cast<EpgEventVideoInfo**>(p);
 		p += sizeof(EpgEventVideoInfo*) * EventData.VideoList.size();
 		for (size_t i = 0; i < EventData.VideoList.size(); i++) {
 			const LibISDB::EventInfo::VideoInfo &Video = EventData.VideoList[i];
-			pEventInfo->VideoList[i] = (EpgEventVideoInfo*)p;
+			pEventInfo->VideoList[i] = reinterpret_cast<EpgEventVideoInfo*>(p);
 			pEventInfo->VideoList[i]->StreamContent = Video.StreamContent;
 			pEventInfo->VideoList[i]->ComponentType = Video.ComponentType;
 			pEventInfo->VideoList[i]->ComponentTag = Video.ComponentTag;
@@ -367,11 +367,11 @@ void CEpgDataConverter::ConvertEventInfo(
 	}
 
 	if (EventData.AudioList.size() > 0) {
-		pEventInfo->AudioList = (EpgEventAudioInfo**)p;
+		pEventInfo->AudioList = reinterpret_cast<EpgEventAudioInfo**>(p);
 		p += sizeof(EpgEventAudioInfo*) * EventData.AudioList.size();
 		for (size_t i = 0; i < EventData.AudioList.size(); i++) {
 			const LibISDB::EventInfo::AudioInfo &Audio = EventData.AudioList[i];
-			EpgEventAudioInfo *pAudioInfo = (EpgEventAudioInfo*)p;
+			EpgEventAudioInfo *pAudioInfo = reinterpret_cast<EpgEventAudioInfo*>(p);
 			pEventInfo->AudioList[i] = pAudioInfo;
 			pAudioInfo->Flags = 0;
 			if (Audio.ESMultiLingualFlag)
@@ -400,7 +400,7 @@ void CEpgDataConverter::ConvertEventInfo(
 	}
 
 	if (EventData.ContentNibble.NibbleCount > 0) {
-		pEventInfo->ContentList = (EpgEventContentInfo*)p;
+		pEventInfo->ContentList = reinterpret_cast<EpgEventContentInfo*>(p);
 		p += sizeof(EpgEventContentInfo) * EventData.ContentNibble.NibbleCount;
 		for (int i = 0; i < EventData.ContentNibble.NibbleCount; i++) {
 			pEventInfo->ContentList[i].ContentNibbleLevel1 =
@@ -417,17 +417,17 @@ void CEpgDataConverter::ConvertEventInfo(
 	}
 
 	if (EventData.EventGroupList.size() > 0) {
-		pEventInfo->EventGroupList = (EpgEventGroupInfo**)p;
+		pEventInfo->EventGroupList = reinterpret_cast<EpgEventGroupInfo**>(p);
 		p += sizeof(EpgEventGroupInfo*) * EventData.EventGroupList.size();
 		for (size_t i = 0; i < EventData.EventGroupList.size(); i++) {
 			const LibISDB::EventInfo::EventGroupInfo &Group = EventData.EventGroupList[i];
-			EpgEventGroupInfo *pGroupInfo = (EpgEventGroupInfo*)p;
+			EpgEventGroupInfo *pGroupInfo = reinterpret_cast<EpgEventGroupInfo*>(p);
 			p += sizeof(EpgEventGroupInfo);
 			pEventInfo->EventGroupList[i] = pGroupInfo;
 			pGroupInfo->GroupType = Group.GroupType;
-			pGroupInfo->EventListLength = (BYTE)Group.EventList.size();
+			pGroupInfo->EventListLength = static_cast<BYTE>(Group.EventList.size());
 			::ZeroMemory(pGroupInfo->Reserved, sizeof(pGroupInfo->Reserved));
-			pGroupInfo->EventList = (EpgGroupEventInfo*)p;
+			pGroupInfo->EventList = reinterpret_cast<EpgGroupEventInfo*>(p);
 			for (size_t j = 0; j < Group.EventList.size(); j++) {
 				pGroupInfo->EventList[j].NetworkID = Group.EventList[j].NetworkID;
 				pGroupInfo->EventList[j].TransportStreamID = Group.EventList[j].TransportStreamID;
@@ -440,57 +440,57 @@ void CEpgDataConverter::ConvertEventInfo(
 		pEventInfo->EventGroupList = nullptr;
 	}
 
-	*ppEventInfo = (EpgEventInfo*)p;
+	*ppEventInfo = reinterpret_cast<EpgEventInfo*>(p);
 	*ppStringBuffer = pString;
 }
 
 
 EpgEventInfo *CEpgDataConverter::Convert(const LibISDB::EventInfo &EventData) const
 {
-	SIZE_T InfoSize, StringSize;
+	size_t InfoSize, StringSize;
 
 	GetEventInfoSize(EventData, &InfoSize, &StringSize);
-	BYTE *pBuffer = (BYTE*)malloc(InfoSize + StringSize);
+	BYTE *pBuffer = static_cast<BYTE*>(std::malloc(InfoSize + StringSize));
 	if (pBuffer == nullptr)
 		return nullptr;
-	EpgEventInfo *pEventInfo = (EpgEventInfo*)pBuffer;
-	LPWSTR pString = (LPWSTR)(pBuffer + InfoSize);
+	EpgEventInfo *pEventInfo = reinterpret_cast<EpgEventInfo*>(pBuffer);
+	LPWSTR pString = reinterpret_cast<LPWSTR>(pBuffer + InfoSize);
 	ConvertEventInfo(EventData, &pEventInfo, &pString);
 #ifdef _DEBUG
-	if ((BYTE*)pEventInfo - pBuffer != InfoSize
-			|| (BYTE*)pString - (pBuffer + InfoSize) != StringSize)
+	if (reinterpret_cast<BYTE*>(pEventInfo) - pBuffer != InfoSize
+			|| reinterpret_cast<BYTE*>(pString) - (pBuffer + InfoSize) != StringSize)
 		::DebugBreak();
 #endif
-	return (EpgEventInfo*)pBuffer;
+	return reinterpret_cast<EpgEventInfo*>(pBuffer);
 }
 
 
 EpgEventInfo **CEpgDataConverter::Convert(const LibISDB::EPGDatabase::EventList &EventList) const
 {
-	const SIZE_T ListSize = EventList.size() * sizeof(EpgEventInfo*);
-	SIZE_T InfoSize = 0, StringSize = 0;
+	const size_t ListSize = EventList.size() * sizeof(EpgEventInfo*);
+	size_t InfoSize = 0, StringSize = 0;
 
 	for (auto &Event : EventList) {
-		SIZE_T Info, String;
+		size_t Info, String;
 
 		GetEventInfoSize(Event, &Info, &String);
 		InfoSize += Info;
 		StringSize += String;
 	}
-	BYTE *pBuffer = (BYTE*)malloc(ListSize + InfoSize + StringSize);
+	BYTE *pBuffer = static_cast<BYTE*>(std::malloc(ListSize + InfoSize + StringSize));
 	if (pBuffer == nullptr)
 		return nullptr;
-	EpgEventInfo **ppEventList = (EpgEventInfo**)pBuffer;
-	EpgEventInfo *pEventInfo = (EpgEventInfo*)(pBuffer + ListSize);
-	LPWSTR pString = (LPWSTR)(pBuffer + ListSize + InfoSize);
+	EpgEventInfo **ppEventList = reinterpret_cast<EpgEventInfo**>(pBuffer);
+	EpgEventInfo *pEventInfo = reinterpret_cast<EpgEventInfo*>(pBuffer + ListSize);
+	LPWSTR pString = reinterpret_cast<LPWSTR>(pBuffer + ListSize + InfoSize);
 	int i = 0;
 	for (auto &Event : EventList) {
 		ppEventList[i++] = pEventInfo;
 		ConvertEventInfo(Event, &pEventInfo, &pString);
 	}
 #ifdef _DEBUG
-	if ((BYTE*)pEventInfo - (pBuffer + ListSize) != InfoSize
-			|| (BYTE*)pString - (pBuffer + ListSize + InfoSize) != StringSize)
+	if (reinterpret_cast<BYTE*>(pEventInfo) - (pBuffer + ListSize) != InfoSize
+			|| reinterpret_cast<BYTE*>(pString) - (pBuffer + ListSize + InfoSize) != StringSize)
 		::DebugBreak();
 #endif
 	return ppEventList;
@@ -499,13 +499,13 @@ EpgEventInfo **CEpgDataConverter::Convert(const LibISDB::EPGDatabase::EventList 
 
 void CEpgDataConverter::FreeEventInfo(EpgEventInfo *pEventInfo)
 {
-	free(pEventInfo);
+	std::free(pEventInfo);
 }
 
 
 void CEpgDataConverter::FreeEventList(EpgEventInfo **ppEventList)
 {
-	free(ppEventList);
+	std::free(ppEventList);
 }
 
 
@@ -545,7 +545,7 @@ static void GetFavoriteItemInfo(
 	*pItemInfo = FavoriteItemInfo();
 	pItemInfo->pszName = pStringBuffer;
 	Length = ::lstrlen(pItem->GetName()) + 1;
-	::CopyMemory(pStringBuffer, pItem->GetName(), Length * sizeof(WCHAR));
+	std::memcpy(pStringBuffer, pItem->GetName(), Length * sizeof(WCHAR));
 	pStringBuffer += Length;
 
 	++*ppItemInfo;
@@ -577,7 +577,7 @@ static void GetFavoriteItemInfo(
 		pItemInfo->Channel.ServiceID = ChannelInfo.GetServiceID();
 		pItemInfo->Channel.pszTuner = pStringBuffer;
 		Length = ::lstrlen(pChannel->GetBonDriverFileName()) + 1;
-		::CopyMemory(pStringBuffer, pChannel->GetBonDriverFileName(), Length * sizeof(WCHAR));
+		std::memcpy(pStringBuffer, pChannel->GetBonDriverFileName(), Length * sizeof(WCHAR));
 		pStringBuffer += Length;
 	}
 
@@ -746,14 +746,14 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 	if (m_hLib != nullptr)
 		Free();
 
-	HMODULE hLib = ::LoadLibrary(pszFileName);
+	const HMODULE hLib = ::LoadLibrary(pszFileName);
 	if (hLib == nullptr) {
 		const int ErrorCode = ::GetLastError();
 		TCHAR szText[256];
 
-		StringPrintf(
+		StringFormat(
 			szText,
-			TEXT("DLLがロードできません。(エラーコード 0x%lx)"), ErrorCode);
+			TEXT("DLLがロードできません。(エラーコード {:#x})"), ErrorCode);
 		SetWin32Error(ErrorCode, szText);
 		switch (ErrorCode) {
 		case ERROR_BAD_EXE_FORMAT:
@@ -772,7 +772,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		}
 		return false;
 	}
-	GetVersionFunc pGetVersion =
+	const GetVersionFunc pGetVersion =
 		reinterpret_cast<GetVersionFunc>(::GetProcAddress(hLib, "TVTGetVersion"));
 	if (pGetVersion == nullptr) {
 		::FreeLibrary(hLib);
@@ -786,7 +786,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		SetErrorText(TEXT("対応していないバージョンです。"));
 		return false;
 	}
-	GetPluginInfoFunc pGetPluginInfo =
+	const GetPluginInfoFunc pGetPluginInfo =
 		reinterpret_cast<GetPluginInfoFunc>(::GetProcAddress(hLib, "TVTGetPluginInfo"));
 	if (pGetPluginInfo == nullptr) {
 		::FreeLibrary(hLib);
@@ -800,7 +800,7 @@ bool CPlugin::Load(LPCTSTR pszFileName)
 		SetErrorText(TEXT("プラグインの情報を取得できません。"));
 		return false;
 	}
-	InitializeFunc pInitialize =
+	const InitializeFunc pInitialize =
 		reinterpret_cast<InitializeFunc>(::GetProcAddress(hLib, "TVTInitialize"));
 	if (pInitialize == nullptr) {
 		::FreeLibrary(hLib);
@@ -877,23 +877,23 @@ void CPlugin::Free()
 	m_ControllerList.clear();
 
 	if (m_hLib != nullptr) {
-		LPCTSTR pszFileName = ::PathFindFileName(m_FileName.c_str());
+		const LPCTSTR pszFileName = ::PathFindFileName(m_FileName.c_str());
 
-		App.AddLog(TEXT("%s の終了処理を行っています..."), pszFileName);
+		App.AddLog(TEXT("{} の終了処理を行っています..."), pszFileName);
 
-		FinalizeFunc pFinalize =
+		const FinalizeFunc pFinalize =
 			reinterpret_cast<FinalizeFunc>(::GetProcAddress(m_hLib, "TVTFinalize"));
 		if (pFinalize == nullptr) {
 			App.AddLog(
 				CLogItem::LogType::Error,
-				TEXT("%s のTVTFinalize()関数のアドレスを取得できません。"),
+				TEXT("{} のTVTFinalize()関数のアドレスを取得できません。"),
 				pszFileName);
 		} else {
 			pFinalize();
 		}
 		::FreeLibrary(m_hLib);
 		m_hLib = nullptr;
-		App.AddLog(TEXT("%s を解放しました。"), pszFileName);
+		App.AddLog(TEXT("{} を解放しました。"), pszFileName);
 	}
 
 	for (auto &Item : m_StatusItemList) {
@@ -927,7 +927,7 @@ bool CPlugin::Enable(bool fEnable)
 		if (m_fSetting)
 			return false;
 		m_fSetting = true;
-		bool fResult = SendEvent(EVENT_PLUGINENABLE, (LPARAM)fEnable) != 0;
+		const bool fResult = SendEvent(EVENT_PLUGINENABLE, static_cast<LPARAM>(fEnable)) != 0;
 		m_fSetting = false;
 		if (!fResult)
 			return false;
@@ -960,7 +960,7 @@ bool CPlugin::SetCommand(int Command)
 
 int CPlugin::NumPluginCommands() const
 {
-	return (int)m_CommandList.size();
+	return static_cast<int>(m_CommandList.size());
 }
 
 
@@ -971,7 +971,7 @@ int CPlugin::ParsePluginCommand(LPCWSTR pszCommand) const
 
 	for (size_t i = 0; i < m_CommandList.size(); i++) {
 		if (::lstrcmpi(m_CommandList[i].GetText(), pszCommand) == 0)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 
 	return -1;
@@ -980,7 +980,7 @@ int CPlugin::ParsePluginCommand(LPCWSTR pszCommand) const
 
 CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_CommandList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_CommandList.size())
 		return nullptr;
 	return &m_CommandList[Index];
 }
@@ -988,7 +988,7 @@ CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index)
 
 const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_CommandList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_CommandList.size())
 		return nullptr;
 	return &m_CommandList[Index];
 }
@@ -996,7 +996,7 @@ const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(int Index) cons
 
 CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand)
 {
-	int Index = ParsePluginCommand(pszCommand);
+	const int Index = ParsePluginCommand(pszCommand);
 	if (Index < 0)
 		return nullptr;
 	return &m_CommandList[Index];
@@ -1005,7 +1005,7 @@ CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand)
 
 const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszCommand) const
 {
-	int Index = ParsePluginCommand(pszCommand);
+	const int Index = ParsePluginCommand(pszCommand);
 	if (Index < 0)
 		return nullptr;
 	return &m_CommandList[Index];
@@ -1014,7 +1014,7 @@ const CPlugin::CPluginCommandInfo *CPlugin::GetPluginCommandInfo(LPCWSTR pszComm
 
 bool CPlugin::GetPluginCommandInfo(int Index, CommandInfo *pInfo) const
 {
-	if (Index < 0 || (size_t)Index >= m_CommandList.size() || pInfo == nullptr)
+	if (Index < 0 || static_cast<size_t>(Index) >= m_CommandList.size() || pInfo == nullptr)
 		return false;
 	const CPluginCommandInfo &Command = m_CommandList[Index];
 	pInfo->ID = Command.GetID();
@@ -1026,7 +1026,7 @@ bool CPlugin::GetPluginCommandInfo(int Index, CommandInfo *pInfo) const
 
 bool CPlugin::NotifyCommand(LPCWSTR pszCommand)
 {
-	int i = ParsePluginCommand(pszCommand);
+	const int i = ParsePluginCommand(pszCommand);
 	if (i < 0)
 		return false;
 	return SendEvent(EVENT_COMMAND, m_CommandList[i].GetID(), 0) != FALSE;
@@ -1043,13 +1043,13 @@ bool CPlugin::DrawPluginCommandIcon(const DrawCommandIconInfo *pInfo)
 
 int CPlugin::NumProgramGuideCommands() const
 {
-	return (int)m_ProgramGuideCommandList.size();
+	return static_cast<int>(m_ProgramGuideCommandList.size());
 }
 
 
 bool CPlugin::GetProgramGuideCommandInfo(int Index, ProgramGuideCommandInfo *pInfo) const
 {
-	if (Index < 0 || (size_t)Index >= m_ProgramGuideCommandList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_ProgramGuideCommandList.size())
 		return false;
 	const CProgramGuideCommand &Command = m_ProgramGuideCommandList[Index];
 	pInfo->Type = Command.GetType();
@@ -1109,7 +1109,7 @@ void CPlugin::RegisterStatusItems()
 		IDText += _T(':');
 		IDText += Item->IDText;
 
-		int ItemID = App.StatusOptions.RegisterItem(IDText.c_str());
+		const int ItemID = App.StatusOptions.RegisterItem(IDText.c_str());
 		if (ItemID >= 0) {
 			Item->ItemID = ItemID;
 			App.StatusView.AddItem(new CPluginStatusItem(this, Item.get()));
@@ -1166,7 +1166,7 @@ void CPlugin::RegisterPanelItems()
 		IDText += _T(':');
 		IDText += Item->IDText;
 
-		int ItemID = App.PanelOptions.RegisterPanelItem(IDText.c_str(), Item->Title.c_str());
+		const int ItemID = App.PanelOptions.RegisterPanelItem(IDText.c_str(), Item->Title.c_str());
 		if (ItemID >= 0) {
 			Item->ItemID = ItemID;
 			if ((Item->StateMask & PANEL_ITEM_STATE_ENABLED) != 0) {
@@ -1215,7 +1215,7 @@ bool CPlugin::Settings(HWND hwndOwner)
 	if (m_fSetting)
 		return true;
 	m_fSetting = true;
-	bool fResult = SendEvent(EVENT_PLUGINSETTINGS, (LPARAM)hwndOwner) != 0;
+	const bool fResult = SendEvent(EVENT_PLUGINSETTINGS, reinterpret_cast<LPARAM>(hwndOwner)) != 0;
 	m_fSetting = false;
 	return fResult;
 }
@@ -1254,7 +1254,7 @@ LRESULT CPlugin::SendPluginMessage(
 		return Result;
 	GetAppClass().AddLog(
 		CLogItem::LogType::Error,
-		TEXT("応答が無いためプラグインからのメッセージを処理できません。(%s : %u)"),
+		TEXT("応答が無いためプラグインからのメッセージを処理できません。({} : {})"),
 		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()), Message);
 	return FailedResult;
 }
@@ -1277,15 +1277,15 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 	case MESSAGE_MEMORYALLOC:
 		{
 			void *pData = reinterpret_cast<void*>(lParam1);
-			SIZE_T Size = lParam2;
+			const size_t Size = lParam2;
 
 			if (Size > 0) {
-				return (LRESULT)realloc(pData, Size);
+				return reinterpret_cast<LRESULT>(std::realloc(pData, Size));
 			} else if (pData != nullptr) {
-				free(pData);
+				std::free(pData);
 			}
 		}
-		return (LRESULT)(void*)0;
+		return reinterpret_cast<LRESULT>(nullptr);
 
 	case MESSAGE_SETEVENTCALLBACK:
 		m_pEventCallback = reinterpret_cast<EventCallbackFunc>(lParam1);
@@ -1298,12 +1298,12 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETSERVICE:
 		{
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 			int *pNumServices = reinterpret_cast<int*>(lParam1);
 
 			if (pNumServices)
 				*pNumServices = CoreEngine.GetSelectableServiceCount();
-			uint16_t ServiceID = CoreEngine.GetServiceID();
+			const uint16_t ServiceID = CoreEngine.GetServiceID();
 			if (ServiceID == LibISDB::SERVICE_ID_INVALID)
 				return -1;
 			return CoreEngine.GetSelectableServiceIndexByID(ServiceID);;
@@ -1316,7 +1316,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETSERVICEINFO:
 		{
-			int Index = (int)lParam1;
+			const int Index = static_cast<int>(lParam1);
 			ServiceInfo *pServiceInfo = reinterpret_cast<ServiceInfo*>(lParam2);
 
 			if (Index < 0 || pServiceInfo == nullptr
@@ -1324,12 +1324,12 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 						&& pServiceInfo->Size != SERVICEINFO_SIZE_V1))
 				return FALSE;
 
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
-			LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			if (pAnalyzer == nullptr)
 				return FALSE;
 
-			WORD ServiceID = CoreEngine.GetSelectableServiceID(Index);
+			const WORD ServiceID = CoreEngine.GetSelectableServiceID(Index);
 			if (ServiceID == LibISDB::SERVICE_ID_INVALID)
 				return FALSE;
 			LibISDB::AnalyzerFilter::ServiceInfo Info;
@@ -1344,7 +1344,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				pServiceInfo->AudioPID[i] = Info.AudioESList[i].PID;
 			StringCopy(pServiceInfo->szServiceName, Info.ServiceName.c_str());
 			if (pServiceInfo->Size == sizeof(ServiceInfo)) {
-				int ServiceIndex = pAnalyzer->GetServiceIndexByID(ServiceID);
+				const int ServiceIndex = pAnalyzer->GetServiceIndexByID(ServiceID);
 				for (int i = 0; i < NumAudioPIDs; i++) {
 					pServiceInfo->AudioComponentType[i] =
 						pAnalyzer->GetAudioComponentType(ServiceIndex, i);
@@ -1446,13 +1446,13 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 						&& pInfo->Size != STATUSINFO_SIZE_V1))
 				return FALSE;
 			const CCoreEngine *pCoreEngine = &GetAppClass().CoreEngine;
-			ULONGLONG DropCount = pCoreEngine->GetContinuityErrorPacketCount();
+			const ULONGLONG DropCount = pCoreEngine->GetContinuityErrorPacketCount();
 			pInfo->SignalLevel = pCoreEngine->GetSignalLevel();
 			pInfo->BitRate = pCoreEngine->GetBitRate();
-			pInfo->ErrorPacketCount = (DWORD)(pCoreEngine->GetErrorPacketCount() + DropCount);
-			pInfo->ScramblePacketCount = (DWORD)pCoreEngine->GetScramblePacketCount();
+			pInfo->ErrorPacketCount = static_cast<DWORD>(pCoreEngine->GetErrorPacketCount() + DropCount);
+			pInfo->ScramblePacketCount = static_cast<DWORD>(pCoreEngine->GetScramblePacketCount());
 			if (pInfo->Size == sizeof(StatusInfo)) {
-				pInfo->DropPacketCount = (DWORD)DropCount;
+				pInfo->DropPacketCount = static_cast<DWORD>(DropCount);
 				pInfo->Reserved = 0;
 			}
 		}
@@ -1491,8 +1491,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 	case MESSAGE_GETVOLUME:
 		{
 			const CUICore &UICore = GetAppClass().UICore;
-			int Volume = UICore.GetVolume();
-			bool fMute = UICore.GetMute();
+			const int Volume = UICore.GetVolume();
+			const bool fMute = UICore.GetMute();
 
 			return MAKELONG(Volume, fMute);
 		}
@@ -1533,16 +1533,16 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			LibISDB::COMMemoryPointer<> Image(GetAppClass().CoreEngine.GetCurrentImage());
 
 			if (Image) {
-				SIZE_T Size = CalcDIBSize(reinterpret_cast<BITMAPINFOHEADER*>(Image.get()));
+				const size_t Size = CalcDIBSize(reinterpret_cast<BITMAPINFOHEADER*>(Image.get()));
 				void *pDib;
 
-				pDib = malloc(Size);
+				pDib = std::malloc(Size);
 				if (pDib != nullptr)
-					::CopyMemory(pDib, Image.get(), Size);
-				return (LRESULT)pDib;
+					std::memcpy(pDib, Image.get(), Size);
+				return reinterpret_cast<LRESULT>(pDib);
 			}
 		}
-		return (LRESULT)(LPVOID)nullptr;
+		return reinterpret_cast<LRESULT>(nullptr);
 
 	case MESSAGE_SAVEIMAGE:
 		GetAppClass().UICore.DoCommand(CM_SAVEIMAGE);
@@ -1550,7 +1550,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_RESET:
 		{
-			DWORD Flags = (DWORD)lParam1;
+			const DWORD Flags = static_cast<DWORD>(lParam1);
 
 			if (Flags == RESET_ALL)
 				GetAppClass().UICore.DoCommand(CM_RESET);
@@ -1617,7 +1617,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETCOLOR:
 		{
-			LPCWSTR pszName = reinterpret_cast<LPCWSTR>(lParam1);
+			const LPCWSTR pszName = reinterpret_cast<LPCWSTR>(lParam1);
 
 			if (pszName == nullptr)
 				return CLR_INVALID;
@@ -1704,7 +1704,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 	case MESSAGE_REGISTERCOMMAND:
 		{
 			const CommandInfo *pCommandList = reinterpret_cast<CommandInfo*>(lParam1);
-			int NumCommands = (int)lParam2;
+			const int NumCommands = static_cast<int>(lParam2);
 
 			if (pCommandList == nullptr || NumCommands <= 0)
 				return FALSE;
@@ -1716,12 +1716,12 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_ADDLOG:
 		{
-			LPCWSTR pszText = reinterpret_cast<LPCWSTR>(lParam1);
+			const LPCWSTR pszText = reinterpret_cast<LPCWSTR>(lParam1);
 			if (pszText == nullptr)
 				return FALSE;
 
-			LPCTSTR pszFileName = ::PathFindFileName(m_FileName.c_str());
-			GetAppClass().AddLog((CLogItem::LogType)lParam2, TEXT("%s : %s"), pszFileName, pszText);
+			const LPCTSTR pszFileName = ::PathFindFileName(m_FileName.c_str());
+			GetAppClass().AddLog(static_cast<CLogItem::LogType>(lParam2), TEXT("{} : {}"), pszFileName, pszText);
 		}
 		return TRUE;
 
@@ -1731,7 +1731,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_SETAUDIOCALLBACK:
 		{
-			AudioCallbackFunc pCallback = reinterpret_cast<AudioCallbackFunc>(lParam1);
+			const AudioCallbackFunc pCallback = reinterpret_cast<AudioCallbackFunc>(lParam1);
 			LibISDB::ViewerFilter *pViewer =
 				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 			if (pViewer == nullptr)
@@ -1773,7 +1773,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_DOCOMMAND:
 		{
-			LPCWSTR pszCommand = reinterpret_cast<LPCWSTR>(lParam1);
+			const LPCWSTR pszCommand = reinterpret_cast<LPCWSTR>(lParam1);
 
 			if (pszCommand == nullptr || pszCommand[0] == L'\0')
 				return FALSE;
@@ -1804,13 +1804,13 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 	case MESSAGE_GETLOGO:
 		{
 			const WORD NetworkID = LOWORD(lParam1), ServiceID = HIWORD(lParam1);
-			const BYTE LogoType = (BYTE)(lParam2 & 0xFF);
-			HBITMAP hbm = GetAppClass().LogoManager.GetAssociatedLogoBitmap(NetworkID, ServiceID, LogoType);
+			const BYTE LogoType = static_cast<BYTE>(lParam2 & 0xFF);
+			const HBITMAP hbm = GetAppClass().LogoManager.GetAssociatedLogoBitmap(NetworkID, ServiceID, LogoType);
 			if (hbm != nullptr) {
 				return reinterpret_cast<LRESULT>(::CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 			}
 		}
-		return reinterpret_cast<LRESULT>((HBITMAP)nullptr);
+		return reinterpret_cast<LRESULT>(nullptr);
 
 	case MESSAGE_GETAVAILABLELOGOTYPE:
 		{
@@ -1863,8 +1863,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETCONTROLLERSETTINGS:
 		{
-			static const DWORD ValidMask = CONTROLLER_SETTINGS_MASK_FLAGS;
-			LPCWSTR pszName = reinterpret_cast<LPCWSTR>(lParam1);
+			static constexpr DWORD ValidMask = CONTROLLER_SETTINGS_MASK_FLAGS;
+			const LPCWSTR pszName = reinterpret_cast<LPCWSTR>(lParam1);
 			ControllerSettings *pSettings = reinterpret_cast<ControllerSettings*>(lParam2);
 
 			if (pSettings == nullptr
@@ -1887,9 +1887,9 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			const EpgEventQueryInfo *pQueryInfo =
 				reinterpret_cast<const EpgEventQueryInfo*>(lParam1);
 			if (pQueryInfo == nullptr)
-				return reinterpret_cast<LRESULT>((EpgEventInfo*)nullptr);
+				return reinterpret_cast<LRESULT>(nullptr);
 
-			LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
+			const LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
 			LibISDB::EventInfo EventData;
 			if (pQueryInfo->Type == EPG_EVENT_QUERY_EVENTID) {
 				if (!EPGDatabase.GetEventInfo(
@@ -1955,7 +1955,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pEventList->EventList = Converter.Convert(EventList);
 			if (pEventList->EventList == nullptr)
 				return FALSE;
-			pEventList->NumEvents = (WORD)EventList.size();
+			pEventList->NumEvents = static_cast<WORD>(EventList.size());
 		}
 		return TRUE;
 
@@ -1973,7 +1973,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_ENUMDRIVER:
 		{
-			LPWSTR pszFileName = reinterpret_cast<LPWSTR>(lParam1);
+			const LPWSTR pszFileName = reinterpret_cast<LPWSTR>(lParam1);
 			const int Index = LOWORD(lParam2);
 			const int MaxLength = HIWORD(lParam2);
 
@@ -1989,7 +1989,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETDRIVERTUNINGSPACELIST:
 		{
-			LPCWSTR pszDriverName = reinterpret_cast<LPCWSTR>(lParam1);
+			const LPCWSTR pszDriverName = reinterpret_cast<LPCWSTR>(lParam1);
 			DriverTuningSpaceList *pList =
 				reinterpret_cast<DriverTuningSpaceList*>(lParam2);
 
@@ -2008,7 +2008,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				return FALSE;
 
 			const int NumSpaces = pTuningSpaceList->NumSpaces();
-			SIZE_T BufferSize =
+			size_t BufferSize =
 				NumSpaces *
 					(sizeof(DriverTuningSpaceInfo) +
 					 sizeof(DriverTuningSpaceInfo*) +
@@ -2019,36 +2019,36 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					pChannelList->NumChannels() *
 						(sizeof(ChannelInfo) + sizeof(ChannelInfo*));
 			}
-			BYTE *pBuffer = (BYTE*)malloc(BufferSize);
+			BYTE *pBuffer = static_cast<BYTE*>(std::malloc(BufferSize));
 			if (pBuffer == nullptr)
 				return FALSE;
 			BYTE *p = pBuffer;
 			pList->NumSpaces = NumSpaces;
-			pList->SpaceList = (DriverTuningSpaceInfo**)p;
+			pList->SpaceList = reinterpret_cast<DriverTuningSpaceInfo**>(p);
 			p += NumSpaces * sizeof(DriverTuningSpaceInfo*);
 			for (int i = 0; i < NumSpaces; i++) {
 				const CTuningSpaceInfo *pSpaceInfo = pTuningSpaceList->GetTuningSpaceInfo(i);
 				const CChannelList *pChannelList = pSpaceInfo->GetChannelList();
 				const int NumChannels = pChannelList->NumChannels();
-				DriverTuningSpaceInfo *pDriverSpaceInfo = (DriverTuningSpaceInfo*)p;
+				DriverTuningSpaceInfo *pDriverSpaceInfo = reinterpret_cast<DriverTuningSpaceInfo*>(p);
 
 				p += sizeof(DriverTuningSpaceInfo);
 				pList->SpaceList[i] = pDriverSpaceInfo;
 				pDriverSpaceInfo->Flags = 0;
 				pDriverSpaceInfo->NumChannels = NumChannels;
-				pDriverSpaceInfo->pInfo = (TuningSpaceInfo*)p;
+				pDriverSpaceInfo->pInfo = reinterpret_cast<TuningSpaceInfo*>(p);
 				pDriverSpaceInfo->pInfo->Size = sizeof(TuningSpaceInfo);
-				pDriverSpaceInfo->pInfo->Space = (int)pSpaceInfo->GetType();
+				pDriverSpaceInfo->pInfo->Space = static_cast<int>(pSpaceInfo->GetType());
 				if (pSpaceInfo->GetName() != nullptr) {
 					StringCopy(pDriverSpaceInfo->pInfo->szName, pSpaceInfo->GetName());
 				} else {
 					pDriverSpaceInfo->pInfo->szName[0] = '\0';
 				}
 				p += sizeof(TuningSpaceInfo);
-				pDriverSpaceInfo->ChannelList = (ChannelInfo**)p;
+				pDriverSpaceInfo->ChannelList = reinterpret_cast<ChannelInfo**>(p);
 				p += NumChannels * sizeof(ChannelInfo*);
 				for (int j = 0; j < NumChannels; j++) {
-					ChannelInfo *pChannelInfo = (ChannelInfo*)p;
+					ChannelInfo *pChannelInfo = reinterpret_cast<ChannelInfo*>(p);
 					p += sizeof(ChannelInfo);
 					pDriverSpaceInfo->ChannelList[j] = pChannelInfo;
 					pChannelInfo->Size = sizeof(ChannelInfo);
@@ -2068,7 +2068,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				reinterpret_cast<DriverTuningSpaceList*>(lParam1);
 
 			if (pList != nullptr) {
-				free(pList->SpaceList);
+				std::free(pList->SpaceList);
 				pList->NumSpaces = 0;
 				pList->SpaceList = nullptr;
 			}
@@ -2076,14 +2076,14 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 		return TRUE;
 
 	case MESSAGE_ENABLEPROGRAMGUIDEEVENT:
-		m_ProgramGuideEventFlags = (UINT)lParam1;
+		m_ProgramGuideEventFlags = static_cast<UINT>(lParam1);
 		return TRUE;
 
 	case MESSAGE_REGISTERPROGRAMGUIDECOMMAND:
 		{
 			const ProgramGuideCommandInfo *pCommandList =
 				reinterpret_cast<ProgramGuideCommandInfo*>(lParam1);
-			const int NumCommands = (int)lParam2;
+			const int NumCommands = static_cast<int>(lParam2);
 
 			if (pCommandList == nullptr || NumCommands < 1)
 				return FALSE;
@@ -2144,7 +2144,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 						return FALSE;
 					}
 					Style::CStyleScaling StyleScaling;
-					int DPI = pInfo->DPI != 0 ? pInfo->DPI : 96;
+					const int DPI = pInfo->DPI != 0 ? pInfo->DPI : 96;
 					StyleScaling.SetDPI(DPI);
 					pInfo->Value = StyleScaling.ConvertUnit(Style.Value.Int, Style.Unit, Unit);
 				}
@@ -2168,8 +2168,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				return FALSE;
 
 			CAppMain &App = GetAppClass();
-			Theme::CThemeManager ThemeManager(App.UICore.GetCurrentColorScheme());
-			int Type = ThemeManager.ParseStyleName(pInfo->pszStyle);
+			const Theme::CThemeManager ThemeManager(App.UICore.GetCurrentColorScheme());
+			const int Type = ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type < 0)
 				return FALSE;
 			Theme::BackgroundStyle Style;
@@ -2205,8 +2205,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					|| pInfo->pszText == nullptr)
 				return FALSE;
 
-			Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
-			int Type = ThemeManager.ParseStyleName(pInfo->pszStyle);
+			const Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
+			const int Type = ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type < 0)
 				return FALSE;
 			Theme::ForegroundStyle Style;
@@ -2231,8 +2231,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					|| pInfo->hbm == nullptr)
 				return FALSE;
 
-			Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
-			int Type = ThemeManager.ParseStyleName(pInfo->pszStyle);
+			const Theme::CThemeManager ThemeManager(GetAppClass().UICore.GetCurrentColorScheme());
+			const int Type = ThemeManager.ParseStyleName(pInfo->pszStyle);
 			if (Type < 0)
 				return FALSE;
 			Theme::ForegroundStyle Style;
@@ -2306,14 +2306,14 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					return FALSE;
 				StringCopy(pInfo->pszText, Command.IDText.c_str(), pInfo->MaxText);
 			} else {
-				pInfo->MaxText = (int)Command.IDText.length() + 1;
+				pInfo->MaxText = static_cast<int>(Command.IDText.length()) + 1;
 			}
 			if (pInfo->pszName != nullptr) {
 				if (pInfo->MaxName < 1)
 					return FALSE;
 				StringCopy(pInfo->pszName, Command.Text.c_str(), pInfo->MaxName);
 			} else {
-				pInfo->MaxName = (int)Command.Text.length() + 1;
+				pInfo->MaxName = static_cast<int>(Command.Text.length()) + 1;
 			}
 		}
 		return TRUE;
@@ -2355,7 +2355,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			} else {
 				pInfo->MaxText = ::lstrlen(pszText) + 1;
 			}
-			pInfo->Type = (int)Log.GetType();
+			pInfo->Type = static_cast<int>(Log.GetType());
 		}
 		return TRUE;
 
@@ -2376,11 +2376,11 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_SETPLUGINCOMMANDSTATE:
 		{
-			const int ID = (int)lParam1;
+			const int ID = static_cast<int>(lParam1);
 
 			for (auto &e : m_CommandList) {
 				if (e.GetID() == ID) {
-					const DWORD State = (DWORD)lParam2;
+					const DWORD State = static_cast<DWORD>(lParam2);
 
 					e.SetState(State);
 
@@ -2403,11 +2403,11 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_PLUGINCOMMANDNOTIFY:
 		{
-			const int ID = (int)lParam1;
+			const int ID = static_cast<int>(lParam1);
 
 			for (const auto &e : m_CommandList) {
 				if (e.GetID() == ID) {
-					const unsigned int Type = (unsigned int)lParam2;
+					const unsigned int Type = static_cast<unsigned int>(lParam2);
 
 					if ((Type & PLUGIN_COMMAND_NOTIFY_CHANGEICON))
 						GetAppClass().SideBar.RedrawItem(e.GetCommand());
@@ -2466,8 +2466,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_SETSTATUSITEM:
 		{
-			StatusItemSetInfo *pInfo =
-				reinterpret_cast<StatusItemSetInfo*>(lParam1);
+			const StatusItemSetInfo *pInfo =
+				reinterpret_cast<const StatusItemSetInfo*>(lParam1);
 
 			if (pInfo == nullptr || pInfo->Size != sizeof(StatusItemSetInfo))
 				return FALSE;
@@ -2475,8 +2475,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			for (auto &Item : m_StatusItemList) {
 				if (Item->ID == pInfo->ID) {
 					if ((pInfo->Mask & STATUS_ITEM_SET_INFO_MASK_STATE) != 0) {
-						DWORD OldState = Item->State;
-						DWORD NewState = (Item->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						const DWORD OldState = Item->State;
+						const DWORD NewState = (Item->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
 						Item->State = NewState;
 						if (((NewState ^ OldState) & STATUS_ITEM_STATE_VISIBLE) != 0) {
 							const bool fVisible = (NewState & STATUS_ITEM_STATE_VISIBLE) != 0;
@@ -2488,8 +2488,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					}
 
 					if ((pInfo->Mask & STATUS_ITEM_SET_INFO_MASK_STYLE) != 0) {
-						DWORD OldStyle = Item->Style;
-						DWORD NewStyle = (OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
+						const DWORD OldStyle = Item->Style;
+						const DWORD NewStyle = (OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
 						if (NewStyle != OldStyle) {
 							Item->Style = NewStyle;
 							if (Item->pItem != nullptr) {
@@ -2612,8 +2612,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_SETPANELITEM:
 		{
-			PanelItemSetInfo *pInfo =
-				reinterpret_cast<PanelItemSetInfo*>(lParam1);
+			const PanelItemSetInfo *pInfo =
+				reinterpret_cast<const PanelItemSetInfo*>(lParam1);
 
 			if (pInfo == nullptr || pInfo->Size != sizeof(PanelItemSetInfo))
 				return FALSE;
@@ -2910,10 +2910,10 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			if (!GetAppClass().Core.GetVariableStringEventInfo(&pContext->Event)) {
 				delete pContext;
-				return (LRESULT)nullptr;
+				return reinterpret_cast<LRESULT>(nullptr);
 			}
 
-			return (LRESULT)pContext;
+			return reinterpret_cast<LRESULT>(pContext);
 		}
 
 	case MESSAGE_FREEVARSTRINGCONTEXT:
@@ -2957,7 +2957,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pInfo->pszResult = static_cast<LPWSTR>(std::malloc((Result.length() + 1) * sizeof(WCHAR)));
 			if (pInfo->pszResult == nullptr)
 				return FALSE;
-			::CopyMemory(pInfo->pszResult, Result.c_str(), (Result.length() + 1) * sizeof(WCHAR));
+			std::memcpy(pInfo->pszResult, Result.c_str(), (Result.length() + 1) * sizeof(WCHAR));
 		}
 		return TRUE;
 
@@ -3011,7 +3011,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_SETWINDOWDARKMODE:
 		{
-			HWND hwnd = reinterpret_cast<HWND>(lParam1);
+			const HWND hwnd = reinterpret_cast<HWND>(lParam1);
 			if (hwnd == nullptr)
 				return FALSE;
 			const bool fDark = lParam2 != 0;
@@ -3038,8 +3038,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (pList->Flags != 0)
 				return FALSE;
 
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
-			LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			if (pAnalyzer == nullptr)
 				return FALSE;
 
@@ -3087,7 +3087,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_GETSERVICECOUNT:
 		{
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			if (pAnalyzer != nullptr)
 				return pAnalyzer->GetServiceCount();
@@ -3106,7 +3106,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 							SERVICE_INFO2_FLAG_BY_SELECTABLE_INDEX)) != 0)
 				return FALSE;
 
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			if (pAnalyzer == nullptr)
 				return FALSE;
@@ -3157,7 +3157,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pList->ServiceCount = 0;
 			pList->ServiceList = nullptr;
 
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
 			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			if (pAnalyzer == nullptr)
 				return FALSE;
@@ -3234,7 +3234,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					|| pInfo->Size != sizeof(AudioInfo))
 				return FALSE;
 
-			LibISDB::ViewerFilter *pViewer =
+			const LibISDB::ViewerFilter *pViewer =
 				GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 			if (pViewer == nullptr)
 				return FALSE;
@@ -3272,8 +3272,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			const ElementaryStreamMediaType Media = static_cast<ElementaryStreamMediaType>(lParam1);
 			WORD ServiceID = static_cast<WORD>(lParam2);
 
-			CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
-			LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			const CCoreEngine &CoreEngine = GetAppClass().CoreEngine;
+			const LibISDB::AnalyzerFilter *pAnalyzer = CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			if (pAnalyzer == nullptr)
 				return 0;
 
@@ -3324,7 +3324,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPluign::OnCallback() : Unknown message %u\n"), Message);
+		TRACE(TEXT("CPluign::OnCallback() : Unknown message {}\n"), Message);
 		break;
 #endif
 	}
@@ -3347,7 +3347,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 	if (pParam == nullptr || wParam != pParam->Message)
 		return 0;
 
-	switch ((UINT)wParam) {
+	switch (static_cast<UINT>(wParam)) {
 	case MESSAGE_GETCURRENTCHANNELINFO:
 		{
 			ChannelInfo *pChannelInfo = reinterpret_cast<ChannelInfo*>(pParam->lParam1);
@@ -3361,7 +3361,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if (pChInfo == nullptr)
 				return FALSE;
 			ConvertChannelInfo(pChInfo, pChannelInfo);
-			LibISDB::AnalyzerFilter *pAnalyzer =
+			const LibISDB::AnalyzerFilter *pAnalyzer =
 				GetAppClass().CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 			LibISDB::String Name;
 			if (pAnalyzer->GetNetworkName(&Name)) {
@@ -3383,31 +3383,31 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 			App.Core.OpenTuner();
 
-			int Space = (int)pParam->lParam1;
+			const int Space = static_cast<int>(pParam->lParam1);
 
 			if (pParam->pPlugin->m_Version < TVTEST_PLUGIN_VERSION_(0, 0, 8))
-				return App.Core.SetChannel(Space, (int)pParam->lParam2, -1);
+				return App.Core.SetChannel(Space, static_cast<int>(pParam->lParam2), -1);
 
-			WORD ServiceID = HIWORD(pParam->lParam2);
+			const WORD ServiceID = HIWORD(pParam->lParam2);
 			return App.Core.SetChannel(
-				Space, (SHORT)LOWORD(pParam->lParam2),
-				ServiceID != 0 ? (int)ServiceID : -1);
+				Space, static_cast<SHORT>(LOWORD(pParam->lParam2)),
+				ServiceID != 0 ? static_cast<int>(ServiceID) : -1);
 		}
 
 	case MESSAGE_SETSERVICE:
 		{
 			if (pParam->lParam2 == 0)
-				return GetAppClass().Core.SetServiceByIndex((int)pParam->lParam1, CAppCore::SetServiceFlag::StrictID);
-			return GetAppClass().Core.SetServiceByID((WORD)pParam->lParam1, CAppCore::SetServiceFlag::StrictID);
+				return GetAppClass().Core.SetServiceByIndex(static_cast<int>(pParam->lParam1), CAppCore::SetServiceFlag::StrictID);
+			return GetAppClass().Core.SetServiceByID(static_cast<WORD>(pParam->lParam1), CAppCore::SetServiceFlag::StrictID);
 		}
 
 	case MESSAGE_GETTUNINGSPACENAME:
 		{
-			LPWSTR pszName = reinterpret_cast<LPWSTR>(pParam->lParam1);
-			int Index = LOWORD(pParam->lParam2);
-			int MaxLength = HIWORD(pParam->lParam2);
+			const LPWSTR pszName = reinterpret_cast<LPWSTR>(pParam->lParam1);
+			const int Index = LOWORD(pParam->lParam2);
+			const int MaxLength = HIWORD(pParam->lParam2);
 			const CTuningSpaceList *pTuningSpaceList = GetAppClass().ChannelManager.GetDriverTuningSpaceList();
-			LPCTSTR pszTuningSpaceName = pTuningSpaceList->GetTuningSpaceName(Index);
+			const LPCTSTR pszTuningSpaceName = pTuningSpaceList->GetTuningSpaceName(Index);
 
 			if (pszTuningSpaceName == nullptr)
 				return 0;
@@ -3419,8 +3419,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 	case MESSAGE_GETCHANNELINFO:
 		{
 			ChannelInfo *pChannelInfo = reinterpret_cast<ChannelInfo*>(pParam->lParam1);
-			int Space = LOWORD(pParam->lParam2);
-			int Channel = HIWORD(pParam->lParam2);
+			const int Space = LOWORD(pParam->lParam2);
+			const int Channel = HIWORD(pParam->lParam2);
 
 			if (pChannelInfo == nullptr
 					|| (pChannelInfo->Size != sizeof(ChannelInfo)
@@ -3442,9 +3442,9 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 	case MESSAGE_GETDRIVERNAME:
 		{
-			LPWSTR pszName = reinterpret_cast<LPWSTR>(pParam->lParam1);
-			int MaxLength = (int)pParam->lParam2;
-			LPCTSTR pszDriverName = GetAppClass().CoreEngine.GetDriverFileName();
+			const LPWSTR pszName = reinterpret_cast<LPWSTR>(pParam->lParam1);
+			const int MaxLength = static_cast<int>(pParam->lParam2);
+			const LPCTSTR pszDriverName = GetAppClass().CoreEngine.GetDriverFileName();
 
 			if (pszName != nullptr && MaxLength > 0)
 				StringCopy(pszName, pszDriverName, MaxLength);
@@ -3453,7 +3453,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 	case MESSAGE_SETDRIVERNAME:
 		{
-			LPCWSTR pszDriverName = reinterpret_cast<LPCWSTR>(pParam->lParam1);
+			const LPCWSTR pszDriverName = reinterpret_cast<LPCWSTR>(pParam->lParam1);
 
 			if (pszDriverName == nullptr) {
 				GetAppClass().Core.ShutDownTuner();
@@ -3534,7 +3534,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 		{
 			CAppMain &App = GetAppClass();
 			const CRecordManager *pRecordManager = &App.RecordManager;
-			bool fPause = pParam->lParam1 != 0;
+			const bool fPause = pParam->lParam1 != 0;
 
 			if (!pRecordManager->IsRecording())
 				return FALSE;
@@ -3699,7 +3699,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 		return GetAppClass().UICore.GetZoomPercentage();
 
 	case MESSAGE_SETZOOM:
-		return GetAppClass().UICore.SetZoomRate((int)pParam->lParam1, (int)pParam->lParam2);
+		return GetAppClass().UICore.SetZoomRate(static_cast<int>(pParam->lParam1), static_cast<int>(pParam->lParam2));
 
 	case MESSAGE_GETRECORDSTATUS:
 		{
@@ -3711,7 +3711,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 						&& pInfo->Size != RECORDSTATUSINFO_SIZE_V1))
 				return FALSE;
 
-			const DWORD Flags = (DWORD)pParam->lParam2;
+			const DWORD Flags = static_cast<DWORD>(pParam->lParam2);
 
 			pInfo->Status =
 				pRecordManager->IsRecording() ?
@@ -3729,7 +3729,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 				}
 				CRecordManager::TimeSpecInfo StopTimeInfo;
 				pRecordManager->GetStopTimeSpec(&StopTimeInfo);
-				pInfo->StopTimeSpec = (DWORD)StopTimeInfo.Type;
+				pInfo->StopTimeSpec = static_cast<DWORD>(StopTimeInfo.Type);
 				if (StopTimeInfo.Type == CRecordManager::TimeSpecType::DateTime) {
 					if ((Flags & RECORD_STATUS_FLAG_UTC) != 0) {
 						::SystemTimeToFileTime(&StopTimeInfo.Time.DateTime, &pInfo->StopTime.Time);
@@ -3742,8 +3742,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			} else {
 				pInfo->StopTimeSpec = RECORD_STOP_NOTSPECIFIED;
 			}
-			pInfo->RecordTime = (DWORD)pRecordManager->GetRecordTime();
-			pInfo->PauseTime = (DWORD)pRecordManager->GetPauseTime();
+			pInfo->RecordTime = static_cast<DWORD>(pRecordManager->GetRecordTime());
+			pInfo->PauseTime = static_cast<DWORD>(pRecordManager->GetPauseTime());
 			if (pInfo->Size > RECORDSTATUSINFO_SIZE_V1) {
 				if (pInfo->pszFileName != nullptr && pInfo->MaxFileName > 0) {
 					if (pRecordManager->IsRecording()) {
@@ -3761,7 +3761,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 	case MESSAGE_SETVOLUME:
 		{
 			CUICore *pUICore = &GetAppClass().UICore;
-			int Volume = (int)pParam->lParam1;
+			const int Volume = static_cast<int>(pParam->lParam1);
 
 			if (Volume < 0)
 				return pUICore->SetMute(pParam->lParam2 != 0);
@@ -3847,26 +3847,26 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 	case MESSAGE_GETTUNINGSPACEINFO:
 		{
-			int Index = (int)pParam->lParam1;
+			const int Index = static_cast<int>(pParam->lParam1);
 			TuningSpaceInfo *pInfo = reinterpret_cast<TuningSpaceInfo*>(pParam->lParam2);
 
 			if (pInfo == nullptr || pInfo->Size != sizeof(TuningSpaceInfo))
 				return FALSE;
 
 			const CTuningSpaceList *pTuningSpaceList = GetAppClass().ChannelManager.GetDriverTuningSpaceList();
-			LPCTSTR pszTuningSpaceName = pTuningSpaceList->GetTuningSpaceName(Index);
+			const LPCTSTR pszTuningSpaceName = pTuningSpaceList->GetTuningSpaceName(Index);
 
 			if (pszTuningSpaceName == nullptr)
 				return FALSE;
 			StringCopy(pInfo->szName, pszTuningSpaceName);
-			pInfo->Space = (int)pTuningSpaceList->GetTuningSpaceType(Index);
+			pInfo->Space = static_cast<int>(pTuningSpaceList->GetTuningSpaceType(Index));
 		}
 		return TRUE;
 
 	case MESSAGE_SETAUDIOSTREAM:
 		{
 			CUICore *pUICore = &GetAppClass().UICore;
-			int Index = (int)pParam->lParam1;
+			const int Index = static_cast<int>(pParam->lParam1);
 
 			if (Index < 0 || Index >= pUICore->GetNumAudioStreams()
 					|| !pUICore->SetAudioStream(Index))
@@ -3876,8 +3876,8 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 	case MESSAGE_GETDRIVERFULLPATHNAME:
 		{
-			LPWSTR pszPath = reinterpret_cast<LPWSTR>(pParam->lParam1);
-			int MaxLength = (int)pParam->lParam2;
+			const LPWSTR pszPath = reinterpret_cast<LPWSTR>(pParam->lParam1);
+			const int MaxLength = static_cast<int>(pParam->lParam2);
 			TCHAR szFileName[MAX_PATH];
 
 			if (!GetAppClass().CoreEngine.GetDriverPath(szFileName, lengthof(szFileName)))
@@ -3889,7 +3889,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 
 	case MESSAGE_RELAYRECORD:
 		{
-			LPCWSTR pszFileName = reinterpret_cast<LPCWSTR>(pParam->lParam1);
+			const LPCWSTR pszFileName = reinterpret_cast<LPCWSTR>(pParam->lParam1);
 
 			return GetAppClass().Core.RelayRecord(pszFileName);
 		}
@@ -3900,7 +3900,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 		return TRUE;
 
 	case MESSAGE_SETVIDEOSTREAM:
-		return GetAppClass().CoreEngine.SetVideoStream((int)pParam->lParam1);
+		return GetAppClass().CoreEngine.SetVideoStream(static_cast<int>(pParam->lParam1));
 
 	case MESSAGE_SELECTCHANNEL:
 		{
@@ -3987,7 +3987,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 					}
 
 					if (hMonitor != nullptr) {
-						int DPI = GetMonitorDPI(hMonitor);
+						const int DPI = GetMonitorDPI(hMonitor);
 						if (DPI != 0)
 							return DPI;
 					}
@@ -4005,7 +4005,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if (pInfo == nullptr || pInfo->Size != sizeof(GetFontInfo))
 				return FALSE;
 
-			CAppMain &App = GetAppClass();
+			const CAppMain &App = GetAppClass();
 			Style::Font Font;
 
 			if (::lstrcmpiW(pInfo->pszName, L"OSDFont") == 0) {
@@ -4024,7 +4024,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			pInfo->LogFont = Font.LogFont;
 
 			if (pInfo->DPI != 0 && Font.Size.Unit == Style::UnitType::Point) {
-				LONG Height = ::MulDiv(Font.Size.Value, pInfo->DPI, 72);
+				const LONG Height = ::MulDiv(Font.Size.Value, pInfo->DPI, 72);
 				pInfo->LogFont.lfHeight =
 					Font.LogFont.lfHeight >= 0 ? Height : -Height;
 			}
@@ -4098,7 +4098,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 					delete pDialog;
 					return 0;
 				}
-				Result = (INT_PTR)pDialog->GetHandle();
+				Result = reinterpret_cast<INT_PTR>(pDialog->GetHandle());
 			} else {
 				CPluginDialog Dialog(pInfo);
 				if ((pInfo->Flags & SHOW_DIALOG_FLAG_POSITION) != 0)
@@ -4127,7 +4127,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if ((pInfo->Flags & AUDIO_SELECT_FLAG_COMPONENT_TAG) != 0) {
 				SelectInfo.ID = CAudioManager::MakeID(0, pInfo->ComponentTag);
 			} else {
-				LibISDB::AnalyzerFilter *pAnalyzer = App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+				const LibISDB::AnalyzerFilter *pAnalyzer = App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 				const uint8_t ComponentTag = pAnalyzer->GetAudioComponentTag(App.CoreEngine.GetServiceIndex(), pInfo->Index);
 				if (ComponentTag == LibISDB::COMPONENT_TAG_INVALID)
 					return FALSE;
@@ -4171,19 +4171,19 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 					|| pInfo->Flags != 0)
 				return FALSE;
 
-			CAppMain &App = GetAppClass();
-			LibISDB::AnalyzerFilter *pAnalyzer = App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
+			const CAppMain &App = GetAppClass();
+			const LibISDB::AnalyzerFilter *pAnalyzer = App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
 
 			pInfo->Index = App.UICore.GetAudioStream();
 			pInfo->ComponentTag = pAnalyzer->GetAudioComponentTag(App.CoreEngine.GetServiceIndex(), pInfo->Index);
 			std::memset(pInfo->Reserved, 0, sizeof(pInfo->Reserved));
-			pInfo->DualMono = (DualMonoChannel)App.UICore.GetDualMonoMode();
+			pInfo->DualMono = static_cast<DualMonoChannel>(App.UICore.GetDualMonoMode());
 		}
 		return TRUE;
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPlugin::OnPluginMessage() : Unknown message %u\n"), pParam->Message);
+		TRACE(TEXT("CPlugin::OnPluginMessage() : Unknown message {}\n"), pParam->Message);
 		break;
 #endif
 	}
@@ -4213,7 +4213,7 @@ static bool GetSettingFont(SettingInfo *pSetting, const LOGFONT *pFont)
 	if (pSetting->Value.pData != nullptr) {
 		if (pSetting->ValueSize != sizeof(LOGFONT))
 			return false;
-		::CopyMemory(pSetting->Value.pData, pFont, sizeof(LOGFONT));
+		std::memcpy(pSetting->Value.pData, pFont, sizeof(LOGFONT));
 	} else {
 		pSetting->ValueSize = sizeof(LOGFONT);
 	}
@@ -4242,7 +4242,7 @@ bool CPlugin::OnGetSetting(SettingInfo *pSetting) const
 	if (pSetting == nullptr || pSetting->pszName == nullptr)
 		return false;
 
-	CAppMain &App = GetAppClass();
+	const CAppMain &App = GetAppClass();
 
 	if (::lstrcmpiW(pSetting->pszName, L"DriverDirectory") == 0) {
 		String Directory;
@@ -4269,7 +4269,7 @@ bool CPlugin::OnGetSetting(SettingInfo *pSetting) const
 	}
 #ifdef _DEBUG
 	else {
-		TRACE(TEXT("CPlugin::OnGetSettings() : Unknown setting \"%s\"\n"), pSetting->pszName);
+		TRACE(TEXT("CPlugin::OnGetSettings() : Unknown setting \"{}\"\n"), pSetting->pszName);
 	}
 #endif
 
@@ -4393,7 +4393,7 @@ CPlugin::CPluginStatusItem::~CPluginStatusItem()
 
 
 void CPlugin::CPluginStatusItem::Draw(
-	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	NotifyDraw(hdc, ItemRect, DrawRect, Flags);
 }
@@ -4587,20 +4587,20 @@ void CPlugin::CPluginStatusItem::ApplyItemStyle()
 
 
 void CPlugin::CPluginStatusItem::NotifyDraw(
-	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, unsigned int Flags)
+	HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	if (m_pPlugin != nullptr && m_pItem != nullptr) {
 		StatusItemDrawInfo Info;
 
 		Info.ID = m_pItem->ID;
 		Info.Flags = 0;
-		if ((Flags & DRAW_PREVIEW) != 0)
+		if (!!(Flags & DrawFlag::Preview))
 			Info.Flags |= STATUS_ITEM_DRAW_FLAG_PREVIEW;
 		Info.State = 0;
-		if ((Flags & DRAW_HIGHLIGHT) != 0) {
+		if (!!(Flags & DrawFlag::Highlight)) {
 			Info.State |= STATUS_ITEM_DRAW_STATE_HOT;
 			Info.pszStyle = L"status-bar.item.hot";
-		} else if ((Flags & DRAW_BOTTOM) != 0) {
+		} else if (!!(Flags & DrawFlag::Bottom)) {
 			Info.pszStyle = L"status-bar.item.bottom";
 		} else {
 			Info.pszStyle = L"status-bar.item";
@@ -4668,7 +4668,7 @@ bool CPlugin::CPluginPanelItem::Create(HWND hwndParent, DWORD Style, DWORD ExSty
 	if (m_pPlugin == nullptr || m_pItem == nullptr)
 		return false;
 
-	HINSTANCE hinst = GetAppClass().GetInstance();
+	const HINSTANCE hinst = GetAppClass().GetInstance();
 
 	if (!m_fInitialized) {
 		WNDCLASS wc;
@@ -4868,7 +4868,7 @@ void CPlugin::CAudioSampleCallback::OnSamples(short *pData, size_t Length, int C
 	BlockLock Lock(CPlugin::m_AudioStreamLock);
 
 	for (auto &e : CPlugin::m_AudioStreamCallbackList) {
-		(e.m_pCallback)(pData, (DWORD)Length, Channels, e.m_pClientData);
+		(e.m_pCallback)(pData, static_cast<DWORD>(Length), Channels, e.m_pClientData);
 	}
 }
 
@@ -4900,11 +4900,6 @@ bool CPlugin::CGetVariable::GetVariable(LPCWSTR pszKeyword, String *pValue)
 }
 
 
-
-
-CPluginManager::CPluginManager()
-{
-}
 
 
 CPluginManager::~CPluginManager()
@@ -4945,11 +4940,10 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 
 	CAppMain &App = GetAppClass();
 	TCHAR szFileName[MAX_PATH];
-	HANDLE hFind;
 	WIN32_FIND_DATA wfd;
 
 	::PathCombine(szFileName, pszDirectory, TEXT("*.tvtp"));
-	hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
+	const HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
@@ -4957,7 +4951,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 
 			if (pExcludePlugins != nullptr) {
 				bool fExclude = false;
-				for (LPCTSTR pszName : *pExcludePlugins) {
+				for (const LPCTSTR pszName : *pExcludePlugins) {
 					if (IsEqualFileName(pszName, wfd.cFileName)) {
 						fExclude = true;
 						break;
@@ -4965,7 +4959,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 				}
 				if (fExclude) {
 					App.AddLog(
-						TEXT("%s は除外指定されているため読み込まれません。"),
+						TEXT("{} は除外指定されているため読み込まれません。"),
 						wfd.cFileName);
 					continue;
 				}
@@ -4978,18 +4972,18 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 
 			::PathCombine(szFileName, pszDirectory, wfd.cFileName);
 			if (pPlugin->Load(szFileName)) {
-				App.AddLog(TEXT("%s を読み込みました。"), wfd.cFileName);
+				App.AddLog(TEXT("{} を読み込みました。"), wfd.cFileName);
 				m_PluginList.emplace_back(pPlugin);
 			} else {
 				App.AddLog(
 					CLogItem::LogType::Error,
-					TEXT("%s : %s"),
+					TEXT("{} : {}"),
 					wfd.cFileName,
 					!IsStringEmpty(pPlugin->GetLastErrorText()) ?
 					pPlugin->GetLastErrorText() :
 					TEXT("プラグインを読み込めません。"));
 				if (!IsStringEmpty(pPlugin->GetLastErrorAdvise()))
-					App.AddLog(CLogItem::LogType::Error, TEXT("(%s)"), pPlugin->GetLastErrorAdvise());
+					App.AddLog(CLogItem::LogType::Error, TEXT("({})"), pPlugin->GetLastErrorAdvise());
 				delete pPlugin;
 			}
 		} while (::FindNextFile(hFind, &wfd));
@@ -4997,7 +4991,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 	}
 	SortPluginsByName();
 	for (size_t i = 0; i < m_PluginList.size(); i++)
-		m_PluginList[i]->SetCommand(CM_PLUGIN_FIRST + (int)i);
+		m_PluginList[i]->SetCommand(CM_PLUGIN_FIRST + static_cast<int>(i));
 	return true;
 }
 
@@ -5012,7 +5006,7 @@ void CPluginManager::FreePlugins()
 
 CPlugin *CPluginManager::GetPlugin(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_PluginList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_PluginList.size())
 		return nullptr;
 	return m_PluginList[Index].get();
 }
@@ -5020,7 +5014,7 @@ CPlugin *CPluginManager::GetPlugin(int Index)
 
 const CPlugin *CPluginManager::GetPlugin(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_PluginList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_PluginList.size())
 		return nullptr;
 	return m_PluginList[Index].get();
 }
@@ -5039,7 +5033,7 @@ int CPluginManager::FindPlugin(const CPlugin *pPlugin) const
 {
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
 		if (m_PluginList[i].get() == pPlugin)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -5051,7 +5045,7 @@ int CPluginManager::FindPluginByFileName(LPCTSTR pszFileName) const
 		return -1;
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
 		if (IsEqualFileName(::PathFindFileName(m_PluginList[i]->GetFileName()), pszFileName))
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -5061,7 +5055,7 @@ int CPluginManager::FindPluginByCommand(int Command) const
 {
 	for (size_t i = 0; i < m_PluginList.size(); i++) {
 		if (m_PluginList[i]->GetCommand() == Command)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 	return -1;
 }
@@ -5069,7 +5063,7 @@ int CPluginManager::FindPluginByCommand(int Command) const
 
 CPlugin *CPluginManager::GetPluginByCommand(int Command)
 {
-	int Index = FindPluginByCommand(Command);
+	const int Index = FindPluginByCommand(Command);
 	if (Index < 0)
 		return nullptr;
 	return GetPlugin(Index);
@@ -5081,14 +5075,14 @@ CPlugin *CPluginManager::GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *p
 	if (IsStringEmpty(pszCommand))
 		return nullptr;
 
-	LPCTSTR pDelimiter = ::StrChr(pszCommand, _T(':'));
+	const LPCTSTR pDelimiter = ::StrChr(pszCommand, _T(':'));
 	if (pDelimiter == nullptr || (pDelimiter - pszCommand) >= MAX_PATH)
 		return nullptr;
 
 	TCHAR szFileName[MAX_PATH];
 	StringCopy(szFileName, pszCommand, (pDelimiter - pszCommand) + 1);
 
-	int PluginIndex = FindPluginByFileName(szFileName);
+	const int PluginIndex = FindPluginByFileName(szFileName);
 	if (PluginIndex < 0)
 		return nullptr;
 
@@ -5101,7 +5095,7 @@ CPlugin *CPluginManager::GetPluginByPluginCommand(LPCTSTR pszCommand, LPCTSTR *p
 
 bool CPluginManager::DeletePlugin(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_PluginList.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_PluginList.size())
 		return false;
 	auto it = m_PluginList.begin();
 	std::advance(it, Index);
@@ -5147,14 +5141,14 @@ bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, cons
 	if (pszCommand == nullptr)
 		return false;
 
-	LPCTSTR pDelimiter = ::StrChr(pszCommand, _T(':'));
+	const LPCTSTR pDelimiter = ::StrChr(pszCommand, _T(':'));
 	if (pDelimiter == nullptr || (pDelimiter - pszCommand) >= MAX_PATH)
 		return false;
 
 	TCHAR szFileName[MAX_PATH];
 	StringCopy(szFileName, pszCommand, (pDelimiter - pszCommand) + 1);
 
-	int PluginIndex = FindPluginByFileName(szFileName);
+	const int PluginIndex = FindPluginByFileName(szFileName);
 	if (PluginIndex < 0)
 		return false;
 	CPlugin *pPlugin = m_PluginList[PluginIndex].get();
@@ -5262,7 +5256,7 @@ void CPluginManager::OnRecordingStart(AppEvent::RecordingStartInfo *pInfo)
 	Info.Size = sizeof(StartRecordInfo);
 	Info.Flags = 0;
 	Info.Modified = 0;
-	Info.Client = (DWORD)pRecordManager->GetClient();
+	Info.Client = static_cast<DWORD>(pRecordManager->GetClient());
 	Info.pszFileName = pInfo->pszFileName;
 	Info.MaxFileName = pInfo->MaxFileName;
 	CRecordManager::TimeSpecInfo TimeSpec;
@@ -5519,10 +5513,10 @@ bool CPluginManager::SendProgramGuideInitializeMenuEvent(HMENU hmenu, UINT *pCom
 		if (Plugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_GENERAL)) {
 			MenuCommandInfo CommandInfo;
 
-			int NumCommands =
-				(int)Plugin->SendEvent(
+			const int NumCommands =
+				static_cast<int>(Plugin->SendEvent(
 					EVENT_PROGRAMGUIDE_INITIALIZEMENU,
-					reinterpret_cast<LPARAM>(&Info));
+					reinterpret_cast<LPARAM>(&Info)));
 			if (NumCommands > 0) {
 				CommandInfo.pPlugin = Plugin.get();
 				CommandInfo.CommandFirst = Info.Command;
@@ -5596,11 +5590,11 @@ bool CPluginManager::SendProgramGuideProgramInitializeMenuEvent(
 		if (Plugin->IsProgramGuideEventEnabled(PROGRAMGUIDE_EVENT_PROGRAM)) {
 			MenuCommandInfo CommandInfo;
 
-			int NumCommands =
-				(int)Plugin->SendEvent(
+			const int NumCommands =
+				static_cast<int>(Plugin->SendEvent(
 					EVENT_PROGRAMGUIDE_PROGRAM_INITIALIZEMENU,
 					reinterpret_cast<LPARAM>(&ProgramInfo),
-					reinterpret_cast<LPARAM>(&Info));
+					reinterpret_cast<LPARAM>(&Info)));
 			if (NumCommands > 0) {
 				CommandInfo.pPlugin = Plugin.get();
 				CommandInfo.CommandFirst = Info.Command;
@@ -5731,13 +5725,13 @@ bool CPluginOptions::LoadSettings(CSettings &Settings)
 			for (int i = 0; i < Count; i++) {
 				TCHAR szName[32], szFileName[MAX_PATH];
 
-				StringPrintf(szName, TEXT("Plugin%d_Name"), i);
+				StringFormat(szName, TEXT("Plugin{}_Name"), i);
 				if (!Settings.Read(szName, szFileName, lengthof(szFileName)))
 					break;
 				if (szFileName[0] != '\0') {
 					bool fEnable;
 
-					StringPrintf(szName, TEXT("Plugin%d_Enable"), i);
+					StringFormat(szName, TEXT("Plugin{}_Enable"), i);
 					if (Settings.Read(szName, &fEnable) && fEnable) {
 						m_EnablePluginList.emplace_back(szFileName);
 					}
@@ -5756,13 +5750,13 @@ bool CPluginOptions::SaveSettings(CSettings &Settings)
 		return false;
 
 	Settings.Clear();
-	Settings.Write(TEXT("PluginCount"), (unsigned int)m_EnablePluginList.size());
+	Settings.Write(TEXT("PluginCount"), static_cast<unsigned int>(m_EnablePluginList.size()));
 	for (size_t i = 0; i < m_EnablePluginList.size(); i++) {
 		TCHAR szName[32];
 
-		StringPrintf(szName, TEXT("Plugin%d_Name"), i);
+		StringFormat(szName, TEXT("Plugin{}_Name"), i);
 		Settings.Write(szName, m_EnablePluginList[i]);
-		StringPrintf(szName, TEXT("Plugin%d_Enable"), i);
+		StringFormat(szName, TEXT("Plugin{}_Enable"), i);
 		Settings.Write(szName, true);
 	}
 
@@ -5818,8 +5812,8 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			HWND hwndList = GetDlgItem(hDlg, IDC_PLUGIN_LIST);
-			LV_COLUMN lvc;
+			const HWND hwndList = GetDlgItem(hDlg, IDC_PLUGIN_LIST);
+			LVCOLUMN lvc;
 
 			ListView_SetExtendedListViewStyle(
 				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES);
@@ -5837,7 +5831,7 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 			for (int i = 0; i < m_pPluginManager->NumPlugins(); i++) {
 				const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
-				LV_ITEM lvi;
+				LVITEM lvi;
 
 				lvi.mask = LVIF_TEXT | LVIF_PARAM;
 				lvi.iItem = i;
@@ -5871,11 +5865,11 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		switch (LOWORD(wParam)) {
 		case IDC_PLUGIN_SETTINGS:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PLUGIN_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PLUGIN_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
@@ -5888,17 +5882,17 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case IDC_PLUGIN_UNLOAD:
 			{
-				HWND hwndList = ::GetDlgItem(hDlg, IDC_PLUGIN_LIST);
-				int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+				const HWND hwndList = ::GetDlgItem(hDlg, IDC_PLUGIN_LIST);
+				const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
 					lvi.iSubItem = 0;
 					if (ListView_GetItem(hwndList, &lvi)) {
-						int Index = m_pPluginManager->FindPlugin(reinterpret_cast<CPlugin*>(lvi.lParam));
+						const int Index = m_pPluginManager->FindPlugin(reinterpret_cast<CPlugin*>(lvi.lParam));
 
 						if (m_pPluginManager->DeletePlugin(Index))
 							ListView_DeleteItem(hwndList, Sel);
@@ -5913,17 +5907,17 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			{
-				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
-				int Sel = ListView_GetNextItem(pnmlv->hdr.hwndFrom, -1, LVNI_SELECTED);
+				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
+				const int Sel = ListView_GetNextItem(pnmlv->hdr.hwndFrom, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
 					lvi.iSubItem = 0;
 					if (ListView_GetItem(pnmlv->hdr.hwndFrom, &lvi)) {
-						CPlugin *pPlugin = reinterpret_cast<CPlugin*>(lvi.lParam);
+						const CPlugin *pPlugin = reinterpret_cast<const CPlugin*>(lvi.lParam);
 						EnableDlgItem(hDlg, IDC_PLUGIN_SETTINGS, pPlugin->HasSettings());
 					}
 				} else {
@@ -5934,10 +5928,10 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case NM_DBLCLK:
 			{
-				LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
+				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->iItem >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = pnmia->iItem;
@@ -5950,21 +5944,21 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case NM_RCLICK:
 			{
-				LPNMHDR pnmh = reinterpret_cast<LPNMHDR>(lParam);
-				int Sel = ListView_GetNextItem(pnmh->hwndFrom, -1, LVNI_SELECTED);
+				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
+				const int Sel = ListView_GetNextItem(pnmh->hwndFrom, -1, LVNI_SELECTED);
 
 				if (Sel >= 0) {
-					LV_ITEM lvi;
+					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iItem = Sel;
 					lvi.iSubItem = 0;
 					if (ListView_GetItem(pnmh->hwndFrom, &lvi)) {
-						HMENU hmenu =
+						const HMENU hmenu =
 							::LoadMenu(
 								GetAppClass().GetResourceInstance(),
 								MAKEINTRESOURCE(IDM_PLUGIN));
-						CPlugin *pPlugin = reinterpret_cast<CPlugin*>(lvi.lParam);
+						const CPlugin *pPlugin = reinterpret_cast<const CPlugin*>(lvi.lParam);
 						POINT pt;
 
 						::EnableMenuItem(
@@ -5995,7 +5989,7 @@ void CPluginOptions::RealizeStyle()
 	CBasicDialog::RealizeStyle();
 
 	if (m_hDlg != nullptr) {
-		HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PLUGIN_LIST);
+		const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PLUGIN_LIST);
 
 		for (int i = 0; i < NUM_COLUMNS; i++)
 			ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);

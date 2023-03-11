@@ -492,11 +492,6 @@ CColorScheme::CColorScheme(const CColorScheme &ColorScheme)
 }
 
 
-CColorScheme::~CColorScheme()
-{
-}
-
-
 COLORREF CColorScheme::GetColor(int Type) const
 {
 	if (Type < 0 || Type >= NUM_COLORS)
@@ -759,7 +754,7 @@ bool CColorScheme::Load(CSettings &Settings)
 	for (int i = 0; i < NUM_GRADIENTS; i++) {
 		TCHAR szName[128];
 
-		StringPrintf(szName, TEXT("%sStyle"), m_GradientInfoList[i].pszText);
+		StringFormat(szName, TEXT("{}Style"), m_GradientInfoList[i].pszText);
 		m_FillList[i].Type = Theme::FillType::Gradient;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(FillTypeNameList); j++) {
@@ -770,7 +765,7 @@ bool CColorScheme::Load(CSettings &Settings)
 			}
 		}
 
-		StringPrintf(szName, TEXT("%sGradient"), m_GradientInfoList[i].pszText);
+		StringFormat(szName, TEXT("{}Gradient"), m_GradientInfoList[i].pszText);
 		m_FillList[i].Gradient.Type = Theme::GradientType::Normal;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(GradientTypeNameList); j++) {
@@ -790,7 +785,7 @@ bool CColorScheme::Load(CSettings &Settings)
 			}
 		}
 
-		StringPrintf(szName, TEXT("%sGradientDirection"), m_GradientInfoList[i].pszText);
+		StringFormat(szName, TEXT("{}GradientDirection"), m_GradientInfoList[i].pszText);
 		m_FillList[i].Gradient.Direction = m_GradientInfoList[i].Direction;
 		if (Settings.Read(szName, szText, lengthof(szText))) {
 			for (int j = 0; j < lengthof(GradientDirectionList); j++) {
@@ -963,18 +958,18 @@ bool CColorScheme::Save(CSettings &Settings, SaveFlag Flags) const
 		for (int i = 0; i < NUM_GRADIENTS; i++) {
 			TCHAR szName[128];
 
-			StringPrintf(szName, TEXT("%sType"), m_GradientInfoList[i].pszText);
-			Settings.Write(szName, FillTypeNameList[(int)m_FillList[i].Type]);
-			StringPrintf(szName, TEXT("%sGradient"), m_GradientInfoList[i].pszText);
-			Settings.Write(szName, GradientTypeNameList[(int)m_FillList[i].Gradient.Type]);
-			StringPrintf(szName, TEXT("%sGradientDirection"), m_GradientInfoList[i].pszText);
-			Settings.Write(szName, GradientDirectionList[(int)m_FillList[i].Gradient.Direction]);
+			StringFormat(szName, TEXT("{}Type"), m_GradientInfoList[i].pszText);
+			Settings.Write(szName, FillTypeNameList[static_cast<int>(m_FillList[i].Type)]);
+			StringFormat(szName, TEXT("{}Gradient"), m_GradientInfoList[i].pszText);
+			Settings.Write(szName, GradientTypeNameList[static_cast<int>(m_FillList[i].Gradient.Type)]);
+			StringFormat(szName, TEXT("{}GradientDirection"), m_GradientInfoList[i].pszText);
+			Settings.Write(szName, GradientDirectionList[static_cast<int>(m_FillList[i].Gradient.Direction)]);
 		}
 	}
 
 	if (Settings.SetSection(TEXT("Style"))) {
 		for (int i = 0; i < NUM_BORDERS; i++)
-			Settings.Write(m_BorderInfoList[i].pszText, BorderTypeNameList[(int)m_BorderList[i]]);
+			Settings.Write(m_BorderInfoList[i].pszText, BorderTypeNameList[static_cast<int>(m_BorderList[i])]);
 	}
 
 	return true;
@@ -1174,7 +1169,7 @@ bool CColorSchemeList::Insert(int Index, CColorScheme *pColorScheme)
 {
 	if (Index < 0)
 		return false;
-	if ((size_t)Index >= m_List.size())
+	if (static_cast<size_t>(Index) >= m_List.size())
 		return Add(pColorScheme);
 	auto i = m_List.begin();
 	std::advance(i, Index);
@@ -1185,12 +1180,11 @@ bool CColorSchemeList::Insert(int Index, CColorScheme *pColorScheme)
 
 bool CColorSchemeList::Load(LPCTSTR pszDirectory)
 {
-	HANDLE hFind;
 	WIN32_FIND_DATA wfd;
 	TCHAR szFileName[MAX_PATH];
 
 	::PathCombine(szFileName, pszDirectory, TEXT("*.httheme"));
-	hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
+	const HANDLE hFind = ::FindFirstFileEx(szFileName, FindExInfoBasic, &wfd, FindExSearchNameMatch, nullptr, 0);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
@@ -1218,7 +1212,7 @@ void CColorSchemeList::Clear()
 
 CColorScheme *CColorSchemeList::GetColorScheme(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_List.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_List.size())
 		return nullptr;
 	return m_List[Index].get();
 }
@@ -1226,7 +1220,7 @@ CColorScheme *CColorSchemeList::GetColorScheme(int Index)
 
 bool CColorSchemeList::SetColorScheme(int Index, const CColorScheme *pColorScheme)
 {
-	if (Index < 0 || (size_t)Index >= m_List.size() || pColorScheme == nullptr)
+	if (Index < 0 || static_cast<size_t>(Index) >= m_List.size() || pColorScheme == nullptr)
 		return false;
 	*m_List[Index] = *pColorScheme;
 	return true;
@@ -1238,7 +1232,7 @@ int CColorSchemeList::FindByName(LPCTSTR pszName, int FirstIndex) const
 	if (pszName == nullptr)
 		return -1;
 
-	for (int i = std::max(FirstIndex, 0); i < (int)m_List.size(); i++) {
+	for (int i = std::max(FirstIndex, 0); i < static_cast<int>(m_List.size()); i++) {
 		if (!IsStringEmpty(m_List[i]->GetName())
 				&& ::lstrcmpi(m_List[i]->GetName(), pszName) == 0)
 			return i;

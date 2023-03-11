@@ -123,8 +123,8 @@ namespace TVTest
 	class CAppMain
 	{
 	public:
-		static const UINT WM_INTERPROCESS = WM_COPYDATA;
-		static const UINT PROCESS_MESSAGE_EXECUTE = 0x54565400;
+		static constexpr UINT WM_INTERPROCESS = WM_COPYDATA;
+		static constexpr UINT PROCESS_MESSAGE_EXECUTE = 0x54565400;
 
 #ifndef _DEBUG
 		static CDebugHelper DebugHelper;
@@ -232,8 +232,32 @@ namespace TVTest
 		bool GetAppDirectory(LPTSTR pszDirectory) const;
 		LPCTSTR GetIniFileName() const { return m_IniFileName.c_str(); }
 		LPCTSTR GetFavoritesFileName() const { return m_FavoritesFileName.c_str(); }
-		void AddLog(CLogItem::LogType Type, LPCTSTR pszText, ...);
-		void AddLog(LPCTSTR pszText, ...);
+
+		template<typename... TArgs> void AddLog(CLogItem::LogType Type, StringView Format, const TArgs&... Args)
+		{
+			Logger.AddLog(Type, Format, Args...);
+		}
+		template<typename... TArgs> void AddLog(StringView Format, const TArgs&... Args)
+		{
+			Logger.AddLog(CLogItem::LogType::Information, Format, Args...);
+		}
+		void AddLogV(CLogItem::LogType Type, StringView Format, FormatArgs Args)
+		{
+			Logger.AddLogV(Type, Format, Args);
+		}
+		void AddLogV(StringView Format, FormatArgs Args)
+		{
+			Logger.AddLogV(CLogItem::LogType::Information, Format, Args);
+		}
+		void AddLogRaw(CLogItem::LogType Type, StringView Text)
+		{
+			Logger.AddLogRaw(Type, Text);
+		}
+		void AddLogRaw(StringView Text)
+		{
+			Logger.AddLogRaw(CLogItem::LogType::Information, Text);
+		}
+
 		bool IsFirstExecute() const;
 		int Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow);
 		void Initialize();
@@ -244,6 +268,7 @@ namespace TVTest
 			None    = 0x0000U,
 			Status  = 0x0001U,
 			Options = 0x0002U,
+			TVTEST_ENUM_FLAGS_TRAILER,
 			All     = Status | Options,
 		};
 		bool SaveSettings(SaveSettingsFlag Flags);
@@ -355,8 +380,6 @@ namespace TVTest
 		void ShowProgramGuideByCommandLine(const CCommandLineOptions &CmdLine);
 		static BOOL CALLBACK ControllerFocusCallback(HWND hwnd, LPARAM Param);
 	};
-
-	TVTEST_ENUM_FLAGS(CAppMain::SaveSettingsFlag)
 
 
 	CAppMain &GetAppClass();

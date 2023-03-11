@@ -14,13 +14,18 @@
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <windowsx.h>
 #include <shlwapi.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <algorithm>
 #include <string>
 #include <vector>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 #include "resource.h"
@@ -1024,7 +1029,7 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 	rcItem.right = rcClient.right;
 	rcItem.top = -m_ScrollPos;
 
-	for (size_t i = 0; i < m_TunerList.size() && rcItem.top < PaintRect.bottom; i++) {
+	for (std::size_t i = 0; i < m_TunerList.size() && rcItem.top < PaintRect.bottom; i++) {
 		const TunerInfo &Tuner = m_TunerList[i];
 		const bool fCurrentTuner = ::lstrcmpiW(Tuner.Name.c_str(), szCurTuner) == 0;
 
@@ -1065,7 +1070,7 @@ void CTunerPanel::Draw(HDC hdc, const RECT &PaintRect)
 		}
 
 		if (Tuner.fExpanded) {
-			for (size_t j = 0; j < Tuner.TuningSpaceList.size(); j++) {
+			for (std::size_t j = 0; j < Tuner.TuningSpaceList.size(); j++) {
 				const TuningSpaceInfo &TuningSpace = Tuner.TuningSpaceList[j];
 				const int ChannelCount = (int)TuningSpace.ChannelList.size();
 
@@ -1167,11 +1172,11 @@ int CTunerPanel::CalcVertExtent() const
 {
 	int Extent = (int)m_TunerList.size() * m_TunerItemHeight;
 
-	for (size_t i = 0; i < m_TunerList.size(); i++) {
+	for (std::size_t i = 0; i < m_TunerList.size(); i++) {
 		const TunerInfo &Tuner = m_TunerList[i];
 
 		if (Tuner.fExpanded) {
-			for (size_t j = 0; j < Tuner.TuningSpaceList.size(); j++) {
+			for (std::size_t j = 0; j < Tuner.TuningSpaceList.size(); j++) {
 				const int ChannelCount = (int)Tuner.TuningSpaceList[j].ChannelList.size();
 
 				Extent += CalcChannelItemRows(ChannelCount) * m_ItemHeight;
@@ -1191,7 +1196,7 @@ int CTunerPanel::GetColumnCount() const
 
 		::GetClientRect(m_hwnd, &rc);
 		int Columns = rc.right / m_ItemWidth;
-		return max(Columns, 1);
+		return std::max(Columns, 1);
 	}
 
 	return 1;
@@ -1216,7 +1221,7 @@ void CTunerPanel::UpdateItemSize()
 	if (m_ViewMode == VIEW_MODE_LIST) {
 		RECT rc;
 		::GetClientRect(m_hwnd, &rc);
-		m_ItemWidth = max(rc.right, 1);
+		m_ItemWidth = std::max<int>(rc.right, 1);
 		m_ItemHeight = m_ChannelItemHeight;
 	} else if (m_ViewMode == VIEW_MODE_LOGO) {
 		SIZE LogoSize = GetLogoSize(m_LogoSize);
@@ -1276,7 +1281,7 @@ void CTunerPanel::SetScrollPos(int Pos)
 		Pos = 0;
 	} else {
 		int Height = CalcVertExtent();
-		int Max = max(Height - rc.bottom, 0);
+		int Max = std::max<int>(Height - rc.bottom, 0);
 		if (Pos > Max)
 			Pos = Max;
 	}
@@ -1372,7 +1377,7 @@ bool CTunerPanel::HitTest(int x, int y, HitTestInfo *pInfo) const
 	::GetClientRect(m_hwnd, &rc);
 	rc.top = -m_ScrollPos;
 
-	for (size_t i = 0; i < m_TunerList.size() && rc.top < y; i++) {
+	for (std::size_t i = 0; i < m_TunerList.size() && rc.top < y; i++) {
 		rc.bottom = rc.top + m_TunerItemHeight;
 
 		if (::PtInRect(&rc, pt)) {
@@ -1389,7 +1394,7 @@ bool CTunerPanel::HitTest(int x, int y, HitTestInfo *pInfo) const
 		const TunerInfo &Tuner = m_TunerList[i];
 
 		if (Tuner.fExpanded) {
-			for (size_t j = 0; j < Tuner.TuningSpaceList.size(); j++) {
+			for (std::size_t j = 0; j < Tuner.TuningSpaceList.size(); j++) {
 				const TuningSpaceInfo &TuningSpace = Tuner.TuningSpaceList[j];
 				const int ChannelCount = (int)TuningSpace.ChannelList.size();
 

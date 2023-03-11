@@ -73,7 +73,7 @@ bool CBasicWindow::SetPosition(int Left, int Top, int Width, int Height)
 			wp.rcNormalPosition.right = Left + Width;
 			wp.rcNormalPosition.bottom = Top + Height;
 			if ((GetWindowExStyle() & WS_EX_TOOLWINDOW) == 0) {
-				HMONITOR hMonitor = ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONEAREST);
+				const HMONITOR hMonitor = ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONEAREST);
 				MONITORINFO mi;
 
 				mi.cbSize = sizeof(MONITORINFO);
@@ -134,7 +134,7 @@ void CBasicWindow::GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight)
 					rcNormalPositionはワークスペース座標になる(仕様が意味不明...)
 				*/
 				if ((GetWindowExStyle() & WS_EX_TOOLWINDOW) == 0) {
-					HMONITOR hMonitor = ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONEAREST);
+					const HMONITOR hMonitor = ::MonitorFromRect(&wp.rcNormalPosition, MONITOR_DEFAULTTONEAREST);
 					MONITORINFO mi;
 
 					mi.cbSize = sizeof(MONITORINFO);
@@ -302,11 +302,10 @@ HWND CBasicWindow::GetParent() const
 bool CBasicWindow::MoveToMonitorInside()
 {
 	RECT rc;
-	HMONITOR hMonitor;
 	MONITORINFO mi;
 
 	GetPosition(&rc);
-	hMonitor = ::MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
+	const HMONITOR hMonitor = ::MonitorFromRect(&rc, MONITOR_DEFAULTTONEAREST);
 	mi.cbSize = sizeof(MONITORINFO);
 	::GetMonitorInfo(hMonitor, &mi);
 	if (rc.left >= mi.rcMonitor.right || rc.top >= mi.rcMonitor.bottom
@@ -403,7 +402,7 @@ void CBasicWindow::OnDestroy()
 		&m_WindowPosition.Left, &m_WindowPosition.Top,
 		&m_WindowPosition.Width, &m_WindowPosition.Height);
 	m_WindowPosition.fMaximized = ::IsZoomed(m_hwnd) != FALSE;
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>((LPVOID)nullptr));
+	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));
 	m_hwnd = nullptr;
 }
 
@@ -452,12 +451,12 @@ bool CBasicWindow::SetOpacity(int Opacity, bool fClearLayered)
 	if ((GetWindowStyle() & WS_CHILD) != 0 && !Util::OS::IsWindows8OrLater())
 		return false;
 
-	DWORD ExStyle = GetWindowExStyle();
+	const DWORD ExStyle = GetWindowExStyle();
 
 	if (Opacity < 255) {
 		if ((ExStyle & WS_EX_LAYERED) == 0)
 			SetWindowExStyle(ExStyle | WS_EX_LAYERED);
-		if (!::SetLayeredWindowAttributes(m_hwnd, 0, (BYTE)Opacity, LWA_ALPHA))
+		if (!::SetLayeredWindowAttributes(m_hwnd, 0, static_cast<BYTE>(Opacity), LWA_ALPHA))
 			return false;
 	} else {
 		if ((ExStyle & WS_EX_LAYERED) != 0) {
@@ -474,11 +473,6 @@ bool CBasicWindow::SetOpacity(int Opacity, bool fClearLayered)
 }
 
 
-
-
-CCustomWindow::CCustomWindow()
-{
-}
 
 
 CCustomWindow::~CCustomWindow()

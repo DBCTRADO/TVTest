@@ -39,9 +39,6 @@ namespace TVTest
 			Error,
 		};
 
-		CMessageDialog();
-		~CMessageDialog();
-
 		bool Show(HWND hwndOwner, MessageType Type, LPCTSTR pszText, LPCTSTR pszTitle = nullptr, LPCTSTR pszSystemMessage = nullptr, LPCTSTR pszCaption = nullptr);
 
 	private:

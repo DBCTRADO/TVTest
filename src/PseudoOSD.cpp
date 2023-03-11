@@ -45,7 +45,7 @@ constexpr DWORD ANIMATION_INTERVAL = 50; // アニメーションの間隔
 
 static float GetOutlineWidth(int FontSize)
 {
-	return (float)FontSize / 5.0f;
+	return static_cast<float>(FontSize) / 5.0f;
 }
 
 
@@ -374,14 +374,14 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 		hdc = ::CreateCompatibleDC(nullptr);
 
 	if (!m_fLayeredWindow) {
-		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+		const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 		RECT rc = {0, 0, pSize->cx, 0};
 		UINT Format = DT_CALCRECT | DT_NOPREFIX;
 		if (!!(m_TextStyle & TextStyle::MultiLine))
 			Format |= DT_WORDBREAK;
 		else
 			Format |= DT_SINGLELINE;
-		fResult = ::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, Format) != 0;
+		fResult = ::DrawText(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rc, Format) != 0;
 		if (fResult) {
 			pSize->cx = rc.right;
 			pSize->cy = rc.bottom;
@@ -402,7 +402,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 
 		if (!!(m_TextStyle & TextStyle::Outline)) {
 			fResult = Canvas.GetOutlineTextSize(
-				m_Text.c_str(), lf, GetOutlineWidth(abs(lf.lfHeight)), TextFlags, pSize);
+				m_Text.c_str(), lf, GetOutlineWidth(std::abs(lf.lfHeight)), TextFlags, pSize);
 		} else {
 			fResult = Canvas.GetTextSize(
 				m_Text.c_str(), lf, TextFlags, pSize);
@@ -494,9 +494,9 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 			rc.left += IconWidth;
 		}
 
-		HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
-		COLORREF crOldTextColor = ::SetTextColor(hdc, m_crTextColor);
-		int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
+		const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
+		const COLORREF crOldTextColor = ::SetTextColor(hdc, m_crTextColor);
+		const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 
 		UINT Format = DT_NOPREFIX;
 		if (!!(m_TextStyle & TextStyle::MultiLine)) {
@@ -513,7 +513,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 		const TextStyle VertAlign = m_TextStyle & TextStyle::VertAlignMask;
 		if ((VertAlign == TextStyle::Bottom) || (VertAlign == TextStyle::VertCenter)) {
 			RECT rcText = {0, 0, rc.right - rc.left, 0};
-			::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rcText, Format | DT_CALCRECT);
+			::DrawText(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rcText, Format | DT_CALCRECT);
 			if (rcText.bottom < rc.bottom - rc.top) {
 				if (VertAlign == TextStyle::Bottom)
 					rc.top = rc.bottom - rcText.bottom;
@@ -522,7 +522,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 			}
 		}
 
-		::DrawText(hdc, m_Text.data(), (int)m_Text.length(), &rc, Format);
+		::DrawText(hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rc, Format);
 
 		::SetBkMode(hdc, OldBkMode);
 		::SetTextColor(hdc, crOldTextColor);
@@ -530,7 +530,7 @@ void CPseudoOSD::Draw(HDC hdc, const RECT &PaintRect) const
 	} else if (m_hbm != nullptr) {
 		BITMAP bm;
 		::GetObject(m_hbm, sizeof(BITMAP), &bm);
-		RECT rcBitmap = {0, 0, bm.bmWidth, bm.bmHeight};
+		const RECT rcBitmap = {0, 0, bm.bmWidth, bm.bmHeight};
 		DrawUtil::DrawBitmap(hdc, 0, 0, rc.right, rc.bottom, m_hbm, &rcBitmap);
 		DrawImageEffect(hdc, &rc);
 	}
@@ -558,14 +558,14 @@ void CPseudoOSD::UpdateLayeredWindow()
 		return;
 
 	void *pBits;
-	HBITMAP hbmSurface = DrawUtil::CreateDIB(Width, Height, 32, &pBits);
+	const HBITMAP hbmSurface = DrawUtil::CreateDIB(Width, Height, 32, &pBits);
 	if (hbmSurface == nullptr)
 		return;
 	::ZeroMemory(pBits, Width * 4 * Height);
 
-	HDC hdc = ::GetDC(m_hwnd);
-	HDC hdcSrc = ::CreateCompatibleDC(hdc);
-	HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmSurface));
+	const HDC hdc = ::GetDC(m_hwnd);
+	const HDC hdcSrc = ::CreateCompatibleDC(hdc);
+	const HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmSurface));
 
 	{
 		Graphics::CCanvas Canvas(hdcSrc);
@@ -635,7 +635,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 				Canvas.DrawOutlineText(
 					m_Text.c_str(), lf, rc, &TextBrush,
 					Graphics::CColor(0, 0, 0, 160),
-					GetOutlineWidth(abs(lf.lfHeight)),
+					GetOutlineWidth(std::abs(lf.lfHeight)),
 					DrawTextFlags);
 			} else {
 				Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
@@ -675,7 +675,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			const CREATESTRUCT *pcs = reinterpret_cast<const CREATESTRUCT*>(lParam);
 			CPseudoOSD *pThis = static_cast<CPseudoOSD*>(pcs->lpCreateParams);
 
 			pThis->m_hwnd = hwnd;
@@ -696,7 +696,7 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_PAINT:
 		{
-			CPseudoOSD *pThis = GetThis(hwnd);
+			const CPseudoOSD *pThis = GetThis(hwnd);
 			PAINTSTRUCT ps;
 
 			::BeginPaint(hwnd, &ps);

@@ -33,7 +33,7 @@ namespace TVTest
 
 bool CKeywordSearch::Load(LPCTSTR pszFileName)
 {
-	TRACE(TEXT("CKeywordSearch::Load() : \"%s\"\n"), pszFileName);
+	TRACE(TEXT("CKeywordSearch::Load() : \"{}\"\n"), pszFileName);
 
 	if (IsStringEmpty(pszFileName))
 		return false;
@@ -53,7 +53,7 @@ bool CKeywordSearch::Load(LPCTSTR pszFileName)
 		m_SearchEngineList.reserve(Entries.size() / 2);
 
 		for (const auto &Entry : Entries) {
-			String::size_type Pos = Entry.Name.find(_T('.'));
+			const String::size_type Pos = Entry.Name.find(_T('.'));
 
 			if (Pos != String::npos && Pos > 0
 					&& ::lstrcmpi(Entry.Name.c_str() + Pos + 1, TEXT("Name")) == 0) {
@@ -101,17 +101,17 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 	String::size_type Pos = 0;
 
 	while (Pos < pEngine->URL.length()) {
-		String::size_type Begin = pEngine->URL.find(_T('{'), Pos);
+		const String::size_type Begin = pEngine->URL.find(_T('{'), Pos);
 		if (Begin == String::npos)
 			break;
-		String::size_type End = pEngine->URL.find(_T('}'), Begin + 1);
+		const String::size_type End = pEngine->URL.find(_T('}'), Begin + 1);
 		if (End == String::npos)
 			break;
 
 		if (Begin > Pos)
 			Buffer += pEngine->URL.substr(Pos, Begin - Pos);
 
-		String Param = pEngine->URL.substr(Begin + 1, End - Begin - 1);
+		const String Param = pEngine->URL.substr(Begin + 1, End - Begin - 1);
 		static const struct {
 			LPCTSTR pszParam;
 			UINT CodePage;
@@ -130,7 +130,7 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 			}
 		}
 		if (!fFound) {
-			TRACE(TEXT("Unknown parameter : {%s}\n"), Param.c_str());
+			TRACE(TEXT("Unknown parameter : {{{}}}\n"), Param);
 			return false;
 		}
 
@@ -143,7 +143,7 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 	if (Buffer.empty())
 		return false;
 
-	TRACE(TEXT("Search by %s : \"%s\"\n"), pEngine->Name.c_str(), Buffer.c_str());
+	TRACE(TEXT("Search by {} : \"{}\"\n"), pEngine->Name, Buffer);
 
 	::ShellExecute(nullptr, TEXT("open"), Buffer.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 
@@ -160,9 +160,9 @@ int CKeywordSearch::InitializeMenu(HMENU hmenu, int Command, int MaxItems) const
 	for (i = 0; i < static_cast<int>(m_SearchEngineList.size()) && (MaxItems < 0 || i < MaxItems); i++) {
 		TCHAR szText[256], szMenu[256];
 
-		StringPrintf(
-			szText, TEXT("%s で検索"),
-			m_SearchEngineList[i].Name.c_str());
+		StringFormat(
+			szText, TEXT("{} で検索"),
+			m_SearchEngineList[i].Name);
 		CopyToMenuText(szText, szMenu, lengthof(szMenu));
 		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, Command + i, szMenu);
 	}
@@ -203,9 +203,9 @@ bool CKeywordSearch::EncodeURL(UINT CodePage, LPCWSTR pszSrc, String *pDst) cons
 			Buffer.data(), DstLength, nullptr, nullptr);
 	} else {
 		bool fOK = false;
-		HMODULE hMLang = Util::LoadSystemLibrary(TEXT("mlang.dll"));
+		const HMODULE hMLang = Util::LoadSystemLibrary(TEXT("mlang.dll"));
 		if (hMLang != nullptr) {
-			auto pConvertINetUnicodeToMultiByte =
+			const auto pConvertINetUnicodeToMultiByte =
 				GET_LIBRARY_FUNCTION(hMLang, ConvertINetUnicodeToMultiByte);
 			if (pConvertINetUnicodeToMultiByte != nullptr) {
 				DWORD Mode = 0;
@@ -240,7 +240,7 @@ bool CKeywordSearch::EncodeURL(UINT CodePage, LPCWSTR pszSrc, String *pDst) cons
 			pDst->push_back(Buffer[i]);
 		} else {
 			TCHAR szHex[4];
-			StringPrintf(szHex, TEXT("%%%02X"), (BYTE)Buffer[i]);
+			StringFormat(szHex, TEXT("%{:02X}"), (BYTE)Buffer[i]);
 			pDst->append(szHex);
 		}
 	}

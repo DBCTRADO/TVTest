@@ -118,14 +118,14 @@ bool CMenuOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < ItemCount; i++) {
 			TCHAR szName[32];
 
-			StringPrintf(szName, TEXT("Item%d_ID"), i);
+			StringFormat(szName, TEXT("Item{}_ID"), i);
 			if (Settings.Read(szName, &Text)) {
 				MenuItemInfo Item;
 
 				Item.Name = Text;
 				Item.ID = MENU_ID_INVALID;
 				Item.fVisible = true;
-				StringPrintf(szName, TEXT("Item%d_State"), i);
+				StringFormat(szName, TEXT("Item{}_State"), i);
 				if (Settings.Read(szName, &Value))
 					Item.fVisible = (Value & ITEM_STATE_VISIBLE) != 0;
 				m_MenuItemList.push_back(Item);
@@ -168,13 +168,13 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 			}
 		}
 		if (!fDefault) {
-			Settings.Write(TEXT("ItemCount"), (int)m_MenuItemList.size());
+			Settings.Write(TEXT("ItemCount"), static_cast<int>(m_MenuItemList.size()));
 			const CCommandManager &CommandManager = GetAppClass().CommandManager;
 			for (size_t i = 0; i < m_MenuItemList.size(); i++) {
 				const MenuItemInfo &Item = m_MenuItemList[i];
 				TCHAR szName[32];
 
-				StringPrintf(szName, TEXT("Item%zu_ID"), i);
+				StringFormat(szName, TEXT("Item{}_ID"), i);
 				if (Item.ID == MENU_ID_INVALID) {
 					Settings.Write(szName, Item.Name);
 				} else if (Item.ID == MENU_ID_SEPARATOR) {
@@ -182,7 +182,7 @@ bool CMenuOptions::WriteSettings(CSettings &Settings)
 				} else {
 					Settings.Write(szName, CommandManager.GetCommandIDText(IDToCommand(Item.ID)));
 				}
-				StringPrintf(szName, TEXT("Item%zu_State"), i);
+				StringFormat(szName, TEXT("Item{}_State"), i);
 				Settings.Write(szName, Item.fVisible ? ITEM_STATE_VISIBLE : 0);
 			}
 		}
@@ -258,7 +258,7 @@ int CMenuOptions::GetIDFromString(const String &Str) const
 	if (Str.empty())
 		return MENU_ID_SEPARATOR;
 
-	int Command = GetAppClass().CommandManager.ParseIDText(Str);
+	const int Command = GetAppClass().CommandManager.ParseIDText(Str);
 	if (Command > 0)
 		return CommandToID(Command);
 
@@ -363,7 +363,8 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_MENUOPTIONS_ITEMLIST_UP:
 		case IDC_MENUOPTIONS_ITEMLIST_DOWN:
 			{
-				int From = m_ItemListView.GetSelectedItem(), To;
+				const int From = m_ItemListView.GetSelectedItem();
+				int To;
 
 				if (From >= 0) {
 					if (LOWORD(wParam) == IDC_MENUOPTIONS_ITEMLIST_UP) {
@@ -386,7 +387,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_MENUOPTIONS_ITEMLIST_INSERTSEPARATOR:
 			{
-				int Sel = m_ItemListView.GetSelectedItem();
+				const int Sel = m_ItemListView.GetSelectedItem();
 
 				if (Sel >= 0) {
 					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
@@ -405,7 +406,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 		case IDC_MENUOPTIONS_ITEMLIST_REMOVESEPARATOR:
 			{
-				int Sel = m_ItemListView.GetSelectedItem();
+				const int Sel = m_ItemListView.GetSelectedItem();
 
 				if (Sel >= 0) {
 					if (m_ItemListView.GetItemParam(Sel) == MENU_ID_SEPARATOR) {
@@ -425,7 +426,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_ItemListView.DeleteAllItems();
 
 				for (int i = 0; i < lengthof(m_DefaultMenuItemList); i++) {
-					int ID = m_DefaultMenuItemList[i].ID;
+					const int ID = m_DefaultMenuItemList[i].ID;
 					TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 					GetItemText(ID, szText, lengthof(szText));
@@ -442,7 +443,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 						TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
 						GetItemText(ID, szText, lengthof(szText));
-						int Index = m_ItemListView.InsertItem(-1, szText, ID);
+						const int Index = m_ItemListView.InsertItem(-1, szText, ID);
 						m_ItemListView.CheckItem(Index, false);
 					}
 				}
@@ -460,7 +461,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case LVN_ITEMCHANGED:
 			if (!m_fChanging)
 				SetDlgItemState(hDlg);
@@ -485,7 +486,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				m_MenuItemList.resize(ItemCount);
 
 				for (int i = 0; i < ItemCount; i++) {
-					m_MenuItemList[i].ID = (int)m_ItemListView.GetItemParam(i);
+					m_MenuItemList[i].ID = static_cast<int>(m_ItemListView.GetItemParam(i));
 					m_MenuItemList[i].fVisible = m_ItemListView.IsItemChecked(i);
 				}
 			}
@@ -506,7 +507,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 void CMenuOptions::SetDlgItemState(HWND hDlg)
 {
-	int Sel = m_ItemListView.GetSelectedItem();
+	const int Sel = m_ItemListView.GetSelectedItem();
 
 	EnableDlgItem(hDlg, IDC_MENUOPTIONS_ITEMLIST_UP, Sel > 0);
 	EnableDlgItem(hDlg, IDC_MENUOPTIONS_ITEMLIST_DOWN, Sel >= 0 && Sel + 1 < m_ItemListView.GetItemCount());

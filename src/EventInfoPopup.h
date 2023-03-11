@@ -67,7 +67,7 @@ namespace TVTest
 		bool IsOwnWindow(HWND hwnd) const;
 		void GetSize(int *pWidth, int *pHeight) const;
 		bool SetSize(int Width, int Height);
-		void SetTheme(const Theme::CThemeManager *pThemeManager);
+		void SetTheme(const Theme::CThemeManager *pThemeManager) override;
 		bool SetFont(const Style::Font &Font);
 		void SetEventHandler(CEventHandler *pEventHandler);
 		bool IsSelected() const;
@@ -109,7 +109,7 @@ namespace TVTest
 
 		static const LPCTSTR m_pszWindowClass;
 		static HINSTANCE m_hinst;
-		static const UINT TIMER_ID_HIDE = 1;
+		static constexpr UINT TIMER_ID_HIDE = 1;
 
 	// CCustomWindow
 		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

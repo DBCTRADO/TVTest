@@ -105,14 +105,14 @@ bool CEventSearchServiceList::ToString(String *pString) const
 
 	ServiceKey PrevKey = 0;
 
-	for (ServiceKey e : m_ServiceList) {
+	for (const ServiceKey e : m_ServiceList) {
 		ServiceKey Key = e;
 		TCHAR szKey[16];
 		if (PrevKey != 0 && PrevKey >> 16 == Key >> 16)
 			Key &= 0xFFFFULL;
 		else if (ServiceKey_GetNetworkID(Key) == ServiceKey_GetTransportStreamID(Key))
 			Key &= 0xFFFFFFFFULL;
-		int Length = EncodeServiceKey(Key, szKey);
+		const int Length = EncodeServiceKey(Key, szKey);
 		szKey[Length] = _T(':');
 		szKey[Length + 1] = _T('\0');
 		*pString += szKey;
@@ -142,7 +142,7 @@ bool CEventSearchServiceList::FromString(LPCTSTR pszString)
 			if (Key <= 0xFFFFULL)
 				Key |= PrevKey & 0xFFFFFFFF0000ULL;
 			else if (ServiceKey_GetNetworkID(Key) == 0)
-				Key |= (ULONGLONG)ServiceKey_GetTransportStreamID(Key) << 32;
+				Key |= static_cast<ULONGLONG>(ServiceKey_GetTransportStreamID(Key)) << 32;
 			m_ServiceList.insert(Key);
 			PrevKey = Key;
 			p += Length;
@@ -161,7 +161,7 @@ int CEventSearchServiceList::EncodeServiceKey(ServiceKey Key, LPTSTR pText)
 
 	int Length = 0;
 	for (int i = 0; i < 8; i++) {
-		unsigned int Char = (unsigned int)((Key >> (42 - i * 6)) & 0x3F);
+		const unsigned int Char = static_cast<unsigned int>((Key >> (42 - i * 6)) & 0x3F);
 		if (Char != 0 || Length > 0) {
 			pText[Length++] = EncodeChars[Char];
 		}
@@ -176,7 +176,7 @@ bool CEventSearchServiceList::DecodeServiceKey(LPCTSTR pText, size_t Length, Ser
 	ServiceKey Key = 0;
 
 	for (size_t i = 0; i < Length; i++) {
-		TCHAR c = pText[i];
+		const TCHAR c = pText[i];
 		unsigned int Value;
 
 		if (c >= _T('A') && c <= _T('Z')) {
@@ -221,33 +221,33 @@ bool CEventSearchSettings::ToString(String *pString) const
 	StringUtility::Encode(Keyword.c_str(), &Buffer);
 	*pString += Buffer;
 
-	unsigned int Flags = 0;
+	ConditionFlag Flags = ConditionFlag::None;
 	if (fDisabled)
-		Flags |= FLAG_DISABLED;
+		Flags |= ConditionFlag::Disabled;
 	if (fRegExp)
-		Flags |= FLAG_REG_EXP;
+		Flags |= ConditionFlag::RegExp;
 	if (fIgnoreCase)
-		Flags |= FLAG_IGNORE_CASE;
+		Flags |= ConditionFlag::IgnoreCase;
 	if (fIgnoreWidth)
-		Flags |= FLAG_IGNORE_WIDTH;
+		Flags |= ConditionFlag::IgnoreWidth;
 	if (fEventName)
-		Flags |= FLAG_EVENT_NAME;
+		Flags |= ConditionFlag::EventName;
 	if (fEventText)
-		Flags |= FLAG_EVENT_TEXT;
+		Flags |= ConditionFlag::EventText;
 	if (fGenre)
-		Flags |= FLAG_GENRE;
+		Flags |= ConditionFlag::Genre;
 	if (fDayOfWeek)
-		Flags |= FLAG_DAY_OF_WEEK;
+		Flags |= ConditionFlag::DayOfWeek;
 	if (fTime)
-		Flags |= FLAG_TIME;
+		Flags |= ConditionFlag::Time;
 	if (fDuration)
-		Flags |= FLAG_DURATION;
+		Flags |= ConditionFlag::Duration;
 	if (fCA)
-		Flags |= FLAG_CA;
+		Flags |= ConditionFlag::CA;
 	if (fVideo)
-		Flags |= FLAG_VIDEO;
+		Flags |= ConditionFlag::Video;
 	if (fServiceList)
-		Flags |= FLAG_SERVICE_LIST;
+		Flags |= ConditionFlag::ServiceList;
 
 	bool fGenre2 = false;
 	for (int i = 0; i < 16; i++) {
@@ -259,16 +259,16 @@ bool CEventSearchSettings::ToString(String *pString) const
 	TCHAR szGenre2[16 * 4 + 1];
 	if (fGenre2) {
 		for (int i = 0; i < 16; i++) {
-			StringPrintf(&szGenre2[i * 4], 5, TEXT("%04x"), Genre2[i]);
+			StringFormat(&szGenre2[i * 4], 5, TEXT("{:04x}"), Genre2[i]);
 		}
 	} else {
 		szGenre2[0] = _T('\0');
 	}
 
-	StringUtility::Format(
-		Buffer,
-		TEXT(",%u,%d,%s,%u,%d:%02d,%d:%02d,%u,%u,%d,%d"),
-		Flags,
+	StringFormat(
+		&Buffer,
+		TEXT(",{},{},{},{},{}:{:02},{}:{:02},{},{},{},{}"),
+		static_cast<std::underlying_type_t<ConditionFlag>>(Flags),
 		Genre1,
 		szGenre2,
 		DayOfWeekFlags,
@@ -308,25 +308,25 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 
 		case 2:
 			{
-				unsigned int Flags = std::wcstoul(Value[i].c_str(), nullptr, 0);
-				fDisabled = (Flags & FLAG_DISABLED) != 0;
-				fRegExp = (Flags & FLAG_REG_EXP) != 0;
-				fIgnoreCase = (Flags & FLAG_IGNORE_CASE) != 0;
-				fIgnoreWidth = (Flags & FLAG_IGNORE_WIDTH) != 0;
-				fEventName = (Flags & FLAG_EVENT_NAME) != 0;
-				fEventText = (Flags & FLAG_EVENT_TEXT) != 0;
-				fGenre = (Flags & FLAG_GENRE) != 0;
-				fDayOfWeek = (Flags & FLAG_DAY_OF_WEEK) != 0;
-				fTime = (Flags & FLAG_TIME) != 0;
-				fDuration = (Flags & FLAG_DURATION) != 0;
-				fCA = (Flags & FLAG_CA) != 0;
-				fVideo = (Flags & FLAG_VIDEO) != 0;
-				fServiceList = (Flags & FLAG_SERVICE_LIST) != 0;
+				const ConditionFlag Flags = static_cast<ConditionFlag>(std::wcstoul(Value[i].c_str(), nullptr, 0));
+				fDisabled = !!(Flags & ConditionFlag::Disabled);
+				fRegExp = !!(Flags & ConditionFlag::RegExp);
+				fIgnoreCase = !!(Flags & ConditionFlag::IgnoreCase);
+				fIgnoreWidth = !!(Flags & ConditionFlag::IgnoreWidth);
+				fEventName = !!(Flags & ConditionFlag::EventName);
+				fEventText = !!(Flags & ConditionFlag::EventText);
+				fGenre = !!(Flags & ConditionFlag::Genre);
+				fDayOfWeek = !!(Flags & ConditionFlag::DayOfWeek);
+				fTime = !!(Flags & ConditionFlag::Time);
+				fDuration = !!(Flags & ConditionFlag::Duration);
+				fCA = !!(Flags & ConditionFlag::CA);
+				fVideo = !!(Flags & ConditionFlag::Video);
+				fServiceList = !!(Flags & ConditionFlag::ServiceList);
 			}
 			break;
 
 		case 3:
-			Genre1 = (WORD)std::wcstoul(Value[i].c_str(), nullptr, 0);
+			Genre1 = static_cast<WORD>(std::wcstoul(Value[i].c_str(), nullptr, 0));
 			break;
 
 		case 4:
@@ -338,7 +338,7 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 					Hex[1] = *it++;
 					Hex[2] = *it++;
 					Hex[3] = *it++;
-					Genre2[j] = (WORD)HexStringToUInt(Hex, 4);
+					Genre2[j] = static_cast<WORD>(HexStringToUInt(Hex, 4));
 				}
 			} else {
 				::ZeroMemory(Genre2, sizeof(Genre2));
@@ -366,11 +366,11 @@ bool CEventSearchSettings::FromString(LPCTSTR pszString)
 			break;
 
 		case 10:
-			CA = (CAType)std::wcstoul(Value[i].c_str(), nullptr, 0);
+			CA = static_cast<CAType>(std::wcstoul(Value[i].c_str(), nullptr, 0));
 			break;
 
 		case 11:
-			Video = (VideoType)std::wcstoul(Value[i].c_str(), nullptr, 0);
+			Video = static_cast<VideoType>(std::wcstoul(Value[i].c_str(), nullptr, 0));
 			break;
 
 		case 12:
@@ -395,11 +395,6 @@ void CEventSearchSettings::ParseTime(LPCWSTR pszString, TimeInfo *pTime)
 }
 
 
-
-
-CEventSearchSettingsList::CEventSearchSettingsList()
-{
-}
 
 
 CEventSearchSettingsList::CEventSearchSettingsList(const CEventSearchSettingsList &Src)
@@ -467,7 +462,7 @@ const CEventSearchSettings *CEventSearchSettingsList::Get(size_t Index) const
 
 CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 {
-	int Index = FindByName(pszName);
+	const int Index = FindByName(pszName);
 	if (Index < 0)
 		return nullptr;
 	return m_List[Index].get();
@@ -476,7 +471,7 @@ CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName)
 
 const CEventSearchSettings *CEventSearchSettingsList::GetByName(LPCTSTR pszName) const
 {
-	int Index = FindByName(pszName);
+	const int Index = FindByName(pszName);
 	if (Index < 0)
 		return nullptr;
 	return m_List[Index].get();
@@ -510,7 +505,7 @@ int CEventSearchSettingsList::FindByName(LPCTSTR pszName) const
 
 	for (size_t i = 0; i < m_List.size(); i++) {
 		if (::lstrcmpi(m_List[i]->Name.c_str(), pszName) == 0)
-			return (int)i;
+			return static_cast<int>(i);
 	}
 
 	return -1;
@@ -525,7 +520,7 @@ bool CEventSearchSettingsList::Load(CSettings &Settings, LPCTSTR pszPrefix)
 	String Value;
 
 	for (int i = 0;; i++) {
-		StringPrintf(szKey, TEXT("%s%d"), pszPrefix, i);
+		StringFormat(szKey, TEXT("{}{}"), pszPrefix, i);
 		if (!Settings.Read(szKey, &Value))
 			break;
 		CEventSearchSettings SearchSettings;
@@ -544,7 +539,7 @@ bool CEventSearchSettingsList::Save(CSettings &Settings, LPCTSTR pszPrefix) cons
 	String Value;
 
 	for (size_t i = 0; i < m_List.size(); i++) {
-		StringPrintf(szKey, TEXT("%s%d"), pszPrefix, (int)i);
+		StringFormat(szKey, TEXT("{}{}"), pszPrefix, (int)i);
 		m_List[i]->ToString(&Value);
 		Settings.Write(szKey, Value);
 	}
@@ -600,7 +595,7 @@ bool CEventSearcher::Match(const LibISDB::EventInfo *pEventInfo)
 	if (m_Settings.fGenre) {
 		bool fMatch = false;
 		for (int i = 0; i < pEventInfo->ContentNibble.NibbleCount; i++) {
-			int Level1 = pEventInfo->ContentNibble.NibbleList[i].ContentNibbleLevel1;
+			const int Level1 = pEventInfo->ContentNibble.NibbleList[i].ContentNibbleLevel1;
 			if (Level1 != 0xE) {
 				if (Level1 > 15)
 					return false;
@@ -608,7 +603,7 @@ bool CEventSearcher::Match(const LibISDB::EventInfo *pEventInfo)
 						&& m_Settings.Genre2[Level1] == 0) {
 					fMatch = true;
 				} else {
-					int Level2 = pEventInfo->ContentNibble.NibbleList[i].ContentNibbleLevel2;
+					const int Level2 = pEventInfo->ContentNibble.NibbleList[i].ContentNibbleLevel2;
 					if ((m_Settings.Genre2[Level1] & (1 << Level2)) != 0)
 						fMatch = true;
 				}
@@ -625,10 +620,10 @@ bool CEventSearcher::Match(const LibISDB::EventInfo *pEventInfo)
 	}
 
 	if (m_Settings.fTime) {
-		int RangeStart = (m_Settings.StartTime.Hour * 60 + m_Settings.StartTime.Minute) % (24 * 60);
-		int RangeEnd = (m_Settings.EndTime.Hour * 60 + m_Settings.EndTime.Minute) % (24 * 60);
-		int EventStart = pEventInfo->StartTime.Hour * 60 + pEventInfo->StartTime.Minute;
-		int EventEnd = EventStart + pEventInfo->Duration / 60;
+		const int RangeStart = (m_Settings.StartTime.Hour * 60 + m_Settings.StartTime.Minute) % (24 * 60);
+		const int RangeEnd = (m_Settings.EndTime.Hour * 60 + m_Settings.EndTime.Minute) % (24 * 60);
+		const int EventStart = pEventInfo->StartTime.Hour * 60 + pEventInfo->StartTime.Minute;
+		const int EventEnd = EventStart + pEventInfo->Duration / 60;
 
 		if (RangeStart <= RangeEnd) {
 			if (EventEnd <= RangeStart || EventStart > RangeEnd)
@@ -842,13 +837,13 @@ bool CEventSearchOptions::SetKeywordHistory(const String *pKeywordList, size_t N
 
 int CEventSearchOptions::GetKeywordHistoryCount() const
 {
-	return (int)m_KeywordHistory.size();
+	return static_cast<int>(m_KeywordHistory.size());
 }
 
 
 LPCTSTR CEventSearchOptions::GetKeywordHistory(int Index) const
 {
-	if (Index < 0 || (size_t)Index >= m_KeywordHistory.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_KeywordHistory.size())
 		return nullptr;
 	return m_KeywordHistory[Index].c_str();
 }
@@ -881,7 +876,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 
 bool CEventSearchOptions::DeleteKeywordHistory(int Index)
 {
-	if (Index < 0 || (size_t)Index >= m_KeywordHistory.size())
+	if (Index < 0 || static_cast<size_t>(Index) >= m_KeywordHistory.size())
 		return false;
 
 	m_KeywordHistory.erase(m_KeywordHistory.begin() + Index);
@@ -903,7 +898,7 @@ bool CEventSearchOptions::SetMaxKeywordHistory(int Max)
 
 	m_MaxKeywordHistory = Max;
 
-	if (m_KeywordHistory.size() > (size_t)Max) {
+	if (m_KeywordHistory.size() > static_cast<size_t>(Max)) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin() + Max, m_KeywordHistory.end());
 	}
 
@@ -984,16 +979,16 @@ namespace
 
 constexpr UINT WM_PROGRAM_SEARCH_GENRE_CHANGED = WM_APP;
 
-constexpr LPARAM GENRE_LPARAM_PACK(int Level1, int Level2) { return (Level1 << 16) | (WORD)(SHORT)(Level2); }
-constexpr int GENRE_LPARAM_LEVEL1(LPARAM lParam) { return (int)(lParam >> 16); }
-constexpr int GENRE_LPARAM_LEVEL2(LPARAM lParam) { return (SHORT)(WORD)(lParam & 0xFFFF); }
+constexpr LPARAM GENRE_LPARAM_PACK(int Level1, int Level2) { return (Level1 << 16) | static_cast<WORD>(static_cast<SHORT>(Level2)); }
+constexpr int GENRE_LPARAM_LEVEL1(LPARAM lParam) { return static_cast<int>(lParam >> 16); }
+constexpr int GENRE_LPARAM_LEVEL2(LPARAM lParam) { return static_cast<SHORT>(static_cast<WORD>(lParam & 0xFFFF)); }
 
 
 static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
 {
-	return ((ULONGLONG)pEventInfo->NetworkID << 48)
-		| ((ULONGLONG)pEventInfo->TransportStreamID << 32)
-		| ((DWORD)pEventInfo->ServiceID << 16)
+	return (static_cast<ULONGLONG>(pEventInfo->NetworkID) << 48)
+		| (static_cast<ULONGLONG>(pEventInfo->TransportStreamID) << 32)
+		| (static_cast<DWORD>(pEventInfo->ServiceID) << 16)
 		| pEventInfo->EventID;
 }
 
@@ -1009,11 +1004,6 @@ CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Opti
 {
 	for (bool &e : m_fGenreExpanded)
 		e = false;
-}
-
-
-CEventSearchSettingsDialog::~CEventSearchSettingsDialog()
-{
 }
 
 
@@ -1083,12 +1073,12 @@ bool CEventSearchSettingsDialog::GetSettings(CEventSearchSettings *pSettings) co
 		pSettings->fCA =
 			DlgCheckBox_IsChecked(m_hDlg, IDC_EVENTSEARCH_CA);
 		pSettings->CA =
-			(CEventSearchSettings::CAType)DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST);
+			static_cast<CEventSearchSettings::CAType>(DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST));
 
 		pSettings->fVideo =
 			DlgCheckBox_IsChecked(m_hDlg, IDC_EVENTSEARCH_VIDEO);
 		pSettings->Video =
-			(CEventSearchSettings::VideoType)DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST);
+			static_cast<CEventSearchSettings::VideoType>(DlgComboBox_GetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST));
 	} else {
 		*pSettings = m_SearchSettings;
 	}
@@ -1116,20 +1106,20 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_KEYWORDTARGET, KeywordTarget);
 
 		// ジャンル
-		HWND hwndGenre = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_GENRE);
+		const HWND hwndGenre = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_GENRE);
 		HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
 		TVITEM tvi;
 		tvi.mask = TVIF_PARAM;
 		while (hItem != nullptr) {
 			tvi.hItem = hItem;
 			TreeView_GetItem(hwndGenre, &tvi);
-			int Level1 = GENRE_LPARAM_LEVEL1(tvi.lParam);
+			const int Level1 = GENRE_LPARAM_LEVEL1(tvi.lParam);
 			TreeView_SetCheckState(hwndGenre, hItem, (Settings.Genre1 & (1 << Level1)) != 0);
 			HTREEITEM hChild = TreeView_GetChild(hwndGenre, hItem);
 			while (hChild != nullptr) {
 				tvi.hItem = hChild;
 				TreeView_GetItem(hwndGenre, &tvi);
-				int Level2 = GENRE_LPARAM_LEVEL2(tvi.lParam);
+				const int Level2 = GENRE_LPARAM_LEVEL2(tvi.lParam);
 				TreeView_SetCheckState(hwndGenre, hChild, (Settings.Genre2[Level1] & (1 << Level2)) != 0);
 				hChild = TreeView_GetNextSibling(hwndGenre, hChild);
 			}
@@ -1154,10 +1144,10 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 		TCHAR szText[16];
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_TIME, Settings.fTime);
 		DlgEdit_SetInt(m_hDlg, IDC_EVENTSEARCH_TIME_START_HOUR, Settings.StartTime.Hour);
-		StringPrintf(szText, TEXT("%02d"), Settings.StartTime.Minute);
+		StringFormat(szText, TEXT("{:02}"), Settings.StartTime.Minute);
 		DlgEdit_SetText(m_hDlg, IDC_EVENTSEARCH_TIME_START_MINUTE, szText);
 		DlgEdit_SetInt(m_hDlg, IDC_EVENTSEARCH_TIME_END_HOUR, Settings.EndTime.Hour);
-		StringPrintf(szText, TEXT("%02d"), Settings.EndTime.Minute);
+		StringFormat(szText, TEXT("{:02}"), Settings.EndTime.Minute);
 		DlgEdit_SetText(m_hDlg, IDC_EVENTSEARCH_TIME_END_MINUTE, szText);
 		EnableDlgItems(
 			m_hDlg, IDC_EVENTSEARCH_TIME_START_HOUR, IDC_EVENTSEARCH_TIME_END_MINUTE,
@@ -1174,12 +1164,12 @@ void CEventSearchSettingsDialog::SetSettings(const CEventSearchSettings &Setting
 
 		// CA
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_CA, Settings.fCA);
-		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST, (int)Settings.CA);
+		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_CA_LIST, static_cast<int>(Settings.CA));
 		EnableDlgItem(m_hDlg, IDC_EVENTSEARCH_CA_LIST, Settings.fCA);
 
 		// 映像
 		DlgCheckBox_Check(m_hDlg, IDC_EVENTSEARCH_VIDEO, Settings.fVideo);
-		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST, (int)Settings.Video);
+		DlgComboBox_SetCurSel(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST, static_cast<int>(Settings.Video));
 		EnableDlgItem(m_hDlg, IDC_EVENTSEARCH_VIDEO_LIST, Settings.fVideo);
 	} else {
 		m_SearchSettings = Settings;
@@ -1207,7 +1197,7 @@ bool CEventSearchSettingsDialog::SetKeyword(LPCTSTR pszKeyword)
 	if (m_hDlg == nullptr)
 		return false;
 
-	HWND hwndComboBox = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD);
+	const HWND hwndComboBox = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD);
 	if (IsStringEmpty(pszKeyword)) {
 		ComboBox_SetText(hwndComboBox, TEXT(""));
 	} else {
@@ -1227,12 +1217,11 @@ bool CEventSearchSettingsDialog::AddToKeywordHistory(LPCTSTR pszKeyword)
 	if (m_hDlg == nullptr || IsStringEmpty(pszKeyword))
 		return false;
 
-	HWND hwndComboBox = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD);
-	int i;
-	i = ComboBox_FindStringExact(hwndComboBox, -1, pszKeyword);
+	const HWND hwndComboBox = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_KEYWORD);
+	const int i = ComboBox_FindStringExact(hwndComboBox, -1, pszKeyword);
 	if (i == CB_ERR) {
 		ComboBox_InsertString(hwndComboBox, 0, pszKeyword);
-		int MaxHistory = m_Options.GetMaxKeywordHistory();
+		const int MaxHistory = m_Options.GetMaxKeywordHistory();
 		if (ComboBox_GetCount(hwndComboBox) > MaxHistory)
 			ComboBox_DeleteString(hwndComboBox, MaxHistory);
 	} else if (i != 0) {
@@ -1283,7 +1272,7 @@ void CEventSearchSettingsDialog::SetSearchTargetList(const LPCTSTR *ppszList, in
 
 bool CEventSearchSettingsDialog::SetSearchTarget(int Target)
 {
-	if (Target < 0 || (size_t)Target >= m_SearchTargetList.size())
+	if (Target < 0 || static_cast<size_t>(Target) >= m_SearchTargetList.size())
 		return false;
 	m_SearchTarget = Target;
 	return true;
@@ -1326,13 +1315,13 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("番組情報"),
 			};
 
-			for (LPCTSTR pszText : KeywordTargetList)
+			for (const LPCTSTR pszText : KeywordTargetList)
 				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_KEYWORDTARGET, pszText);
 		}
 
 		// ジャンル
 		{
-			HWND hwndGenre = GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
+			const HWND hwndGenre = GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
 
 			// 最初からTVS_CHECKBOXESを付けるとデフォルトでチェックできない
 			::SetWindowLong(
@@ -1379,7 +1368,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("有料"),
 			};
 
-			for (LPCTSTR pszText : pszCAList)
+			for (const LPCTSTR pszText : pszCAList)
 				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_CA_LIST, pszText);
 		}
 
@@ -1390,7 +1379,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				TEXT("SD"),
 			};
 
-			for (LPCTSTR pszText : pszVideoList)
+			for (const LPCTSTR pszText : pszVideoList)
 				DlgComboBox_AddString(hDlg, IDC_EVENTSEARCH_VIDEO_LIST, pszText);
 		}
 
@@ -1432,8 +1421,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 		case IDC_EVENTSEARCH_GENRE_CHECKALL:
 		case IDC_EVENTSEARCH_GENRE_UNCHECKALL:
 			{
-				BOOL fCheck = LOWORD(wParam) == IDC_EVENTSEARCH_GENRE_CHECKALL;
-				HWND hwndGenre = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
+				const BOOL fCheck = LOWORD(wParam) == IDC_EVENTSEARCH_GENRE_CHECKALL;
+				const HWND hwndGenre = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
 				HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
 				while (hItem != nullptr) {
 					TreeView_SetCheckState(hwndGenre, hItem, fCheck);
@@ -1462,6 +1451,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				IDC_EVENTSEARCH_TIME_START_HOUR,
 				IDC_EVENTSEARCH_TIME_END_MINUTE,
 				IDC_EVENTSEARCH_TIME);
+			return TRUE;
 
 		case IDC_EVENTSEARCH_DURATION:
 			EnableDlgItemsSyncCheckBox(
@@ -1494,7 +1484,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case IDC_EVENTSEARCH_SETTINGSLIST:
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
-				LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
+				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
 
 				if (Sel >= 0) {
 					TCHAR szName[CEventSearchSettings::MAX_NAME_LENGTH];
@@ -1512,7 +1502,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case IDC_EVENTSEARCH_SETTINGSLIST_SAVE:
 			{
-				HWND hwndComboBox = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
+				const HWND hwndComboBox = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
 				TCHAR szName[CEventSearchSettings::MAX_NAME_LENGTH];
 
 				if (::GetWindowText(hwndComboBox, szName, lengthof(szName)) < 1) {
@@ -1521,7 +1511,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					return TRUE;
 				}
 
-				int Index = ComboBox_FindStringExact(hwndComboBox, -1, szName);
+				const int Index = ComboBox_FindStringExact(hwndComboBox, -1, szName);
 				CEventSearchSettings *pSettings = m_Options.GetSearchSettingsByName(szName);
 				if (pSettings != nullptr) {
 					GetSettings(pSettings);
@@ -1537,8 +1527,8 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				}
 
 				TCHAR szText[lengthof(szName) + 64];
-				StringPrintf(
-					szText, TEXT("設定 \"%s\" を%sしました。"),
+				StringFormat(
+					szText, TEXT("設定 \"{}\" を{}しました。"),
 					szName, pSettings == nullptr ? TEXT("保存") : TEXT("上書き"));
 				::MessageBox(hDlg, szText, TEXT("設定の保存"), MB_OK | MB_ICONINFORMATION);
 			}
@@ -1546,21 +1536,21 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case IDC_EVENTSEARCH_SETTINGSLIST_DELETE:
 			{
-				HWND hwndComboBox = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
+				const HWND hwndComboBox = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_SETTINGSLIST);
 				TCHAR szName[CEventSearchSettings::MAX_NAME_LENGTH];
 
 				if (::GetWindowText(hwndComboBox, szName, lengthof(szName)) > 0) {
-					int Index = ComboBox_FindStringExact(hwndComboBox, -1, szName);
+					const int Index = ComboBox_FindStringExact(hwndComboBox, -1, szName);
 
 					if (Index != CB_ERR) {
-						int i = m_Options.FindSearchSettings(szName);
+						const int i = m_Options.FindSearchSettings(szName);
 						if (i >= 0)
 							m_Options.DeleteSearchSettings(i);
 
 						ComboBox_DeleteString(hwndComboBox, Index);
 
 						TCHAR szText[lengthof(szName) + 64];
-						StringPrintf(szText, TEXT("設定 \"%s\" を削除しました。"), szName);
+						StringFormat(szText, TEXT("設定 \"{}\" を削除しました。"), szName);
 						::MessageBox(hDlg, szText, TEXT("設定の削除"), MB_OK | MB_ICONINFORMATION);
 					}
 				}
@@ -1569,7 +1559,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case IDC_EVENTSEARCH_SEARCHTARGET:
 			if (HIWORD(wParam) == CBN_SELCHANGE)
-				m_SearchTarget = (int)DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_SEARCHTARGET);
+				m_SearchTarget = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_SEARCHTARGET));
 			return TRUE;
 
 		case IDC_EVENTSEARCH_KEYWORDMENU:
@@ -1579,7 +1569,6 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					MAKEINTRESOURCE(IDM_EVENTSEARCHKEYWORD));
 				TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 				RECT rc;
-				POINT pt;
 
 				::GetDlgItemText(hDlg, IDC_EVENTSEARCH_KEYWORD, szKeyword, lengthof(szKeyword));
 				Menu.EnableItem(
@@ -1587,8 +1576,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 					szKeyword[0] != _T('\0') &&
 						DlgComboBox_FindStringExact(hDlg, IDC_EVENTSEARCH_KEYWORD, -1, szKeyword) >= 0);
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_EVENTSEARCH_KEYWORDMENU), &rc);
-				pt.x = rc.right;
-				pt.y = rc.bottom;
+				const POINT pt = {rc.right, rc.bottom};
 				Menu.Show(hDlg, &pt, TPM_RIGHTALIGN);
 			}
 			return TRUE;
@@ -1598,12 +1586,12 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				int Index = -1;
 
 				if (DlgComboBox_GetDroppedState(hDlg, IDC_EVENTSEARCH_KEYWORD)) {
-					Index = (int)DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_KEYWORD);
+					Index = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_EVENTSEARCH_KEYWORD));
 				} else {
 					TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 
 					if (::GetDlgItemText(hDlg, IDC_EVENTSEARCH_KEYWORD, szKeyword, lengthof(szKeyword)) > 0) {
-						Index = (int)DlgComboBox_FindStringExact(hDlg, IDC_EVENTSEARCH_KEYWORD, -1, szKeyword);
+						Index = static_cast<int>(DlgComboBox_FindStringExact(hDlg, IDC_EVENTSEARCH_KEYWORD, -1, szKeyword));
 						if (Index >= 0)
 							::SetDlgItemText(hDlg, IDC_EVENTSEARCH_KEYWORD, TEXT(""));
 					}
@@ -1625,7 +1613,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 #if 0
 	case WM_CTLCOLORSTATIC:
 		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE_STATUS)) {
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 
 			::SetTextColor(hdc, ::GetSysColor(COLOR_GRAYTEXT));
 			::SetBkColor(hdc, ::GetSysColor(COLOR_3DFACE));
@@ -1635,15 +1623,15 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 #endif
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case NM_CLICK:
 			{
-				LPNMHDR pnmh = reinterpret_cast<LPNMHDR>(lParam);
+				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
 
 				if (pnmh->idFrom == IDC_EVENTSEARCH_GENRE) {
-					HWND hwndTree = pnmh->hwndFrom;
+					const HWND hwndTree = pnmh->hwndFrom;
 					TVHITTESTINFO tvhti;
-					DWORD Pos = ::GetMessagePos();
+					const DWORD Pos = ::GetMessagePos();
 					tvhti.pt.x = GET_X_LPARAM(Pos);
 					tvhti.pt.y = GET_Y_LPARAM(Pos);
 					::ScreenToClient(hwndTree, &tvhti.pt);
@@ -1659,7 +1647,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 		case TVN_KEYDOWN:
 			{
-				LPNMTVKEYDOWN pnmtvkd = reinterpret_cast<LPNMTVKEYDOWN>(lParam);
+				const NMTVKEYDOWN *pnmtvkd = reinterpret_cast<const NMTVKEYDOWN*>(lParam);
 
 				if (pnmtvkd->wVKey == VK_SPACE)
 					::PostMessage(hDlg, WM_PROGRAM_SEARCH_GENRE_CHANGED, 0, 0);
@@ -1675,7 +1663,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 	case WM_DESTROY:
 		// ジャンルのツリー展開状態を保存
 		{
-			HWND hwndGenre = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
+			const HWND hwndGenre = ::GetDlgItem(hDlg, IDC_EVENTSEARCH_GENRE);
 			HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
 			TVITEM tvi;
 			tvi.mask = TVIF_STATE | TVIF_PARAM;
@@ -1697,7 +1685,7 @@ INT_PTR CEventSearchSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 void CEventSearchSettingsDialog::GetGenreSettings(CEventSearchSettings *pSettings) const
 {
-	HWND hwndGenre = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_GENRE);
+	const HWND hwndGenre = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_GENRE);
 	HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
 	TVITEM tvi;
 	tvi.mask = TVIF_PARAM | TVIF_STATE;
@@ -1705,7 +1693,7 @@ void CEventSearchSettingsDialog::GetGenreSettings(CEventSearchSettings *pSetting
 	while (hItem != nullptr) {
 		tvi.hItem = hItem;
 		TreeView_GetItem(hwndGenre, &tvi);
-		int Level1 = GENRE_LPARAM_LEVEL1(tvi.lParam);
+		const int Level1 = GENRE_LPARAM_LEVEL1(tvi.lParam);
 		if ((tvi.state & TVIS_STATEIMAGEMASK) >> 12 > 1) {
 			pSettings->Genre1 |= 1 << Level1;
 			pSettings->fGenre = true;
@@ -1715,7 +1703,7 @@ void CEventSearchSettingsDialog::GetGenreSettings(CEventSearchSettings *pSetting
 			tvi.hItem = hChild;
 			TreeView_GetItem(hwndGenre, &tvi);
 			if ((tvi.state & TVIS_STATEIMAGEMASK) >> 12 > 1) {
-				int Level2 = GENRE_LPARAM_LEVEL2(tvi.lParam);
+				const int Level2 = GENRE_LPARAM_LEVEL2(tvi.lParam);
 				pSettings->Genre2[Level1] |= 1 << Level2;
 				pSettings->fGenre = true;
 			}
@@ -1728,7 +1716,7 @@ void CEventSearchSettingsDialog::GetGenreSettings(CEventSearchSettings *pSetting
 
 void CEventSearchSettingsDialog::SetGenreStatus()
 {
-	HWND hwndGenre = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_GENRE);
+	const HWND hwndGenre = ::GetDlgItem(m_hDlg, IDC_EVENTSEARCH_GENRE);
 	HTREEITEM hItem = TreeView_GetChild(hwndGenre, TVI_ROOT);
 	int CheckCount = 0;
 	TVITEM tvi;
@@ -1752,7 +1740,7 @@ void CEventSearchSettingsDialog::SetGenreStatus()
 
 	TCHAR szText[256];
 	if (CheckCount > 0)
-		StringPrintf(szText, TEXT("%d 個選択"), CheckCount);
+		StringFormat(szText, TEXT("{} 個選択"), CheckCount);
 	else
 		StringCopy(szText, TEXT("指定なし"));
 	::SetDlgItemText(m_hDlg, IDC_EVENTSEARCH_GENRE_STATUS, szText);
@@ -1770,19 +1758,19 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 
 	case WM_KEYDOWN:
 		if (wParam == VK_RETURN) {
-			HWND hwndComboBox = ::GetParent(hwnd);
+			const HWND hwndComboBox = ::GetParent(hwnd);
 			if (!ComboBox_GetDroppedState(hwndComboBox)) {
 				::PostMessage(::GetParent(hwndComboBox), WM_COMMAND, IDC_EVENTSEARCH_SEARCH, 0);
 				return 0;
 			}
 		} else if (wParam == VK_DELETE) {
-			int Length = ::GetWindowTextLength(hwnd);
+			const int Length = ::GetWindowTextLength(hwnd);
 
 			if (Length > 0) {
-				HWND hwndComboBox = ::GetParent(hwnd);
+				const HWND hwndComboBox = ::GetParent(hwnd);
 
 				if (ComboBox_GetDroppedState(hwndComboBox)) {
-					int Sel = ComboBox_GetCurSel(hwndComboBox);
+					const int Sel = ComboBox_GetCurSel(hwndComboBox);
 
 					if (Sel >= 0) {
 						DWORD Start, End;
@@ -1791,7 +1779,7 @@ LRESULT CEventSearchSettingsDialog::CKeywordEditSubclass::OnMessage(
 							hwnd, EM_GETSEL,
 							reinterpret_cast<WPARAM>(&Start),
 							reinterpret_cast<LPARAM>(&End));
-						if (Start == 0 && End == (DWORD)Length) {
+						if (Start == 0 && End == static_cast<DWORD>(Length)) {
 							TCHAR szKeyword[CEventSearchSettings::MAX_KEYWORD_LENGTH];
 
 							if (::GetWindowText(hwnd, szKeyword, lengthof(szKeyword)) == Length
@@ -1958,7 +1946,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		// 検索結果一覧
 		{
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
 			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 			SetListViewTooltipsTopMost(hwndList);
 
@@ -1980,9 +1968,9 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 			int FontSize;
 			if (fNeedFontSize) {
-				HDC hdc = ::GetDC(hwndList);
-				HFONT hfont = GetWindowFont(hwndList);
-				HFONT hfontOld = SelectFont(hdc, hfont);
+				const HDC hdc = ::GetDC(hwndList);
+				const HFONT hfont = GetWindowFont(hwndList);
+				const HFONT hfontOld = SelectFont(hdc, hfont);
 				TEXTMETRIC tm;
 				::GetTextMetrics(hdc, &tm);
 				FontSize = tm.tmHeight - tm.tmInternalLeading;
@@ -2010,10 +1998,9 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		// 番組情報
 		{
 			LOGFONT lf;
-			HDC hdc;
 
 			::GetObject(GetWindowFont(hDlg), sizeof(LOGFONT), &lf);
-			hdc = ::GetDC(hDlg);
+			const HDC hdc = ::GetDC(hDlg);
 			CRichEditUtil::LogFontToCharFormat(hdc, &lf, &m_InfoTextFormat);
 			::ReleaseDC(hDlg, hdc);
 			CRichEditUtil::DisableAutoFont(::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_INFO));
@@ -2062,7 +2049,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 	case WM_CTLCOLORSTATIC:
 		if (reinterpret_cast<HWND>(lParam) == ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_STATUS)) {
-			HDC hdc = reinterpret_cast<HDC>(wParam);
+			const HDC hdc = reinterpret_cast<HDC>(wParam);
 
 			::SetTextColor(hdc, GetThemeColor(COLOR_WINDOWTEXT));
 			::SetBkColor(hdc, GetThemeColor(COLOR_WINDOW));
@@ -2071,7 +2058,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		break;
 
 	case WM_SETCURSOR:
-		if ((HWND)wParam == hDlg && LOWORD(lParam) == HTCLIENT && m_fSplitterCursor) {
+		if (reinterpret_cast<HWND>(wParam) == hDlg && LOWORD(lParam) == HTCLIENT && m_fSplitterCursor) {
 			::SetCursor(::LoadCursor(nullptr, IDC_SIZENS));
 			::SetWindowLongPtr(hDlg, DWLP_MSGRESULT, TRUE);
 			return TRUE;
@@ -2082,7 +2069,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 	case WM_LBUTTONDOWN:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			if (IsSplitterPos(x, y)) {
 				RECT rc;
@@ -2104,7 +2091,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 	case WM_MOUSEMOVE:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			if (::GetCapture() == hDlg)
 				AdjustResultListHeight(m_ResultListHeight + (y - m_SplitterDragPos));
@@ -2114,11 +2101,11 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case NM_RCLICK:
 		case NM_DBLCLK:
 			{
-				LPNMITEMACTIVATE pnmia = reinterpret_cast<LPNMITEMACTIVATE>(lParam);
+				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->hdr.idFrom == IDC_PROGRAMSEARCH_RESULT
 						&& m_pEventHandler != nullptr
@@ -2143,7 +2130,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case LVN_COLUMNCLICK:
 			{
-				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
+				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
 
 				if (pnmlv->iSubItem == m_SortColumn) {
 					m_fSortDescending = !m_fSortDescending;
@@ -2157,7 +2144,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case LVN_ITEMCHANGED:
 			{
-				LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(lParam);
+				const NMLISTVIEW *pnmlv = reinterpret_cast<const NMLISTVIEW*>(lParam);
 
 				if (!!(pnmlv->uChanged & LVIF_STATE)
 						&& !!((pnmlv->uNewState ^ pnmlv->uOldState) & LVIS_SELECTED)) {
@@ -2209,7 +2196,7 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 	case WM_DESTROY:
 		// 検索結果のカラムの幅を保存
 		{
-			HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
+			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
 			for (int i = 0; i < lengthof(m_ColumnWidth); i++)
 				m_ColumnWidth[i] = ListView_GetColumnWidth(hwndList, i);
 		}
@@ -2246,8 +2233,8 @@ void CProgramSearchDialog::ApplyStyle()
 	CResizableDialog::ApplyStyle();
 
 	if (m_hDlg != nullptr) {
-		HWND hwnd = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO);
-		HDC hdc = ::GetDC(hwnd);
+		const HWND hwnd = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO);
+		const HDC hdc = ::GetDC(hwnd);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);
 		CRichEditUtil::LogFontToCharFormat(hdc, &lf, &m_InfoTextFormat);
@@ -2292,8 +2279,8 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	if (m_hDlg == nullptr || pEventInfo == nullptr)
 		return false;
 
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
-	LV_ITEM lvi;
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
+	LVITEM lvi;
 	TCHAR szText[256];
 
 	lvi.mask = LVIF_TEXT | LVIF_PARAM;
@@ -2307,9 +2294,9 @@ bool CProgramSearchDialog::AddSearchResult(CSearchEventInfo *pEventInfo)
 	EpgUtil::EpgTimeToDisplayTime(pEventInfo->StartTime, &Start);
 	pEventInfo->GetEndTime(&End);
 	EpgUtil::EpgTimeToDisplayTime(&End);
-	StringPrintf(
+	StringFormat(
 		szText,
-		TEXT("%02d/%02d(%s) %02d:%02d～%02d:%02d"),
+		TEXT("{:02}/{:02}({}) {:02}:{:02}～{:02}:{:02}"),
 		Start.Month, Start.Day,
 		GetDayOfWeekText(Start.DayOfWeek),
 		Start.Hour, Start.Minute,
@@ -2334,8 +2321,8 @@ void CProgramSearchDialog::ClearSearchResult()
 {
 	m_ResultMap.clear();
 
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
-	int Items = ListView_GetItemCount(hwndList);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
+	const int Items = ListView_GetItemCount(hwndList);
 	LVITEM lvi;
 
 	lvi.mask = LVIF_PARAM;
@@ -2354,7 +2341,7 @@ void CProgramSearchDialog::ClearSearchResult()
 
 void CProgramSearchDialog::SortSearchResult()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
 
 	ListView_SortItems(
 		hwndList, ResultCompareFunc,
@@ -2365,7 +2352,7 @@ void CProgramSearchDialog::SortSearchResult()
 
 void CProgramSearchDialog::UpdateEventInfoText()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT);
 	const int Sel = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 
 	::SetDlgItemText(m_hDlg, IDC_PROGRAMSEARCH_INFO, TEXT(""));
@@ -2384,7 +2371,7 @@ void CProgramSearchDialog::UpdateEventInfoText()
 
 void CProgramSearchDialog::SetEventInfoText(const LibISDB::EventInfo *pEventInfo)
 {
-	HWND hwndInfo = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO);
+	const HWND hwndInfo = ::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_INFO);
 	TCHAR szText[256];
 	String Text;
 
@@ -2402,7 +2389,7 @@ void CProgramSearchDialog::SetEventInfoText(const LibISDB::EventInfo *pEventInfo
 }
 
 
-int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const
+size_t CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, size_t MaxLength) const
 {
 	if (pEventInfo == nullptr) {
 		pszText[0] = '\0';
@@ -2412,14 +2399,14 @@ int CProgramSearchDialog::FormatEventTimeText(const LibISDB::EventInfo *pEventIn
 	TCHAR szEndTime[16];
 	LibISDB::DateTime End;
 	if (pEventInfo->Duration > 0 && pEventInfo->GetEndTime(&End)) {
-		StringPrintf(
+		StringFormat(
 			szEndTime,
-			TEXT("～%d:%02d"), End.Hour, End.Minute);
+			TEXT("～{}:{:02}"), End.Hour, End.Minute);
 	} else {
 		szEndTime[0] = '\0';
 	}
-	return StringPrintf(
-		pszText, MaxLength, TEXT("%d/%d/%d(%s) %d:%02d%s\r\n"),
+	return StringFormat(
+		pszText, MaxLength, TEXT("{}/{}/{}({}) {}:{:02}{}\r\n"),
 		pEventInfo->StartTime.Year,
 		pEventInfo->StartTime.Month,
 		pEventInfo->StartTime.Day,
@@ -2451,7 +2438,7 @@ void CProgramSearchDialog::FormatEventInfoText(const LibISDB::EventInfo *pEventI
 		*pText += ExtendedText;
 	}
 
-	String::size_type Pos = pText->find_last_not_of(TEXT("\r\n"));
+	const String::size_type Pos = pText->find_last_not_of(TEXT("\r\n"));
 	if (Pos != String::npos && pText->length() > Pos + 2)
 		pText->resize(Pos + 2);
 }
@@ -2471,7 +2458,7 @@ void CProgramSearchDialog::HighlightKeyword()
 	else
 		FirstLine = 3;
 	if (m_SearchSettings.fEventText)
-		LastLine = (int)::SendMessage(hwndInfo, EM_GETLINECOUNT, 0, 0) - 1;
+		LastLine = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINECOUNT, 0, 0)) - 1;
 	else
 		LastLine = 1;
 
@@ -2485,18 +2472,18 @@ void CProgramSearchDialog::HighlightKeyword()
 	::SendMessage(hwndInfo, EM_EXGETSEL, 0, reinterpret_cast<LPARAM>(&crOld));
 
 	for (int i = FirstLine; i <= LastLine;) {
-		const int LineIndex = (int)::SendMessage(hwndInfo, EM_LINEINDEX, i, 0);
+		const int LineIndex = static_cast<int>(::SendMessage(hwndInfo, EM_LINEINDEX, i, 0));
 		TCHAR szText[2048], *q;
 		int TotalLength = 0, Length;
 
 		q = szText;
 		while (i <= LastLine) {
 #ifdef UNICODE
-			q[0] = (WORD)(lengthof(szText) - 2 - TotalLength);
+			q[0] = static_cast<WORD>(lengthof(szText) - 2 - TotalLength);
 #else
 			*(WORD*)q = (WORD)(sizeof(szText) - sizeof(WORD) - 1 - TotalLength);
 #endif
-			Length = (int)::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q));
+			Length = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q)));
 			i++;
 			if (Length < 1)
 				break;
@@ -2514,8 +2501,8 @@ void CProgramSearchDialog::HighlightKeyword()
 
 				while (*q != _T('\0') && m_Searcher.GetRegExp().Match(q, &Range)) {
 					q += Range.Start;
-					cr.cpMin = LineIndex + (LONG)(q - szText);
-					cr.cpMax = cr.cpMin + (LONG)Range.Length;
+					cr.cpMin = LineIndex + static_cast<LONG>(q - szText);
+					cr.cpMax = cr.cpMin + static_cast<LONG>(Range.Length);
 					::SendMessage(hwndInfo, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 					::SendMessage(hwndInfo, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cfHighlight));
 					q += Range.Length;
@@ -2546,7 +2533,7 @@ void CProgramSearchDialog::HighlightKeyword()
 					if (!fMinus && KeywordLength > 0) {
 						LPCTSTR q = szText;
 						while (SearchNextKeyword(&q, szWord, KeywordLength, &Length)) {
-							cr.cpMin = LineIndex + (LONG)(q - szText);
+							cr.cpMin = LineIndex + static_cast<LONG>(q - szText);
 							cr.cpMax = cr.cpMin + Length;
 							::SendMessage(hwndInfo, EM_EXSETSEL, 0, reinterpret_cast<LPARAM>(&cr));
 							::SendMessage(hwndInfo, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cfHighlight));
@@ -2568,7 +2555,7 @@ void CProgramSearchDialog::HighlightKeyword()
 
 bool CProgramSearchDialog::SearchNextKeyword(LPCTSTR *ppszText, LPCTSTR pKeyword, int KeywordLength, int *pLength) const
 {
-	int Pos = m_Searcher.FindKeyword(*ppszText, pKeyword, KeywordLength, pLength);
+	const int Pos = m_Searcher.FindKeyword(*ppszText, pKeyword, KeywordLength, pLength);
 	if (Pos < 0)
 		return false;
 	*ppszText += Pos;
@@ -2634,10 +2621,10 @@ void CProgramSearchDialog::OnSearch()
 	if (!m_Searcher.BeginSearch(m_SearchSettings))
 		return;
 
-	HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
-	DWORD StartTime = ::GetTickCount();
+	const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
+	const DWORD StartTime = ::GetTickCount();
 	m_pEventHandler->Search(&m_Searcher);
-	DWORD SearchTime = TickTimeSpan(StartTime, ::GetTickCount());
+	const DWORD SearchTime = TickTimeSpan(StartTime, ::GetTickCount());
 	if (m_SortColumn >= 0)
 		SortSearchResult();
 	::SetCursor(hcurOld);
@@ -2647,7 +2634,7 @@ void CProgramSearchDialog::OnSearch()
 	if (!m_SearchSettings.Keyword.empty()) {
 		if (m_SearchSettings.fGenre)
 			StatusFormat.Append(TEXT("指定ジャンルから "));
-		StatusFormat.AppendFormat(TEXT("%s に一致する番組"), m_SearchSettings.Keyword.c_str());
+		StatusFormat.AppendFormat(TEXT("{} に一致する番組"), m_SearchSettings.Keyword);
 	} else {
 		if (m_SearchSettings.fGenre)
 			StatusFormat.Append(TEXT("指定ジャンルの番組"));
@@ -2655,7 +2642,7 @@ void CProgramSearchDialog::OnSearch()
 			StatusFormat.Append(TEXT("すべての番組"));
 	}
 	StatusFormat.AppendFormat(
-		TEXT(" %d 件 (%d.%02d 秒)"),
+		TEXT(" {} 件 ({}.{:02} 秒)"),
 		ListView_GetItemCount(::GetDlgItem(m_hDlg, IDC_PROGRAMSEARCH_RESULT)),
 		SearchTime / 1000, SearchTime / 10 % 100);
 	::SetDlgItemText(m_hDlg, IDC_PROGRAMSEARCH_STATUS, StatusFormat.GetString());

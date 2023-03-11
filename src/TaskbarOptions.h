@@ -36,7 +36,6 @@ namespace TVTest
 		typedef std::vector<int> TaskList;
 
 		CTaskbarOptions();
-		~CTaskbarOptions();
 
 	// COptions
 		bool ReadSettings(CSettings &Settings) override;

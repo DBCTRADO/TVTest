@@ -121,11 +121,11 @@ namespace TVTest
 		};
 
 		static inline ULONGLONG GetMapKey(WORD NID, WORD LogoID, BYTE LogoType) {
-			return ((ULONGLONG)NID << 24) | ((ULONGLONG)LogoID << 8) | LogoType;
+			return (static_cast<ULONGLONG>(NID) << 24) | (static_cast<ULONGLONG>(LogoID) << 8) | LogoType;
 		}
 		typedef std::map<ULONGLONG, std::unique_ptr<CLogoData>> LogoMap;
 		static inline DWORD GetIDMapKey(WORD NID, WORD SID) {
-			return ((DWORD)NID << 16) | (DWORD)SID;
+			return (static_cast<DWORD>(NID) << 16) | static_cast<DWORD>(SID);
 		}
 		typedef std::map<DWORD, WORD> LogoIDMap;
 

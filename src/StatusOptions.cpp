@@ -124,15 +124,15 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 		for (int i = 0; i < NumItems; i++) {
 			TCHAR szKey[32];
 
-			StringPrintf(szKey, TEXT("Item%d_ID"), i);
+			StringFormat(szKey, TEXT("Item{}_ID"), i);
 			if (Settings.Read(szKey, &ID) && !ID.empty()) {
 				StatusItemInfo Item;
 
 				LPTSTR p;
-				long IDNum = std::_tcstol(ID.c_str(), &p, 10);
+				const long IDNum = std::_tcstol(ID.c_str(), &p, 10);
 				if (*p == _T('\0')) {
 					if (IDNum >= STATUS_ITEM_FIRST && IDNum <= STATUS_ITEM_LAST) {
-						Item.ID = (int)IDNum;
+						Item.ID = static_cast<int>(IDNum);
 					} else {
 						continue;
 					}
@@ -162,9 +162,9 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 					Item.fVisible = false;
 				}
 
-				StringPrintf(szKey, TEXT("Item%d_Visible"), i);
+				StringFormat(szKey, TEXT("Item{}_Visible"), i);
 				Settings.Read(szKey, &Item.fVisible);
-				StringPrintf(szKey, TEXT("Item%d_Width"), i);
+				StringFormat(szKey, TEXT("Item{}_Width"), i);
 				if (!Settings.Read(szKey, &Item.Width) || Item.Width < 1)
 					Item.Width = -1;
 
@@ -215,19 +215,19 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 
 bool CStatusOptions::WriteSettings(CSettings &Settings)
 {
-	if (Settings.Write(TEXT("NumItems"), (int)m_ItemList.size())) {
-		for (int i = 0; i < (int)m_ItemList.size(); i++) {
+	if (Settings.Write(TEXT("NumItems"), static_cast<int>(m_ItemList.size()))) {
+		for (int i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 			const StatusItemInfo &Info = m_ItemList[i];
 			TCHAR szKey[32];
 
-			StringPrintf(szKey, TEXT("Item%d_ID"), i);
+			StringFormat(szKey, TEXT("Item{}_ID"), i);
 			if (!Info.IDText.empty())
 				Settings.Write(szKey, Info.IDText);
 			else
 				Settings.Write(szKey, Info.ID);
-			StringPrintf(szKey, TEXT("Item%d_Visible"), i);
+			StringFormat(szKey, TEXT("Item{}_Visible"), i);
 			Settings.Write(szKey, Info.fVisible);
-			StringPrintf(szKey, TEXT("Item%d_Width"), i);
+			StringFormat(szKey, TEXT("Item{}_Width"), i);
 			Settings.Write(szKey, Info.Width);
 		}
 	}
@@ -429,12 +429,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			switch (pdis->itemAction) {
 			case ODA_DRAWENTIRE:
 			case ODA_SELECT:
-				if ((INT)pdis->itemID >= 0) {
-					StatusItemInfo *pItemInfo = reinterpret_cast<StatusItemInfo*>(pdis->itemData);
+				if (static_cast<INT>(pdis->itemID) >= 0) {
+					const StatusItemInfo *pItemInfo = reinterpret_cast<const StatusItemInfo*>(pdis->itemData);
 					CStatusItem *pItem = m_pStatusView->GetItemByID(pItemInfo->ID);
 					int TextColor, BackColor;
-					int OldBkMode;
-					COLORREF crTextColor, crOldTextColor;
+					COLORREF crTextColor;
 					RECT rc;
 
 					if ((pdis->itemState & ODS_SELECTED) == 0) {
@@ -445,11 +444,11 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 						BackColor = COLOR_HIGHLIGHT;
 					}
 					DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(BackColor));
-					OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
+					const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
 					crTextColor = GetThemeColor(TextColor);
 					if (!pItemInfo->fVisible)
 						crTextColor = MixColor(crTextColor, GetThemeColor(BackColor));
-					crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
+					const COLORREF crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
 					rc.left = pdis->rcItem.left + m_ItemMargin.Left;
 					rc.top = pdis->rcItem.top + m_ItemMargin.Top;
 					rc.right = rc.left + m_CheckSize.Width;
@@ -477,11 +476,9 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					const int ItemHeight = m_ItemHeight - m_ItemMargin.Vert();
 					rc.top += ((rc.bottom - rc.top) - ItemHeight) / 2;
 					rc.bottom = rc.top + ItemHeight;
-					HPEN hpen, hpenOld;
-					HBRUSH hbrOld;
-					hpen = ::CreatePen(PS_SOLID, 1, crTextColor);
-					hpenOld = SelectPen(pdis->hDC, hpen);
-					hbrOld = SelectBrush(pdis->hDC, static_cast<HBRUSH>(GetStockObject(NULL_BRUSH)));
+					const HPEN hpen = ::CreatePen(PS_SOLID, 1, crTextColor);
+					const HPEN hpenOld = SelectPen(pdis->hDC, hpen);
+					const HBRUSH hbrOld = SelectBrush(pdis->hDC, static_cast<HBRUSH>(GetStockObject(NULL_BRUSH)));
 					::Rectangle(pdis->hDC, rc.left - 1, rc.top - 1, rc.right + 1, rc.bottom + 1);
 					SelectBrush(pdis->hDC, hbrOld);
 					SelectPen(pdis->hDC, hpenOld);
@@ -495,16 +492,17 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 					::SetBkMode(pdis->hDC, OldBkMode);
 					::SetTextColor(pdis->hDC, crOldTextColor);
-					if ((int)pdis->itemID == m_DropInsertPos
-							|| (int)pdis->itemID + 1 == m_DropInsertPos)
+					if (static_cast<int>(pdis->itemID) == m_DropInsertPos
+							|| static_cast<int>(pdis->itemID) + 1 == m_DropInsertPos)
 						::PatBlt(
 							pdis->hDC, pdis->rcItem.left,
-							(int)pdis->itemID == m_DropInsertPos ?
+							static_cast<int>(pdis->itemID) == m_DropInsertPos ?
 							pdis->rcItem.top : pdis->rcItem.bottom - 1,
 							pdis->rcItem.right - pdis->rcItem.left, 1, DSTINVERT);
 					if ((pdis->itemState & ODS_FOCUS) == 0)
 						break;
 				}
+				[[fallthrough]];
 			case ODA_FOCUS:
 				if ((pdis->itemState & ODS_NOFOCUSRECT) == 0)
 					::DrawFocusRect(pdis->hDC, &pdis->rcItem);
@@ -573,7 +571,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		return TRUE;
 
 	case WM_NOTIFY:
-		switch (((LPNMHDR)lParam)->code) {
+		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case PSN_APPLY:
 			{
 				m_pStatusView->EnableSizeAdjustment(false);
@@ -595,7 +593,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					}
 				}
 
-				bool fMultiRow = DlgCheckBox_IsChecked(hDlg, IDC_STATUSOPTIONS_MULTIROW);
+				const bool fMultiRow = DlgCheckBox_IsChecked(hDlg, IDC_STATUSOPTIONS_MULTIROW);
 				if (m_fMultiRow != fMultiRow) {
 					m_fMultiRow = fMultiRow;
 					m_pStatusView->SetMultiRow(fMultiRow);
@@ -610,7 +608,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 				m_fShowPopup = DlgCheckBox_IsChecked(hDlg, IDC_STATUSOPTIONS_SHOWPOPUP);
 				if (Util::OS::IsWindows8OrLater()) {
-					int Opacity = DlgEdit_GetInt(hDlg, IDC_STATUSOPTIONS_OPACITY_INPUT);
+					const int Opacity = DlgEdit_GetInt(hDlg, IDC_STATUSOPTIONS_OPACITY_INPUT);
 					m_PopupOpacity = std::clamp(Opacity, OPACITY_MIN, OPACITY_MAX);
 				}
 
@@ -666,22 +664,18 @@ void CStatusOptions::RealizeStyle()
 
 void CStatusOptions::CalcTextWidth()
 {
-	HWND hwndList;
-	HDC hdc;
-	HFONT hfontOld;
-	int Count, i;
+	const HWND hwndList = GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
 	int MaxWidth;
 	CStatusItem *pItem;
 	SIZE sz;
 
-	hwndList = GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
-	hdc = GetDC(hwndList);
+	const HDC hdc = GetDC(hwndList);
 	if (hdc == nullptr)
 		return;
-	hfontOld = SelectFont(hdc, GetWindowFont(hwndList));
-	Count = ListBox_GetCount(hwndList);
+	const HFONT hfontOld = SelectFont(hdc, GetWindowFont(hwndList));
+	const int Count = ListBox_GetCount(hwndList);
 	MaxWidth = 0;
-	for (i = 0; i < Count; i++) {
+	for (int i = 0; i < Count; i++) {
 		pItem = m_pStatusView->GetItemByID(m_ItemListCur[i].ID);
 		GetTextExtentPoint32(hdc, pItem->GetName(), lstrlen(pItem->GetName()), &sz);
 		if (sz.cx > MaxWidth)
@@ -695,11 +689,11 @@ void CStatusOptions::CalcTextWidth()
 
 void CStatusOptions::SetListHExtent()
 {
-	HWND hwndList = ::GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
+	const HWND hwndList = ::GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
 	int MaxWidth = 0;
 
 	for (const StatusItemInfo &Item : m_ItemListCur) {
-		int Width = Item.Width >= 0 ? Item.Width : m_pStatusView->GetItemByID(Item.ID)->GetWidth();
+		const int Width = Item.Width >= 0 ? Item.Width : m_pStatusView->GetItemByID(Item.ID)->GetWidth();
 		if (Width > MaxWidth)
 			MaxWidth = Width;
 	}
@@ -713,9 +707,7 @@ void CStatusOptions::SetListHExtent()
 
 static int ListBox_GetHitItem(HWND hwndList, int x, int y)
 {
-	int Index;
-
-	Index = ListBox_GetTopIndex(hwndList) + y / ListBox_GetItemHeight(hwndList, 0);
+	const int Index = ListBox_GetTopIndex(hwndList) + y / ListBox_GetItemHeight(hwndList, 0);
 	if (Index < 0 || Index >= ListBox_GetCount(hwndList))
 		return -1;
 	return Index;
@@ -724,10 +716,9 @@ static int ListBox_GetHitItem(HWND hwndList, int x, int y)
 
 static void ListBox_MoveItem(HWND hwndList, int From, int To)
 {
-	int Top = ListBox_GetTopIndex(hwndList);
-	LPARAM lData;
+	const int Top = ListBox_GetTopIndex(hwndList);
+	const LPARAM lData = ListBox_GetItemData(hwndList, From);
 
-	lData = ListBox_GetItemData(hwndList, From);
 	ListBox_DeleteString(hwndList, From);
 	ListBox_InsertItemData(hwndList, To, lData);
 	ListBox_SetCurSel(hwndList, To);
@@ -737,9 +728,8 @@ static void ListBox_MoveItem(HWND hwndList, int From, int To)
 
 static void ListBox_EnsureVisible(HWND hwndList, int Index)
 {
-	int Top;
+	const int Top = ListBox_GetTopIndex(hwndList);
 
-	Top = ListBox_GetTopIndex(hwndList);
 	if (Index < Top) {
 		ListBox_SetTopIndex(hwndList, Index);
 	} else if (Index > Top) {
@@ -758,10 +748,9 @@ static void ListBox_EnsureVisible(HWND hwndList, int Index)
 
 void CStatusOptions::DrawInsertMark(HWND hwndList, int Pos)
 {
-	HDC hdc;
 	RECT rc;
 
-	hdc = GetDC(hwndList);
+	const HDC hdc = GetDC(hwndList);
 	GetClientRect(hwndList, &rc);
 	rc.top = (Pos - ListBox_GetTopIndex(hwndList)) * m_ItemHeight - 1;
 	PatBlt(hdc, 0, rc.top, rc.right - rc.left, 2, DSTINVERT);
@@ -799,7 +788,7 @@ bool CStatusOptions::IsCursorResize(HWND hwndList, int x, int y)
 
 	if (!GetItemPreviewRect(hwndList, ListBox_GetHitItem(hwndList, x, y), &rc))
 		return false;
-	int Margin = (GetSystemMetricsWithDPI(SM_CXSIZEFRAME, m_CurrentDPI) + 1) / 2;
+	const int Margin = (GetSystemMetricsWithDPI(SM_CXSIZEFRAME, m_CurrentDPI) + 1) / 2;
 	return x >= rc.right - Margin && x <= rc.right + Margin;
 }
 
@@ -854,11 +843,11 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 	switch (uMsg) {
 	case WM_LBUTTONDOWN:
 		{
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-			int Sel;
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int Sel = ListBox_GetHitItem(hwnd, x, y);
 
 			SetFocus(hwnd);
-			Sel = ListBox_GetHitItem(hwnd, x, y);
+
 			if (Sel >= 0) {
 				RECT rc;
 
@@ -893,7 +882,8 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 			m_pStatusOptions->m_DragTimerID = 0;
 		}
 		if (m_pStatusOptions->m_DropInsertPos >= 0) {
-			int From = ListBox_GetCurSel(hwnd), To;
+			const int From = ListBox_GetCurSel(hwnd);
+			int To;
 
 			m_pStatusOptions->DrawInsertMark(hwnd, m_pStatusOptions->m_DropInsertPos);
 			To = m_pStatusOptions->m_DropInsertPos;
@@ -908,21 +898,21 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 
 	case WM_MOUSEMOVE:
 		if (GetCapture() == hwnd) {
-			int y = GET_Y_LPARAM(lParam);
+			const int y = GET_Y_LPARAM(lParam);
 			RECT rc;
 
 			GetClientRect(hwnd, &rc);
 			if (m_pStatusOptions->m_fDragResize) {
-				int x = GET_X_LPARAM(lParam);
-				int Sel = ListBox_GetCurSel(hwnd);
+				const int x = GET_X_LPARAM(lParam);
+				const int Sel = ListBox_GetCurSel(hwnd);
 				RECT rc;
 
 				if (m_pStatusOptions->GetItemPreviewRect(hwnd, Sel, &rc)) {
 					StatusItemInfo *pItemInfo = reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd, Sel));
 					int Width = (x - rc.left) - m_pStatusOptions->m_pStatusView->GetItemPadding().Horz();
 					const CStatusItem *pItem = m_pStatusOptions->m_pStatusView->GetItemByID(pItemInfo->ID);
-					int MinWidth = pItem->GetMinWidth();
-					int MaxWidth = pItem->GetMaxWidth();
+					const int MinWidth = pItem->GetMinWidth();
+					const int MaxWidth = pItem->GetMaxWidth();
 
 					if (Width < MinWidth)
 						Width = MinWidth;
@@ -934,7 +924,7 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 					m_pStatusOptions->SetListHExtent();
 				}
 			} else if (y >= 0 && y < rc.bottom) {
-				int Insert, Count, Sel;
+				int Insert;
 
 				if (m_pStatusOptions->m_DragTimerID != 0) {
 					KillTimer(hwnd, m_pStatusOptions->m_DragTimerID);
@@ -943,11 +933,11 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 				Insert =
 					ListBox_GetTopIndex(hwnd) +
 					(y + m_pStatusOptions->m_ItemHeight / 2) / m_pStatusOptions->m_ItemHeight;
-				Count = ListBox_GetCount(hwnd);
+				const int Count = ListBox_GetCount(hwnd);
 				if (Insert > Count) {
 					Insert = Count;
 				} else {
-					Sel = ListBox_GetCurSel(hwnd);
+					const int Sel = ListBox_GetCurSel(hwnd);
 					if (Insert == Sel || Insert == Sel + 1)
 						Insert = -1;
 				}
@@ -971,12 +961,12 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 				if (TimerID != m_pStatusOptions->m_DragTimerID) {
 					if (m_pStatusOptions->m_DragTimerID != 0)
 						KillTimer(hwnd, m_pStatusOptions->m_DragTimerID);
-					m_pStatusOptions->m_DragTimerID = (UINT)SetTimer(hwnd, TimerID, 100, nullptr);
+					m_pStatusOptions->m_DragTimerID = static_cast<UINT>(SetTimer(hwnd, TimerID, 100, nullptr));
 				}
 				SetCursor(LoadCursor(nullptr, IDC_NO));
 			}
 		} else {
-			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
 			SetCursor(LoadCursor(nullptr, m_pStatusOptions->IsCursorResize(hwnd, x, y) ? IDC_SIZEWE : IDC_ARROW));
 		}
