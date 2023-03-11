@@ -116,6 +116,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 					&& Renderer != LibISDB::DirectShow::VideoRenderer::RendererType::VMR9)
 				break;
 		}
+		[[fallthrough]];
 	case WM_SIZE:
 		{
 			const int Width = LOWORD(lParam), Height = HIWORD(lParam);

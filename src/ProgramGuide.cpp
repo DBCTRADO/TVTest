@@ -6945,6 +6945,7 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 			::SendMessage(hwnd, WM_CLOSE, 0, 0);
 			return 0;
 		}
+		[[fallthrough]];
 	case WM_MOUSEWHEEL:
 	case WM_MOUSEHWHEEL:
 		return m_pProgramGuide->SendMessage(uMsg, wParam, lParam);
@@ -7434,6 +7435,7 @@ LRESULT CProgramGuideFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 	case WM_SHOWWINDOW:
 		if (!wParam)
 			break;
+		[[fallthrough]];
 	case WM_DWMCOMPOSITIONCHANGED:
 		SetAeroGlass();
 		m_UxTheme.Close();

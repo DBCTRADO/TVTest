@@ -704,6 +704,7 @@ INT_PTR CAudioOptions::CSurroundOptionsDialog::DlgProc(
 				m_pOptions->m_fChanged = true;
 				m_pOptions->ApplyMediaViewerOptions();
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

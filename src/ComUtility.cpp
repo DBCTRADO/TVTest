@@ -433,6 +433,7 @@ INT_PTR CPropertyPageFrame::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				if (e.fActivated)
 					e.pPropPage->Apply();
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

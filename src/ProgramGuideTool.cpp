@@ -344,6 +344,7 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 			GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_NAME, &m_pTool->m_Name);
 			GetDlgItemString(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, &m_pTool->m_Command);
 			m_pTool->m_Icon.Destroy();
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

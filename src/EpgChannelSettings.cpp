@@ -179,6 +179,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				m_pProgramGuide->SetExcludeNoEventServices(
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT));
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

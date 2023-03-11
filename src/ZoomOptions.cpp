@@ -492,6 +492,7 @@ INT_PTR CZoomOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					m_ZoomList[Index].fVisible = m_ItemListView.IsItemChecked(i);
 				}
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

@@ -188,6 +188,7 @@ INT_PTR CProgramGuideToolbarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 					CProgramGuideFrameSettings::TimeBarSettings::BUTTONCOUNT_MIN;
 				m_FrameSettings.SetTimeBarSettings(TimeBarSettings);
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

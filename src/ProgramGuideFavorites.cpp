@@ -353,6 +353,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 				m_Favorites.SetFixedWidth(DlgCheckBox_IsChecked(hDlg, IDC_PROGRAMGUIDEFAVORITES_FIXEDWIDTH));
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

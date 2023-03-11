@@ -1307,6 +1307,7 @@ INT_PTR CFavoritePropertiesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, 
 				m_pChannel->SetForceBonDriverChange(
 					DlgCheckBox_IsChecked(hDlg, IDC_FAVORITEPROP_FORCEBONDRIVERCHANGE));
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -1664,6 +1665,7 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 				m_pManager->GetRootFolder() = Root;
 				m_pManager->SetModified(true);
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

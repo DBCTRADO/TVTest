@@ -609,6 +609,7 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 				m_PresetList = List;
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			if (m_fTested)
 				GetAppClass().UICore.SetPanAndScan(m_OldPanAndScanInfo);

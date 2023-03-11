@@ -873,6 +873,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_ACCELERATOR_KEY:
 			if (HIWORD(wParam) != CBN_SELCHANGE)
 				break;
+			[[fallthrough]];
 		case IDC_ACCELERATOR_SHIFT:
 		case IDC_ACCELERATOR_CONTROL:
 		case IDC_ACCELERATOR_ALT:

@@ -686,6 +686,7 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg, UINT uMsg, WPAR
 				GetDlgItemString(hDlg, IDC_TSPROCESSORTUNERMAP_DEVICE, &m_pInfo->Device);
 				GetDlgItemString(hDlg, IDC_TSPROCESSORTUNERMAP_FILTER, &m_pInfo->Filter);
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

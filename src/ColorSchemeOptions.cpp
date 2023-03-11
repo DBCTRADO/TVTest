@@ -85,6 +85,7 @@ INT_PTR CColorSchemeSaveDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 			::GetDlgItemText(hDlg, IDC_SAVECOLORSCHEME_NAME, m_pszName, MAX_COLORSCHEME_NAME);
 			if (m_pszName[0] == _T('\0'))
 				return TRUE;
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -396,6 +397,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					}
 					if ((pdis->itemState & ODS_FOCUS) == 0)
 						break;
+					[[fallthrough]];
 				case ODA_FOCUS:
 					if ((pdis->itemState & ODS_NOFOCUSRECT) == 0
 							&& (pdis->itemState & ODS_COMBOBOXEDIT) != 0)
@@ -448,6 +450,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					}
 					if ((pdis->itemState & ODS_FOCUS) == 0)
 						break;
+					[[fallthrough]];
 				case ODA_FOCUS:
 					if ((pdis->itemState & ODS_NOFOCUSRECT) == 0)
 						::DrawFocusRect(pdis->hDC, &pdis->rcItem);

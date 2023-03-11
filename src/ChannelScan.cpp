@@ -148,6 +148,7 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 				if (!fModified)
 					wParam = IDCANCEL;
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -1890,6 +1891,7 @@ INT_PTR CChannelScan::CScanSettingsDialog::DlgProc(
 				m_pChannelScan->m_fDetectAudioService =
 					DlgCheckBox_IsChecked(hDlg, IDC_CHANNELSCANSETTINGS_DETECTAUDIOSERVICE);
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

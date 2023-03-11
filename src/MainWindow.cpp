@@ -1128,6 +1128,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_SYSKEYDOWN:
 		if (wParam != VK_F10)
 			break;
+		[[fallthrough]];
 	case WM_KEYDOWN:
 		if (OnKeyDown(wParam))
 			return 0;
@@ -1655,6 +1656,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (!wParam)
 			break;
 		m_App.Core.SetSilent(true);
+		[[fallthrough]];
 	case WM_DESTROY:
 		OnDestroy();
 		return 0;
@@ -5667,11 +5669,13 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 	case WM_SYSKEYDOWN:
 		if (wParam != VK_F10)
 			break;
+		[[fallthrough]];
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE) {
 			m_App.UICore.SetFullscreen(false);
 			return 0;
 		}
+		[[fallthrough]];
 	case WM_COMMAND:
 		return m_MainWindow.SendMessage(uMsg, wParam, lParam);
 

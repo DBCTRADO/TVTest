@@ -563,6 +563,7 @@ INT_PTR CFeaturedEventsSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam
 					m_SearchSettings.ServiceList.Clear();
 				}
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
@@ -889,6 +890,7 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 					m_Settings.SetEventTextLines(Lines);
 			}
 
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

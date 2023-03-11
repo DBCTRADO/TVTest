@@ -133,6 +133,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		case IDC_TSPROCESSORERROR_DEVICELIST:
 			if (HIWORD(wParam) != CBN_SELCHANGE)
 				return TRUE;
+			[[fallthrough]];
 		case IDC_TSPROCESSORERROR_SEARCH:
 			{
 				const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
@@ -183,6 +184,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					m_Filter.clear();
 				}
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

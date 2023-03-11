@@ -502,6 +502,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					if ((pdis->itemState & ODS_FOCUS) == 0)
 						break;
 				}
+				[[fallthrough]];
 			case ODA_FOCUS:
 				if ((pdis->itemState & ODS_NOFOCUSRECT) == 0)
 					::DrawFocusRect(pdis->hDC, &pdis->rcItem);

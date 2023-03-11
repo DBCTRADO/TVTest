@@ -214,6 +214,7 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 				m_Options.fKeyTimeoutCancel =
 					DlgComboBox_GetCurSel(hDlg, IDC_CHANNELINPUT_TIMEOUTMODE) == 1;
 			}
+			[[fallthrough]];
 		case IDCANCEL:
 			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;

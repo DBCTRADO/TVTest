@@ -1797,7 +1797,7 @@ LRESULT CHomeDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			::SetFocus(hwnd);
 			m_fHitCloseButton = CloseButtonHitTest(pt.x, pt.y);
 		}
-		// Fall through
+		[[fallthrough]];
 	case WM_MOUSEMOVE:
 		{
 			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
