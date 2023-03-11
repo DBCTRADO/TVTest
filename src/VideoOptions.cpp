@@ -43,6 +43,7 @@ const CVideoOptions::RendererInfo CVideoOptions::m_RendererList[] = {
 	{LibISDB::DirectShow::VideoRenderer::RendererType::EVRCustomPresenter, TEXT("EVR (Custom Presenter)")},
 //	{LibISDB::DirectShow::VideoRenderer::RendererType::OverlayMixer,       TEXT("Overlay Mixer")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::madVR,              TEXT("madVR")},
+	{LibISDB::DirectShow::VideoRenderer::RendererType::MPCVideoRenderer,   TEXT("MPC Video Renderer")},
 };
 
 

@@ -19,16 +19,20 @@ TVTestで利用可能なデコーダとレンダラについて解説します�
 <tr><th>名前</th><th>特記事項</th></tr>
 <tr><td><a href="https://github.com/DBCTRADO/TVTestVideoDecoder">TVTest DTV Video Decoder</a></td><td>TVTest のフォルダに配置するとインストールせずに使えます。</td></tr>
 <tr><td>ATI MPEG Video Decoder<br>AMD Video Decoder</td><td>インターレース解除などは、CCC で設定します。<br>一部ノイズが出る場合があります。</td></tr>
-<tr><td><a href="http://deinterlace.sourceforge.net/dscaler5.htm">DScaler Mpeg2 Video Decoder</a></td><td>2006年の Alpha 版で開発停止しています。</td></tr>
-<tr><td><a href="http://ffdshow-tryout.sourceforge.net/">ffdshow Video Decoder</a></td><td>オリジナルの ffdshow は2006年に開発停止、後継の ffdshow tryouts も既にほぼ開発停止しています。<br>チャンネル切り替え時にノイズが出るなどの問題が出ることがあります。</td></tr>
 <tr><td><a href="https://github.com/Nevcairiel/LAVFilters">LAV Video Decoder</a></td><td>再生オフからオンに切り替えた時に映像が表示されません。<br>その場合もう一度オフ・オンを繰り返してください。</td></tr>
 <tr><td>Microsoft MPEG-2 Video Decoder<br>Microsoft DTV-DVD Video Decoder</td><td>Windows Vista 以降に付属しているデコーダです。<br>Windows 8 以降では MPEG-2 のデコードは有料オプションです。</td></tr>
 <tr><td>MPV Decoder Filter<br>MPC - MPEG-2 Video Decoder<br>Mpeg2Dec Filter</td><td>Media Player Classic のデコーダとその派生デコーダです。<br><a href="https://sourceforge.net/projects/mpcbe/">MPC-BE</a> の Standalone filters から入手可能です。<br></td></tr>
 </table>
+<p class="descript">以下のデコーダも利用は可能ですが、既に開発停止しているため非推奨です。</p>
+<table class="info">
+<tr><th>名前</th><th>特記事項</th></tr>
+<tr><td><a href="http://deinterlace.sourceforge.net/dscaler5.htm">DScaler Mpeg2 Video Decoder</a></td><td>2006年の Alpha 版で開発停止しています。</td></tr>
+<tr><td><a href="http://ffdshow-tryout.sourceforge.net/">ffdshow Video Decoder</a></td><td>オリジナルの ffdshow は2006年に開発停止、後継の ffdshow tryouts も既に開発停止しています。<br>チャンネル切り替え時にノイズが出るなどの問題が出ることがあります。</td></tr>
+</table>
 
 <h2>レンダラ</h2>
 <p class="descript">以下の映像レンダラが利用できます。<br>
-基本的に Vista 以降では EVR をお薦めします。</p>
+特に理由が無ければ、通常は EVR または EVR (Custom Presenter) を選ぶのが良いでしょう。</p>
 <table class="info">
 <tr><th>名前</th><th>説明</th></tr>
 <tr><td>システムデフォルト</td><td>システムのデフォルトレンダラ。通常古いレンダラが使われます。</td></tr>
@@ -37,6 +41,7 @@ TVTestで利用可能なデコーダとレンダラについて解説します�
 <tr><td>EVR</td><td>Vista 以降用のレンダラ。<br>ハードウェアによる再生支援やインターレース解除に必要です。</td></tr>
 <tr><td>EVR (Custom Presenter)</td><td>EVR のプレゼンタをカスタム実装したもの。EVR で問題がある場合(マルチディスプレイ環境など)に試してください。</td></tr>
 <tr><td><a href="http://madvr.com/">madVR</a></td><td>madVR がインストールされていれば利用できます。<br>v0.24 以降でないとフリーズします。</td></tr>
+<tr><td><a href="https://github.com/Aleksoid1978/VideoRenderer">MPC Video Renderer</a></td><td>MPC Video Renderer がインストールされていれば利用できます。<br>デコーダで DXVA2 でのデコードを行う場合は、プロパティで [Use Direct3D 11] のチェックを外します。また、D3D11 でのデコードを行う場合はチェックを入れます。</td></tr>
 </table>
 
 </body>
