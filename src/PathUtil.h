@@ -23,6 +23,7 @@
 
 
 #include "StringUtility.h"
+#include <format>
 
 
 namespace TVTest
@@ -79,6 +80,15 @@ namespace TVTest
 	};
 
 }	// namespace TVTest
+
+template<> struct std::formatter<TVTest::CFilePath, TCHAR>
+	: public std::formatter<TVTest::String, TCHAR>
+{
+	template<typename TContext> auto format(const TVTest::CFilePath &Value, TContext &Context)
+	{
+		return formatter<TVTest::String, TCHAR>::format(Value, Context);
+	}
+};
 
 
 #endif
