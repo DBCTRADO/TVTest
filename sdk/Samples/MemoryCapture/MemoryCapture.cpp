@@ -206,7 +206,7 @@ private:
 	void LoadAppSettings();
 	bool AllocateStreamBuffer();
 	void FreeStreamBuffer();
-	void InputStream(DWORD Format, const void *pData, SIZE_T Size);
+	void InputStream(DWORD Format, const void *pData, std::size_t Size);
 	bool StartCapture(bool fAdd);
 	void CloseDecodeThread();
 	void FreeImages();
@@ -745,7 +745,7 @@ void CMemoryCapture::FreeStreamBuffer()
 
 
 // ストリームの受け取り
-void CMemoryCapture::InputStream(DWORD Format, const void *pData, SIZE_T Size)
+void CMemoryCapture::InputStream(DWORD Format, const void *pData, std::size_t Size)
 {
 	CBlockLock Lock(m_StreamLock);
 
