@@ -17,13 +17,19 @@
 #include <windows.h>
 #include <tchar.h>
 #include <objbase.h>
-#include <gdiplus.h>
 #include <shlwapi.h>
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <deque>
 #include <strsafe.h>
+
+// Windows SDK version 2104 (10.0.20348.0) より前は Gdiplus に min / max の宣言が必要
+namespace Gdiplus {
+	using std::min;
+	using std::max;
+}
+#include <gdiplus.h>
 
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT // クラスとして実装
 #include "TVTestPlugin.h"
