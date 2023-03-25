@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <memory>
+#include <bitset>
 #include "Theme.h"
 #include "Settings.h"
 
@@ -491,7 +492,7 @@ namespace TVTest
 			int Color;
 		};
 
-		DWORD m_LoadedFlags[(NUM_COLORS + 31) / 32];
+		std::bitset<NUM_COLORS> m_LoadedFlags;
 		void SetLoadedFlag(int Color);
 		static const ColorInfo m_ColorInfoList[NUM_COLORS];
 		static const GradientInfo m_GradientInfoList[NUM_GRADIENTS];

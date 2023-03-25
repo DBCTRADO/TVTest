@@ -482,7 +482,6 @@ const Theme::BorderType CColorScheme::m_CustomDefaultBorderList[NUM_BORDERS] = {
 CColorScheme::CColorScheme()
 {
 	SetDefault();
-	::ZeroMemory(m_LoadedFlags, sizeof(m_LoadedFlags));
 }
 
 
@@ -643,7 +642,7 @@ bool CColorScheme::Load(CSettings &Settings)
 			m_BaseScheme = BaseSchemeType::Light;
 	}
 
-	::ZeroMemory(m_LoadedFlags, sizeof(m_LoadedFlags));
+	m_LoadedFlags.reset();
 	for (int i = 0; i < NUM_COLORS; i++) {
 		if (Settings.ReadColor(m_ColorInfoList[i].pszText, &m_ColorList[i]))
 			SetLoadedFlag(i);
@@ -1091,13 +1090,13 @@ bool CColorScheme::IsLoaded(int Type) const
 {
 	if (Type < 0 || Type >= NUM_COLORS)
 		return false;
-	return (m_LoadedFlags[Type / 32] & (1 << (Type % 32))) != 0;
+	return m_LoadedFlags[Type];
 }
 
 
 void CColorScheme::SetLoaded()
 {
-	::FillMemory(m_LoadedFlags, sizeof(m_LoadedFlags), 0xFF);
+	m_LoadedFlags.set();
 }
 
 
@@ -1145,7 +1144,7 @@ int CColorScheme::GetColorBorder(int Type)
 
 void CColorScheme::SetLoadedFlag(int Color)
 {
-	m_LoadedFlags[Color / 32] |= 1 << (Color % 32);
+	m_LoadedFlags.set(Color);
 }
 
 
