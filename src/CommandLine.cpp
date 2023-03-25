@@ -61,7 +61,7 @@ public:
 CArgsParser::CArgsParser(LPCWSTR pszCmdLine)
 {
 	m_ppszArgList = ::CommandLineToArgvW(pszCmdLine, &m_Args);
-	if (m_ppszArgList == 0)
+	if (m_ppszArgList == nullptr)
 		m_Args = 0;
 	m_CurPos = 0;
 }
