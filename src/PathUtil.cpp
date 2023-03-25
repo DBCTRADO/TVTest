@@ -246,7 +246,7 @@ bool Canonicalize(String *pPath)
 		if (Pos == String::npos)
 			Pos = pPath->length();
 		if (Pos > Next) {
-			const String Item = pPath->substr(Next, Pos - Next);
+			const StringView Item(pPath->data() + Next, Pos - Next);
 			if (Item.compare(L".") == 0) {
 				pPath->erase(Next, Pos - Next + 1);
 				Pos = Next;
