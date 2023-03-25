@@ -505,9 +505,8 @@ bool CIniFile::CreateSection(LPCWSTR pszName)
 
 CIniFile::CEntry::CEntry(const String &Text)
 {
-	String::size_type Pos;
+	String::size_type Pos = Text.find_first_not_of(L" \t");
 
-	Pos = Text.find_first_not_of(L" \t");
 	if (Pos != String::npos && Text[Pos] == L';') {
 		Value = Text;
 	} else {

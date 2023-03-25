@@ -164,11 +164,10 @@ void CStreamInfoPage::SetService()
 		return;
 
 	TCHAR szText[1024];
-	size_t Length;
 
 	const WORD TSID = pAnalyzer->GetTransportStreamID();
 	if (TSID != LibISDB::TRANSPORT_STREAM_ID_INVALID) {
-		Length = StringFormat(szText, TEXT("TSID {0:#04x} ({0})"), TSID);
+		const size_t Length = StringFormat(szText, TEXT("TSID {0:#04x} ({0})"), TSID);
 		String TSName;
 		if (pAnalyzer->GetTSName(&TSName)) {
 			StringFormat(szText + Length, lengthof(szText) - Length, TEXT(" {}"), TSName);
@@ -180,7 +179,7 @@ void CStreamInfoPage::SetService()
 
 	const WORD NID = pAnalyzer->GetNetworkID();
 	if (NID != LibISDB::NETWORK_ID_INVALID) {
-		Length = StringFormat(szText, TEXT("NID {0:#04x} ({0})"), NID);
+		const size_t Length = StringFormat(szText, TEXT("NID {0:#04x} ({0})"), NID);
 		String Name;
 		if (pAnalyzer->GetNetworkName(&Name)) {
 			StringFormat(szText + Length, lengthof(szText) - Length, TEXT(" {}"), Name);
@@ -211,20 +210,19 @@ void CStreamInfoPage::SetService()
 	if (hItem != nullptr) {
 		for (int i = 0; i < static_cast<int>(ServiceList.size()); i++) {
 			const LibISDB::AnalyzerFilter::ServiceInfo &ServiceInfo = ServiceList[i];
-			WORD ServiceID, PID;
+			WORD PID;
 
 			tvis.hParent = hItem;
 			tvis.item.state = 0;
 			tvis.item.cChildren = 1;
-			Length = StringFormat(szText, TEXT("サービス{}"), i + 1);
+			size_t Length = StringFormat(szText, TEXT("サービス{}"), i + 1);
 			if (!ServiceInfo.ServiceName.empty())
 				Length += StringFormat(
 					szText + Length, lengthof(szText) - Length,
 					TEXT(" ({})"), ServiceInfo.ServiceName);
-			ServiceID = ServiceInfo.ServiceID;
 			Length += StringFormat(
 				szText + Length, lengthof(szText) - Length,
-				TEXT(" : SID {0:#04x} ({0})"), ServiceID);
+				TEXT(" : SID {0:#04x} ({0})"), ServiceInfo.ServiceID);
 			if (ServiceInfo.ServiceType != LibISDB::SERVICE_TYPE_INVALID) {
 				StringFormat(
 					szText + Length, lengthof(szText) - Length,
@@ -320,6 +318,7 @@ void CStreamInfoPage::SetService()
 				tvis.hParent = hItem;
 				tvis.item.state = 0;
 				tvis.item.cChildren = 0;
+				size_t Length;
 				if (!ServiceInfo.ServiceName.empty())
 					Length = StringFormat(szText, TEXT("{}"), ServiceInfo.ServiceName);
 				else

@@ -367,10 +367,8 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_LBUTTONDOWN:
 		{
-			POINT pt;
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			if (m_fShowTitle && pt.y < m_TitleHeight) {
 				RECT rc;
 
@@ -382,8 +380,8 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				} else {
 					SetHotItem(ItemType::None);
 					if (m_fEnableFloating) {
-						::ClientToScreen(hwnd, &pt);
 						m_fCloseButtonPushed = false;
+						::ClientToScreen(hwnd, &pt);
 						m_ptDragStartPos = pt;
 						::SetCapture(hwnd);
 					}
@@ -412,10 +410,7 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEMOVE:
 		{
-			POINT pt;
-
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
 			RECT rc;
 			GetCloseButtonRect(&rc);
@@ -466,10 +461,8 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_RBUTTONUP:
 		{
-			POINT pt;
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			if (m_fShowTitle && pt.y < m_TitleHeight
 					&& m_pEventHandler != nullptr) {
 				const HMENU hmenu = ::CreatePopupMenu();
@@ -884,11 +877,10 @@ LRESULT CPanelFrame::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			const int Margin = m_pStyleScaling->GetScaledSystemMetrics(SM_CYCAPTION);
 			POINT pt;
 			RECT rcTarget, rc;
-			DockingPlace Target;
+			DockingPlace Target = DockingPlace::None;
 
 			::GetCursorPos(&pt);
 			m_pSplitter->GetLayoutBase()->GetScreenPosition(&rcTarget);
-			Target = DockingPlace::None;
 			rc = rcTarget;
 			rc.right = rc.left + Margin;
 			if (::PtInRect(&rc, pt)) {

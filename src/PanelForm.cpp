@@ -583,10 +583,10 @@ void CPanelForm::CalcTabSize()
 
 	if (m_TabStyle != TabStyle::IconOnly) {
 		int MaxWidth = 0;
-		SIZE sz;
 
 		for (const auto &Window : m_WindowList) {
 			if (Window->m_fVisible) {
+				SIZE sz;
 				::GetTextExtentPoint32(hdc, Window->m_Title.data(), static_cast<int>(Window->m_Title.length()), &sz);
 				if (sz.cx > MaxWidth)
 					MaxWidth = sz.cx;
@@ -660,11 +660,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 		const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 		const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 		const HBRUSH hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
-		RECT rc;
-		rc.left = 0;
-		rc.top = 0;
-		rc.right = TabWidth;
-		rc.bottom = m_TabHeight;
+		RECT rc = {0, 0, TabWidth, m_TabHeight};
 
 		for (const int Index : m_TabOrder) {
 			const CWindowInfo *pWindow = m_WindowList[Index].get();

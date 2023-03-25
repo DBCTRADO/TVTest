@@ -423,15 +423,11 @@ int CChannelList::GetNextChannel(int Index, bool fWrap) const
 			return i;
 	}
 
-	int Channel, Min;
+	int Channel = INT_MAX, Min = INT_MAX;
 
-	Channel = INT_MAX;
-	Min = INT_MAX;
-	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); ++i) {
-		const CChannelInfo *pChInfo = i->get();
-
-		if (pChInfo->IsEnabled()) {
-			const int No = pChInfo->GetChannelNo();
+	for (const auto &ChInfo : m_ChannelList) {
+		if (ChInfo->IsEnabled()) {
+			const int No = ChInfo->GetChannelNo();
 			if (No != 0) {
 				if (No > ChannelNo && No < Channel)
 					Channel = No;
@@ -463,15 +459,11 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 			return i;
 	}
 
-	int Channel, Max;
+	int Channel = 0, Max = 0;
 
-	Channel = 0;
-	Max = 0;
-	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); ++i) {
-		const CChannelInfo *pChInfo = i->get();
-
-		if (pChInfo->IsEnabled()) {
-			const int No = pChInfo->GetChannelNo();
+	for (const auto &ChInfo : m_ChannelList) {
+		if (ChInfo->IsEnabled()) {
+			const int No = ChInfo->GetChannelNo();
 			if (No != 0) {
 				if (No < ChannelNo && No > Channel)
 					Channel = No;
@@ -499,11 +491,10 @@ int CChannelList::GetPrevChannel(int Index, bool fWrap) const
 
 int CChannelList::GetMaxChannelNo() const
 {
-	int Max;
+	int Max = 0;
 
-	Max = 0;
-	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); i++) {
-		const int No = (*i)->GetChannelNo();
+	for (const auto &ChInfo : m_ChannelList) {
+		const int No = ChInfo->GetChannelNo();
 		if (No > Max)
 			Max = No;
 	}
@@ -578,8 +569,8 @@ bool CChannelList::Sort(SortType Type, bool fDescending)
 
 bool CChannelList::HasRemoteControlKeyID() const
 {
-	for (auto i = m_ChannelList.begin(); i != m_ChannelList.end(); i++) {
-		if ((*i)->GetChannelNo() != 0)
+	for (const auto &ChInfo : m_ChannelList) {
+		if (ChInfo->GetChannelNo() != 0)
 			return true;
 	}
 	return false;

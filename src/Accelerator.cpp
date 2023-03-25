@@ -309,18 +309,17 @@ void CAccelerator::FormatAccelText(LPTSTR pszText, size_t MaxText, int Key, int 
 
 void CAccelerator::SetMenuAccelText(HMENU hmenu, int Command)
 {
-	TCHAR szText[128], *p;
-	size_t i;
+	TCHAR szText[128];
 	const KeyInfo *pKey = nullptr;
 
 	GetMenuString(hmenu, Command, szText, lengthof(szText), MF_BYCOMMAND);
-	for (i = 0; i < m_KeyList.size(); i++) {
-		if (m_KeyList[i].Command == Command) {
-			pKey = &m_KeyList[i];
+	for (const KeyInfo &Key : m_KeyList) {
+		if (Key.Command == Command) {
+			pKey = &Key;
 			break;
 		}
 	}
-	p = szText;
+	LPTSTR p = szText;
 	while (*p != '\t') {
 		if (*p == '\0') {
 			if (pKey == nullptr)
@@ -347,9 +346,8 @@ HACCEL CAccelerator::CreateAccel()
 		return nullptr;
 
 	std::unique_ptr<ACCEL[]> paccl(new ACCEL[m_KeyList.size()]);
-	int j;
+	int j = 0;
 
-	j = 0;
 	for (size_t i = 0; i < m_KeyList.size(); i++) {
 		if (!m_KeyList[i].fGlobal) {
 			paccl[j].fVirt = FVIRTKEY;
@@ -671,9 +669,9 @@ bool CAccelerator::TranslateMessage(HWND hwnd, LPMSG pmsg)
 
 int CAccelerator::TranslateHotKey(WPARAM wParam, LPARAM lParam) const
 {
-	for (size_t i = 0; i < m_KeyList.size(); i++) {
-		if (((m_KeyList[i].Modifiers << 8) | m_KeyList[i].KeyCode) == wParam) {
-			return m_KeyList[i].Command;
+	for (const KeyInfo &Key : m_KeyList) {
+		if (((Key.Modifiers << 8) | Key.KeyCode) == wParam) {
+			return Key.Command;
 		}
 	}
 	return -1;
@@ -684,10 +682,10 @@ int CAccelerator::TranslateAppCommand(WPARAM wParam, LPARAM lParam) const
 {
 	const WORD Command = GET_APPCOMMAND_LPARAM(lParam);
 
-	for (size_t i = 0; i < m_AppCommandList.size(); i++) {
-		if (m_AppCommandList[i].Type == MediaKeyType::AppCommand
-				&& m_AppCommandList[i].AppCommand == Command)
-			return m_AppCommandList[i].Command;
+	for (const AppCommandInfo &Info : m_AppCommandList) {
+		if (Info.Type == MediaKeyType::AppCommand
+				&& Info.AppCommand == Command)
+			return Info.Command;
 	}
 	return 0;
 }
@@ -806,9 +804,9 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				int AppCommand = 0;
 				TCHAR szText[CCommandManager::MAX_COMMAND_TEXT];
 
-				for (size_t j = 0; j < m_KeyList.size(); j++) {
-					if (m_KeyList[j].Command == Command) {
-						pKey = &m_KeyList[j];
+				for (const KeyInfo &Key : m_KeyList) {
+					if (Key.Command == Command) {
+						pKey = &Key;
 						break;
 					}
 				}
@@ -844,11 +842,11 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			m_ListView.AdjustColumnWidth(true);
 
 			DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_KEY, TEXT("なし"));
-			for (int i = 0; i < lengthof(AccelKeyList); i++)
-				DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_KEY, AccelKeyList[i].pszText);
+			for (auto &e : AccelKeyList)
+				DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_KEY, e.pszText);
 			DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_APPCOMMAND, TEXT("なし"));
-			for (size_t i = 0; i < m_MediaKeyList.size(); i++)
-				DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_APPCOMMAND, m_MediaKeyList[i].pszText);
+			for (const auto &e : m_MediaKeyList)
+				DlgComboBox_AddString(hDlg, IDC_ACCELERATOR_APPCOMMAND, e.pszText);
 
 			SetDlgItemStatus(hDlg);
 
@@ -886,17 +884,15 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				LPARAM Param = m_ListView.GetItemParam(Sel);
 				const int Key = static_cast<int>(SendDlgItemMessage(hDlg, IDC_ACCELERATOR_KEY, CB_GETCURSEL, 0, 0));
 				if (Key > 0) {
-					BYTE Mod;
-					int i;
+					BYTE Mod = 0;
 
-					Mod = 0;
 					if (DlgCheckBox_IsChecked(hDlg, IDC_ACCELERATOR_SHIFT))
 						Mod |= MOD_SHIFT;
 					if (DlgCheckBox_IsChecked(hDlg, IDC_ACCELERATOR_CONTROL))
 						Mod |= MOD_CONTROL;
 					if (DlgCheckBox_IsChecked(hDlg, IDC_ACCELERATOR_ALT))
 						Mod |= MOD_ALT;
-					i = CheckAccelKey(Mod, AccelKeyList[Key - 1].KeyCode);
+					const int i = CheckAccelKey(Mod, AccelKeyList[Key - 1].KeyCode);
 					if (i >= 0 && i != Sel) {
 						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
@@ -939,9 +935,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				const int AppCommand = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_ACCELERATOR_APPCOMMAND));
 				if (AppCommand > 0) {
-					int i;
-
-					i = CheckAppCommand(AppCommand);
+					const int i = CheckAppCommand(AppCommand);
 					if (i >= 0 && i != Sel) {
 						TCHAR szCommand[CCommandManager::MAX_COMMAND_TEXT], szText[CCommandManager::MAX_COMMAND_TEXT + 128];
 
@@ -980,18 +974,18 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					BYTE Mod = 0;
 					int AppCommand = 0;
 
-					for (int j = 0; j < lengthof(m_DefaultAccelList); j++) {
-						if (m_DefaultAccelList[j].Command == Command) {
-							Key = m_DefaultAccelList[j].KeyCode;
-							Mod = m_DefaultAccelList[j].Modifiers;
+					for (const KeyInfo &Info : m_DefaultAccelList) {
+						if (Info.Command == Command) {
+							Key = Info.KeyCode;
+							Mod = Info.Modifiers;
 							break;
 						}
 					}
-					for (int j = 0; j < lengthof(m_DefaultAppCommandList); j++) {
-						if (m_DefaultAppCommandList[j].Command == Command) {
+					for (const AppCommandInfo &Info : m_DefaultAppCommandList) {
+						if (Info.Command == Command) {
 							for (size_t k = 0; k < m_MediaKeyList.size(); k++) {
 								if (m_MediaKeyList[k].Type == MediaKeyType::AppCommand
-										&& m_MediaKeyList[k].Command == m_DefaultAppCommandList[j].AppCommand) {
+										&& m_MediaKeyList[k].Command == Info.AppCommand) {
 									AppCommand = static_cast<int>(k + 1);
 									break;
 								}
@@ -1180,10 +1174,10 @@ void CAccelerator::OnInput(int Type)
 	const int Data = m_RawInput.GetKeyData(Type);
 
 	if (m_hDlg == nullptr || !::IsWindowVisible(m_hDlg)) {
-		for (size_t i = 0; i < m_AppCommandList.size(); i++) {
-			if (m_AppCommandList[i].Type == MediaKeyType::RawInput
-					&& m_AppCommandList[i].AppCommand == Data) {
-				::PostMessage(m_hwndHotKey, WM_COMMAND, m_AppCommandList[i].Command, 0);
+		for (const AppCommandInfo &Info : m_AppCommandList) {
+			if (Info.Type == MediaKeyType::RawInput
+					&& Info.AppCommand == Data) {
+				::PostMessage(m_hwndHotKey, WM_COMMAND, Info.Command, 0);
 				return;
 			}
 		}
@@ -1201,7 +1195,7 @@ void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 		TCHAR szText[256];
 
 		::lstrcpy(szText, TEXT("データ : "));
-		i = ::lstrlen(szText);
+		int i = ::lstrlen(szText);
 		for (int j = 0; j < std::min(Size, 16); j++) {
 			szText[i++] = pszHex[pData[j] >> 4];
 			szText[i++] = pszHex[pData[j] & 0x0F];

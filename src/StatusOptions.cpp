@@ -433,7 +433,6 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					const StatusItemInfo *pItemInfo = reinterpret_cast<const StatusItemInfo*>(pdis->itemData);
 					CStatusItem *pItem = m_pStatusView->GetItemByID(pItemInfo->ID);
 					int TextColor, BackColor;
-					COLORREF crTextColor;
 					RECT rc;
 
 					if ((pdis->itemState & ODS_SELECTED) == 0) {
@@ -445,7 +444,7 @@ INT_PTR CStatusOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					}
 					DrawUtil::Fill(pdis->hDC, &pdis->rcItem, GetThemeColor(BackColor));
 					const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-					crTextColor = GetThemeColor(TextColor);
+					COLORREF crTextColor = GetThemeColor(TextColor);
 					if (!pItemInfo->fVisible)
 						crTextColor = MixColor(crTextColor, GetThemeColor(BackColor));
 					const COLORREF crOldTextColor = ::SetTextColor(pdis->hDC, crTextColor);
@@ -665,18 +664,15 @@ void CStatusOptions::RealizeStyle()
 void CStatusOptions::CalcTextWidth()
 {
 	const HWND hwndList = GetDlgItem(m_hDlg, IDC_STATUSOPTIONS_ITEMLIST);
-	int MaxWidth;
-	CStatusItem *pItem;
-	SIZE sz;
-
 	const HDC hdc = GetDC(hwndList);
 	if (hdc == nullptr)
 		return;
 	const HFONT hfontOld = SelectFont(hdc, GetWindowFont(hwndList));
 	const int Count = ListBox_GetCount(hwndList);
-	MaxWidth = 0;
+	int MaxWidth = 0;
 	for (int i = 0; i < Count; i++) {
-		pItem = m_pStatusView->GetItemByID(m_ItemListCur[i].ID);
+		const CStatusItem *pItem = m_pStatusView->GetItemByID(m_ItemListCur[i].ID);
+		SIZE sz;
 		GetTextExtentPoint32(hdc, pItem->GetName(), lstrlen(pItem->GetName()), &sz);
 		if (sz.cx > MaxWidth)
 			MaxWidth = sz.cx;
@@ -748,9 +744,8 @@ static void ListBox_EnsureVisible(HWND hwndList, int Index)
 
 void CStatusOptions::DrawInsertMark(HWND hwndList, int Pos)
 {
-	RECT rc;
-
 	const HDC hdc = GetDC(hwndList);
+	RECT rc;
 	GetClientRect(hwndList, &rc);
 	rc.top = (Pos - ListBox_GetTopIndex(hwndList)) * m_ItemHeight - 1;
 	PatBlt(hdc, 0, rc.top, rc.right - rc.left, 2, DSTINVERT);
@@ -760,12 +755,10 @@ void CStatusOptions::DrawInsertMark(HWND hwndList, int Pos)
 
 bool CStatusOptions::GetItemPreviewRect(HWND hwndList, int Index, RECT *pRect)
 {
-	StatusItemInfo *pItemInfo;
-	RECT rc;
-
 	if (Index < 0)
 		return false;
-	pItemInfo = reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwndList, Index));
+	const StatusItemInfo *pItemInfo = reinterpret_cast<const StatusItemInfo*>(ListBox_GetItemData(hwndList, Index));
+	RECT rc;
 	ListBox_GetItemRect(hwndList, Index, &rc);
 	OffsetRect(&rc, -GetScrollPos(hwndList, SB_HORZ), 0);
 	rc.left += m_ItemMargin.Horz() + m_CheckSize.Width + m_TextWidth + m_ItemMargin.Left;
@@ -849,18 +842,15 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 			SetFocus(hwnd);
 
 			if (Sel >= 0) {
-				RECT rc;
-
-				ListBox_GetItemRect(hwnd, Sel, &rc);
+				RECT rcItem;
+				ListBox_GetItemRect(hwnd, Sel, &rcItem);
+				RECT rc = rcItem;
 				OffsetRect(&rc, -GetScrollPos(hwnd, SB_HORZ), 0);
 				if (x >= rc.left + m_pStatusOptions->m_ItemMargin.Left
 						&& x < rc.left + m_pStatusOptions->m_ItemMargin.Left + m_pStatusOptions->m_CheckSize.Width) {
 					StatusItemInfo *pItemInfo = reinterpret_cast<StatusItemInfo*>(ListBox_GetItemData(hwnd, Sel));
-					RECT rc;
-
 					pItemInfo->fVisible = !pItemInfo->fVisible;
-					ListBox_GetItemRect(hwnd, Sel, &rc);
-					InvalidateRect(hwnd, &rc, TRUE);
+					InvalidateRect(hwnd, &rcItem, TRUE);
 				} else {
 					if (ListBox_GetCurSel(hwnd) != Sel)
 						ListBox_SetCurSel(hwnd, Sel);
@@ -882,11 +872,9 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 			m_pStatusOptions->m_DragTimerID = 0;
 		}
 		if (m_pStatusOptions->m_DropInsertPos >= 0) {
-			const int From = ListBox_GetCurSel(hwnd);
-			int To;
-
 			m_pStatusOptions->DrawInsertMark(hwnd, m_pStatusOptions->m_DropInsertPos);
-			To = m_pStatusOptions->m_DropInsertPos;
+			const int From = ListBox_GetCurSel(hwnd);
+			int To = m_pStatusOptions->m_DropInsertPos;
 			if (To > From)
 				To--;
 			SetWindowRedraw(hwnd, FALSE);
@@ -924,13 +912,11 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 					m_pStatusOptions->SetListHExtent();
 				}
 			} else if (y >= 0 && y < rc.bottom) {
-				int Insert;
-
 				if (m_pStatusOptions->m_DragTimerID != 0) {
 					KillTimer(hwnd, m_pStatusOptions->m_DragTimerID);
 					m_pStatusOptions->m_DragTimerID = 0;
 				}
-				Insert =
+				int Insert =
 					ListBox_GetTopIndex(hwnd) +
 					(y + m_pStatusOptions->m_ItemHeight / 2) / m_pStatusOptions->m_ItemHeight;
 				const int Count = ListBox_GetCount(hwnd);
@@ -988,9 +974,7 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 
 	case WM_TIMER:
 		{
-			int Pos;
-
-			Pos = ListBox_GetTopIndex(hwnd);
+			int Pos = ListBox_GetTopIndex(hwnd);
 			if (wParam == TIMER_ID_UP) {
 				if (Pos > 0)
 					Pos--;

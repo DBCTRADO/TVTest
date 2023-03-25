@@ -276,10 +276,9 @@ bool CCaptionPanel::SetLanguage(BYTE Language)
 		if (Length > 0) {
 			LanguageInfo &Lang = m_LanguageList[m_CurLanguage];
 			String Buffer(Length + 1, _T('\0'));
-			int End;
 
 			::GetWindowText(m_hwndEdit, Buffer.data(), Length + 1);
-			End = Length - 1;
+			int End = Length - 1;
 			for (int i = Length - 2; Lang.CaptionList.size() < MAX_QUEUE_TEXT; i--) {
 				if (i < 0 || Buffer[i] == _T('\n')) {
 					Lang.CaptionList.emplace_front(Buffer.substr(i + 1, End - i));
@@ -966,14 +965,13 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 	std::unique_ptr<BYTE[]> DIBBits(new BYTE[BitsSize]);
 	const BYTE *p = static_cast<const BYTE*>(pBitmap->pData);
 	BYTE *q = DIBBits.get() + (pBitmap->Height - 1) * DIBRowBytes;
-	int x, y;
 	if (BitCount == 1) {
 		BYTE Mask;
 
 		::ZeroMemory(DIBBits.get(), BitsSize);
 		Mask = 0x80;
-		for (y = 0; y < pBitmap->Height; y++) {
-			for (x = 0; x < pBitmap->Width; x++) {
+		for (int y = 0; y < pBitmap->Height; y++) {
+			for (int x = 0; x < pBitmap->Width; x++) {
 				if ((*p & Mask) != 0)
 					q[x >> 3] |= 0x80 >> (x & 7);
 				Mask >>= 1;
@@ -991,8 +989,8 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 
 		Shift = 16 - pBitmap->BitsPerPixel;
 		Mask = (1 << pBitmap->BitsPerPixel) - 1;
-		for (y = 0; y < pBitmap->Height; y++) {
-			for (x = 0; x < pBitmap->Width; x++) {
+		for (int y = 0; y < pBitmap->Height; y++) {
+			for (int x = 0; x < pBitmap->Width; x++) {
 				unsigned int Pixel = *p;
 				if (Shift < 8)
 					Pixel = (Pixel << (8 - Shift)) | (*p >> Shift);

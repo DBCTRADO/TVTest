@@ -371,9 +371,8 @@ int CDebugHelper::FormatSymbolFromAddress(
 	const MODULEENTRY32 *pModuleEntries, int NumModuleEntries,
 	PSYMBOL_INFO pSymbolInfo, char *pszText)
 {
-	const char *pszModule;
+	const char *pszModule = "\?\?\?";
 
-	pszModule = "\?\?\?";
 #if 0
 	if (m_pSymGetModuleBase != nullptr && m_pSymGetModuleInfo != nullptr) {
 		DWORD64 ModuleBase = m_pSymGetModuleBase(s.hProcess, s.Stack.StackFrame.AddrReturn.Offset);

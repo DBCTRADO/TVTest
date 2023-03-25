@@ -315,13 +315,13 @@ void CChannelDisplay::LoadSettings()
 			&& Settings.SetSection(TEXT("TunerSettings"))) {
 		m_TunerInfoList.clear();
 		for (int i = 0;; i++) {
-			TCHAR szName[64], *p;
+			TCHAR szName[64];
 			TunerInfo Info;
 
 			StringFormat(szName, TEXT("Tuner{}_Driver"), i);
 			if (!Settings.Read(szName, Info.DriverMasks, lengthof(Info.DriverMasks) - 1))
 				break;
-			p = Info.DriverMasks;
+			LPTSTR p = Info.DriverMasks;
 			while (*p != '\0') {
 				if (*p == '|')
 					*p = '\0';
@@ -1102,9 +1102,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				return 0;
 			m_LastCursorPos.x = x;
 			m_LastCursorPos.y = y;
-			int Index;
-
-			Index = TunerItemHitTest(x, y);
+			int Index = TunerItemHitTest(x, y);
 			if (Index >= 0 && Index != m_CurTuner) {
 				SetCurTuner(Index);
 			}
@@ -1191,11 +1189,14 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					{VK_HOME,  SB_TOP},
 					{VK_END,   SB_BOTTOM},
 				};
-				int i;
-				for (i = 0; KeyMap[i].KeyCode != wParam; i++);
-				::SendMessage(
-					hwnd, WM_VSCROLL, KeyMap[i].Scroll,
-					reinterpret_cast<LPARAM>(m_CurChannel >= 0 ? m_hwndChannelScroll : m_hwndTunerScroll));
+				for (auto &Map : KeyMap) {
+					if (Map.KeyCode == wParam) {
+						::SendMessage(
+							hwnd, WM_VSCROLL, Map.Scroll,
+							reinterpret_cast<LPARAM>(m_CurChannel >= 0 ? m_hwndChannelScroll : m_hwndTunerScroll));
+						break;
+					}
+				}
 			}
 			break;
 

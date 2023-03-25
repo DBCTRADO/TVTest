@@ -517,7 +517,7 @@ void CDriverOptions::InitDlgItem(int Driver)
 			::PathFindFileName(GetAppClass().CoreEngine.GetDriverFileName()));
 		if (fCur || pDriverInfo->LoadTuningSpaceList(CDriverInfo::LoadTuningSpaceListMode::UseDriverNoOpen)) {
 			const CTuningSpaceList *pTuningSpaceList;
-			int NumSpaces, i;
+			int NumSpaces;
 
 			if (fCur) {
 				pTuningSpaceList = GetAppClass().ChannelManager.GetDriverTuningSpaceList();
@@ -529,7 +529,7 @@ void CDriverOptions::InitDlgItem(int Driver)
 					NumSpaces = pDriverInfo->GetDriverSpaceList()->NumSpaces();
 			}
 			DlgComboBox_AddString(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_SPACE, TEXT("すべて"));
-			for (i = 0; i < NumSpaces; i++) {
+			for (int i = 0; i < NumSpaces; i++) {
 				LPCTSTR pszName = pTuningSpaceList->GetTuningSpaceName(i);
 				TCHAR szName[16];
 
@@ -544,16 +544,16 @@ void CDriverOptions::InitDlgItem(int Driver)
 			if (pSettings->GetAllChannels()) {
 				DlgComboBox_SetCurSel(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_SPACE, 0);
 			} else {
-				i = pSettings->GetInitialSpace();
-				if (i >= 0)
-					DlgComboBox_SetCurSel(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_SPACE, i + 1);
+				const int Space = pSettings->GetInitialSpace();
+				if (Space >= 0)
+					DlgComboBox_SetCurSel(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_SPACE, Space + 1);
 			}
 			SetChannelList(Driver);
 			int Sel = 0;
 			if (pSettings->GetInitialSpace() >= 0
 					&& pSettings->GetInitialChannel() >= 0) {
 				const int Count = static_cast<int>(DlgComboBox_GetCount(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL));
-				for (i = 1; i < Count; i++) {
+				for (int i = 1; i < Count; i++) {
 					const CChannelInfo *pChInfo = m_InitChannelList.GetChannelInfo(
 						(int)DlgComboBox_GetItemData(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL, i));
 					if (pChInfo->GetSpace() == pSettings->GetInitialSpace()

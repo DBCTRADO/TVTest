@@ -35,13 +35,10 @@ namespace ImageLib
 
 bool SaveBMPFile(const ImageSaveInfo *pInfo)
 {
-	DWORD dwWrite;
-	size_t InfoBytes;
-
 	const int Width = pInfo->pbmi->bmiHeader.biWidth;
 	const int Height = std::abs(pInfo->pbmi->bmiHeader.biHeight);
 	const int BitsPerPixel = pInfo->pbmi->bmiHeader.biBitCount;
-	InfoBytes = sizeof(BITMAPINFOHEADER);
+	size_t InfoBytes = sizeof(BITMAPINFOHEADER);
 	if (BitsPerPixel <= 8)
 		InfoBytes += (static_cast<size_t>(1) << BitsPerPixel) * sizeof(RGBQUAD);
 	else if (pInfo->pbmi->bmiHeader.biCompression == BI_BITFIELDS)
@@ -54,6 +51,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	if (hFile == INVALID_HANDLE_VALUE) {
 		return false;
 	}
+
 	/* BITMAPFILEHEADERの書き込み */
 	BITMAPFILEHEADER bmfh;
 
@@ -61,11 +59,13 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 	bmfh.bfSize = static_cast<DWORD>(sizeof(BITMAPFILEHEADER) + InfoBytes + BitsBytes);
 	bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
 	bmfh.bfOffBits = static_cast<DWORD>(sizeof(BITMAPFILEHEADER) + InfoBytes);
+	DWORD dwWrite;
 	if (!WriteFile(hFile, &bmfh, sizeof(BITMAPFILEHEADER), &dwWrite, nullptr)
 			|| dwWrite != sizeof(BITMAPFILEHEADER)) {
 		CloseHandle(hFile);
 		return false;
 	}
+
 	/* ヘッダを書き込む */
 	BITMAPINFOHEADER bmih;
 
@@ -97,6 +97,7 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 			return false;
 		}
 	}
+
 	/* ビットデータを書き込む */
 	if (pInfo->pbmi->bmiHeader.biHeight > 0) {
 		if (!WriteFile(hFile, pInfo->pBits, static_cast<DWORD>(BitsBytes), &dwWrite, nullptr)
@@ -105,11 +106,9 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 			return false;
 		}
 	} else {
-		int y;
-		const BYTE *p;
+		const BYTE *p = static_cast<const BYTE*>(pInfo->pBits) + (Height - 1) * RowBytes;
 
-		p = static_cast<const BYTE*>(pInfo->pBits) + (Height - 1) * RowBytes;
-		for (y = 0; y < Height; y++) {
+		for (int y = 0; y < Height; y++) {
 			if (!WriteFile(hFile, p, static_cast<DWORD>(RowBytes), &dwWrite, nullptr)
 					|| dwWrite != RowBytes) {
 				CloseHandle(hFile);
@@ -118,7 +117,9 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 			p -= RowBytes;
 		}
 	}
+
 	CloseHandle(hFile);
+
 	return true;
 }
 

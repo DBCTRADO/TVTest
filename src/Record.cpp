@@ -857,13 +857,12 @@ bool CRecordManager::ShowWritePluginSetting(HWND hwndOwner, LPCTSTR pszPlugin)
 
 static void SetDateTimeFormat(HWND hDlg, UINT ID)
 {
-	int Length;
 	TCHAR szText[256];
 
 	GetLocaleInfo(
 		LOCALE_USER_DEFAULT, LOCALE_SSHORTDATE, szText,
 		lengthof(szText) - 1);
-	Length = lstrlen(szText);
+	int Length = lstrlen(szText);
 	szText[Length++] = ' ';
 	GetLocaleInfo(
 		LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT,

@@ -72,9 +72,6 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 	png_infop pPNGInfo = nullptr;
 
 	try {
-		int i, y;
-		png_bytep pbRow;
-
 		pPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, PNGError, PNGWarning);
 		if (pPNG == nullptr) {
 			std::fclose(fp);
@@ -104,10 +101,9 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		if (BitsPerPixel <= 8) {
 			const int nColors = 1 << BitsPerPixel;
 			png_color PNGPalette[256];
-			const RGBQUAD *prgb;
+			const RGBQUAD *prgb = pInfo->pbmi->bmiColors;
 
-			prgb = pInfo->pbmi->bmiColors;
-			for (i = 0; i < nColors; i++) {
+			for (int i = 0; i < nColors; i++) {
 				PNGPalette[i].red = prgb->rgbRed;
 				PNGPalette[i].green = prgb->rgbGreen;
 				PNGPalette[i].blue = prgb->rgbBlue;
@@ -159,19 +155,16 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 		if (BitsPerPixel == 32)
 			Buff.reset(new BYTE[Width * 3]);
 
-		for (i = 0; i < nPasses; i++) {
-			for (y = 0; y < Height; y++) {
-				pbRow =
+		for (int i = 0; i < nPasses; i++) {
+			for (int y = 0; y < Height; y++) {
+				png_bytep pbRow =
 					const_cast<png_bytep>(static_cast<const png_byte*>(pInfo->pBits) +
 						(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes);
 				if (Buff) {
-					int x;
-					const BYTE *p;
-					BYTE *q;
+					const BYTE *p = pbRow;
+					BYTE *q = Buff.get();
 
-					p = pbRow;
-					q = Buff.get();
-					for (x = 0; x < Width; x++) {
+					for (int x = 0; x < Width; x++) {
 						*q++ = p[0];
 						*q++ = p[1];
 						*q++ = p[2];
@@ -356,6 +349,13 @@ static const RGBA DefaultPalette[128] = {
 // ARIB 形式の PNG を読み込む
 HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 {
+	if (pData == nullptr || DataSize <= 8)
+		return nullptr;
+
+	const BYTE *p = static_cast<const BYTE*>(pData);
+	if (std::memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
+		return nullptr;
+
 	static const BYTE Adam7[8][2][2] = {
 		{{ 1, 0}, { 1, 0}},	// No interlace
 		{{ 8, 0}, { 8, 0}},	// Interlaced image 1
@@ -366,18 +366,11 @@ HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 		{{ 2, 1}, { 2, 0}},	// Interlaced image 6
 		{{ 1, 0}, { 2, 1}},	// Interlaced image 7
 	};
-	const BYTE *p;
-	size_t Pos;
 	IHDR ImageHeader;
 	const BYTE *pCompressedImageData = nullptr;
 	size_t CompressedImageSize = 0;
 
-	if (pData == nullptr || DataSize <= 8)
-		return nullptr;
-	p = static_cast<const BYTE*>(pData);
-	if (std::memcmp(p, "\x89PNG\r\n\x1A\n", 8) != 0)
-		return nullptr;
-	Pos = 8;
+	size_t Pos = 8;
 	while (Pos + 8 < DataSize) {
 		const DWORD ChunkSize = MSBFirst32(&p[Pos]);
 		const DWORD ChunkType = MSBFirst32(&p[Pos + 4]);
@@ -429,8 +422,6 @@ Decode:
 		int Height;
 		size_t BytesPerLine;
 	} InterlacedImage[8];
-	int i;
-	size_t ImageDataSize;
 
 	switch (ImageHeader.ColorType) {
 	case 0: // Grayscale
@@ -447,8 +438,8 @@ Decode:
 		PlanesPerPixel = 4;
 		break;
 	}
-	ImageDataSize = 0;
-	for (i = ImageHeader.InterlaceMethod; i < 8; i++) {
+	size_t ImageDataSize = 0;
+	for (int i = ImageHeader.InterlaceMethod; i < 8; i++) {
 		InterlacedImage[i].Width = (ImageHeader.Width + Adam7[i][0][0] - Adam7[i][0][1] - 1) / Adam7[i][0][0];
 		InterlacedImage[i].Height = (ImageHeader.Height + Adam7[i][1][0] - Adam7[i][1][1] - 1) / Adam7[i][1][0];
 		InterlacedImage[i].BytesPerLine = (InterlacedImage[i].Width * ImageHeader.BitDepth * PlanesPerPixel + 7) / 8 + 1;
@@ -487,10 +478,9 @@ Decode:
 	BYTE *q = ImageData.get();
 	const int SampleMask = (1 << ImageHeader.BitDepth) - 1;
 	const int PixelBytes = (ImageHeader.BitDepth * PlanesPerPixel + 7) / 8;
-	int x, y, z;
 
-	for (i = ImageHeader.InterlaceMethod; i < 8; i++) {
-		for (y = 0; y < InterlacedImage[i].Height; y++) {
+	for (int i = ImageHeader.InterlaceMethod; i < 8; i++) {
+		for (int y = 0; y < InterlacedImage[i].Height; y++) {
 			const int FilterType = *q++;
 			BYTE *r = q;
 
@@ -498,7 +488,7 @@ Decode:
 				::GlobalFree(hDIB);
 				return nullptr;
 			}
-			for (x = 0; static_cast<size_t>(x) < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
+			for (int x = 0; static_cast<size_t>(x) < InterlacedImage[i].BytesPerLine - 1; x++, q++) {
 				const int a = (x >= PixelBytes) ? *(q - PixelBytes) : 0;
 				const int b = (y > 0) ? *(q - InterlacedImage[i].BytesPerLine) : 0;
 				const int c = (x >= PixelBytes && y > 0) ? *(q - PixelBytes - InterlacedImage[i].BytesPerLine) : 0;
@@ -527,9 +517,9 @@ Decode:
 			BYTE *pDestLine =
 				pDIBBits +
 					(ImageHeader.Height - 1 - (y * Adam7[i][1][0] + Adam7[i][1][1])) * (ImageHeader.Width * 4);
-			for (x = 0; x < InterlacedImage[i].Width; x++) {
+			for (int x = 0; x < InterlacedImage[i].Width; x++) {
 				int Sample[4];
-				for (z = 0; z < PlanesPerPixel; z++) {
+				for (int z = 0; z < PlanesPerPixel; z++) {
 					int s = ImageHeader.BitDepth * (x * PlanesPerPixel + z);
 					BYTE *t = r + s / 8;
 					s = (8 - s - ImageHeader.BitDepth) & 7;

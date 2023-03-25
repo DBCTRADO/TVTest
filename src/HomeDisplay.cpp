@@ -1243,11 +1243,11 @@ int CFeaturedEventsCategory::GetItemByPosition(int x, int y) const
 	if (!::PtInRect(&m_Rect, pt))
 		return -1;
 
-	int Top, Bottom;
-	Bottom = m_Rect.top - m_pHomeDisplay->GetScrollPos();
+	int Bottom = m_Rect.top - m_pHomeDisplay->GetScrollPos();
+
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		const CEventItem *pItem = m_ItemList[i].get();
-		Top = Bottom;
+		const int Top = Bottom;
 		if (pItem->IsExpanded()) {
 			Bottom = Top + pItem->GetExpandedHeight();
 		} else {
@@ -2209,7 +2209,7 @@ void CHomeDisplay::GetContentAreaRect(RECT *pRect) const
 
 CHomeDisplay::PartType CHomeDisplay::HitTest(int x, int y, int *pCategoryIndex) const
 {
-	POINT pt = {x, y};
+	const POINT pt = {x, y};
 
 	RECT rcCategories;
 	rcCategories.left = m_Style.CategoriesMargin.Left;

@@ -970,18 +970,17 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_VSCROLL:
 		{
-			const int LineHeight = m_FontHeight + m_Style.LineSpacing;
-			int Pos, Max;
 			RECT rc;
-
-			Pos = m_ScrollPos;
 			GetProgramListRect(&rc);
 			const int Page = rc.bottom - rc.top;
-			Max =
+			const int LineHeight = m_FontHeight + m_Style.LineSpacing;
+			int Max =
 				m_TotalLines * LineHeight +
 				m_ItemList.NumItems() * (m_Style.TitlePadding.Top + m_Style.TitlePadding.Bottom - m_Style.LineSpacing) - Page;
 			if (Max < 0)
 				Max = 0;
+			int Pos = m_ScrollPos;
+
 			switch (LOWORD(wParam)) {
 			case SB_LINEUP:        Pos -= LineHeight;    break;
 			case SB_LINEDOWN:      Pos += LineHeight;    break;
@@ -1465,10 +1464,8 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventIn
 		IconWidth, IconHeight);
 
 	RECT rc;
-	POINT pt;
 	m_pPanel->GetItemRect(ItemIndex, &rc);
-	pt.x = rc.left;
-	pt.y = rc.bottom;
+	POINT pt = {rc.left, rc.bottom};
 	::ClientToScreen(m_pPanel->m_hwnd, &pt);
 	pPopup->GetDefaultPopupPosition(&rc);
 	if (rc.top > pt.y) {

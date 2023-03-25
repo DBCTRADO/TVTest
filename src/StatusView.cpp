@@ -459,7 +459,6 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_MOUSEMOVE:
 		{
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-			RECT rc;
 
 			if (::GetCapture() != hwnd) {
 				if (m_fSingleMode)
@@ -470,6 +469,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				for (i = 0; i < static_cast<int>(m_ItemList.size()); i++) {
 					if (!m_ItemList[i]->GetVisible())
 						continue;
+					RECT rc;
 					GetItemRectByIndex(i, &rc);
 					if (::PtInRect(&rc, pt))
 						break;
@@ -482,6 +482,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			}
 
 			if (m_HotItem >= 0) {
+				RECT rc;
 				GetItemRectByIndex(m_HotItem, &rc);
 				x -= rc.left;
 				y -= rc.top;
@@ -708,9 +709,8 @@ bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 		rc.bottom = rc.top + m_ItemHeight;
 	const int HorzMargin = m_Style.ItemPadding.Horz();
 	const int Left = rc.left;
-	const CStatusItem *pItem;
 	for (int i = 0; i < Index; i++) {
-		pItem = m_ItemList[i].get();
+		const CStatusItem *pItem = m_ItemList[i].get();
 		if (pItem->m_fBreak) {
 			rc.left = Left;
 			rc.top = rc.bottom;
@@ -720,7 +720,7 @@ bool CStatusView::GetItemRectByIndex(int Index, RECT *pRect) const
 		}
 	}
 	rc.right = rc.left;
-	pItem = m_ItemList[Index].get();
+	const CStatusItem *pItem = m_ItemList[Index].get();
 	if (pItem->GetVisible())
 		rc.right += pItem->GetActualWidth() + HorzMargin;
 	*pRect = rc;
@@ -778,9 +778,8 @@ const Style::Size &CStatusView::GetIconSize() const
 
 int CStatusView::GetIntegralWidth() const
 {
-	int Width;
+	int Width = 0;
 
-	Width = 0;
 	for (const auto &e : m_ItemList) {
 		if (e->GetVisible())
 			Width += e->GetWidth() + m_Style.ItemPadding.Horz();

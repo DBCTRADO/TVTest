@@ -604,7 +604,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			case LBN_SELCHANGE:
 				{
 					const int SelCount = static_cast<int>(DlgListBox_GetSelCount(hDlg, IDC_COLORSCHEME_LIST));
-					COLORREF SelColor = CLR_INVALID, Color;
+					COLORREF SelColor = CLR_INVALID;
 
 					if (SelCount == 0) {
 						m_ColorPalette.SetSel(-1);
@@ -621,7 +621,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 						int i;
 						for (i = 0; i < CColorScheme::NUM_COLORS; i++) {
 							if (DlgListBox_GetSel(hDlg, IDC_COLORSCHEME_LIST, i)) {
-								Color = static_cast<COLORREF>(DlgListBox_GetItemData(hDlg, IDC_COLORSCHEME_LIST, i));
+								const COLORREF Color = static_cast<COLORREF>(DlgListBox_GetItemData(hDlg, IDC_COLORSCHEME_LIST, i));
 								if (SelColor == CLR_INVALID)
 									SelColor = Color;
 								else if (Color != SelColor)
@@ -641,7 +641,6 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			case LBN_EX_RBUTTONUP:
 				{
 					const HMENU hmenu = ::LoadMenu(GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDM_COLORSCHEME));
-					POINT pt;
 
 					::EnableMenuItem(
 						hmenu, IDC_COLORSCHEME_SELECTSAMECOLOR,
@@ -685,6 +684,8 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 								MF_BYCOMMAND);
 						}
 					}
+
+					POINT pt;
 					::GetCursorPos(&pt);
 					::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
 					::DestroyMenu(hmenu);

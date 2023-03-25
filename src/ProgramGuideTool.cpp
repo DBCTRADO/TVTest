@@ -164,9 +164,7 @@ bool CProgramGuideTool::Execute(
 		return false;
 
 	TCHAR szFileName[MAX_PATH];
-	LPCTSTR p;
-
-	p = m_Command.c_str();
+	LPCTSTR p = m_Command.c_str();
 	if (!GetCommandFileName(&p, szFileName, lengthof(szFileName))) {
 		::MessageBox(hwnd, TEXT("パスが長すぎます。"), nullptr, MB_OK | MB_ICONEXCLAMATION);
 		return false;
@@ -210,12 +208,10 @@ bool CProgramGuideTool::ShowDialog(HWND hwndOwner)
 
 bool CProgramGuideTool::GetCommandFileName(LPCTSTR *ppszCommand, LPTSTR pszFileName, int MaxFileName)
 {
-	LPCTSTR p;
-	LPTSTR q;
+	LPCTSTR p = *ppszCommand;
+	LPTSTR q = pszFileName;
 	TCHAR cDelimiter;
 
-	p = *ppszCommand;
-	q = pszFileName;
 	if (*p == _T('"')) {
 		cDelimiter = _T('"');
 		p++;
@@ -327,12 +323,9 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 			{
 				CEpgVariableStringMap VarStrMap;
 				RECT rc;
-				POINT pt;
 
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_PARAMETER), &rc);
-				pt.x = rc.left;
-				pt.y = rc.bottom;
-				VarStrMap.InputParameter(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, pt);
+				VarStrMap.InputParameter(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, POINT{rc.left, rc.bottom});
 			}
 			return TRUE;
 

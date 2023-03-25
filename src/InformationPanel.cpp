@@ -511,15 +511,14 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_RBUTTONUP:
 		{
 			const HMENU hmenu = ::LoadMenu(m_hinst, MAKEINTRESOURCE(IDM_INFORMATIONPANEL));
-			POINT pt;
 
 			for (int i = 0; i < NUM_ITEMS; i++) {
 				CheckMenuItem(
 					hmenu, CM_INFORMATIONPANEL_ITEM_FIRST + i,
 					MF_BYCOMMAND | (IsItemVisible(i) ? MFS_CHECKED : MFS_UNCHECKED));
 			}
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
+
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd, &pt);
 			::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, nullptr);
 			::DestroyMenu(hmenu);
@@ -655,10 +654,8 @@ void CInformationPanel::OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNoti
 
 void CInformationPanel::GetItemRect(int Item, RECT *pRect) const
 {
-	int VisibleItemCount;
-
 	GetClientRect(pRect);
-	VisibleItemCount = 0;
+	int VisibleItemCount = 0;
 	for (int i = 0; i < Item; i++) {
 		if (IsItemVisible(i))
 			VisibleItemCount++;
@@ -688,14 +685,13 @@ void CInformationPanel::CalcFontHeight()
 
 void CInformationPanel::Draw(HDC hdc, const RECT &PaintRect)
 {
-	HDC hdcDst;
 	RECT rc;
 
 	GetClientRect(&rc);
 	if (rc.right > m_Offscreen.GetWidth()
 			|| m_FontHeight + m_Style.LineSpacing > m_Offscreen.GetHeight())
 		m_Offscreen.Create(rc.right, m_FontHeight + m_Style.LineSpacing);
-	hdcDst = m_Offscreen.GetDC();
+	HDC hdcDst = m_Offscreen.GetDC();
 	if (hdcDst == nullptr)
 		hdcDst = hdc;
 
@@ -1016,11 +1012,11 @@ bool CInformationPanel::CItem::GetButtonTipText(int Button, LPTSTR pszText, int 
 
 int CInformationPanel::CItem::ButtonHitTest(int x, int y) const
 {
+	const POINT pt = {x, y};
 	const int ButtonCount = GetButtonCount();
 	for (int i = 0; i < ButtonCount; i++) {
 		RECT rc;
 		GetButtonRect(i, &rc);
-		const POINT pt = {x, y};
 		if (::PtInRect(&rc, pt))
 			return i;
 	}
@@ -1460,10 +1456,9 @@ void CInformationPanel::CRecordItem::Draw(HDC hdc, const RECT &Rect)
 {
 	if (m_fRecording) {
 		TCHAR szText[256];
-		size_t Length;
 
 		const unsigned int RecordSec = static_cast<unsigned int>(m_RecordTime / 1000);
-		Length = StringFormat(
+		size_t Length = StringFormat(
 			szText,
 			TEXT("● {}:{:02}:{:02}"),
 			RecordSec / (60 * 60), (RecordSec / 60) % 60, RecordSec % 60);

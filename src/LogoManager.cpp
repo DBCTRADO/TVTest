@@ -765,13 +765,13 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
-		BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
+		const BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
 		void *pBits;
 		m_hbm = ::CreateDIBSection(nullptr, pbmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
 		if (m_hbm == nullptr)
 			return nullptr;
 		std::memcpy(
-			pBits, reinterpret_cast<BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader),
+			pBits, reinterpret_cast<const BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader),
 			CalcDIBBitsSize(&pbmi->bmiHeader));
 		::GlobalUnlock(hDIB);
 		::GlobalFree(hDIB);
@@ -786,8 +786,8 @@ const Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
-		BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
-		const bool fResult = m_Image.CreateFromDIB(pbmi, reinterpret_cast<BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader));
+		const BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
+		const bool fResult = m_Image.CreateFromDIB(pbmi, reinterpret_cast<const BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader));
 		::GlobalUnlock(hDIB);
 		::GlobalFree(hDIB);
 		if (!fResult)

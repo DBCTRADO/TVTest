@@ -130,18 +130,17 @@ bool CPseudoOSD::Create(HWND hwndParent, bool fLayeredWindow)
 	m_hwndParent = hwndParent;
 
 	if (m_fPopupLayeredWindow) {
-		POINT pt;
-		RECT rc;
-
-		pt.x = m_Position.Left;
-		pt.y = m_Position.Top;
+		POINT pt = {m_Position.Left, m_Position.Top};
 		::ClientToScreen(hwndParent, &pt);
+
 		if (::CreateWindowEx(
 					WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE,
 					m_pszWindowClass, nullptr, WS_POPUP,
 					pt.x, pt.y, m_Position.Width, m_Position.Height,
 					hwndParent, nullptr, m_hinst, this) == nullptr)
 			return false;
+
+		RECT rc;
 		::GetWindowRect(hwndParent, &rc);
 		m_ParentPosition.x = rc.left;
 		m_ParentPosition.y = rc.top;
@@ -172,10 +171,7 @@ bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 
 	if (m_fPopupLayeredWindow) {
 		if (Time > 0) {
-			POINT pt;
-
-			pt.x = m_Position.Left;
-			pt.y = m_Position.Top;
+			POINT pt = {m_Position.Left, m_Position.Top};
 			::ClientToScreen(m_hwndParent, &pt);
 			m_Timer.BeginTimer(TIMER_ID_HIDE, Time);
 			if (fAnimation) {
@@ -292,10 +288,7 @@ bool CPseudoOSD::SetPosition(int Left, int Top, int Width, int Height)
 
 	if (m_hwnd != nullptr) {
 		if (m_fPopupLayeredWindow) {
-			POINT pt;
-
-			pt.x = Left;
-			pt.y = Top;
+			POINT pt = {Left, Top};
 			::ClientToScreen(m_hwndParent, &pt);
 			::SetWindowPos(
 				m_hwnd, nullptr, pt.x, pt.y, Width, Height,
@@ -549,11 +542,9 @@ void CPseudoOSD::DrawImageEffect(HDC hdc, const RECT *pRect) const
 void CPseudoOSD::UpdateLayeredWindow()
 {
 	RECT rc;
-	int Width, Height;
-
 	::GetWindowRect(m_hwnd, &rc);
-	Width = rc.right - rc.left;
-	Height = rc.bottom - rc.top;
+	const int Width = rc.right - rc.left;
+	const int Height = rc.bottom - rc.top;
 	if (Width < 1 || Height < 1)
 		return;
 
@@ -756,11 +747,9 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 	case WM_MOUSEMOVE:
 		{
 			CPseudoOSD *pThis = GetThis(hwnd);
-			POINT pt;
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			RECT rc;
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			::MapWindowPoints(hwnd, pThis->m_hwndParent, &pt, 1);
 			::GetClientRect(pThis->m_hwndParent, &rc);
 			if (::PtInRect(&rc, pt))

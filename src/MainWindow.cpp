@@ -1209,8 +1209,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (m_fCustomFrame && !::IsZoomed(hwnd)) {
 			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			const int BorderWidth = m_CustomFrameWidth;
-			RECT rc;
 			int Code = HTNOWHERE;
+			RECT rc;
 
 			::GetWindowRect(hwnd, &rc);
 			if (x >= rc.left && x < rc.left + BorderWidth) {
@@ -1236,8 +1236,7 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			} else if (y >= rc.bottom - BorderWidth && y < rc.bottom) {
 				Code = HTBOTTOM;
 			} else {
-				POINT pt = {x, y};
-				if (::PtInRect(&rc, pt))
+				if (::PtInRect(&rc, POINT{x, y}))
 					Code = HTCLIENT;
 			}
 			return Code;
@@ -3337,9 +3336,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 					StreamNumber++;
 
 				TCHAR szText[80];
-				size_t Length;
-
-				Length = StringFormat(
+				const size_t Length = StringFormat(
 					szText, TEXT("{}{}: "),
 					i < 9 ? TEXT("&") : TEXT(""), i + 1);
 				GetAudioInfoText(AudioInfo, StreamNumber, szText + Length, static_cast<int>(lengthof(szText) - Length));
@@ -3501,7 +3498,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 								if (EsList[EsIndex].ComponentTag == ComponentTag) {
 									TCHAR szText[80];
 									VideoCount++;
-									int Length = CopyToMenuText(GroupInfo.Text.c_str(), szText, lengthof(szText));
+									const int Length = CopyToMenuText(GroupInfo.Text.c_str(), szText, lengthof(szText));
 									StringFormat(szText + Length, lengthof(szText) - Length, TEXT(": 映像{}"), VideoCount);
 									Menu.Append(CM_VIDEOSTREAM_FIRST + EsIndex, szText);
 									if (ComponentTag == CurVideoComponentTag)
@@ -3916,10 +3913,8 @@ void CMainWindow::GetPanelDockingAdjustedPos(bool fDock, RECT *pPos) const
 		mi.cbSize = sizeof(MONITORINFO);
 		if (::GetMonitorInfo(hMonitor, &mi)) {
 			int XOffset = 0, YOffset = 0;
-			POINT pt;
+			POINT pt = {pPos->left, pPos->top};
 
-			pt.x = pPos->left;
-			pt.y = pPos->top;
 			if (::MonitorFromPoint(pt, MONITOR_DEFAULTTONULL) == nullptr) {
 				if (pPos->left < mi.rcWork.left)
 					XOffset = mi.rcWork.left - pPos->left;
@@ -4489,10 +4484,8 @@ bool CMainWindow::SetZoomRate(int Rate, int Factor)
 	int Width, Height;
 
 	if (m_App.CoreEngine.GetVideoViewSize(&Width, &Height) && Width > 0 && Height > 0) {
-		int ZoomWidth, ZoomHeight;
-
-		ZoomWidth = CalcZoomSize(Width, Rate, Factor);
-		ZoomHeight = CalcZoomSize(Height, Rate, Factor);
+		int ZoomWidth = CalcZoomSize(Width, Rate, Factor);
+		int ZoomHeight = CalcZoomSize(Height, Rate, Factor);
 
 		if (m_App.ViewOptions.GetZoomKeepAspectRatio()) {
 			SIZE ScreenSize;
@@ -6091,7 +6084,6 @@ void CMainWindow::CFullscreen::OnMouseMove()
 		return;
 
 	POINT pt;
-
 	::GetCursorPos(&pt);
 	::ScreenToClient(m_hwnd, &pt);
 
@@ -6100,17 +6092,18 @@ void CMainWindow::CFullscreen::OnMouseMove()
 		return;
 	}
 
-	RECT rcClient, rcStatus, rcTitle, rc;
 	bool fShowStatusView = false, fShowTitleBar = false, fShowSideBar = false;
 
+	RECT rcClient;
 	m_ViewWindow.GetClientRect(&rcClient);
 	MapWindowRect(m_ViewWindow.GetHandle(), m_hwnd, &rcClient);
 
-	rcStatus = rcClient;
+	RECT rcStatus = rcClient;
 	rcStatus.top = rcStatus.bottom - m_App.StatusView.CalcHeight(rcClient.right - rcClient.left);
 	if (::PtInRect(&rcStatus, pt))
 		fShowStatusView = true;
-	rc = rcClient;
+
+	RECT rc = rcClient, rcTitle;
 	m_TitleBarManager.Layout(&rc, &rcTitle);
 	if (::PtInRect(&rcTitle, pt))
 		fShowTitleBar = true;
@@ -6405,9 +6398,8 @@ void CMainWindow::CBarLayout::AdjustArea(RECT *pArea)
 
 void CMainWindow::CBarLayout::ReserveArea(RECT *pArea, bool fNoMove)
 {
-	RECT rc;
+	RECT rc = *pArea;
 
-	rc = *pArea;
 	AdjustArea(&rc);
 	if (fNoMove) {
 		pArea->right += (pArea->right - pArea->left) - (rc.right - rc.left);
@@ -6463,10 +6455,8 @@ void CMainWindow::CTitleBarManager::OnMouseLeave()
 void CMainWindow::CTitleBarManager::OnLabelLButtonDown(int x, int y)
 {
 	if (m_fMainWindow) {
-		POINT pt;
+		POINT pt = {x, y};
 
-		pt.x = x;
-		pt.y = y;
 		::ClientToScreen(m_pTitleBar->GetHandle(), &pt);
 		m_pMainWindow->SendMessage(WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(pt.x, pt.y));
 		m_fFixed = true;
@@ -6484,10 +6474,8 @@ void CMainWindow::CTitleBarManager::OnLabelLButtonDoubleClick(int x, int y)
 
 void CMainWindow::CTitleBarManager::OnLabelRButtonUp(int x, int y)
 {
-	POINT pt;
+	POINT pt = {x, y};
 
-	pt.x = x;
-	pt.y = y;
 	::ClientToScreen(m_pTitleBar->GetHandle(), &pt);
 	ShowSystemMenu(pt.x, pt.y);
 }
@@ -6611,16 +6599,16 @@ void CMainWindow::CSideBarManager::OnCommand(int Command)
 void CMainWindow::CSideBarManager::OnRButtonUp(int x, int y)
 {
 	CPopupMenu Menu(m_pMainWindow->m_App.GetResourceInstance(), IDM_SIDEBAR);
-	POINT pt;
 
 	Menu.CheckItem(CM_SIDEBAR, m_pMainWindow->GetSideBarVisible());
 	Menu.EnableItem(CM_SIDEBAR, !m_pMainWindow->m_pCore->GetFullscreen());
 	Menu.CheckRadioItem(
 		CM_SIDEBAR_PLACE_FIRST, CM_SIDEBAR_PLACE_LAST,
 		CM_SIDEBAR_PLACE_FIRST + static_cast<int>(m_pMainWindow->m_App.SideBarOptions.GetPlace()));
-	pt.x = x;
-	pt.y = y;
+
+	POINT pt = {x, y};
 	::ClientToScreen(m_pSideBar->GetHandle(), &pt);
+
 	m_fFixed = true;
 	Menu.Show(m_pMainWindow->GetHandle(), &pt);
 	m_fFixed = false;

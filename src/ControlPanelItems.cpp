@@ -178,19 +178,13 @@ void CVolumeControlItem::Draw(HDC hdc, const RECT &Rect)
 {
 	const CUICore &UICore = GetAppClass().UICore;
 	const COLORREF TextColor = ::GetTextColor(hdc);
-	COLORREF BarColor;
-	LOGBRUSH lb;
-	RECT rc;
-
-	lb.lbStyle = BS_SOLID;
-	lb.lbColor = TextColor;
-	lb.lbHatch = 0;
+	const LOGBRUSH lb = {BS_SOLID, TextColor, 0};
 	const HPEN hpen = ::ExtCreatePen(
 		PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
 		m_Style.BarBorderWidth, &lb, 0, nullptr);
 	const HPEN hpenOld = SelectPen(hdc, hpen);
 	const HBRUSH hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
-	rc = Rect;
+	RECT rc = Rect;
 	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	rc.top += ((rc.bottom - rc.top) - m_Style.BarHeight) / 2;
 	rc.bottom = rc.top + m_Style.BarHeight;
@@ -198,6 +192,8 @@ void CVolumeControlItem::Draw(HDC hdc, const RECT &Rect)
 	SelectBrush(hdc, hbrOld);
 	SelectPen(hdc, hpenOld);
 	::DeleteObject(hpen);
+
+	COLORREF BarColor;
 	if (!UICore.GetMute())
 		BarColor = TextColor;
 	else
@@ -223,13 +219,10 @@ void CVolumeControlItem::OnRButtonDown(int x, int y)
 void CVolumeControlItem::OnMouseMove(int x, int y)
 {
 	CUICore &UICore = GetAppClass().UICore;
-	RECT rc;
-	int Volume;
-
-	rc = m_Position;
+	RECT rc = m_Position;
 	Style::Subtract(&rc, m_pControlPanel->GetItemPadding());
 	Style::Subtract(&rc, m_Style.BarPadding);
-	Volume = (x - rc.left) * CCoreEngine::MAX_VOLUME / ((rc.right - rc.left) - 1);
+	int Volume = (x - rc.left) * CCoreEngine::MAX_VOLUME / ((rc.right - rc.left) - 1);
 	if (Volume < 0)
 		Volume = 0;
 	else if (Volume > CCoreEngine::MAX_VOLUME)

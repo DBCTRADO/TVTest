@@ -774,9 +774,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 		case IDC_PROGRAMGUIDETOOL_ADD:
 			{
-				CProgramGuideTool *pTool;
+				CProgramGuideTool *pTool = new CProgramGuideTool;
 
-				pTool = new CProgramGuideTool;
 				if (pTool->ShowDialog(hDlg)) {
 					const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 					LVITEM lvi;
@@ -809,14 +808,13 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LVITEM lvi;
-				CProgramGuideTool *pTool;
 
 				lvi.mask = LVIF_PARAM;
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 				lvi.iSubItem = 0;
 				if (!ListView_GetItem(hwndList, &lvi))
 					return TRUE;
-				pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+				CProgramGuideTool *pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
 				if (pTool->ShowDialog(hDlg)) {
 					lvi.mask = LVIF_TEXT;
 					lvi.pszText = const_cast<LPTSTR>(pTool->GetName());
@@ -837,7 +835,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LVITEM lvi;
-				CProgramGuideTool *pTool;
 
 				lvi.mask = LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
@@ -845,7 +842,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					return TRUE;
 				lvi.iSubItem = 0;
 				ListView_GetItem(hwndList, &lvi);
-				pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+				const CProgramGuideTool *pTool = reinterpret_cast<const CProgramGuideTool*>(lvi.lParam);
 				ListView_DeleteItem(hwndList, lvi.iItem);
 				lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem--;
@@ -865,7 +862,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			{
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
 				LVITEM lvi;
-				CProgramGuideTool *pTool;
 
 				lvi.mask = LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
@@ -874,7 +870,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					return TRUE;
 				lvi.iSubItem = 0;
 				ListView_GetItem(hwndList, &lvi);
-				pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+				const CProgramGuideTool *pTool = reinterpret_cast<const CProgramGuideTool*>(lvi.lParam);
 				ListView_DeleteItem(hwndList, lvi.iItem);
 				lvi.mask = LVIF_STATE | LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 				lvi.iItem++;
@@ -899,10 +895,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 				lvi.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
 				lvi.iSubItem = 0;
 				if (ListView_GetItem(hwndList, &lvi)) {
-					CProgramGuideTool *pTool;
-
 					ListView_DeleteItem(hwndList, lvi.iItem);
-					pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
+					CProgramGuideTool *pTool = reinterpret_cast<CProgramGuideTool*>(lvi.lParam);
 					delete pTool;
 				}
 			}
@@ -1034,16 +1028,15 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 				CProgramGuideToolList *pToolList = m_pProgramGuide->GetToolList();
 				const HWND hwndList = GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_LIST);
-				int Items, i;
+				const int Items = ListView_GetItemCount(hwndList);
 
 				pToolList->Clear();
-				Items = ListView_GetItemCount(hwndList);
 				if (Items > 0) {
 					LVITEM lvi;
 
 					lvi.mask = LVIF_PARAM;
 					lvi.iSubItem = 0;
-					for (i = 0; i < Items; i++) {
+					for (int i = 0; i < Items; i++) {
 						lvi.iItem = i;
 						ListView_GetItem(hwndList, &lvi);
 						pToolList->Add(reinterpret_cast<CProgramGuideTool*>(lvi.lParam));

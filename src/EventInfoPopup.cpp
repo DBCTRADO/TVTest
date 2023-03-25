@@ -485,11 +485,9 @@ bool CEventInfoPopup::GetPopupPosition(int x, int y, RECT *pPos) const
 		return false;
 
 	RECT rc;
-	int Width, Height;
-
 	GetPosition(&rc);
-	Width = rc.right - rc.left;
-	Height = rc.bottom - rc.top;
+	const int Width = rc.right - rc.left;
+	const int Height = rc.bottom - rc.top;
 
 	POINT pt = {x, y};
 	const HMONITOR hMonitor = ::MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
@@ -654,11 +652,9 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 	case WM_NCHITTEST:
 		{
-			POINT pt;
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			RECT rc;
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			::ScreenToClient(hwnd, &pt);
 			GetCloseButtonRect(&rc);
 			if (::PtInRect(&rc, pt))

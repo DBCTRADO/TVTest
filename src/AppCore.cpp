@@ -494,9 +494,8 @@ bool CAppCore::SelectChannel(LPCTSTR pszTunerName, const CChannelInfo &ChannelIn
 		return false;
 
 	int Space = CChannelManager::SPACE_INVALID, Channel = -1;
-	const CChannelList *pChannelList;
+	const CChannelList *pChannelList = m_App.ChannelManager.GetCurrentChannelList();
 
-	pChannelList = m_App.ChannelManager.GetCurrentChannelList();
 	if (pChannelList != nullptr) {
 		if (ChannelInfo.GetChannelIndex() >= 0) {
 			Channel = pChannelList->FindByIndex(
@@ -628,12 +627,10 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 	if (pCmdLine->m_TransportStreamID > 0)
 		FindChannel.SetTransportStreamID(static_cast<WORD>(pCmdLine->m_TransportStreamID));
 
-	const CChannelList *pChannelList;
-
 	// まず有効なチャンネルから探し、無ければ全てのチャンネルから探す
 	for (int i = 0; i < 2; i++) {
 		for (int Space = 0; Space < m_App.ChannelManager.NumSpaces(); Space++) {
-			pChannelList = m_App.ChannelManager.GetChannelList(Space);
+			const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(Space);
 			if (pChannelList != nullptr
 					&& (pCmdLine->m_TuningSpace < 0 || Space == pCmdLine->m_TuningSpace)) {
 				const int Channel = pChannelList->Find(FindChannel, i == 0);
@@ -653,7 +650,7 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 		FindChannel.SetServiceID(0);
 		for (int i = 0; i < 2; i++) {
 			for (int Space = 0; Space < m_App.ChannelManager.NumSpaces(); Space++) {
-				pChannelList = m_App.ChannelManager.GetChannelList(Space);
+				const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(Space);
 				if (pChannelList != nullptr
 						|| (pCmdLine->m_TuningSpace < 0 || Space == pCmdLine->m_TuningSpace)) {
 					const int Channel = pChannelList->Find(FindChannel, i == 0);
@@ -673,11 +670,10 @@ bool CAppCore::SetCommandLineChannel(const CCommandLineOptions *pCmdLine)
 
 bool CAppCore::FollowChannelChange(WORD TransportStreamID, WORD ServiceID)
 {
-	const CChannelList *pChannelList;
+	const CChannelList *pChannelList = m_App.ChannelManager.GetCurrentChannelList();
 	const CChannelInfo *pChannelInfo = nullptr;
 	int Space, Channel;
 
-	pChannelList = m_App.ChannelManager.GetCurrentChannelList();
 	if (pChannelList != nullptr) {
 		Channel = pChannelList->FindByIDs(0, TransportStreamID, ServiceID);
 		if (Channel >= 0) {
@@ -1506,8 +1502,8 @@ bool CAppCore::GetVariableStringEventInfo(
 		LibISDB::GetCurrentEPGTime(&CurTime);
 	pInfo->TOTTime = CurTime;
 
-	WORD ServiceID;
-	if (pAnalyzer != nullptr
+	if (WORD ServiceID;
+			pAnalyzer != nullptr
 			&& (ServiceID = m_App.CoreEngine.GetServiceID()) != LibISDB::SERVICE_ID_INVALID) {
 		const int Index = pAnalyzer->GetServiceIndexByID(ServiceID);
 		LibISDB::String ServiceName;

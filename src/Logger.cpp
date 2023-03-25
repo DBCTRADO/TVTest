@@ -63,9 +63,7 @@ void CLogItem::GetTime(SYSTEMTIME *pTime) const
 
 int CLogItem::Format(char *pszText, int MaxLength) const
 {
-	int Length;
-
-	Length = FormatTime(pszText, MaxLength);
+	int Length = FormatTime(pszText, MaxLength);
 	Length += static_cast<int>(StringFormat(pszText + Length, MaxLength - Length, " [{}]>", ::GetCurrentProcessId()));
 	Length += ::WideCharToMultiByte(
 		CP_ACP, 0, m_Text.data(), (int)m_Text.length(),
@@ -77,9 +75,7 @@ int CLogItem::Format(char *pszText, int MaxLength) const
 
 int CLogItem::Format(WCHAR *pszText, int MaxLength) const
 {
-	int Length;
-
-	Length = FormatTime(pszText, MaxLength);
+	int Length = FormatTime(pszText, MaxLength);
 	Length += static_cast<int>(StringFormat(pszText + Length, MaxLength - Length, L" [{}]>", ::GetCurrentProcessId()));
 	StringCopy(pszText + Length, m_Text.c_str(), MaxLength - Length);
 	Length += ::lstrlenW(pszText + Length);
@@ -90,10 +86,9 @@ int CLogItem::Format(WCHAR *pszText, int MaxLength) const
 int CLogItem::FormatTime(char *pszText, int MaxLength) const
 {
 	SYSTEMTIME st;
-	int Length;
 
 	GetTime(&st);
-	Length = ::GetDateFormatA(
+	int Length = ::GetDateFormatA(
 		LOCALE_USER_DEFAULT, DATE_SHORTDATE,
 		&st, nullptr, pszText, MaxLength - 1);
 	if (Length < 1)
@@ -113,10 +108,9 @@ int CLogItem::FormatTime(char *pszText, int MaxLength) const
 int CLogItem::FormatTime(WCHAR *pszText, int MaxLength) const
 {
 	SYSTEMTIME st;
-	int Length;
 
 	GetTime(&st);
-	Length = ::GetDateFormatW(
+	int Length = ::GetDateFormatW(
 		LOCALE_USER_DEFAULT, DATE_SHORTDATE,
 		&st, nullptr, pszText, MaxLength - 1);
 	if (Length < 1)
@@ -217,9 +211,7 @@ bool CLogger::AddLogRaw(CLogItem::LogType Type, StringView Text)
 
 		if (m_hFile != INVALID_HANDLE_VALUE) {
 			WCHAR szText[MAX_LOG_TEXT_LENGTH];
-			DWORD Length;
-
-			Length = pLogItem->Format(szText, lengthof(szText) - 1);
+			DWORD Length = pLogItem->Format(szText, lengthof(szText) - 1);
 			szText[Length++] = L'\r';
 			szText[Length++] = L'\n';
 

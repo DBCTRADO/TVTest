@@ -150,10 +150,9 @@ CControlPanelItem *CControlPanel::GetItem(int Index) const
 
 bool CControlPanel::UpdateItem(int Index)
 {
-	RECT rc;
-
 	if (Index < 0 || Index >= static_cast<int>(m_ItemList.size()) || m_hwnd == nullptr)
 		return false;
+	RECT rc;
 	m_ItemList[Index]->GetPosition(&rc);
 	Invalidate(&rc);
 	return true;
@@ -172,13 +171,11 @@ bool CControlPanel::GetItemPosition(int Index, RECT *pRect) const
 void CControlPanel::UpdateLayout()
 {
 	RECT rc;
-	int x, y;
-	int MaxHeight;
-
 	GetClientRect(&rc);
 	const int Width = (rc.right - rc.left) - (m_Style.Padding.Left + m_Style.Padding.Right);
-	x = m_Style.Padding.Left;
-	y = m_Style.Padding.Top;
+	int x = m_Style.Padding.Left;
+	int y = m_Style.Padding.Top;
+	int MaxHeight = 0;
 
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		CControlPanelItem *pItem = m_ItemList[i].get();
@@ -300,9 +297,8 @@ void CControlPanel::Draw(HDC hdc, const RECT &PaintRect)
 	RECT rcClient;
 	GetClientRect(&rcClient);
 	const int Width = (rcClient.right - rcClient.left) - (m_Style.Padding.Left + m_Style.Padding.Right);
+	int MaxHeight = 0;
 
-	int MaxHeight;
-	MaxHeight = 0;
 	for (const auto &Item : m_ItemList) {
 		if (Item->GetVisible()) {
 			const int Height = Item->m_Position.bottom - Item->m_Position.top;
@@ -422,23 +418,22 @@ LRESULT CControlPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_MOUSEMOVE:
 		{
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-			RECT rc;
 
 			if (::GetCapture() == hwnd) {
+				RECT rc;
 				m_ItemList[m_HotItem]->GetPosition(&rc);
 				x -= rc.left;
 				y -= rc.top;
 				m_ItemList[m_HotItem]->OnMouseMove(x, y);
 			} else {
+				const POINT pt = {x, y};
 				int i;
-				POINT pt;
 
-				pt.x = x;
-				pt.y = y;
 				for (i = static_cast<int>(m_ItemList.size()) - 1; i >= 0; i--) {
 					const CControlPanelItem *pItem = m_ItemList[i].get();
 
 					if (pItem->GetVisible() && pItem->GetEnable()) {
+						RECT rc;
 						pItem->GetPosition(&rc);
 						if (::PtInRect(&rc, pt))
 							break;
@@ -526,10 +521,7 @@ LRESULT CControlPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				else
 					m_ItemList[m_HotItem]->OnRButtonUp(x, y);
 			} else if (uMsg == WM_RBUTTONUP) {
-				POINT pt;
-
-				pt.x = x;
-				pt.y = y;
+				POINT pt = {x, y};
 				::MapWindowPoints(hwnd, GetParent(), &pt, 1);
 				::SendMessage(GetParent(), uMsg, wParam, MAKELPARAM(pt.x, pt.y));
 			}

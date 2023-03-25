@@ -200,9 +200,8 @@ bool CEventItem::SetCommonEvent(const LibISDB::EventInfo *pEvent)
 
 int CEventItem::GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const
 {
-	int Length;
+	int Length = GetTimeText(pszText, MaxLength);
 
-	Length = GetTimeText(pszText, MaxLength);
 	if (m_pEventInfo != nullptr && Length + 2 < MaxLength) {
 		const LibISDB::String *pEventName;
 		if (m_pEventInfo->EventName.empty() && m_pCommonEventInfo != nullptr)
@@ -347,19 +346,14 @@ const CEventItem *CEventLayout::GetItem(size_t Index) const
 
 void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const LibISDB::DateTime &LastTime)
 {
-	int FirstItem, LastItem;
-	CEventItem *pItem, *pPrevItem;
-	LibISDB::DateTime PrevTime, StartTime, EndTime;
-	int EmptyCount;
+	int FirstItem = -1, LastItem = -1;
+	LibISDB::DateTime PrevTime = FirstTime;
+	int EmptyCount = 0;
 
-	FirstItem = -1;
-	LastItem = -1;
-	EmptyCount = 0;
-	PrevTime = FirstTime;
 	for (int i = 0; i < static_cast<int>(m_EventList.size()); i++) {
-		pItem = m_EventList[i].get();
-		StartTime = pItem->GetStartTime();
-		EndTime = pItem->GetEndTime();
+		const CEventItem *pItem = m_EventList[i].get();
+		const LibISDB::DateTime StartTime = pItem->GetStartTime();
+		const LibISDB::DateTime EndTime = pItem->GetEndTime();
 		if (StartTime < LastTime && EndTime > FirstTime) {
 			if (FirstItem < 0) {
 				FirstItem = i;
@@ -374,12 +368,13 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 			break;
 		PrevTime = EndTime;
 	}
+
 	if (EmptyCount > 0) {
-		pPrevItem = nullptr;
+		CEventItem *pPrevItem = nullptr;
 		PrevTime = FirstTime;
 		for (int i = FirstItem; i < LastItem; i++) {
-			pItem = m_EventList[i].get();
-			StartTime = pItem->GetStartTime();
+			CEventItem *pItem = m_EventList[i].get();
+			const LibISDB::DateTime StartTime = pItem->GetStartTime();
 			const int Cmp = PrevTime.Compare(StartTime);
 			if (Cmp > 0) {
 				if (pPrevItem)
@@ -565,15 +560,13 @@ void CServiceInfo::CalcLayout(
 	pEventList->InsertNullItems(FirstTime, LastTime);
 
 	const size_t NumItems = pEventList->NumItems();
-	LibISDB::DateTime First, Last;
-	CEventItem *pItem;
+	LibISDB::DateTime First = FirstTime;
 	int ItemPos = 0;
 
-	First = FirstTime;
 	for (size_t i = 0; i < NumItems;) {
 		if (First >= LastTime)
 			break;
-		Last = First;
+		LibISDB::DateTime Last = First;
 		Last.OffsetHours(1);
 		do {
 			if (pEventList->GetItem(i)->GetEndTime() > First)
@@ -605,7 +598,7 @@ void CServiceInfo::CalcLayout(
 				}
 			}
 			if (ProgramsPerHour == 1) {
-				pItem = pEventList->GetItem(i);
+				CEventItem *pItem = pEventList->GetItem(i);
 				pItem->SetItemLines(pItem->GetItemLines() + Lines);
 				if (pItem->GetItemPos() < 0)
 					pItem->SetItemPos(ItemPos + Offset);
@@ -618,12 +611,11 @@ void CServiceInfo::CalcLayout(
 					int LineCount = ProgramsPerHour;
 
 					do {
-						DWORD MaxTime;
+						DWORD MaxTime = 0;
 						int MaxItem;
 
-						MaxTime = 0;
 						for (int j = 0; j < ProgramsPerHour; j++) {
-							pItem = pEventList->GetItem(i + j);
+							const CEventItem *pItem = pEventList->GetItem(i + j);
 							LibISDB::DateTime Start = pItem->GetStartTime();
 							if (Start < First)
 								Start = First;
@@ -644,7 +636,7 @@ void CServiceInfo::CalcLayout(
 				}
 				int Pos = ItemPos + Offset;
 				for (int j = 0; j < std::min(ProgramsPerHour, Lines); j++) {
-					pItem = pEventList->GetItem(i + j);
+					CEventItem *pItem = pEventList->GetItem(i + j);
 					if (pItem->GetItemPos() < 0)
 						pItem->SetItemPos(Pos);
 					pItem->SetItemLines(pItem->GetItemLines() + ItemLines[j]);
@@ -1710,9 +1702,7 @@ void CProgramGuide::DrawHeaderBackground(Theme::CThemeDraw &ThemeDraw, const REC
 	const Theme::FillStyle &Style =
 		fCur ? m_Theme.CurChannelNameBackStyle : m_Theme.ChannelNameBackStyle;
 	const int LineWidth = GetHairlineWidth();
-	RECT rc;
-
-	rc = Rect;
+	RECT rc = Rect;
 	rc.left += LineWidth;
 	rc.right -= LineWidth;
 	ThemeDraw.Draw(Style, rc);
@@ -1990,7 +1980,6 @@ void CProgramGuide::DrawMessage(HDC hdc, const RECT &ClientRect) const
 void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 {
 	RECT rcClient, rcGuide, rc;
-	HRGN hrgn;
 
 	::GetClientRect(m_hwnd, &rcClient);
 	GetProgramGuideRect(&rcGuide);
@@ -2012,7 +2001,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			rc.top = 0;
 			rc.right = rcClient.right - m_TimeBarWidth;
 			rc.bottom = HeaderHeight;
-			hrgn = ::CreateRectRgnIndirect(&rc);
+			HRGN hrgn = ::CreateRectRgnIndirect(&rc);
 			::SelectClipRgn(hdc, hrgn);
 			if (m_ListMode == ListMode::Services) {
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
@@ -2045,7 +2034,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 
 		rc.top = HeaderHeight - m_ScrollPos.y * GetLineHeight();
 		if (rc.top < PaintRect.bottom) {
-			hrgn = ::CreateRectRgnIndirect(&rcGuide);
+			HRGN hrgn = ::CreateRectRgnIndirect(&rcGuide);
 			::SelectClipRgn(hdc, hrgn);
 
 			CTextDraw TextDraw;
@@ -2125,7 +2114,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 	rc.top = HeaderHeight;
 	rc.right = rcClient.right;
 	rc.bottom = rcClient.bottom;
-	hrgn = ::CreateRectRgnIndirect(&rc);
+	HRGN hrgn = ::CreateRectRgnIndirect(&rc);
 	::SelectClipRgn(hdc, hrgn);
 	rc.top = HeaderHeight - m_ScrollPos.y * GetLineHeight();
 	rc.bottom = rc.top + GetLineHeight() * m_LinesPerHour * m_Hours;
@@ -2279,10 +2268,9 @@ int CProgramGuide::CalcHeaderHeight() const
 int CProgramGuide::GetCurTimeLinePos() const
 {
 	LibISDB::DateTime First;
-	LONGLONG Span;
 
 	GetCurrentTimeRange(&First, nullptr);
-	Span = m_CurTime.DiffSeconds(First) % (24 * 60 * 60);
+	LONGLONG Span = m_CurTime.DiffSeconds(First) % (24 * 60 * 60);
 	if (Span < 0)
 		Span += 24 * 60 * 60;
 	return static_cast<int>(Span * static_cast<LONGLONG>(GetLineHeight() * m_LinesPerHour) / (60 * 60));
@@ -2451,10 +2439,10 @@ int CProgramGuide::GetTimePos() const
 
 bool CProgramGuide::SetTimePos(int Pos)
 {
-	LibISDB::DateTime Begin, End, Time;
-
+	LibISDB::DateTime Begin, End;
 	GetCurrentTimeRange(&Begin, &End);
-	Time = Begin;
+
+	LibISDB::DateTime Time = Begin;
 	Time.OffsetMinutes(Pos * 60 / m_LinesPerHour - Begin.Hour * 60);
 	if (Time < Begin)
 		Time.OffsetDays(1);
@@ -2535,8 +2523,6 @@ void CProgramGuide::SetCaption()
 
 void CProgramGuide::SetTooltip()
 {
-	RECT rc;
-
 	if (m_ListMode == ListMode::Services) {
 		int NumTools = m_Tooltip.NumTools();
 		const int NumServices = static_cast<int>(m_ServiceList.NumServices());
@@ -2548,6 +2534,7 @@ void CProgramGuide::SetTooltip()
 		rcHeader.top = 0;
 		rcHeader.bottom = m_HeaderHeight;
 
+		RECT rc;
 		rc.left = m_TimeBarWidth - m_ScrollPos.x;
 		rc.top = 0;
 		rc.bottom = m_HeaderHeight;
@@ -2599,6 +2586,7 @@ void CProgramGuide::SetTooltip()
 		}
 	} else if (m_ListMode == ListMode::Week) {
 		m_Tooltip.DeleteAllTools();
+		RECT rc;
 		GetClientRect(&rc);
 		rc.left += m_TimeBarWidth;
 		rc.right -= m_TimeBarWidth;
@@ -2979,11 +2967,8 @@ bool CProgramGuide::SetBeginHour(int Hour)
 
 bool CProgramGuide::SetTimeRange(const LibISDB::DateTime &FirstTime, const LibISDB::DateTime &LastTime)
 {
-	LibISDB::DateTime First, Last;
-
-	First = FirstTime;
+	LibISDB::DateTime First = FirstTime, Last = LastTime;
 	First.TruncateToHours();
-	Last = LastTime;
 	Last.TruncateToHours();
 
 	const int Hours = static_cast<int>(Last.DiffSeconds(First) / (60 * 60));
@@ -3697,13 +3682,10 @@ bool CProgramGuide::RedrawEventByIDs(WORD NetworkID, WORD TSID, WORD ServiceID, 
 
 bool CProgramGuide::EventHitTest(int x, int y, int *pListIndex, int *pEventIndex, RECT *pItemRect) const
 {
-	POINT pt;
 	RECT rc;
 
-	pt.x = x;
-	pt.y = y;
 	GetProgramGuideRect(&rc);
-	if (::PtInRect(&rc, pt)) {
+	if (::PtInRect(&rc, POINT{x, y})) {
 		const int XPos = x - rc.left + m_ScrollPos.x;
 		const int ServiceWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 
@@ -3887,11 +3869,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_SIZE:
 		{
 			SIZE Size, Page;
-			POINT Pos;
 
 			GetProgramGuideSize(&Size);
 			GetPageSize(&Page);
-			Pos = m_ScrollPos;
+			POINT Pos = m_ScrollPos;
 			if (Pos.x > std::max(Size.cx - Page.cx, 0L))
 				Pos.x = std::max(Size.cx - Page.cx, 0L);
 			if (Pos.y > std::max(Size.cy - Page.cy, 0L))
@@ -3905,11 +3886,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_MOUSEWHEEL:
 		{
 			SIZE Size, Page;
-			int Pos;
 
 			GetProgramGuideSize(&Size);
 			GetPageSize(&Page);
-			Pos = m_ScrollPos.y;
+			int Pos = m_ScrollPos.y;
 			if (uMsg == WM_VSCROLL) {
 				switch (LOWORD(wParam)) {
 				case SB_LINEUP:        Pos--;                                 break;
@@ -3938,11 +3918,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_MOUSEHWHEEL:
 		{
 			SIZE Size, Page;
-			int Pos;
 
 			GetProgramGuideSize(&Size);
 			GetPageSize(&Page);
-			Pos = m_ScrollPos.x;
+			int Pos = m_ScrollPos.x;
 			if (uMsg == WM_HSCROLL) {
 				switch (LOWORD(wParam)) {
 				case SB_LINELEFT:      Pos -= m_FontHeight;                   break;
@@ -3969,12 +3948,10 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_LBUTTONDOWN:
 		{
-			POINT pt;
+			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			RECT rc;
 
 			::SetFocus(hwnd);
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			::GetClientRect(hwnd, &rc);
 			if (pt.y < m_HeaderHeight
 					&& pt.x >= m_TimeBarWidth && pt.x < rc.right - m_TimeBarWidth) {
@@ -4813,10 +4790,8 @@ bool CProgramGuide::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 				IconWidth, IconHeight);
 
 			RECT rc;
-			POINT pt;
 			m_pProgramGuide->GetEventRect(List, Event, &rc);
-			pt.x = rc.left;
-			pt.y = rc.bottom;
+			POINT pt = {rc.left, rc.bottom};
 			::ClientToScreen(m_pProgramGuide->m_hwnd, &pt);
 			pPopup->GetDefaultPopupPosition(&rc);
 			if (rc.top > pt.y) {
@@ -4876,11 +4851,10 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 
 	for (size_t i = 0; i < m_pProgramGuide->m_ServiceList.NumServices(); i++) {
 		const ProgramGuide::CServiceInfo *pServiceInfo = m_pProgramGuide->m_ServiceList.GetItem(i);
-		const LibISDB::EventInfo *pEventInfo;
 		int j;
 
 		for (j = 0; j < pServiceInfo->NumEvents(); j++) {
-			pEventInfo = pServiceInfo->GetEvent(j);
+			const LibISDB::EventInfo *pEventInfo = pServiceInfo->GetEvent(j);
 			LibISDB::DateTime End;
 			pEventInfo->GetEndTime(&End);
 			if (End > First)
@@ -4888,7 +4862,7 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 		}
 
 		for (; j < pServiceInfo->NumEvents(); j++) {
-			pEventInfo = pServiceInfo->GetEvent(j);
+			const LibISDB::EventInfo *pEventInfo = pServiceInfo->GetEvent(j);
 			if (!pEventInfo->IsCommonEvent && Match(pEventInfo)) {
 				AddSearchResult(
 					new CSearchEventInfo(
@@ -5241,10 +5215,8 @@ public:
 					&& m_pProgramGuide->EnumChannelProvider(i, szText, lengthof(szText)); i++)
 				m_Menu.AppendItem(new CDropDownMenu::CItem(CM_PROGRAMGUIDE_CHANNELPROVIDER_FIRST + i, szText));
 			RECT rc;
-			POINT pt;
 			GetRect(&rc);
-			pt.x = rc.left;
-			pt.y = rc.bottom;
+			POINT pt = {rc.left, rc.bottom};
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
 			m_Menu.SetDarkMode(IsDarkMenu());
 			m_Menu.Show(
@@ -5381,10 +5353,8 @@ public:
 				CurItem = CM_CHANNEL_FIRST + m_pProgramGuide->GetWeekListService();
 			}
 			RECT rc;
-			POINT pt;
 			GetRect(&rc);
-			pt.x = rc.left;
-			pt.y = rc.bottom;
+			POINT pt = {rc.left, rc.bottom};
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
 			m_Menu.SetDarkMode(IsDarkMenu());
 			m_Menu.Show(
@@ -5674,9 +5644,9 @@ bool CProgramGuideToolbar::OnNotify(LPARAM lParam, LRESULT *pResult)
 
 	case CDDS_ITEMPREPAINT:
 		{
-			HDC hdcBuffer = nullptr, hdc;
+			HDC hdc = pnmtb->nmcd.hdc;
+			HDC hdcBuffer = nullptr;
 
-			hdc = pnmtb->nmcd.hdc;
 			if (m_fUseBufferedPaint) {
 				hdcBuffer = m_BufferedPaint.Begin(pnmtb->nmcd.hdc, &pnmtb->nmcd.rc);
 				if (hdcBuffer != nullptr)
@@ -6230,9 +6200,7 @@ bool CDateToolbar::SetButtons(const LibISDB::DateTime *pDateList, int Days, int 
 		::SendMessage(m_hwnd, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
 	}
 
-	SIZE ButtonSize;
-	ButtonSize.cx = 0;
-	ButtonSize.cy = m_FontHeight;
+	SIZE ButtonSize = {0, m_FontHeight};
 	const HDC hdc = ::GetDC(m_hwnd);
 	const HFONT hfontOld = SelectFont(hdc, GetWindowFont(m_hwnd));
 	for (int i = 0; i < Days; i++) {
@@ -6508,9 +6476,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 		::SendMessage(m_hwnd, TB_ADDBUTTONS, 1, reinterpret_cast<LPARAM>(&tbb));
 	}
 
-	SIZE ButtonSize;
-	ButtonSize.cx = 0;
-	ButtonSize.cy = m_FontHeight;
+	SIZE ButtonSize = {0, m_FontHeight};
 	const HDC hdc = ::GetDC(m_hwnd);
 	const HFONT hfontOld = SelectFont(hdc, GetWindowFont(m_hwnd));
 	for (int i = 0; i < TimeListLength; i++) {
@@ -6980,13 +6946,10 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 		break;
 
 	case WM_NOTIFY:
-		{
+		for (const auto &e : m_ToolbarList) {
 			LRESULT Result;
-
-			for (const auto &e : m_ToolbarList) {
-				if (e->OnNotify(lParam, &Result))
-					return Result;
-			}
+			if (e->OnNotify(lParam, &Result))
+				return Result;
 		}
 		break;
 

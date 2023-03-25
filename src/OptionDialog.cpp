@@ -305,17 +305,17 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					::DrawFocusRect(pdis->hDC, &rc);
 				}
 			} else if (wParam == IDC_OPTIONS_TITLE) {
-				RECT rc;
-
 				DrawUtil::FillGradient(
 					pdis->hDC, &pdis->rcItem, RGB(0, 0, 0), GetTitleColor(m_CurrentPage));
 				const HFONT hfontOld = SelectFont(pdis->hDC, m_TitleFont.GetHandle());
 				const COLORREF crOldText = ::SetTextColor(pdis->hDC, RGB(255, 255, 255));
 				const int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
-				rc.left = pdis->rcItem.left + 2;
-				rc.top = pdis->rcItem.top;
-				rc.right = pdis->rcItem.right - 2;
-				rc.bottom = pdis->rcItem.bottom;
+				RECT rc = {
+					pdis->rcItem.left + 2,
+					pdis->rcItem.top,
+					pdis->rcItem.right - 2,
+					pdis->rcItem.bottom
+				};
 				::DrawText(
 					pdis->hDC, m_PageList[m_CurrentPage].pszTitle, -1,
 					&rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);

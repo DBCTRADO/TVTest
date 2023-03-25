@@ -2473,17 +2473,17 @@ void CProgramSearchDialog::HighlightKeyword()
 
 	for (int i = FirstLine; i <= LastLine;) {
 		const int LineIndex = static_cast<int>(::SendMessage(hwndInfo, EM_LINEINDEX, i, 0));
-		TCHAR szText[2048], *q;
-		int TotalLength = 0, Length;
+		TCHAR szText[2048];
+		LPTSTR q = szText;
+		int TotalLength = 0;
 
-		q = szText;
 		while (i <= LastLine) {
 #ifdef UNICODE
 			q[0] = static_cast<WORD>(lengthof(szText) - 2 - TotalLength);
 #else
 			*(WORD*)q = (WORD)(sizeof(szText) - sizeof(WORD) - 1 - TotalLength);
 #endif
-			Length = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q)));
+			const int Length = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q)));
 			i++;
 			if (Length < 1)
 				break;
@@ -2532,6 +2532,7 @@ void CProgramSearchDialog::HighlightKeyword()
 						p++;
 					if (!fMinus && KeywordLength > 0) {
 						LPCTSTR q = szText;
+						int Length;
 						while (SearchNextKeyword(&q, szWord, KeywordLength, &Length)) {
 							cr.cpMin = LineIndex + static_cast<LONG>(q - szText);
 							cr.cpMax = cr.cpMin + Length;

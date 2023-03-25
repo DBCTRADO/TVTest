@@ -177,19 +177,14 @@ CVolumeStatusItem::CVolumeStatusItem()
 void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags)
 {
 	const CUICore *pUICore = &GetAppClass().UICore;
-	LOGBRUSH lb;
-	RECT rc;
 	const COLORREF crText = ::GetTextColor(hdc);
-	COLORREF crBar;
-
-	lb.lbStyle = BS_SOLID;
-	lb.lbColor = crText;
-	lb.lbHatch = 0;
+	const LOGBRUSH lb = {BS_SOLID, crText, 0};
 	const HPEN hpen = ::ExtCreatePen(
 		PS_GEOMETRIC | PS_SOLID | PS_INSIDEFRAME | PS_JOIN_MITER,
 		m_Style.BarBorderWidth, &lb, 0, nullptr);
 	const HPEN hpenOld = SelectPen(hdc, hpen);
 	const HBRUSH hbrOld = SelectBrush(hdc, ::GetStockObject(NULL_BRUSH));
+	RECT rc;
 	rc.left = DrawRect.left;
 	rc.top = DrawRect.top + ((DrawRect.bottom - DrawRect.top) - m_Style.BarHeight) / 2;
 	rc.right = DrawRect.right;
@@ -198,6 +193,8 @@ void CVolumeStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 	::SelectObject(hdc, hbrOld);
 	::SelectObject(hdc, hpenOld);
 	::DeleteObject(hpen);
+
+	COLORREF crBar;
 	if (!pUICore->GetMute())
 		crBar = crText;
 	else
@@ -227,12 +224,11 @@ void CVolumeStatusItem::OnMouseMove(int x, int y)
 
 	CUICore *pUICore = &GetAppClass().UICore;
 	RECT rcItem, rcClient;
-	int Volume;
 
 	GetRect(&rcItem);
 	GetClientRect(&rcClient);
 	Style::Subtract(&rcClient, m_Style.BarPadding);
-	Volume = (x - (rcClient.left - rcItem.left)) * CCoreEngine::MAX_VOLUME / ((rcClient.right - rcClient.left) - 1);
+	int Volume = (x - (rcClient.left - rcItem.left)) * CCoreEngine::MAX_VOLUME / ((rcClient.right - rcClient.left) - 1);
 	if (Volume < 0)
 		Volume = 0;
 	else if (Volume > CCoreEngine::MAX_VOLUME)
@@ -357,10 +353,9 @@ void CRecordStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect
 
 	const CRecordManager &RecordManager = GetAppClass().RecordManager;
 	const int FontHeight = m_pStatus->GetFontHeight();
-	RECT rc;
+	RECT rc = DrawRect;
 	TCHAR szText[32];
 
-	rc = DrawRect;
 	if (RecordManager.IsRecording()) {
 		if (RecordManager.IsPaused()) {
 			const HBRUSH hbr = ::CreateSolidBrush(::GetTextColor(hdc));
@@ -1058,13 +1053,10 @@ void CProgramInfoStatusItem::ShowPopupInfo()
 		if (App.CoreEngine.GetCurrentEventInfo(
 					&EventInfo, ChInfo.GetServiceID(), m_fNext)) {
 			RECT rc;
-			POINT pt;
-			int Width, Height;
-
 			GetRect(&rc);
-			pt.x = rc.left;
-			pt.y = rc.top;
+			POINT pt = {rc.left, rc.top};
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
+			int Width, Height;
 			m_EventInfoPopup.GetSize(&Width, &Height);
 			::SetRect(&rc, pt.x, pt.y - Height, pt.x + Width, pt.y);
 

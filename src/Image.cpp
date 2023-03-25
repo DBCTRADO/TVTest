@@ -38,9 +38,8 @@ namespace TVTest
 
 size_t CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
 {
-	size_t Size;
+	size_t Size = sizeof(BITMAPINFOHEADER);
 
-	Size = sizeof(BITMAPINFOHEADER);
 	if (pbmih->biBitCount <= 8)
 		Size += (1_z << pbmih->biBitCount) * sizeof(RGBQUAD);
 	else if (pbmih->biCompression == BI_BITFIELDS)
@@ -67,23 +66,19 @@ static void CropImage(
 {
 	const std::size_t SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
 	const std::size_t DstRowBytes = DIB_ROW_BYTES(Width, 24);
-	int x, y;
-	const BYTE *p;
-	BYTE *q;
+	BYTE *q = static_cast<BYTE*>(pDstData) + (Height - 1) * DstRowBytes;
 
-	q = static_cast<BYTE*>(pDstData) + (Height - 1) * DstRowBytes;
-	for (y = 0; y < Height; y++) {
-		p = static_cast<const BYTE*>(pSrcData) +
+	for (int y = 0; y < Height; y++) {
+		const BYTE *p = static_cast<const BYTE*>(pSrcData) +
 			((pbmiSrc->bmiHeader.biHeight > 0) ?
 				(pbmiSrc->bmiHeader.biHeight - 1 - (Top + y)) : (Top + y)) * SrcRowBytes +
 			Left * pbmiSrc->bmiHeader.biBitCount / 8;
 		if (pbmiSrc->bmiHeader.biBitCount == 24) {
 			std::memcpy(q, p, Width * 3);
 		} else {
-			BYTE *r;
+			BYTE *r = q;
 
-			r = q;
-			for (x = 0; x < Width; x++) {
+			for (int x = 0; x < Width; x++) {
 				*r++ = *p++;
 				*r++ = *p++;
 				*r++ = *p++;
@@ -99,22 +94,15 @@ HGLOBAL ResizeImage(
 	const BITMAPINFO *pbmiSrc, const void *pSrcData,
 	const RECT *pSrcRect, int Width, int Height)
 {
-	BITMAPINFOHEADER *pbmihDst;
-	void *pDstData;
-	int SrcLeft, SrcTop, SrcWidth, SrcHeight;
-	int x, y, x1, y1, dx1, dy1, dx2, dy2;
-	int b, g, r;
-	const BYTE *p, *p1;
-	BYTE *q;
-
 	if (pbmiSrc->bmiHeader.biBitCount != 24 && pbmiSrc->bmiHeader.biBitCount != 32)
 		return nullptr;
+
 	const HGLOBAL hGlobal = GlobalAlloc(
 		GMEM_MOVEABLE | GMEM_SHARE,
 		sizeof(BITMAPINFOHEADER) + DIB_ROW_BYTES(Width, 24) * Height);
 	if (hGlobal == nullptr)
 		return nullptr;
-	pbmihDst = static_cast<BITMAPINFOHEADER*>(GlobalLock(hGlobal));
+	BITMAPINFOHEADER *pbmihDst = static_cast<BITMAPINFOHEADER*>(GlobalLock(hGlobal));
 	pbmihDst->biSize = sizeof(BITMAPINFOHEADER);
 	pbmihDst->biWidth = Width;
 	pbmihDst->biHeight = Height;
@@ -126,7 +114,9 @@ HGLOBAL ResizeImage(
 	pbmihDst->biYPelsPerMeter = 0;
 	pbmihDst->biClrUsed = 0;
 	pbmihDst->biClrImportant = 0;
-	pDstData = pbmihDst + 1;
+	void *pDstData = pbmihDst + 1;
+
+	int SrcLeft, SrcTop, SrcWidth, SrcHeight;
 	if (pSrcRect != nullptr) {
 		SrcLeft = pSrcRect->left;
 		SrcTop = pSrcRect->top;
@@ -142,13 +132,15 @@ HGLOBAL ResizeImage(
 		GlobalUnlock(hGlobal);
 		return hGlobal;
 	}
+
 	const int SrcPlanes = pbmiSrc->bmiHeader.biBitCount / 8;
 	std::unique_ptr<int[]> SrcPos(new int[Width]);
 	const int SrcXCenter = ((SrcWidth - 1) << 8) / 2;
 	const int SrcYCenter = ((SrcHeight - 1) << 8) / 2;
 	const int DstXCenter = ((Width - 1) << 8) / 2;
 	const int DstYCenter = ((Height - 1) << 8) / 2;
-	for (x = 0; x < Width; x++) {
+
+	for (int x = 0; x < Width; x++) {
 		SrcPos[x] = ((x << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
 		if (SrcPos[x] < 0)
 			SrcPos[x] = 0;
@@ -160,26 +152,26 @@ HGLOBAL ResizeImage(
 	if (SrcTop > 0)
 		pSrcData = static_cast<const BYTE*>(pSrcData) +
 			(pbmiSrc->bmiHeader.biHeight > 0 ? (pbmiSrc->bmiHeader.biHeight - (SrcHeight + SrcTop)) : SrcTop) * SrcRowBytes;
-	q = static_cast<BYTE*>(pDstData);
-	for (y = 0; y < Height; y++) {
-		y1 = ((y << 8) - DstYCenter) * SrcHeight / Height + SrcYCenter;
+	BYTE *q = static_cast<BYTE*>(pDstData);
+	for (int y = 0; y < Height; y++) {
+		int y1 = ((y << 8) - DstYCenter) * SrcHeight / Height + SrcYCenter;
 		if (y1 < 0)
 			y1 = 0;
 		else if (y1 > (SrcHeight - 1) << 8)
 			y1 = (SrcHeight - 1) << 8;
-		dy2 = y1 & 0xFF;
-		dy1 = 0x100 - dy2;
+		const int dy2 = y1 & 0xFF;
+		const int dy1 = 0x100 - dy2;
 		const std::size_t YOffset = dy2 > 0 ? SrcRowBytes : 0;
-		for (x = 0; x < Width; x++) {
-			x1 = SrcPos[x];
-			dx2 = x1 & 0xFF;
-			dx1 = 0x100 - dx2;
-			p = static_cast<const BYTE*>(pSrcData) + (y1 >> 8) * SrcRowBytes +
+		for (int x = 0; x < Width; x++) {
+			const int x1 = SrcPos[x];
+			const int dx2 = x1 & 0xFF;
+			const int dx1 = 0x100 - dx2;
+			const BYTE *p = static_cast<const BYTE*>(pSrcData) + (y1 >> 8) * SrcRowBytes +
 				((x1 >> 8) + SrcLeft) * SrcPlanes;
-			p1 = p + ((dx2 + 0xFF) >> 8) * SrcPlanes;
-			b = (p[0] * dx1 + p1[0] * dx2) * dy1;
-			g = (p[1] * dx1 + p1[1] * dx2) * dy1;
-			r = (p[2] * dx1 + p1[2] * dx2) * dy1;
+			const BYTE *p1 = p + ((dx2 + 0xFF) >> 8) * SrcPlanes;
+			int b = (p[0] * dx1 + p1[0] * dx2) * dy1;
+			int g = (p[1] * dx1 + p1[1] * dx2) * dy1;
+			int r = (p[2] * dx1 + p1[2] * dx2) * dy1;
 			p += YOffset;
 			p1 += YOffset;
 			b += (p[0] * dx1 + p1[0] * dx2) * dy2;

@@ -245,13 +245,12 @@ CContainer *CSplitter::GetChildContainer(int Index) const
 
 void CSplitter::OnLButtonDown(int x, int y)
 {
-	POINT pt = {x, y};
 	RECT rc;
 
 	if (!(m_Style & StyleFlag::Fixed)
 			&& m_PaneList[0].pContainer != nullptr && m_PaneList[0].pContainer->GetVisible()
 			&& m_PaneList[1].pContainer != nullptr && m_PaneList[1].pContainer->GetVisible()
-			&& GetBarRect(&rc) && ::PtInRect(&rc, pt))
+			&& GetBarRect(&rc) && ::PtInRect(&rc, POINT{x, y}))
 		::SetCapture(m_pBase->GetHandle());
 }
 
@@ -266,7 +265,6 @@ void CSplitter::OnLButtonUp(int x, int y)
 void CSplitter::OnMouseMove(int x, int y)
 {
 	const POINT pt = {x, y};
-	RECT rc;
 	LPCTSTR pszCursor;
 
 	if (::GetCapture() == m_pBase->GetHandle()) {
@@ -294,6 +292,7 @@ void CSplitter::OnMouseMove(int x, int y)
 		}
 		pszCursor = !!(m_Style & StyleFlag::Vert) ? IDC_SIZENS : IDC_SIZEWE;
 	} else {
+		RECT rc;
 		if (!(m_Style & StyleFlag::Fixed)
 				&& m_PaneList[0].pContainer != nullptr && m_PaneList[0].pContainer->GetVisible()
 				&& m_PaneList[1].pContainer != nullptr && m_PaneList[1].pContainer->GetVisible()
@@ -506,14 +505,13 @@ bool CSplitter::GetBarRect(RECT *pRect) const
 			|| m_PaneList[1].pContainer == nullptr || !m_PaneList[1].pContainer->GetVisible())
 		return false;
 
-	int BarPos;
 	SIZE MinSize1, MinSize2;
-	RECT rc;
-
-	BarPos = m_BarPos;
 	m_PaneList[0].pContainer->GetMinSize(&MinSize1);
 	m_PaneList[1].pContainer->GetMinSize(&MinSize2);
-	rc = m_Position;
+
+	RECT rc = m_Position;
+	int BarPos = m_BarPos;
+
 	if (!(m_Style & StyleFlag::Vert)) {
 		int Width;
 
@@ -784,9 +782,8 @@ CContainer *CLayoutBase::GetChildContainerFromPoint(const CContainer *pContainer
 		return nullptr;
 
 	const POINT pt = {x, y};
-	RECT rc;
+	RECT rc = pContainer->GetPosition();
 
-	rc = pContainer->GetPosition();
 	if (::PtInRect(&rc, pt)) {
 		const int NumChildren = pContainer->NumChildContainers();
 

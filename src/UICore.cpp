@@ -1195,19 +1195,15 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 	// 各チューニング空間のメニューを追加する
 	// 実際のメニューの設定は WM_INITMENUPOPUP で行っている
 	if (fIsTunerOpen && m_App.ChannelManager.NumSpaces() > 0) {
-		HMENU hmenuSpace;
-		LPCTSTR pszName;
-
 		if (m_App.ChannelManager.NumSpaces() > 1) {
-			hmenuSpace = ::CreatePopupMenu();
+			HMENU hmenuSpace = ::CreatePopupMenu();
 			Menu.Append(hmenuSpace, TEXT("&A: すべて"));
 		}
-		for (int i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
-			const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(i);
 
-			hmenuSpace = ::CreatePopupMenu();
+		for (int i = 0; i < m_App.ChannelManager.NumSpaces(); i++) {
+			HMENU hmenuSpace = ::CreatePopupMenu();
 			const size_t Length = StringFormat(szText, TEXT("&{}: "), i);
-			pszName = m_App.ChannelManager.GetTuningSpaceName(i);
+			LPCTSTR pszName = m_App.ChannelManager.GetTuningSpaceName(i);
 			if (pszName != nullptr) {
 				CopyToMenuText(pszName, szText + Length, static_cast<int>(lengthof(szText) - Length));
 			} else {
@@ -1215,6 +1211,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 					szText + Length, lengthof(szText) - Length,
 					TEXT("チューニング空間{}"), i);
 			}
+			const CChannelList *pChannelList = m_App.ChannelManager.GetChannelList(i);
 			Menu.Append(
 				hmenuSpace, szText,
 				pChannelList != nullptr && pChannelList->NumEnableChannels() > 0 ? MF_ENABLED : MF_GRAYED);
@@ -1713,10 +1710,9 @@ bool CUICore::InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu)
 		return false;
 
 	const CChannelManager &ChannelManager = m_App.ChannelManager;
-	const CChannelList *pChannelList;
+	const CChannelList *pChannelList = ChannelManager.GetAllChannelList();
 	int Command = CM_SPACE_CHANNEL_FIRST;
 
-	pChannelList = ChannelManager.GetAllChannelList();
 	if (ChannelManager.NumSpaces() > 1) {
 		if (i == 0) {
 			CreateChannelMenu(
@@ -1850,26 +1846,22 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 
 	const CChannelManager &ChannelManager = m_UICore.m_App.ChannelManager;
 	const bool fIsTunerOpen = m_UICore.m_App.CoreEngine.IsTunerOpen();
-	HMENU hmenuSpace;
 	const CChannelList *pChannelList;
-	int Command;
-	LPCTSTR pszName;
+	int Command = CM_SPACE_CHANNEL_FIRST;
 	TCHAR szText[MAX_PATH * 2];
-
-	Command = CM_SPACE_CHANNEL_FIRST;
 
 	if (fIsTunerOpen) {
 		pChannelList = ChannelManager.GetAllChannelList();
 		if (ChannelManager.NumSpaces() > 1) {
-			hmenuSpace = ::CreatePopupMenu();
+			HMENU hmenuSpace = ::CreatePopupMenu();
 			m_Menu.Append(hmenuSpace, TEXT("&A: すべて"));
 		}
 		Command += pChannelList->NumChannels();
 		for (int i = 0; i < ChannelManager.NumSpaces(); i++) {
 			pChannelList = ChannelManager.GetChannelList(i);
-			hmenuSpace = ::CreatePopupMenu();
+			HMENU hmenuSpace = ::CreatePopupMenu();
 			const size_t Length = StringFormat(szText, TEXT("&{}: "), i);
-			pszName = ChannelManager.GetTuningSpaceName(i);
+			LPCTSTR pszName = ChannelManager.GetTuningSpaceName(i);
 			if (!IsStringEmpty(pszName))
 				CopyToMenuText(pszName, szText + Length, static_cast<int>(lengthof(szText) - Length));
 			else
@@ -1912,6 +1904,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 					Command += pChannelList->NumChannels();
 					continue;
 				}
+				HMENU hmenuSpace;
 				if (pTuningSpaceList->NumSpaces() > 1)
 					hmenuSpace = ::CreatePopupMenu();
 				else
@@ -1924,7 +1917,7 @@ bool CUICore::CTunerSelectMenu::Create(HWND hwnd)
 				::SetMenuInfo(hmenuSpace, &mi);
 				Command += pChannelList->NumChannels();
 				if (hmenuSpace != hmenuDriver) {
-					pszName = pTuningSpaceList->GetTuningSpaceName(j);
+					LPCTSTR pszName = pTuningSpaceList->GetTuningSpaceName(j);
 					const size_t Length = StringFormat(szText, TEXT("&{}: "), j);
 					if (!IsStringEmpty(pszName)) {
 						CopyToMenuText(pszName, szText + Length, static_cast<int>(lengthof(szText) - Length));

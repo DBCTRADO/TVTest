@@ -387,9 +387,7 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, e.ID, e.pszText);
 	}
 
-	POINT pt;
-	pt.x = rc.right;
-	pt.y = rc.bottom;
+	POINT pt = {rc.right, rc.bottom};
 	::ClientToScreen(hwndList, &pt);
 	const int Command = ::TrackPopupMenu(
 		hmenu, TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,

@@ -725,11 +725,10 @@ bool CColorScheme::Load(CSettings &Settings)
 		{COLOR_PROGRAMGUIDE_DATEBUTTON_HOTTEXT,       COLOR_PROGRAMGUIDE_DATEBUTTON_TEXT},
 	};
 
-	for (int i = 0; i < lengthof(ColorMap); i++) {
-		const int To = ColorMap[i].To;
-		if (!IsLoaded(To) && IsLoaded(ColorMap[i].From)) {
-			m_ColorList[To] = m_ColorList[ColorMap[i].From];
-			SetLoadedFlag(To);
+	for (const auto Map : ColorMap) {
+		if (!IsLoaded(Map.To) && IsLoaded(Map.From)) {
+			m_ColorList[Map.To] = m_ColorList[Map.From];
+			SetLoadedFlag(Map.To);
 		}
 	}
 
@@ -743,11 +742,10 @@ bool CColorScheme::Load(CSettings &Settings)
 		{COLOR_SIDEBARBORDER,      COLOR_SIDEBARBACK1,      COLOR_SIDEBARBACK2},
 	};
 
-	for (int i = 0; i < lengthof(MixMap); i++) {
-		const int To = MixMap[i].To;
-		if (!IsLoaded(To) && IsLoaded(MixMap[i].From1) && IsLoaded(MixMap[i].From2)) {
-			m_ColorList[To] = MixColor(m_ColorList[MixMap[i].From1], m_ColorList[MixMap[i].From2]);
-			SetLoadedFlag(To);
+	for (const auto Map : MixMap) {
+		if (!IsLoaded(Map.To) && IsLoaded(Map.From1) && IsLoaded(Map.From2)) {
+			m_ColorList[Map.To] = MixColor(m_ColorList[Map.From1], m_ColorList[Map.From2]);
+			SetLoadedFlag(Map.To);
 		}
 	}
 
@@ -833,16 +831,15 @@ bool CColorScheme::Load(CSettings &Settings)
 		{GRADIENT_PROGRAMGUIDE_DATEBUTTON_HOTBACK,       GRADIENT_PROGRAMGUIDE_DATEBUTTON_BACK},
 	};
 
-	for (const auto &Map : GradientMap) {
-		const int To = Map.To, From = Map.From;
-		if (m_GradientInfoList[To].Color1 >= 0
-				&& !IsLoaded(m_GradientInfoList[To].Color1)
-				&& IsLoaded(m_GradientInfoList[From].Color1)) {
-			m_ColorList[m_GradientInfoList[To].Color1] = m_ColorList[m_GradientInfoList[From].Color1];
-			m_ColorList[m_GradientInfoList[To].Color2] = m_ColorList[m_GradientInfoList[From].Color2];
-			SetLoadedFlag(m_GradientInfoList[To].Color1);
-			SetLoadedFlag(m_GradientInfoList[To].Color2);
-			m_FillList[To] = m_FillList[From];
+	for (const auto Map : GradientMap) {
+		if (m_GradientInfoList[Map.To].Color1 >= 0
+				&& !IsLoaded(m_GradientInfoList[Map.To].Color1)
+				&& IsLoaded(m_GradientInfoList[Map.From].Color1)) {
+			m_ColorList[m_GradientInfoList[Map.To].Color1] = m_ColorList[m_GradientInfoList[Map.From].Color1];
+			m_ColorList[m_GradientInfoList[Map.To].Color2] = m_ColorList[m_GradientInfoList[Map.From].Color2];
+			SetLoadedFlag(m_GradientInfoList[Map.To].Color1);
+			SetLoadedFlag(m_GradientInfoList[Map.To].Color2);
+			m_FillList[Map.To] = m_FillList[Map.From];
 		}
 	}
 
@@ -879,14 +876,12 @@ bool CColorScheme::Load(CSettings &Settings)
 		{BORDER_PROGRAMGUIDE_DATEBUTTON_HOT,       BORDER_PROGRAMGUIDE_DATEBUTTON},
 	};
 
-	for (const auto &Map : BorderMap) {
-		const int To = Map.To;
-		const int From = Map.From;
-		if (!BorderLoaded[To] && BorderLoaded[From]) {
-			m_BorderList[To] = m_BorderList[From];
+	for (const auto Map : BorderMap) {
+		if (!BorderLoaded[Map.To] && BorderLoaded[Map.From]) {
+			m_BorderList[Map.To] = m_BorderList[Map.From];
 		}
-		const int ColorTo = m_BorderInfoList[To].Color;
-		const int ColorFrom = m_BorderInfoList[From].Color;
+		const int ColorTo = m_BorderInfoList[Map.To].Color;
+		const int ColorFrom = m_BorderInfoList[Map.From].Color;
 		if (!IsLoaded(ColorTo) && IsLoaded(ColorFrom)) {
 			m_ColorList[ColorTo] = m_ColorList[ColorFrom];
 			SetLoadedFlag(ColorTo);

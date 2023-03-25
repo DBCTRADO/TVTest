@@ -536,14 +536,13 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (m_fVertical) {
 				const NMHDR *pnmh = reinterpret_cast<const NMHDR*>(lParam);
 				RECT rcBar, rcTip;
-				int x;
 
 				::GetWindowRect(hwnd, &rcBar);
 				Theme::BorderStyle Border = m_Theme.Border;
 				ConvertBorderWidthsInPixels(&Border);
 				Theme::SubtractBorderRect(Border, &rcBar);
 				::GetWindowRect(pnmh->hwndFrom, &rcTip);
-				x = rcBar.right;
+				int x = rcBar.right;
 				const HMONITOR hMonitor = ::MonitorFromRect(&rcTip, MONITOR_DEFAULTTONULL);
 				if (hMonitor != nullptr) {
 					MONITORINFO mi;
@@ -709,7 +708,6 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 			const bool fHot = m_HotItem == i;
 			COLORREF ForeColor;
 			BYTE Opacity = 255;
-			RECT rcItem;
 
 			if (fHot) {
 				Theme::Style Style = m_Theme.HighlightItemStyle;
@@ -738,6 +736,7 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 				}
 			}
 
+			RECT rcItem;
 			rcItem.left = rc.left + m_Style.ItemPadding.Left;
 			rcItem.top = rc.top + m_Style.ItemPadding.Top;
 			rcItem.right = rcItem.left + m_Style.IconSize.Width;

@@ -90,7 +90,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 	case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
-			RECT rcDest, rc;
+			RECT rcDest;
 
 			::BeginPaint(hwnd, &ps);
 			const HBRUSH hbr = static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
@@ -99,6 +99,7 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 				::FillRect(ps.hdc, &ps.rcPaint, hbr);
 			} else {
 				m_pViewer->RepaintVideo(hwnd, ps.hdc);
+				RECT rc;
 				::GetClientRect(hwnd, &rc);
 				if (rc != rcDest)
 					DrawUtil::FillBorder(ps.hdc, &rc, &rcDest, &ps.rcPaint, hbr);
@@ -145,12 +146,9 @@ LRESULT CVideoContainerWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 	case WM_MBUTTONDBLCLK:
 	case WM_MOUSEMOVE:
 		{
-			POINT pt;
-
 			if (uMsg == WM_LBUTTONDOWN || uMsg == WM_RBUTTONDOWN || uMsg == WM_MBUTTONDOWN)
 				::SetFocus(hwnd);
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::MapWindowPoints(hwnd, ::GetParent(hwnd), &pt, 1);
 			return ::SendMessage(::GetParent(hwnd), uMsg, wParam, MAKELONG(pt.x, pt.y));
 		}
@@ -451,10 +449,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_MBUTTONDBLCLK:
 	case WM_MOUSEMOVE:
 		if (m_hwndMessage != nullptr) {
-			POINT pt;
-
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::MapWindowPoints(hwnd, m_hwndMessage, &pt, 1);
 			return ::SendMessage(m_hwndMessage, uMsg, wParam, MAKELONG(pt.x, pt.y));
 		}
@@ -572,13 +567,10 @@ bool CDisplayView::GetCloseButtonRect(RECT *pRect) const
 bool CDisplayView::CloseButtonHitTest(int x, int y) const
 {
 	RECT rc;
-	POINT pt;
 
 	if (!GetCloseButtonRect(&rc))
 		return false;
-	pt.x = x;
-	pt.y = y;
-	return ::PtInRect(&rc, pt) != FALSE;
+	return ::PtInRect(&rc, POINT{x, y}) != FALSE;
 }
 
 

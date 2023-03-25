@@ -239,15 +239,14 @@ bool Canonicalize(String *pPath)
 	if (pPath == nullptr)
 		return false;
 
-	String::size_type Pos, Next = 0;
-	String Item;
+	String::size_type Next = 0;
 
 	do {
-		Pos = pPath->find_first_of(L'\\', Next);
+		String::size_type Pos = pPath->find_first_of(L'\\', Next);
 		if (Pos == String::npos)
 			Pos = pPath->length();
 		if (Pos > Next) {
-			Item = pPath->substr(Next, Pos - Next);
+			const String Item = pPath->substr(Next, Pos - Next);
 			if (Item.compare(L".") == 0) {
 				pPath->erase(Next, Pos - Next + 1);
 				Pos = Next;

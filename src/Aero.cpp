@@ -35,7 +35,7 @@ namespace TVTest
 // コンポジションが有効か取得する
 bool CAeroGlass::IsEnabled()
 {
-	BOOL fEnabled;
+	BOOL fEnabled = FALSE;
 
 	return ::DwmIsCompositionEnabled(&fEnabled) == S_OK && fEnabled;
 }
@@ -127,7 +127,7 @@ HDC CBufferedPaint::Begin(HDC hdc, const RECT *pRect, bool fErase)
 	BP_PAINTPARAMS Params = {sizeof(BP_PAINTPARAMS), 0, nullptr, nullptr};
 	if (fErase)
 		Params.dwFlags |= BPPF_ERASE;
-	HDC hdcBuffer;
+	HDC hdcBuffer = nullptr;
 	m_hPaintBuffer = ::BeginBufferedPaint(hdc, pRect, BPBF_TOPDOWNDIB, &Params, &hdcBuffer);
 	if (m_hPaintBuffer == nullptr)
 		return nullptr;

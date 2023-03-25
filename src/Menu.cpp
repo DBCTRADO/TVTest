@@ -991,10 +991,7 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			}
 			if (pEventInfo1 != nullptr) {
 				TCHAR szText[256 * 2 + 1];
-				int Length;
-				POINT pt;
-
-				Length = GetEventText(pEventInfo1, szText, lengthof(szText) / 2);
+				int Length = GetEventText(pEventInfo1, szText, lengthof(szText) / 2);
 				pEventInfo2 = pItem->GetEventInfo(&GetAppClass().EPGDatabase, 1);
 				if (pEventInfo2 != nullptr) {
 					szText[Length++] = _T('\r');
@@ -1002,6 +999,8 @@ bool CChannelMenu::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
 					GetEventText(pEventInfo2, szText + Length, lengthof(szText) / 2);
 				}
 				m_Tooltip.SetText(1, szText);
+
+				POINT pt;
 				::GetCursorPos(&pt);
 				pt.x += 16;
 				pt.y +=

@@ -120,15 +120,17 @@ COLORREF CColorPalette::GetColor(int Index) const
 
 bool CColorPalette::SetColor(int Index, COLORREF Color)
 {
-	RECT rc;
-
 	if (Index < 0 || Index >= m_NumColors)
 		return false;
+
 	m_Palette[Index].rgbBlue = GetBValue(Color);
 	m_Palette[Index].rgbGreen = GetGValue(Color);
 	m_Palette[Index].rgbRed = GetRValue(Color);
+
+	RECT rc;
 	GetItemRect(Index, &rc);
 	InvalidateRect(m_hwnd, &rc, TRUE);
+
 	return true;
 }
 
@@ -198,13 +200,12 @@ void CColorPalette::GetItemRect(int Index, RECT *pRect) const
 
 void CColorPalette::DrawSelRect(HDC hdc, int Sel, bool fSel)
 {
-	RECT rc;
-
 	const HPEN hpen = CreatePen(
 		PS_INSIDEFRAME, 2,
 		fSel || m_BackColor == CLR_INVALID ? GetSysColor(fSel ? COLOR_HIGHLIGHT : COLOR_3DFACE) : m_BackColor);
 	const HPEN hpenOld = SelectPen(hdc, hpen);
 	const HBRUSH hbrOld = SelectBrush(hdc, GetStockObject(NULL_BRUSH));
+	RECT rc;
 	GetItemRect(Sel, &rc);
 	InflateRect(&rc, 1, 1);
 	Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
@@ -228,16 +229,14 @@ void CColorPalette::DrawNewSelHighlight(int OldSel, int NewSel)
 
 void CColorPalette::SetToolTip()
 {
-	int NumTools, i;
-	RECT rc;
-
-	NumTools = m_Tooltip.NumTools();
+	int NumTools = m_Tooltip.NumTools();
 	if (NumTools > m_NumColors) {
 		do {
 			m_Tooltip.DeleteTool(--NumTools);
 		} while (NumTools > m_NumColors);
 	}
-	for (i = 0; i < m_NumColors; i++) {
+	for (int i = 0; i < m_NumColors; i++) {
+		RECT rc;
 		GetItemRect(i, &rc);
 		if (i < NumTools)
 			m_Tooltip.SetToolRect(i, rc);
@@ -278,7 +277,6 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_PAINT:
 		if (m_Palette) {
 			PAINTSTRUCT ps;
-			RECT rc;
 
 			::BeginPaint(hwnd, &ps);
 
@@ -290,6 +288,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			for (int i = 0; i < m_NumColors; i++) {
 				const int x = i % 16;
 				const int y = i / 16;
+				RECT rc;
 				rc.left = m_Left + x * m_ItemWidth + 2;
 				rc.top = m_Top + y * m_ItemHeight + 2;
 				rc.right = rc.left + m_ItemWidth - 4;
@@ -313,9 +312,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_MOUSEMOVE:
 		if (m_Palette) {
 			const POINT ptCursor = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-			int Hot;
-
-			Hot =
+			int Hot =
 				(ptCursor.y - m_Top) / m_ItemHeight * 16 +
 				(ptCursor.x - m_Left) / m_ItemWidth;
 			if (ptCursor.x < m_Left
@@ -335,9 +332,7 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_RBUTTONDOWN:
 		if (m_Palette) {
 			const POINT ptCursor = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-			int Sel;
-
-			Sel =
+			const int Sel =
 				(ptCursor.y - m_Top) / m_ItemHeight * 16 +
 				(ptCursor.x - m_Left) / m_ItemWidth;
 			if (ptCursor.x < m_Left

@@ -35,7 +35,7 @@ namespace TVTest
 
 static HANDLE GetCurrentThreadHandle()
 {
-	HANDLE hThread;
+	HANDLE hThread = nullptr;
 
 	if (!::DuplicateHandle(
 				::GetCurrentProcess(),
@@ -152,7 +152,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 	hEvents[1] = pThis->m_hContinueEvent;
 
 	for (;;) {
-		DWORD Result = ::WaitForMultipleObjects(2, hEvents, FALSE, pThis->m_Timeout);
+		const DWORD Result = ::WaitForMultipleObjects(2, hEvents, FALSE, pThis->m_Timeout);
 		if (Result == WAIT_OBJECT_0)
 			break;
 

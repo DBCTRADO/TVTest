@@ -104,7 +104,6 @@ int GetCheckedRadioButton(HWND hDlg, int FirstID, int LastID)
 bool AdjustDialogPos(HWND hwndOwner, HWND hDlg)
 {
 	RECT rcWork, rcWnd, rcDlg;
-	int x, y;
 
 	if (hwndOwner) {
 		const HMONITOR hMonitor = ::MonitorFromWindow(hwndOwner, MONITOR_DEFAULTTONEAREST);
@@ -122,12 +121,12 @@ bool AdjustDialogPos(HWND hwndOwner, HWND hDlg)
 	}
 
 	::GetWindowRect(hDlg, &rcDlg);
-	x = ((rcWnd.right - rcWnd.left) - (rcDlg.right - rcDlg.left)) / 2 + rcWnd.left;
+	int x = ((rcWnd.right - rcWnd.left) - (rcDlg.right - rcDlg.left)) / 2 + rcWnd.left;
 	if (x < rcWork.left)
 		x = rcWork.left;
 	else if (x + (rcDlg.right - rcDlg.left) > rcWork.right)
 		x = rcWork.right - (rcDlg.right - rcDlg.left);
-	y = ((rcWnd.bottom - rcWnd.top) - (rcDlg.bottom - rcDlg.top)) / 2 + rcWnd.top;
+	int y = ((rcWnd.bottom - rcWnd.top) - (rcDlg.bottom - rcDlg.top)) / 2 + rcWnd.top;
 	if (y < rcWork.top)
 		y = rcWork.top;
 	else if (y + (rcDlg.bottom - rcDlg.top) > rcWork.bottom)
@@ -155,9 +154,7 @@ void SyncEditWithTrackBar(HWND hDlg, int TrackbarID, int EditID)
 
 void SetComboBoxList(HWND hDlg, int ID, LPCTSTR pszList)
 {
-	LPCTSTR p;
-
-	for (p = pszList; *p != '\0'; p += lstrlen(p) + 1)
+	for (LPCTSTR p = pszList; *p != '\0'; p += lstrlen(p) + 1)
 		SendDlgItemMessage(hDlg, ID, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(p));
 }
 
@@ -188,9 +185,6 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 
 	const int Count = static_cast<int>(SendMessage(hwnd, LB_GETCOUNT, 0, 0));
 	if (Count >= 1) {
-		TCHAR szText[MAX_PATH];
-		SIZE sz;
-
 		const HFONT hfont = reinterpret_cast<HFONT>(SendMessage(hwnd, WM_GETFONT, 0, 0));
 		if (hfont == nullptr)
 			return false;
@@ -199,7 +193,9 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 			return false;
 		const HFONT hfontOld = static_cast<HFONT>(SelectObject(hdc, hfont));
 		for (int i = 0; i < Count; i++) {
+			TCHAR szText[MAX_PATH];
 			SendMessage(hwnd, LB_GETTEXT, i, reinterpret_cast<LPARAM>(szText));
+			SIZE sz;
 			GetTextExtentPoint32(hdc, szText, lstrlen(szText), &sz);
 			if (sz.cx > MaxWidth)
 				MaxWidth = sz.cx;
@@ -365,15 +361,16 @@ bool PopupMenuFromControls(
 	HWND hDlg, const int *pIDList, int IDListLength,
 	unsigned int Flags, const POINT *ppt)
 {
-	POINT pt;
-
 	const HMENU hmenu = CreatePopupMenuFromControls(hDlg, pIDList, IDListLength);
 	if (hmenu == nullptr)
 		return false;
+
+	POINT pt;
 	if (ppt != nullptr)
 		pt = *ppt;
 	else
 		GetCursorPos(&pt);
+
 	TrackPopupMenu(hmenu, Flags, pt.x, pt.y, 0, hDlg, nullptr);
 	DestroyMenu(hmenu);
 	return true;

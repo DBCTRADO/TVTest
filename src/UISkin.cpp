@@ -56,9 +56,8 @@ void CUISkin::ShowErrorMessage(LPCTSTR pszText) const
 void CUISkin::ShowErrorMessage(
 	const LibISDB::ErrorHandler *pErrorHandler, LPCTSTR pszTitle) const
 {
-	String Text;
+	String Text = pErrorHandler->GetLastErrorText();
 
-	Text = pErrorHandler->GetLastErrorText();
 	if (!IsStringEmpty(pErrorHandler->GetLastErrorAdvise())) {
 		if (!Text.empty())
 			Text += TEXT('\n');

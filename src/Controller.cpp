@@ -411,10 +411,9 @@ void CControllerManager::InitDlgItems()
 
 		m_hbmController = pController->GetImage(CController::ImageType::Controller);
 		if (m_hbmController != nullptr) {
-			RECT rc;
-
 			BITMAP bm;
 			::GetObject(m_hbmController, sizeof(BITMAP), &bm);
+			RECT rc;
 			::GetWindowRect(::GetDlgItem(m_hDlg, IDC_CONTROLLER_IMAGEPLACE), &rc);
 			MapWindowRect(nullptr, m_hDlg, &rc);
 			m_ImageRect.left = rc.left + ((rc.right - rc.left) - bm.bmWidth) / 2;

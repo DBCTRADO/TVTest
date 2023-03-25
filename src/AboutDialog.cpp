@@ -272,7 +272,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
-			RECT rcClient, rcLogo, rcHeader, rc;
+			RECT rcClient, rcLogo, rcHeader;
 
 			::BeginPaint(hDlg, &ps);
 			GetDlgItemRect(hDlg, IDC_ABOUT_LOGO, &rcLogo);
@@ -288,7 +288,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					&m_LogoImage,
 					(rcLogo.right - m_LogoImage.GetWidth()) / 2,
 					(rcLogo.bottom - m_LogoImage.GetHeight()) / 2);
-				rc = rcClient;
+				RECT rc = rcClient;
 				rc.bottom = rcHeader.bottom;
 				Canvas.FillGradient(
 					Colors.Header1, Colors.Header2, rc,
@@ -304,7 +304,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					Colors.Info1, Colors.Info2, rc,
 					Graphics::GradientDirection::Vert);
 			} else {
-				rc = rcClient;
+				RECT rc = rcClient;
 				rc.bottom = rcHeader.bottom;
 				DrawUtil::FillGradient(
 					ps.hdc, &rc, Colors.Header1, Colors.Header2,

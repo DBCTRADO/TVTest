@@ -205,10 +205,8 @@ int CompareSystemTime(const SYSTEMTIME *pTime1, const SYSTEMTIME *pTime2)
 	SystemTimeToFileTime(pTime2, &ft2);
 	return CompareFileTime(&ft1, &ft2);
 #else
-	DWORD Date1, Date2;
-
-	Date1 = (static_cast<DWORD>(pTime1->wYear) << 16) | (static_cast<DWORD>(pTime1->wMonth) << 8) | pTime1->wDay;
-	Date2 = (static_cast<DWORD>(pTime2->wYear) << 16) | (static_cast<DWORD>(pTime2->wMonth) << 8) | pTime2->wDay;
+	DWORD Date1 = (static_cast<DWORD>(pTime1->wYear) << 16) | (static_cast<DWORD>(pTime1->wMonth) << 8) | pTime1->wDay;
+	DWORD Date2 = (static_cast<DWORD>(pTime2->wYear) << 16) | (static_cast<DWORD>(pTime2->wMonth) << 8) | pTime2->wDay;
 	if (Date1 == Date2) {
 		Date1 =
 			(static_cast<DWORD>(pTime1->wHour) << 24) | (static_cast<DWORD>(pTime1->wMinute) << 16) |
@@ -403,9 +401,8 @@ void ClearMenu(HMENU hmenu)
 
 int CopyToMenuText(LPCTSTR pszSrcText, LPTSTR pszDstText, int MaxLength)
 {
-	int SrcPos, DstPos;
+	int SrcPos = 0, DstPos = 0;
 
-	SrcPos = DstPos = 0;
 	while (pszSrcText[SrcPos] != _T('\0') && DstPos + 1 < MaxLength) {
 		if (pszSrcText[SrcPos] == _T('&')) {
 			if (DstPos + 2 >= MaxLength)
@@ -827,10 +824,9 @@ bool GetAbsolutePath(LPCTSTR pszFilePath, LPTSTR pszAbsolutePath, int MaxLength)
 	if (pszFilePath == nullptr || pszFilePath[0] == _T('\0'))
 		return false;
 	if (::PathIsRelative(pszFilePath)) {
-		TCHAR szTemp[MAX_PATH], *p;
-
+		TCHAR szTemp[MAX_PATH];
 		::GetModuleFileName(nullptr, szTemp, _countof(szTemp));
-		p = ::PathFindFileName(szTemp);
+		LPTSTR p = ::PathFindFileName(szTemp);
 		if ((p - szTemp) + ::lstrlen(pszFilePath) >= MaxLength)
 			return false;
 		StringCopy(p, pszFilePath);
@@ -881,12 +877,10 @@ static HBITMAP CreateIconMaskBitmap(
 		::ZeroMemory(Bits.get() + Top * BytesPerLine, ImageHeight * BytesPerLine);
 	} else {
 		const int Left = (IconWidth - ImageWidth) / 2;
-		int x, y;
-		BYTE *p;
+		BYTE *p = Bits.get() + Top * BytesPerLine;
 
-		p = Bits.get() + Top * BytesPerLine;
-		for (y = 0; y < ImageHeight; y++) {
-			for (x = Left; x < Left + ImageWidth; x++)
+		for (int y = 0; y < ImageHeight; y++) {
+			for (int x = Left; x < Left + ImageWidth; x++)
 				//p[x / 8] &= ~(0x80 >> (x % 8));
 				p[x >> 3] &= ~(0x80 >> (x & 7));
 			p += BytesPerLine;
@@ -910,8 +904,7 @@ static HBITMAP CreateIconColorBitmap(
 		const HBITMAP hbmDestOld = static_cast<HBITMAP>(::SelectObject(hdcDest, hbmIcon));
 
 		if (ImageWidth < IconWidth || ImageHeight < IconHeight) {
-			RECT rc = {0, 0, IconWidth, IconHeight};
-
+			const RECT rc = {0, 0, IconWidth, IconHeight};
 			::FillRect(hdcDest, &rc, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 		}
 		const int OldStretchMode = ::SetStretchBltMode(hdcDest, STRETCH_HALFTONE);
@@ -1073,7 +1066,7 @@ bool SaveIconFromBitmap(
 		const HBITMAP hbmDstOld = static_cast<HBITMAP>(::SelectObject(hdcDst, hbmColor));
 
 		if (ImageWidth < IconWidth || ImageHeight < IconHeight) {
-			RECT rc = {0, 0, IconWidth, IconHeight};
+			const RECT rc = {0, 0, IconWidth, IconHeight};
 			::FillRect(hdcDst, &rc, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 		}
 		const int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
@@ -1135,7 +1128,6 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 		return nullptr;
 
 	ICONINFO ii = {TRUE, 0, 0, nullptr, nullptr};
-	HICON hicon = nullptr;
 
 	{
 		const int Planes = BitsPerPixel == 1 ? 2 : 1;
@@ -1176,7 +1168,7 @@ HICON CreateEmptyIcon(int Width, int Height, int BitsPerPixel)
 		}
 	}
 
-	hicon = ::CreateIconIndirect(&ii);
+	HICON hicon = ::CreateIconIndirect(&ii);
 
 	if (ii.hbmMask != nullptr)
 		::DeleteObject(ii.hbmMask);

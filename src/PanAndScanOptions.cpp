@@ -97,7 +97,7 @@ static bool ParsePanAndScanInfo(CCoreEngine::PanAndScanInfo *pInfo, LPTSTR pszTe
 	for (j = 0; j < 6 && *p != _T('\0'); j++) {
 		while (*p == _T(' '))
 			p++;
-		const LPTSTR pszValue = p;
+		const LPCTSTR pszValue = p;
 		while (*p != _T('\0') && *p != _T(','))
 			p++;
 		if (*p != _T('\0'))

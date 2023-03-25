@@ -104,7 +104,7 @@ LRESULT CRawInput::OnInput(HWND hwnd, WPARAM wParam, LPARAM lParam)
 		return 0;
 	std::unique_ptr<BYTE[]> Data(new BYTE[Size]);
 	if (::GetRawInputData(hRawInput, RID_INPUT, Data.get(), &Size, sizeof(RAWINPUTHEADER)) == Size) {
-		RAWINPUT *pri = reinterpret_cast<RAWINPUT*>(Data.get());
+		const RAWINPUT *pri = reinterpret_cast<const RAWINPUT*>(Data.get());
 
 		if (pri->header.dwType == RIM_TYPEHID) {
 			if (pri->data.hid.dwCount >= 1 && pri->data.hid.dwSizeHid >= 3) {

@@ -354,11 +354,9 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 	case WM_MBUTTONDBLCLK:
 	case WM_MOUSEMOVE:
 		{
-			POINT pt;
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			const HWND hwndParent = ::GetParent(hwnd);
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			::MapWindowPoints(hwnd, hwndParent, &pt, 1);
 			return ::SendMessage(hwndParent, uMsg, wParam, MAKELPARAM(pt.x, pt.y));
 		}

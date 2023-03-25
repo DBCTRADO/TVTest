@@ -755,12 +755,11 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_VSCROLL:
 		{
 			const int Height = CalcHeight();
-			int Pos;
 			RECT rc;
-
-			Pos = m_ScrollPos;
 			GetClientRect(&rc);
 			const int Page = rc.bottom;
+			int Pos = m_ScrollPos;
+
 			switch (LOWORD(wParam)) {
 			case SB_LINEUP:        Pos -= m_FontHeight;              break;
 			case SB_LINEDOWN:      Pos += m_FontHeight;              break;
@@ -793,10 +792,7 @@ LRESULT CChannelPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 	case WM_RBUTTONUP:
 		{
-			POINT pt;
-
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd, &pt);
 			ShowMenu(pt.x, pt.y);
 		}
@@ -1241,13 +1237,12 @@ void CChannelPanel::GetItemRect(int Index, RECT *pRect)
 
 int CChannelPanel::HitTest(int x, int y, HitType *pType) const
 {
-	POINT pt;
+	const POINT pt = {x, y};
 	RECT rc;
 
-	pt.x = x;
-	pt.y = y;
 	GetClientRect(&rc);
 	rc.top = -m_ScrollPos;
+
 	for (int i = 0; i < static_cast<int>(m_ChannelList.size()); i++) {
 		rc.bottom = rc.top + m_ChannelNameHeight;
 		if (::PtInRect(&rc, pt)) {
@@ -1307,12 +1302,12 @@ void CChannelPanel::SetTooltips(bool fRectOnly)
 			NumTools = 0;
 		}
 
-		int ToolCount;
 		RECT rc;
-
 		GetClientRect(&rc);
 		rc.top = -m_ScrollPos;
-		ToolCount = 0;
+
+		int ToolCount = 0;
+
 		for (int i = 0; i < static_cast<int>(m_ChannelList.size()); i++) {
 			rc.top += m_ChannelNameHeight;
 			const int NumEvents = m_ChannelList[i]->IsExpanded() ? m_ExpandEvents : m_EventsPerChannel;
@@ -1373,10 +1368,8 @@ bool CChannelPanel::ShowEventInfoPopup(LPARAM Param, CEventInfoPopup *pPopup)
 	}
 
 	RECT rc;
-	POINT pt;
 	GetItemRect(Channel, &rc);
-	pt.x = rc.left;
-	pt.y = rc.top;
+	POINT pt = {rc.left, rc.top};
 	::ClientToScreen(m_hwnd, &pt);
 	const int y = pt.y + m_ChannelNameHeight + m_EventNameHeight * (Event + 1);
 	pPopup->GetDefaultPopupPosition(&rc);

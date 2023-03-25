@@ -146,17 +146,16 @@ INT_PTR CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 			{
 				REQRESIZE *prr = reinterpret_cast<REQRESIZE*>(lParam);
 				RECT rcEdit, rcDialog, rcClient, rcOK, rcIcon;
-				int Width, Height;
 
 				::GetWindowRect(hDlg, &rcDialog);
 				::GetClientRect(hDlg, &rcClient);
 				::GetWindowRect(prr->nmhdr.hwndFrom, &rcEdit);
 				GetDlgItemRect(hDlg, IDOK, &rcOK);
 				const int MinWidth = (rcOK.right - rcOK.left) + (rcClient.right - rcOK.right) * 2;
-				Width = prr->rc.right - prr->rc.left;
+				int Width = prr->rc.right - prr->rc.left;
 				if (Width < MinWidth)
 					Width = MinWidth;
-				Height = prr->rc.bottom - prr->rc.top;
+				int Height = prr->rc.bottom - prr->rc.top;
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_ERROR_ICON), &rcIcon);
 				rcIcon.bottom -= rcIcon.top;
 				if (Height < rcIcon.bottom)

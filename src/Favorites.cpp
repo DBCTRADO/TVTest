@@ -1373,10 +1373,8 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 	case WM_MOUSEMOVE:
 		if (m_fItemDragging) {
 			const HWND hwndTree = ::GetDlgItem(hDlg, IDC_FAVORITES_FOLDERTREE);
-			POINT pt;
+			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
-			pt.x = GET_X_LPARAM(lParam);
-			pt.y = GET_Y_LPARAM(lParam);
 			ImageList_DragShowNolock(FALSE);
 			TVHITTESTINFO tvhti;
 			tvhti.pt = pt;

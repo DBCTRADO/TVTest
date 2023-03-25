@@ -505,11 +505,9 @@ HRESULT ShowPropertyPageFrame(
 	if (NumPages < 1)
 		return E_INVALIDARG;
 
-	HRESULT hr;
-
 	CPropertyPageSite *pPageSite = new CPropertyPageSite;
 	for (int i = 0; i < NumPages; i++) {
-		hr = ppPropPages[i]->SetPageSite(pPageSite);
+		const HRESULT hr = ppPropPages[i]->SetPageSite(pPageSite);
 		if (FAILED(hr)) {
 			for (i--; i >= 0; i--)
 				ppPropPages[i]->SetPageSite(nullptr);

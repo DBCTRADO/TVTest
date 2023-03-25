@@ -70,9 +70,8 @@ bool FillGradient(
 		return Fill(hdc, pRect, MixColor(Color1, Color2));
 
 	if (Direction == FillDirection::HorzMirror || Direction == FillDirection::VertMirror) {
-		RECT rc;
+		RECT rc = *pRect;
 
-		rc = *pRect;
 		if (Direction == FillDirection::HorzMirror) {
 			rc.right = (pRect->left + pRect->right) / 2;
 			if (rc.right > rc.left) {
@@ -134,9 +133,8 @@ bool FillGradient(
 		return FillGradient(hdc, pRect, Color1.GetCOLORREF(), Color2.GetCOLORREF(), Direction);
 
 	if (Direction == FillDirection::HorzMirror || Direction == FillDirection::VertMirror) {
-		RECT rc;
+		RECT rc = *pRect;
 
-		rc = *pRect;
 		if (Direction == FillDirection::HorzMirror) {
 			rc.right = (pRect->left + pRect->right) / 2;
 			if (rc.right > rc.left) {
@@ -267,9 +265,7 @@ bool FillInterlacedGradient(
 		const int Center = pRect->left * 2 + Width - 1;
 
 		for (int x = pRect->left; x < pRect->right; x++) {
-			COLORREF Color;
-
-			Color = MixColor(
+			COLORREF Color = MixColor(
 				Color1, Color2,
 				(BYTE)(Direction == FillDirection::Horz ?
 					(pRect->right - 1 - x) * 255 / (Width - 1) :
@@ -284,9 +280,7 @@ bool FillInterlacedGradient(
 		const int Center = pRect->top * 2 + Height - 1;
 
 		for (int y = pRect->top; y < pRect->bottom; y++) {
-			COLORREF Color;
-
-			Color = MixColor(
+			COLORREF Color = MixColor(
 				Color1, Color2,
 				(BYTE)(Direction == FillDirection::Vert ?
 					(pRect->bottom - 1 - y) * 255 / (Height - 1) :
@@ -329,7 +323,7 @@ bool GlossOverlay(
 
 	const size_t RowBytes = Width * 4;
 	const int Center = Height / 2;
-	int x, y;
+	int y;
 	BYTE *p = static_cast<BYTE*>(pBits);
 	for (y = 0; y < Center; y++) {
 		::FillMemory(p, RowBytes, BlendAlpha(Highlight1, Highlight2, y, Center - 1));
@@ -338,7 +332,7 @@ bool GlossOverlay(
 	for (; y < Height; y++) {
 		const BYTE Alpha = BlendAlpha(Shadow1, Shadow2, y - Center, Height - Center - 1);
 		::ZeroMemory(p, RowBytes);
-		for (x = 0; x < Width; x++) {
+		for (int x = 0; x < Width; x++) {
 			p[x * 4 + 3] = Alpha;
 		}
 		p += RowBytes;
@@ -705,9 +699,9 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 		return ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pLogFont) == sizeof(LOGFONT);
 	} else {
 		NONCLIENTMETRICS ncm;
-		const LOGFONT *plf;
 		ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
+		const LOGFONT *plf;
 		switch (Type) {
 		case FontType::Message:      plf = &ncm.lfMessageFont;   break;
 		case FontType::Menu:         plf = &ncm.lfMenuFont;      break;

@@ -33,29 +33,29 @@ namespace TVTest
 */
 static bool IsWindowEdgeVisible(HWND hwnd, HWND hwndTop, const RECT *pRect, HWND hwndTarget)
 {
-	RECT rc, rcEdge;
-
 	if (hwndTop == hwnd || hwndTop == nullptr)
 		return true;
+
+	RECT rc;
 	GetWindowRect(hwndTop, &rc);
 	const HWND hwndNext = GetNextWindow(hwndTop, GW_HWNDNEXT);
 	if (hwndTop == hwndTarget || !IsWindowVisible(hwndTop)
 			|| rc.left == rc.right || rc.top == rc.bottom)
 		return IsWindowEdgeVisible(hwnd, hwndNext, pRect, hwndTarget);
+
+	RECT rcEdge = *pRect;
+
 	if (pRect->top == pRect->bottom) {
 		if (rc.top <= pRect->top && rc.bottom > pRect->top) {
 			if (rc.left <= pRect->left && rc.right >= pRect->right)
 				return false;
 			if (rc.left <= pRect->left && rc.right > pRect->left) {
-				rcEdge = *pRect;
 				rcEdge.right = std::min(rc.right, pRect->right);
 				return IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget);
 			} else if (rc.left > pRect->left && rc.right >= pRect->right) {
-				rcEdge = *pRect;
 				rcEdge.left = rc.left;
 				return IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget);
 			} else if (rc.left > pRect->left && rc.right < pRect->right) {
-				rcEdge = *pRect;
 				rcEdge.right = rc.left;
 				if (IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget))
 					return true;
@@ -69,15 +69,12 @@ static bool IsWindowEdgeVisible(HWND hwnd, HWND hwndTop, const RECT *pRect, HWND
 			if (rc.top <= pRect->top && rc.bottom >= pRect->bottom)
 				return false;
 			if (rc.top <= pRect->top && rc.bottom > pRect->top) {
-				rcEdge = *pRect;
 				rcEdge.bottom = std::min(rc.bottom, pRect->bottom);
 				return IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget);
 			} else if (rc.top > pRect->top && rc.bottom >= pRect->bottom) {
-				rcEdge = *pRect;
 				rcEdge.top = rc.top;
 				return IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget);
 			} else if (rc.top > pRect->top && rc.bottom < pRect->bottom) {
-				rcEdge = *pRect;
 				rcEdge.bottom = rc.top;
 				if (IsWindowEdgeVisible(hwnd, hwndNext, &rcEdge, hwndTarget))
 					return true;
@@ -152,8 +149,6 @@ static BOOL CALLBACK SnapWindowProc(HWND hwnd, LPARAM lParam)
 void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude)
 {
 	RECT rc;
-	SnapWindowInfo Info;
-	int XOffset, YOffset;
 
 	const HMONITOR hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 	if (hMonitor != nullptr) {
@@ -168,6 +163,8 @@ void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude)
 		rc.right = GetSystemMetrics(SM_CXSCREEN);
 		rc.bottom = GetSystemMetrics(SM_CYSCREEN);
 	}
+
+	SnapWindowInfo Info;
 	Info.hwnd = hwnd;
 	Info.rcOriginal = *prc;
 	Info.rcNearest.left = rc.left - prc->left;
@@ -176,6 +173,8 @@ void SnapWindow(HWND hwnd, RECT *prc, int Margin, HWND hwndExclude)
 	Info.rcNearest.bottom = rc.bottom - prc->bottom;
 	Info.hwndExclude = hwndExclude;
 	EnumWindows(SnapWindowProc, reinterpret_cast<LPARAM>(&Info));
+
+	int XOffset, YOffset;
 	if (std::abs(Info.rcNearest.left) < std::abs(Info.rcNearest.right)
 			|| Info.rcNearest.left == Info.rcNearest.right)
 		XOffset = Info.rcNearest.left;

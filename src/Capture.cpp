@@ -134,11 +134,9 @@ bool CCaptureImage::LockData(BITMAPINFO **ppbmi, BYTE **ppBits)
 		return false;
 
 	void *pDib = ::GlobalLock(m_hData);
-	BITMAPINFO *pbmi;
-
 	if (pDib == nullptr)
 		return false;
-	pbmi = static_cast<BITMAPINFO*>(pDib);
+	BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(pDib);
 	if (ppbmi != nullptr)
 		*ppbmi = pbmi;
 	if (ppBits != nullptr)
@@ -284,13 +282,10 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			::BeginPaint(hwnd, &ps);
 			GetClientRect(&rc);
 			if (m_Image && m_Image->LockData(&pbmi, &pBits)) {
-				int DstWidth, DstHeight;
-				RECT rcDest;
-
-				DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / std::abs(pbmi->bmiHeader.biHeight);
+				int DstWidth = pbmi->bmiHeader.biWidth * rc.bottom / std::abs(pbmi->bmiHeader.biHeight);
 				if (DstWidth > rc.right)
 					DstWidth = rc.right;
-				DstHeight = pbmi->bmiHeader.biHeight * rc.right / pbmi->bmiHeader.biWidth;
+				int DstHeight = pbmi->bmiHeader.biHeight * rc.right / pbmi->bmiHeader.biWidth;
 				if (DstHeight > rc.bottom)
 					DstHeight = rc.bottom;
 				const int DstX = (rc.right - DstWidth) / 2;
@@ -303,10 +298,7 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					::SetStretchBltMode(ps.hdc, OldStretchBltMode);
 				}
 				m_Image->UnlockData();
-				rcDest.left = DstX;
-				rcDest.top = DstY;
-				rcDest.right = DstX + DstWidth;
-				rcDest.bottom = DstY + DstHeight;
+				const RECT rcDest = {DstX, DstY, DstX + DstWidth, DstY + DstHeight};
 				DrawUtil::FillBorder(ps.hdc, &rc, &rcDest, &ps.rcPaint, m_crBackColor);
 			} else {
 				DrawUtil::Fill(ps.hdc, &rc, m_crBackColor);

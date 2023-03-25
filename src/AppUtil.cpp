@@ -179,7 +179,7 @@ BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd, LPARAM lParam)
 	if (hwnd == pThis->m_hwndSelf)
 		return TRUE;
 	if (IsTVTestWindow(hwnd)) {
-		DWORD_PTR Result;
+		DWORD_PTR Result = 0;
 
 		if (::SendMessageTimeout(
 					hwnd, WM_APP_QUERYPORT, 0, 0,

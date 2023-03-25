@@ -161,9 +161,8 @@ const CTuningSpaceList *CDriverInfo::GetAvailableTuningSpaceList() const
 
 const CChannelList *CDriverInfo::GetChannelList(int Space) const
 {
-	const CChannelList *pChannelList;
+	const CChannelList *pChannelList = m_TuningSpaceList.GetChannelList(Space);
 
-	pChannelList = m_TuningSpaceList.GetChannelList(Space);
 	if (pChannelList == nullptr) {
 		pChannelList = m_DriverSpaceList.GetChannelList(Space);
 	} else if (pChannelList->NumChannels() == 0) {
@@ -323,11 +322,11 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 				{TEXT("volatile"),        TunerSpec::Flag::Volatile},
 				{TEXT("no-enum-channel"), TunerSpec::Flag::NoEnumChannel},
 			};
-			for (int i = 0; i < lengthof(FlagList); i++) {
-				for (auto itAttr = Attributes.begin(); itAttr != Attributes.end(); ++itAttr) {
-					StringUtility::Trim(*itAttr);
-					if (StringUtility::CompareNoCase(*itAttr, FlagList[i].pszName) == 0) {
-						Info.Spec.Flags |= FlagList[i].Flag;
+			for (String Attribute : Attributes) {
+				StringUtility::Trim(Attribute);
+				for (auto &Map : FlagList) {
+					if (StringUtility::CompareNoCase(Attribute, Map.pszName) == 0) {
+						Info.Spec.Flags |= Map.Flag;
 						break;
 					}
 				}

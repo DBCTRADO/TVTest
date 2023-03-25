@@ -280,17 +280,17 @@ bool CRichEditUtil::DetectURL(
 
 	for (int i = FirstLine; i < LastLine;) {
 		const int LineIndex = static_cast<int>(::SendMessage(hwndEdit, EM_LINEINDEX, i, 0));
-		TCHAR szText[2048], *p;
-		int TotalLength = 0, Length;
+		TCHAR szText[2048];
+		LPTSTR p = szText;
+		int TotalLength = 0;
 
-		p = szText;
 		while (i < LastLine) {
 #ifdef UNICODE
 			p[0] = static_cast<WORD>(lengthof(szText) - 2 - TotalLength);
 #else
 			*reinterpret_cast<WORD*>(p) = static_cast<WORD>(sizeof(szText) - sizeof(WORD) - 1 - TotalLength);
 #endif
-			Length = static_cast<int>(::SendMessage(hwndEdit, EM_GETLINE, i, reinterpret_cast<LPARAM>(p)));
+			const int Length = static_cast<int>(::SendMessage(hwndEdit, EM_GETLINE, i, reinterpret_cast<LPARAM>(p)));
 			i++;
 			if (Length < 1)
 				break;
@@ -302,7 +302,7 @@ bool CRichEditUtil::DetectURL(
 		if (TotalLength > 0) {
 			szText[TotalLength] = _T('\0');
 			LPCTSTR q = szText;
-			Length = TotalLength;
+			int Length = TotalLength;
 			while (SearchNextURL(&q, &Length)) {
 				cr.cpMin = LineIndex + static_cast<LONG>(q - szText);
 				cr.cpMax = cr.cpMin + Length;
@@ -435,12 +435,11 @@ bool CRichEditUtil::OpenLink(HWND hwndEdit, const CHARRANGE &Range)
 		return false;
 
 	TCHAR szText[256];
-	int Length;
 
 	TEXTRANGE tr;
 	tr.chrg = Range;
 	tr.lpstrText = szText;
-	Length = static_cast<int>(::SendMessage(hwndEdit, EM_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr)));
+	int Length = static_cast<int>(::SendMessage(hwndEdit, EM_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr)));
 	if (Length <= 0)
 		return false;
 

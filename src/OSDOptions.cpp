@@ -266,9 +266,8 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DRAWITEM:
 		{
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
-			RECT rc;
+			RECT rc = pdis->rcItem;
 
-			rc = pdis->rcItem;
 			::DrawEdge(pdis->hDC, &rc, BDR_SUNKENOUTER, BF_RECT | BF_ADJUST);
 			DrawUtil::Fill(pdis->hDC, &rc, m_CurTextColor);
 		}
@@ -290,9 +289,8 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_OSDOPTIONS_OSDFONT_CHOOSE:
 			{
 				CHOOSEFONT cf;
-				LOGFONT lf;
+				LOGFONT lf = m_CurOSDFont;
 
-				lf = m_CurOSDFont;
 				lf.lfWidth = 0;
 				lf.lfHeight = -PointsToPixels(11);
 				cf.lStructSize = sizeof(CHOOSEFONT);

@@ -151,9 +151,7 @@ int CTitleBar::CalcHeight() const
 	const int LabelHeight = m_FontHeight + m_Style.LabelMargin.Vert();
 	const int IconHeight = m_Style.IconSize.Height + m_Style.IconMargin.Vert();
 	const int ButtonHeight = GetButtonHeight();
-	int Height = std::max(LabelHeight, IconHeight);
-	if (Height < ButtonHeight)
-		Height = ButtonHeight;
+	const int Height = std::max({LabelHeight, IconHeight, ButtonHeight});
 	RECT Border;
 	GetBorderWidthsInPixels(m_Theme.Border, &Border);
 
@@ -605,9 +603,9 @@ int CTitleBar::HitTest(int x, int y) const
 {
 	const POINT pt = {x, y};
 	int i;
-	RECT rc;
 
 	for (i = ITEM_LAST; i >= 0; i--) {
+		RECT rc;
 		GetItemRect(i, &rc);
 		if (::PtInRect(&rc, pt))
 			break;
@@ -639,8 +637,6 @@ void CTitleBar::UpdateTooltipsRect()
 
 void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 {
-	RECT rc;
-
 	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_Font);
 	const int OldBkMode = ::SetBkMode(hdc, TRANSPARENT);
 	const COLORREF crOldTextColor = ::GetTextColor(hdc);
@@ -648,6 +644,7 @@ void CTitleBar::Draw(HDC hdc, const RECT &PaintRect)
 
 	Theme::CThemeDraw ThemeDraw(BeginThemeDraw(hdc));
 
+	RECT rc;
 	GetClientRect(&rc);
 	Theme::BorderStyle Border = m_Theme.Border;
 	ConvertBorderWidthsInPixels(&Border);
