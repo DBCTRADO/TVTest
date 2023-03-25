@@ -939,10 +939,10 @@ HICON CreateIconFromBitmap(HBITMAP hbm, int IconWidth, int IconHeight, int Image
 			ImageWidth = bm.bmWidth;
 			ImageHeight = bm.bmHeight;
 		} else {
-			ImageWidth = std::min(bm.bmWidth * IconHeight / bm.bmHeight, (long)IconWidth);
+			ImageWidth = std::min(bm.bmWidth * IconHeight / bm.bmHeight, static_cast<LONG>(IconWidth));
 			if (ImageWidth < 1)
 				ImageWidth = 1;
-			ImageHeight = std::min(bm.bmHeight * IconWidth / bm.bmWidth, (long)IconHeight);
+			ImageHeight = std::min(bm.bmHeight * IconWidth / bm.bmWidth, static_cast<LONG>(IconHeight));
 			if (ImageHeight < 1)
 				ImageHeight = 1;
 		}
@@ -1014,10 +1014,10 @@ bool SaveIconFromBitmap(
 			ImageWidth = bm.bmWidth;
 			ImageHeight = bm.bmHeight;
 		} else {
-			ImageWidth = std::min(bm.bmWidth * IconHeight / bm.bmHeight, (long)IconWidth);
+			ImageWidth = std::min(bm.bmWidth * IconHeight / bm.bmHeight, static_cast<LONG>(IconWidth));
 			if (ImageWidth < 1)
 				ImageWidth = 1;
-			ImageHeight = std::min(bm.bmHeight * IconWidth / bm.bmWidth, (long)IconHeight);
+			ImageHeight = std::min(bm.bmHeight * IconWidth / bm.bmWidth, static_cast<LONG>(IconHeight));
 			if (ImageHeight < 1)
 				ImageHeight = 1;
 		}

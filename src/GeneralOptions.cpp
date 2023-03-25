@@ -97,7 +97,7 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 bool CGeneralOptions::WriteSettings(CSettings &Settings)
 {
 	Settings.Write(TEXT("DriverDirectory"), m_BonDriverDirectory);
-	Settings.Write(TEXT("DefaultDriverType"), (int)m_DefaultDriverType);
+	Settings.Write(TEXT("DefaultDriverType"), static_cast<int>(m_DefaultDriverType));
 	Settings.Write(TEXT("DefaultDriver"), m_DefaultBonDriverName);
 	Settings.Write(TEXT("Driver"), GetAppClass().CoreEngine.GetDriverFileName());
 	Settings.Write(TEXT("Resident"), m_fResident);
@@ -184,7 +184,7 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			::CheckRadioButton(
 				hDlg, IDC_OPTIONS_DEFAULTDRIVER_NONE,
 				IDC_OPTIONS_DEFAULTDRIVER_CUSTOM,
-				(int)m_DefaultDriverType + IDC_OPTIONS_DEFAULTDRIVER_NONE);
+				static_cast<int>(m_DefaultDriverType) + IDC_OPTIONS_DEFAULTDRIVER_NONE);
 			EnableDlgItems(
 				hDlg, IDC_OPTIONS_DEFAULTDRIVER,
 				IDC_OPTIONS_DEFAULTDRIVER_BROWSE,

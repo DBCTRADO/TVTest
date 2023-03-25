@@ -192,7 +192,7 @@ bool CPanelOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("PanelSnapAtMainWindow"), m_fSnapAtMainWindow);
 	Settings.Write(TEXT("PanelAttachToMainWindow"), m_fAttachToMainWindow);
 	Settings.Write(TEXT("PanelOpacity"), m_Opacity);
-	Settings.Write(TEXT("PanelTabStyle"), (int)m_TabStyle);
+	Settings.Write(TEXT("PanelTabStyle"), static_cast<int>(m_TabStyle));
 	Settings.Write(TEXT("PanelTabTooltip"), m_fTabTooltip);
 
 	StyleUtil::WriteFontSettings(Settings, TEXT("PanelFont"), m_Font);
@@ -278,7 +278,7 @@ int CPanelOptions::RegisterPanelItem(LPCTSTR pszID, LPCTSTR pszTitle)
 	if (it == m_ItemList.end())
 		m_ItemList.push_back(Item);
 
-	return (int)m_AvailItemList.size() - 1;
+	return static_cast<int>(m_AvailItemList.size()) - 1;
 }
 
 
@@ -440,7 +440,7 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			};
 			for (const LPCTSTR pszText : TabStyleList)
 				DlgComboBox_AddString(hDlg, IDC_PANELOPTIONS_TABSTYLE, pszText);
-			DlgComboBox_SetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE, (int)m_TabStyle);
+			DlgComboBox_SetCurSel(hDlg, IDC_PANELOPTIONS_TABSTYLE, static_cast<int>(m_TabStyle));
 
 			DlgCheckBox_Check(hDlg, IDC_PANELOPTIONS_TABTOOLTIP, m_fTabTooltip);
 		}

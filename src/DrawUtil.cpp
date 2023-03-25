@@ -267,7 +267,7 @@ bool FillInterlacedGradient(
 		for (int x = pRect->left; x < pRect->right; x++) {
 			COLORREF Color = MixColor(
 				Color1, Color2,
-				(BYTE)(Direction == FillDirection::Horz ?
+				static_cast<BYTE>(Direction == FillDirection::Horz ?
 					(pRect->right - 1 - x) * 255 / (Width - 1) :
 					std::abs(Center - x * 2) * 255 / (Width - 1)));
 			if ((x - pRect->left) % 2 == 1)
@@ -282,7 +282,7 @@ bool FillInterlacedGradient(
 		for (int y = pRect->top; y < pRect->bottom; y++) {
 			COLORREF Color = MixColor(
 				Color1, Color2,
-				(BYTE)(Direction == FillDirection::Vert ?
+				static_cast<BYTE>(Direction == FillDirection::Vert ?
 					(pRect->bottom - 1 - y) * 255 / (Height - 1) :
 					std::abs(Center - y * 2) * 255 / (Height - 1)));
 			if ((y - pRect->top) % 2 == 1)
@@ -1547,7 +1547,7 @@ bool CMonoColorIconList::Draw(
 				Canvas.DrawImage(
 					DstX, DstY, DstWidth, DstHeight,
 					&Image, 0, 0, m_IconWidth, m_IconHeight,
-					(float)Opacity / 255.0f);
+					static_cast<float>(Opacity) / 255.0f);
 			}
 			::DeleteObject(hbm);
 			return true;

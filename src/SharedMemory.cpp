@@ -94,7 +94,7 @@ bool CSharedMemory::Create(LPCWSTR pszName, ULONGLONG Size, bool *pfExists)
 
 	m_hFileMapping = ::CreateFileMapping(
 		INVALID_HANDLE_VALUE, &SecurityAttributes, PAGE_READWRITE,
-		(DWORD)(Size >> 32), (DWORD)(Size & 0xFFFFFFFFULL),
+		static_cast<DWORD>(Size >> 32), static_cast<DWORD>(Size & 0xFFFFFFFFULL),
 		pszName);
 	if (m_hFileMapping == nullptr) {
 		TRACE(TEXT("CreateFileMapping \"{}\" Error {:x}\n"), pszName, ::GetLastError());
@@ -165,7 +165,7 @@ void *CSharedMemory::Map(DWORD DesiredAccess, ULONGLONG Offset, size_t Size)
 
 	return ::MapViewOfFile(
 		m_hFileMapping, DesiredAccess,
-		(DWORD)(Offset >> 32), (DWORD)(Offset & 0xFFFFFFFFULL),
+		static_cast<DWORD>(Offset >> 32), static_cast<DWORD>(Offset & 0xFFFFFFFFULL),
 		Size);
 }
 

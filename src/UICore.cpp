@@ -737,7 +737,7 @@ int CUICore::FormatCurrentAudioText(LPTSTR pszText, int MaxLength) const
 		}
 	}
 
-	return (int)Formatter.Length();
+	return static_cast<int>(Formatter.Length());
 }
 
 

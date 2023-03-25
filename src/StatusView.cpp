@@ -566,7 +566,7 @@ LRESULT CStatusView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				::ScreenToClient(hwnd, &pt);
 				::GetClientRect(hwnd, &rc);
 				if (::PtInRect(&rc, pt)) {
-					::SendMessage(hwnd, WM_MOUSEMOVE, 0, MAKELPARAM((SHORT)pt.x, (SHORT)pt.y));
+					::SendMessage(hwnd, WM_MOUSEMOVE, 0, MAKELPARAM(static_cast<SHORT>(pt.x), static_cast<SHORT>(pt.y)));
 				} else {
 					SetHotItem(-1);
 					if (m_pEventHandler)
@@ -1362,7 +1362,7 @@ int CStatusView::CalcTextHeight(int *pFontHeight) const
 
 int CStatusView::CalcItemHeight(int TextHeight) const
 {
-	return std::max(TextHeight, (int)m_Style.IconSize.Height) + m_Style.ItemPadding.Vert();
+	return std::max(TextHeight, static_cast<int>(m_Style.IconSize.Height)) + m_Style.ItemPadding.Vert();
 }
 
 

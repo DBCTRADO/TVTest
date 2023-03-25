@@ -395,7 +395,7 @@ void CChannelDisplay::Layout()
 	if (fTunerIcon)
 		m_TunerItemWidth += m_ChannelDisplayStyle.TunerIconSize.Width + m_ChannelDisplayStyle.TunerIconTextMargin;
 	m_TunerItemHeight =
-		std::max((int)m_ChannelDisplayStyle.TunerIconSize.Height, m_FontHeight) +
+		std::max(m_ChannelDisplayStyle.TunerIconSize.Height.Value, m_FontHeight) +
 		m_ChannelDisplayStyle.TunerItemPadding.Vert();
 	const int CategoriesHeight = rc.bottom - m_Style.CategoriesMargin.Vert();
 	m_VisibleTunerItems = CategoriesHeight / m_TunerItemHeight;
@@ -454,7 +454,7 @@ void CChannelDisplay::Layout()
 	}
 	m_ChannelItemLeft = m_TunerAreaWidth + m_Style.ContentMargin.Left;
 	m_ChannelItemWidth = std::max(
-		(int)rc.right - m_ChannelItemLeft - m_Style.ContentMargin.Right,
+		static_cast<int>(rc.right) - m_ChannelItemLeft - m_Style.ContentMargin.Right,
 		m_ChannelNameWidth + m_ChannelDisplayStyle.ChannelItemPadding.Horz() +
 			m_ChannelDisplayStyle.ChannelEventMargin + m_FontHeight * 8);
 	m_ChannelItemHeight = m_FontHeight * 2 + m_ChannelDisplayStyle.ChannelItemPadding.Vert();

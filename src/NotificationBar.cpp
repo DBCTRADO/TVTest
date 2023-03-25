@@ -374,7 +374,7 @@ void CNotificationBar::ApplyStyle()
 	CreateDrawFont(m_StyleFont, &m_Font);
 
 	/*
-	m_Icons[(int)MessageType::Info].Attach(
+	m_Icons[static_cast<int>(MessageType::Info)].Attach(
 		LoadSystemIcon(IDI_INFORMATION, m_Style.IconSize.Width, m_Style.IconSize.Height));
 	*/
 	m_Icons[static_cast<int>(MessageType::Warning)].Attach(

@@ -726,7 +726,7 @@ inline bool MsgSetChannel(PluginParam *pParam, int Space, int Channel)
 #else
 inline bool MsgSetChannel(PluginParam *pParam, int Space, int Channel, WORD ServiceID = 0)
 {
-	return (*pParam->Callback)(pParam, MESSAGE_SETCHANNEL, Space, MAKELPARAM((SHORT)Channel, ServiceID)) != 0;
+	return (*pParam->Callback)(pParam, MESSAGE_SETCHANNEL, Space, MAKELPARAM(static_cast<SHORT>(Channel), ServiceID)) != 0;
 }
 #endif
 

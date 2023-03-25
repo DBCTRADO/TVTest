@@ -526,7 +526,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				szName[0] = _T('\0');
 				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_COLORSCHEME_PRESET);
 				pColorScheme = m_PresetList.GetColorScheme(
-					(int)DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel));
+					static_cast<int>(DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel)));
 				if (pColorScheme != nullptr && pColorScheme->IsLoadedFromFile())
 					StringCopy(szName, pColorScheme->GetName());
 				CColorSchemeSaveDialog SaveDlg(szName);
@@ -584,7 +584,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			{
 				const LRESULT Sel = DlgComboBox_GetCurSel(hDlg, IDC_COLORSCHEME_PRESET);
 				const CColorScheme *pColorScheme = m_PresetList.GetColorScheme(
-					(int)DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel));
+					static_cast<int>(DlgComboBox_GetItemData(hDlg, IDC_COLORSCHEME_PRESET, Sel)));
 				if (pColorScheme == nullptr || !pColorScheme->IsLoadedFromFile())
 					break;
 				if (::MessageBox(
@@ -747,7 +747,7 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					for (int i = 0; i < CColorScheme::NUM_COLORS; i++) {
 						DlgListBox_SetSel(
 							hDlg, IDC_COLORSCHEME_LIST, i,
-							(COLORREF)DlgListBox_GetItemData(hDlg, IDC_COLORSCHEME_LIST, i) == Color);
+							static_cast<COLORREF>(DlgListBox_GetItemData(hDlg, IDC_COLORSCHEME_LIST, i)) == Color);
 					}
 					DlgListBox_SetTopIndex(hDlg, IDC_COLORSCHEME_LIST, TopIndex);
 					::SendDlgItemMessage(hDlg, IDC_COLORSCHEME_LIST, WM_SETREDRAW, TRUE, 0);

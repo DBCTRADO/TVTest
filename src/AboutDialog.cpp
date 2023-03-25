@@ -338,7 +338,7 @@ INT_PTR CAboutDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_ABOUT_LOGO,
-					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
+					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>(nullptr)));
 
 			if (hbm != nullptr) {
 				::DeleteObject(hbm);

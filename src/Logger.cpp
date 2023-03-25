@@ -66,7 +66,7 @@ int CLogItem::Format(char *pszText, int MaxLength) const
 	int Length = FormatTime(pszText, MaxLength);
 	Length += static_cast<int>(StringFormat(pszText + Length, MaxLength - Length, " [{}]>", ::GetCurrentProcessId()));
 	Length += ::WideCharToMultiByte(
-		CP_ACP, 0, m_Text.data(), (int)m_Text.length(),
+		CP_ACP, 0, m_Text.data(), static_cast<int>(m_Text.length()),
 		pszText + Length, MaxLength - Length - 1, nullptr, nullptr);
 	pszText[Length] = '\0';
 	return Length;
@@ -432,7 +432,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			LVITEM lvi;
 			lvi.iItem = 0;
 			m_Lock.Lock();
-			ListView_SetItemCount(hwndList, (int)m_LogList.size());
+			ListView_SetItemCount(hwndList, static_cast<int>(m_LogList.size()));
 			for (const auto &e : m_LogList) {
 				TCHAR szTime[64];
 
@@ -458,7 +458,7 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			for (int i = 1; i < NUM_COLUMNS; i++)
 				ListView_SetColumnWidth(hwndList, i, LVSCW_AUTOSIZE_USEHEADER);
 			if (!m_LogList.empty())
-				ListView_EnsureVisible(hwndList, (int)m_LogList.size() - 1, FALSE);
+				ListView_EnsureVisible(hwndList, static_cast<int>(m_LogList.size()) - 1, FALSE);
 			m_Lock.Unlock();
 
 			DlgCheckBox_Check(hDlg, IDC_LOG_OUTPUTTOFILE, m_fOutputToFile);

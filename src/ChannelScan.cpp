@@ -1705,7 +1705,7 @@ void CChannelScan::Scan()
 
 					TRACE(
 						TEXT("Channel found [{:2}][{:2}] : {} NID {:#04x} TSID {:#04x} SID {:#04x}\n"),
-						m_ScanChannel, (int)i, Name,
+						m_ScanChannel, i, Name,
 						NetworkID, TransportStreamID, ServiceID);
 
 					m_ScanningChannelList.AddChannel(pChInfo);
@@ -1765,7 +1765,7 @@ End:
 
 	::PostMessage(
 		m_hScanDlg, WM_APP_ENDSCAN,
-		(WPARAM)Result, MAKELPARAM(SetChannelCount, SetChannelErrorCount));
+		static_cast<WPARAM>(Result), MAKELPARAM(SetChannelCount, SetChannelErrorCount));
 }
 
 

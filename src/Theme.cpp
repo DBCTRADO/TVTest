@@ -86,17 +86,17 @@ bool Draw(HDC hdc, const RECT &Rect, const GradientStyle &Style)
 	case GradientType::Normal:
 		return DrawUtil::FillGradient(
 			hdc, &Rect, Style.Color1, Style.Color2,
-			(DrawUtil::FillDirection)Style.Direction);
+			static_cast<DrawUtil::FillDirection>(Style.Direction));
 
 	case GradientType::Glossy:
 		return DrawUtil::FillGlossyGradient(
 			hdc, &Rect, Style.Color1, Style.Color2,
-			(DrawUtil::FillDirection)Style.Direction);
+			static_cast<DrawUtil::FillDirection>(Style.Direction));
 
 	case GradientType::Interlaced:
 		return DrawUtil::FillInterlacedGradient(
 			hdc, &Rect, Style.Color1, Style.Color2,
-			(DrawUtil::FillDirection)Style.Direction);
+			static_cast<DrawUtil::FillDirection>(Style.Direction));
 	}
 
 	return false;

@@ -216,7 +216,7 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ItemCount"), static_cast<int>(m_ItemNameList.size()));
 	for (size_t i = 0; i < m_ItemNameList.size(); i++) {
 		TCHAR szName[32];
-		StringFormat(szName, TEXT("Item{}"), (int)i);
+		StringFormat(szName, TEXT("Item{}"), i);
 		Settings.Write(szName, m_ItemNameList[i]);
 	}
 	/*
@@ -224,7 +224,7 @@ bool CSideBarOptions::WriteSettings(CSettings &Settings)
 	for (size_t i = 0; i < m_ItemList.size(); i++) {
 		TCHAR szName[32];
 
-		StringFormat(szName, TEXT("Item{}"), (int)i);
+		StringFormat(szName, TEXT("Item{}"), i);
 		if (m_ItemList[i] == ITEM_SEPARATOR)
 			Settings.Write(szName, TEXT(""));
 		else

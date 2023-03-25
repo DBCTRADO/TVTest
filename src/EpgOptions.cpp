@@ -129,7 +129,7 @@ bool CEpgOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("EpgUpdateCSExtended"), m_fUpdateCSExtended);
 	Settings.Write(TEXT("UseEpgData"), m_fUseEDCBData);
 	Settings.Write(TEXT("EpgDataFolder"), m_EDCBDataFolder);
-	Settings.Write(TEXT("EpgTimeMode"), (int)m_EpgTimeMode);
+	Settings.Write(TEXT("EpgTimeMode"), static_cast<int>(m_EpgTimeMode));
 
 	Settings.Write(TEXT("SaveLogoData"), m_fSaveLogoFile);
 	Settings.Write(TEXT("LogoDataFileName"), m_LogoFileName);

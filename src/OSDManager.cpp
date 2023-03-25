@@ -441,7 +441,7 @@ bool COSDManager::CreateTextOSD(LPCTSTR pszText, const OSDClientInfo &ClientInfo
 		ClientInfo.ClientRect.left + m_Style.Margin.Left,
 		ClientInfo.ClientRect.top + m_Style.Margin.Top,
 		sz.cx + TextMargin + ImageWidth,
-		std::max(sz.cy, (LONG)ImageHeight));
+		std::max(static_cast<int>(sz.cy), ImageHeight));
 
 	return true;
 }

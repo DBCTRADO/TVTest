@@ -105,9 +105,9 @@ bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ShowChannelIcon"), m_fShowChannelIcon);
 	Settings.Write(TEXT("IconDirectory"), m_IconDirectory);
 
-	Settings.Write(TEXT("TaskCount"), (int)m_TaskList.size());
+	Settings.Write(TEXT("TaskCount"), static_cast<int>(m_TaskList.size()));
 	const CCommandManager &CommandManager = GetAppClass().CommandManager;
-	for (int i = 0; i < (int)m_TaskList.size(); i++) {
+	for (size_t i = 0; i < m_TaskList.size(); i++) {
 		TCHAR szKey[32];
 		StringFormat(szKey, TEXT("Task{}"), i);
 		Settings.Write(szKey, CommandManager.GetCommandIDText(m_TaskList[i]));

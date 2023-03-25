@@ -450,7 +450,7 @@ bool CAppMain::LoadSettings()
 			RecordManager.SetFileName(szText);
 		/*
 		if (Settings.Read(TEXT("RecOptionExistsOperation"), &Value))
-			RecordManager.SetFileExistsOperation((CRecordManager::FileExistsOperation)Value);
+			RecordManager.SetFileExistsOperation(static_cast<CRecordManager::FileExistsOperation>(Value));
 		*/
 		/*
 		if (Settings.Read(TEXT("RecOptionStopTimeSpec"), &f))
@@ -1078,8 +1078,8 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		if (m_fIncrementNetworkPort) {
 			CPortQuery PortQuery;
 			WORD UDPPort =
-				CmdLineOptions.m_UDPPort > 0 ? (WORD)CmdLineOptions.m_UDPPort :
-				CoreEngine.IsUDPDriver() ? 1234 : 2230;
+				CmdLineOptions.m_UDPPort > 0 ? static_cast<uint16_t>(CmdLineOptions.m_UDPPort) :
+				CoreEngine.IsUDPDriver() ? 1234_u16 : 2230_u16;
 
 			StatusView.SetSingleText(TEXT("空きポートを検索しています..."));
 			PortQuery.Query(MainWindow.GetHandle(), &UDPPort, CoreEngine.IsUDPDriver() ? 1243 : 2239);
@@ -1236,7 +1236,7 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 		}
 	}
 
-	return (int)msg.wParam;
+	return static_cast<int>(msg.wParam);
 }
 
 

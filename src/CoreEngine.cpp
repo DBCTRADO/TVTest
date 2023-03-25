@@ -252,7 +252,7 @@ bool CCoreEngine::BuildMediaViewer(const LibISDB::ViewerFilter::OpenSettings &Se
 	m_pViewer->SetVolume(m_fMute ? -100.0f : LevelToDeciBel(m_Volume));
 	m_pViewer->SetAudioGainControl(
 		m_AudioGain != 100 || m_SurroundAudioGain != 100,
-		(float)m_AudioGain / 100.0f, (float)m_SurroundAudioGain / 100.0f);
+		static_cast<float>(m_AudioGain) / 100.0f, static_cast<float>(m_SurroundAudioGain) / 100.0f);
 	m_pViewer->SetDualMonoMode(m_DualMonoMode);
 	m_pViewer->SetSPDIFOptions(m_SPDIFOptions);
 
@@ -545,7 +545,7 @@ bool CCoreEngine::SetAudioGainControl(int Gain, int SurroundGain)
 		if (m_pViewer != nullptr) {
 			m_pViewer->SetAudioGainControl(
 				Gain != 100 || SurroundGain != 100,
-				(float)Gain / 100.0f, (float)SurroundGain / 100.0f);
+				static_cast<float>(Gain) / 100.0f, static_cast<float>(SurroundGain) / 100.0f);
 		}
 		m_AudioGain = Gain;
 		m_SurroundAudioGain = SurroundGain;

@@ -154,7 +154,7 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("SupportAeroSnap"), m_fSupportAeroSnap);
 	Settings.Write(TEXT("NearCornerResizeOrigin"), m_fNearCornerResizeOrigin);
 	Settings.Write(TEXT("ZoomKeepAspectRatio"), m_fZoomKeepAspectRatio);
-	Settings.Write(TEXT("PanScanAdjustWindow"), (int)m_PanScanAdjustWindowMode);
+	Settings.Write(TEXT("PanScanAdjustWindow"), static_cast<int>(m_PanScanAdjustWindowMode));
 	Settings.Write(TEXT("Remember1SegWindowSize"), m_fRemember1SegWindowSize);
 	Settings.Write(TEXT("MinimizeToTray"), m_fMinimizeToTray);
 	Settings.Write(TEXT("DisablePreviewWhenMinimized"), m_fDisablePreviewWhenMinimized);

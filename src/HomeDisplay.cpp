@@ -924,7 +924,7 @@ void CFeaturedEventsCategory::Draw(
 			::SelectObject(hdc, hfontTitle);
 			::DrawText(
 				hdc,
-				EventInfo.EventName.data(), (int)EventInfo.EventName.length(), &rc,
+				EventInfo.EventName.data(), static_cast<int>(EventInfo.EventName.length()), &rc,
 				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 			::SelectObject(hdc, hfontText);
 		}
@@ -1705,7 +1705,7 @@ bool CHomeDisplay::SetCurCategory(int Category)
 
 int CHomeDisplay::GetCurCategoryID() const
 {
-	if (m_CurCategory < 0 || (size_t)m_CurCategory >= m_CategoryList.size())
+	if (m_CurCategory < 0 || static_cast<size_t>(m_CurCategory) >= m_CategoryList.size())
 		return -1;
 	return m_CategoryList[m_CurCategory]->GetID();
 }

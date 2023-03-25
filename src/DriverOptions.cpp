@@ -555,7 +555,7 @@ void CDriverOptions::InitDlgItem(int Driver)
 				const int Count = static_cast<int>(DlgComboBox_GetCount(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL));
 				for (int i = 1; i < Count; i++) {
 					const CChannelInfo *pChInfo = m_InitChannelList.GetChannelInfo(
-						(int)DlgComboBox_GetItemData(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL, i));
+						static_cast<int>(DlgComboBox_GetItemData(m_hDlg, IDC_DRIVEROPTIONS_INITCHANNEL_CHANNEL, i)));
 					if (pChInfo->GetSpace() == pSettings->GetInitialSpace()
 							&& pChInfo->GetChannelIndex() == pSettings->GetInitialChannel()
 							&& (pSettings->GetInitialServiceID() < 0

@@ -276,8 +276,8 @@ bool CEventSearchSettings::ToString(String *pString) const
 		EndTime.Hour, EndTime.Minute,
 		DurationShortest,
 		DurationLongest,
-		(int)CA,
-		(int)Video);
+		static_cast<int>(CA),
+		static_cast<int>(Video));
 	*pString += Buffer;
 
 	if (!ServiceList.IsEmpty()) {
@@ -539,7 +539,7 @@ bool CEventSearchSettingsList::Save(CSettings &Settings, LPCTSTR pszPrefix) cons
 	String Value;
 
 	for (size_t i = 0; i < m_List.size(); i++) {
-		StringFormat(szKey, TEXT("{}{}"), pszPrefix, (int)i);
+		StringFormat(szKey, TEXT("{}{}"), pszPrefix, i);
 		m_List[i]->ToString(&Value);
 		Settings.Write(szKey, Value);
 	}
@@ -866,7 +866,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 
 	m_KeywordHistory.emplace_front(pszKeyword);
 
-	if (m_KeywordHistory.size() > (size_t)m_MaxKeywordHistory) {
+	if (m_KeywordHistory.size() > static_cast<size_t>(m_MaxKeywordHistory)) {
 		m_KeywordHistory.erase(m_KeywordHistory.begin() + m_MaxKeywordHistory, m_KeywordHistory.end());
 	}
 
@@ -2481,7 +2481,7 @@ void CProgramSearchDialog::HighlightKeyword()
 #ifdef UNICODE
 			q[0] = static_cast<WORD>(lengthof(szText) - 2 - TotalLength);
 #else
-			*(WORD*)q = (WORD)(sizeof(szText) - sizeof(WORD) - 1 - TotalLength);
+			*reinterpret_cast<WORD*>(q) = static_cast<WORD>(sizeof(szText) - sizeof(WORD) - 1 - TotalLength);
 #endif
 			const int Length = static_cast<int>(::SendMessage(hwndInfo, EM_GETLINE, i, reinterpret_cast<LPARAM>(q)));
 			i++;

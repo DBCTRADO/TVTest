@@ -1239,7 +1239,7 @@ void CMediaBitRateStatusItem::Draw(HDC hdc, const RECT &ItemRect, const RECT &Dr
 		Length = StringFormat(
 			szText,
 			TEXT("V {:.2f} Mbps"),
-			(double)(m_VideoBitRate) / (double)(1000 * 1000));
+			static_cast<double>(m_VideoBitRate) / static_cast<double>(1000 * 1000));
 	}
 	StringFormat(
 		szText + Length, lengthof(szText) - Length,

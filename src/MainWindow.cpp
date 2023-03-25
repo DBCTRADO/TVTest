@@ -393,7 +393,7 @@ void CMainWindow::ShowNotificationBar(
 	m_NotificationBar.SetFont(m_App.OSDOptions.GetNotificationBarFont());
 	m_NotificationBar.Show(
 		pszText, Type,
-		std::max((DWORD)m_App.OSDOptions.GetNotificationBarDuration(), Duration),
+		std::max(static_cast<DWORD>(m_App.OSDOptions.GetNotificationBarDuration()), Duration),
 		fSkippable);
 }
 
@@ -3146,7 +3146,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				m_App.PanAndScanOptions.GetPreset(i, &Info);
 				CopyToMenuText(Info.szName, szText, lengthof(szText));
 				::InsertMenu(
-					hmenu, ItemCount - 2 + (UINT)i,
+					hmenu, ItemCount - 2 + static_cast<UINT>(i),
 					MF_BYPOSITION | MF_STRING | MF_ENABLED
 						| (AspectRatioType == CUICore::ASPECTRATIO_CUSTOM_FIRST + static_cast<int>(i) ? MF_CHECKED : MF_UNCHECKED),
 					CM_PANANDSCAN_PRESET_FIRST + i, szText);

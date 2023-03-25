@@ -2100,7 +2100,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 		}
 	} else {
 		if (PaintRect.top < m_HeaderHeight) {
-			rc.left = std::max(PaintRect.left, (long)m_TimeBarWidth);
+			rc.left = std::max(PaintRect.left, static_cast<LONG>(m_TimeBarWidth));
 			rc.right = std::min(PaintRect.right, rcClient.right - m_TimeBarWidth);
 			if (rc.left < rc.right) {
 				rc.top = 0;
@@ -5346,7 +5346,7 @@ public:
 
 					m_Menu.AppendItem(
 						new CServiceMenuItem(
-							CM_CHANNEL_FIRST + (int)i,
+							CM_CHANNEL_FIRST + static_cast<int>(i),
 							pService->GetServiceName(),
 							pService->GetLogo()));
 				}
@@ -6260,8 +6260,8 @@ void CDateToolbar::OnCustomDraw(NMTBCUSTOMDRAW *pnmtb, HDC hdc)
 	} else {
 		StringFormat(
 			szText, TEXT("{}/{}({})"),
-			(int)(pnmtb->nmcd.lItemlParam >> 16),
-			(int)((pnmtb->nmcd.lItemlParam >> 8) & 0xFF),
+			static_cast<int>(pnmtb->nmcd.lItemlParam >> 16),
+			static_cast<int>((pnmtb->nmcd.lItemlParam >> 8) & 0xFF),
 			GetDayOfWeekText(DayOfWeek));
 	}
 	RECT rc = pnmtb->nmcd.rc;

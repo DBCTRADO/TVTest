@@ -396,7 +396,7 @@ LONGLONG CRecordTask::GetFreeSpace() const
 	ULARGE_INTEGER FreeSpace;
 	if (!::GetDiskFreeSpaceEx(FileName.c_str(), &FreeSpace, nullptr, nullptr))
 		return -1;
-	return (LONGLONG)FreeSpace.QuadPart;
+	return static_cast<LONGLONG>(FreeSpace.QuadPart);
 }
 
 
@@ -1077,9 +1077,9 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 		{
 			const LONGLONG Remain = m_pRecManager->GetRemainTime();
 
-			UpdateDlgItemInt(hDlg, IDC_RECORD_STOPTIME_HOUR, (int)(Remain / (60 * 60 * 1000)));
-			UpdateDlgItemInt(hDlg, IDC_RECORD_STOPTIME_MINUTE, (int)(Remain / (60 * 1000)) % 60);
-			UpdateDlgItemInt(hDlg, IDC_RECORD_STOPTIME_SECOND, (int)(Remain / 1000) % 60);
+			UpdateDlgItemInt(hDlg, IDC_RECORD_STOPTIME_HOUR, static_cast<int>(Remain / (60 * 60 * 1000)));
+			UpdateDlgItemInt(hDlg, IDC_RECORD_STOPTIME_MINUTE, static_cast<int>(Remain / (60 * 1000)) % 60);
+			UpdateDlgItemInt(hDlg, IDC_RECORD_STOPTIME_SECOND, static_cast<int>(Remain / 1000) % 60);
 		}
 		return TRUE;
 #endif

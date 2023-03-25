@@ -309,9 +309,9 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 
 	OffsetSystemTime(
 		&st,
-		(LONGLONG)Time.wHour * TimeConsts::SYSTEMTIME_HOUR +
-		(LONGLONG)Time.wMinute * TimeConsts::SYSTEMTIME_MINUTE +
-		(LONGLONG)Time.wSecond * TimeConsts::SYSTEMTIME_SECOND);
+		static_cast<LONGLONG>(Time.wHour) * TimeConsts::SYSTEMTIME_HOUR +
+		static_cast<LONGLONG>(Time.wMinute) * TimeConsts::SYSTEMTIME_MINUTE +
+		static_cast<LONGLONG>(Time.wSecond) * TimeConsts::SYSTEMTIME_SECOND);
 
 	*pValue = st;
 

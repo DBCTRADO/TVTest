@@ -395,7 +395,7 @@ LRESULT CListBoxSubclass::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 			if (Index >= 0 && Index < ListBox_GetCount(hwnd)) {
 				if ((GetWindowStyle(hwnd) & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) != 0) {
 					if (ListBox_GetSel(hwnd, Index) <= 0) {
-						(void)ListBox_SetSel(hwnd, TRUE, Index);
+						ListBox_SetSel(hwnd, TRUE, Index);
 						SendMessage(
 							GetParent(hwnd), WM_COMMAND,
 							MAKEWPARAM(GetWindowID(hwnd), LBN_SELCHANGE),
@@ -403,7 +403,7 @@ LRESULT CListBoxSubclass::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 					}
 				} else {
 					if (Index != ListBox_GetCurSel(hwnd)) {
-						(void)ListBox_SetCurSel(hwnd, Index);
+						ListBox_SetCurSel(hwnd, Index);
 						SendMessage(
 							GetParent(hwnd), WM_COMMAND,
 							MAKEWPARAM(GetWindowID(hwnd), LBN_SELCHANGE),

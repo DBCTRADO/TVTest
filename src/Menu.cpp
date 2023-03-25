@@ -1927,7 +1927,7 @@ void CDropDownMenu::CItem::Draw(HDC hdc, const RECT *pRect)
 		RECT rc = *pRect;
 
 		::DrawText(
-			hdc, m_Text.data(), (int)m_Text.length(), &rc,
+			hdc, m_Text.data(), static_cast<int>(m_Text.length()), &rc,
 			DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 	}
 }

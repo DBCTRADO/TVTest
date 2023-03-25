@@ -356,7 +356,7 @@ INT_PTR CInitialSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 			const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 				::SendDlgItemMessage(
 					hDlg, IDC_INITIALSETTINGS_LOGO,
-					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
+					STM_SETIMAGE, IMAGE_BITMAP, reinterpret_cast<LPARAM>(nullptr)));
 
 			if (hbm != nullptr) {
 				::DeleteObject(hbm);
@@ -398,8 +398,8 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,
 						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
-						Filter1.data(), (int)Filter1.length(),
-						Filter2.data(), (int)Filter2.length()) == CSTR_LESS_THAN;
+						Filter1.data(), static_cast<int>(Filter1.length()),
+						Filter2.data(), static_cast<int>(Filter2.length())) == CSTR_LESS_THAN;
 				});
 		}
 		for (const String &e :FilterList) {

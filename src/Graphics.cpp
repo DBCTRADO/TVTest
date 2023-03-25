@@ -52,10 +52,10 @@ static Gdiplus::Rect GdiplusRect(const RECT &Rect)
 static Gdiplus::RectF GdiplusRectF(const RECT &Rect)
 {
 	return Gdiplus::RectF(
-		(Gdiplus::REAL)Rect.left,
-		(Gdiplus::REAL)Rect.top,
-		(Gdiplus::REAL)(Rect.right - Rect.left),
-		(Gdiplus::REAL)(Rect.bottom - Rect.top));
+		static_cast<Gdiplus::REAL>(Rect.left),
+		static_cast<Gdiplus::REAL>(Rect.top),
+		static_cast<Gdiplus::REAL>(Rect.right - Rect.left),
+		static_cast<Gdiplus::REAL>(Rect.bottom - Rect.top));
 }
 
 
@@ -344,7 +344,7 @@ CFont::CFont(const LOGFONT &lf)
 	m_Font.reset(
 		new Gdiplus::Font(
 			lf.lfFaceName,
-			(Gdiplus::REAL)std::abs(lf.lfHeight),
+			static_cast<Gdiplus::REAL>(std::abs(lf.lfHeight)),
 			FontStyle,
 			Gdiplus::UnitPixel));
 }
@@ -504,10 +504,10 @@ bool CCanvas::DrawText(
 		pszText, -1,
 		Font.m_Font.get(),
 		Gdiplus::RectF(
-			(Gdiplus::REAL)Rect.left,
-			(Gdiplus::REAL)Rect.top,
-			(Gdiplus::REAL)(Rect.right - Rect.left),
-			(Gdiplus::REAL)(Rect.bottom - Rect.top)),
+			static_cast<Gdiplus::REAL>(Rect.left),
+			static_cast<Gdiplus::REAL>(Rect.top),
+			static_cast<Gdiplus::REAL>(Rect.right - Rect.left),
+			static_cast<Gdiplus::REAL>(Rect.bottom - Rect.top)),
 		&Format,
 		pBrush->m_Brush.get()) == Gdiplus::Ok;
 }
@@ -550,8 +550,8 @@ bool CCanvas::GetTextSize(
 			|| Region.GetBounds(&Bounds, m_Graphics.get()))
 		return false;
 
-	pSize->cx = (int)(Bounds.GetRight() + 1.0f);
-	pSize->cy = (int)(Bounds.GetBottom() + 1.0f);
+	pSize->cx = static_cast<int>(Bounds.GetRight() + 1.0f);
+	pSize->cy = static_cast<int>(Bounds.GetBottom() + 1.0f);
 #else
 	Gdiplus::RectF Bounds;
 

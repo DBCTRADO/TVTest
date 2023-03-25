@@ -200,8 +200,8 @@ bool CAppCore::RestoreChannel()
 				if (m_App.RestoreChannelInfo.TransportStreamID > 0 && m_App.RestoreChannelInfo.ServiceID > 0) {
 					Index = pList->FindByIDs(
 						0,
-						(WORD)m_App.RestoreChannelInfo.TransportStreamID,
-						(WORD)m_App.RestoreChannelInfo.ServiceID);
+						static_cast<WORD>(m_App.RestoreChannelInfo.TransportStreamID),
+						static_cast<WORD>(m_App.RestoreChannelInfo.ServiceID));
 				}
 				if (Index < 0 && m_App.RestoreChannelInfo.ServiceID > 0) {
 					Index = pList->FindByIndex(

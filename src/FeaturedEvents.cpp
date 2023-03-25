@@ -80,7 +80,7 @@ bool CFeaturedEventsSettings::WriteSettings(CSettings &Settings)
 
 	m_SearchSettingsList.Save(Settings, TEXT("Settings"));
 
-	Settings.Write(TEXT("Sort"), (int)m_SortType);
+	Settings.Write(TEXT("Sort"), static_cast<int>(m_SortType));
 	Settings.Write(TEXT("Period"), m_PeriodSeconds);
 	Settings.Write(TEXT("ShowEventText"), m_fShowEventText);
 	Settings.Write(TEXT("EventTextLines"), m_EventTextLines);

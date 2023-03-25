@@ -152,7 +152,7 @@ bool COSDOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("OSDFadeTime"), m_FadeTime);
 	Settings.Write(TEXT("EnabledOSD"), m_EnabledOSD);
 	Settings.Write(TEXT("EnabledOSDMask"), OSD_FLAG(OSDType::Trailer_) - 1);
-	Settings.Write(TEXT("ChannelOSDType"), (int)m_ChannelChangeType);
+	Settings.Write(TEXT("ChannelOSDType"), static_cast<int>(m_ChannelChangeType));
 	Settings.Write(TEXT("ChannelOSDText"), m_ChannelChangeText);
 
 	Settings.Write(TEXT("EnableNotificationBar"), m_fEnableNotificationBar);
@@ -236,7 +236,7 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetComboBoxList(
 				hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE,
 				ChannelChangeModeText, lengthof(ChannelChangeModeText));
-			DlgComboBox_SetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE, (int)m_ChannelChangeType);
+			DlgComboBox_SetCurSel(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TYPE, static_cast<int>(m_ChannelChangeType));
 			DlgEdit_SetText(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, m_ChannelChangeText.c_str());
 			InitDropDownButton(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS);
 			EnableDlgItems(hDlg, IDC_OSDOPTIONS_FIRST, IDC_OSDOPTIONS_LAST, m_fShowOSD);

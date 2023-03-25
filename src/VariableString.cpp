@@ -391,27 +391,27 @@ bool CEventVariableStringMap::GetLocalString(LPCWSTR pszKeyword, String *pString
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour")) == 0) {
 		StringFormat(
 			pString, TEXT("{}"),
-			(int)(m_EventInfo.Event.Duration / (60 * 60)));
+			m_EventInfo.Event.Duration / (60 * 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-hour2")) == 0) {
 		StringFormat(
 			pString, TEXT("{:02}"),
-			(int)(m_EventInfo.Event.Duration / (60 * 60)));
+			m_EventInfo.Event.Duration / (60 * 60));
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min")) == 0) {
 		StringFormat(
 			pString, TEXT("{}"),
-			(int)(m_EventInfo.Event.Duration / 60 % 60));
+			m_EventInfo.Event.Duration / 60 % 60);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-min2")) == 0) {
 		StringFormat(
 			pString, TEXT("{:02}"),
-			(int)(m_EventInfo.Event.Duration / 60 % 60));
+			m_EventInfo.Event.Duration / 60 % 60);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec")) == 0) {
 		StringFormat(
 			pString, TEXT("{}"),
-			(int)(m_EventInfo.Event.Duration % 60));
+			m_EventInfo.Event.Duration % 60);
 	} else if (::lstrcmpi(pszKeyword, TEXT("event-duration-sec2")) == 0) {
 		StringFormat(
 			pString, TEXT("{:02}"),
-			(int)(m_EventInfo.Event.Duration % 60));
+			m_EventInfo.Event.Duration % 60);
 	} else if (IsDateTimeParameter(pszKeyword)) {
 		if (!!(m_Flags & Flag::NoCurrentTime))
 			return false;

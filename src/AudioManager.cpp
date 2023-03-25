@@ -43,7 +43,7 @@ int CAudioManager::GetAudioCount() const
 {
 	LibISDB::BlockLock Lock(m_Lock);
 
-	return (int)m_AudioList.size();
+	return static_cast<int>(m_AudioList.size());
 }
 
 
@@ -79,7 +79,7 @@ int CAudioManager::FindAudioInfoByID(IDType ID) const
 
 	for (auto it = m_AudioList.begin(); it != m_AudioList.end(); ++it) {
 		if (it->ID == ID)
-			return (int)std::distance(m_AudioList.begin(), it);
+			return static_cast<int>(std::distance(m_AudioList.begin(), it));
 	}
 
 	return -1;
@@ -110,7 +110,7 @@ int CAudioManager::GetDefaultAudio(AudioSelectInfo *pSelectInfo) const
 								pSelectInfo->ID = itAudio->ID;
 								pSelectInfo->DualMono = itAudio->DualMono;
 							}
-							return (int)std::distance(m_AudioList.begin(), itAudio);
+							return static_cast<int>(std::distance(m_AudioList.begin(), itAudio));
 						}
 					}
 				}
@@ -196,7 +196,7 @@ int CAudioManager::FindSelectedAudio() const
 	for (auto it = m_AudioList.begin(); it != m_AudioList.end(); ++it) {
 		if (it->ID == m_SelectedAudio.ID
 				&& it->DualMono == m_SelectedAudio.DualMono)
-			return (int)std::distance(m_AudioList.begin(), it);
+			return static_cast<int>(std::distance(m_AudioList.begin(), it));
 	}
 
 	return -1;

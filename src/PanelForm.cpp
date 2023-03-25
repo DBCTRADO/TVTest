@@ -136,7 +136,7 @@ void CPanelForm::SetTheme(const Theme::CThemeManager *pThemeManager)
 bool CPanelForm::AddPage(const PageInfo &Info)
 {
 	m_WindowList.emplace_back(std::make_unique<CWindowInfo>(Info));
-	m_TabOrder.push_back((int)m_WindowList.size() - 1);
+	m_TabOrder.push_back(static_cast<int>(m_WindowList.size()) - 1);
 	RegisterUIChild(Info.pPage);
 	if (m_hwnd != nullptr) {
 		CalcTabSize();
@@ -749,7 +749,7 @@ void CPanelForm::Draw(HDC hdc, const RECT &PaintRect)
 	if (PaintRect.bottom > m_TabHeight) {
 		const RECT rc = {
 			PaintRect.left,
-			std::max(PaintRect.top, (long)m_TabHeight),
+			std::max(PaintRect.top, static_cast<LONG>(m_TabHeight)),
 			PaintRect.right,
 			PaintRect.bottom
 		};

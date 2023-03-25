@@ -139,7 +139,7 @@ bool COperationOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("DisplayDragMove"), m_fDisplayDragMove);
 	Settings.Write(TEXT("VolumeStep"), m_VolumeStep);
 	Settings.Write(TEXT("AudioDelayStep"), m_AudioDelayStep);
-	Settings.Write(TEXT("ChannelUpDownOrder"), (int)m_ChannelUpDownOrder);
+	Settings.Write(TEXT("ChannelUpDownOrder"), static_cast<int>(m_ChannelUpDownOrder));
 	Settings.Write(TEXT("ChannelUpDownSkipSubChannel"), m_fChannelUpDownSkipSubChannel);
 
 	TCHAR szCommand[CWheelCommandManager::MAX_COMMAND_PARSABLE_NAME];
@@ -256,7 +256,7 @@ INT_PTR COperationOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM l
 			for (LPCTSTR pszText : ChannelUpDownOrderList) {
 				DlgComboBox_AddString(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER, pszText);
 			}
-			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER, (int)m_ChannelUpDownOrder);
+			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_CHANNELUPDOWNORDER, static_cast<int>(m_ChannelUpDownOrder));
 
 			DlgCheckBox_Check(hDlg, IDC_OPTIONS_SKIPSUBCHANNEL, m_fChannelUpDownSkipSubChannel);
 		}

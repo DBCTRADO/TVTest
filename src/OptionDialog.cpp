@@ -267,7 +267,7 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					if (fSelected)
 						::ImageList_Draw(m_himlIcons, static_cast<int>(pdis->itemData), pdis->hDC, rc.left, y, ILD_TRANSPARENT);
 				} else {
-					const HICON hicon = ::ImageList_ExtractIcon(nullptr, m_himlIcons, (int)pdis->itemData);
+					const HICON hicon = ::ImageList_ExtractIcon(nullptr, m_himlIcons, static_cast<int>(pdis->itemData));
 #if 0				// DrawIconEx で描画すると汚い
 					::DrawIconEx(pdis->hDC, rc.left, y, hicon, m_IconWidth, m_IconHeight, 0, nullptr, DI_NORMAL);
 					if (fSelected)

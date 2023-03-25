@@ -82,7 +82,7 @@ namespace TVTest
 		bool GetAlertLowFreeSpace() const { return m_fAlertLowFreeSpace; }
 		ULONGLONG GetLowFreeSpaceThresholdBytes() const
 		{
-			return (ULONGLONG)m_LowFreeSpaceThreshold * (1024 * 1024);
+			return static_cast<ULONGLONG>(m_LowFreeSpaceThreshold) * (1024 * 1024);
 		}
 		bool IsTimeShiftRecordingEnabled() const { return m_Settings.m_fEnableTimeShift; }
 		bool EnableTimeShiftRecording(bool fEnable);

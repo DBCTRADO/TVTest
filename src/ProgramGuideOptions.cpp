@@ -411,9 +411,9 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 			const CProgramGuideTool *pTool = pToolList->GetTool(i);
 			TCHAR szName[32];
 
-			StringFormat(szName, TEXT("Tool{}_Name"), (UINT)i);
+			StringFormat(szName, TEXT("Tool{}_Name"), i);
 			Settings.Write(szName, pTool->GetName());
-			StringFormat(szName, TEXT("Tool{}_Command"), (UINT)i);
+			StringFormat(szName, TEXT("Tool{}_Command"), i);
 			Settings.Write(szName, pTool->GetCommand());
 		}
 	}
@@ -1065,7 +1065,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					::SendDlgItemMessage(
 						hDlg, IDC_PROGRAMGUIDEOPTIONS_ICON_FIRST + i,
 						BM_SETIMAGE, IMAGE_BITMAP,
-						reinterpret_cast<LPARAM>((HBITMAP)nullptr)));
+						reinterpret_cast<LPARAM>(nullptr)));
 				if (hbm != nullptr)
 					::DeleteObject(hbm);
 			}

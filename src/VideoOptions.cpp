@@ -158,8 +158,8 @@ bool CVideoOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("ResetPanScanEventChange"), m_fResetPanScanEventChange);
 	Settings.Write(TEXT("NoMaskSideCut"), m_fNoMaskSideCut);
 	Settings.Write(TEXT("FrameCut"), m_StretchMode == LibISDB::ViewerFilter::ViewStretchMode::Crop);
-	Settings.Write(TEXT("FullscreenStretchMode"), (int)m_FullscreenStretchMode);
-	Settings.Write(TEXT("MaximizeStretchMode"), (int)m_MaximizeStretchMode);
+	Settings.Write(TEXT("FullscreenStretchMode"), static_cast<int>(m_FullscreenStretchMode));
+	Settings.Write(TEXT("MaximizeStretchMode"), static_cast<int>(m_MaximizeStretchMode));
 	Settings.Write(TEXT("IgnoreDisplayExtension"), m_fIgnoreDisplayExtension);
 	Settings.Write(TEXT("ClipToDevice"), m_fClipToDevice);
 
@@ -410,8 +410,8 @@ void CVideoOptions::SetVideoDecoderList(
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,
 						NORM_IGNORECASE | NORM_IGNORESYMBOLS,
-						Filter1.data(), (int)Filter1.length(),
-						Filter2.data(), (int)Filter2.length()) == CSTR_LESS_THAN;
+						Filter1.data(), static_cast<int>(Filter1.length()),
+						Filter2.data(), static_cast<int>(Filter2.length())) == CSTR_LESS_THAN;
 				});
 		}
 		for (const String &e : FilterList) {

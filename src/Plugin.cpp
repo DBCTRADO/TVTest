@@ -612,8 +612,8 @@ static bool GetFavoriteList(const CFavoriteFolder &Folder, FavoriteList *pList)
 		GetFavoriteItemInfo(Folder.GetItem(i), &pItemInfo, &pStringBuffer);
 
 	_ASSERT(
-		((BYTE*)pItemInfo - (BYTE*)pList->ItemList) == StructSize &&
-		((BYTE*)pStringBuffer - (BYTE*)pItemInfo) == StringSize);
+		(reinterpret_cast<BYTE*>(pItemInfo) - reinterpret_cast<BYTE*>(pList->ItemList)) == StructSize &&
+		(reinterpret_cast<BYTE*>(pStringBuffer) - reinterpret_cast<BYTE*>(pItemInfo)) == StringSize);
 
 	return true;
 }
@@ -1338,7 +1338,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pServiceInfo->ServiceID = ServiceID;
 			pServiceInfo->VideoPID =
 				Info.VideoESList.empty() ? LibISDB::PID_INVALID : Info.VideoESList[0].PID;
-			const int NumAudioPIDs = std::min((int)Info.AudioESList.size(), 4);
+			const int NumAudioPIDs = std::min(static_cast<int>(Info.AudioESList.size()), 4);
 			pServiceInfo->NumAudioPIDs = NumAudioPIDs;
 			for (int i = 0; i < NumAudioPIDs; i++)
 				pServiceInfo->AudioPID[i] = Info.AudioESList[i].PID;
@@ -1859,7 +1859,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 	case MESSAGE_ONCONTROLLERBUTTONDOWN:
 		return GetAppClass().ControllerManager.OnButtonDown(
-			reinterpret_cast<LPCWSTR>(lParam1), (int)lParam2);
+			reinterpret_cast<LPCWSTR>(lParam1), static_cast<int>(lParam2));
 
 	case MESSAGE_GETCONTROLLERSETTINGS:
 		{
@@ -1898,25 +1898,25 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 							pQueryInfo->ServiceID,
 							pQueryInfo->EventID,
 							&EventData))
-					return reinterpret_cast<LRESULT>((EpgEventInfo*)nullptr);
+					return reinterpret_cast<LRESULT>(nullptr);
 			} else if (pQueryInfo->Type == EPG_EVENT_QUERY_TIME) {
 				SYSTEMTIME stUTC;
 				LibISDB::DateTime UTCTime, EPGTime;
 
 				if (!::FileTimeToSystemTime(&pQueryInfo->Time, &stUTC))
-					return reinterpret_cast<LRESULT>((EpgEventInfo*)nullptr);
+					return reinterpret_cast<LRESULT>(nullptr);
 				UTCTime.FromSYSTEMTIME(stUTC);
 				if (!LibISDB::UTCTimeToEPGTime(UTCTime, &EPGTime))
-					return reinterpret_cast<LRESULT>((EpgEventInfo*)nullptr);
+					return reinterpret_cast<LRESULT>(nullptr);
 				if (!EPGDatabase.GetEventInfo(
 							pQueryInfo->NetworkID,
 							pQueryInfo->TransportStreamID,
 							pQueryInfo->ServiceID,
 							EPGTime,
 							&EventData))
-					return reinterpret_cast<LRESULT>((EpgEventInfo*)nullptr);
+					return reinterpret_cast<LRESULT>(nullptr);
 			} else {
-				return reinterpret_cast<LRESULT>((EpgEventInfo*)nullptr);
+				return reinterpret_cast<LRESULT>(nullptr);
 			}
 
 			CEpgDataConverter Converter;
@@ -2572,7 +2572,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				new CTSProcessor(pInfo->pTSProcessor);
 			if (!GetAppClass().TSProcessorManager.RegisterTSProcessor(
 						pTSProcessor,
-						(CCoreEngine::TSProcessorConnectPosition)pInfo->ConnectPosition)) {
+						static_cast<CCoreEngine::TSProcessorConnectPosition>(pInfo->ConnectPosition))) {
 				pTSProcessor->Release();
 				return FALSE;
 			}
@@ -4073,7 +4073,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 					if (m_Info.pMessageFunc != nullptr) {
 						return m_Info.pMessageFunc(
 							hDlg, uMsg, wParam,
-							uMsg == WM_INITDIALOG ? (LPARAM)m_Info.pClientData : lParam,
+							uMsg == WM_INITDIALOG ? reinterpret_cast<LPARAM>(m_Info.pClientData) : lParam,
 							m_Info.pClientData);
 					}
 					if (uMsg == WM_INITDIALOG)

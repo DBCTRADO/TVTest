@@ -178,7 +178,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 			"\r\n",
 			ExceptionInfo->ExceptionRecord->ExceptionCode,
 			s.pszExceptionCode,
-			(void*)ExceptionInfo->ExceptionRecord->ExceptionAddress
+			reinterpret_cast<void*>(ExceptionInfo->ExceptionRecord->ExceptionAddress)
 #if defined(_M_IX86)
 			, ExceptionInfo->ContextRecord->Eax,
 			ExceptionInfo->ContextRecord->Ebx,
@@ -190,15 +190,15 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 			ExceptionInfo->ContextRecord->Esp,
 			ExceptionInfo->ContextRecord->Eip
 #elif defined(_M_AMD64)
-			, (void*)ExceptionInfo->ContextRecord->Rax,
-			(void*)ExceptionInfo->ContextRecord->Rbx,
-			(void*)ExceptionInfo->ContextRecord->Rcx,
-			(void*)ExceptionInfo->ContextRecord->Rdx,
-			(void*)ExceptionInfo->ContextRecord->Rsi,
-			(void*)ExceptionInfo->ContextRecord->Rdi,
-			(void*)ExceptionInfo->ContextRecord->Rbp,
-			(void*)ExceptionInfo->ContextRecord->Rsp,
-			(void*)ExceptionInfo->ContextRecord->Rip
+			, reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rax),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rbx),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rcx),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rdx),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rsi),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rdi),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rbp),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rsp),
+			reinterpret_cast<void*>(ExceptionInfo->ContextRecord->Rip)
 #endif
 			);
 
@@ -257,14 +257,14 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 
 		s.Stack.Context = *ExceptionInfo->ContextRecord;
 
-		s.Stack.pSymbol = (PSYMBOL_INFO)s.Stack.SymbolInfoBuffer;
+		s.Stack.pSymbol = reinterpret_cast<PSYMBOL_INFO>(s.Stack.SymbolInfoBuffer);
 		s.Stack.pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 		s.Stack.pSymbol->MaxNameLen = sizeof(s.Stack.SymbolInfoBuffer) - sizeof(SYMBOL_INFO);
 
 		s.szText[s.Length++] = '>';
 		s.Length += FormatSymbolFromAddress(
 			s.hProcess,
-			(DWORD64)ExceptionInfo->ExceptionRecord->ExceptionAddress,
+			reinterpret_cast<DWORD64>(ExceptionInfo->ExceptionRecord->ExceptionAddress),
 			s.ModuleEntries, s.NumModuleEntries,
 			s.Stack.pSymbol,
 			s.szText + s.Length);
@@ -336,7 +336,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 					" (IA64)"
 #endif
 					"\r\n\r\n";
-				::WriteFile(s.File.hFile, szHeader, (DWORD)(sizeof(szHeader) - 1), &s.File.WroteSize, nullptr);
+				::WriteFile(s.File.hFile, szHeader, static_cast<DWORD>(sizeof(szHeader) - 1), &s.File.WroteSize, nullptr);
 				::WriteFile(s.File.hFile, s.szText, s.Length, &s.File.WroteSize, nullptr);
 				if (s.NumModuleEntries > 0) {
 					s.Length = ::wsprintfA(s.szText, "\r\nModules (%d Modules)\r\n", s.NumModuleEntries);
@@ -388,8 +388,8 @@ int CDebugHelper::FormatSymbolFromAddress(
 #else
 	int i;
 	for (i = 0; i < NumModuleEntries; i++) {
-		if (Address >= (DWORD64)pModuleEntries[i].modBaseAddr
-				&& Address < (DWORD64)pModuleEntries[i].modBaseAddr + pModuleEntries[i].modBaseSize) {
+		if (Address >= reinterpret_cast<DWORD64>(pModuleEntries[i].modBaseAddr)
+				&& Address < reinterpret_cast<DWORD64>(pModuleEntries[i].modBaseAddr) + pModuleEntries[i].modBaseSize) {
 			pszModule = pModuleEntries[i].szModule;
 			break;
 		}
@@ -401,17 +401,17 @@ int CDebugHelper::FormatSymbolFromAddress(
 	if (m_pSymFromAddr(hProcess, Address, &Displacement, pSymbolInfo)) {
 		Length = ::wsprintfA(
 			pszText, "%p %s : %s + %08x\r\n",
-			(void*)Address, pszModule,
-			pSymbolInfo->Name, (DWORD)Displacement);
+			reinterpret_cast<void*>(Address), pszModule,
+			pSymbolInfo->Name, static_cast<DWORD>(Displacement));
 	} else if (i < NumModuleEntries) {
 		Length = ::wsprintfA(
 			pszText, "%p %s + %08x\r\n",
-			(void*)Address, pszModule,
-			(DWORD)(Address - (DWORD64)pModuleEntries[i].modBaseAddr));
+			reinterpret_cast<void*>(Address), pszModule,
+			static_cast<DWORD>(Address - reinterpret_cast<DWORD64>(pModuleEntries[i].modBaseAddr)));
 	} else {
 		Length = ::wsprintfA(
 			pszText, "%p %s\r\n",
-			(void*)Address, pszModule);
+			reinterpret_cast<void*>(Address), pszModule);
 	}
 	return Length;
 }

@@ -623,7 +623,7 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					const int OldBkMode = ::SetBkMode(ps.hdc, TRANSPARENT);
 					const COLORREF OldTextColor = ::SetTextColor(ps.hdc, m_TitleTextColor);
 					::DrawText(
-						ps.hdc, m_TitleText.data(), (int)m_TitleText.length(), &rc,
+						ps.hdc, m_TitleText.data(), static_cast<int>(m_TitleText.length()), &rc,
 						DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 					::SelectObject(ps.hdc, hfontOld);
 					::SetBkMode(ps.hdc, OldBkMode);

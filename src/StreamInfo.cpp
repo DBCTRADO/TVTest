@@ -356,7 +356,7 @@ void CStreamInfoPage::SetService()
 					StringFormat(
 						szText,
 						TEXT("TS{0} : TSID {1:#04x} ({1})"),
-						(int)i + 1,
+						i + 1,
 						TsInfo.TransportStreamID);
 					tvis.hParent = hItem;
 					tvis.item.state = 0;
@@ -369,7 +369,7 @@ void CStreamInfoPage::SetService()
 						StringFormat(
 							szText,
 							TEXT("サービス{0} : SID {1:#04x} ({1}) / Type {2:#02x}"),
-							(int)j + 1,
+							j + 1,
 							ServiceInfo.ServiceID,
 							ServiceInfo.ServiceType);
 						TreeView_InsertItem(hwndTree, &tvis);
@@ -398,7 +398,7 @@ void CStreamInfoPage::SetService()
 					StringFormat(
 						szText,
 						TEXT("TS{0} : TSID {1:#04x} ({1})"),
-						(int)i + 1,
+						i + 1,
 						TsInfo.TransportStreamID);
 					tvis.hParent = hItem;
 					tvis.item.state = 0;
@@ -411,7 +411,7 @@ void CStreamInfoPage::SetService()
 						StringFormat(
 							szText,
 							TEXT("サービス{0} ({1}) : SID {2:#04x} ({2}) / Type {3:#02x} / CA {4}"),
-							(int)j + 1,
+							j + 1,
 							ServiceInfo.ServiceName,
 							ServiceInfo.ServiceID,
 							ServiceInfo.ServiceType,

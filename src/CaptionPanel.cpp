@@ -144,7 +144,7 @@ bool CCaptionPanel::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CaptionPanel.IgnoreSmall"), m_fIgnoreSmall);
 	Settings.Write(TEXT("CaptionPanel.HalfWidthAlnum"), m_fHalfWidthAlnum);
 	Settings.Write(TEXT("CaptionPanel.HalfWidthEuroLanguagesOnly"), m_fHalfWidthEuroLanguagesOnly);
-	Settings.Write(TEXT("CaptionPanel.SaveCharEncoding"), (int)m_SaveCharEncoding);
+	Settings.Write(TEXT("CaptionPanel.SaveCharEncoding"), static_cast<int>(m_SaveCharEncoding));
 	return true;
 }
 
@@ -351,7 +351,7 @@ void CCaptionPanel::OnCommand(int Command)
 					TEXT("テキストファイル(UTF-16 LE)(*.*)\0*.*\0")
 					TEXT("テキストファイル(UTF-8)(*.*)\0*.*\0")
 					TEXT("テキストファイル(Shift_JIS)(*.*)\0*.*\0");
-				ofn.nFilterIndex = (int)m_SaveCharEncoding + 1;
+				ofn.nFilterIndex = static_cast<int>(m_SaveCharEncoding) + 1;
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);
 				ofn.lpstrTitle = TEXT("字幕の保存");
@@ -997,7 +997,7 @@ bool CCaptionDRCSMap::SaveBMP(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 				else
 					Pixel >>= Shift - 8;
 				Pixel = (Pixel & Mask) * 255 / Max;
-				q[x] = (BYTE)std::min(Pixel, 255U);
+				q[x] = static_cast<BYTE>(std::min(Pixel, 255U));
 				Shift -= pBitmap->BitsPerPixel;
 				if (Shift < 0) {
 					Shift += 16;

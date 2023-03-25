@@ -673,7 +673,7 @@ void CCaptureOptions::UpdateFileNamePreview()
 		FormatVariableString(&VarStrMap, Format.c_str(), &FileName);
 		if (!FileName.empty()) {
 			LPCTSTR pszExtension = m_ImageCodec.GetExtension(
-				(int)DlgComboBox_GetCurSel(m_hDlg, IDC_CAPTUREOPTIONS_FORMAT));
+				static_cast<int>(DlgComboBox_GetCurSel(m_hDlg, IDC_CAPTUREOPTIONS_FORMAT)));
 			if (pszExtension != nullptr) {
 				FileName += _T('.');
 				FileName += pszExtension;

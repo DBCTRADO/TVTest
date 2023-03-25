@@ -1095,7 +1095,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		case TTN_NEEDTEXT:
 			{
 				LPNMTTDISPINFO pnmtdi = reinterpret_cast<LPNMTTDISPINFO>(lParam);
-				const CProgramItemInfo *pItem = m_ItemList.GetItem((int)pnmtdi->lParam);
+				const CProgramItemInfo *pItem = m_ItemList.GetItem(static_cast<int>(pnmtdi->lParam));
 
 				if (pItem != nullptr) {
 					static TCHAR szText[1024];

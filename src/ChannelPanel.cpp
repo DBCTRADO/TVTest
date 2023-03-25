@@ -1196,7 +1196,7 @@ void CChannelPanel::CalcItemHeight()
 		return;
 	m_FontHeight = m_Font.GetHeight(hdc);
 	m_ChannelNameHeight =
-		std::max(m_FontHeight, (int)m_Style.ChannelChevronSize.Height) +
+		std::max(m_FontHeight, m_Style.ChannelChevronSize.Height.Value) +
 			m_Style.ChannelNameMargin.Top + m_Style.ChannelNameMargin.Bottom;
 	m_EventNameHeight =
 		m_FontHeight * m_EventNameLines +

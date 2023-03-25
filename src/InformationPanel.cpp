@@ -156,7 +156,7 @@ void CInformationPanel::SetTheme(const Theme::CThemeManager *pThemeManager)
 			if (m_fUseRichEdit) {
 				::SendMessage(
 					m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
-					(COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+					static_cast<COLORREF>(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor()));
 				POINT ptScroll;
 				::SendMessage(m_hwndProgramInfo, EM_GETSCROLLPOS, 0, reinterpret_cast<LPARAM>(&ptScroll));
 				UpdateProgramInfoText();
@@ -379,7 +379,7 @@ bool CInformationPanel::CreateProgramInfoEdit()
 		::SendMessage(m_hwndProgramInfo, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
 		::SendMessage(
 			m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
-			(COLORREF)m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor());
+			static_cast<COLORREF>(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor()));
 	} else {
 		m_hwndProgramInfo = ::CreateWindowEx(
 			0, TEXT("EDIT"), TEXT(""),
@@ -1338,7 +1338,7 @@ void CInformationPanel::CMediaBitRateItem::Draw(HDC hdc, const RECT &Rect)
 		Length = StringFormat(
 			szText,
 			TEXT("映像 {:.2f} Mbps"),
-			(double)(m_VideoBitRate) / (double)(1000 * 1000));
+			static_cast<double>(m_VideoBitRate) / static_cast<double>(1000 * 1000));
 	}
 	StringFormat(
 		szText + Length, lengthof(szText) - Length,

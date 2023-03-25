@@ -57,10 +57,10 @@ inline bool CharToHalfWidth(WCHAR &Char)
 void StringToHalfWidth(String &Text)
 {
 #if 0
-	const int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), nullptr, 0);
+	const int MapLength = ::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), static_cast<int>(Text.length()), nullptr, 0);
 	if (MapLength > 0) {
 		String MapText(MapLength, L'\0');
-		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), (int)Text.length(), MapText.data(), MapLength);
+		::LCMapString(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH, Text.data(), static_cast<int>(Text.length()), MapText.data(), MapLength);
 		Text = std::move(MapText);
 	}
 #else

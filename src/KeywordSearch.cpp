@@ -240,7 +240,7 @@ bool CKeywordSearch::EncodeURL(UINT CodePage, LPCWSTR pszSrc, String *pDst) cons
 			pDst->push_back(Buffer[i]);
 		} else {
 			TCHAR szHex[4];
-			StringFormat(szHex, TEXT("%{:02X}"), (BYTE)Buffer[i]);
+			StringFormat(szHex, TEXT("%{:02X}"), static_cast<BYTE>(Buffer[i]));
 			pDst->append(szHex);
 		}
 	}
