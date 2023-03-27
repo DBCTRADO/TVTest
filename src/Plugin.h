@@ -417,6 +417,8 @@ namespace TVTest
 		void OnDarkModeChanged(bool fDarkMode) override;
 		void OnMainWindowDarkModeChanged(bool fDarkMode) override;
 		void OnProgramGuideDarkModeChanged(bool fDarkMode) override;
+		void OnEventChanged() override;
+		void OnEventInfoChanged() override;
 
 	public:
 		~CPluginManager();

@@ -288,6 +288,18 @@ void CAppEventManager::OnProgramGuideDarkModeChanged(bool fDarkMode)
 }
 
 
+void CAppEventManager::OnEventChanged()
+{
+	CALL_HANDLERS(OnEventChanged());
+}
+
+
+void CAppEventManager::OnEventInfoChanged()
+{
+	CALL_HANDLERS(OnEventInfoChanged());
+}
+
+
 
 
 CAppEventHandler::~CAppEventHandler() = default;

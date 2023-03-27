@@ -91,6 +91,8 @@ namespace TVTest
 		virtual void OnDarkModeChanged(bool fDarkMode) {}
 		virtual void OnMainWindowDarkModeChanged(bool fDarkMode) {}
 		virtual void OnProgramGuideDarkModeChanged(bool fDarkMode) {}
+		virtual void OnEventChanged() {}
+		virtual void OnEventInfoChanged() {}
 	};
 
 	class CAppEventManager
@@ -138,6 +140,8 @@ namespace TVTest
 		void OnDarkModeChanged(bool fDarkMode);
 		void OnMainWindowDarkModeChanged(bool fDarkMode);
 		void OnProgramGuideDarkModeChanged(bool fDarkMode);
+		void OnEventChanged();
+		void OnEventInfoChanged();
 
 	private:
 		std::vector<CAppEventHandler*> m_HandlerList;

@@ -5485,6 +5485,18 @@ void CPluginManager::OnProgramGuideDarkModeChanged(bool fDarkMode)
 }
 
 
+void CPluginManager::OnEventChanged()
+{
+	SendEvent(EVENT_EVENTCHANGED);
+}
+
+
+void CPluginManager::OnEventInfoChanged()
+{
+	SendEvent(EVENT_EVENTINFOCHANGED);
+}
+
+
 bool CPluginManager::SendProgramGuideInitializeEvent(HWND hwnd)
 {
 	return SendProgramGuideEvent(

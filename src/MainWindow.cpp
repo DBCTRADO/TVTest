@@ -2800,12 +2800,16 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 			if (!!(UpdateStatus & CCoreEngine::StatusFlag::EventID)) {
 				// 番組の切り替わり
 				OnEventChanged();
+
+				m_App.AppEventManager.OnEventChanged();
 			} else if (!!(UpdateStatus & CCoreEngine::StatusFlag::EventInfo)) {
 				// 番組情報が更新された
 				fUpdateEventInfo = true;
 
 				m_pCore->UpdateTitle();
 				m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
+
+				m_App.AppEventManager.OnEventInfoChanged();
 			}
 
 			CProgramInfoStatusItem *pProgramInfoStatusItem =
@@ -4150,6 +4154,8 @@ void CMainWindow::OnEventChanged()
 
 	m_App.StatusView.UpdateItem(STATUS_ITEM_AUDIOCHANNEL);
 	m_App.Panel.ControlPanel.UpdateItem(CONTROLPANEL_ITEM_AUDIO);
+
+
 }
 
 
