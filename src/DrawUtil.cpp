@@ -690,6 +690,20 @@ bool DrawText(
 }
 
 
+static const LOGFONT * GetNonClientFont(const NONCLIENTMETRICS &ncm, FontType Type)
+{
+	switch (Type) {
+	case FontType::Message:      return &ncm.lfMessageFont;
+	case FontType::Menu:         return &ncm.lfMenuFont;
+	case FontType::Caption:      return &ncm.lfCaptionFont;
+	case FontType::SmallCaption: return &ncm.lfSmCaptionFont;
+	case FontType::Status:       return &ncm.lfStatusFont;
+	}
+
+	return nullptr;
+}
+
+
 // システムフォントを取得する
 bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 {
@@ -701,16 +715,11 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 		NONCLIENTMETRICS ncm;
 		ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
 		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
-		const LOGFONT *plf;
-		switch (Type) {
-		case FontType::Message:      plf = &ncm.lfMessageFont;   break;
-		case FontType::Menu:         plf = &ncm.lfMenuFont;      break;
-		case FontType::Caption:      plf = &ncm.lfCaptionFont;   break;
-		case FontType::SmallCaption: plf = &ncm.lfSmCaptionFont; break;
-		case FontType::Status:       plf = &ncm.lfStatusFont;    break;
-		default:
+
+		const LOGFONT *plf = GetNonClientFont(ncm, Type);
+		if (plf == nullptr)
 			return false;
-		}
+
 		*pLogFont = *plf;
 	}
 	return true;
@@ -738,16 +747,9 @@ bool GetSystemFontWithDPI(FontType Type, LOGFONT *pLogFont, int DPI)
 			fNeedScaling = true;
 		}
 
-		const LOGFONT *plf;
-		switch (Type) {
-		case FontType::Message:      plf = &ncm.lfMessageFont;   break;
-		case FontType::Menu:         plf = &ncm.lfMenuFont;      break;
-		case FontType::Caption:      plf = &ncm.lfCaptionFont;   break;
-		case FontType::SmallCaption: plf = &ncm.lfSmCaptionFont; break;
-		case FontType::Status:       plf = &ncm.lfStatusFont;    break;
-		default:
+		const LOGFONT *plf = GetNonClientFont(ncm, Type);
+		if (plf == nullptr)
 			return false;
-		}
 
 		*pLogFont = *plf;
 	}
