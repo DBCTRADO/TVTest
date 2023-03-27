@@ -611,7 +611,7 @@ static bool GetFavoriteList(const CFavoriteFolder &Folder, FavoriteList *pList)
 	for (size_t i = 0; i < Folder.GetItemCount(); i++)
 		GetFavoriteItemInfo(Folder.GetItem(i), &pItemInfo, &pStringBuffer);
 
-	_ASSERT(
+	TVTEST_ASSERT(
 		(reinterpret_cast<BYTE*>(pItemInfo) - reinterpret_cast<BYTE*>(pList->ItemList)) == StructSize &&
 		(reinterpret_cast<BYTE*>(pStringBuffer) - reinterpret_cast<BYTE*>(pItemInfo)) == StringSize);
 

@@ -1560,7 +1560,7 @@ bool CHomeDisplay::LoadSettings(CSettings &Settings)
 				}
 			}
 
-			_ASSERT(CategoryOrder.size() == m_CategoryList.size());
+			TVTEST_ASSERT(CategoryOrder.size() == m_CategoryList.size());
 
 			for (size_t i = 0; i < m_CategoryList.size(); i++) {
 				m_CategoryList[i].release();

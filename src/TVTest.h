@@ -42,6 +42,7 @@
 
 
 #define TRACE LIBISDB_TRACE
+#define TVTEST_ASSERT LIBISDB_ASSERT
 
 
 namespace TVTest

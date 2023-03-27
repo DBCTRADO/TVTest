@@ -928,7 +928,7 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 			LibISDB::TSPacket *pPacketData = static_cast<LibISDB::TSPacket *>(pData);
 #else
 			LibISDB::TSPacket *pPacketData = dynamic_cast<LibISDB::TSPacket *>(pData);
-			_ASSERT(pPacketData != nullptr);
+			TVTEST_ASSERT(pPacketData != nullptr);
 #endif
 
 			if (pPacket->GetModified() == S_OK) {
