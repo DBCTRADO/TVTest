@@ -52,9 +52,7 @@ public:
 	bool IsChanged(const CProgramItemInfo *pItem) const;
 
 private:
-	enum {
-		MAX_EVENT_TITLE = 256
-	};
+	static constexpr size_t MAX_EVENT_TITLE = 256;
 
 	LibISDB::EventInfo m_EventInfo;
 	WORD m_EventID;

@@ -191,26 +191,22 @@ private:
 		COMMAND_ONOFF = 2  // On/Off
 	};
 
-	enum {
-		NUM_FREQUENCY = 10,
-		NUM_CUSTOM_PRESETS = 10
-	};
+	static constexpr int NUM_FREQUENCY = 10;
+	static constexpr int NUM_CUSTOM_PRESETS = 10;
 
 	// 各部のサイズ(DIP単位)
-	enum {
-		SLIDER_WIDTH         = 16,
-		SLIDER_HEIGHT        = 80,
-		SLIDER_MARGIN        = 4,
-		SLIDER_PADDING       = 2,
-		WINDOW_MARGIN        = 8,
-		TEXT_HEIGHT          = 10,
-		SLIDER_TEXT_MARGIN   = 3,
-		SLIDER_BUTTON_MARGIN = 4,
-		BUTTON_WIDTH         = 52,
-		BUTTON_HEIGHT        = TEXT_HEIGHT + 8,
-		BUTTON_MARGIN        = 4,
-		LINE_WIDTH           = 1
-	};
+	static constexpr int SLIDER_WIDTH         = 16;
+	static constexpr int SLIDER_HEIGHT        = 80;
+	static constexpr int SLIDER_MARGIN        = 4;
+	static constexpr int SLIDER_PADDING       = 2;
+	static constexpr int WINDOW_MARGIN        = 8;
+	static constexpr int TEXT_HEIGHT          = 10;
+	static constexpr int SLIDER_TEXT_MARGIN   = 3;
+	static constexpr int SLIDER_BUTTON_MARGIN = 4;
+	static constexpr int BUTTON_WIDTH         = 52;
+	static constexpr int BUTTON_HEIGHT        = TEXT_HEIGHT + 8;
+	static constexpr int BUTTON_MARGIN        = 4;
+	static constexpr int LINE_WIDTH           = 1;
 
 	enum {
 		BUTTON_ENABLE,

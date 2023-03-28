@@ -280,10 +280,9 @@ namespace TVTest
 		bool CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID);
 
 	private:
-		enum {
-			ICON_MARGIN = 1,
-			TEXT_MARGIN = 3
-		};
+		static constexpr int ICON_MARGIN = 1;
+		static constexpr int TEXT_MARGIN = 3;
+
 		enum {
 			ITEM_DATA_IMAGEMASK = 0x0000FFFFUL,
 			ITEM_DATA_CHECKED   = 0x00010000UL
