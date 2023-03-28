@@ -99,17 +99,17 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 			PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 		if (BitsPerPixel <= 8) {
-			const int nColors = 1 << BitsPerPixel;
+			const int Colors = 1 << BitsPerPixel;
 			png_color PNGPalette[256];
 			const RGBQUAD *prgb = pInfo->pbmi->bmiColors;
 
-			for (int i = 0; i < nColors; i++) {
+			for (int i = 0; i < Colors; i++) {
 				PNGPalette[i].red = prgb->rgbRed;
 				PNGPalette[i].green = prgb->rgbGreen;
 				PNGPalette[i].blue = prgb->rgbBlue;
 				prgb++;
 			}
-			png_set_PLTE(pPNG, pPNGInfo, PNGPalette, nColors);
+			png_set_PLTE(pPNG, pPNGInfo, PNGPalette, Colors);
 		}
 
 		if (pInfo->pszComment != nullptr) {
@@ -144,24 +144,24 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 			png_set_bgr(pPNG);
 
 		/*if (fInterlace)
-			nPasses = png_set_interlace_handling(pPNG);
+			Passes = png_set_interlace_handling(pPNG);
 		else
-			nPasses = 1;
+			Passes = 1;
 		*/
-		constexpr int nPasses = 1;
-		const int nSrcRowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
+		constexpr int Passes = 1;
+		const int SrcRowBytes = DIB_ROW_BYTES(Width, BitsPerPixel);
 
 		std::unique_ptr<BYTE[]> Buff;
 		if (BitsPerPixel == 32)
 			Buff.reset(new BYTE[Width * 3]);
 
-		for (int i = 0; i < nPasses; i++) {
+		for (int i = 0; i < Passes; i++) {
 			for (int y = 0; y < Height; y++) {
-				png_bytep pbRow =
+				png_bytep pRow =
 					const_cast<png_bytep>(static_cast<const png_byte*>(pInfo->pBits) +
-						(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * nSrcRowBytes);
+						(pInfo->pbmi->bmiHeader.biHeight > 0 ? (Height - 1 - y) : y) * SrcRowBytes);
 				if (Buff) {
-					const BYTE *p = pbRow;
+					const BYTE *p = pRow;
 					BYTE *q = Buff.get();
 
 					for (int x = 0; x < Width; x++) {
@@ -170,9 +170,9 @@ bool SavePNGFile(const ImageSaveInfo *pInfo)
 						*q++ = p[2];
 						p += 4;
 					}
-					pbRow = Buff.get();
+					pRow = Buff.get();
 				}
-				png_write_rows(pPNG, &pbRow, 1);
+				png_write_rows(pPNG, &pRow, 1);
 			}
 		}
 

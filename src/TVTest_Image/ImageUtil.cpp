@@ -27,38 +27,38 @@ namespace TVTest
 
 
 void CopyToRGB24(
-	void *pDstBits, const void *pSrcBits, int nSrcBitsPerPixel,
-	const RGBQUAD *prgb, int nLength)
+	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+	const RGBQUAD *prgb, int Length)
 {
 	const BYTE *p = static_cast<const BYTE*>(pSrcBits);
 	BYTE *q = static_cast<BYTE*>(pDstBits);
-	const BYTE *pbEnd = q + nLength * 3;
+	const BYTE *pEnd = q + Length * 3;
 
-	switch (nSrcBitsPerPixel) {
+	switch (SrcBitsPerPixel) {
 	case 1:
 		{
-			int nShift = 7;
+			int Shift = 7;
 
-			while (q < pbEnd) {
-				const int i = (*p >> nShift) & 1;
+			while (q < pEnd) {
+				const int i = (*p >> Shift) & 1;
 				*q++ = prgb[i].rgbRed;
 				*q++ = prgb[i].rgbGreen;
 				*q++ = prgb[i].rgbBlue;
-				nShift--;
-				if (nShift < 0) {
-					nShift = 7;
+				Shift--;
+				if (Shift < 0) {
+					Shift = 7;
 					p++;
 				}
 			}
 		}
 		break;
 	case 4:
-		while (q < pbEnd) {
+		while (q < pEnd) {
 			int i = *p >> 4;
 			*q++ = prgb[i].rgbRed;
 			*q++ = prgb[i].rgbGreen;
 			*q++ = prgb[i].rgbBlue;
-			if (q == pbEnd)
+			if (q == pEnd)
 				break;
 			i = *p++ & 0x0F;
 			*q++ = prgb[i].rgbRed;
@@ -67,7 +67,7 @@ void CopyToRGB24(
 		}
 		break;
 	case 8:
-		while (q < pbEnd) {
+		while (q < pEnd) {
 			const int i = *p++;
 			*q++ = prgb[i].rgbRed;
 			*q++ = prgb[i].rgbGreen;
@@ -75,7 +75,7 @@ void CopyToRGB24(
 		}
 		break;
 	case 24:
-		while (q < pbEnd) {
+		while (q < pEnd) {
 			*q++ = p[2];
 			*q++ = p[1];
 			*q++ = p[0];
@@ -83,7 +83,7 @@ void CopyToRGB24(
 		}
 		break;
 	case 32:
-		while (q < pbEnd) {
+		while (q < pEnd) {
 			*q++ = p[2];
 			*q++ = p[1];
 			*q++ = p[0];

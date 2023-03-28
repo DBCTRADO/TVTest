@@ -32,8 +32,8 @@ namespace TVTest
 
 
 void CopyToRGB24(
-	void *pDstBits, const void *pSrcBits, int nSrcBitsPerPixel,
-	const RGBQUAD *prgb, int nLength);
+	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+	const RGBQUAD *prgb, int Length);
 
 }
 
