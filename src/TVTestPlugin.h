@@ -281,6 +281,10 @@
 #define TVTEST_PLUGIN_H
 
 
+#ifndef offsetof
+#include <cstddef>
+#endif
+
 #include <pshpack1.h>
 
 
@@ -296,13 +300,6 @@ namespace TVTest {
 
 // エクスポート関数定義用
 #define TVTEST_EXPORT(type) extern "C" __declspec(dllexport) type WINAPI
-
-#ifdef offsetof
-#define TVTEST_OFFSETOF offsetof
-#else
-#define TVTEST_OFFSETOF(type, member) \
-	((size_t)((BYTE*)&((type*)0)->member-(BYTE*)(type*)0))
-#endif
 
 #ifdef interface
 #define TVTEST_COM_INTERFACE interface
@@ -706,9 +703,9 @@ enum {
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 1)
 enum {
-	CHANNELINFO_SIZE_V1 = TVTEST_OFFSETOF(ChannelInfo, PhysicalChannel)
+	CHANNELINFO_SIZE_V1 = offsetof(ChannelInfo, PhysicalChannel)
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 12)
-	, CHANNELINFO_SIZE_V2 = TVTEST_OFFSETOF(ChannelInfo, Flags)
+	, CHANNELINFO_SIZE_V2 = offsetof(ChannelInfo, Flags)
 #endif
 };
 #endif
@@ -788,7 +785,7 @@ struct ServiceInfo
 };
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 2)
-enum { SERVICEINFO_SIZE_V1 = TVTEST_OFFSETOF(ServiceInfo, AudioComponentType) };
+enum { SERVICEINFO_SIZE_V1 = offsetof(ServiceInfo, AudioComponentType) };
 #endif
 
 // サービスの情報を取得する
@@ -969,7 +966,7 @@ struct StatusInfo
 };
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 2)
-enum { STATUSINFO_SIZE_V1 = TVTEST_OFFSETOF(StatusInfo, DropPacketCount) };
+enum { STATUSINFO_SIZE_V1 = offsetof(StatusInfo, DropPacketCount) };
 #endif
 
 // ステータスを取得する
@@ -1010,7 +1007,7 @@ struct RecordStatusInfo
 };
 
 #if TVTEST_PLUGIN_VERSION >= TVTEST_PLUGIN_VERSION_(0, 0, 10)
-enum { RECORDSTATUSINFO_SIZE_V1 = TVTEST_OFFSETOF(RecordStatusInfo, pszFileName) };
+enum { RECORDSTATUSINFO_SIZE_V1 = offsetof(RecordStatusInfo, pszFileName) };
 #endif
 
 // 録画ステータスを取得する
