@@ -6284,7 +6284,7 @@ inline bool MsgStatusItemNotify(PluginParam *pParam, int ID, StatusItemNotifyTyp
 /**
 @brief ステータス項目描画フラグ
 */
-TVTEST_DEFINE_ENUM(StatusItemDrawFlag, DWORD) {
+TVTEST_DEFINE_ENUM(StatusItemDrawFlag, WORD) {
 	STATUS_ITEM_DRAW_FLAG_NONE    = 0x0000U, /**< なし(0) */
 	STATUS_ITEM_DRAW_FLAG_PREVIEW = 0x0001U  /**< プレビュー(設定ダイアログでの表示) */
 };
@@ -6293,7 +6293,7 @@ TVTEST_DEFINE_ENUM_FLAG_OPERATORS(StatusItemDrawFlag)
 /**
 @brief ステータス項目描画状態フラグ
 */
-TVTEST_DEFINE_ENUM(StatusItemDrawState, DWORD) {
+TVTEST_DEFINE_ENUM(StatusItemDrawState, WORD) {
 	STATUS_ITEM_DRAW_STATE_NONE = 0x0000U, /**< なし(0) */
 	STATUS_ITEM_DRAW_STATE_HOT  = 0x0001U  /**< フォーカスが当たっている */
 };
