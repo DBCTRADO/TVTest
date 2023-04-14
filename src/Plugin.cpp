@@ -234,7 +234,7 @@ static void ConvertChannelInfo(const CChannelInfo *pChInfo, ChannelInfo *pChanne
 		pChannelInfo->ServiceType = pChInfo->GetServiceType();
 		pChannelInfo->ServiceID = pChInfo->GetServiceID();
 		if (pChannelInfo->Size == sizeof(ChannelInfo)) {
-			pChannelInfo->Flags = 0;
+			pChannelInfo->Flags = CHANNEL_FLAG_NONE;
 			if (!pChInfo->IsEnabled())
 				pChannelInfo->Flags |= CHANNEL_FLAG_DISABLED;
 		}
@@ -373,7 +373,7 @@ void CEpgDataConverter::ConvertEventInfo(
 			const LibISDB::EventInfo::AudioInfo &Audio = EventData.AudioList[i];
 			EpgEventAudioInfo *pAudioInfo = reinterpret_cast<EpgEventAudioInfo*>(p);
 			pEventInfo->AudioList[i] = pAudioInfo;
-			pAudioInfo->Flags = 0;
+			pAudioInfo->Flags = EPG_EVENT_AUDIO_FLAG_NONE;
 			if (Audio.ESMultiLingualFlag)
 				pAudioInfo->Flags |= EPG_EVENT_AUDIO_FLAG_MULTILINGUAL;
 			if (Audio.MainComponentFlag)
@@ -654,7 +654,7 @@ static bool CopyESList(const LibISDB::AnalyzerFilter::ESInfoList &SrcList, Eleme
 static void AnalyzerServiceInfoToServiceInfo2(
 	const LibISDB::AnalyzerFilter::ServiceInfo &Info, ServiceInfo2 *pServiceInfo)
 {
-	pServiceInfo->Status = 0;
+	pServiceInfo->Status = SERVICE_INFO2_STATUS_NONE;
 	if (Info.FreeCAMode)
 		pServiceInfo->Status |= SERVICE_INFO2_STATUS_FREE_CA_MODE;
 	pServiceInfo->ServiceID = Info.ServiceID;
@@ -722,8 +722,8 @@ MutexLock CPlugin::m_VideoStreamLock;
 CPlugin::CPlugin()
 	: m_hLib(nullptr)
 	, m_Version(0)
-	, m_Type(0)
-	, m_Flags(0)
+	, m_Type(PLUGIN_TYPE_NORMAL)
+	, m_Flags(PLUGIN_FLAG_NONE)
 	, m_fEnabled(false)
 	, m_fSetting(false)
 	, m_Command(0)
@@ -1053,7 +1053,7 @@ bool CPlugin::GetProgramGuideCommandInfo(int Index, ProgramGuideCommandInfo *pIn
 		return false;
 	const CProgramGuideCommand &Command = m_ProgramGuideCommandList[Index];
 	pInfo->Type = Command.GetType();
-	pInfo->Flags = 0;
+	pInfo->Flags = PROGRAMGUIDE_COMMAND_FLAG_NONE;
 	pInfo->ID = Command.GetID();
 	pInfo->pszText = Command.GetText();
 	pInfo->pszName = Command.GetName();
@@ -1062,7 +1062,7 @@ bool CPlugin::GetProgramGuideCommandInfo(int Index, ProgramGuideCommandInfo *pIn
 
 
 bool CPlugin::NotifyProgramGuideCommand(
-	LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent,
+	LPCTSTR pszCommand, ProgramGuideCommandAction Action, const LibISDB::EventInfo *pEvent,
 	const POINT *pCursorPos, const RECT *pItemRect)
 {
 	for (const auto &e : m_ProgramGuideCommandList) {
@@ -1192,7 +1192,7 @@ void CPlugin::RegisterPanelItems()
 }
 
 
-LRESULT CPlugin::SendEvent(UINT Event, LPARAM lParam1, LPARAM lParam2)
+LRESULT CPlugin::SendEvent(EventCode Event, LPARAM lParam1, LPARAM lParam2)
 {
 	if (m_pEventCallback != nullptr)
 		return m_pEventCallback(Event, lParam1, lParam2, m_pEventCallbackClientData);
@@ -1221,7 +1221,7 @@ bool CPlugin::Settings(HWND hwndOwner)
 }
 
 
-LRESULT CALLBACK CPlugin::Callback(PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2)
+LRESULT CALLBACK CPlugin::Callback(PluginParam *pParam, MessageCode Message, LPARAM lParam1, LPARAM lParam2)
 {
 	if (pParam == nullptr)
 		return 0;
@@ -1235,7 +1235,7 @@ LRESULT CALLBACK CPlugin::Callback(PluginParam *pParam, UINT Message, LPARAM lPa
 
 
 LRESULT CPlugin::SendPluginMessage(
-	PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2,
+	PluginParam *pParam, MessageCode Message, LPARAM lParam1, LPARAM lParam2,
 	LRESULT FailedResult)
 {
 	PluginMessageParam MessageParam;
@@ -1255,12 +1255,12 @@ LRESULT CPlugin::SendPluginMessage(
 	GetAppClass().AddLog(
 		CLogItem::LogType::Error,
 		TEXT("応答が無いためプラグインからのメッセージを処理できません。({} : {})"),
-		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()), Message);
+		::PathFindFileName(MessageParam.pPlugin->m_FileName.c_str()), static_cast<UINT>(Message));
 	return FailedResult;
 }
 
 
-LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, LPARAM lParam2)
+LRESULT CPlugin::OnCallback(PluginParam *pParam, MessageCode Message, LPARAM lParam1, LPARAM lParam2)
 {
 	switch (Message) {
 	case MESSAGE_GETVERSION:
@@ -1875,7 +1875,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (pControllerSettings == nullptr)
 				return FALSE;
 			if ((pSettings->Mask & CONTROLLER_SETTINGS_MASK_FLAGS) != 0) {
-				pSettings->Flags = 0;
+				pSettings->Flags = CONTROLLER_SETTINGS_FLAG_NONE;
 				if (pControllerSettings->fActiveOnly)
 					pSettings->Flags |= CONTROLLER_SETTINGS_FLAG_ACTIVEONLY;
 			}
@@ -2034,11 +2034,11 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 				p += sizeof(DriverTuningSpaceInfo);
 				pList->SpaceList[i] = pDriverSpaceInfo;
-				pDriverSpaceInfo->Flags = 0;
+				pDriverSpaceInfo->Flags = DRIVER_TUNING_SPACE_INFO_FLAG_NONE;
 				pDriverSpaceInfo->NumChannels = NumChannels;
 				pDriverSpaceInfo->pInfo = reinterpret_cast<TuningSpaceInfo*>(p);
 				pDriverSpaceInfo->pInfo->Size = sizeof(TuningSpaceInfo);
-				pDriverSpaceInfo->pInfo->Space = static_cast<int>(pSpaceInfo->GetType());
+				pDriverSpaceInfo->pInfo->Space = static_cast<TuningSpaceType>(pSpaceInfo->GetType());
 				if (pSpaceInfo->GetName() != nullptr) {
 					StringCopy(pDriverSpaceInfo->pInfo->szName, pSpaceInfo->GetName());
 				} else {
@@ -2260,11 +2260,11 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			if (pInfo == nullptr
 					|| pInfo->Size != sizeof(EpgCaptureStatusInfo)
-					|| pInfo->Flags != 0)
+					|| pInfo->Flags != EPG_CAPTURE_STATUS_FLAG_NONE)
 				return FALSE;
 
 			const LibISDB::EPGDatabase &EPGDatabase = GetAppClass().EPGDatabase;
-			DWORD Status = 0;
+			EpgCaptureStatus Status = EPG_CAPTURE_STATUS_NONE;
 
 			if ((pInfo->Status & EPG_CAPTURE_STATUS_SCHEDULEBASICCOMPLETED) != 0) {
 				if (EPGDatabase.IsScheduleComplete(pInfo->NetworkID, pInfo->TransportStreamID, pInfo->ServiceID, false))
@@ -2380,7 +2380,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			for (auto &e : m_CommandList) {
 				if (e.GetID() == ID) {
-					const DWORD State = static_cast<DWORD>(lParam2);
+					const PluginCommandState State = static_cast<PluginCommandState>(lParam2);
 
 					e.SetState(State);
 
@@ -2457,7 +2457,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pItem->MinHeight = pInfo->MinHeight;
 			pItem->ItemID = -1;
 			pItem->Style = pInfo->Style;
-			pItem->State = 0;
+			pItem->State = STATUS_ITEM_STATE_NONE;
 			pItem->pItem = nullptr;
 
 			m_StatusItemList.emplace_back(pItem);
@@ -2475,8 +2475,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			for (auto &Item : m_StatusItemList) {
 				if (Item->ID == pInfo->ID) {
 					if ((pInfo->Mask & STATUS_ITEM_SET_INFO_MASK_STATE) != 0) {
-						const DWORD OldState = Item->State;
-						const DWORD NewState = (Item->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
+						const StatusItemState OldState = Item->State;
+						const StatusItemState NewState = (Item->State & ~pInfo->StateMask) | (pInfo->State & pInfo->StateMask);
 						Item->State = NewState;
 						if (((NewState ^ OldState) & STATUS_ITEM_STATE_VISIBLE) != 0) {
 							const bool fVisible = (NewState & STATUS_ITEM_STATE_VISIBLE) != 0;
@@ -2488,8 +2488,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					}
 
 					if ((pInfo->Mask & STATUS_ITEM_SET_INFO_MASK_STYLE) != 0) {
-						const DWORD OldStyle = Item->Style;
-						const DWORD NewStyle = (OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
+						const StatusItemStyle OldStyle = Item->Style;
+						const StatusItemStyle NewStyle = (OldStyle & ~pInfo->StyleMask) | (pInfo->Style & pInfo->StyleMask);
 						if (NewStyle != OldStyle) {
 							Item->Style = NewStyle;
 							if (Item->pItem != nullptr) {
@@ -2588,7 +2588,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 			if (pInfo == nullptr
 					|| pInfo->Size != sizeof(PanelItemInfo)
-					|| pInfo->Flags != 0
+					|| pInfo->Flags != PANEL_ITEM_FLAG_NONE
 					|| IsStringEmpty(pInfo->pszIDText)
 					|| IsStringEmpty(pInfo->pszTitle))
 				return FALSE;
@@ -2598,8 +2598,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			pItem->ID = pInfo->ID;
 			pItem->IDText = pInfo->pszIDText;
 			pItem->Title = pInfo->pszTitle;
-			pItem->StateMask = 0;
-			pItem->State = 0;
+			pItem->StateMask = PANEL_ITEM_STATE_NONE;
+			pItem->State = PANEL_ITEM_STATE_NONE;
 			pItem->Style = pInfo->Style;
 			pItem->ItemID = -1;
 			pItem->pItem = nullptr;
@@ -3184,8 +3184,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 					const LibISDB::AnalyzerFilter::SDTServiceInfo &SDTInfo = SDTList[i];
 
 					Info.Size = sizeof(ServiceInfo2);
-					Info.Flags = 0;
-					Info.Status = 0;
+					Info.Flags = SERVICE_INFO2_FLAG_NONE;
+					Info.Status = SERVICE_INFO2_STATUS_NONE;
 					if (SDTInfo.FreeCAMode)
 						Info.Status |= SERVICE_INFO2_STATUS_FREE_CA_MODE;
 					Info.NetworkID = NetworkID;
@@ -3217,7 +3217,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 				for (size_t i = 0; i < List.size(); i++) {
 					ServiceInfo2 &Info = pList->ServiceList[i];
 					Info.Size = sizeof(ServiceInfo2);
-					Info.Flags = 0;
+					Info.Flags = SERVICE_INFO2_FLAG_NONE;
 					AnalyzerServiceInfoToServiceInfo2(List[i], &Info);
 					Info.NetworkID = NetworkID;
 					Info.TransportStreamID = TransportStreamID;
@@ -3242,7 +3242,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 			if (!pViewer->GetAudioInfo(&Info))
 				return FALSE;
 
-			pInfo->Status = 0;
+			pInfo->Status = AUDIO_INFO_STATUS_NONE;
 			if (Info.DualMono)
 				pInfo->Status |= AUDIO_INFO_STATUS_DUAL_MONO;
 			if (pViewer->IsSPDIFPassthrough())
@@ -3324,7 +3324,7 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, UINT Message, LPARAM lParam1, L
 
 #ifdef _DEBUG
 	default:
-		TRACE(TEXT("CPluign::OnCallback() : Unknown message {}\n"), Message);
+		TRACE(TEXT("CPluign::OnCallback() : Unknown message {}\n"), static_cast<UINT>(Message));
 		break;
 #endif
 	}
@@ -3729,7 +3729,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 				}
 				CRecordManager::TimeSpecInfo StopTimeInfo;
 				pRecordManager->GetStopTimeSpec(&StopTimeInfo);
-				pInfo->StopTimeSpec = static_cast<DWORD>(StopTimeInfo.Type);
+				pInfo->StopTimeSpec = static_cast<RecordStopTime>(StopTimeInfo.Type);
 				if (StopTimeInfo.Type == CRecordManager::TimeSpecType::DateTime) {
 					if ((Flags & RECORD_STATUS_FLAG_UTC) != 0) {
 						::SystemTimeToFileTime(&StopTimeInfo.Time.DateTime, &pInfo->StopTime.Time);
@@ -3859,7 +3859,7 @@ LRESULT CPlugin::OnPluginMessage(WPARAM wParam, LPARAM lParam)
 			if (pszTuningSpaceName == nullptr)
 				return FALSE;
 			StringCopy(pInfo->szName, pszTuningSpaceName);
-			pInfo->Space = static_cast<int>(pTuningSpaceList->GetTuningSpaceType(Index));
+			pInfo->Space = static_cast<TuningSpaceType>(pTuningSpaceList->GetTuningSpaceType(Index));
 		}
 		return TRUE;
 
@@ -4301,8 +4301,8 @@ void CPlugin::CreateAppCommandList()
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID, LPCWSTR pszText, LPCWSTR pszName)
 	: m_ID(ID)
 	, m_Command(0)
-	, m_Flags(0)
-	, m_State(0)
+	, m_Flags(PLUGIN_COMMAND_FLAG_NONE)
+	, m_State(PLUGIN_COMMAND_STATE_NONE)
 	, m_Text(pszText)
 	, m_Name(pszName)
 {
@@ -4312,8 +4312,8 @@ CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID, LPCWSTR pszText, LPCWSTR
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(const CommandInfo &Info)
 	: m_ID(Info.ID)
 	, m_Command(0)
-	, m_Flags(0)
-	, m_State(0)
+	, m_Flags(PLUGIN_COMMAND_FLAG_NONE)
+	, m_State(PLUGIN_COMMAND_STATE_NONE)
 	, m_Text(Info.pszText)
 	, m_Name(Info.pszName)
 {
@@ -4593,10 +4593,10 @@ void CPlugin::CPluginStatusItem::NotifyDraw(
 		StatusItemDrawInfo Info;
 
 		Info.ID = m_pItem->ID;
-		Info.Flags = 0;
+		Info.Flags = STATUS_ITEM_DRAW_FLAG_NONE;
 		if (!!(Flags & DrawFlag::Preview))
 			Info.Flags |= STATUS_ITEM_DRAW_FLAG_PREVIEW;
-		Info.State = 0;
+		Info.State = STATUS_ITEM_DRAW_STATE_NONE;
 		if (!!(Flags & DrawFlag::Highlight)) {
 			Info.State |= STATUS_ITEM_DRAW_STATE_HOT;
 			Info.pszStyle = L"status-bar.item.hot";
@@ -4616,7 +4616,7 @@ void CPlugin::CPluginStatusItem::NotifyDraw(
 }
 
 
-LRESULT CPlugin::CPluginStatusItem::NotifyMouseEvent(UINT Action, int x, int y, int WheelDelta)
+LRESULT CPlugin::CPluginStatusItem::NotifyMouseEvent(StatusItemMouseAction Action, int x, int y, int WheelDelta)
 {
 	if (m_pPlugin != nullptr && m_pItem != nullptr) {
 		StatusItemMouseEventInfo Info;
@@ -5135,8 +5135,9 @@ bool CPluginManager::OnPluginCommand(LPCTSTR pszCommand)
 }
 
 
-bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, const LibISDB::EventInfo *pEvent,
-		const POINT *pCursorPos, const RECT *pItemRect)
+bool CPluginManager::OnProgramGuideCommand(
+	LPCTSTR pszCommand, ProgramGuideCommandAction Action, const LibISDB::EventInfo *pEvent,
+	const POINT *pCursorPos, const RECT *pItemRect)
 {
 	if (pszCommand == nullptr)
 		return false;
@@ -5161,7 +5162,7 @@ bool CPluginManager::OnProgramGuideCommand(LPCTSTR pszCommand, UINT Action, cons
 }
 
 
-bool CPluginManager::SendEvent(UINT Event, LPARAM lParam1, LPARAM lParam2)
+bool CPluginManager::SendEvent(EventCode Event, LPARAM lParam1, LPARAM lParam2)
 {
 	for (const auto &e : m_PluginList) {
 		e->SendEvent(Event, lParam1, lParam2);
@@ -5170,7 +5171,7 @@ bool CPluginManager::SendEvent(UINT Event, LPARAM lParam1, LPARAM lParam2)
 }
 
 
-bool CPluginManager::SendProgramGuideEvent(UINT Event, LPARAM Param1, LPARAM Param2)
+bool CPluginManager::SendProgramGuideEvent(EventCode Event, LPARAM Param1, LPARAM Param2)
 {
 	bool fSent = false;
 
@@ -5183,7 +5184,7 @@ bool CPluginManager::SendProgramGuideEvent(UINT Event, LPARAM Param1, LPARAM Par
 }
 
 
-bool CPluginManager::SendProgramGuideProgramEvent(UINT Event, const LibISDB::EventInfo &EventInfo, LPARAM Param)
+bool CPluginManager::SendProgramGuideProgramEvent(EventCode Event, const LibISDB::EventInfo &EventInfo, LPARAM Param)
 {
 	ProgramGuideProgramInfo ProgramInfo;
 	EventInfoToProgramGuideProgramInfo(EventInfo, &ProgramInfo);
@@ -5200,11 +5201,11 @@ bool CPluginManager::SendProgramGuideProgramEvent(UINT Event, const LibISDB::Eve
 
 
 bool CPluginManager::SendFilterGraphEvent(
-	UINT Event, LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder)
+	EventCode Event, LibISDB::ViewerFilter *pMediaViewer, IGraphBuilder *pGraphBuilder)
 {
 	FilterGraphInfo Info;
 
-	Info.Flags = 0;
+	Info.Flags = FILTER_GRAPH_INFO_FLAG_NONE;
 	Info.VideoStreamType = pMediaViewer->GetVideoStreamType();
 	::ZeroMemory(Info.Reserved, sizeof(Info.Reserved));
 	Info.pGraphBuilder = pGraphBuilder;
@@ -5254,9 +5255,9 @@ void CPluginManager::OnRecordingStart(AppEvent::RecordingStartInfo *pInfo)
 	StartRecordInfo Info;
 
 	Info.Size = sizeof(StartRecordInfo);
-	Info.Flags = 0;
-	Info.Modified = 0;
-	Info.Client = static_cast<DWORD>(pRecordManager->GetClient());
+	Info.Flags = STARTRECORD_FLAG_NONE;
+	Info.Modified = STARTRECORD_MODIFIED_NONE;
+	Info.Client = static_cast<RecordClient>(pRecordManager->GetClient());
 	Info.pszFileName = pInfo->pszFileName;
 	Info.MaxFileName = pInfo->MaxFileName;
 	CRecordManager::TimeSpecInfo TimeSpec;

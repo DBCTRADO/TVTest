@@ -6704,8 +6704,8 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 					DrawCommandIconInfo Info;
 
 					Info.ID = pCommandInfo->GetID();
-					Info.Flags = 0;
-					Info.State = 0;
+					Info.Flags = COMMAND_ICON_FLAG_NONE;
+					Info.State = COMMAND_ICON_STATE_NONE;
 					if (!!(pInfo->State & CSideBar::ItemState::Disabled))
 						Info.State |= COMMAND_ICON_STATE_DISABLED;
 					if (!!(pInfo->State & CSideBar::ItemState::Checked))
