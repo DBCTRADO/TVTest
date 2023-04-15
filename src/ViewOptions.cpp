@@ -427,7 +427,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER);
 				m_fNoMonitorLowPowerActiveOnly =
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY);
-				App.UICore.PreventDisplaySave(true);
+				App.UICore.PreventDisplaySave(App.UICore.IsViewerEnabled());
 
 				m_fChanged = true;
 			}

@@ -43,11 +43,9 @@ CUICore::CUICore(CAppMain &App)
 
 	, m_fViewerInitializeError(false)
 
+	, m_hPowerRequest(INVALID_HANDLE_VALUE)
+	, m_fPowerRequestSet(false)
 	, m_fScreenSaverActiveOriginal(FALSE)
-	/*
-	, m_fLowPowerActiveOriginal(FALSE)
-	, m_fPowerOffActiveOriginal(FALSE)
-	*/
 
 	, m_PopupMenuDPI(0)
 	, m_TunerSelectMenu(*this)
@@ -56,6 +54,15 @@ CUICore::CUICore(CAppMain &App)
 
 	, m_fStatusBarTrace(false)
 {
+}
+
+
+CUICore::~CUICore()
+{
+	if (m_hPowerRequest != INVALID_HANDLE_VALUE) {
+		SetPowerRequest(false);
+		::CloseHandle(m_hPowerRequest);
+	}
 }
 
 
@@ -905,25 +912,9 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 				SPIF_UPDATEINIFILE/* | SPIF_SENDWININICHANGE*/);
 			m_fScreenSaverActiveOriginal = FALSE;
 		}
-		if (!fNoMonitorLowPower || fNoMonitorLowPowerActiveOnly) {
-#if 1
-			if (m_pSkin != nullptr)
-				m_pSkin->PreventDisplaySleep(false);
-#else
-			if (m_fPowerOffActiveOriginal) {
-				SystemParametersInfo(
-					SPI_SETPOWEROFFACTIVE, TRUE, nullptr,
-					SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-				m_fPowerOffActiveOriginal = FALSE;
-			}
-			if (m_fLowPowerActiveOriginal) {
-				SystemParametersInfo(
-					SPI_SETLOWPOWERACTIVE, TRUE, nullptr,
-					SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-				m_fLowPowerActiveOriginal = FALSE;
-			}
-#endif
-		}
+		if (!fNoMonitorLowPower || fNoMonitorLowPowerActiveOnly)
+			SetPowerRequest(false);
+
 		if (fNoScreenSaver && !m_fScreenSaverActiveOriginal) {
 			if (!SystemParametersInfo(
 						SPI_GETSCREENSAVEACTIVE, 0,
@@ -935,59 +926,49 @@ bool CUICore::PreventDisplaySave(bool fPrevent)
 					0/*SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE*/);
 			}
 		}
-		if (fNoMonitorLowPower && !fNoMonitorLowPowerActiveOnly) {
-#if 1
-			if (m_pSkin != nullptr)
-				m_pSkin->PreventDisplaySleep(true);
-#else
-			if (!m_fPowerOffActiveOriginal) {
-				if (!SystemParametersInfo(
-							SPI_GETPOWEROFFACTIVE, 0,
-							&m_fPowerOffActiveOriginal, 0))
-					m_fPowerOffActiveOriginal = FALSE;
-				if (m_fPowerOffActiveOriginal) {
-					SystemParametersInfo(
-						SPI_SETPOWEROFFACTIVE, FALSE, nullptr,
-						SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-				}
-			}
-			if (!m_fLowPowerActiveOriginal) {
-				if (!SystemParametersInfo(
-							SPI_GETLOWPOWERACTIVE, 0,
-							&m_fLowPowerActiveOriginal, 0))
-					m_fLowPowerActiveOriginal = FALSE;
-				if (m_fLowPowerActiveOriginal) {
-					SystemParametersInfo(
-						SPI_SETLOWPOWERACTIVE, FALSE, nullptr,
-						SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-				}
-			}
-#endif
-		}
+		if (fNoMonitorLowPower && !fNoMonitorLowPowerActiveOnly)
+			SetPowerRequest(true);
 	} else {
-		if (m_pSkin != nullptr)
-			m_pSkin->PreventDisplaySleep(false);
+		SetPowerRequest(false);
+
 		if (m_fScreenSaverActiveOriginal) {
 			::SystemParametersInfo(
 				SPI_SETSCREENSAVEACTIVE, TRUE, nullptr,
 				SPIF_UPDATEINIFILE/* | SPIF_SENDWININICHANGE*/);
 			m_fScreenSaverActiveOriginal = FALSE;
 		}
-#if 0
-		if (m_fPowerOffActiveOriginal) {
-			::SystemParametersInfo(
-				SPI_SETPOWEROFFACTIVE, TRUE, nullptr,
-				SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-			m_fPowerOffActiveOriginal = FALSE;
-		}
-		if (m_fLowPowerActiveOriginal) {
-			::SystemParametersInfo(
-				SPI_SETLOWPOWERACTIVE, TRUE, nullptr,
-				SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-			m_fLowPowerActiveOriginal = FALSE;
-		}
-#endif
 	}
+	return true;
+}
+
+
+bool CUICore::SetPowerRequest(bool fSet)
+{
+	if (fSet == m_fPowerRequestSet)
+		return true;
+
+	if (fSet) {
+		if (m_hPowerRequest == INVALID_HANDLE_VALUE) {
+			REASON_CONTEXT ReasonContext;
+			ReasonContext.Version = POWER_REQUEST_CONTEXT_VERSION;
+			ReasonContext.Flags = POWER_REQUEST_CONTEXT_DETAILED_STRING;
+			ReasonContext.Reason.Detailed.LocalizedReasonModule = m_App.GetResourceInstance();
+			ReasonContext.Reason.Detailed.LocalizedReasonId = IDS_POWERREQUEST;
+			ReasonContext.Reason.Detailed.ReasonStringCount = 0;
+			ReasonContext.Reason.Detailed.ReasonStrings = nullptr;
+			m_hPowerRequest = ::PowerCreateRequest(&ReasonContext);
+			if (m_hPowerRequest == INVALID_HANDLE_VALUE)
+				return false;
+		}
+
+		if (!::PowerSetRequest(m_hPowerRequest, PowerRequestDisplayRequired))
+			return false;
+		m_fPowerRequestSet = true;
+	} else {
+		::PowerClearRequest(m_hPowerRequest, PowerRequestDisplayRequired);
+		m_fPowerRequestSet = false;
+	}
+
 	return true;
 }
 

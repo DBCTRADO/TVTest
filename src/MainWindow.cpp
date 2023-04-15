@@ -2951,11 +2951,6 @@ void CMainWindow::OnTimer(HWND hwnd, UINT id)
 		m_Timer.EndTimer(TIMER_ID_OSD);
 		break;
 
-	case TIMER_ID_DISPLAY:
-		// モニタがオフにならないようにする
-		::SetThreadExecutionState(ES_DISPLAY_REQUIRED);
-		break;
-
 	case TIMER_ID_WHEELCHANNELSELECT:
 		// ホイールでのチャンネル変更
 		{
@@ -4645,15 +4640,6 @@ bool CMainWindow::SetTitleFont(const Style::Font &Font)
 bool CMainWindow::SetLogo(HBITMAP hbm)
 {
 	return m_Display.GetViewWindow().SetLogo(hbm);
-}
-
-
-void CMainWindow::PreventDisplaySleep(bool fPrevent)
-{
-	if (fPrevent)
-		m_Timer.BeginTimer(TIMER_ID_DISPLAY, 10000);
-	else
-		m_Timer.EndTimer(TIMER_ID_DISPLAY);
 }
 
 

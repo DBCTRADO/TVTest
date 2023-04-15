@@ -92,6 +92,7 @@ namespace TVTest
 		};
 
 		CUICore(CAppMain &App);
+		~CUICore();
 
 		CUICore(const CUICore &) = delete;
 		CUICore &operator=(const CUICore &) = delete;
@@ -245,11 +246,9 @@ namespace TVTest
 
 		bool m_fViewerInitializeError;
 
+		HANDLE m_hPowerRequest;
+		bool m_fPowerRequestSet;
 		BOOL m_fScreenSaverActiveOriginal;
-		/*
-		BOOL m_fLowPowerActiveOriginal;
-		BOOL m_fPowerOffActiveOriginal;
-		*/
 
 		int m_PopupMenuDPI;
 		CTunerSelectMenu m_TunerSelectMenu;
@@ -269,6 +268,8 @@ namespace TVTest
 			UINT Command, UINT LastCommand, HMENU hmenu, HWND hwnd,
 			CChannelMenu::CreateFlag Flags = CChannelMenu::CreateFlag::None);
 		bool InitChannelMenuPopup(HMENU hmenuParent, HMENU hmenu);
+
+		bool SetPowerRequest(bool fSet);
 
 	// CColorSchemeOptions::CEventHandler
 		bool ApplyColorScheme(const CColorScheme *pColorScheme) override;

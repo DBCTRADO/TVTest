@@ -816,6 +816,8 @@ BEGIN
 
     IDS_MENU_ADDTOFAVORITES,        "お気に入りに追加(&A)"
     IDS_MENU_ORGANIZEFAVORITES,     "お気に入りの管理(&O)..."
+
+    IDS_POWERREQUEST                "TVTest 再生中"
 END
 
 IDD_ABOUT DIALOG 0, 0, 224, 80

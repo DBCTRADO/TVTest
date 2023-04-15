@@ -53,7 +53,6 @@ namespace TVTest
 		virtual bool SetFullscreen(bool fFullscreen) = 0;
 		virtual bool SetStandby(bool fStandby) = 0;
 		virtual bool ShowVolumeOSD() = 0;
-		virtual void PreventDisplaySleep(bool fPrevent) = 0;
 		virtual void BeginWheelChannelSelect(DWORD Delay) {}
 		virtual void EndWheelChannelSelect() {}
 

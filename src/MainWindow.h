@@ -195,7 +195,6 @@ namespace TVTest
 		enum {
 			TIMER_ID_UPDATE              = 0x0001U,
 			TIMER_ID_OSD                 = 0x0002U,
-			TIMER_ID_DISPLAY             = 0x0004U,
 			TIMER_ID_WHEELCHANNELSELECT  = 0x0008U,
 			TIMER_ID_PROGRAMLISTUPDATE   = 0x0010U,
 			TIMER_ID_PROGRAMGUIDEUPDATE  = 0x0020U,
@@ -629,7 +628,6 @@ namespace TVTest
 		bool SetFullscreen(bool fFullscreen) override;
 		bool SetStandby(bool fStandby) override;
 		bool ShowVolumeOSD() override;
-		void PreventDisplaySleep(bool fPrevent) override;
 		void BeginWheelChannelSelect(DWORD Delay) override;
 		void EndWheelChannelSelect() override;
 
