@@ -860,9 +860,10 @@ CFont &CFont::operator=(const CFont &Font)
 		Font.GetLogFont(&lf);
 		Create(&lf);
 	} else {
-		if (m_hfont)
+		if (m_hfont) {
 			::DeleteObject(m_hfont);
-		m_hfont = nullptr;
+			m_hfont = nullptr;
+		}
 	}
 	return *this;
 }
