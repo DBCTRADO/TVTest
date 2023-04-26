@@ -27,12 +27,6 @@
 #include "TVTestPlugin.h"
 
 
-// ウィンドウクラス名
-#define LOGO_LIST_WINDOW_CLASS TEXT("TV Logo List Window")
-
-// 更新用タイマーの識別子
-#define TIMER_UPDATELOGO 1
-
 // ロゴの大きさ
 static const struct {
 	int Width, Height;
@@ -64,6 +58,12 @@ class CLogoList : public TVTest::CTVTestPlugin
 		CServiceInfo(const TVTest::ChannelInfo &ChInfo);
 		~CServiceInfo();
 	};
+
+	// ウィンドウクラス名
+	static const LPCTSTR LOGO_LIST_WINDOW_CLASS;
+
+	// 更新用タイマーの識別子
+	static constexpr UINT TIMER_UPDATELOGO = 1;
 
 	bool m_fInitialized = false;
 	HWND m_hwnd = nullptr;
@@ -97,6 +97,9 @@ public:
 	bool Initialize() override;
 	bool Finalize() override;
 };
+
+
+const LPCTSTR CLogoList::LOGO_LIST_WINDOW_CLASS = TEXT("TV Logo List Window");
 
 
 // プラグインの情報を返す

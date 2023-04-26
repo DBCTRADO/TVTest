@@ -39,11 +39,6 @@ namespace Gdiplus {
 #pragma comment(lib, "shlwapi.lib")
 
 
-// グラフの大きさ
-#define GRAPH_WIDTH  300
-#define GRAPH_HEIGHT 200
-
-
 // プラグインクラス
 class CSignalGraph : public TVTest::CTVTestPlugin
 {
@@ -89,6 +84,10 @@ private:
 	DWORD m_BitRateScale = 40 * 1000 * 1000;
 
 	static const LPCTSTR WINDOW_CLASS_NAME;
+
+	// グラフの大きさ
+	static constexpr int GRAPH_WIDTH  = 300;
+	static constexpr int GRAPH_HEIGHT = 200;
 
 	bool EnablePlugin(bool fEnable);
 	void DrawGraph(Gdiplus::Graphics &Graphics, int Width, int Height);

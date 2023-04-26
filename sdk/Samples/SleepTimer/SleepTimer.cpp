@@ -59,10 +59,6 @@ static LONGLONG DiffSystemTime(const SYSTEMTIME &st1, const SYSTEMTIME &st2)
 }
 
 
-// ウィンドウクラス名
-#define SLEEPTIMER_WINDOW_CLASS TEXT("TVTest SleepTimer Window")
-
-
 // プラグインクラス
 class CSleepTimer : public TVTest::CTVTestPlugin
 {
@@ -86,6 +82,8 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 		TIMER_ID_SLEEP = 1,
 		TIMER_ID_QUERY
 	};
+
+	static const LPCTSTR SLEEPTIMER_WINDOW_CLASS;        // ウィンドウクラス名
 
 	static constexpr int DEFAULT_POS = INT_MIN;
 
@@ -129,6 +127,8 @@ public:
 	bool Finalize() override;
 };
 
+
+const LPCTSTR CSleepTimer::SLEEPTIMER_WINDOW_CLASS = TEXT("TVTest SleepTimer Window");
 
 const LPCTSTR CSleepTimer::m_ModeTextList[] = {
 	TEXT("TVTest を終了"),

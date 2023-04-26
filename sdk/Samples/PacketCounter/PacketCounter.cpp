@@ -24,13 +24,12 @@
 #include "TVTestPlugin.h"
 
 
-// ステータス項目の識別子
-#define STATUS_ITEM_ID 1
-
-
 // プラグインクラス
 class CPacketCounter : public TVTest::CTVTestPlugin
 {
+	// ステータス項目の識別子
+	static constexpr int STATUS_ITEM_ID = 1;
+
 	LONG m_PacketCount = 0;
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);

@@ -25,9 +25,6 @@
 #pragma comment(lib, "shlwapi.lib")
 
 
-// コントローラ名
-#define HDUS_REMOCON_NAME L"HDUS Remocon"
-
 // ボタンのリスト
 static const struct {
 	TVTest::ControllerButtonInfo Info;
@@ -78,12 +75,16 @@ static const struct {
 #endif
 };
 
-#define NUM_BUTTONS (sizeof(g_ButtonList) / sizeof(g_ButtonList[0]))
-
 
 // プラグインクラス
 class CHDUSRemocon : public TVTest::CTVTestPlugin
 {
+	// コントローラ名
+	static const LPCTSTR HDUS_REMOCON_NAME; 
+
+	// ボタンの数
+	static constexpr int NUM_BUTTONS = sizeof(g_ButtonList) / sizeof(g_ButtonList[0]);
+
 	bool m_fInitialized = false; // 初期化済みか?
 	HMODULE m_hLib = nullptr;    // フックDLLのハンドル
 	bool m_fHook = false;        // フックしているか?
@@ -106,6 +107,8 @@ public:
 	bool Finalize() override;
 };
 
+
+const LPCTSTR CHDUSRemocon::HDUS_REMOCON_NAME = L"HDUS Remocon";
 
 UINT CHDUSRemocon::m_Message = 0;
 

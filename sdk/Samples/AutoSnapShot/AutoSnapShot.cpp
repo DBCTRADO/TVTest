@@ -21,15 +21,14 @@
 #include "resource.h"
 
 
-#define SNAPSHOT_WINDOW_CLASS TEXT("Auto Snap Shot Window")
-
-
 // プラグインクラス
 class CAutoSnapShot : public TVTest::CTVTestPlugin
 {
 	DWORD m_Interval = 10; // キャプチャ間隔(秒単位)
 	HWND m_hwnd = nullptr;
 	bool m_fEnabled = false;
+
+	static const LPCTSTR SNAPSHOT_WINDOW_CLASS;
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static CAutoSnapShot * GetThis(HWND hwnd);
@@ -41,6 +40,9 @@ public:
 	bool Initialize() override;
 	bool Finalize() override;
 };
+
+
+const LPCTSTR CAutoSnapShot::SNAPSHOT_WINDOW_CLASS = TEXT("Auto Snap Shot Window");
 
 
 bool CAutoSnapShot::GetPluginInfo(TVTest::PluginInfo *pInfo)

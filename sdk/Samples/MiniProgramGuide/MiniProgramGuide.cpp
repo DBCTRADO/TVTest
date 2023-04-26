@@ -26,18 +26,6 @@
 #include "TVTestPlugin.h"
 
 
-// ウィンドウクラス名
-#define MINI_PROGRAM_GUIDE_WINDOW_CLASS TEXT("TV Mini Program Guide Window")
-
-// コントロールの識別子
-#define IDC_TUNERLIST   100
-#define IDC_CHANNELLIST 101
-#define IDC_EVENTLIST   102
-
-// 番組あたりの行数
-#define LINES_PER_EVENT 3
-
-
 // プラグインクラス
 class CMiniProgramGuide : public TVTest::CTVTestPlugin
 {
@@ -45,6 +33,17 @@ class CMiniProgramGuide : public TVTest::CTVTestPlugin
 	{
 		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
+
+	// ウィンドウクラス名
+	static const LPCTSTR MINI_PROGRAM_GUIDE_WINDOW_CLASS;
+
+	// コントロールの識別子
+	static constexpr int IDC_TUNERLIST   = 100;
+	static constexpr int IDC_CHANNELLIST = 101;
+	static constexpr int IDC_EVENTLIST   = 102;
+
+	// 番組あたりの行数
+	static constexpr int LINES_PER_EVENT = 3;
 
 	HWND m_hwnd = nullptr;
 	HWND m_hwndTunerList = nullptr;
@@ -78,6 +77,9 @@ public:
 	bool Initialize() override;
 	bool Finalize() override;
 };
+
+
+const LPCTSTR CMiniProgramGuide::MINI_PROGRAM_GUIDE_WINDOW_CLASS = TEXT("TV Mini Program Guide Window");
 
 
 // プラグインの情報を返す
@@ -385,19 +387,19 @@ LRESULT CALLBACK CMiniProgramGuide::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LP
 				0, TEXT("COMBOBOX"), nullptr,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST,
 				0, 0, 0, pThis->m_FontHeight * 20,
-				hwnd, reinterpret_cast<HMENU>(IDC_TUNERLIST), g_hinstDLL, nullptr);
+				hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_TUNERLIST)), g_hinstDLL, nullptr);
 
 			pThis->m_hwndChannelList = ::CreateWindowEx(
 				0, TEXT("COMBOBOX"), nullptr,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWNLIST,
 				0, 0, 0, pThis->m_FontHeight * 20,
-				hwnd, reinterpret_cast<HMENU>(IDC_CHANNELLIST), g_hinstDLL, nullptr);
+				hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_CHANNELLIST)), g_hinstDLL, nullptr);
 
 			pThis->m_hwndEventList = ::CreateWindowEx(
 				0, TEXT("LISTBOX"), nullptr,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT,
 				0, 0, 0, 0,
-				hwnd, reinterpret_cast<HMENU>(IDC_EVENTLIST), g_hinstDLL, nullptr);
+				hwnd, reinterpret_cast<HMENU>(static_cast<INT_PTR>(IDC_EVENTLIST)), g_hinstDLL, nullptr);
 
 			pThis->SetControlsFont();
 			pThis->GetColors();

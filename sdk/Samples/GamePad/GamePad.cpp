@@ -29,9 +29,6 @@
 #pragma comment(lib, "shlwapi.lib")
 
 
-// コントローラ名
-#define CONTROLLER_NAME L"GamePad"
-
 // ボタンのリスト
 static TVTest::ControllerButtonInfo g_ButtonList[] = {
 	{L"↑",       L"VolumeUp"},
@@ -55,8 +52,6 @@ static TVTest::ControllerButtonInfo g_ButtonList[] = {
 	{L"ボタン15", nullptr},
 	{L"ボタン16", nullptr},
 };
-
-#define NUM_BUTTONS (sizeof(g_ButtonList) / sizeof(g_ButtonList[0]))
 
 
 // 対象ウィンドウを設定/取得するクラス
@@ -128,6 +123,12 @@ class CGamePad : public TVTest::CTVTestPlugin
 		DWORD RepeatCount;
 	};
 
+	// コントローラ名
+	static const LPCTSTR CONTROLLER_NAME;
+
+	// ボタンの数
+	static constexpr int NUM_BUTTONS = sizeof(g_ButtonList) / sizeof(g_ButtonList[0]);
+
 	CTargetWindow m_TargetWindow;             // 操作対象ウィンドウ
 	HANDLE m_hThread = nullptr;               // スレッドのハンドル
 	HANDLE m_hEvent = nullptr;                // イベントのハンドル
@@ -147,6 +148,9 @@ public:
 	bool Initialize() override;
 	bool Finalize() override;
 };
+
+
+const LPCTSTR CGamePad::CONTROLLER_NAME = L"GamePad";
 
 
 bool CGamePad::GetPluginInfo(TVTest::PluginInfo *pInfo)

@@ -27,21 +27,20 @@
 #pragma comment(lib, "shell32.lib")
 
 
-// 予備のフォルダの数
-#define NUM_SPARE_FOLDERS 3
-
-// ウィンドウクラス名
-#define DISKRELAY_WINDOW_CLASS TEXT("TVTest DiskRelay Window")
-
-// 空き容量を監視するタイマーの識別子
-#define WATCH_TIMER_ID 1
-// 空き容量を監視する間隔(ms)
-#define WATCH_INTERVAL 2000
-
-
 // プラグインクラス
 class CDiskRelay : public TVTest::CTVTestPlugin
 {
+	// 予備のフォルダの数
+	static constexpr int NUM_SPARE_FOLDERS = 3;
+
+	// ウィンドウクラス名
+	static const LPCTSTR DISKRELAY_WINDOW_CLASS;
+
+	// 空き容量を監視するタイマーの識別子
+	static constexpr UINT WATCH_TIMER_ID = 1;
+	// 空き容量を監視する間隔(ms)
+	static constexpr DWORD WATCH_INTERVAL = 2000;
+
 	bool m_fInitialized = false;                        // 初期化済みか?
 	TCHAR m_szIniFileName[MAX_PATH];                    // INIファイルのパス
 	TCHAR m_szSpareFolder[NUM_SPARE_FOLDERS][MAX_PATH]; // 予備のフォルダ
@@ -65,6 +64,9 @@ public:
 	bool Initialize() override;
 	bool Finalize() override;
 };
+
+
+const LPCTSTR CDiskRelay::DISKRELAY_WINDOW_CLASS = TEXT("TVTest DiskRelay Window");
 
 
 CDiskRelay::CDiskRelay()

@@ -44,15 +44,6 @@ namespace Gdiplus {
 extern "C" void rdft(int n, int isgn, double *a, int *ip, double *w);
 
 
-// FFT 処理を行うサンプル数
-#define FFT_SIZE_BITS 10
-#define FFT_SIZE (1 << FFT_SIZE_BITS)
-// 帯域分割数
-#define NUM_BANDS 20
-// レベル分割数
-#define NUM_LEVELS 30
-
-
 // プラグインクラス
 class CSpectrumAnalyzer : public TVTest::CTVTestPlugin
 {
@@ -86,6 +77,14 @@ private:
 	private:
 		CRITICAL_SECTION m_CriticalSection;
 	};
+
+	// FFT 処理を行うサンプル数
+	static constexpr int FFT_SIZE_BITS = 10;
+	static constexpr int FFT_SIZE = 1 << FFT_SIZE_BITS;
+	// 帯域分割数
+	static constexpr int NUM_BANDS = 20;
+	// レベル分割数
+	static constexpr int NUM_LEVELS = 30;
 
 	bool m_fInitialized = false;
 	HWND m_hwnd = nullptr;
