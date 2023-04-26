@@ -61,7 +61,6 @@ namespace TVTest
 		int m_NetworkID = 0;
 		int m_TransportStreamID = 0;
 
-		bool m_fUseNetworkRemocon = false;
 		DWORD m_UDPPort = 1234;
 
 		bool m_fRecord = false;

@@ -472,7 +472,6 @@
   /sid            サービスIDの指定 (e.g. /sid 1024)
   /nid            ネットワークIDの指定 (e.g. /nid 32736)
   /tsid           トランスポートストリームIDの指定 (e.g. /tsid 32736)
-  /nr             ネットワークリモコンを使用する
   /port /p        BonDriver_UDP/TCP のポート番号 (e.g. /port 1234)
   /1seg           ワンセグモードにする
 

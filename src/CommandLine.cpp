@@ -414,7 +414,6 @@ static bool GetIniEntry(LPCWSTR pszText, CCommandLineOptions::IniEntry *pEntry)
 	/h264           H.264を有効
 	/h265           H.265を有効
 	/1seg           ワンセグモード
-	/nr             ネットワークリモコンを使用する
 	/p /port        UDP のポート番号 (e.g. /p 1234)
 	/plugin-        指定されたプラグインを読み込まない
 	/plugindir      プラグインのフォルダ
@@ -484,7 +483,6 @@ void CCommandLineOptions::Parse(LPCWSTR pszCmdLine)
 					&& !Args.GetOption(TEXT("noepg"), &m_fNoEpg)
 					&& !Args.GetOption(TEXT("noplugin"), &m_fNoPlugin)
 					&& !Args.GetOption(TEXT("noview"), &m_fNoView)
-					&& !Args.GetOption(TEXT("nr"), &m_fUseNetworkRemocon)
 					&& !Args.GetOption(TEXT("nid"), &m_NetworkID)
 					&& !Args.GetOption(TEXT("p"), &m_UDPPort)
 					&& !Args.GetOption(TEXT("port"), &m_UDPPort)
