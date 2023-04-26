@@ -101,9 +101,9 @@ class CHDUSRemocon : public TVTest::CTVTestPlugin
 	static BOOL CALLBACK TranslateMessageCallback(HWND hwnd, MSG *pMessage, void *pClientData);
 
 public:
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 

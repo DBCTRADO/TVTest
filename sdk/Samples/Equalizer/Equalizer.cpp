@@ -179,9 +179,9 @@ class CEqualizer : public TVTest::CTVTestPlugin
 {
 public:
 	CEqualizer();
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 
 private:
 	// コマンド

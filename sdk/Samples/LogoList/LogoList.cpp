@@ -92,9 +92,9 @@ class CLogoList : public TVTest::CTVTestPlugin
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 

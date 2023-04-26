@@ -48,9 +48,9 @@ namespace Gdiplus {
 class CSignalGraph : public TVTest::CTVTestPlugin
 {
 public:
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 
 private:
 	struct Position

@@ -61,9 +61,9 @@ class CDiskRelay : public TVTest::CTVTestPlugin
 
 public:
 	CDiskRelay();
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 

@@ -57,9 +57,9 @@ extern "C" void rdft(int n, int isgn, double *a, int *ip, double *w);
 class CSpectrumAnalyzer : public TVTest::CTVTestPlugin
 {
 public:
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 
 private:
 	struct Position
