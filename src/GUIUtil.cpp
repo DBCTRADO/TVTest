@@ -28,14 +28,7 @@ namespace TVTest
 {
 
 
-CIcon::CIcon()
-	: m_hico(nullptr)
-{
-}
-
-
 CIcon::CIcon(const CIcon &Src)
-	: m_hico(nullptr)
 {
 	*this = Src;
 }

@@ -65,10 +65,10 @@ namespace TVTest
 		CColorScheme::GradientStyle m_GradientList[CColorScheme::NUM_GRADIENTS];
 		Theme::BorderType m_BorderList[CColorScheme::NUM_BORDERS];
 		std::unique_ptr<CColorScheme> m_PreviewColorScheme;
-		bool m_fPreview;
-		CEventHandler *m_pEventHandler;
+		bool m_fPreview = false;
+		CEventHandler *m_pEventHandler = nullptr;
 		CColorPalette m_ColorPalette;
-		int m_ColorListMargin;
+		int m_ColorListMargin = 0;
 
 		static const LPCTSTR m_pszExtension;
 

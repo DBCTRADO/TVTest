@@ -50,7 +50,6 @@ static void OffsetFileTime(FILETIME *pTime, LONGLONG Offset)
 class CTunerPanel : public TVTest::CTVTestPlugin
 {
 public:
-	CTunerPanel();
 	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
 	bool Initialize() override;
 	bool Finalize() override;
@@ -74,9 +73,9 @@ private:
 
 	struct Bitmap
 	{
-		Bitmap() : m_hbm(nullptr) {}
+		Bitmap() = default;
 		~Bitmap() { Delete(); }
-		Bitmap(const Bitmap &Src) : m_hbm(nullptr) { *this = Src; }
+		Bitmap(const Bitmap &Src) { *this = Src; }
 		Bitmap & operator=(const Bitmap &Src) {
 			if (&Src != this) {
 				Delete();
@@ -100,7 +99,7 @@ private:
 		}
 
 	private:
-		HBITMAP m_hbm;
+		HBITMAP m_hbm = nullptr;
 	};
 
 	struct ChannelInfo
@@ -131,9 +130,7 @@ private:
 
 	struct Margins
 	{
-		int Left, Top, Right, Bottom;
-
-		Margins() : Left(0), Top(0), Right(0), Bottom(0) {}
+		int Left = 0, Top = 0, Right = 0, Bottom = 0;
 	};
 
 	enum PartType {
@@ -157,13 +154,13 @@ private:
 	WCHAR m_szIniFileName[MAX_PATH];
 	std::vector<TunerInfo> m_TunerList;
 	std::vector<std::wstring> m_ExpandedTunerList;
-	ViewModeType m_ViewMode;
-	LogoSizeType m_LogoSize;
-	bool m_fEnableByPlugin;
-	HWND m_hwnd;
-	HWND m_hwndToolTips;
+	ViewModeType m_ViewMode = VIEW_MODE_LIST;
+	LogoSizeType m_LogoSize = LOGO_SIZE_MEDIUM;
+	bool m_fEnableByPlugin = false;
+	HWND m_hwnd = nullptr;
+	HWND m_hwndToolTips = nullptr;
 	int m_DPI;
-	HFONT m_hFont;
+	HFONT m_hFont = nullptr;
 	int m_FontHeight;
 	int m_ScrollPos;
 	Margins m_TunerItemMargin;
@@ -210,16 +207,6 @@ private:
 
 
 const LPCTSTR CTunerPanel::WINDOW_CLASS_NAME = TEXT("Tuner Panel Window");
-
-
-CTunerPanel::CTunerPanel()
-	: m_ViewMode(VIEW_MODE_LIST)
-	, m_LogoSize(LOGO_SIZE_MEDIUM)
-	, m_fEnableByPlugin(false)
-	, m_hwnd(nullptr)
-	, m_hwndToolTips(nullptr)
-{
-}
 
 
 // プラグインの情報を返す

@@ -89,23 +89,23 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 
 	static const int DEFAULT_POS = INT_MIN;
 
-	bool m_fInitialized;             // 初期化済みか?
-	TCHAR m_szIniFileName[MAX_PATH]; // INIファイルのパス
-	SleepCondition m_Condition;      // スリープする条件
-	DWORD m_SleepDuration;           // スリープまでの時間(秒単位)
-	SYSTEMTIME m_SleepDateTime;      // スリープする時刻
-	WORD m_EventID;                  // 現在の番組の event_id
-	SleepMode m_Mode;                // スリープ時の動作
-	bool m_fForce;                   // 強制
-	bool m_fMonitorOff;              // モニタをOFFにする
-	bool m_fIgnoreRecStatus;         // 録画中でもスリープする
-	bool m_fConfirm;                 // 確認を取る
-	int m_ConfirmTimeout;            // 確認のタイムアウト時間(秒単位)
-	bool m_fShowSettings;            // プラグイン有効時に設定表示
-	POINT m_SettingsDialogPos;       // 設定ダイアログの位置
-	HWND m_hwnd;                     // ウィンドウハンドル
-	bool m_fEnabled;                 // プラグインが有効か?
-	int m_ConfirmTimerCount;         // 確認のタイマー
+	bool m_fInitialized = false;                         // 初期化済みか?
+	TCHAR m_szIniFileName[MAX_PATH];                     // INIファイルのパス
+	SleepCondition m_Condition = CONDITION_DURATION;     // スリープする条件
+	DWORD m_SleepDuration = 30 * 60;                     // スリープまでの時間(秒単位)
+	SYSTEMTIME m_SleepDateTime;                          // スリープする時刻
+	WORD m_EventID = 0;                                  // 現在の番組の event_id
+	SleepMode m_Mode = MODE_EXIT;                        // スリープ時の動作
+	bool m_fForce = false;                               // 強制
+	bool m_fMonitorOff = false;                          // モニタをOFFにする
+	bool m_fIgnoreRecStatus = false;                     // 録画中でもスリープする
+	bool m_fConfirm = true;                              // 確認を取る
+	int m_ConfirmTimeout = 10;                           // 確認のタイムアウト時間(秒単位)
+	bool m_fShowSettings = true;                         // プラグイン有効時に設定表示
+	POINT m_SettingsDialogPos{DEFAULT_POS, DEFAULT_POS}; // 設定ダイアログの位置
+	HWND m_hwnd = nullptr;                               // ウィンドウハンドル
+	bool m_fEnabled = false;                             // プラグインが有効か?
+	int m_ConfirmTimerCount;                             // 確認のタイマー
 
 	static const LPCTSTR m_ModeTextList[];
 
@@ -124,7 +124,6 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 	static INT_PTR CALLBACK ConfirmDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
 
 public:
-	CSleepTimer();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
@@ -138,26 +137,6 @@ const LPCTSTR CSleepTimer::m_ModeTextList[] = {
 	TEXT("サスペンド"),
 	TEXT("ハイバネート"),
 };
-
-
-CSleepTimer::CSleepTimer()
-	: m_fInitialized(false)
-	, m_Condition(CONDITION_DURATION)
-	, m_SleepDuration(30 * 60)
-	, m_EventID(0)
-	, m_Mode(MODE_EXIT)
-	, m_fForce(false)
-	, m_fMonitorOff(false)
-	, m_fIgnoreRecStatus(false)
-	, m_fConfirm(true)
-	, m_ConfirmTimeout(10)
-	, m_fShowSettings(true)
-	, m_hwnd(nullptr)
-	, m_fEnabled(false)
-{
-	m_SettingsDialogPos.x = DEFAULT_POS;
-	m_SettingsDialogPos.y = DEFAULT_POS;
-}
 
 
 bool CSleepTimer::GetPluginInfo(TVTest::PluginInfo *pInfo)

@@ -33,16 +33,6 @@ namespace TVTest
 {
 
 
-CGeneralOptions::CGeneralOptions()
-	: m_DefaultDriverType(DefaultDriverType::Last)
-	, m_fResident(false)
-	, m_fKeepSingleTask(false)
-	, m_fStandaloneProgramGuide(false)
-	, m_fEnable1SegFallback(true)
-{
-}
-
-
 CGeneralOptions::~CGeneralOptions()
 {
 	Destroy();

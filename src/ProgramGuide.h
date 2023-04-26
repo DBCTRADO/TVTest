@@ -69,7 +69,7 @@ namespace TVTest
 		{
 			CTunerChannelInfo m_ChannelInfo;
 			LibISDB::EPGDatabase::ServiceInfo m_ServiceInfo;
-			HBITMAP m_hbmLogo;
+			HBITMAP m_hbmLogo = nullptr;
 			DrawUtil::CBitmap m_StretchedLogo;
 			std::vector<std::unique_ptr<LibISDB::EventInfo>> m_EventList;
 			typedef std::map<WORD, LibISDB::EventInfo*> EventIDMap;
@@ -263,10 +263,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CFrame)
 		{
 		protected:
-			CProgramGuide *m_pProgramGuide;
+			CProgramGuide *m_pProgramGuide = nullptr;
 
 		public:
-			CFrame();
 			virtual ~CFrame();
 
 			virtual void SetCaption(LPCTSTR pszCaption) {}
@@ -285,10 +284,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			class CProgramGuide *m_pProgramGuide;
+			class CProgramGuide *m_pProgramGuide = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler();
 
 			virtual bool OnClose() { return true; }
@@ -304,10 +302,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CProgramCustomizer)
 		{
 		protected:
-			class CProgramGuide *m_pProgramGuide;
+			class CProgramGuide *m_pProgramGuide = nullptr;
 
 		public:
-			CProgramCustomizer();
 			virtual ~CProgramCustomizer();
 
 			virtual bool Initialize() { return true; }
@@ -449,28 +446,27 @@ namespace TVTest
 	private:
 		struct ProgramGuideStyle
 		{
-			Style::IntValue ColumnMargin;
-			Style::Margins HeaderPadding;
-			Style::Margins HeaderChannelNameMargin;
-			Style::Margins HeaderIconMargin;
-			Style::Size HeaderChevronSize;
-			Style::Margins HeaderChevronMargin;
-			Style::IntValue HeaderShadowHeight;
-			Style::IntValue EventLeading;
-			Style::IntValue EventLineSpacing;
-			bool fEventJustify;
-			Style::Margins EventPadding;
-			Style::Size EventIconSize;
-			Style::Margins EventIconMargin;
-			Style::Margins FeaturedMarkMargin;
-			Style::Margins HighlightBorder;
-			Style::Margins SelectedBorder;
-			Style::Margins TimeBarPadding;
-			Style::IntValue TimeBarShadowWidth;
-			Style::IntValue CurTimeLineWidth;
-			Style::Margins ToolbarItemPadding;
+			Style::IntValue ColumnMargin{4};
+			Style::Margins HeaderPadding{4};
+			Style::Margins HeaderChannelNameMargin{0};
+			Style::Margins HeaderIconMargin{0, 0, 4, 0};
+			Style::Size HeaderChevronSize{10, 10};
+			Style::Margins HeaderChevronMargin{8, 0, 0, 0};
+			Style::IntValue HeaderShadowHeight{8};
+			Style::IntValue EventLeading{1};
+			Style::IntValue EventLineSpacing{0};
+			bool fEventJustify = true;
+			Style::Margins EventPadding{0, 0, 2, 0};
+			Style::Size EventIconSize{CEpgIcons::DEFAULT_ICON_WIDTH, CEpgIcons::DEFAULT_ICON_HEIGHT};
+			Style::Margins EventIconMargin{1};
+			Style::Margins FeaturedMarkMargin{0};
+			Style::Margins HighlightBorder{3};
+			Style::Margins SelectedBorder{2};
+			Style::Margins TimeBarPadding{4};
+			Style::IntValue TimeBarShadowWidth{6};
+			Style::IntValue CurTimeLineWidth{2};
+			Style::Margins ToolbarItemPadding{4};
 
-			ProgramGuideStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -488,33 +484,32 @@ namespace TVTest
 			Theme::BackgroundStyle FavoriteButtonStyle;
 		};
 
-		LibISDB::EPGDatabase *m_pEPGDatabase;
+		LibISDB::EPGDatabase *m_pEPGDatabase = nullptr;
 		ProgramGuide::CServiceList m_ServiceList;
 		ProgramGuide::CEventLayoutList m_EventLayoutList;
 		ProgramGuideStyle m_Style;
-		ListMode m_ListMode;
-		int m_WeekListService;
-		int m_LinesPerHour;
+		ListMode m_ListMode = ListMode::Services;
+		int m_WeekListService = -1;
+		int m_LinesPerHour = 12;
 		Style::Font m_Font;
 		DrawUtil::CFont m_ContentFont;
 		DrawUtil::CFont m_TitleFont;
 		DrawUtil::CFont m_TimeFont;
-		CTextDrawClient::TextDrawEngine m_TextDrawEngine;
+		CTextDrawClient::TextDrawEngine m_TextDrawEngine = CTextDrawClient::TextDrawEngine::GDI;
 		CTextDrawClient m_TextDrawClient;
 		int m_FontHeight;
 		int m_GDIFontHeight;
-		int m_LineMargin;
-		int m_ItemLogicalWidth;
+		int m_ItemLogicalWidth = 140;
 		int m_ItemWidth;
 		int m_TextLeftMargin;
 		int m_HeaderHeight;
 		int m_TimeBarWidth;
-		POINT m_ScrollPos;
-		POINT m_OldScrollPos;
-		bool m_fDragScroll;
-		bool m_fScrolling;
-		HCURSOR m_hDragCursor1;
-		HCURSOR m_hDragCursor2;
+		POINT m_ScrollPos{};
+		POINT m_OldScrollPos{};
+		bool m_fDragScroll = false;
+		bool m_fScrolling = false;
+		HCURSOR m_hDragCursor1 = nullptr;
+		HCURSOR m_hDragCursor2 = nullptr;
 		struct {
 			POINT StartCursorPos;
 			POINT StartScrollPos;
@@ -524,9 +519,9 @@ namespace TVTest
 		CMouseWheelHandler m_HorzWheel;
 		Theme::IconList m_Chevron;
 		CEpgIcons m_EpgIcons;
-		UINT m_VisibleEventIcons;
-		bool m_fUseARIBSymbol;
-		bool m_fBarShadow;
+		UINT m_VisibleEventIcons = ((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY);
+		bool m_fUseARIBSymbol = false;
+		bool m_fBarShadow = false;
 		CEventInfoPopup m_EventInfoPopup;
 		CEventInfoPopupManager m_EventInfoPopupManager;
 		class CEventInfoPopupHandler
@@ -546,22 +541,22 @@ namespace TVTest
 		public:
 			CEventInfoPopupHandler(CProgramGuide *pProgramGuide);
 		};
-		CEventInfoPopupHandler m_EventInfoPopupHandler;
-		bool m_fShowToolTip;
+		CEventInfoPopupHandler m_EventInfoPopupHandler{this};
+		bool m_fShowToolTip = true;
 		CTooltip m_Tooltip;
-		bool m_fKeepTimePos;
-		int m_CurTimePos;
+		bool m_fKeepTimePos = false;
+		int m_CurTimePos = 0;
 
-		CProgramGuideChannelProviderManager *m_pChannelProviderManager;
-		CProgramGuideChannelProvider *m_pChannelProvider;
-		int m_CurrentChannelProvider;
-		int m_CurrentChannelGroup;
+		CProgramGuideChannelProviderManager *m_pChannelProviderManager = nullptr;
+		CProgramGuideChannelProvider *m_pChannelProvider = nullptr;
+		int m_CurrentChannelProvider = -1;
+		int m_CurrentChannelGroup = -1;
 		ServiceInfo m_CurrentChannel;
-		bool m_fExcludeNoEventServices;
+		bool m_fExcludeNoEventServices = true;
 		ServiceInfoList m_ExcludeServiceList;
-		WORD m_CurrentEventID;
+		WORD m_CurrentEventID = 0;
 
-		int m_BeginHour;
+		int m_BeginHour = -1;
 		LibISDB::DateTime m_FirstTime;
 		LibISDB::DateTime m_LastTime;
 		LibISDB::DateTime m_CurTime;
@@ -570,23 +565,23 @@ namespace TVTest
 
 		struct EventSelectInfo
 		{
-			bool fSelected;
+			bool fSelected = false;
 			int ListIndex;
 			int EventIndex;
 		};
 		EventSelectInfo m_CurEventItem;
 
-		CEventHandler *m_pEventHandler;
-		CFrame *m_pFrame;
-		CProgramCustomizer *m_pProgramCustomizer;
+		CEventHandler *m_pEventHandler = nullptr;
+		CFrame *m_pFrame = nullptr;
+		CProgramCustomizer *m_pProgramCustomizer = nullptr;
 		ProgramGuideTheme m_Theme;
 		CEpgTheme m_EpgTheme;
 		Theme::BackgroundStyle m_FeaturedMarkStyle;
 		CProgramGuideToolList m_ToolList;
-		int m_WheelScrollLines;
-		FilterFlag m_Filter;
+		int m_WheelScrollLines = 0;
+		FilterFlag m_Filter = FilterFlag::None;
 
-		bool m_fEpgUpdating;
+		bool m_fEpgUpdating = false;
 		struct {
 			int Pos;
 			int End;
@@ -612,7 +607,7 @@ namespace TVTest
 			void DoCommand(int Command, const CSearchEventInfo *pEventInfo);
 			CProgramGuide *m_pProgramGuide;
 		};
-		CProgramSearchEventHandler m_ProgramSearchEventHandler;
+		CProgramSearchEventHandler m_ProgramSearchEventHandler{this};
 		enum {
 			SEARCH_TARGET_CURRENT,
 			SEARCH_TARGET_ALL
@@ -622,7 +617,7 @@ namespace TVTest
 
 		CProgramGuideFavorites m_Favorites;
 
-		bool m_fShowFeaturedMark;
+		bool m_fShowFeaturedMark = true;
 		CFeaturedEventsMatcher m_FeaturedEventsMatcher;
 
 		static const LPCTSTR m_pszWindowClass;
@@ -771,8 +766,8 @@ namespace TVTest
 
 		protected:
 			CProgramGuide *m_pProgramGuide;
-			bool m_fVisible;
-			bool m_fUseBufferedPaint;
+			bool m_fVisible = true;
+			bool m_fUseBufferedPaint = false;
 		};
 
 	}
@@ -801,13 +796,11 @@ namespace TVTest
 	protected:
 		struct FrameStyle
 		{
-			Style::Margins ToolbarMargin;
-			Style::IntValue ToolbarHorzGap;
-			Style::IntValue ToolbarVertGap;
-			bool fExtendFrame;
-			bool fAllowDarkMode;
-
-			FrameStyle();
+			Style::Margins ToolbarMargin{2, 2, 2, 4};
+			Style::IntValue ToolbarHorzGap{3};
+			Style::IntValue ToolbarVertGap{4};
+			bool fExtendFrame = true;
+			bool fAllowDarkMode = true;
 
 			void SetStyle(const Style::CStyleManager * pStyleManager);
 			void NormalizeStyle(
@@ -819,8 +812,8 @@ namespace TVTest
 		CProgramGuideFrameSettings * m_pSettings;
 		std::unique_ptr<ProgramGuideBar::CProgramGuideBar> m_ToolbarList[TOOLBAR_NUM];
 		FrameStyle m_FrameStyle;
-		int m_ToolbarRightMargin;
-		bool m_fNoUpdateLayout;
+		int m_ToolbarRightMargin = 0;
+		bool m_fNoUpdateLayout = false;
 
 	// CProgramGuide::CFrame
 		void OnDateChanged() override;
@@ -861,12 +854,10 @@ namespace TVTest
 			static constexpr int BUTTONCOUNT_MIN = 1;
 			static constexpr int BUTTONCOUNT_MAX = 20;
 
-			TimeType Time;
-			int Interval;
-			String CustomTime;
-			int MaxButtonCount;
-
-			TimeBarSettings();
+			TimeType Time = TimeType::Interval;
+			int Interval = 4;
+			String CustomTime{TEXT("0,3,6,9,12,15,18,21")};
+			int MaxButtonCount = 10;
 		};
 
 		CProgramGuideFrameSettings();
@@ -947,12 +938,12 @@ namespace TVTest
 	private:
 		Style::CStyleScaling m_StyleScaling;
 		CAeroGlass m_AeroGlass;
-		bool m_fAero;
-		bool m_fAllowDarkMode;
-		bool m_fDarkMode;
+		bool m_fAero = false;
+		bool m_fAllowDarkMode = false;
+		bool m_fDarkMode = false;
 		CUxTheme m_UxTheme;
-		bool m_fAlwaysOnTop;
-		bool m_fCreated;
+		bool m_fAlwaysOnTop = false;
+		bool m_fCreated = false;
 
 	// CProgramGuideFrameBase
 		void OnLayoutChange() override;
@@ -984,11 +975,9 @@ namespace TVTest
 			: public CDisplayView::CEventHandler
 		{
 		protected:
-			class CProgramGuideDisplay * m_pProgramGuideDisplay;
+			class CProgramGuideDisplay * m_pProgramGuideDisplay = nullptr;
 
 		public:
-			CProgramGuideDisplayEventHandler();
-
 			virtual bool OnHide() { return true; }
 			virtual bool SetAlwaysOnTop(bool fTop) = 0;
 			virtual bool GetAlwaysOnTop() const = 0;
@@ -1014,7 +1003,7 @@ namespace TVTest
 		void SetEventHandler(CProgramGuideDisplayEventHandler *pHandler);
 
 	private:
-		CProgramGuideDisplayEventHandler *m_pProgramGuideDisplayEventHandler;
+		CProgramGuideDisplayEventHandler *m_pProgramGuideDisplayEventHandler = nullptr;
 
 		static const LPCTSTR m_pszWindowClass;
 		static HINSTANCE m_hinst;

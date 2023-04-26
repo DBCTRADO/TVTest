@@ -33,8 +33,6 @@ namespace TVTest
 
 
 CChannelInputOptions::CChannelInputOptions()
-	: KeyTimeout(2000)
-	, fKeyTimeoutCancel(false)
 {
 	for (auto &e : KeyInputMode)
 		e = KeyInputModeType::SingleKey;
@@ -45,10 +43,6 @@ CChannelInputOptions::CChannelInputOptions()
 
 CChannelInput::CChannelInput(const CChannelInputOptions &Options)
 	: m_Options(Options)
-	, m_fInputting(false)
-	, m_MaxDigits(0)
-	, m_CurDigits(0)
-	, m_Number(0)
 {
 }
 

@@ -37,10 +37,9 @@ namespace TVTest
 	public:
 		struct Position
 		{
-			int x, y;
-			int Width, Height;
+			int x = 0, y = 0;
+			int Width = 0, Height = 0;
 
-			Position() : x(0), y(0), Width(0), Height(0) {}
 			void Set(const RECT *pRect) {
 				x = pRect->left;
 				y = pRect->top;
@@ -83,9 +82,9 @@ namespace TVTest
 		bool IsDarkMode() const noexcept { return m_fDarkMode; }
 
 	protected:
-		HWND m_hDlg;
-		bool m_fModeless;
-		bool m_fSetPosition;
+		HWND m_hDlg = nullptr;
+		bool m_fModeless = false;
+		bool m_fSetPosition = false;
 		Position m_Position;
 		Style::CStyleScaling m_StyleScaling;
 
@@ -95,17 +94,17 @@ namespace TVTest
 			RECT rcOriginal;
 		};
 		std::vector<ItemInfo> m_ItemList;
-		int m_OriginalDPI;
-		int m_CurrentDPI;
-		HFONT m_hOriginalFont;
-		LOGFONT m_lfOriginalFont;
+		int m_OriginalDPI = 0;
+		int m_CurrentDPI = 0;
+		HFONT m_hOriginalFont = nullptr;
+		LOGFONT m_lfOriginalFont{};
 		DrawUtil::CFont m_Font;
-		bool m_fInitializing;
-		bool m_fOwnDPIScaling;
+		bool m_fInitializing = false;
+		bool m_fOwnDPIScaling = false;
 
-		bool m_fDisableDarkMode;
-		bool m_fAllowDarkMode;
-		bool m_fDarkMode;
+		bool m_fDisableDarkMode = false;
+		bool m_fAllowDarkMode = false;
+		bool m_fDarkMode = false;
 		DrawUtil::CBrush m_BackBrush;
 		DrawUtil::CBrush m_FaceBrush;
 
@@ -215,7 +214,6 @@ namespace TVTest
 			AlignFlag Align;
 		};
 
-		CResizableDialog();
 		virtual ~CResizableDialog();
 
 	protected:
@@ -227,11 +225,11 @@ namespace TVTest
 			AlignFlag Align;
 		};
 
-		SIZE m_MinSize;
-		SIZE m_OriginalClientSize;
-		SIZE m_ScaledClientSize;
-		int m_BaseDPI;
-		HWND m_hwndSizeGrip;
+		SIZE m_MinSize{};
+		SIZE m_OriginalClientSize{};
+		SIZE m_ScaledClientSize{};
+		int m_BaseDPI = 0;
+		HWND m_hwndSizeGrip = nullptr;
 		std::vector<LayoutItem> m_ControlList;
 
 		INT_PTR HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

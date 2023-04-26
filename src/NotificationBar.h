@@ -78,13 +78,12 @@ namespace TVTest
 
 		struct NotificationBarStyle
 		{
-			Style::Margins Padding;
-			Style::Size IconSize;
-			Style::Margins IconMargin;
-			Style::Margins TextMargin;
-			Style::IntValue TextExtraHeight;
+			Style::Margins Padding{4, 2, 4, 2};
+			Style::Size IconSize{::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON)};
+			Style::Margins IconMargin{0, 0, 4, 0};
+			Style::Margins TextMargin{0};
+			Style::IntValue TextExtraHeight{4};
 
-			NotificationBarStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -107,10 +106,10 @@ namespace TVTest
 		COLORREF m_TextColor[3];
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
-		int m_BarHeight;
-		bool m_fAnimate;
+		int m_BarHeight = 0;
+		bool m_fAnimate = true;
 		std::deque<MessageInfo> m_MessageQueue;
-		int m_TimerCount;
+		int m_TimerCount = 0;
 		CIcon m_Icons[3];
 
 		static HINSTANCE m_hinst;

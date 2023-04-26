@@ -36,8 +36,6 @@ namespace TVTest
 			: public CProgramGuideChannelProviderManager
 		{
 		public:
-			CChannelProviderManager();
-
 		// CProgramGuideChannelProviderManager
 			size_t GetChannelProviderCount() const override;
 			CProgramGuideChannelProvider *GetChannelProvider(size_t Index) const override;
@@ -83,14 +81,14 @@ namespace TVTest
 			};
 
 			std::vector<std::unique_ptr<CProgramGuideChannelProvider>> m_ChannelProviderList;
-			int m_CurChannelProvider;
+			int m_CurChannelProvider = -1;
 		};
 
 		CProgramGuide ProgramGuide;
 		CProgramGuideFrameSettings ProgramGuideFrameSettings;
 		CProgramGuideFrame ProgramGuideFrame;
 		CProgramGuideDisplay ProgramGuideDisplay;
-		bool fShowProgramGuide;
+		bool fShowProgramGuide = false;
 
 		CEpg(LibISDB::EPGDatabase &EPGDatabase, CEventSearchOptions &EventSearchOptions);
 		CChannelProviderManager *CreateChannelProviderManager(LPCTSTR pszDefaultTuner = nullptr);

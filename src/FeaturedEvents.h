@@ -68,10 +68,10 @@ namespace TVTest
 	private:
 		CEventSearchServiceList m_DefaultServiceList;
 		CEventSearchSettingsList m_SearchSettingsList;
-		SortType m_SortType;
-		int m_PeriodSeconds;
-		bool m_fShowEventText;
-		int m_EventTextLines;
+		SortType m_SortType = SortType::Time;
+		int m_PeriodSeconds = 24 * 60 * 60;
+		bool m_fShowEventText = true;
+		int m_EventTextLines = 2;
 	};
 
 	class CFeaturedEventsSearcher

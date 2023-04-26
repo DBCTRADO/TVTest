@@ -39,15 +39,6 @@ const int CTaskbarOptions::m_DefaultTaskList[] = {
 
 CTaskbarOptions::CTaskbarOptions()
 	: COptions(TEXT("Taskbar"))
-	, m_fEnableJumpList(true)
-	, m_fShowTasks(true)
-	, m_fShowRecentChannels(true)
-	, m_MaxRecentChannels(10)
-	, m_fShowChannelIcon(true)
-	, m_IconDirectory(TEXT(".\\JumpListIcons"))
-	, m_fJumpListKeepSingleTask(false)
-	, m_fUseUniqueAppID(false)
-	, m_AppID(TEXT("DBCTRADO.") APP_NAME)
 {
 	m_TaskList.resize(lengthof(m_DefaultTaskList));
 	for (int i = 0; i < lengthof(m_DefaultTaskList); i++)

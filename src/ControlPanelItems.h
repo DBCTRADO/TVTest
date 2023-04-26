@@ -99,11 +99,9 @@ namespace TVTest
 	private:
 		struct VolumeControlStyle
 		{
-			Style::IntValue BarHeight;
-			Style::Margins BarPadding;
-			Style::IntValue BarBorderWidth;
-
-			VolumeControlStyle();
+			Style::IntValue BarHeight{8};
+			Style::Margins BarPadding{1};
+			Style::IntValue BarBorderWidth{1};
 		};
 
 		VolumeControlStyle m_Style;

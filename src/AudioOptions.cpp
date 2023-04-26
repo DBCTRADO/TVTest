@@ -89,21 +89,6 @@ const DWORD CAudioOptions::m_AudioLanguageList[] = {
 };
 
 
-CAudioOptions::CAudioOptions()
-	: m_SPDIFOptions(
-		LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled,
-		LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions::Channel_Surround)
-	, m_fDownMixSurround(true)
-	, m_fUseCustomSurroundMixingMatrix(false)
-	, m_SurroundMixingMatrix(m_DefaultSurroundMixingMatrix)
-	, m_fUseCustomDownMixMatrix(false)
-	, m_DownMixMatrix(m_DefaultDownMixMatrix)
-	, m_fEnableLanguagePriority(false)
-	, m_fResetAudioDelayOnChannelChange(true)
-{
-}
-
-
 CAudioOptions::~CAudioOptions()
 {
 	Destroy();

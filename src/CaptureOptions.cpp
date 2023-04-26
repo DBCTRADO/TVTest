@@ -140,27 +140,6 @@ const CCaptureOptions::PercentageType CCaptureOptions::m_PercentageList[PERCENTA
 };
 
 
-CCaptureOptions::CCaptureOptions()
-	: m_FileName(TEXT("Capture_%date%-%time%"))
-	, m_SaveFormat(0)
-	, m_JPEGQuality(90)
-	, m_PNGCompressionLevel(6)
-	, m_fCaptureSaveToFile(true)
-	, m_fSetComment(false)
-	, m_CommentFormat(TEXT("%year%/%month%/%day% %hour%:%minute%:%second% %channel-name%\r\n%event-title%"))
-	, m_CaptureSizeType(SIZE_TYPE_ORIGINAL)
-	, m_CaptureSize(
-#ifndef TVTEST_FOR_1SEG
-		SIZE_1920x1080
-#else
-		SIZE_320x180
-#endif
-		)
-	, m_CapturePercentage(PERCENTAGE_50)
-{
-}
-
-
 CCaptureOptions::~CCaptureOptions()
 {
 	Destroy();

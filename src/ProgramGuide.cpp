@@ -66,15 +66,14 @@ class CEventItem
 {
 	static constexpr size_t MAX_TITLE_LENGTH = 256;
 
-	const LibISDB::EventInfo *m_pEventInfo;
-	const LibISDB::EventInfo *m_pCommonEventInfo;
+	const LibISDB::EventInfo *m_pEventInfo = nullptr;
+	const LibISDB::EventInfo *m_pCommonEventInfo = nullptr;
 	LibISDB::DateTime m_StartTime;
 	LibISDB::DateTime m_EndTime;
-	DWORD m_Duration;
-	int m_TitleLines;
-	int m_ItemPos;
-	int m_ItemLines;
-	bool m_fSelected;
+	int m_TitleLines = 0;
+	int m_ItemPos = -1;
+	int m_ItemLines = 0;
+	bool m_fSelected = false;
 
 	int GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const;
 	int GetTimeText(LPTSTR pszText, int MaxLength) const;
@@ -110,11 +109,6 @@ public:
 
 CEventItem::CEventItem(const LibISDB::EventInfo *pInfo)
 	: m_pEventInfo(pInfo)
-	, m_pCommonEventInfo(nullptr)
-	, m_TitleLines(0)
-	, m_ItemPos(-1)
-	, m_ItemLines(0)
-	, m_fSelected(false)
 {
 	m_pEventInfo->GetStartTime(&m_StartTime);
 	m_StartTime.Second = 0;
@@ -124,14 +118,7 @@ CEventItem::CEventItem(const LibISDB::EventInfo *pInfo)
 
 
 CEventItem::CEventItem(const LibISDB::DateTime &StartTime, DWORD Duration)
-	: m_pEventInfo(nullptr)
-	, m_pCommonEventInfo(nullptr)
-	, m_StartTime(StartTime)
-	, m_Duration(Duration)
-	, m_TitleLines(0)
-	, m_ItemPos(-1)
-	, m_ItemLines(0)
-	, m_fSelected(false)
+	: m_StartTime(StartTime)
 {
 	m_EndTime = StartTime;
 	m_EndTime.OffsetSeconds(Duration);
@@ -442,7 +429,6 @@ CServiceInfo::CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver
 		ChannelInfo.GetNetworkID(),
 		ChannelInfo.GetTransportStreamID(),
 		ChannelInfo.GetServiceID())
-	, m_hbmLogo(nullptr)
 {
 }
 
@@ -1036,42 +1022,11 @@ bool CProgramGuide::Initialize(HINSTANCE hinst)
 
 
 CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
-	: m_pEPGDatabase(nullptr)
-	, m_ListMode(ListMode::Services)
-	, m_WeekListService(-1)
-	, m_LinesPerHour(12)
-	, m_TextDrawEngine(CTextDrawClient::TextDrawEngine::GDI)
-	, m_ItemLogicalWidth(140)
-	, m_TextLeftMargin(
+	: m_TextLeftMargin(
 		m_Style.EventIconSize.Width +
 		m_Style.EventIconMargin.Left + m_Style.EventIconMargin.Right)
-	, m_fDragScroll(false)
-	, m_fScrolling(false)
-	, m_hDragCursor1(nullptr)
-	, m_hDragCursor2(nullptr)
-	, m_VisibleEventIcons(((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
-	, m_fUseARIBSymbol(false)
-	, m_fBarShadow(false)
 	, m_EventInfoPopupManager(&m_EventInfoPopup)
-	, m_EventInfoPopupHandler(this)
-	, m_fShowToolTip(true)
-	, m_fKeepTimePos(false)
-	, m_pChannelProviderManager(nullptr)
-	, m_pChannelProvider(nullptr)
-	, m_CurrentChannelProvider(-1)
-	, m_CurrentChannelGroup(-1)
-	, m_fExcludeNoEventServices(true)
-	, m_CurrentEventID(0)
-	, m_BeginHour(-1)
-	, m_pEventHandler(nullptr)
-	, m_pFrame(nullptr)
-	, m_pProgramCustomizer(nullptr)
-	, m_WheelScrollLines(0)
-	, m_ProgramSearchEventHandler(this)
-	, m_Filter(FilterFlag::None)
-	, m_fEpgUpdating(false)
 	, m_ProgramSearch(EventSearchOptions)
-	, m_fShowFeaturedMark(true)
 {
 	m_WindowPosition.Left = 0;
 	m_WindowPosition.Top = 0;
@@ -1079,12 +1034,6 @@ CProgramGuide::CProgramGuide(CEventSearchOptions &EventSearchOptions)
 	m_WindowPosition.Height = 480;
 
 	GetDefaultFont(&m_Font);
-
-	m_ScrollPos.x = 0;
-	m_ScrollPos.y = 0;
-	m_OldScrollPos = m_ScrollPos;
-
-	m_CurEventItem.fSelected = false;
 
 	m_EventInfoPopup.SetEventHandler(&m_EventInfoPopupHandler);
 
@@ -4700,12 +4649,6 @@ void CProgramGuide::OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEve
 
 
 
-CProgramGuide::CEventHandler::CEventHandler()
-	: m_pProgramGuide(nullptr)
-{
-}
-
-
 CProgramGuide::CEventHandler::~CEventHandler()
 {
 	if (m_pProgramGuide != nullptr)
@@ -4713,22 +4656,10 @@ CProgramGuide::CEventHandler::~CEventHandler()
 }
 
 
-CProgramGuide::CFrame::CFrame()
-	: m_pProgramGuide(nullptr)
-{
-}
-
-
 CProgramGuide::CFrame::~CFrame()
 {
 	if (m_pProgramGuide != nullptr)
 		m_pProgramGuide->SetFrame(nullptr);
-}
-
-
-CProgramGuide::CProgramCustomizer::CProgramCustomizer()
-	: m_pProgramGuide(nullptr)
-{
 }
 
 
@@ -5063,31 +4994,6 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 }
 
 
-
-
-CProgramGuide::ProgramGuideStyle::ProgramGuideStyle()
-	: ColumnMargin(4)
-	, HeaderPadding(4)
-	, HeaderChannelNameMargin(0)
-	, HeaderIconMargin(0, 0, 4, 0)
-	, HeaderChevronSize(10, 10)
-	, HeaderChevronMargin(8, 0, 0, 0)
-	, HeaderShadowHeight(8)
-	, EventLeading(1)
-	, EventLineSpacing(0)
-	, fEventJustify(true)
-	, EventPadding(0, 0, 2, 0)
-	, EventIconSize(CEpgIcons::DEFAULT_ICON_WIDTH, CEpgIcons::DEFAULT_ICON_HEIGHT)
-	, EventIconMargin(1)
-	, FeaturedMarkMargin(0)
-	, HighlightBorder(3)
-	, SelectedBorder(2)
-	, TimeBarPadding(4)
-	, TimeBarShadowWidth(6)
-	, CurTimeLineWidth(2)
-	, ToolbarItemPadding(4)
-{
-}
 
 
 void CProgramGuide::ProgramGuideStyle::SetStyle(const Style::CStyleManager *pStyleManager)
@@ -5464,8 +5370,6 @@ public:
 
 CProgramGuideBar::CProgramGuideBar(CProgramGuide *pProgramGuide)
 	: m_pProgramGuide(pProgramGuide)
-	, m_fVisible(true)
-	, m_fUseBufferedPaint(false)
 {
 }
 
@@ -5503,7 +5407,7 @@ protected:
 	CBufferedPaint m_BufferedPaint;
 	Style::Margins m_Padding;
 	DrawUtil::CFont m_Font;
-	int m_FontHeight;
+	int m_FontHeight = 0;
 
 	void AdjustSize();
 	void DeleteAllButtons();
@@ -5521,7 +5425,6 @@ protected:
 CProgramGuideToolbar::CProgramGuideToolbar(CProgramGuide *pProgramGuide)
 	: CProgramGuideBar(pProgramGuide)
 	, m_Padding(pProgramGuide->GetToolbarItemPadding())
-	, m_FontHeight(0)
 {
 }
 
@@ -6109,7 +6012,7 @@ public:
 private:
 	static constexpr DWORD ITEM_FLAG_NOW = 0x80000000;
 
-	int m_ButtonCount;
+	int m_ButtonCount = CProgramGuideFrameSettings::DATEBAR_DEFAULTBUTTONCOUNT;
 	DateButtonTheme m_Theme;
 
 	bool SetButtons(const LibISDB::DateTime *pDateList, int Days, int FirstCommand);
@@ -6120,7 +6023,6 @@ private:
 
 CDateToolbar::CDateToolbar(CProgramGuide *pProgramGuide)
 	: CProgramGuideToolbar(pProgramGuide)
-	, m_ButtonCount(CProgramGuideFrameSettings::DATEBAR_DEFAULTBUTTONCOUNT)
 {
 }
 
@@ -6577,8 +6479,6 @@ void CTimeToolbar::RealizeStyle()
 CProgramGuideFrameBase::CProgramGuideFrameBase(CProgramGuide *pProgramGuide, CProgramGuideFrameSettings *pSettings)
 	: m_pProgramGuide(pProgramGuide)
 	, m_pSettings(pSettings)
-	, m_ToolbarRightMargin(0)
-	, m_fNoUpdateLayout(false)
 {
 	m_ToolbarList[TOOLBAR_TUNER_MENU] = std::make_unique<ProgramGuideBar::CTunerMenuBar>(pProgramGuide);
 	m_ToolbarList[TOOLBAR_DATE_MENU ] = std::make_unique<ProgramGuideBar::CDateMenuBar>(pProgramGuide);
@@ -6971,16 +6871,6 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 
 
 
-CProgramGuideFrameBase::FrameStyle::FrameStyle()
-	: ToolbarMargin(2, 2, 2, 4)
-	, ToolbarHorzGap(3)
-	, ToolbarVertGap(4)
-	, fExtendFrame(true)
-	, fAllowDarkMode(true)
-{
-}
-
-
 void CProgramGuideFrameBase::FrameStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = FrameStyle();
@@ -7235,17 +7125,6 @@ int CProgramGuideFrameSettings::ParseIDText(LPCTSTR pszID) const
 
 
 
-CProgramGuideFrameSettings::TimeBarSettings::TimeBarSettings()
-	: Time(TimeType::Interval)
-	, Interval(4)
-	, CustomTime(TEXT("0,3,6,9,12,15,18,21"))
-	, MaxButtonCount(10)
-{
-}
-
-
-
-
 const LPCTSTR CProgramGuideFrame::m_pszWindowClass = APP_NAME TEXT(" Program Guide Frame");
 HINSTANCE CProgramGuideFrame::m_hinst = nullptr;
 
@@ -7275,11 +7154,6 @@ bool CProgramGuideFrame::Initialize(HINSTANCE hinst)
 
 CProgramGuideFrame::CProgramGuideFrame(CProgramGuide *pProgramGuide, CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide, pSettings)
-	, m_fAero(false)
-	, m_fAllowDarkMode(false)
-	, m_fDarkMode(false)
-	, m_fAlwaysOnTop(false)
-	, m_fCreated(false)
 {
 	m_WindowPosition.Width = 640;
 	m_WindowPosition.Height = 480;
@@ -7559,7 +7433,6 @@ bool CProgramGuideDisplay::Initialize(HINSTANCE hinst)
 
 CProgramGuideDisplay::CProgramGuideDisplay(CProgramGuide *pProgramGuide, CProgramGuideFrameSettings *pSettings)
 	: CProgramGuideFrameBase(pProgramGuide, pSettings)
-	, m_pProgramGuideDisplayEventHandler(nullptr)
 {
 }
 
@@ -7700,12 +7573,6 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	}
 
 	return DefaultMessageHandler(hwnd, uMsg, wParam, lParam);
-}
-
-
-CProgramGuideDisplay::CProgramGuideDisplayEventHandler::CProgramGuideDisplayEventHandler()
-	: m_pProgramGuideDisplay(nullptr)
-{
 }
 
 

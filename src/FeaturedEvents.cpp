@@ -37,10 +37,6 @@ namespace TVTest
 
 CFeaturedEventsSettings::CFeaturedEventsSettings()
 	: CSettingsBase(TEXT("FeaturedEvents"))
-	, m_SortType(SortType::Time)
-	, m_PeriodSeconds(24 * 60 * 60)
-	, m_fShowEventText(true)
-	, m_EventTextLines(2)
 {
 }
 

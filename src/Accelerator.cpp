@@ -251,7 +251,6 @@ const CAccelerator::AppCommandInfo CAccelerator::m_DefaultAppCommandList[] = {
 
 CAccelerator::CAccelerator()
 {
-	m_hAccel = nullptr;
 	m_KeyList.resize(lengthof(m_DefaultAccelList));
 	for (size_t i = 0; i < lengthof(m_DefaultAccelList); i++)
 		m_KeyList[i] = m_DefaultAccelList[i];
@@ -272,10 +271,6 @@ CAccelerator::CAccelerator()
 	m_AppCommandList.resize(lengthof(m_DefaultAppCommandList));
 	for (size_t i = 0; i < lengthof(m_DefaultAppCommandList); i++)
 		m_AppCommandList[i] = m_DefaultAppCommandList[i];
-	m_hwndHotKey = nullptr;
-	m_pMainMenu = nullptr;
-	m_pCommandManager = nullptr;
-	m_fRegisterHotKey = false;
 }
 
 

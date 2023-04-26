@@ -49,7 +49,6 @@ public:
 		virtual bool OnFrame(const FrameInfo &Frame) = 0;
 	};
 
-	CVideoDecoder();
 	~CVideoDecoder();
 
 	bool Initialize();
@@ -61,12 +60,12 @@ public:
 	void SetDeinterlaceMethod(DeinterlaceMethod Deinterlace);
 
 private:
-	HMODULE m_hLib;
-	ITVTestVideoFrameDecoder *m_pDecoder;
-	CFrameCapture *m_pFrameCapture;
-	decltype(TVTestVideoDecoder_CreateInstance) *m_pCreateInstance;
-	DeinterlaceMethod m_Deinterlace;
-	LONG m_RefCount;
+	HMODULE m_hLib = nullptr;
+	ITVTestVideoFrameDecoder *m_pDecoder = nullptr;
+	CFrameCapture *m_pFrameCapture = nullptr;
+	decltype(TVTestVideoDecoder_CreateInstance) *m_pCreateInstance = nullptr;
+	DeinterlaceMethod m_Deinterlace = Deinterlace_Blend;
+	LONG m_RefCount = 1;
 
 	STDMETHOD_(ULONG, AddRef)() override;
 	STDMETHOD_(ULONG, Release)() override;

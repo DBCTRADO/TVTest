@@ -71,7 +71,7 @@ namespace TVTest
 			COLUMN_APPCOMMAND
 		};
 
-		HACCEL m_hAccel;
+		HACCEL m_hAccel = nullptr;
 		struct KeyInfo {
 			WORD Command;
 			WORD KeyCode;
@@ -97,11 +97,11 @@ namespace TVTest
 			bool operator==(const AppCommandInfo &Info) const noexcept = default;
 		};
 		std::vector<AppCommandInfo> m_AppCommandList;
-		HWND m_hwndHotKey;
-		CMainMenu *m_pMainMenu;
-		const CCommandManager *m_pCommandManager;
+		HWND m_hwndHotKey = nullptr;
+		CMainMenu *m_pMainMenu = nullptr;
+		const CCommandManager *m_pCommandManager = nullptr;
 		CRawInput m_RawInput;
-		bool m_fRegisterHotKey;
+		bool m_fRegisterHotKey = false;
 		CChannelInputOptions m_ChannelInputOptions;
 		CListView m_ListView;
 

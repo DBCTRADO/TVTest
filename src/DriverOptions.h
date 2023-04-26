@@ -67,15 +67,15 @@ namespace TVTest
 
 		struct BonDriverOptions
 		{
-			bool fNoSignalLevel;
-			bool fIgnoreInitialStream;
-			bool fPurgeStreamOnChannelChange;
-			bool fResetChannelChangeErrorCount;
-			bool fPumpStreamSyncPlayback;
-			DWORD FirstChannelSetDelay;
-			DWORD MinChannelChangeInterval;
+			bool fNoSignalLevel = false;
+			bool fIgnoreInitialStream = true;
+			bool fPurgeStreamOnChannelChange = true;
+			bool fResetChannelChangeErrorCount = true;
+			bool fPumpStreamSyncPlayback = false;
+			DWORD FirstChannelSetDelay = 0;
+			DWORD MinChannelChangeInterval = 0;
 
-			BonDriverOptions();
+			BonDriverOptions() = default;
 			BonDriverOptions(LPCTSTR pszBonDriverName);
 		};
 
@@ -98,7 +98,7 @@ namespace TVTest
 		bool GetBonDriverOptions(LPCTSTR pszFileName, BonDriverOptions *pOptions) const;
 
 	private:
-		CDriverManager *m_pDriverManager;
+		CDriverManager *m_pDriverManager = nullptr;
 		CDriverSettingList m_SettingList;
 		CDriverSettingList m_CurSettingList;
 		CChannelList m_InitChannelList;

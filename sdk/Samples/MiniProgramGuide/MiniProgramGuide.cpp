@@ -43,24 +43,23 @@ class CMiniProgramGuide : public TVTest::CTVTestPlugin
 {
 	struct Position
 	{
-		int Left,Top,Width,Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
-	HWND m_hwnd;
-	HWND m_hwndTunerList;
-	HWND m_hwndChannelList;
-	HWND m_hwndEventList;
+	HWND m_hwnd = nullptr;
+	HWND m_hwndTunerList = nullptr;
+	HWND m_hwndChannelList = nullptr;
+	HWND m_hwndEventList = nullptr;
 	Position m_WindowPosition;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
-	HBRUSH m_hbrBackground;
-	HFONT m_hfont;
+	HBRUSH m_hbrBackground = nullptr;
+	HFONT m_hfont = nullptr;
 	int m_DPI;
 	int m_FontHeight;
 	int m_ItemMargin;
 	int m_ItemHeight;
-	TVTest::EpgEventList m_EventList;
+	TVTest::EpgEventList m_EventList{};
 
 	bool Enable(bool fEnable);
 	void SetTunerList();
@@ -75,24 +74,10 @@ class CMiniProgramGuide : public TVTest::CTVTestPlugin
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-	CMiniProgramGuide();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
 };
-
-
-CMiniProgramGuide::CMiniProgramGuide()
-	: m_hwnd(nullptr)
-	, m_hwndTunerList(nullptr)
-	, m_hwndChannelList(nullptr)
-	, m_hwndEventList(nullptr)
-	, m_hbrBackground(nullptr)
-	, m_hfont(nullptr)
-{
-	m_EventList.NumEvents = 0;
-	m_EventList.EventList = nullptr;
-}
 
 
 // プラグインの情報を返す

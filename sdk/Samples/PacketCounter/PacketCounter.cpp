@@ -31,18 +31,13 @@
 // プラグインクラス
 class CPacketCounter : public TVTest::CTVTestPlugin
 {
-	LONG m_PacketCount;
+	LONG m_PacketCount = 0;
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static BOOL CALLBACK StreamCallback(BYTE *pData, void *pClientData);
 	void ShowItem(bool fShow);
 
 public:
-	CPacketCounter()
-		: m_PacketCount(0)
-	{
-	}
-
 	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
 	bool Initialize() override;
 	bool Finalize() override;

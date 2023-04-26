@@ -33,12 +33,12 @@ namespace TVTest
 		typedef HWND (WINAPI *HtmlHelpFunc)(
 			HWND hwndCaller, LPCTSTR pszFile, UINT uCommand, DWORD_PTR dwData);
 		TCHAR m_szFileName[MAX_PATH];
-		HMODULE m_hLib;
-		HtmlHelpFunc m_pHtmlHelp;
+		HMODULE m_hLib = nullptr;
+		HtmlHelpFunc m_pHtmlHelp = nullptr;
 		DWORD m_Cookie;
 
 	public:
-		CHtmlHelp();
+		CHtmlHelp() = default;
 		~CHtmlHelp();
 
 		CHtmlHelp(const CHtmlHelp &) = delete;

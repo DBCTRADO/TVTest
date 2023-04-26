@@ -84,10 +84,10 @@ static const struct {
 // プラグインクラス
 class CHDUSRemocon : public TVTest::CTVTestPlugin
 {
-	bool m_fInitialized;   // 初期化済みか?
-	HMODULE m_hLib;        // フックDLLのハンドル
-	bool m_fHook;          // フックしているか?
-	static UINT m_Message; // フックDLLから送られるメッセージ
+	bool m_fInitialized = false; // 初期化済みか?
+	HMODULE m_hLib = nullptr;    // フックDLLのハンドル
+	bool m_fHook = false;        // フックしているか?
+	static UINT m_Message;       // フックDLLから送られるメッセージ
 
 	bool InitializePlugin();
 	bool BeginHook();
@@ -101,7 +101,6 @@ class CHDUSRemocon : public TVTest::CTVTestPlugin
 	static BOOL CALLBACK TranslateMessageCallback(HWND hwnd, MSG *pMessage, void *pClientData);
 
 public:
-	CHDUSRemocon();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
@@ -109,14 +108,6 @@ public:
 
 
 UINT CHDUSRemocon::m_Message = 0;
-
-
-CHDUSRemocon::CHDUSRemocon()
-	: m_fInitialized(false)
-	, m_hLib(nullptr)
-	, m_fHook(false)
-{
-}
 
 
 bool CHDUSRemocon::GetPluginInfo(TVTest::PluginInfo *pInfo)

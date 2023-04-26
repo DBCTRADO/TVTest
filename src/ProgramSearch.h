@@ -206,8 +206,6 @@ namespace TVTest
 	class CEventSearchOptions
 	{
 	public:
-		CEventSearchOptions();
-
 		bool SetKeywordHistory(const LPTSTR *pKeywordList, int NumKeywords);
 		bool SetKeywordHistory(const String *pKeywordList, size_t NumKeywords);
 		int GetKeywordHistoryCount() const;
@@ -232,7 +230,7 @@ namespace TVTest
 
 	private:
 		std::deque<String> m_KeywordHistory;
-		int m_MaxKeywordHistory;
+		int m_MaxKeywordHistory = 40;
 		CEventSearchSettingsList m_SettingsList;
 	};
 
@@ -288,12 +286,12 @@ namespace TVTest
 		};
 
 		CEventSearchSettings m_SearchSettings;
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 		CEventSearchOptions &m_Options;
 		CKeywordEditSubclass m_KeywordEditSubclass;
-		bool m_fGenreExpanded[16];
+		bool m_fGenreExpanded[16] = {};
 		std::vector<String> m_SearchTargetList;
-		int m_SearchTarget;
+		int m_SearchTarget = 0;
 	};
 
 	class CSearchEventInfo
@@ -327,7 +325,6 @@ namespace TVTest
 		class CEventHandler
 		{
 		public:
-			CEventHandler();
 			virtual ~CEventHandler();
 			bool Search(CEventSearcher *pSearcher);
 			virtual bool OnSearch() = 0;
@@ -339,8 +336,8 @@ namespace TVTest
 			friend class CProgramSearchDialog;
 
 		protected:
-			class CProgramSearchDialog *m_pSearchDialog;
-			CEventSearcher *m_pSearcher;
+			class CProgramSearchDialog *m_pSearchDialog = nullptr;
+			CEventSearcher *m_pSearcher = nullptr;
 
 			bool AddSearchResult(CSearchEventInfo *pEventInfo);
 			bool Match(const LibISDB::EventInfo *pEventInfo) const;
@@ -366,18 +363,18 @@ namespace TVTest
 		int GetSearchTarget() const;
 
 	private:
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 		CEventSearchOptions &m_Options;
 		CEventSearchSettings m_SearchSettings;
 		CEventSearcher m_Searcher;
 		CEventSearchSettingsDialog m_SearchSettingsDialog;
 		std::map<ULONGLONG, CSearchEventInfo*> m_ResultMap;
-		bool m_fHighlightResult;
-		int m_SortColumn;
-		bool m_fSortDescending;
+		bool m_fHighlightResult = true;
+		int m_SortColumn = -1;
+		bool m_fSortDescending = false;
 		int m_ColumnWidth[NUM_COLUMNS];
-		int m_ResultListHeight;
-		bool m_fSplitterCursor;
+		int m_ResultListHeight = -1;
+		bool m_fSplitterCursor = false;
 		int m_SplitterDragPos;
 		CRichEditUtil m_RichEditUtil;
 		CRichEditLinkHandler m_RichEditLink;

@@ -149,16 +149,16 @@ namespace TVTest
 	private:
 		const LPTSTR m_pBuffer;
 		const size_t m_BufferLength;
-		size_t m_Length;
+		size_t m_Length = 0;
 	};
 
 	class CGlobalLock
 	{
-		HANDLE m_hMutex;
-		bool m_fOwner;
+		HANDLE m_hMutex = nullptr;
+		bool m_fOwner = false;
 
 	public:
-		CGlobalLock();
+		CGlobalLock() = default;
 		~CGlobalLock();
 
 		CGlobalLock(const CGlobalLock &) = delete;
@@ -177,7 +177,7 @@ namespace TVTest
 	class CSemaphore
 	{
 	public:
-		CSemaphore();
+		CSemaphore() = default;
 		~CSemaphore();
 
 		CSemaphore(const CSemaphore &) = delete;
@@ -194,8 +194,8 @@ namespace TVTest
 		LONG GetMaxCount() const { return m_MaxCount; }
 
 	private:
-		HANDLE m_hSemaphore;
-		LONG m_MaxCount;
+		HANDLE m_hSemaphore = nullptr;
+		LONG m_MaxCount = 0;
 	};
 
 	class CInterprocessReadWriteLock
@@ -338,7 +338,6 @@ namespace TVTest
 		class CTimer
 		{
 		public:
-			CTimer();
 			virtual ~CTimer();
 			bool Begin(DWORD DueTime, DWORD Period);
 			void End();
@@ -349,7 +348,7 @@ namespace TVTest
 		private:
 			static void CALLBACK TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired);
 
-			HANDLE m_hTimer;
+			HANDLE m_hTimer = nullptr;
 		};
 
 		template<typename T, std::size_t N> class CTempBuffer

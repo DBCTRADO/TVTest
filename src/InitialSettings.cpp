@@ -39,7 +39,6 @@ namespace TVTest
 
 CInitialSettings::CInitialSettings(const CDriverManager *pDriverManager)
 	: m_pDriverManager(pDriverManager)
-	, m_fDrawLogo(false)
 {
 	// ビデオレンダラのデフォルトをEVRにする
 	m_VideoRenderer = LibISDB::DirectShow::VideoRenderer::RendererType::EVR;

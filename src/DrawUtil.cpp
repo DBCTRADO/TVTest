@@ -833,25 +833,17 @@ bool IsClearTypeEnabled()
 }
 
 
-CFont::CFont()
-	: m_hfont(nullptr)
-{
-}
-
 CFont::CFont(const CFont &Font)
-	: m_hfont(nullptr)
 {
 	*this = Font;
 }
 
 CFont::CFont(const LOGFONT &Font)
-	: m_hfont(nullptr)
 {
 	Create(&Font);
 }
 
 CFont::CFont(FontType Type)
-	: m_hfont(nullptr)
 {
 	Create(Type);
 }
@@ -957,19 +949,12 @@ int CFont::GetHeight(HDC hdc, bool fCell) const
 }
 
 
-CBrush::CBrush()
-	: m_hbr(nullptr)
-{
-}
-
 CBrush::CBrush(const CBrush &Brush)
-	: m_hbr(nullptr)
 {
 	*this = Brush;
 }
 
 CBrush::CBrush(COLORREF Color)
-	: m_hbr(nullptr)
 {
 	Create(Color);
 }
@@ -1013,13 +998,7 @@ void CBrush::Destroy()
 }
 
 
-CBitmap::CBitmap()
-	: m_hbm(nullptr)
-{
-}
-
 CBitmap::CBitmap(const CBitmap &Src)
-	: m_hbm(nullptr)
 {
 	*this = Src;
 }
@@ -1105,22 +1084,12 @@ int CBitmap::GetHeight() const
 }
 
 
-CMonoColorBitmap::CMonoColorBitmap()
-	: m_hbm(nullptr)
-	, m_hbmPremultiplied(nullptr)
-{
-}
-
 CMonoColorBitmap::CMonoColorBitmap(const CMonoColorBitmap &Src)
-	: m_hbm(nullptr)
-	, m_hbmPremultiplied(nullptr)
 {
 	*this = Src;
 }
 
 CMonoColorBitmap::CMonoColorBitmap(CMonoColorBitmap &&Src) noexcept
-	: m_hbm(nullptr)
-	, m_hbmPremultiplied(nullptr)
 {
 	*this = std::move(Src);
 }
@@ -1439,12 +1408,6 @@ void CMonoColorBitmap::SetColor(COLORREF Color)
 }
 
 
-CMonoColorIconList::CMonoColorIconList()
-	: m_IconWidth(0)
-	, m_IconHeight(0)
-{
-}
-
 bool CMonoColorIconList::Load(HINSTANCE hinst, LPCTSTR pszName, int Width, int Height)
 {
 	if (!m_Bitmap.Load(hinst, pszName))
@@ -1578,13 +1541,7 @@ HICON CMonoColorIconList::ExtractIcon(int Index, COLORREF Color)
 }
 
 
-CMemoryDC::CMemoryDC()
-	: m_hdc(nullptr)
-{
-}
-
 CMemoryDC::CMemoryDC(HDC hdc)
-	: m_hdc(nullptr)
 {
 	Create(hdc);
 }
@@ -1650,15 +1607,6 @@ bool CMemoryDC::DrawAlpha(HDC hdc, int DstX, int DstY, int SrcX, int SrcY, int W
 	return true;
 }
 
-
-COffscreen::COffscreen()
-	: m_hdc(nullptr)
-	, m_hbm(nullptr)
-	, m_hbmOld(nullptr)
-	, m_Width(0)
-	, m_Height(0)
-{
-}
 
 COffscreen::~COffscreen()
 {
@@ -1757,11 +1705,6 @@ HTHEME WINAPI OpenThemeDataForDpi(HWND hwnd, PCWSTR pszClassIdList, UINT dpi);
 
 }
 
-
-CUxTheme::CUxTheme()
-	: m_hTheme(nullptr)
-{
-}
 
 CUxTheme::~CUxTheme()
 {

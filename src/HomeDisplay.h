@@ -61,14 +61,12 @@ namespace TVTest
 			: public CDisplayView::CEventHandler
 		{
 		public:
-			CHomeDisplayEventHandler();
-
 			virtual void OnClose() = 0;
 
 			friend class CHomeDisplay;
 
 		protected:
-			class CHomeDisplay * m_pHomeDisplay;
+			class CHomeDisplay *m_pHomeDisplay = nullptr;
 		};
 
 		class ABSTRACT_CLASS(CCategory)
@@ -144,23 +142,22 @@ namespace TVTest
 
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
-		bool m_fAutoFontSize;
+		bool m_fAutoFontSize = true;
 		StyleInfo m_HomeDisplayStyle;
-		int m_CategoriesAreaWidth;
-		int m_CategoryItemWidth;
-		int m_CategoryItemHeight;
-		int m_ContentHeight;
+		int m_CategoriesAreaWidth = 0;
+		int m_CategoryItemWidth = 0;
+		int m_CategoryItemHeight = 0;
+		int m_ContentHeight = 0;
 
 		std::vector<std::unique_ptr<CCategory>> m_CategoryList;
-		CHomeDisplayEventHandler *m_pHomeDisplayEventHandler;
-		int m_CurCategory;
-		HWND m_hwndScroll;
-		int m_ScrollPos;
+		CHomeDisplayEventHandler *m_pHomeDisplayEventHandler = nullptr;
+		int m_CurCategory = 0;
+		HWND m_hwndScroll = nullptr;
+		int m_ScrollPos = 0;
 		CMouseWheelHandler m_MouseWheel;
-		bool m_fHitCloseButton;
-		PartType m_CursorPart;
-		bool m_fHoverOverButton;
-		HIMAGELIST m_himlIcons;
+		bool m_fHitCloseButton = false;
+		PartType m_CursorPart = PartType::Margin;
+		HIMAGELIST m_himlIcons = nullptr;
 
 		static const LPCTSTR m_pszWindowClass;
 		static HINSTANCE m_hinst;

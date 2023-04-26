@@ -29,14 +29,6 @@ namespace TVTest
 {
 
 
-CEpgCaptureManager::CEpgCaptureManager()
-	: m_fCapturing(false)
-	, m_pEventHandler(nullptr)
-	, m_fChannelChanging(false)
-{
-}
-
-
 bool CEpgCaptureManager::BeginCapture(
 	LPCTSTR pszTuner, const CChannelList *pChannelList, BeginFlag Flags)
 {

@@ -719,22 +719,6 @@ CPlugin::CVideoStreamCallback CPlugin::m_VideoStreamCallback;
 MutexLock CPlugin::m_VideoStreamLock;
 
 
-CPlugin::CPlugin()
-	: m_hLib(nullptr)
-	, m_Version(0)
-	, m_Type(PLUGIN_TYPE_NORMAL)
-	, m_Flags(PLUGIN_FLAG_NONE)
-	, m_fEnabled(false)
-	, m_fSetting(false)
-	, m_Command(0)
-	, m_pEventCallback(nullptr)
-	, m_ProgramGuideEventFlags(0)
-	, m_pMessageCallback(nullptr)
-	, m_GetVariable(this)
-{
-}
-
-
 CPlugin::~CPlugin()
 {
 	Free();
@@ -4300,9 +4284,6 @@ void CPlugin::CreateAppCommandList()
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID, LPCWSTR pszText, LPCWSTR pszName)
 	: m_ID(ID)
-	, m_Command(0)
-	, m_Flags(PLUGIN_COMMAND_FLAG_NONE)
-	, m_State(PLUGIN_COMMAND_STATE_NONE)
 	, m_Text(pszText)
 	, m_Name(pszName)
 {
@@ -4311,9 +4292,6 @@ CPlugin::CPluginCommandInfo::CPluginCommandInfo(int ID, LPCWSTR pszText, LPCWSTR
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(const CommandInfo &Info)
 	: m_ID(Info.ID)
-	, m_Command(0)
-	, m_Flags(PLUGIN_COMMAND_FLAG_NONE)
-	, m_State(PLUGIN_COMMAND_STATE_NONE)
 	, m_Text(Info.pszText)
 	, m_Name(Info.pszName)
 {
@@ -4322,7 +4300,6 @@ CPlugin::CPluginCommandInfo::CPluginCommandInfo(const CommandInfo &Info)
 
 CPlugin::CPluginCommandInfo::CPluginCommandInfo(const PluginCommandInfo &Info)
 	: m_ID(Info.ID)
-	, m_Command(0)
 	, m_Flags(Info.Flags)
 	, m_State(Info.State)
 	, m_Text(Info.pszText)
@@ -4648,7 +4625,6 @@ bool CPlugin::CPluginPanelItem::m_fInitialized = false;
 CPlugin::CPluginPanelItem::CPluginPanelItem(CPlugin *pPlugin, PanelItem *pItem)
 	: m_pPlugin(pPlugin)
 	, m_pItem(pItem)
-	, m_hwndItem(nullptr)
 {
 	pItem->pItem = this;
 }

@@ -57,7 +57,6 @@ extern "C" void rdft(int n, int isgn, double *a, int *ip, double *w);
 class CSpectrumAnalyzer : public TVTest::CTVTestPlugin
 {
 public:
-	CSpectrumAnalyzer();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
@@ -65,8 +64,7 @@ public:
 private:
 	struct Position
 	{
-		int Left, Top, Width, Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
 	class CCriticalLock
@@ -89,24 +87,24 @@ private:
 		CRITICAL_SECTION m_CriticalSection;
 	};
 
-	bool m_fInitialized;
-	HWND m_hwnd;
+	bool m_fInitialized = false;
+	HWND m_hwnd = nullptr;
 	Position m_WindowPosition;
 	int m_DPI;
-	Gdiplus::Color m_BackColor;
-	Gdiplus::Color m_SpectrumColor1;
-	Gdiplus::Color m_SpectrumColor2;
-	Gdiplus::SolidBrush *m_pBrush;
-	Gdiplus::Graphics *m_pOffscreen;
-	Gdiplus::Bitmap *m_pOffscreenImage;
+	Gdiplus::Color m_BackColor{255, 0, 0, 0};
+	Gdiplus::Color m_SpectrumColor1{255, 0, 224, 0};
+	Gdiplus::Color m_SpectrumColor2{255, 255, 128, 0};
+	Gdiplus::SolidBrush *m_pBrush = nullptr;
+	Gdiplus::Graphics *m_pOffscreen = nullptr;
+	Gdiplus::Bitmap *m_pOffscreenImage = nullptr;
 
-	short *m_pSampleBuffer;
-	double *m_pFFTBuffer;
-	int *m_pFFTWorkBuffer;
-	double *m_pFFTSinTable;
-	DWORD m_BufferUsed;
-	DWORD m_BufferPos;
-	double *m_pPower;
+	short *m_pSampleBuffer = nullptr;
+	double *m_pFFTBuffer = nullptr;
+	int *m_pFFTWorkBuffer = nullptr;
+	double *m_pFFTSinTable = nullptr;
+	DWORD m_BufferUsed = 0;
+	DWORD m_BufferPos = 0;
+	double *m_pPower = nullptr;
 	struct {
 		double Real;
 		double Delayed;
@@ -147,26 +145,6 @@ private:
 
 // ウィンドウクラス名
 const LPCTSTR CSpectrumAnalyzer::WINDOW_CLASS_NAME = TEXT("TVTest Spectrum Analyzer Window");
-
-
-CSpectrumAnalyzer::CSpectrumAnalyzer()
-	: m_fInitialized(false)
-	, m_hwnd(nullptr)
-	, m_BackColor(255, 0, 0, 0)
-	, m_SpectrumColor1(255, 0, 224, 0)
-	, m_SpectrumColor2(255, 255, 128, 0)
-	, m_pBrush(nullptr)
-	, m_pOffscreen(nullptr)
-	, m_pOffscreenImage(nullptr)
-	, m_pSampleBuffer(nullptr)
-	, m_pFFTBuffer(nullptr)
-	, m_pFFTWorkBuffer(nullptr)
-	, m_pFFTSinTable(nullptr)
-	, m_BufferUsed(0)
-	, m_BufferPos(0)
-	, m_pPower(nullptr)
-{
-}
 
 
 // プラグインの情報を返す

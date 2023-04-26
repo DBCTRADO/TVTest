@@ -29,17 +29,8 @@ namespace TVTest
 
 
 CStatusItem::CStatusItem(int ID, const SizeValue &DefaultWidth)
-	: m_pStatus(nullptr)
-	, m_ID(ID)
+	: m_ID(ID)
 	, m_DefaultWidth(DefaultWidth)
-	, m_Width(-1)
-	, m_MinWidth(8)
-	, m_MaxWidth(-1)
-	, m_ActualWidth(-1)
-	, m_MinHeight(0)
-	, m_fVisible(true)
-	, m_fBreak(false)
-	, m_Style(StyleFlag::None)
 {
 }
 
@@ -223,12 +214,6 @@ void CIconStatusItem::NormalizeStyle(
 
 
 
-CStatusView::CEventHandler::CEventHandler()
-	: m_pStatusView(nullptr)
-{
-}
-
-
 CStatusView::CEventHandler::~CEventHandler()
 {
 	if (m_pStatusView != nullptr)
@@ -266,18 +251,6 @@ bool CStatusView::Initialize(HINSTANCE hinst)
 
 
 CStatusView::CStatusView()
-	: m_FontHeight(0)
-	, m_TextHeight(0)
-	, m_ItemHeight(0)
-	, m_fMultiRow(false)
-	, m_MaxRows(2)
-	, m_Rows(1)
-	, m_fSingleMode(false)
-	, m_HotItem(-1)
-	, m_fOnButtonDown(false)
-	, m_pEventHandler(nullptr)
-	, m_fBufferedPaint(false)
-	, m_fAdjustSize(true)
 {
 	GetDefaultFont(&m_Font);
 }
@@ -1416,14 +1389,6 @@ void CStatusView::RealizeStyle()
 }
 
 
-
-
-CStatusView::StatusViewStyle::StatusViewStyle()
-	: ItemPadding(4, 2, 4, 2)
-	, TextExtraHeight(4)
-	, IconSize(16, 16)
-{
-}
 
 
 void CStatusView::StatusViewStyle::SetStyle(const Style::CStyleManager *pStyleManager)

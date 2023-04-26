@@ -85,9 +85,9 @@ namespace TVTest
 		typedef Util::TickCountType DurationType;
 
 	protected:
-		State m_State;
-		LibISDB::TSEngine *m_pTSEngine;
-		LibISDB::RecorderFilter *m_pRecorderFilter;
+		State m_State = State::Stop;
+		LibISDB::TSEngine *m_pTSEngine = nullptr;
+		LibISDB::RecorderFilter *m_pRecorderFilter = nullptr;
 		std::shared_ptr<LibISDB::RecorderFilter::RecordingTask> m_RecordingTask;
 		CRecordTime m_StartTime;
 		DurationType m_PauseStartTime;
@@ -95,7 +95,7 @@ namespace TVTest
 		LibISDB::RecorderFilter::RecordingStatistics m_Statistics;
 
 	public:
-		CRecordTask();
+		CRecordTask() = default;
 		virtual ~CRecordTask();
 
 		CRecordTask(const CRecordTask &) = delete;
@@ -137,7 +137,7 @@ namespace TVTest
 
 		struct TimeSpecInfo
 		{
-			TimeSpecType Type;
+			TimeSpecType Type = TimeSpecType::NotSpecified;
 			union {
 				SYSTEMTIME DateTime;
 				ULONGLONG Duration;
@@ -168,24 +168,24 @@ namespace TVTest
 			INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 		};
 
-		bool m_fRecording;
-		bool m_fReserved;
+		bool m_fRecording = false;
+		bool m_fReserved = false;
 		String m_FileName;
 		CRecordTime m_ReserveTime;
 		TimeSpecInfo m_StartTimeSpec;
 		TimeSpecInfo m_StopTimeSpec;
-		bool m_fStopOnEventEnd;
-		RecordClient m_Client;
+		bool m_fStopOnEventEnd = false;
+		RecordClient m_Client = RecordClient::User;
 		CRecordTask m_RecordTask;
-		LibISDB::TSEngine *m_pTSEngine;
-		LibISDB::RecorderFilter *m_pRecorderFilter;
+		LibISDB::TSEngine *m_pTSEngine = nullptr;
+		LibISDB::RecorderFilter *m_pRecorderFilter = nullptr;
 		CRecordingSettings m_Settings;
 		CRecordingSettings m_ReserveSettings;
 
 		std::vector<String> m_WritePluginList;
 
 	public:
-		CRecordManager();
+		CRecordManager() = default;
 		~CRecordManager();
 
 		CRecordManager(const CRecordManager &) = delete;

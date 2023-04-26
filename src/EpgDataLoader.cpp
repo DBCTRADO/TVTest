@@ -29,9 +29,6 @@ namespace TVTest
 
 
 CEpgDataLoader::CEpgDataLoader()
-	: m_hThread(nullptr)
-	, m_hAbortEvent(nullptr)
-	, m_pEventHandler(nullptr)
 {
 	m_EPGDatabaseFilter.SetEPGDatabase(&m_EPGDatabase);
 	m_EPGDatabaseFilter.SetSourceID(2);

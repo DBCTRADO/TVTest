@@ -53,7 +53,7 @@ namespace TVTest
 	class CImageCodec
 	{
 	public:
-		CImageCodec();
+		CImageCodec() = default;
 		~CImageCodec();
 
 		CImageCodec(const CImageCodec &) = delete;
@@ -71,8 +71,8 @@ namespace TVTest
 
 #ifndef TVTEST_IMAGE_STATIC
 	private:
-		HMODULE m_hLib;
-		ImageDLL::SaveImageFunc m_pSaveImage;
+		HMODULE m_hLib = nullptr;
+		ImageDLL::SaveImageFunc m_pSaveImage = nullptr;
 #endif
 	};
 

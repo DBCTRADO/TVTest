@@ -90,8 +90,7 @@ private:
 
 	struct Position
 	{
-		int Left, Top, Width, Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
 	enum CaptureSizeType
@@ -154,44 +153,44 @@ private:
 
 	static const unsigned int VideoMemorySizeLimitInMB = 40;
 
-	bool m_fInitialized;
-	HWND m_hwnd;
+	bool m_fInitialized = false;
+	HWND m_hwnd = nullptr;
 	Position m_WindowPosition;
-	bool m_fFitWindowToImage;
-	bool m_fAccumulateAlways;
+	bool m_fFitWindowToImage = true;
+	bool m_fAccumulateAlways = false;
 	int m_DPI;
-	int m_SkipFrames;
-	int m_CurFrame;
-	int m_SeekCommand;
-	int m_WheelDelta;
-	DWORD m_WheelTime;
+	int m_SkipFrames = 10;
+	int m_CurFrame = -1;
+	int m_SeekCommand = 0;
+	int m_WheelDelta = 0;
+	DWORD m_WheelTime = 0;
 	CImageCodec m_Codec;
 	CVideoDecoder m_Decoder;
 	CPreviewWindow m_Preview;
 	CSeekBar m_SeekBar;
 	CToolbar m_Toolbar;
 	CaptureSizeInfo m_CaptureSize;
-	CImage::ResampleType m_Resample;
-	CVideoDecoder::DeinterlaceMethod m_Deinterlace;
+	CImage::ResampleType m_Resample = CImage::Resample_Lanczos3;
+	CVideoDecoder::DeinterlaceMethod m_Deinterlace = CVideoDecoder::Deinterlace_Blend;
 	CLocalLock m_WindowLock;
 
-	unsigned int m_VideoMemorySizeInMB;
-	BYTE *m_pStreamBuffer;
-	std::size_t m_StreamSize;
-	std::size_t m_StreamAvail;
-	std::size_t m_StreamPos;
-	DWORD m_StreamFormat;
+	unsigned int m_VideoMemorySizeInMB = 2;
+	BYTE *m_pStreamBuffer = nullptr;
+	std::size_t m_StreamSize = 0;
+	std::size_t m_StreamAvail = 0;
+	std::size_t m_StreamPos = 0;
+	DWORD m_StreamFormat = 0;
 	CLocalLock m_StreamLock;
 
 	std::vector<CImage*> m_ImageList;
 	CLocalLock m_ImageLock;
 	std::vector<FrameGroupInfo> m_FrameGroupList;
-	BYTE *m_pDecodeBuffer;
-	std::size_t m_DecodeSize;
-	HANDLE m_hDecodeThread;
+	BYTE *m_pDecodeBuffer = nullptr;
+	std::size_t m_DecodeSize = 0;
+	HANDLE m_hDecodeThread = nullptr;
 
-	CImageCodec::FormatType m_SaveFormat;
-	CImageCodec::FormatType m_LastSaveFormat;
+	CImageCodec::FormatType m_SaveFormat = CImageCodec::Format_JPEG;
+	CImageCodec::FormatType m_LastSaveFormat = CImageCodec::Format_JPEG;
 	String m_LastSaveFileName;
 	String m_LastSaveFolder;
 
@@ -299,31 +298,6 @@ const CMemoryCapture::CaptureSizeInfo CMemoryCapture::m_ZoomRateList[] =
 
 
 CMemoryCapture::CMemoryCapture()
-	: m_fInitialized(false)
-	, m_hwnd(nullptr)
-	, m_fFitWindowToImage(true)
-	, m_fAccumulateAlways(false)
-	, m_SkipFrames(10)
-	, m_CurFrame(-1)
-	, m_SeekCommand(0)
-	, m_WheelDelta(0)
-	, m_WheelTime(0)
-	, m_Resample(CImage::Resample_Lanczos3)
-	, m_Deinterlace(CVideoDecoder::Deinterlace_Blend)
-
-	, m_VideoMemorySizeInMB(2)
-	, m_pStreamBuffer(nullptr)
-	, m_StreamSize(0)
-	, m_StreamAvail(0)
-	, m_StreamPos(0)
-	, m_StreamFormat(0)
-
-	, m_pDecodeBuffer(nullptr)
-	, m_DecodeSize(0)
-	, m_hDecodeThread(nullptr)
-
-	, m_SaveFormat(CImageCodec::Format_JPEG)
-	, m_LastSaveFormat(CImageCodec::Format_JPEG)
 {
 	m_CaptureSize.Type = CaptureSizeType_Rate;
 	m_CaptureSize.Rate.Num = 1;

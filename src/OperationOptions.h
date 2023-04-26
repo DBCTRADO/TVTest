@@ -67,23 +67,23 @@ namespace TVTest
 		int GetMiddleClickCommand() const { return m_MiddleClickCommand; }
 
 	private:
-		const CCommandManager *m_pCommandManager;
+		const CCommandManager *m_pCommandManager = nullptr;
 		CWheelCommandManager m_WheelCommandManager;
 
-		bool m_fDisplayDragMove;
-		int m_VolumeStep;
-		int m_AudioDelayStep;
-		CChannelManager::UpDownOrder m_ChannelUpDownOrder;
-		bool m_fChannelUpDownSkipSubChannel;
+		bool m_fDisplayDragMove = true;
+		int m_VolumeStep = 5;
+		int m_AudioDelayStep = 50;
+		CChannelManager::UpDownOrder m_ChannelUpDownOrder = CChannelManager::UpDownOrder::Index;
+		bool m_fChannelUpDownSkipSubChannel = true;
 		int m_WheelCommand;
 		int m_WheelShiftCommand;
 		int m_WheelCtrlCommand;
 		int m_WheelTiltCommand;
-		bool m_fStatusBarWheel;
-		bool m_fWheelVolumeReverse;
-		bool m_fWheelChannelReverse;
-		int m_WheelChannelDelay;
-		int m_WheelZoomStep;
+		bool m_fStatusBarWheel = true;
+		bool m_fWheelVolumeReverse = false;
+		bool m_fWheelChannelReverse = false;
+		int m_WheelChannelDelay = 1000;
+		int m_WheelZoomStep = 5;
 		int m_LeftDoubleClickCommand;
 		int m_RightClickCommand;
 		int m_MiddleClickCommand;

@@ -32,15 +32,8 @@ COptionFrame *COptions::m_pFrame = nullptr;
 DWORD COptions::m_GeneralUpdateFlags = 0;
 
 
-COptions::COptions()
-	: m_UpdateFlags(0)
-{
-}
-
-
 COptions::COptions(LPCTSTR pszSection)
 	: CSettingsBase(pszSection)
-	, m_UpdateFlags(0)
 {
 }
 

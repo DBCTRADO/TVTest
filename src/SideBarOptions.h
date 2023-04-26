@@ -81,12 +81,12 @@ namespace TVTest
 		std::vector<CSideBar::SideBarItem> m_AvailItemList;
 		std::vector<int> m_ItemList;
 		std::vector<String> m_ItemNameList;
-		bool m_fShowPopup;
-		bool m_fShowToolTips;
-		bool m_fShowChannelLogo;
-		int m_PopupOpacity;
-		PlaceType m_Place;
-		HIMAGELIST m_himlIcons;
+		bool m_fShowPopup = true;
+		bool m_fShowToolTips = true;
+		bool m_fShowChannelLogo = true;
+		int m_PopupOpacity = OPACITY_MAX;
+		PlaceType m_Place = PlaceType::Left;
+		HIMAGELIST m_himlIcons = nullptr;
 		std::map<int, int> m_IconIDMap;
 
 	// CBasicDialog

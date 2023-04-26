@@ -70,12 +70,6 @@ static const struct {
 
 
 
-CRawInput::CRawInput()
-	: m_pEventHandler(nullptr)
-{
-}
-
-
 bool CRawInput::Initialize(HWND hwnd)
 {
 	RAWINPUTDEVICE rid[2];

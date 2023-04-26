@@ -42,9 +42,9 @@ namespace TVTest
 		class CPluginCommandInfo
 		{
 			int m_ID;
-			int m_Command;
-			PluginCommandFlag m_Flags;
-			PluginCommandState m_State;
+			int m_Command = 0;
+			PluginCommandFlag m_Flags = PLUGIN_COMMAND_FLAG_NONE;
+			PluginCommandState m_State = PLUGIN_COMMAND_STATE_NONE;
 			String m_Text;
 			String m_Name;
 			Theme::ThemeBitmap m_Icon;
@@ -66,7 +66,7 @@ namespace TVTest
 			Theme::ThemeBitmap &GetIcon() { return m_Icon; }
 		};
 
-		CPlugin();
+		CPlugin() = default;
 		~CPlugin();
 
 		CPlugin(const CPlugin &) = delete;
@@ -248,7 +248,7 @@ namespace TVTest
 
 			CPlugin *m_pPlugin;
 			PanelItem *m_pItem;
-			HWND m_hwndItem;
+			HWND m_hwndItem = nullptr;
 
 			static bool m_fInitialized;
 		};
@@ -271,23 +271,23 @@ namespace TVTest
 			String Text;
 		};
 
-		HMODULE m_hLib;
+		HMODULE m_hLib = nullptr;
 		String m_FileName;
 		PluginParam m_PluginParam;
-		DWORD m_Version;
-		PluginType m_Type;
-		PluginFlag m_Flags;
+		DWORD m_Version = 0;
+		PluginType m_Type = PLUGIN_TYPE_NORMAL;
+		PluginFlag m_Flags = PLUGIN_FLAG_NONE;
 		String m_PluginName;
 		String m_Copyright;
 		String m_Description;
-		bool m_fEnabled;
-		bool m_fSetting;
-		int m_Command;
+		bool m_fEnabled = false;
+		bool m_fSetting = false;
+		int m_Command = 0;
 		Theme::ThemeBitmap m_PluginIcon;
-		EventCallbackFunc m_pEventCallback;
+		EventCallbackFunc m_pEventCallback = nullptr;
 		void *m_pEventCallbackClientData;
-		UINT m_ProgramGuideEventFlags;
-		WindowMessageCallbackFunc m_pMessageCallback;
+		UINT m_ProgramGuideEventFlags = 0;
+		WindowMessageCallbackFunc m_pMessageCallback = nullptr;
 		void *m_pMessageCallbackClientData;
 		std::vector<std::unique_ptr<CStreamGrabber>> m_StreamGrabberList;
 		MutexLock m_GrabberLock;
@@ -296,7 +296,7 @@ namespace TVTest
 		std::vector<String> m_ControllerList;
 		std::vector<std::unique_ptr<StatusItem>> m_StatusItemList;
 		std::vector<std::unique_ptr<PanelItem>> m_PanelItemList;
-		CGetVariable m_GetVariable;
+		CGetVariable m_GetVariable{this};
 		std::vector<AppCommand> m_AppCommandList;
 
 		static HWND m_hwndMessage;

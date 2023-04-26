@@ -93,22 +93,22 @@ protected:
 		const LibISDB::EventInfo *GetEvent(int Index) const;
 
 	protected:
-		HBITMAP m_hbmSmallLogo;
-		HBITMAP m_hbmBigLogo;
+		HBITMAP m_hbmSmallLogo = nullptr;
+		HBITMAP m_hbmBigLogo = nullptr;
 		mutable DrawUtil::CBitmap m_StretchedLogo;
 		LibISDB::EventInfo m_Event[2];
 	};
 
 	typedef std::vector<std::unique_ptr<CChannelItemBase>> ItemList;
 
-	RECT m_Rect;
-	int m_Height;
-	int m_ItemHeight;
-	int m_ChannelNameWidth;
-	int m_LogoWidth;
-	int m_LogoHeight;
-	int m_HotItem;
-	int m_ClickingItem;
+	RECT m_Rect{};
+	int m_Height = 0;
+	int m_ItemHeight = 0;
+	int m_ChannelNameWidth = 0;
+	int m_LogoWidth = 0;
+	int m_LogoHeight = 0;
+	int m_HotItem = -1;
+	int m_ClickingItem = -1;
 	ItemList m_ItemList;
 
 	void Clear();
@@ -122,9 +122,6 @@ protected:
 
 CChannelListCategoryBase::CChannelListCategoryBase(CHomeDisplay *pHomeDisplay)
 	: CCategory(pHomeDisplay)
-	, m_Height(0)
-	, m_HotItem(-1)
-	, m_ClickingItem(-1)
 {
 }
 
@@ -437,8 +434,6 @@ bool CChannelListCategoryBase::SetHotItem(int Item)
 
 CChannelListCategoryBase::CChannelItemBase::CChannelItemBase(const CChannelInfo &ChannelInfo)
 	: CChannelInfo(ChannelInfo)
-	, m_hbmSmallLogo(nullptr)
-	, m_hbmBigLogo(nullptr)
 {
 }
 
@@ -609,13 +604,12 @@ private:
 		LPCTSTR GetBonDriverFileName() const { return m_BonDriverFileName.c_str(); }
 	};
 
-	int m_MaxChannels;
+	int m_MaxChannels = 20;
 };
 
 
 CRecentChannelsCategory::CRecentChannelsCategory(CHomeDisplay *pHomeDisplay)
 	: CChannelListCategoryBase(pHomeDisplay)
-	, m_MaxChannels(20)
 {
 }
 
@@ -713,22 +707,22 @@ private:
 	private:
 		CChannelInfo m_ChannelInfo;
 		LibISDB::EventInfo m_EventInfo;
-		int m_ExpandedHeight;
-		bool m_fExpanded;
-		HBITMAP m_hbmLogo;
+		int m_ExpandedHeight = 0;
+		bool m_fExpanded = false;
+		HBITMAP m_hbmLogo = nullptr;
 		mutable DrawUtil::CBitmap m_StretchedLogo;
 
 		static void AppendEventText(String *pString, LPCWSTR pszText);
 	};
 
-	RECT m_Rect;
-	int m_Height;
-	int m_ItemHeight;
-	int m_ChannelNameWidth;
-	int m_LogoWidth;
-	int m_LogoHeight;
-	int m_HotItem;
-	int m_ClickingItem;
+	RECT m_Rect{};
+	int m_Height = 0;
+	int m_ItemHeight = 0;
+	int m_ChannelNameWidth = 0;
+	int m_LogoWidth = 0;
+	int m_LogoHeight = 0;
+	int m_HotItem = -1;
+	int m_ClickingItem = -1;
 	std::vector<std::unique_ptr<CEventItem>> m_ItemList;
 
 	void Clear();
@@ -746,9 +740,6 @@ private:
 
 CFeaturedEventsCategory::CFeaturedEventsCategory(CHomeDisplay *pHomeDisplay)
 	: CCategory(pHomeDisplay)
-	, m_Height(0)
-	, m_HotItem(-1)
-	, m_ClickingItem(-1)
 {
 }
 
@@ -1305,9 +1296,6 @@ void CFeaturedEventsCategory::OnFeaturedEventsSettingsChanged(CFeaturedEvents &F
 CFeaturedEventsCategory::CEventItem::CEventItem(const CChannelInfo &ChannelInfo, const LibISDB::EventInfo &EventInfo)
 	: m_ChannelInfo(ChannelInfo)
 	, m_EventInfo(EventInfo)
-	, m_ExpandedHeight(0)
-	, m_fExpanded(false)
-	, m_hbmLogo(nullptr)
 {
 }
 
@@ -1418,13 +1406,6 @@ bool CHomeDisplay::Initialize(HINSTANCE hinst)
 
 
 CHomeDisplay::CHomeDisplay()
-	: m_fAutoFontSize(true)
-	, m_ContentHeight(0)
-	, m_pHomeDisplayEventHandler(nullptr)
-	, m_CurCategory(0)
-	, m_hwndScroll(nullptr)
-	, m_ScrollPos(0)
-	, m_himlIcons(nullptr)
 {
 	GetDefaultFont(&m_StyleFont);
 
@@ -2281,14 +2262,6 @@ bool CHomeDisplay::RedrawCategoryItem(int Category)
 		return false;
 	Invalidate(&rc);
 	return true;
-}
-
-
-
-
-CHomeDisplay::CHomeDisplayEventHandler::CHomeDisplayEventHandler()
-	: m_pHomeDisplay(nullptr)
-{
 }
 
 

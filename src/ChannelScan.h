@@ -34,7 +34,6 @@ namespace TVTest
 		: public COptions
 	{
 	public:
-		CChannelScan();
 		~CChannelScan();
 
 	// COptions
@@ -76,14 +75,14 @@ namespace TVTest
 			static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
 		public:
-			CChannelListSort();
+			CChannelListSort() = default;
 			CChannelListSort(int Column, bool fDescending = false);
 
 			void Sort(HWND hwndList);
 			bool UpdateChannelList(HWND hwndList, CChannelList *pList);
 
-			int m_Column;
-			bool m_fDescending;
+			int m_Column = COLUMN_CHANNELINDEX;
+			bool m_fDescending = false;
 		};
 
 		class CScanSettingsDialog
@@ -114,34 +113,34 @@ namespace TVTest
 			CChannelScan *m_pChannelScan;
 		};
 
-		int m_ScanSpace;
-		int m_ScanChannel;
-		const CTuningSpaceList *m_pOriginalTuningSpaceList;
+		int m_ScanSpace = -1;
+		int m_ScanChannel = -1;
+		const CTuningSpaceList *m_pOriginalTuningSpaceList = nullptr;
 		CTuningSpaceList m_TuningSpaceList;
 		CChannelList m_ScanningChannelList;
 		std::vector<String> m_BonDriverChannelList;
-		bool m_fScanService;
-		bool m_fIgnoreSignalLevel;
-		float m_SignalLevelThreshold;
-		unsigned int m_ScanWait;
-		int m_RetryCount;
-		unsigned int m_RetryInterval;
-		bool m_fDetectDataService;
-		bool m_fDetect1SegService;
-		bool m_fDetectAudioService;
-		bool m_fUpdated;
-		bool m_fScaned;
-		bool m_fRestorePreview;
-		HWND m_hScanDlg;
-		HANDLE m_hScanThread;
-		HANDLE m_hCancelEvent;
-		bool m_fCancelled;
-		int m_SortColumn;
-		bool m_fSortDescending;
-		bool m_fChanging;
-		float m_MaxSignalLevel;
-		float m_ChannelMaxSignalLevel;
-		DWORD m_MaxBitRate;
+		bool m_fScanService = true;          /**< サービスを検索 */
+		bool m_fIgnoreSignalLevel = false;   /**< 信号レベルを無視 */
+		float m_SignalLevelThreshold = 7.0f; /**< 信号レベルの閾値 */
+		unsigned int m_ScanWait = 5000;      /**< チャンネル切り替え後の待ち時間(ms) */
+		int m_RetryCount = 4;                /**< 情報取得の再試行回数 */
+		unsigned int m_RetryInterval = 1000; /**< 再試行の間隔(ms) */
+		bool m_fDetectDataService = true;    /**< データ放送サービスを検出 */
+		bool m_fDetect1SegService = true;    /**< ワンセグサービスを検出 */
+		bool m_fDetectAudioService = true;   /**< 音声サービスを検出 */
+		bool m_fUpdated = false;
+		bool m_fScaned = false;
+		bool m_fRestorePreview = false;
+		HWND m_hScanDlg = nullptr;
+		HANDLE m_hScanThread = nullptr;
+		HANDLE m_hCancelEvent = nullptr;
+		bool m_fCancelled = false;
+		int m_SortColumn = -1;
+		bool m_fSortDescending = false;
+		bool m_fChanging = false;
+		float m_MaxSignalLevel = 0.0f;
+		float m_ChannelMaxSignalLevel = 0.0f;
+		DWORD m_MaxBitRate = 0;
 		std::vector<float> m_ChannelSignalLevel;
 
 	// CBasicDialog

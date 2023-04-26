@@ -31,14 +31,6 @@ namespace TVTest
 {
 
 
-CAudioManager::CAudioManager()
-	: m_CurTransportStreamID(LibISDB::TRANSPORT_STREAM_ID_INVALID)
-	, m_CurServiceID(LibISDB::SERVICE_ID_INVALID)
-	, m_CurEventID(LibISDB::EVENT_ID_INVALID)
-{
-}
-
-
 int CAudioManager::GetAudioCount() const
 {
 	LibISDB::BlockLock Lock(m_Lock);

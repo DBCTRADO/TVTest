@@ -34,7 +34,7 @@ namespace TVTest
 	class CTaskbarManager
 	{
 	public:
-		CTaskbarManager();
+		CTaskbarManager() = default;
 		~CTaskbarManager();
 
 		CTaskbarManager(const CTaskbarManager &) = delete;
@@ -86,15 +86,15 @@ namespace TVTest
 
 		static const CommandIconInfo m_CommandIconList[];
 
-		HWND m_hwnd;
-		UINT m_TaskbarButtonCreatedMessage;
-		interface ITaskbarList3 *m_pTaskbarList;
+		HWND m_hwnd = nullptr;
+		UINT m_TaskbarButtonCreatedMessage = 0;
+		interface ITaskbarList3 *m_pTaskbarList = nullptr;
 		String m_AppID;
-		bool m_fAppIDInvalid;
-		bool m_fJumpListInitialized;
+		bool m_fAppIDInvalid = false;
+		bool m_fJumpListInitialized = false;
 		CTaskbarSharedProperties m_SharedProperties;
 		CRecentChannelList m_RecentChannelList;
-		bool m_fSaveRecentChannelList;
+		bool m_fSaveRecentChannelList = false;
 		std::map<DWORD, ChannelIconInfo> m_ChannelIconMap;
 
 		HRESULT InitializeJumpList();

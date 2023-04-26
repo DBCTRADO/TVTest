@@ -32,11 +32,8 @@ namespace Layout
 
 
 CContainer::CContainer(int ID)
-	: m_pBase(nullptr)
-	, m_ID(ID)
-	, m_fVisible(false)
+	: m_ID(ID)
 {
-	::SetRectEmpty(&m_Position);
 }
 
 
@@ -82,10 +79,6 @@ CContainer *CContainer::GetChildContainer(int Index) const
 
 CWindowContainer::CWindowContainer(int ID)
 	: CContainer(ID)
-	, m_pWindow(nullptr)
-	, m_pUIBase(nullptr)
-	, m_MinWidth(0)
-	, m_MinHeight(0)
 {
 }
 
@@ -145,10 +138,6 @@ bool CWindowContainer::SetMinSize(int Width, int Height)
 
 CSplitter::CSplitter(int ID)
 	: CContainer(ID)
-	, m_Style(StyleFlag::None)
-	, m_AdjustPane(0)
-	, m_BarPos(0)
-	, m_BarWidth(4)
 {
 }
 
@@ -603,16 +592,6 @@ bool CLayoutBase::Initialize(HINSTANCE hinst)
 }
 
 
-CLayoutBase::CLayoutBase()
-	: m_pEventHandler(nullptr)
-	, m_pContainer(nullptr)
-	, m_pFocusContainer(nullptr)
-	, m_BackColor(::GetSysColor(COLOR_3DFACE))
-	, m_fLockLayout(false)
-{
-}
-
-
 CLayoutBase::~CLayoutBase()
 {
 	if (m_pEventHandler != nullptr)
@@ -898,12 +877,6 @@ HBRUSH CLayoutBase::GetBackBrush()
 }
 
 
-
-
-CLayoutBase::CEventHandler::CEventHandler()
-	: m_pBase(nullptr)
-{
-}
 
 
 CLayoutBase::CEventHandler::~CEventHandler()

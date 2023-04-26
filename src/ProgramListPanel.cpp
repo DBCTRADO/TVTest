@@ -56,8 +56,8 @@ private:
 
 	LibISDB::EventInfo m_EventInfo;
 	WORD m_EventID;
-	int m_NameLines;
-	int m_TextLines;
+	int m_NameLines = 0;
+	int m_TextLines = 0;
 
 	String GetEventText(bool fUseARIBSymbol) const;
 	void GetEventTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const;
@@ -66,11 +66,9 @@ private:
 
 
 CProgramItemInfo::CProgramItemInfo(const LibISDB::EventInfo &EventInfo)
+	: m_EventInfo(EventInfo)
+	, m_EventID(EventInfo.EventID)
 {
-	m_EventInfo = EventInfo;
-	m_EventID = EventInfo.EventID;
-	m_NameLines = 0;
-	m_TextLines = 0;
 }
 
 
@@ -231,19 +229,6 @@ bool CProgramListPanel::Initialize(HINSTANCE hinst)
 
 CProgramListPanel::CProgramListPanel()
 	: m_EventInfoPopupManager(&m_EventInfoPopup)
-	, m_EventInfoPopupHandler(this)
-	, m_pEPGDatabase(nullptr)
-	, m_FontHeight(0)
-	, m_fMouseOverEventInfo(true)
-	, m_fUseEpgColorScheme(false)
-	, m_fShowFeaturedMark(true)
-	, m_fUseARIBSymbol(false)
-	, m_VisibleEventIcons(((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY))
-	, m_ChannelHeight(0)
-	, m_CurEventID(-1)
-	, m_ScrollPos(0)
-	//, m_hwndToolTip(nullptr)
-	, m_fShowRetrievingMessage(false)
 {
 	GetDefaultFont(&m_StyleFont);
 }
@@ -1483,23 +1468,6 @@ bool CProgramListPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventIn
 }
 
 
-
-
-CProgramListPanel::ProgramListPanelStyle::ProgramListPanelStyle()
-	: ChannelPadding(3, 3, 3, 3)
-	, ChannelLogoMargin(0, 0, 3, 0)
-	, ChannelNameMargin(0, 2, 0, 2)
-	, ChannelButtonIconSize(12, 12)
-	, ChannelButtonPadding(2)
-	, ChannelButtonMargin(12)
-	, TitlePadding(2)
-	, IconSize(CEpgIcons::DEFAULT_ICON_WIDTH, CEpgIcons::DEFAULT_ICON_HEIGHT)
-	, IconMargin(1)
-	, LineSpacing(1)
-	, FeaturedMarkSize(5, 5)
-	, FeaturedMarkMargin(0)
-{
-}
 
 
 void CProgramListPanel::ProgramListPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)

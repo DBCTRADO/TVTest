@@ -73,18 +73,6 @@ bool CCaptionPanel::Initialize(HINSTANCE hinst)
 
 
 CCaptionPanel::CCaptionPanel()
-	: m_BackColor(RGB(0, 0, 0))
-	, m_TextColor(RGB(255, 255, 255))
-	, m_hwndEdit(nullptr)
-	, m_EditSubclass(this)
-	, m_fActive(false)
-	, m_fEnable(true)
-	, m_fAutoScroll(true)
-	, m_fIgnoreSmall(true)
-	, m_fHalfWidthAlnum(true)
-	, m_fHalfWidthEuroLanguagesOnly(true)
-	, m_CurLanguage(0)
-	, m_SaveCharEncoding(CHARENCODING_UTF16)
 {
 	GetDefaultFont(&m_CaptionFont);
 }
@@ -743,13 +731,6 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 }
 
 
-
-
-CCaptionDRCSMap::CCaptionDRCSMap()
-	: m_fSaveBMP(false)
-	, m_fSaveRaw(false)
-{
-}
 
 
 void CCaptionDRCSMap::Clear()

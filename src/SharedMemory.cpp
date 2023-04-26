@@ -56,12 +56,6 @@ namespace TVTest
 {
 
 
-CSharedMemory::CSharedMemory()
-	: m_hFileMapping(nullptr)
-{
-}
-
-
 CSharedMemory::~CSharedMemory()
 {
 	Close();

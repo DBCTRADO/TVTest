@@ -96,17 +96,17 @@ namespace TVTest
 		StatusItemInfoList m_AvailItemList;
 		StatusItemInfoList m_ItemList;
 		StatusItemInfoList m_ItemListCur;
-		int m_ItemID;
+		int m_ItemID = STATUS_ITEM_LAST + 1;
 		int m_DPI;
 		int m_StatusBarDPI;
 		Style::Font m_ItemFont;
 		bool m_fMultiRow;
-		int m_MaxRows;
-		bool m_fShowPopup;
-		int m_PopupOpacity;
+		int m_MaxRows = 2;
+		bool m_fShowPopup = true;
+		int m_PopupOpacity = OPACITY_MAX;
 
 		Style::Font m_CurSettingFont;
-		CItemListSubclass m_ItemListSubclass;
+		CItemListSubclass m_ItemListSubclass{this};
 		int m_ItemHeight;
 		int m_TextWidth;
 		Style::Margins m_ItemMargin;
@@ -116,12 +116,12 @@ namespace TVTest
 		UINT m_DragTimerID;
 		bool m_fDragResize;
 
-		bool m_fShowTOTTime;
-		bool m_fInterpolateTOTTime;
-		bool m_fEnablePopupProgramInfo;
-		bool m_fShowEventProgress;
-		int m_PopupEventInfoWidth;
-		int m_PopupEventInfoHeight;
+		bool m_fShowTOTTime = false;
+		bool m_fInterpolateTOTTime = true;
+		bool m_fEnablePopupProgramInfo = true;
+		bool m_fShowEventProgress = true;
+		int m_PopupEventInfoWidth = 0;
+		int m_PopupEventInfoHeight = 0;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

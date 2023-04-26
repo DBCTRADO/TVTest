@@ -36,7 +36,6 @@ CDirectWriteOptionsDialog::CDirectWriteOptionsDialog(
 	const LOGFONT &Font)
 	: m_pParams(pParams)
 	, m_Font(Font)
-	, m_pRenderingTester(nullptr)
 {
 }
 

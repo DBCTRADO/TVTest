@@ -61,7 +61,7 @@ namespace TVTest
 		String m_RecordFolder;
 		CAeroGlass m_AeroGlass;
 		Graphics::CImage m_LogoImage;
-		bool m_fDrawLogo;
+		bool m_fDrawLogo = false;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

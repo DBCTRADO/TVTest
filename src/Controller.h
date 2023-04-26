@@ -62,7 +62,6 @@ namespace TVTest
 			SelButtons,
 		};
 
-		CController();
 		virtual ~CController() = default;
 
 		virtual LPCTSTR GetName() const = 0;
@@ -80,7 +79,7 @@ namespace TVTest
 		void SetEventHandler(CEventHandler * pEventHandler);
 
 	protected:
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 
 		bool OnButtonDown(int Index);
 	};
@@ -98,7 +97,6 @@ namespace TVTest
 			bool operator==(const ControllerSettings &Operand) const;
 		};
 
-		CControllerManager();
 		~CControllerManager();
 
 	// CSettingsBase
@@ -127,26 +125,24 @@ namespace TVTest
 		struct ControllerInfo
 		{
 			std::unique_ptr<CController> Controller;
-			bool fSettingsLoaded;
-			bool fSettingsChanged;
+			bool fSettingsLoaded = false;
+			bool fSettingsChanged = false;
 			ControllerSettings Settings;
 
 			ControllerInfo(CController *p)
 				: Controller(p)
-				, fSettingsLoaded(false)
-				, fSettingsChanged(false)
 			{
 			}
 		};
 
 		std::vector<ControllerInfo> m_ControllerList;
 		std::vector<ControllerSettings> m_CurSettingsList;
-		bool m_fFocus;
-		bool m_fActive;
+		bool m_fFocus = false;
+		bool m_fActive = false;
 		String m_CurController;
-		HBITMAP m_hbmController;
-		HBITMAP m_hbmSelButtons;
-		RECT m_ImageRect;
+		HBITMAP m_hbmController = nullptr;
+		HBITMAP m_hbmSelButtons = nullptr;
+		RECT m_ImageRect{};
 		CTooltip m_Tooltip;
 
 	// CController::CEventHandler

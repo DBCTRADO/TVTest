@@ -33,16 +33,16 @@ namespace TVTest
 	class CColorPalette
 		: public CCustomWindow
 	{
-		int m_NumColors;
+		int m_NumColors = 0;
 		std::unique_ptr<RGBQUAD[]> m_Palette;
-		int m_SelColor;
-		int m_HotColor;
-		int m_Left;
-		int m_Top;
-		int m_ItemWidth;
-		int m_ItemHeight;
+		int m_SelColor = -1;
+		int m_HotColor = -1;
+		int m_Left = 0;
+		int m_Top = 0;
+		int m_ItemWidth = 6;
+		int m_ItemHeight = 6;
 		CTooltip m_Tooltip;
-		COLORREF m_BackColor;
+		COLORREF m_BackColor = CLR_INVALID;
 
 		static HINSTANCE m_hinst;
 
@@ -56,7 +56,6 @@ namespace TVTest
 		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 	public:
-		CColorPalette();
 		~CColorPalette();
 
 	// CBasicWindow

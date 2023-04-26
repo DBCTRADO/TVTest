@@ -45,8 +45,6 @@ namespace TVTest
 			FILETIME UpdatedTime;
 		};
 
-		CLogoManager();
-
 		void Clear();
 		bool SetLogoDirectory(LPCTSTR pszDirectory);
 		LPCTSTR GetLogoDirectory() const { return m_LogoDirectory.c_str(); }
@@ -96,7 +94,7 @@ namespace TVTest
 			WORD m_DataSize;
 			std::unique_ptr<BYTE[]> m_Data;
 			LibISDB::DateTime m_Time;
-			HBITMAP m_hbm;
+			HBITMAP m_hbm = nullptr;
 			Graphics::CImage m_Image;
 
 		public:
@@ -129,17 +127,17 @@ namespace TVTest
 		}
 		typedef std::map<DWORD, WORD> LogoIDMap;
 
-		CFilePath m_LogoDirectory;
-		bool m_fSaveLogo;
-		bool m_fSaveBmp;
+		CFilePath m_LogoDirectory{TEXT(".\\Logo")};
+		bool m_fSaveLogo = false;
+		bool m_fSaveBmp = false;
 		LogoMap m_LogoMap;
 		LogoIDMap m_LogoIDMap;
 		CImageCodec m_ImageCodec;
 		mutable MutexLock m_Lock;
-		bool m_fLogoUpdated;
-		bool m_fLogoIDMapUpdated;
-		FILETIME m_LogoFileLastWriteTime;
-		FILETIME m_LogoIDMapFileLastWriteTime;
+		bool m_fLogoUpdated = false;
+		bool m_fLogoIDMapUpdated = false;
+		FILETIME m_LogoFileLastWriteTime{};
+		FILETIME m_LogoIDMapFileLastWriteTime{};
 
 		bool SetLogoIDMap(WORD NetworkID, WORD ServiceID, WORD LogoID, bool fUpdate = true);
 		CLogoData *LoadLogoData(WORD NetworkID, WORD LogoID, BYTE LogoType);

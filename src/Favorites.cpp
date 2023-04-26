@@ -226,7 +226,6 @@ CFavoriteFolder *CFavoriteFolder::FindSubFolder(LPCTSTR pszName)
 CFavoriteChannel::CFavoriteChannel(const CChannelInfo &ChannelInfo)
 	: CFavoriteItem(ItemType::Channel)
 	, m_ChannelInfo(ChannelInfo)
-	, m_fForceBonDriverChange(false)
 {
 	m_Name = ChannelInfo.GetName();
 }
@@ -294,11 +293,6 @@ bool CFavoriteItemEnumerator::EnumItems(CFavoriteFolder &Folder)
 
 constexpr unsigned int CHANNEL_FLAG_FORCEBONDRIVERCHANGE = 0x0001U;
 
-CFavoritesManager::CFavoritesManager()
-	: m_fModified(false)
-	, m_OrganizeDialog(this)
-{
-}
 
 bool CFavoritesManager::AddChannel(const CChannelInfo *pChannelInfo, LPCTSTR pszBonDriverFileName)
 {
@@ -648,7 +642,7 @@ class CFavoritesMenu::CFolderItem
 	: public CFavoritesMenu::CMenuItem
 {
 	const CFavoriteFolder *m_pFolder;
-	int m_TextWidth;
+	int m_TextWidth = 0;
 
 public:
 	CFolderItem(const CFavoriteFolder *pFolder);
@@ -659,7 +653,6 @@ public:
 
 CFavoritesMenu::CFolderItem::CFolderItem(const CFavoriteFolder *pFolder)
 	: m_pFolder(pFolder)
-	, m_TextWidth(0)
 {
 }
 
@@ -669,13 +662,12 @@ class CFavoritesMenu::CChannelItem
 	const CFavoriteChannel *m_pChannel;
 	struct Event
 	{
-		bool fValid;
+		bool fValid = false;
 		LibISDB::EventInfo EventInfo;
-		Event() : fValid(false) {}
 	};
 	Event m_EventList[2];
-	int m_NameWidth;
-	int m_EventWidth;
+	int m_NameWidth = 0;
+	int m_EventWidth = 0;
 
 public:
 	CChannelItem(const CFavoriteChannel *pChannel);
@@ -692,8 +684,6 @@ public:
 
 CFavoritesMenu::CChannelItem::CChannelItem(const CFavoriteChannel *pChannel)
 	: m_pChannel(pChannel)
-	, m_NameWidth(0)
-	, m_EventWidth(0)
 {
 }
 
@@ -737,19 +727,6 @@ const LibISDB::EventInfo *CFavoritesMenu::CChannelItem::GetEventInfo(int Index) 
 	return &m_EventList[Index].EventInfo;
 }
 
-
-CFavoritesMenu::CFavoritesMenu()
-	: m_Flags(CreateFlag::None)
-	, m_hwnd(nullptr)
-	, m_hmenu(nullptr)
-	, m_TextHeight(0)
-	, m_TextWidth(0)
-	, m_IconWidth(16)
-	, m_IconHeight(16)
-	, m_MenuLogoMargin(3)
-	, m_himlIcons(nullptr)
-{
-}
 
 CFavoritesMenu::~CFavoritesMenu()
 {

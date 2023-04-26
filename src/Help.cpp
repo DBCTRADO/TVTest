@@ -29,13 +29,6 @@ namespace TVTest
 {
 
 
-CHtmlHelp::CHtmlHelp()
-	: m_hLib(nullptr)
-	, m_pHtmlHelp(nullptr)
-{
-}
-
-
 CHtmlHelp::~CHtmlHelp()
 {
 	Finalize();

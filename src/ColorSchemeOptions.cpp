@@ -104,7 +104,6 @@ const LPCTSTR CColorSchemeOptions::m_pszExtension = TEXT(".httheme");
 
 CColorSchemeOptions::CColorSchemeOptions()
 	: m_ColorScheme(std::make_unique<CColorScheme>())
-	, m_pEventHandler(nullptr)
 {
 }
 

@@ -33,7 +33,6 @@ CEpg::CEpg(LibISDB::EPGDatabase &EPGDatabase, CEventSearchOptions &EventSearchOp
 	: ProgramGuide(EventSearchOptions)
 	, ProgramGuideFrame(&ProgramGuide, &ProgramGuideFrameSettings)
 	, ProgramGuideDisplay(&ProgramGuide, &ProgramGuideFrameSettings)
-	, fShowProgramGuide(false)
 {
 	ProgramGuide.SetEPGDatabase(&EPGDatabase);
 	ProgramGuide.SetEventHandler(&m_ProgramGuideEventHandler);
@@ -48,12 +47,6 @@ CEpg::CChannelProviderManager *CEpg::CreateChannelProviderManager(LPCTSTR pszDef
 {
 	m_ChannelProviderManager.Create(pszDefaultTuner);
 	return &m_ChannelProviderManager;
-}
-
-
-CEpg::CChannelProviderManager::CChannelProviderManager()
-	: m_CurChannelProvider(-1)
-{
 }
 
 

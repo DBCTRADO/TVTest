@@ -31,13 +31,6 @@ namespace TVTest
 {
 
 
-CTSPacketInterface::CTSPacketInterface()
-	: m_pData(nullptr)
-	, m_fModified(false)
-{
-}
-
-
 STDMETHODIMP CTSPacketInterface::QueryInterface(REFIID riid, void **ppvObject)
 {
 	if (ppvObject == nullptr)
@@ -112,13 +105,7 @@ STDMETHODIMP CTSPacketInterface::SetDataBuffer(LibISDB::DataBuffer *pData)
 
 CTSProcessor::CTSProcessor(Interface::ITSProcessor *pTSProcessor)
 	: m_pTSProcessor(pTSProcessor)
-	, m_pFilterManager(nullptr)
-	, m_pFilterModule(nullptr)
-	, m_pFilter(nullptr)
 	, m_pTSPacket(new CTSPacketInterface)
-	, m_fSourceProcessor(false)
-	, m_pEventHandler(nullptr)
-	, m_CurDevice(-1)
 {
 	m_pTSProcessor->AddRef();
 	m_pTSProcessor->QueryInterface(IID_PPV_ARGS(&m_pFilterManager));

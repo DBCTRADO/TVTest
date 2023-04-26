@@ -69,12 +69,6 @@ bool CPanel::Initialize(HINSTANCE hinst)
 
 
 CPanel::CPanel()
-	: m_TitleHeight(0)
-	, m_pContent(nullptr)
-	, m_fShowTitle(false)
-	, m_fEnableFloating(true)
-	, m_pEventHandler(nullptr)
-	, m_HotItem(ItemType::None)
 {
 	GetSystemFont(DrawUtil::FontType::Caption, &m_StyleFont);
 }
@@ -527,16 +521,6 @@ void CPanel::RealizeStyle()
 }
 
 
-CPanel::PanelStyle::PanelStyle()
-	: TitlePadding(0, 0, 4, 0)
-	, TitleLabelMargin(4, 2, 4, 2)
-	, TitleLabelExtraHeight(4)
-	, TitleButtonIconSize(12, 12)
-	, TitleButtonPadding(2)
-{
-}
-
-
 void CPanel::PanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = PanelStyle();
@@ -589,13 +573,6 @@ bool CPanelFrame::Initialize(HINSTANCE hinst)
 
 
 CPanelFrame::CPanelFrame()
-	: m_fFloating(true)
-	, m_fFloatingTransition(false)
-	, m_DockingWidth(-1)
-	, m_DockingHeight(-1)
-	, m_Opacity(255)
-	, m_DragDockingTarget(DockingPlace::None)
-	, m_pEventHandler(nullptr)
 {
 	m_WindowPosition.Left = 120;
 	m_WindowPosition.Top = 120;
@@ -1101,12 +1078,6 @@ bool CDropHelper::Initialize(HINSTANCE hinst)
 		m_hinst = hinst;
 	}
 	return true;
-}
-
-
-CDropHelper::CDropHelper()
-	: m_Opacity(128)
-{
 }
 
 

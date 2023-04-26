@@ -75,7 +75,6 @@ namespace TVTest
 	class ABSTRACT_CLASS(CRegExpEngine)
 	{
 	public:
-		CRegExpEngine();
 		virtual ~CRegExpEngine() = default;
 
 		virtual bool GetName(LPTSTR pszName, size_t MaxLength) const = 0;
@@ -92,7 +91,7 @@ namespace TVTest
 		void MapTargetString(String &Text) const;
 
 		String m_Pattern;
-		CRegExp::PatternFlag m_Flags;
+		CRegExp::PatternFlag m_Flags = CRegExp::PatternFlag::None;
 	};
 
 }

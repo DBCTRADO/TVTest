@@ -142,7 +142,7 @@ namespace TVTest
 
 		static UINT IconFlag(int Icon) { return 1 << Icon; }
 
-		CEpgIcons();
+		CEpgIcons() = default;
 		~CEpgIcons();
 
 		CEpgIcons(const CEpgIcons &) = delete;
@@ -163,12 +163,12 @@ namespace TVTest
 		static unsigned int GetEventIcons(const LibISDB::EventInfo *pEventInfo);
 
 	protected:
-		HDC m_hdc;
-		HBITMAP m_hbmOld;
-		int m_IconWidth;
-		int m_IconHeight;
+		HDC m_hdc = nullptr;
+		HBITMAP m_hbmOld = nullptr;
+		int m_IconWidth = 0;
+		int m_IconHeight = 0;
 		DrawUtil::COffscreen m_StretchBuffer;
-		unsigned int m_StretchedIcons;
+		unsigned int m_StretchedIcons = 0;
 	};
 
 	class CEpgTheme

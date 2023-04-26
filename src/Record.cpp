@@ -112,14 +112,6 @@ bool CRecordTime::IsValid() const
 
 
 
-CRecordTask::CRecordTask()
-	: m_State(State::Stop)
-	, m_pTSEngine(nullptr)
-	, m_pRecorderFilter(nullptr)
-{
-}
-
-
 CRecordTask::~CRecordTask()
 {
 	Stop();
@@ -400,19 +392,6 @@ LONGLONG CRecordTask::GetFreeSpace() const
 }
 
 
-
-
-CRecordManager::CRecordManager()
-	: m_fRecording(false)
-	, m_fReserved(false)
-	, m_fStopOnEventEnd(false)
-	, m_Client(RecordClient::User)
-	, m_pTSEngine(nullptr)
-	, m_pRecorderFilter(nullptr)
-{
-	m_StartTimeSpec.Type = TimeSpecType::NotSpecified;
-	m_StopTimeSpec.Type = TimeSpecType::NotSpecified;
-}
 
 
 CRecordManager::~CRecordManager()

@@ -34,8 +34,6 @@ namespace TVTest
 	class CChannelHistory
 	{
 	public:
-		CChannelHistory();
-
 		void Clear();
 		bool SetCurrentChannel(LPCTSTR pszDriverName, const CChannelInfo *pChannelInfo);
 		const CTunerChannelInfo *Forward();
@@ -43,8 +41,8 @@ namespace TVTest
 
 	private:
 		std::deque<std::unique_ptr<CTunerChannelInfo>> m_ChannelList;
-		int m_MaxChannelHistory;
-		int m_CurrentChannel;
+		int m_MaxChannelHistory = 20;
+		int m_CurrentChannel = -1;
 	};
 
 	class CRecentChannelList
@@ -66,8 +64,8 @@ namespace TVTest
 
 	private:
 		std::deque<std::unique_ptr<CTunerChannelInfo>> m_ChannelList;
-		int m_MaxChannelHistory;
-		int m_MaxChannelHistoryMenu;
+		int m_MaxChannelHistory = 20;
+		int m_MaxChannelHistoryMenu = 20;
 	};
 
 }	// namespace TVTest

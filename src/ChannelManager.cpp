@@ -404,14 +404,6 @@ bool CChannelManager::GetChannelFileName(LPTSTR pszFileName, int MaxLength) cons
 
 
 
-CChannelSpec::CChannelSpec()
-	: m_Space(CChannelManager::SPACE_INVALID)
-	, m_Channel(-1)
-	, m_ServiceID(-1)
-{
-}
-
-
 bool CChannelSpec::Store(const CChannelManager *pChannelManager)
 {
 	m_Space = pChannelManager->GetCurrentSpace();

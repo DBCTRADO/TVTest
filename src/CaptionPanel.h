@@ -53,8 +53,8 @@ namespace TVTest
 
 		HashMap m_HashMap;
 		CodeMap m_CodeMap;
-		bool m_fSaveBMP;
-		bool m_fSaveRaw;
+		bool m_fSaveBMP = false;
+		bool m_fSaveRaw = false;
 		CFilePath m_SaveDirectory;
 		MutexLock m_Lock;
 
@@ -66,8 +66,6 @@ namespace TVTest
 		bool SetDRCS(uint16_t Code, const DRCSBitmap *pBitmap) override;
 
 	public:
-		CCaptionDRCSMap();
-
 		void Clear();
 		void Reset();
 		bool Load(LPCTSTR pszFileName);
@@ -133,24 +131,24 @@ namespace TVTest
 		static constexpr CharEncoding CHARENCODING_FIRST = CHARENCODING_UTF16;
 		static constexpr CharEncoding CHARENCODING_LAST  = CHARENCODING_SHIFTJIS;
 
-		COLORREF m_BackColor;
-		COLORREF m_TextColor;
+		COLORREF m_BackColor = RGB(0, 0, 0);
+		COLORREF m_TextColor = RGB(255, 255, 255);
 		DrawUtil::CBrush m_BackBrush;
 		Style::Font m_CaptionFont;
 		DrawUtil::CFont m_Font;
-		HWND m_hwndEdit;
-		CEditSubclass m_EditSubclass;
-		bool m_fActive;
-		bool m_fEnable;
-		bool m_fAutoScroll;
-		bool m_fIgnoreSmall;
-		bool m_fHalfWidthAlnum;
-		bool m_fHalfWidthEuroLanguagesOnly;
-		BYTE m_CurLanguage;
+		HWND m_hwndEdit = nullptr;
+		CEditSubclass m_EditSubclass{this};
+		bool m_fActive = false;
+		bool m_fEnable = true;
+		bool m_fAutoScroll = true;
+		bool m_fIgnoreSmall = true;
+		bool m_fHalfWidthAlnum = true;
+		bool m_fHalfWidthEuroLanguagesOnly = true;
+		BYTE m_CurLanguage = 0;
 		std::vector<LanguageInfo> m_LanguageList;
 		MutexLock m_Lock;
 		CCaptionDRCSMap m_DRCSMap;
-		CharEncoding m_SaveCharEncoding;
+		CharEncoding m_SaveCharEncoding = CHARENCODING_UTF16;
 
 	// LibISDB::CaptionFilter::Handler
 		virtual void OnLanguageUpdate(LibISDB::CaptionFilter *pFilter, LibISDB::CaptionParser *pParser) override;

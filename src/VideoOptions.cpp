@@ -56,19 +56,6 @@ bool CVideoOptions::GetRendererInfo(int Index, RendererInfo *pInfo)
 }
 
 
-CVideoOptions::CVideoOptions()
-	: m_VideoRendererType(LibISDB::DirectShow::VideoRenderer::RendererType::Default)
-	, m_fResetPanScanEventChange(true)
-	, m_fNoMaskSideCut(true)
-	, m_StretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
-	, m_FullscreenStretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
-	, m_MaximizeStretchMode(LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio)
-	, m_fIgnoreDisplayExtension(false)
-	, m_fClipToDevice(true)
-{
-}
-
-
 CVideoOptions::~CVideoOptions()
 {
 	Destroy();

@@ -83,10 +83,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			CSideBar *m_pSideBar;
+			CSideBar *m_pSideBar = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler();
 
 			virtual void OnCommand(int Command) {}
@@ -144,11 +143,10 @@ namespace TVTest
 	protected:
 		struct SideBarStyle
 		{
-			Style::Size IconSize;
-			Style::Margins ItemPadding;
-			Style::IntValue SeparatorWidth;
+			Style::Size IconSize{ICON_WIDTH, ICON_HEIGHT};
+			Style::Margins ItemPadding{3};
+			Style::IntValue SeparatorWidth{8};
 
-			SideBarStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -158,15 +156,15 @@ namespace TVTest
 		SideBarStyle m_Style;
 		CTooltip m_Tooltip;
 		DrawUtil::CFont m_TooltipFont;
-		bool m_fShowTooltips;
+		bool m_fShowTooltips = true;
 		DrawUtil::CMonoColorIconList m_Icons;
-		bool m_fVertical;
+		bool m_fVertical = true;
 		SideBarTheme m_Theme;
 		std::vector<SideBarItem> m_ItemList;
-		int m_HotItem;
-		int m_ClickItem;
+		int m_HotItem = -1;
+		int m_ClickItem = -1;
 		CMouseLeaveTrack m_MouseLeaveTrack;
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 		const CCommandManager *m_pCommandManager;
 
 		static constexpr int ICON_WIDTH = 16;

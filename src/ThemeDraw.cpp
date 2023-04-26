@@ -36,7 +36,6 @@ CThemeDraw::CThemeDraw(
 	const TVTest::Style::CStyleScaling *pStyleScaling)
 	: m_pStyleManager(pStyleManager)
 	, m_pStyleScaling(pStyleScaling)
-	, m_hdc(nullptr)
 {
 	if (m_pStyleScaling == nullptr) {
 		m_pStyleManager->InitStyleScaling(&m_StyleScaling);

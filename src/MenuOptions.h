@@ -86,11 +86,11 @@ namespace TVTest
 		static const MenuInfo m_DefaultMenuItemList[];
 		static const AdditionalItemInfo m_AdditionalItemList[];
 
-		int m_MaxChannelMenuRows;
-		int m_MaxChannelMenuEventInfo;
+		int m_MaxChannelMenuRows = 24;
+		int m_MaxChannelMenuEventInfo = 30;
 		std::vector<MenuItemInfo> m_MenuItemList;
 
-		bool m_fChanging;
+		bool m_fChanging = false;
 		CListView m_ItemListView;
 	};
 

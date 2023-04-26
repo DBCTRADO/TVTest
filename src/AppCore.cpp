@@ -33,9 +33,6 @@ namespace TVTest
 
 CAppCore::CAppCore(CAppMain &App)
 	: m_App(App)
-	, m_fSilent(false)
-	, m_fExitOnRecordingStop(false)
-	, m_f1SegMode(false)
 {
 }
 
@@ -279,7 +276,7 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName, const CTuningSpaceLis
 	{
 		LPCTSTR m_pszBonDriver;
 		const CTuningSpaceList *m_pTuningSpaceList;
-		bool m_fUpdated;
+		bool m_fUpdated = false;
 
 		bool ChannelItem(CFavoriteFolder &Folder, CFavoriteChannel &Channel) override
 		{
@@ -326,7 +323,6 @@ bool CAppCore::UpdateChannelList(LPCTSTR pszBonDriverName, const CTuningSpaceLis
 		CFavoritesChannelUpdator(LPCTSTR pszBonDriver, const CTuningSpaceList *pTuningSpaceList)
 			: m_pszBonDriver(pszBonDriver)
 			, m_pTuningSpaceList(pTuningSpaceList)
-			, m_fUpdated(false)
 		{
 		}
 

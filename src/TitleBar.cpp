@@ -77,14 +77,7 @@ bool CTitleBar::Initialize(HINSTANCE hinst)
 
 
 CTitleBar::CTitleBar()
-	: m_FontHeight(0)
-	, m_hIcon(nullptr)
-	, m_HotItem(-1)
-	, m_ClickItem(-1)
-	, m_fMaximized(false)
-	, m_fFullscreen(false)
-	, m_fSnapLayoutsSupport(Util::OS::IsWindows11OrLater())
-	, m_pEventHandler(nullptr)
+	: m_fSnapLayoutsSupport(Util::OS::IsWindows11OrLater())
 {
 	GetSystemFont(DrawUtil::FontType::Caption, &m_StyleFont);
 }
@@ -758,12 +751,6 @@ void CTitleBar::RealizeStyle()
 
 
 
-CTitleBar::CEventHandler::CEventHandler()
-	: m_pTitleBar(nullptr)
-{
-}
-
-
 CTitleBar::CEventHandler::~CEventHandler()
 {
 	if (m_pTitleBar != nullptr)
@@ -771,18 +758,6 @@ CTitleBar::CEventHandler::~CEventHandler()
 }
 
 
-
-
-CTitleBar::TitleBarStyle::TitleBarStyle()
-	: Padding(0, 0, 0, 0)
-	, LabelMargin(4, 2, 4, 2)
-	, LabelExtraHeight(4)
-	, IconSize(16, 16)
-	, IconMargin(4, 0, 0, 0)
-	, ButtonIconSize(12, 12)
-	, ButtonPadding(4)
-{
-}
 
 
 void CTitleBar::TitleBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)

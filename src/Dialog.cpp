@@ -119,18 +119,6 @@ const LPCTSTR CBasicDialog::PROP_NAME = TEXT("TVTestDialog");
 
 
 CBasicDialog::CBasicDialog()
-	: m_hDlg(nullptr)
-	, m_fModeless(false)
-	, m_fSetPosition(false)
-	, m_OriginalDPI(0)
-	, m_CurrentDPI(0)
-	, m_hOriginalFont(nullptr)
-	, m_fInitializing(false)
-	, m_fOwnDPIScaling(false)
-
-	, m_fDisableDarkMode(false)
-	, m_fAllowDarkMode(false)
-	, m_fDarkMode(false)
 {
 	SetStyleScaling(&m_StyleScaling);
 }
@@ -1912,14 +1900,6 @@ LRESULT CALLBACK CBasicDialog::UpDownSubclassProc(
 }
 
 
-
-
-CResizableDialog::CResizableDialog()
-	: m_hwndSizeGrip(nullptr)
-{
-	m_MinSize.cx = 0;
-	m_MinSize.cy = 0;
-}
 
 
 CResizableDialog::~CResizableDialog()

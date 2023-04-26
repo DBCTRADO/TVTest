@@ -32,7 +32,7 @@ namespace TVTest
 	class CDirectWriteSystem
 	{
 	public:
-		CDirectWriteSystem();
+		CDirectWriteSystem() = default;
 		~CDirectWriteSystem();
 
 		CDirectWriteSystem(const CDirectWriteSystem &) = delete;
@@ -45,10 +45,10 @@ namespace TVTest
 		IDWriteFactory *GetDWriteFactory();
 
 	private:
-		HMODULE m_hD2DLib;
-		HMODULE m_hDWriteLib;
-		ID2D1Factory *m_pD2DFactory;
-		IDWriteFactory *m_pDWriteFactory;
+		HMODULE m_hD2DLib = nullptr;
+		HMODULE m_hDWriteLib = nullptr;
+		ID2D1Factory *m_pD2DFactory = nullptr;
+		IDWriteFactory *m_pDWriteFactory = nullptr;
 	};
 
 	class CDirectWriteRenderer;
@@ -70,7 +70,6 @@ namespace TVTest
 		: public CDirectWriteResource
 	{
 	public:
-		CDirectWriteFont();
 		~CDirectWriteFont();
 
 		bool Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf);
@@ -80,15 +79,14 @@ namespace TVTest
 		bool GetLogFont(LOGFONT *pLogFont) const;
 
 	private:
-		IDWriteTextFormat *m_pTextFormat;
-		LOGFONT m_LogFont;
+		IDWriteTextFormat *m_pTextFormat = nullptr;
+		LOGFONT m_LogFont{};
 	};
 
 	class CDirectWriteBrush
 		: public CDirectWriteResource
 	{
 	public:
-		CDirectWriteBrush();
 		~CDirectWriteBrush();
 
 		bool Create(CDirectWriteRenderer &Renderer, BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255);
@@ -98,7 +96,7 @@ namespace TVTest
 		ID2D1Brush *GetBrush();
 
 	private:
-		ID2D1SolidColorBrush *m_pBrush;
+		ID2D1SolidColorBrush *m_pBrush = nullptr;
 	};
 
 	class CDirectWriteRenderer
@@ -117,11 +115,11 @@ namespace TVTest
 			};
 
 			ParamFlag Mask = ParamFlag::None;
-			float Gamma;
-			float EnhancedContrast;
-			float ClearTypeLevel;
-			DWRITE_PIXEL_GEOMETRY PixelGeometry;
-			DWRITE_RENDERING_MODE RenderingMode;
+			float Gamma = 2.2f;
+			float EnhancedContrast = 0.5f;
+			float ClearTypeLevel = 0.5f;
+			DWRITE_PIXEL_GEOMETRY PixelGeometry = DWRITE_PIXEL_GEOMETRY_RGB;
+			DWRITE_RENDERING_MODE RenderingMode = DWRITE_RENDERING_MODE_DEFAULT;
 		};
 
 		struct FontMetrics
@@ -180,12 +178,12 @@ namespace TVTest
 		bool UpdateRenderingParams();
 
 		CDirectWriteSystem &m_System;
-		ID2D1DCRenderTarget *m_pRenderTarget;
-		HWND m_hwnd;
-		HDC m_hdc;
-		HMONITOR m_hMonitor;
+		ID2D1DCRenderTarget *m_pRenderTarget = nullptr;
+		HWND m_hwnd = nullptr;
+		HDC m_hdc = nullptr;
+		HMONITOR m_hMonitor = nullptr;
 		RenderingParams m_RenderingParams;
-		bool m_fNeedRecreate;
+		bool m_fNeedRecreate = false;
 	};
 
 }	// namespace TVTest

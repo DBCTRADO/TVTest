@@ -38,13 +38,6 @@ namespace TVTest
 {
 
 
-CTooltip::CTooltip()
-	: m_hwndTooltip(nullptr)
-	, m_hwndParent(nullptr)
-{
-}
-
-
 CTooltip::~CTooltip()
 {
 	Destroy();
@@ -277,12 +270,6 @@ bool CTooltip::SetFont(HFONT hfont)
 }
 
 
-
-
-CBalloonTip::CBalloonTip()
-	: m_hwndToolTips(nullptr)
-{
-}
 
 
 CBalloonTip::~CBalloonTip()

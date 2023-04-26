@@ -30,12 +30,6 @@ namespace TVTest
 {
 
 
-CListView::CListView()
-	: m_hwnd(nullptr)
-{
-}
-
-
 bool CListView::Attach(HWND hwnd)
 {
 	if (hwnd == nullptr)

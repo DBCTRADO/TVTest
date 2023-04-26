@@ -95,7 +95,7 @@ namespace TVTest
 			LibISDB::DateTime TOTTime;
 		};
 
-		CEventVariableStringMap();
+		CEventVariableStringMap() = default;
 		CEventVariableStringMap(const EventInfo &Info);
 
 		bool BeginFormat() override;
@@ -112,9 +112,9 @@ namespace TVTest
 		static void GetEventTitle(const String &EventName, String *pTitle);
 		static void GetEventMark(const String &EventName, String *pMarks);
 
-		Flag m_Flags;
+		Flag m_Flags = Flag::None;
 		EventInfo m_EventInfo;
-		bool m_fCurrentTimeSet;
+		bool m_fCurrentTimeSet = false;
 		LibISDB::DateTime m_CurrentTime;
 	};
 

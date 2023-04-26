@@ -33,7 +33,7 @@ namespace TVTest
 	class CCaptureImage
 	{
 		HGLOBAL m_hData;
-		bool m_fLocked;
+		bool m_fLocked = false;
 		LibISDB::DateTime m_CaptureTime;
 		String m_Comment;
 
@@ -61,10 +61,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			CCapturePreview *m_pCapturePreview;
+			CCapturePreview *m_pCapturePreview = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler() = 0;
 
 			virtual void OnLButtonDown(int x, int y) {}
@@ -75,7 +74,6 @@ namespace TVTest
 
 		static bool Initialize(HINSTANCE hinst);
 
-		CCapturePreview();
 		~CCapturePreview();
 
 	// CBasicWindow
@@ -91,8 +89,8 @@ namespace TVTest
 		static HINSTANCE m_hinst;
 
 		std::shared_ptr<CCaptureImage> m_Image;
-		COLORREF m_crBackColor;
-		CEventHandler *m_pEventHandler;
+		COLORREF m_crBackColor = RGB(0, 0, 0);
+		CEventHandler *m_pEventHandler = nullptr;
 
 	// CCustomWindow
 		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -106,10 +104,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			CCaptureWindow *m_pCaptureWindow;
+			CCaptureWindow *m_pCaptureWindow = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler() = 0;
 
 			virtual void OnRestoreSettings() {}
@@ -209,13 +206,13 @@ namespace TVTest
 
 		Style::CStyleScaling m_StyleScaling;
 		CCapturePreview m_Preview;
-		CPreviewEventHandler m_PreviewEventHandler;
+		CPreviewEventHandler m_PreviewEventHandler{this};
 		CStatusView m_Status;
-		bool m_fShowStatusBar;
+		bool m_fShowStatusBar = true;
 		Theme::IconList m_StatusIcons;
 		std::shared_ptr<CCaptureImage> m_Image;
-		CEventHandler *m_pEventHandler;
-		bool m_fCreateFirst;
+		CEventHandler *m_pEventHandler = nullptr;
+		bool m_fCreateFirst = true;
 
 		void SetTitle();
 

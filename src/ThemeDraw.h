@@ -55,7 +55,7 @@ namespace TVTest
 			const TVTest::Style::CStyleManager *m_pStyleManager;
 			const TVTest::Style::CStyleScaling *m_pStyleScaling;
 			TVTest::Style::CStyleScaling m_StyleScaling;
-			HDC m_hdc;
+			HDC m_hdc = nullptr;
 		};
 
 	}	// namespace Theme

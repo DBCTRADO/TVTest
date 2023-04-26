@@ -73,12 +73,6 @@ void StringToHalfWidth(String &Text)
 
 
 
-CRegExpEngine::CRegExpEngine()
-	: m_Flags(CRegExp::PatternFlag::None)
-{
-}
-
-
 void CRegExpEngine::ClearPattern()
 {
 	m_Pattern.clear();
@@ -136,7 +130,6 @@ class CRegExpEngine_ECMAScript
 	: public CRegExpEngine
 {
 public:
-	CRegExpEngine_ECMAScript();
 	~CRegExpEngine_ECMAScript();
 	bool GetName(LPTSTR pszName, size_t MaxLength) const override;
 	bool Initialize() override;
@@ -148,14 +141,8 @@ public:
 private:
 	typedef std::basic_regex<TCHAR> RegEx;
 	RegEx m_RegEx;
-	bool m_fInitialized;
+	bool m_fInitialized = false;
 };
-
-
-CRegExpEngine_ECMAScript::CRegExpEngine_ECMAScript()
-	: m_fInitialized(false)
-{
-}
 
 
 CRegExpEngine_ECMAScript::~CRegExpEngine_ECMAScript()
@@ -397,7 +384,6 @@ class CRegExpEngine_Bregonig
 	: public CRegExpEngine
 {
 public:
-	CRegExpEngine_Bregonig();
 	~CRegExpEngine_Bregonig();
 	bool GetName(LPTSTR pszName, size_t MaxLength) const override;
 	bool Initialize() override;
@@ -422,20 +408,11 @@ private:
 		BREGEXP **rxp, TCHAR *msg);;
 	typedef void (*BRegFreeFunc)(BREGEXP *rx);
 
-	HMODULE m_hLib;
-	BREGEXP *m_pBRegExp;
-	BoMatchFunc m_pBoMatch;
-	BRegFreeFunc m_pBRegFree;
+	HMODULE m_hLib = nullptr;
+	BREGEXP *m_pBRegExp = nullptr;
+	BoMatchFunc m_pBoMatch = nullptr;
+	BRegFreeFunc m_pBRegFree = nullptr;
 };
-
-
-CRegExpEngine_Bregonig::CRegExpEngine_Bregonig()
-	: m_hLib(nullptr)
-	, m_pBRegExp(nullptr)
-	, m_pBoMatch(nullptr)
-	, m_pBRegFree(nullptr)
-{
-}
 
 
 CRegExpEngine_Bregonig::~CRegExpEngine_Bregonig()

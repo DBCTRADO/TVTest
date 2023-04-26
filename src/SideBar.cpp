@@ -57,12 +57,7 @@ bool CSideBar::Initialize(HINSTANCE hinst)
 
 
 CSideBar::CSideBar(const CCommandManager *pCommandManager)
-	: m_fShowTooltips(true)
-	, m_fVertical(true)
-	, m_HotItem(-1)
-	, m_ClickItem(-1)
-	, m_pEventHandler(nullptr)
-	, m_pCommandManager(pCommandManager)
+	: m_pCommandManager(pCommandManager)
 {
 }
 
@@ -775,12 +770,6 @@ void CSideBar::Draw(HDC hdc, const RECT &PaintRect)
 
 
 
-CSideBar::CEventHandler::CEventHandler()
-	: m_pSideBar(nullptr)
-{
-}
-
-
 CSideBar::CEventHandler::~CEventHandler()
 {
 	if (m_pSideBar != nullptr)
@@ -788,14 +777,6 @@ CSideBar::CEventHandler::~CEventHandler()
 }
 
 
-
-
-CSideBar::SideBarStyle::SideBarStyle()
-	: IconSize(ICON_WIDTH, ICON_HEIGHT)
-	, ItemPadding(3)
-	, SeparatorWidth(8)
-{
-}
 
 
 void CSideBar::SideBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)

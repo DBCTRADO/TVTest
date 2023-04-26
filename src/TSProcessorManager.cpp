@@ -690,7 +690,6 @@ void CTSProcessorManager::OnNotify(
 
 CTSProcessorManager::CTSProcessorSettings::CTSProcessorSettings(const GUID &guid)
 	: m_guid(guid)
-	, m_fLastOpenFailed(false)
 {
 }
 

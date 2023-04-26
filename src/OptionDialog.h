@@ -61,7 +61,6 @@ namespace TVTest
 			PAGE_LAST = PAGE_LOG
 		};
 
-		COptionDialog();
 		~COptionDialog();
 
 		bool Show(HWND hwndOwner, int StartPage = -1);
@@ -81,12 +80,12 @@ namespace TVTest
 		static bool m_fInitialized;
 		static PageInfo m_PageList[NUM_PAGES];
 
-		int m_CurrentPage;
-		int m_StartPage;
-		HIMAGELIST m_himlIcons;
+		int m_CurrentPage = 0;
+		int m_StartPage = -1;
+		HIMAGELIST m_himlIcons = nullptr;
 		DrawUtil::CFont m_TitleFont;
-		bool m_fSettingError;
-		bool m_fApplied;
+		bool m_fSettingError = false;
+		bool m_fApplied = false;
 		int m_IconWidth;
 		int m_IconHeight;
 		int m_ListMargin;

@@ -8,17 +8,6 @@
 #include "VideoDecoder.h"
 
 
-CVideoDecoder::CVideoDecoder()
-	: m_hLib(nullptr)
-	, m_pDecoder(nullptr)
-	, m_pFrameCapture(nullptr)
-	, m_pCreateInstance(nullptr)
-	, m_Deinterlace(Deinterlace_Blend)
-	, m_RefCount(1)
-{
-}
-
-
 CVideoDecoder::~CVideoDecoder()
 {
 	Finalize();

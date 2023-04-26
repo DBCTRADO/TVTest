@@ -190,14 +190,6 @@ HGLOBAL ResizeImage(
 
 
 
-CImageCodec::CImageCodec()
-#ifndef TVTEST_IMAGE_STATIC
-	: m_hLib(nullptr)
-#endif
-{
-}
-
-
 CImageCodec::~CImageCodec()
 {
 #ifndef TVTEST_IMAGE_STATIC

@@ -41,20 +41,20 @@ private:
 	static const LPCTSTR m_WindowClassName;
 	static HINSTANCE m_hinst;
 
-	TVTest::CTVTestApp *m_pApp;
-	HWND m_hwnd;
-	HWND m_hwndTooltips;
-	int m_DPI;
+	TVTest::CTVTestApp *m_pApp = nullptr;
+	HWND m_hwnd = nullptr;
+	HWND m_hwndTooltips = nullptr;
+	int m_DPI = 96;
 	RECT m_Margin;
 	int m_ItemPadding;
 	int m_ItemWidth;
 	int m_ItemHeight;
 	int m_IconWidth;
 	int m_IconHeight;
-	HBITMAP m_hbmIcons;
+	HBITMAP m_hbmIcons = nullptr;
 	std::vector<ItemInfo> m_ItemList;
-	int m_HotItem;
-	int m_ClickItem;
+	int m_HotItem = -1;
+	int m_ClickItem = -1;
 
 	void CalcMetrics();
 	void Draw(HDC hdc, const RECT &rcPaint);

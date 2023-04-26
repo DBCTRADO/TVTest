@@ -61,26 +61,7 @@ static void TitleFormatMakeCompatible(String &Str)
 
 
 CViewOptions::CViewOptions()
-	: m_fAdjustAspectResizing(false)
-	, m_fSnapAtWindowEdge(false)
-	, m_SnapAtWindowEdgeMargin(8)
-	, m_fSupportAeroSnap(true)
-	, m_fNearCornerResizeOrigin(false)
-	, m_fZoomKeepAspectRatio(false)
-	, m_PanScanAdjustWindowMode(AdjustWindowMode::Width)
-	, m_fRemember1SegWindowSize(true)
-	, m_fMinimizeToTray(false)
-	, m_fDisablePreviewWhenMinimized(false)
-	, m_fHideCursor(false)
-	, m_fUseLogoIcon(false)
-	, m_TitleTextFormat(TitleTextFormatPresets[0].pszFormat)
-	, m_fEnableTitleBarFont(false)
-	, m_fShowLogo(true)
-	, m_LogoFileName(APP_NAME TEXT("_Logo.bmp"))
-
-	, m_fNoScreenSaver(false)
-	, m_fNoMonitorLowPower(false)
-	, m_fNoMonitorLowPowerActiveOnly(false)
+	: m_TitleTextFormat(TitleTextFormatPresets[0].pszFormat)
 {
 	StyleUtil::GetSystemFont(DrawUtil::FontType::Caption, &m_TitleBarFont);
 }

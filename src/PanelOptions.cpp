@@ -34,14 +34,6 @@ namespace TVTest
 
 
 CPanelOptions::CPanelOptions()
-	: m_fSnapAtMainWindow(true)
-	, m_SnapMargin(4)
-	, m_fAttachToMainWindow(true)
-	, m_Opacity(100)
-	, m_fSpecCaptionFont(true)
-	, m_TabStyle(CPanelForm::TabStyle::TextOnly)
-	, m_fTabTooltip(true)
-	, m_fProgramInfoUseRichEdit(true)
 {
 	StyleUtil::GetDefaultUIFont(&m_Font);
 	StyleUtil::GetSystemFont(DrawUtil::FontType::Message, &m_CaptionFont);

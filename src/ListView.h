@@ -28,7 +28,7 @@ namespace TVTest
 	class CListView
 	{
 	public:
-		CListView();
+		CListView() = default;
 
 		CListView(const CListView &) = delete;
 		CListView &operator=(const CListView &) = delete;
@@ -58,7 +58,7 @@ namespace TVTest
 		void AdjustSingleColumnWidth();
 
 	protected:
-		HWND m_hwnd;
+		HWND m_hwnd = nullptr;
 	};
 
 }	// namespace TVTest

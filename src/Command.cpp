@@ -365,8 +365,6 @@ String CCommandManager::GetNumberedText(const String &Text, int Number) const
 
 CCommandManager::CCommandLister::CCommandLister(const CCommandManager &Manager)
 	: m_Manager(Manager)
-	, m_Index(0)
-	, m_ID(0)
 {
 }
 

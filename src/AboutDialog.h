@@ -35,7 +35,6 @@ namespace TVTest
 		: public CBasicDialog
 	{
 	public:
-		CAboutDialog();
 		~CAboutDialog();
 
 		bool Show(HWND hwndOwner) override;
@@ -43,7 +42,7 @@ namespace TVTest
 	private:
 		CAeroGlass m_AeroGlass;
 		Graphics::CImage m_LogoImage;
-		bool m_fDrawLogo;
+		bool m_fDrawLogo = false;
 		DrawUtil::CFont m_Font;
 		DrawUtil::CFont m_LinkFont;
 

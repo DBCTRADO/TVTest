@@ -56,15 +56,6 @@ bool CPanelForm::Initialize(HINSTANCE hinst)
 
 
 CPanelForm::CPanelForm()
-	: m_TabStyle(TabStyle::TextOnly)
-	, m_TabHeight(0)
-	, m_TabWidth(0)
-	, m_TabLineWidth(1)
-	, m_fFitTabWidth(true)
-	, m_CurTab(-1)
-	, m_PrevActivePageID(-1)
-	, m_pEventHandler(nullptr)
-	, m_fEnableTooltip(true)
 {
 	m_WindowPosition.Width = 200;
 	m_WindowPosition.Height = 240;
@@ -828,17 +819,6 @@ bool CPanelForm::CPage::CreateDefaultFont(DrawUtil::CFont *pFont)
 }
 
 
-
-
-CPanelForm::PanelFormStyle::PanelFormStyle()
-	: TabPadding(3)
-	, TabIconSize(16, 16)
-	, TabIconMargin(0)
-	, TabLabelMargin(0)
-	, TabIconLabelMargin(4)
-	, ClientMargin(4)
-{
-}
 
 
 void CPanelForm::PanelFormStyle::SetStyle(const Style::CStyleManager *pStyleManager)

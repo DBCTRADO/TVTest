@@ -45,12 +45,11 @@ namespace TVTest
 			: public CDisplayView::CEventHandler
 		{
 		protected:
-			class CChannelDisplay * m_pChannelDisplay;
+			class CChannelDisplay *m_pChannelDisplay = nullptr;
 		public:
 			static constexpr int SPACE_NOTSPECIFIED = -2;
 			static constexpr int SPACE_ALL          = -1;
 
-			CChannelDisplayEventHandler() : m_pChannelDisplay(nullptr) {}
 			virtual void OnTunerSelect(LPCTSTR pszDriverFileName, int TuningSpace) = 0;
 			virtual void OnChannelSelect(LPCTSTR pszDriverFileName, const CChannelInfo *pChannelInfo) = 0;
 			virtual void OnClose() = 0;
@@ -91,15 +90,13 @@ namespace TVTest
 			class CChannel
 				: public CChannelInfo
 			{
-				HBITMAP m_hbmSmallLogo;
-				HBITMAP m_hbmBigLogo;
+				HBITMAP m_hbmSmallLogo = nullptr;
+				HBITMAP m_hbmBigLogo = nullptr;
 				LibISDB::EventInfo m_Event[2];
 
 			public:
 				CChannel(const CChannelInfo &Info)
 					: CChannelInfo(Info)
-					, m_hbmSmallLogo(nullptr)
-					, m_hbmBigLogo(nullptr)
 				{
 				}
 				void SetSmallLogo(HBITMAP hbm) { m_hbmSmallLogo = hbm; }
@@ -161,7 +158,7 @@ namespace TVTest
 		Theme::Style m_ClockStyle;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
-		bool m_fAutoFontSize;
+		bool m_fAutoFontSize = true;
 		int m_FontHeight;
 		int m_TunerItemWidth;
 		int m_TunerItemHeight;
@@ -177,20 +174,20 @@ namespace TVTest
 		int m_TunerScrollPos;
 		int m_VisibleChannelItems;
 		int m_ChannelScrollPos;
-		HWND m_hwndTunerScroll;
-		HWND m_hwndChannelScroll;
+		HWND m_hwndTunerScroll = nullptr;
+		HWND m_hwndChannelScroll = nullptr;
 		CMouseWheelHandler m_MouseWheel;
 		LibISDB::DateTime m_EpgBaseTime;
 		LibISDB::DateTime m_ClockTime;
 		static constexpr UINT TIMER_CLOCK = 1;
 
 		std::vector<std::unique_ptr<CTuner>> m_TunerList;
-		int m_TotalTuningSpaces;
-		int m_CurTuner;
-		int m_CurChannel;
+		int m_TotalTuningSpaces = 0;
+		int m_CurTuner = -1;
+		int m_CurChannel = -1;
 		LibISDB::EPGDatabase *m_pEPGDatabase;
-		CLogoManager *m_pLogoManager;
-		CChannelDisplayEventHandler *m_pChannelDisplayEventHandler;
+		CLogoManager *m_pLogoManager = nullptr;
+		CChannelDisplayEventHandler *m_pChannelDisplayEventHandler = nullptr;
 		POINT m_LastCursorPos;
 
 		struct TunerInfo

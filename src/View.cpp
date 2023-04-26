@@ -43,16 +43,6 @@ const LPCTSTR VIDEO_CONTAINER_WINDOW_CLASS = APP_NAME TEXT(" Video Container");
 HINSTANCE CVideoContainerWindow::m_hinst = nullptr;
 
 
-CVideoContainerWindow::CVideoContainerWindow()
-	: m_pViewer(nullptr)
-	, m_pDisplayBase(nullptr)
-	, m_pEventHandler(nullptr)
-{
-	m_ClientSize.cx = 0;
-	m_ClientSize.cy = 0;
-}
-
-
 CVideoContainerWindow::~CVideoContainerWindow()
 {
 	Destroy();
@@ -202,12 +192,6 @@ void CVideoContainerWindow::SetEventHandler(CEventHandler *pEventHandler)
 
 
 
-CVideoContainerWindow::CEventHandler::CEventHandler()
-	: m_pVideoContainer(nullptr)
-{
-}
-
-
 CVideoContainerWindow::CEventHandler::~CEventHandler()
 {
 	if (m_pVideoContainer != nullptr)
@@ -240,17 +224,6 @@ bool CViewWindow::Initialize(HINSTANCE hinst)
 		m_hinst = hinst;
 	}
 	return true;
-}
-
-
-CViewWindow::CViewWindow()
-	: m_pVideoContainer(nullptr)
-	, m_hwndMessage(nullptr)
-	, m_pEventHandler(nullptr)
-	, m_hbmLogo(nullptr)
-	, m_BorderStyle(Theme::BorderType::None, RGB(128, 128, 128))
-	, m_fShowCursor(true)
-{
 }
 
 
@@ -482,12 +455,6 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 
 
-CViewWindow::CEventHandler::CEventHandler()
-	: m_pView(nullptr)
-{
-}
-
-
 CViewWindow::CEventHandler::~CEventHandler()
 {
 	if (m_pView != nullptr)
@@ -495,13 +462,6 @@ CViewWindow::CEventHandler::~CEventHandler()
 }
 
 
-
-
-CDisplayView::CDisplayView()
-	: m_pDisplayBase(nullptr)
-	, m_pEventHandler(nullptr)
-{
-}
 
 
 CDisplayView::~CDisplayView() = default;
@@ -725,20 +685,6 @@ LRESULT CDisplayView::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 CDisplayView::CEventHandler::~CEventHandler() = default;
 
 
-CDisplayView::DisplayViewStyle::DisplayViewStyle()
-	: TextSizeRatioHorz(50)
-	, TextSizeRatioVert(30)
-	, TextSizeScaleBase(140)
-	, TextSizeMin(12)
-	, TextSizeMax(72)
-	, ContentMargin(8, 16, 18, 16)
-	, CategoriesMargin(8, 32, 8, 32)
-	, CloseButtonSize(14, 14)
-	, CloseButtonMargin(2)
-{
-}
-
-
 void CDisplayView::DisplayViewStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	Style::IntValue Value;
@@ -771,15 +717,6 @@ void CDisplayView::DisplayViewStyle::NormalizeStyle(
 }
 
 
-
-
-CDisplayBase::CDisplayBase()
-	: m_pParentWindow(nullptr)
-	, m_pDisplayView(nullptr)
-	, m_pEventHandler(nullptr)
-	, m_fVisible(false)
-{
-}
 
 
 void CDisplayBase::SetEventHandler(CEventHandler *pHandler)

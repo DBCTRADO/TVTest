@@ -69,7 +69,6 @@ namespace TVTest
 			PERCENTAGE_LAST = PERCENTAGE_25
 		};
 
-		CCaptureOptions();
 		~CCaptureOptions();
 
 	// CSettingsBase
@@ -98,16 +97,22 @@ namespace TVTest
 
 	private:
 		String m_SaveFolder;
-		String m_FileName;
-		int m_SaveFormat;
-		int m_JPEGQuality;
-		int m_PNGCompressionLevel;
-		bool m_fCaptureSaveToFile;
-		bool m_fSetComment;
-		String m_CommentFormat;
-		int m_CaptureSizeType;
-		int m_CaptureSize;
-		int m_CapturePercentage;
+		String m_FileName{TEXT("Capture_%date%-%time%")};
+		int m_SaveFormat = 0;
+		int m_JPEGQuality = 90;
+		int m_PNGCompressionLevel = 6;
+		bool m_fCaptureSaveToFile = true;
+		bool m_fSetComment = false;
+		String m_CommentFormat{TEXT("%year%/%month%/%day% %hour%:%minute%:%second% %channel-name%\r\n%event-title%")};
+		int m_CaptureSizeType = SIZE_TYPE_ORIGINAL;
+		int m_CaptureSize =
+#ifndef TVTEST_FOR_1SEG
+			SIZE_1920x1080
+#else
+			SIZE_320x180
+#endif
+			;
+		int m_CapturePercentage = PERCENTAGE_50;
 		CImageCodec m_ImageCodec;
 
 	// CBasicDialog

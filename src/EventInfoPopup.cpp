@@ -59,26 +59,6 @@ bool CEventInfoPopup::Initialize(HINSTANCE hinst)
 
 
 CEventInfoPopup::CEventInfoPopup()
-	: m_hwndEdit(nullptr)
-	, m_BackColor(::GetSysColor(COLOR_WINDOW))
-	, m_TextColor(::GetSysColor(COLOR_WINDOWTEXT))
-	, m_EventTitleColor(m_TextColor)
-	, m_TitleBackColor(RGB(228, 228, 240))
-	, m_TitleTextColor(RGB(80, 80, 80))
-	, m_TitleHeight(0)
-	, m_TitleLeftMargin(2)
-	, m_TitleIconTextMargin(4)
-	, m_ButtonSize(14)
-	, m_ButtonMargin(3)
-	, m_pEventHandler(nullptr)
-	, m_fDetailInfo(
-#ifdef _DEBUG
-		true
-#else
-		false
-#endif
-		)
-	, m_fMenuShowing(false)
 {
 	m_WindowPosition.Width = 320;
 	m_WindowPosition.Height = 320;
@@ -924,12 +904,6 @@ void CEventInfoPopup::ShowContextMenu()
 
 
 
-CEventInfoPopup::CEventHandler::CEventHandler()
-	: m_pPopup(nullptr)
-{
-}
-
-
 CEventInfoPopup::CEventHandler::~CEventHandler()
 {
 	if (m_pPopup != nullptr)
@@ -941,9 +915,6 @@ CEventInfoPopup::CEventHandler::~CEventHandler()
 
 CEventInfoPopupManager::CEventInfoPopupManager(CEventInfoPopup *pPopup)
 	: m_pPopup(pPopup)
-	, m_fEnable(true)
-	, m_pEventHandler(nullptr)
-	, m_HitTestParam(-1)
 {
 }
 
@@ -1087,14 +1058,6 @@ LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 	}
 
 	return CWindowSubclass::OnMessage(hwnd, uMsg, wParam, lParam);
-}
-
-
-
-
-CEventInfoPopupManager::CEventHandler::CEventHandler()
-	: m_pPopup(nullptr)
-{
 }
 
 

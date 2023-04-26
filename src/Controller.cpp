@@ -32,12 +32,6 @@ namespace TVTest
 {
 
 
-CController::CController()
-	: m_pEventHandler(nullptr)
-{
-}
-
-
 bool CController::TranslateMessage(HWND hwnd, MSG *pMessage)
 {
 	return false;
@@ -81,15 +75,6 @@ bool CController::OnButtonDown(int Index)
 }
 
 
-
-
-CControllerManager::CControllerManager()
-	: m_fFocus(false)
-	, m_fActive(false)
-	, m_hbmController(nullptr)
-	, m_hbmSelButtons(nullptr)
-{
-}
 
 
 CControllerManager::~CControllerManager()

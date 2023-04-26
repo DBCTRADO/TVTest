@@ -162,13 +162,6 @@ INT_PTR CChannelPropDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 
 
-CChannelScan::CChannelListSort::CChannelListSort()
-	: m_Column(COLUMN_CHANNELINDEX)
-	, m_fDescending(false)
-{
-}
-
-
 CChannelScan::CChannelListSort::CChannelListSort(int Column, bool fDescending)
 	: m_Column(Column)
 	, m_fDescending(fDescending)
@@ -257,25 +250,6 @@ bool CChannelScan::CChannelListSort::UpdateChannelList(HWND hwndList, CChannelLi
 }
 
 
-
-
-CChannelScan::CChannelScan()
-	: m_pOriginalTuningSpaceList(nullptr)
-	, m_fScanService(true)
-	, m_fIgnoreSignalLevel(false)  // 信号レベルを無視
-	, m_SignalLevelThreshold(7.0f) // 信号レベルの閾値
-	, m_ScanWait(5000)             // チャンネル切り替え後の待ち時間(ms)
-	, m_RetryCount(4)              // 情報取得の再試行回数
-	, m_RetryInterval(1000)        // 再試行の間隔(ms)
-	, m_fDetectDataService(true)
-	, m_fDetect1SegService(true)
-	, m_fDetectAudioService(true)
-	, m_hScanDlg(nullptr)
-	, m_hScanThread(nullptr)
-	, m_hCancelEvent(nullptr)
-	, m_fChanging(false)
-{
-}
 
 
 CChannelScan::~CChannelScan()

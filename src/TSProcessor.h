@@ -45,8 +45,6 @@ namespace TVTest
 		, protected CIUnknownImpl
 	{
 	public:
-		CTSPacketInterface();
-
 	// IUnknown
 		STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
 		STDMETHODIMP_(ULONG) AddRef() override { return AddRefImpl(); }
@@ -63,8 +61,8 @@ namespace TVTest
 		STDMETHODIMP_(LibISDB::DataBuffer*) GetDataBuffer() override { return m_pData; }
 
 	protected:
-		LibISDB::DataBuffer *m_pData;
-		bool m_fModified;
+		LibISDB::DataBuffer *m_pData = nullptr;
+		bool m_fModified = false;
 
 		~CTSPacketInterface() = default;
 	};
@@ -177,17 +175,17 @@ namespace TVTest
 
 	protected:
 		Interface::ITSProcessor *m_pTSProcessor;
-		Interface::IFilterManager *m_pFilterManager;
-		Interface::IFilterModule *m_pFilterModule;
-		Interface::IFilter *m_pFilter;
+		Interface::IFilterManager *m_pFilterManager = nullptr;
+		Interface::IFilterModule *m_pFilterModule = nullptr;
+		Interface::IFilter *m_pFilter = nullptr;
 		CTSPacketInterface *m_pTSPacket;
 		LibISDB::DataBuffer m_OutputData;
 		std::vector<LibISDB::TSPacket> m_OutputPacket;
 		LibISDB::DataStreamSequence<LibISDB::DataBuffer *> m_OutputSequence;
-		bool m_fSourceProcessor;
-		CEventHandler *m_pEventHandler;
+		bool m_fSourceProcessor = false;
+		CEventHandler *m_pEventHandler = nullptr;
 		String m_ModuleName;
-		int m_CurDevice;
+		int m_CurDevice = -1;
 		String m_CurFilter;
 
 		~CTSProcessor();

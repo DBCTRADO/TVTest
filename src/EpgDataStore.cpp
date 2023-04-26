@@ -31,11 +31,6 @@ namespace TVTest
 
 
 CEpgDataStore::CEpgDataStore()
-	: m_OpenFlags(OpenFlag::None)
-	, m_hThread(nullptr)
-	, m_pEventHandler(nullptr)
-	, m_UpdateCount(0)
-	, m_LockTimeout(10000)
 {
 	m_EPGDataFile.SetSourceID(1);
 }

@@ -98,9 +98,6 @@ bool CChannelStatusItem::OnMouseWheel(int x, int y, bool fHorz, int Delta, int *
 
 CVideoSizeStatusItem::CVideoSizeStatusItem()
 	: CStatusItem(STATUS_ITEM_VIDEOSIZE, SizeValue(11 * EM_FACTOR, SizeUnit::EM))
-	, m_OriginalVideoWidth(0)
-	, m_OriginalVideoHeight(0)
-	, m_ZoomPercentage(0)
 {
 }
 
@@ -260,13 +257,6 @@ void CVolumeStatusItem::NormalizeStyle(
 	pStyleScaling->ToPixels(&m_Style.BarBorderWidth);
 }
 
-CVolumeStatusItem::VolumeStatusStyle::VolumeStatusStyle()
-	: BarHeight(8)
-	, BarPadding(1)
-	, BarBorderWidth(1)
-{
-}
-
 
 CAudioChannelStatusItem::CAudioChannelStatusItem()
 	: CStatusItem(STATUS_ITEM_AUDIOCHANNEL, SizeValue(7 * EM_FACTOR, SizeUnit::EM))
@@ -334,8 +324,6 @@ bool CAudioChannelStatusItem::OnMouseWheel(int x, int y, bool fHorz, int Delta, 
 
 CRecordStatusItem::CRecordStatusItem()
 	: CStatusItem(STATUS_ITEM_RECORD, SizeValue(6 * EM_FACTOR, SizeUnit::EM))
-	, m_fRemain(false)
-	, m_CircleColor(RGB(223, 63, 0))
 {
 }
 
@@ -602,9 +590,6 @@ void CCaptureStatusItem::OnRButtonDown(int x, int y)
 
 CErrorStatusItem::CErrorStatusItem()
 	: CStatusItem(STATUS_ITEM_ERROR, SizeValue(11 * EM_FACTOR, SizeUnit::EM))
-	, m_ContinuityErrorPacketCount(0)
-	, m_ErrorPacketCount(0)
-	, m_ScramblePacketCount(0)
 {
 }
 
@@ -662,9 +647,6 @@ void CErrorStatusItem::OnRButtonDown(int x, int y)
 
 CSignalLevelStatusItem::CSignalLevelStatusItem()
 	: CStatusItem(STATUS_ITEM_SIGNALLEVEL, SizeValue(11 * EM_FACTOR, SizeUnit::EM))
-	, m_fShowSignalLevel(true)
-	, m_SignalLevel(0.0f)
-	, m_BitRate(0)
 {
 }
 
@@ -721,8 +703,6 @@ void CSignalLevelStatusItem::ShowSignalLevel(bool fShow)
 
 CClockStatusItem::CClockStatusItem()
 	: CStatusItem(STATUS_ITEM_CLOCK, SizeValue(5 * EM_FACTOR, SizeUnit::EM))
-	, m_fTOT(false)
-	, m_fInterpolateTOT(true)
 {
 }
 
@@ -854,12 +834,6 @@ void CClockStatusItem::FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText,
 
 CProgramInfoStatusItem::CProgramInfoStatusItem()
 	: CStatusItem(STATUS_ITEM_PROGRAMINFO, SizeValue(20 * EM_FACTOR, SizeUnit::EM))
-	, m_fNext(false)
-	, m_fShowProgress(true)
-	, m_fEnablePopupInfo(true)
-	, m_ProgressBackStyle(Theme::FillStyle(Theme::SolidStyle(Theme::ThemeColor(160, 160, 160))))
-	, m_ProgressElapsedStyle(Theme::FillStyle(Theme::SolidStyle(Theme::ThemeColor(0, 0, 128))))
-	, m_fValidProgress(false)
 {
 }
 
@@ -1088,8 +1062,6 @@ void CProgramInfoStatusItem::GetPopupInfoSize(int *pWidth, int *pHeight) const
 
 CBufferingStatusItem::CBufferingStatusItem()
 	: CStatusItem(STATUS_ITEM_BUFFERING, SizeValue(7 * EM_FACTOR, SizeUnit::EM))
-	, m_StreamRemain(0)
-	, m_PacketBufferUsedPercentage(0)
 {
 }
 
@@ -1192,8 +1164,6 @@ void CTunerStatusItem::OnRButtonDown(int x, int y)
 
 CMediaBitRateStatusItem::CMediaBitRateStatusItem()
 	: CStatusItem(STATUS_ITEM_MEDIABITRATE, SizeValue(13 * EM_FACTOR, SizeUnit::EM))
-	, m_VideoBitRate(0)
-	, m_AudioBitRate(0)
 {
 }
 

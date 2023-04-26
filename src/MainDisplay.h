@@ -79,7 +79,7 @@ namespace TVTest
 
 	protected:
 		CAppMain &m_App;
-		bool m_fViewerEnabled;
+		bool m_fViewerEnabled = false;
 		CViewWindow m_ViewWindow;
 		CVideoContainerWindow m_VideoContainer;
 		CDisplayBase m_DisplayBase;

@@ -97,13 +97,12 @@ namespace TVTest
 	private:
 		struct PanelStyle
 		{
-			Style::Margins TitlePadding;
-			Style::Margins TitleLabelMargin;
-			Style::IntValue TitleLabelExtraHeight;
-			Style::Size TitleButtonIconSize;
-			Style::Margins TitleButtonPadding;
+			Style::Margins TitlePadding{0, 0, 4, 0};
+			Style::Margins TitleLabelMargin{4, 2, 4, 2};
+			Style::IntValue TitleLabelExtraHeight{4};
+			Style::Size TitleButtonIconSize{12, 12};
+			Style::Margins TitleButtonPadding{2};
 
-			PanelStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -119,16 +118,16 @@ namespace TVTest
 		DrawUtil::CFont m_Font;
 		DrawUtil::CFont m_IconFont;
 		int m_FontHeight;
-		int m_TitleHeight;
-		CPanelContent *m_pContent;
+		int m_TitleHeight = 0;
+		CPanelContent *m_pContent = nullptr;
 		String m_Title;
-		bool m_fShowTitle;
-		bool m_fEnableFloating;
+		bool m_fShowTitle = false;
+		bool m_fEnableFloating = true;
 		PanelStyle m_Style;
 		PanelTheme m_Theme;
-		CEventHandler *m_pEventHandler;
-		ItemType m_HotItem;
-		bool m_fCloseButtonPushed;
+		CEventHandler *m_pEventHandler = nullptr;
+		ItemType m_HotItem = ItemType::None;
+		bool m_fCloseButtonPushed = false;
 		POINT m_ptDragStartPos;
 		POINT m_ptMovingWindowPos;
 
@@ -151,7 +150,7 @@ namespace TVTest
 	class CDropHelper
 		: public CCustomWindow
 	{
-		int m_Opacity;
+		int m_Opacity = 128;
 		static HINSTANCE m_hinst;
 
 	// CBasicWindow
@@ -163,7 +162,6 @@ namespace TVTest
 	public:
 		static bool Initialize(HINSTANCE hinst);
 
-		CDropHelper();
 		~CDropHelper();
 
 		bool Show(const RECT *pRect);
@@ -232,15 +230,15 @@ namespace TVTest
 		Layout::CSplitter *m_pSplitter;
 		int m_PanelID;
 		CPanel m_Panel;
-		bool m_fFloating;
-		bool m_fFloatingTransition;
-		int m_DockingWidth;
-		int m_DockingHeight;
-		int m_Opacity;
+		bool m_fFloating = true;
+		bool m_fFloatingTransition = false;
+		int m_DockingWidth = -1;
+		int m_DockingHeight = -1;
+		int m_Opacity = 255;
 		CDropHelper m_DropHelper;
-		DockingPlace m_DragDockingTarget;
-		bool m_fDragMoving;
-		CEventHandler *m_pEventHandler;
+		DockingPlace m_DragDockingTarget = DockingPlace::None;
+		bool m_fDragMoving = false;
+		CEventHandler *m_pEventHandler = nullptr;
 		Style::CStyleScaling m_StyleScaling;
 
 		static HINSTANCE m_hinst;

@@ -43,8 +43,6 @@ namespace TVTest
 			void SetDefaultColors();
 		};
 
-		CProgramGuideFavorites();
-
 		void Clear();
 		size_t GetCount() const;
 		bool Add(const FavoriteInfo &Info);
@@ -57,7 +55,7 @@ namespace TVTest
 
 	private:
 		std::vector<FavoriteInfo> m_List;
-		bool m_fFixedWidth;
+		bool m_fFixedWidth = true;
 	};
 
 	class CProgramGuideFavoritesDialog
@@ -78,8 +76,8 @@ namespace TVTest
 
 	private:
 		CProgramGuideFavorites m_Favorites;
-		int m_CurItem;
-		bool m_fChanging;
+		int m_CurItem = -1;
+		bool m_fChanging = false;
 		Theme::BackgroundStyle m_ButtonTheme;
 
 	// CBasicDialog

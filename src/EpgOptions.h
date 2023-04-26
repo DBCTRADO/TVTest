@@ -149,16 +149,16 @@ namespace TVTest
 			static unsigned int __stdcall LoadThread(void *pParameter);
 		};
 
-		bool m_fSaveEpgFile;
-		CFilePath m_EpgFileName;
-		bool m_fUpdateWhenStandby;
-		bool m_fUpdateBSExtended;
-		bool m_fUpdateCSExtended;
-		bool m_fUseEDCBData;
+		bool m_fSaveEpgFile = true;
+		CFilePath m_EpgFileName{TEXT("EpgData")};
+		bool m_fUpdateWhenStandby = false;
+		bool m_fUpdateBSExtended = false;
+		bool m_fUpdateCSExtended = false;
+		bool m_fUseEDCBData = false;
 		CFilePath m_EDCBDataFolder;
-		EpgTimeMode m_EpgTimeMode;
-		bool m_fSaveLogoFile;
-		CFilePath m_LogoFileName;
+		EpgTimeMode m_EpgTimeMode = EpgTimeMode::JST;
+		bool m_fSaveLogoFile = true;
+		CFilePath m_LogoFileName{TEXT("LogoData")};
 
 		std::unique_ptr<CEpgFileLoader> m_EpgFileLoader;
 		CEpgDataStore m_EpgDataStore;

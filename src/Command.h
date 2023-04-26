@@ -74,8 +74,8 @@ namespace TVTest
 
 		private:
 			const CCommandManager &m_Manager;
-			size_t m_Index;
-			int m_ID;
+			size_t m_Index = 0;
+			int m_ID = 0;
 		};
 
 		class ABSTRACT_CLASS(CEventListener)

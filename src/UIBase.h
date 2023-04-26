@@ -34,7 +34,7 @@ namespace TVTest
 	class CUIBase
 	{
 	public:
-		CUIBase();
+		CUIBase() = default;
 		virtual ~CUIBase() = 0;
 
 		CUIBase(const CUIBase &) = delete;
@@ -78,7 +78,7 @@ namespace TVTest
 		void InitStyleScaling(HWND hwnd, bool fNonClientScaling);
 		void OnDPIChanged(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
-		Style::CStyleScaling *m_pStyleScaling;
+		Style::CStyleScaling *m_pStyleScaling = nullptr;
 		std::vector<CUIBase*> m_UIChildList;
 
 	private:

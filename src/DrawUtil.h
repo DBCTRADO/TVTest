@@ -115,10 +115,10 @@ namespace TVTest
 
 		class CFont
 		{
-			HFONT m_hfont;
+			HFONT m_hfont = nullptr;
 
 		public:
-			CFont();
+			CFont() = default;
 			CFont(const CFont &Font);
 			CFont(const LOGFONT &Font);
 			CFont(FontType Type);
@@ -143,10 +143,10 @@ namespace TVTest
 
 		class CBrush
 		{
-			HBRUSH m_hbr;
+			HBRUSH m_hbr = nullptr;
 
 		public:
-			CBrush();
+			CBrush() = default;
 			CBrush(const CBrush &Brush);
 			CBrush(COLORREF Color);
 			~CBrush();
@@ -161,10 +161,10 @@ namespace TVTest
 
 		class CBitmap
 		{
-			HBITMAP m_hbm;
+			HBITMAP m_hbm = nullptr;
 
 		public:
-			CBitmap();
+			CBitmap() = default;
 			CBitmap(const CBitmap &Src);
 			~CBitmap();
 
@@ -197,7 +197,7 @@ namespace TVTest
 		class CMonoColorBitmap
 		{
 		public:
-			CMonoColorBitmap();
+			CMonoColorBitmap() = default;
 			CMonoColorBitmap(const CMonoColorBitmap &Src);
 			CMonoColorBitmap(CMonoColorBitmap &&Src) noexcept;
 			~CMonoColorBitmap();
@@ -227,10 +227,10 @@ namespace TVTest
 		private:
 			void SetColor(COLORREF Color);
 
-			HBITMAP m_hbm;
-			HBITMAP m_hbmPremultiplied;
-			COLORREF m_Color;
-			bool m_fColorImage;
+			HBITMAP m_hbm = nullptr;
+			HBITMAP m_hbmPremultiplied = nullptr;
+			COLORREF m_Color = CLR_INVALID;
+			bool m_fColorImage = false;
 		};
 
 		class CMonoColorIconList
@@ -242,8 +242,6 @@ namespace TVTest
 				int Width;
 				int Height;
 			};
-
-			CMonoColorIconList();
 
 			bool Load(HINSTANCE hinst, LPCTSTR pszName, int Width, int Height);
 			bool Load(HINSTANCE hinst, int ID, int Width, int Height) {
@@ -267,14 +265,14 @@ namespace TVTest
 
 		private:
 			CMonoColorBitmap m_Bitmap;
-			int m_IconWidth;
-			int m_IconHeight;
+			int m_IconWidth = 0;
+			int m_IconHeight = 0;
 		};
 
 		class CMemoryDC
 		{
 		public:
-			CMemoryDC();
+			CMemoryDC() = default;
 			CMemoryDC(HDC hdc);
 			~CMemoryDC();
 
@@ -294,20 +292,20 @@ namespace TVTest
 			bool DrawAlpha(HDC hdc, int DstX, int DstY, int SrcX, int SrcY, int Width, int Height);
 
 		private:
-			HDC m_hdc;
-			HBITMAP m_hbmOld;
+			HDC m_hdc = nullptr;
+			HBITMAP m_hbmOld = nullptr;
 		};
 
 		class COffscreen
 		{
-			HDC m_hdc;
-			HBITMAP m_hbm;
-			HBITMAP m_hbmOld;
-			int m_Width;
-			int m_Height;
+			HDC m_hdc = nullptr;
+			HBITMAP m_hbm = nullptr;
+			HBITMAP m_hbmOld = nullptr;
+			int m_Width = 0;
+			int m_Height = 0;
 
 		public:
-			COffscreen();
+			COffscreen() = default;
 			~COffscreen();
 
 			COffscreen(const COffscreen &) = delete;
@@ -335,10 +333,10 @@ namespace TVTest
 
 	class CUxTheme
 	{
-		HTHEME m_hTheme;
+		HTHEME m_hTheme = nullptr;
 
 	public:
-		CUxTheme();
+		CUxTheme() = default;
 		~CUxTheme();
 
 		CUxTheme(const CUxTheme &) = delete;

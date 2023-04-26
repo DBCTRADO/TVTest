@@ -37,7 +37,7 @@ namespace TVTest
 			DirectWrite,
 		};
 
-		CTextDrawClient();
+		CTextDrawClient() = default;
 		~CTextDrawClient();
 
 		CTextDrawClient(const CTextDrawClient &) = delete;
@@ -64,7 +64,7 @@ namespace TVTest
 
 		CDirectWriteEngine *GetDirectWriteEngine();
 
-		TextDrawEngine m_Engine;
+		TextDrawEngine m_Engine = TextDrawEngine::Undefined;
 		std::unique_ptr<CDirectWriteEngine> m_DirectWriteEngine;
 	};
 

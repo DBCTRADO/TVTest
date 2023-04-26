@@ -29,16 +29,6 @@ bool CPreviewWindow::Initialize(HINSTANCE hinst)
 }
 
 
-CPreviewWindow::CPreviewWindow()
-	: m_hwnd(nullptr)
-	, m_pImage(nullptr)
-	, m_fFitImageToWindow(true)
-	, m_ZoomNum(50)
-	, m_ZoomDenom(100)
-{
-}
-
-
 bool CPreviewWindow::Create(HWND hwndParent)
 {
 	return ::CreateWindowEx(

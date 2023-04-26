@@ -46,22 +46,7 @@ constexpr unsigned int OSD_FLAG(COSDOptions::OSDType type) { return 1U << static
 
 
 COSDOptions::COSDOptions()
-	: m_fShowOSD(true)
-	, m_fPseudoOSD(true)
-	, m_TextColor(RGB(0, 255, 0))
-	, m_Opacity(80)
-	, m_FadeTime(3000)
-	, m_ChannelChangeType(ChannelChangeType::LogoAndText)
-	, m_ChannelChangeText(TEXT("%channel-no% %channel-name%"))
-	, m_EnabledOSD(OSD_FLAG(OSDType::Channel) | OSD_FLAG(OSDType::Volume) | OSD_FLAG(OSDType::ChannelNoInput))
-
-	, m_fLayeredWindow(true)
-	, m_fCompositionEnabled(false)
-
-	, m_fEnableNotificationBar(true)
-	, m_NotificationBarDuration(3000)
-	, m_NotificationBarFlags(NOTIFY_EVENTNAME | NOTIFY_TSPROCESSORERROR)
-	, m_fDisplayFontAutoSize(false)
+	: m_EnabledOSD(OSD_FLAG(OSDType::Channel) | OSD_FLAG(OSDType::Volume) | OSD_FLAG(OSDType::ChannelNoInput))
 {
 	CAeroGlass Aero;
 	if (Aero.IsEnabled())

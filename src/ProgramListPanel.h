@@ -119,20 +119,18 @@ namespace TVTest
 	private:
 		struct ProgramListPanelStyle
 		{
-			Style::Margins ChannelPadding;
-			Style::Margins ChannelLogoMargin;
-			Style::Margins ChannelNameMargin;
-			Style::Size ChannelButtonIconSize;
-			Style::Margins ChannelButtonPadding;
-			Style::IntValue ChannelButtonMargin;
-			Style::Margins TitlePadding;
-			Style::Size IconSize;
-			Style::Margins IconMargin;
-			Style::IntValue LineSpacing;
-			Style::Size FeaturedMarkSize;
-			Style::Margins FeaturedMarkMargin;
-
-			ProgramListPanelStyle();
+			Style::Margins ChannelPadding{3, 3, 3, 3};
+			Style::Margins ChannelLogoMargin{0, 0, 3, 0};
+			Style::Margins ChannelNameMargin{0, 2, 0, 2};
+			Style::Size ChannelButtonIconSize{12, 12};
+			Style::Margins ChannelButtonPadding{2};
+			Style::IntValue ChannelButtonMargin{12};
+			Style::Margins TitlePadding{2};
+			Style::Size IconSize{CEpgIcons::DEFAULT_ICON_WIDTH, CEpgIcons::DEFAULT_ICON_HEIGHT};
+			Style::Margins IconMargin{1};
+			Style::IntValue LineSpacing{1};
+			Style::Size FeaturedMarkSize{5, 5};
+			Style::Margins FeaturedMarkMargin{0};
 
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
@@ -145,30 +143,30 @@ namespace TVTest
 			ITEM_CHANNELLISTBUTTON
 		};
 
-		LibISDB::EPGDatabase *m_pEPGDatabase;
+		LibISDB::EPGDatabase *m_pEPGDatabase = nullptr;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
 		DrawUtil::CFont m_TitleFont;
 		DrawUtil::CFont m_IconFont;
-		int m_FontHeight;
+		int m_FontHeight = 0;
 		ProgramListPanelStyle m_Style;
 		ProgramListPanelTheme m_Theme;
 		CEpgTheme m_EpgTheme;
-		bool m_fMouseOverEventInfo;
-		bool m_fUseEpgColorScheme;
-		bool m_fShowFeaturedMark;
-		bool m_fUseARIBSymbol;
+		bool m_fMouseOverEventInfo = true;
+		bool m_fUseEpgColorScheme = false;
+		bool m_fShowFeaturedMark = true;
+		bool m_fUseARIBSymbol = false;
 		CEpgIcons m_EpgIcons;
-		UINT m_VisibleEventIcons;
-		int m_ChannelHeight;
-		int m_TotalLines;
+		UINT m_VisibleEventIcons = ((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY);
+		int m_ChannelHeight = 0;
+		int m_TotalLines = 0;
 		CProgramItemList m_ItemList;
 		CChannelInfo m_SelectedChannel;
 		CChannelInfo m_CurChannel;
-		int m_CurEventID;
-		int m_ScrollPos;
-		int m_OldDPI;
-		int m_HotItem;
+		int m_CurEventID = -1;
+		int m_ScrollPos = 0;
+		int m_OldDPI = 0;
+		int m_HotItem = -1;
 		CChannelMenu m_ChannelMenu;
 		CMouseWheelHandler m_MouseWheel;
 		//HWND m_hwndToolTip;
@@ -185,9 +183,9 @@ namespace TVTest
 			bool HitTest(int x, int y, LPARAM *pParam) override;
 			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 		};
-		CEventInfoPopupHandler m_EventInfoPopupHandler;
+		CEventInfoPopupHandler m_EventInfoPopupHandler{this};
 		CFeaturedEventsMatcher m_FeaturedEventsMatcher;
-		bool m_fShowRetrievingMessage;
+		bool m_fShowRetrievingMessage = false;
 
 		static const LPCTSTR m_pszClassName;
 		static HINSTANCE m_hinst;

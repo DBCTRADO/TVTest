@@ -31,7 +31,7 @@ namespace TVTest
 	class CIcon
 	{
 	public:
-		CIcon();
+		CIcon() = default;
 		CIcon(const CIcon &Src);
 		CIcon(HICON hico);
 		~CIcon();
@@ -49,7 +49,7 @@ namespace TVTest
 		HICON GetHandle() const { return m_hico; }
 
 	private:
-		HICON m_hico;
+		HICON m_hico = nullptr;
 	};
 
 

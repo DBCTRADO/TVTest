@@ -43,7 +43,7 @@ namespace TVTest
 			MESSAGE_ICON_ERROR
 		};
 
-		CTaskTrayManager();
+		CTaskTrayManager() = default;
 		~CTaskTrayManager();
 
 		CTaskTrayManager(const CTaskTrayManager &) = delete;
@@ -62,12 +62,12 @@ namespace TVTest
 		bool HandleMessage(UINT Message, WPARAM wParam, LPARAM lParam);
 
 	private:
-		HWND m_hwnd;
-		UINT m_TrayIconMessage;
-		bool m_fResident;
-		bool m_fMinimizeToTray;
-		StatusFlag m_Status;
-		UINT m_TaskbarCreatedMessage;
+		HWND m_hwnd = nullptr;
+		UINT m_TrayIconMessage = 0;
+		bool m_fResident = false;
+		bool m_fMinimizeToTray = true;
+		StatusFlag m_Status = StatusFlag::None;
+		UINT m_TaskbarCreatedMessage = 0;
 		String m_TipText;
 
 		bool AddTrayIcon();

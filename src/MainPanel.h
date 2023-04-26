@@ -46,7 +46,7 @@ namespace TVTest
 		CControlPanel ControlPanel;
 		// CPanelFormのデストラクタからパネル項目に通知が送られるので、宣言の順序に注意
 		CPanelForm Form;
-		bool fShowPanelWindow;
+		bool fShowPanelWindow = false;
 
 		CMainPanel();
 
@@ -75,7 +75,7 @@ namespace TVTest
 				EDGE_RIGHT,
 				EDGE_TOP,
 				EDGE_BOTTOM
-			} m_SnapEdge;
+			} m_SnapEdge = EDGE_NONE;
 			int m_AttachOffset;
 
 		public:
@@ -114,7 +114,7 @@ namespace TVTest
 		CFrameEventHandler m_FrameEventHandler;
 		CFormEventHandler m_FormEventHandler;
 		CChannelPanelEventHandler m_ChannelPanelEventHandler;
-		bool m_fEnableProgramListUpdate;
+		bool m_fEnableProgramListUpdate = true;
 	};
 
 }	// namespace TVTest

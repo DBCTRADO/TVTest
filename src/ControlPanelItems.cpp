@@ -248,13 +248,6 @@ void CVolumeControlItem::NormalizeStyle(
 	pStyleScaling->ToPixels(&m_Style.BarBorderWidth);
 }
 
-CVolumeControlItem::VolumeControlStyle::VolumeControlStyle()
-	: BarHeight(8)
-	, BarPadding(1)
-	, BarBorderWidth(1)
-{
-}
-
 
 void CAudioControlItem::CalcSize(int Width, SIZE *pSize)
 {

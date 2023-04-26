@@ -59,9 +59,9 @@ namespace TVTest
 	private:
 		String m_FileName;
 		String m_TunerName;
-		bool m_fChannelFileLoaded;
+		bool m_fChannelFileLoaded = false;
 		CTuningSpaceList m_TuningSpaceList;
-		bool m_fDriverSpaceLoaded;
+		bool m_fDriverSpaceLoaded = false;
 		CTuningSpaceList m_DriverSpaceList;
 	};
 

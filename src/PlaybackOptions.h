@@ -32,7 +32,6 @@ namespace TVTest
 		: public COptions
 	{
 	public:
-		CPlaybackOptions();
 		~CPlaybackOptions();
 
 	// COptions
@@ -71,23 +70,23 @@ namespace TVTest
 
 		static constexpr DWORD MAX_PACKET_BUFFER_LENGTH = 0x00100000UL;
 
-		bool m_fRestoreMute;
-		bool m_fMute;
-		bool m_fRestorePlayStatus;
-		bool m_fRestore1SegMode;
-		bool m_f1SegMode;
+		bool m_fRestoreMute = false;
+		bool m_fMute = false;
+		bool m_fRestorePlayStatus = false;
+		bool m_fRestore1SegMode = false;
+		bool m_f1SegMode = false;
 
-		bool m_fUseAudioRendererClock;
-		bool m_fEnablePTSSync;
-		bool m_fAdjustAudioStreamTime;
-		bool m_fMinTimerResolution;
+		bool m_fUseAudioRendererClock = true;
+		bool m_fEnablePTSSync = true;
+		bool m_fAdjustAudioStreamTime = true;
+		bool m_fMinTimerResolution = true;
 
-		bool m_fPacketBuffering;
-		DWORD m_PacketBufferLength;
-		int m_PacketBufferPoolPercentage;
-		int m_StreamThreadPriority;
+		bool m_fPacketBuffering = false;
+		DWORD m_PacketBufferLength = 40000;
+		int m_PacketBufferPoolPercentage = 50;
+		int m_StreamThreadPriority = THREAD_PRIORITY_NORMAL;
 
-		bool m_fAdjust1SegFrameRate;
+		bool m_fAdjust1SegFrameRate = true;
 
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;

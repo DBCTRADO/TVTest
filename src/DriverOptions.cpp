@@ -51,19 +51,19 @@ constexpr unsigned int DRIVER_FLAG_DEFAULTMASK                  = 0x0000003F;
 class CDriverSettings
 {
 	String m_FileName;
-	int m_InitialChannelType;
-	int m_InitialSpace;
-	int m_InitialChannel;
-	int m_InitialServiceID;
-	bool m_fAllChannels;
+	int m_InitialChannelType = INITIALCHANNEL_LAST;
+	int m_InitialSpace = 0;
+	int m_InitialChannel = 0;
+	int m_InitialServiceID = -1;
+	bool m_fAllChannels = false;
 	CDriverOptions::BonDriverOptions m_Options;
 
 public:
-	int m_LastSpace;
-	int m_LastChannel;
-	int m_LastServiceID;
-	int m_LastTransportStreamID;
-	bool m_fLastAllChannels;
+	int m_LastSpace = -1;
+	int m_LastChannel = -1;
+	int m_LastServiceID = -1;
+	int m_LastTransportStreamID = -1;
+	bool m_fLastAllChannels = false;
 
 	CDriverSettings(LPCTSTR pszFileName);
 
@@ -104,18 +104,7 @@ public:
 
 CDriverSettings::CDriverSettings(LPCTSTR pszFileName)
 	: m_FileName(pszFileName)
-	, m_InitialChannelType(INITIALCHANNEL_LAST)
-	, m_InitialSpace(0)
-	, m_InitialChannel(0)
-	, m_InitialServiceID(-1)
-	, m_fAllChannels(false)
 	, m_Options(pszFileName)
-
-	, m_LastSpace(-1)
-	, m_LastChannel(-1)
-	, m_LastServiceID(-1)
-	, m_LastTransportStreamID(-1)
-	, m_fLastAllChannels(false)
 {
 }
 
@@ -212,7 +201,6 @@ int CDriverSettingList::Find(LPCTSTR pszFileName) const
 
 CDriverOptions::CDriverOptions()
 	: COptions(TEXT("DriverSettings"))
-	, m_pDriverManager(nullptr)
 {
 }
 
@@ -890,22 +878,8 @@ INT_PTR CDriverOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 
 
-CDriverOptions::BonDriverOptions::BonDriverOptions()
-	: fNoSignalLevel(false)
-	, fIgnoreInitialStream(true)
-	, fPurgeStreamOnChannelChange(true)
-	, fResetChannelChangeErrorCount(true)
-	, fPumpStreamSyncPlayback(false)
-	, FirstChannelSetDelay(0)
-	, MinChannelChangeInterval(0)
-{
-}
-
-
 CDriverOptions::BonDriverOptions::BonDriverOptions(LPCTSTR pszBonDriverName)
 {
-	*this = BonDriverOptions();
-
 	CDriverManager::TunerSpec Spec;
 	if (GetAppClass().DriverManager.GetTunerSpec(pszBonDriverName, &Spec)) {
 		if (!!(Spec.Flags &

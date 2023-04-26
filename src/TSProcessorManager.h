@@ -74,7 +74,7 @@ namespace TVTest
 			std::vector<TunerFilterInfo> m_TunerFilterMap;
 			PropertyList m_PropertyList;
 			FilterInfo m_LastOpenFilter;
-			bool m_fLastOpenFailed;
+			bool m_fLastOpenFailed = false;
 
 			CTSProcessorSettings(const GUID &guid);
 			const TunerFilterInfo *GetTunerFilterInfo(

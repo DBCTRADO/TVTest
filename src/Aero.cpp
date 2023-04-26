@@ -72,11 +72,6 @@ bool CAeroGlass::EnableNcRendering(HWND hwnd, bool fEnable)
 class CBufferedPaintInitializer
 {
 public:
-	CBufferedPaintInitializer()
-		: m_fInitialized(false)
-	{
-	}
-
 	~CBufferedPaintInitializer()
 	{
 		if (m_fInitialized)
@@ -96,16 +91,10 @@ public:
 	bool IsInitialized() const { return m_fInitialized; }
 
 private:
-	bool m_fInitialized;
+	bool m_fInitialized = false;
 };
 
 static CBufferedPaintInitializer BufferedPaintInitializer;
-
-
-CBufferedPaint::CBufferedPaint()
-	: m_hPaintBuffer(nullptr)
-{
-}
 
 
 CBufferedPaint::~CBufferedPaint()

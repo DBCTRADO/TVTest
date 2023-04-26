@@ -61,13 +61,6 @@ COptionDialog::PageInfo COptionDialog::m_PageList[NUM_PAGES] = {
 };
 
 
-COptionDialog::COptionDialog()
-	: m_CurrentPage(0)
-	, m_himlIcons(nullptr)
-{
-}
-
-
 COptionDialog::~COptionDialog()
 {
 	Destroy();

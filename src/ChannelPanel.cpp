@@ -61,32 +61,6 @@ bool CChannelPanel::Initialize(HINSTANCE hinst)
 
 CChannelPanel::CChannelPanel()
 	: m_EventInfoPopupManager(&m_EventInfoPopup)
-	, m_EventInfoPopupHandler(this)
-	, m_pEPGDatabase(nullptr)
-	, m_FontHeight(0)
-	, m_EventNameLines(2)
-	, m_ChannelNameHeight(0)
-	, m_EventNameHeight(0)
-	, m_ItemHeight(0)
-	, m_ExpandedItemHeight(0)
-
-	, m_fUseEpgColorScheme(false)
-	, m_fShowGenreColor(false)
-	, m_fShowFeaturedMark(true)
-	, m_fShowProgressBar(false)
-	, m_fUseARIBSymbol(false)
-	, m_ProgressBarStyle(ProgressBarStyle::Elapsed)
-	, m_EventsPerChannel(2)
-	, m_ExpandAdditionalEvents(4)
-	, m_ExpandEvents(m_EventsPerChannel + m_ExpandAdditionalEvents)
-	, m_ScrollPos(0)
-	, m_CurChannel(-1)
-	, m_fScrollToCurChannel(false)
-	, m_pEventHandler(nullptr)
-	, m_fDetailToolTip(false)
-	, m_pLogoManager(nullptr)
-	, m_UpdatedTime()
-	, m_CurTime()
 {
 	GetDefaultFont(&m_StyleFont);
 }
@@ -1451,8 +1425,6 @@ bool CChannelPanel::CEventInfoPopupHandler::ShowPopup(LPARAM Param, CEventInfoPo
 CChannelPanel::CChannelEventInfo::CChannelEventInfo(const CChannelInfo *pInfo, int OriginalIndex)
 	: m_ChannelInfo(*pInfo)
 	, m_OriginalChannelIndex(OriginalIndex)
-	, m_hbmLogo(nullptr)
-	, m_fExpanded(false)
 {
 }
 
@@ -1575,17 +1547,6 @@ void CChannelPanel::CChannelEventInfo::DrawEventName(
 }
 
 
-
-
-CChannelPanel::ChannelPanelStyle::ChannelPanelStyle()
-	: ChannelNameMargin(2, 2, 2, 2)
-	, ChannelLogoMargin(0, 0, 3, 0)
-	, EventNameMargin(8, 1, 2, 1)
-	, ChannelChevronSize(10, 10)
-	, ChannelChevronMargin(12)
-	, FeaturedMarkMargin(1)
-{
-}
 
 
 void CChannelPanel::ChannelPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)

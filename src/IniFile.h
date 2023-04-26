@@ -55,7 +55,7 @@ namespace TVTest
 
 		typedef std::vector<CEntry> EntryArray;
 
-		CIniFile();
+		CIniFile() = default;
 		~CIniFile();
 
 		CIniFile(const CIniFile &) = delete;
@@ -97,11 +97,11 @@ namespace TVTest
 
 		String m_FileName;
 		String m_Section;
-		OpenFlag m_OpenFlags;
+		OpenFlag m_OpenFlags = OpenFlag::None;
 		SectionList m_SectionList;
-		CSectionData *m_pCurSection;
+		CSectionData *m_pCurSection = nullptr;
 		CGlobalLock m_FileLock;
-		HANDLE m_hFile;
+		HANDLE m_hFile = INVALID_HANDLE_VALUE;
 	};
 
 }

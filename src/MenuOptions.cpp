@@ -88,8 +88,6 @@ const CMenuOptions::AdditionalItemInfo CMenuOptions::m_AdditionalItemList[] = {
 
 CMenuOptions::CMenuOptions()
 	: COptions(TEXT("Menu"))
-	, m_MaxChannelMenuRows(24)
-	, m_MaxChannelMenuEventInfo(30)
 {
 }
 

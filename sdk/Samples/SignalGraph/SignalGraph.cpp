@@ -48,7 +48,6 @@ namespace Gdiplus {
 class CSignalGraph : public TVTest::CTVTestPlugin
 {
 public:
-	CSignalGraph();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
@@ -56,39 +55,38 @@ public:
 private:
 	struct Position
 	{
-		int Left, Top, Width, Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
 	struct SignalInfo
 	{
-		float SignalLevel;
-		DWORD BitRate;
+		float SignalLevel = 0.0f;
+		DWORD BitRate = 0;
 
-		SignalInfo() : SignalLevel(0.0f), BitRate(0) {}
+		SignalInfo() = default;
 		SignalInfo(float level, DWORD rate) : SignalLevel(level), BitRate(rate) {}
 	};
 
-	bool m_fInitialized;
+	bool m_fInitialized = false;
 	std::deque<SignalInfo> m_List;
-	HWND m_hwnd;
+	HWND m_hwnd = nullptr;
 	Position m_WindowPosition;
 	int m_DPI;
-	Gdiplus::Color m_BackColor;
-	Gdiplus::Color m_SignalLevelColor;
-	Gdiplus::Color m_BitRateColor;
-	Gdiplus::Color m_GridColor;
-	Gdiplus::Pen *m_pGridPen;
-	Gdiplus::Pen *m_pSignalLevelPen;
-	Gdiplus::Pen *m_pBitRatePen;
-	Gdiplus::SolidBrush *m_pBrush;
+	Gdiplus::Color m_BackColor{255, 0, 0, 0};
+	Gdiplus::Color m_SignalLevelColor{255, 0, 255, 128};
+	Gdiplus::Color m_BitRateColor{192, 0, 160, 255};
+	Gdiplus::Color m_GridColor{255, 64, 64, 64};
+	Gdiplus::Pen *m_pGridPen = nullptr;
+	Gdiplus::Pen *m_pSignalLevelPen = nullptr;
+	Gdiplus::Pen *m_pBitRatePen = nullptr;
+	Gdiplus::SolidBrush *m_pBrush = nullptr;
 	LOGFONT m_Font;
-	Gdiplus::Font *m_pFont;
-	Gdiplus::Graphics *m_pOffscreen;
-	Gdiplus::Bitmap *m_pOffscreenImage;
-	float m_SignalLevelScale;
+	Gdiplus::Font *m_pFont = nullptr;
+	Gdiplus::Graphics *m_pOffscreen = nullptr;
+	Gdiplus::Bitmap *m_pOffscreenImage = nullptr;
+	float m_SignalLevelScale = 80.0f;
 	float m_ActualSignalLevelScale;
-	DWORD m_BitRateScale;
+	DWORD m_BitRateScale = 40 * 1000 * 1000;
 
 	static const LPCTSTR WINDOW_CLASS_NAME;
 
@@ -115,26 +113,6 @@ private:
 
 // ウィンドウクラス名
 const LPCTSTR CSignalGraph::WINDOW_CLASS_NAME = TEXT("TVTest Signal Graph Window");
-
-
-CSignalGraph::CSignalGraph()
-	: m_fInitialized(false)
-	, m_hwnd(nullptr)
-	, m_BackColor(255, 0, 0, 0)
-	, m_SignalLevelColor(255, 0, 255, 128)
-	, m_BitRateColor(192, 0, 160, 255)
-	, m_GridColor(255, 64, 64, 64)
-	, m_pGridPen(nullptr)
-	, m_pSignalLevelPen(nullptr)
-	, m_pBitRatePen(nullptr)
-	, m_pBrush(nullptr)
-	, m_pFont(nullptr)
-	, m_pOffscreen(nullptr)
-	, m_pOffscreenImage(nullptr)
-	, m_SignalLevelScale(80.0f)
-	, m_BitRateScale(40 * 1000 * 1000)
-{
-}
 
 
 // プラグインの情報を返す

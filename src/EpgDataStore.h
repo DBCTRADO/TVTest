@@ -70,11 +70,11 @@ namespace TVTest
 		static unsigned int __stdcall LoadThread(void *pParameter);
 
 		LibISDB::EPGDataFile m_EPGDataFile;
-		OpenFlag m_OpenFlags;
-		HANDLE m_hThread;
-		CEventHandler *m_pEventHandler;
-		uint64_t m_UpdateCount;
-		DWORD m_LockTimeout;
+		OpenFlag m_OpenFlags = OpenFlag::None;
+		HANDLE m_hThread = nullptr;
+		CEventHandler *m_pEventHandler = nullptr;
+		uint64_t m_UpdateCount = 0;
+		DWORD m_LockTimeout = 10000;
 	};
 
 }	// namespace TVTest

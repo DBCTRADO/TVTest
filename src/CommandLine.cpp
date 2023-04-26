@@ -32,8 +32,8 @@ namespace TVTest
 class CArgsParser
 {
 	LPWSTR *m_ppszArgList;
-	int m_Args;
-	int m_CurPos;
+	int m_Args = 0;
+	int m_CurPos = 0;
 
 public:
 	CArgsParser(LPCWSTR pszCmdLine);
@@ -63,7 +63,6 @@ CArgsParser::CArgsParser(LPCWSTR pszCmdLine)
 	m_ppszArgList = ::CommandLineToArgvW(pszCmdLine, &m_Args);
 	if (m_ppszArgList == nullptr)
 		m_Args = 0;
-	m_CurPos = 0;
 }
 
 
@@ -383,67 +382,6 @@ static bool GetIniEntry(LPCWSTR pszText, CCommandLineOptions::IniEntry *pEntry)
 }
 
 
-
-
-CCommandLineOptions::CCommandLineOptions()
-	: m_fNoDriver(false)
-	, m_fNoTSProcessor(false)
-	, m_fSingleTask(false)
-	, m_fStandby(false)
-	, m_fNoView(false)
-	, m_fNoDirectShow(false)
-	, m_fMpeg2(false)
-	, m_fH264(false)
-	, m_fH265(false)
-	, m_fSilent(false)
-	, m_fInitialSettings(false)
-	, m_fSaveLog(false)
-	, m_fNoEpg(false)
-	, m_f1Seg(false)
-	, m_fJumpList(false)
-	, m_TvRockDID(-1)
-
-	, m_Channel(0)
-	, m_ControllerChannel(0)
-	, m_ChannelIndex(-1)
-	, m_TuningSpace(-1)
-	, m_ServiceID(0)
-	, m_NetworkID(0)
-	, m_TransportStreamID(0)
-
-	, m_fUseNetworkRemocon(false)
-	, m_UDPPort(1234)
-
-	, m_fRecord(false)
-	, m_fRecordStop(false)
-	, m_RecordStartTime()
-	, m_RecordDelay(0)
-	, m_RecordDuration(0)
-	, m_fRecordCurServiceOnly(false)
-	, m_fExitOnRecordEnd(false)
-	, m_fRecordOnly(false)
-
-	, m_fFullscreen(false)
-	, m_fMinimize(false)
-	, m_fMaximize(false)
-	, m_fTray(false)
-	, m_WindowLeft(INVALID_WINDOW_POS)
-	, m_WindowTop(INVALID_WINDOW_POS)
-	, m_WindowWidth(0)
-	, m_WindowHeight(0)
-
-	, m_Volume(-1)
-	, m_fMute(false)
-
-	, m_fNoPlugin(false)
-
-	, m_fShowProgramGuide(false)
-	, m_fProgramGuideOnly(false)
-
-	, m_fHomeDisplay(false)
-	, m_fChannelDisplay(false)
-{
-}
 
 
 /*

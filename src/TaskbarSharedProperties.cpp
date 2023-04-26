@@ -29,13 +29,6 @@ namespace TVTest
 {
 
 
-CTaskbarSharedProperties::CTaskbarSharedProperties()
-	: m_pHeader(nullptr)
-	, m_LockTimeout(3000)
-{
-}
-
-
 CTaskbarSharedProperties::~CTaskbarSharedProperties()
 {
 	Close();

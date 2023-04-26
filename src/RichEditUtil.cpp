@@ -40,12 +40,6 @@ const LPCTSTR CRichEditUtil::m_pszURLFullWidthChars =
 	TEXT("！＃＄％＆’（）＊＋，－．／：；＝？＠［］＿～");
 
 
-CRichEditUtil::CRichEditUtil()
-	: m_hLib(nullptr)
-{
-}
-
-
 CRichEditUtil::~CRichEditUtil()
 {
 	UnloadRichEditLib();

@@ -35,19 +35,19 @@ namespace TVTest
 
 	class CChannelInfo
 	{
-		int m_Space;              // チューニング空間
-		int m_ChannelIndex;       // チャンネルインデックス(BonDriverでの番号)
-		int m_ChannelNo;          // リモコンチャンネル番号
-		int m_PhysicalChannel;    // 物理チャンネル番号
-		String m_Name;    // チャンネル名
-		WORD m_NetworkID;         // ネットワークID
-		WORD m_TransportStreamID; // トランスポートストリームID
-		WORD m_ServiceID;         // サービスID
-		BYTE m_ServiceType;       // サービスの種類
-		bool m_fEnabled;          // 有効
+		int m_Space = -1;             // チューニング空間
+		int m_ChannelIndex = -1;      // チャンネルインデックス(BonDriverでの番号)
+		int m_ChannelNo = 0;          // リモコンチャンネル番号
+		int m_PhysicalChannel = 0;    // 物理チャンネル番号
+		String m_Name;                // チャンネル名
+		WORD m_NetworkID = 0;         // ネットワークID
+		WORD m_TransportStreamID = 0; // トランスポートストリームID
+		WORD m_ServiceID = 0;         // サービスID
+		BYTE m_ServiceType = 0;       // サービスの種類
+		bool m_fEnabled = true;       // 有効
 
 	public:
-		CChannelInfo();
+		CChannelInfo() = default;
 		CChannelInfo(int Space, int ChannelIndex, int No, LPCTSTR pszName);
 		virtual ~CChannelInfo() = default;
 
@@ -153,7 +153,7 @@ namespace TVTest
 			CS110,
 		};
 
-		CTuningSpaceInfo();
+		CTuningSpaceInfo() = default;
 		CTuningSpaceInfo(const CTuningSpaceInfo &Info);
 
 		CTuningSpaceInfo &operator=(const CTuningSpaceInfo &Info);
@@ -171,7 +171,7 @@ namespace TVTest
 	private:
 		std::unique_ptr<CChannelList> m_ChannelList;
 		String m_Name;
-		TuningSpaceType m_Space;
+		TuningSpaceType m_Space = TuningSpaceType::Unknown;
 	};
 
 	class CTuningSpaceList

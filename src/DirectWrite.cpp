@@ -53,15 +53,6 @@ static inline D2D1_RECT_F D2DRectF(const RECT &Rect)
 
 
 
-CDirectWriteSystem::CDirectWriteSystem()
-	: m_hD2DLib(nullptr)
-	, m_hDWriteLib(nullptr)
-	, m_pD2DFactory(nullptr)
-	, m_pDWriteFactory(nullptr)
-{
-}
-
-
 CDirectWriteSystem::~CDirectWriteSystem()
 {
 	Finalize();
@@ -165,12 +156,6 @@ IDWriteFactory *CDirectWriteSystem::GetDWriteFactory()
 
 
 
-CDirectWriteFont::CDirectWriteFont()
-	: m_pTextFormat(nullptr)
-{
-}
-
-
 CDirectWriteFont::~CDirectWriteFont()
 {
 	Destroy();
@@ -257,12 +242,6 @@ bool CDirectWriteFont::GetLogFont(LOGFONT *pLogFont) const
 
 
 
-CDirectWriteBrush::CDirectWriteBrush()
-	: m_pBrush(nullptr)
-{
-}
-
-
 CDirectWriteBrush::~CDirectWriteBrush()
 {
 	Destroy();
@@ -329,11 +308,6 @@ ID2D1Brush *CDirectWriteBrush::GetBrush()
 
 CDirectWriteRenderer::CDirectWriteRenderer(CDirectWriteSystem &System)
 	: m_System(System)
-	, m_pRenderTarget(nullptr)
-	, m_hwnd(nullptr)
-	, m_hdc(nullptr)
-	, m_hMonitor(nullptr)
-	, m_fNeedRecreate(false)
 {
 }
 

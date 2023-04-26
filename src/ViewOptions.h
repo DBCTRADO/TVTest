@@ -87,30 +87,30 @@ namespace TVTest
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
-		bool m_fAdjustAspectResizing;
-		bool m_fSnapAtWindowEdge;
-		int m_SnapAtWindowEdgeMargin;
-		bool m_fSupportAeroSnap;
-		bool m_fNearCornerResizeOrigin;
-		bool m_fZoomKeepAspectRatio;
-		AdjustWindowMode m_PanScanAdjustWindowMode;
-		bool m_fRemember1SegWindowSize;
-		bool m_fMinimizeToTray;
-		bool m_fDisablePreviewWhenMinimized;
-		bool m_fHideCursor;
-		bool m_fUseLogoIcon;
+		bool m_fAdjustAspectResizing = false;
+		bool m_fSnapAtWindowEdge = false;
+		int m_SnapAtWindowEdgeMargin = 8;
+		bool m_fSupportAeroSnap = true;
+		bool m_fNearCornerResizeOrigin = false;
+		bool m_fZoomKeepAspectRatio = false;
+		AdjustWindowMode m_PanScanAdjustWindowMode = AdjustWindowMode::Width;
+		bool m_fRemember1SegWindowSize = true;
+		bool m_fMinimizeToTray = false;
+		bool m_fDisablePreviewWhenMinimized = false;
+		bool m_fHideCursor = false;
+		bool m_fUseLogoIcon = false;
 		String m_TitleTextFormat;
 		String m_MinimizedTitleTextFormat;
 		String m_MaximizedTitleTextFormat;
 		String m_TaskbarTitleTextFormat;
-		bool m_fEnableTitleBarFont;
+		bool m_fEnableTitleBarFont = false;
 		Style::Font m_TitleBarFont;
-		bool m_fShowLogo;
-		String m_LogoFileName;
+		bool m_fShowLogo = true;
+		String m_LogoFileName{APP_NAME TEXT("_Logo.bmp")};
 
-		bool m_fNoScreenSaver;
-		bool m_fNoMonitorLowPower;
-		bool m_fNoMonitorLowPowerActiveOnly;
+		bool m_fNoScreenSaver = false;
+		bool m_fNoMonitorLowPower = false;
+		bool m_fNoMonitorLowPowerActiveOnly = false;
 
 		Style::Font m_CurTitleBarFont;
 	};

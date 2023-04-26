@@ -10,8 +10,6 @@ class CPreviewWindow
 public:
 	static bool Initialize(HINSTANCE hinst);
 
-	CPreviewWindow();
-
 	bool Create(HWND hwndParent);
 	void SetPosition(int Left, int Top, int Width, int Height);
 	void SetImage(const CImage *pImage);
@@ -25,11 +23,11 @@ private:
 	static const LPCTSTR m_WindowClassName;
 	static HINSTANCE m_hinst;
 
-	HWND m_hwnd;
-	const CImage *m_pImage;
-	bool m_fFitImageToWindow;
-	int m_ZoomNum;
-	int m_ZoomDenom;
+	HWND m_hwnd = nullptr;
+	const CImage *m_pImage = nullptr;
+	bool m_fFitImageToWindow = true;
+	int m_ZoomNum = 50;
+	int m_ZoomDenom = 100;
 
 	void Draw(HDC hdc);
 

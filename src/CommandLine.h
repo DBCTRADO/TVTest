@@ -31,74 +31,73 @@ namespace TVTest
 	class CCommandLineOptions
 	{
 	public:
-		CCommandLineOptions();
 		void Parse(LPCWSTR pszCmdLine);
 		bool IsChannelSpecified() const;
 
 		String m_IniFileName;
 		String m_DriverName;
-		bool m_fNoDriver;
-		bool m_fNoTSProcessor;
-		bool m_fSingleTask;
-		bool m_fStandby;
-		bool m_fNoView;
-		bool m_fNoDirectShow;
-		bool m_fMpeg2;
-		bool m_fH264;
-		bool m_fH265;
-		bool m_fSilent;
-		bool m_fInitialSettings;
-		bool m_fSaveLog;
-		bool m_fNoEpg;
-		bool m_f1Seg;
-		bool m_fJumpList;
-		int m_TvRockDID;
+		bool m_fNoDriver = false;
+		bool m_fNoTSProcessor = false;
+		bool m_fSingleTask = false;
+		bool m_fStandby = false;
+		bool m_fNoView = false;
+		bool m_fNoDirectShow = false;
+		bool m_fMpeg2 = false;
+		bool m_fH264 = false;
+		bool m_fH265 = false;
+		bool m_fSilent = false;
+		bool m_fInitialSettings = false;
+		bool m_fSaveLog = false;
+		bool m_fNoEpg = false;
+		bool m_f1Seg = false;
+		bool m_fJumpList = false;
+		int m_TvRockDID = -1;
 
-		int m_Channel;
-		int m_ControllerChannel;
-		int m_ChannelIndex;
-		int m_TuningSpace;
-		int m_ServiceID;
-		int m_NetworkID;
-		int m_TransportStreamID;
+		int m_Channel = 0;
+		int m_ControllerChannel = 0;
+		int m_ChannelIndex = -1;
+		int m_TuningSpace = -1;
+		int m_ServiceID = 0;
+		int m_NetworkID = 0;
+		int m_TransportStreamID = 0;
 
-		bool m_fUseNetworkRemocon;
-		DWORD m_UDPPort;
+		bool m_fUseNetworkRemocon = false;
+		DWORD m_UDPPort = 1234;
 
-		bool m_fRecord;
-		bool m_fRecordStop;
-		SYSTEMTIME m_RecordStartTime;
-		int m_RecordDelay;
-		int m_RecordDuration;
+		bool m_fRecord = false;
+		bool m_fRecordStop = false;
+		SYSTEMTIME m_RecordStartTime{};
+		int m_RecordDelay = 0;
+		int m_RecordDuration = 0;
 		String m_RecordFileName;
-		bool m_fRecordCurServiceOnly;
-		bool m_fExitOnRecordEnd;
-		bool m_fRecordOnly;
+		bool m_fRecordCurServiceOnly = false;
+		bool m_fExitOnRecordEnd = false;
+		bool m_fRecordOnly = false;
 
-		bool m_fFullscreen;
-		bool m_fMinimize;
-		bool m_fMaximize;
-		bool m_fTray;
-		int m_WindowLeft;
-		int m_WindowTop;
-		int m_WindowWidth;
-		int m_WindowHeight;
+		bool m_fFullscreen = false;
+		bool m_fMinimize = false;
+		bool m_fMaximize = false;
+		bool m_fTray = false;
 		static constexpr int INVALID_WINDOW_POS = INT_MIN;
+		int m_WindowLeft = INVALID_WINDOW_POS;
+		int m_WindowTop = INVALID_WINDOW_POS;
+		int m_WindowWidth = 0;
+		int m_WindowHeight = 0;
 
-		int m_Volume;
-		bool m_fMute;
+		int m_Volume = -1;
+		bool m_fMute = false;
 
-		bool m_fNoPlugin;
+		bool m_fNoPlugin = false;
 		std::vector<String> m_NoLoadPlugins;
 		String m_PluginsDirectory;
 
-		bool m_fShowProgramGuide;
-		bool m_fProgramGuideOnly;
+		bool m_fShowProgramGuide = false;
+		bool m_fProgramGuideOnly = false;
 		String m_ProgramGuideTuner;
 		String m_ProgramGuideSpace;
 
-		bool m_fHomeDisplay;
-		bool m_fChannelDisplay;
+		bool m_fHomeDisplay = false;
+		bool m_fChannelDisplay = false;
 
 		String m_StyleFileName;
 

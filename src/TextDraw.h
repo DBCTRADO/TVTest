@@ -66,7 +66,7 @@ namespace TVTest
 			int Height;
 		};
 
-		CTextDraw();
+		CTextDraw() = default;
 
 		CTextDraw(const CTextDraw &) = delete;
 		CTextDraw &operator=(const CTextDraw &) = delete;
@@ -88,9 +88,9 @@ namespace TVTest
 		bool ResetClipping();
 
 	private:
-		CTextDrawEngine *m_pEngine;
+		CTextDrawEngine *m_pEngine = nullptr;
 		std::unique_ptr<CTextDrawEngine> m_DefaultEngine;
-		Flag m_Flags;
+		Flag m_Flags = Flag::None;
 		std::vector<WCHAR> m_StringBuffer;
 
 		int GetLineLength(LPCWSTR pszText);
@@ -135,7 +135,6 @@ namespace TVTest
 		: public CTextDrawEngine
 	{
 	public:
-		CTextDrawEngine_GDI();
 		~CTextDrawEngine_GDI();
 
 		void Finalize() override;
@@ -152,8 +151,8 @@ namespace TVTest
 	private:
 		void UnbindDC();
 
-		HDC m_hdc;
-		HFONT m_hfontOld;
+		HDC m_hdc = nullptr;
+		HFONT m_hfontOld = nullptr;
 		COLORREF m_OldTextColor;
 	};
 
@@ -182,9 +181,9 @@ namespace TVTest
 
 	private:
 		CDirectWriteRenderer &m_Renderer;
-		CDirectWriteFont *m_pFont;
+		CDirectWriteFont *m_pFont = nullptr;
 		std::deque<std::unique_ptr<CDirectWriteFont>> m_FontCache;
-		std::size_t m_MaxFontCache;
+		std::size_t m_MaxFontCache = 4;
 		CDirectWriteBrush m_Brush;
 	};
 

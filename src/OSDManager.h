@@ -77,25 +77,24 @@ namespace TVTest
 	private:
 		struct OSDStyle
 		{
-			Style::Margins Margin;
-			Style::IntValue TextSizeRatio;
-			Style::IntValue TextSizeMin;
-			Style::IntValue TextSizeMax;
-			Style::IntValue CompositeTextSizeRatio;
-			Style::IntValue CompositeTextSizeMin;
-			Style::IntValue CompositeTextSizeMax;
-			Style::Size LogoSize;
+			Style::Margins Margin{8};
+			Style::IntValue TextSizeRatio{28};
+			Style::IntValue TextSizeMin{12};
+			Style::IntValue TextSizeMax{100};
+			Style::IntValue CompositeTextSizeRatio{24};
+			Style::IntValue CompositeTextSizeMin{12};
+			Style::IntValue CompositeTextSizeMax{100};
+			Style::Size LogoSize{64, 36};
 			String LogoEffect;
-			bool fChannelAnimation;
-			Style::Margins VolumeMargin;
-			Style::IntValue VolumeTextSizeMin;
-			Style::IntValue VolumeTextSizeMax;
-			Style::IntValue VolumeHorizontalScale;
-			Style::IntValue VolumeSteps;
-			String VolumeTextFill;
-			String VolumeTextRemain;
+			bool fChannelAnimation = true;
+			Style::Margins VolumeMargin{16};
+			Style::IntValue VolumeTextSizeMin{10};
+			Style::IntValue VolumeTextSizeMax{50};
+			Style::IntValue VolumeHorizontalScale{60};
+			Style::IntValue VolumeSteps{20};
+			String VolumeTextFill{TEXT("■")};
+			String VolumeTextRemain{TEXT("□")};
 
-			OSDStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -104,10 +103,10 @@ namespace TVTest
 
 		const COSDOptions *m_pOptions;
 		OSDStyle m_Style;
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 		CPseudoOSD m_OSD;
 		CPseudoOSD m_VolumeOSD;
-		int m_VolumeOSDMaxWidth;
+		int m_VolumeOSDMaxWidth = 0;
 
 		bool CompositeText(LPCTSTR pszText, const RECT &rcClient, int LeftOffset, DWORD FadeTime);
 		bool CreateTextOSD(

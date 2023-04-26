@@ -36,8 +36,8 @@ namespace TVTest
 		: public CAppEventHandler
 	{
 	protected:
-		CUICore * m_pCore;
-		bool m_fWheelChannelChanging;
+		CUICore *m_pCore = nullptr;
+		bool m_fWheelChannelChanging = false;
 
 		virtual bool InitializeViewer(BYTE VideoStreamType = 0) = 0;
 		virtual bool FinalizeViewer() = 0;
@@ -59,7 +59,7 @@ namespace TVTest
 		void SetWheelChannelChanging(bool fChanging, DWORD Delay = 0);
 
 	public:
-		CUISkin();
+		CUISkin() = default;
 		virtual ~CUISkin() = default;
 
 		CUISkin(const CUISkin &) = delete;

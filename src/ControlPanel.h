@@ -49,7 +49,6 @@ namespace TVTest
 
 		static bool Initialize(HINSTANCE hinst);
 
-		CControlPanel();
 		~CControlPanel();
 
 	// CBasicWindow
@@ -84,12 +83,11 @@ namespace TVTest
 	private:
 		struct ControlPanelStyle
 		{
-			Style::Margins Padding;
-			Style::Margins ItemPadding;
-			Style::IntValue TextExtraHeight;
-			Style::Size IconSize;
+			Style::Margins Padding{2};
+			Style::Margins ItemPadding{4, 2, 4, 2};
+			Style::IntValue TextExtraHeight{4};
+			Style::Size IconSize{16, 16};
 
-			ControlPanelStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -99,14 +97,14 @@ namespace TVTest
 		std::vector<std::unique_ptr<CControlPanelItem>> m_ItemList;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
-		int m_FontHeight;
+		int m_FontHeight = 0;
 		ControlPanelStyle m_Style;
 		ControlPanelTheme m_Theme;
 		DrawUtil::COffscreen m_Offscreen;
-		HWND m_hwndMessage;
-		int m_HotItem;
-		bool m_fTrackMouseEvent;
-		bool m_fOnButtonDown;
+		HWND m_hwndMessage = nullptr;
+		int m_HotItem = -1;
+		bool m_fTrackMouseEvent = false;
+		bool m_fOnButtonDown = false;
 
 		static const LPCTSTR m_pszClassName;
 		static HINSTANCE m_hinst;
@@ -130,20 +128,19 @@ namespace TVTest
 		: public CUIBase
 	{
 	protected:
-		RECT m_Position;
-		int m_Command;
-		bool m_fVisible;
-		bool m_fEnable;
-		bool m_fCheck;
-		bool m_fBreak;
-		CControlPanel * m_pControlPanel;
+		RECT m_Position{};
+		int m_Command = 0;
+		bool m_fVisible = true;
+		bool m_fEnable = true;
+		bool m_fCheck = false;
+		bool m_fBreak = true;
+		CControlPanel * m_pControlPanel = nullptr;
 
 		bool CalcTextSize(LPCTSTR pszText, SIZE * pSize) const;
 		int GetTextItemHeight() const;
 		void GetMenuPos(POINT * pPos) const;
 
 	public:
-		CControlPanelItem();
 		virtual ~CControlPanelItem() = default;
 
 		void GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const;

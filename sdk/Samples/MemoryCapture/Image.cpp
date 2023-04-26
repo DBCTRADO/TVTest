@@ -42,19 +42,6 @@ inline BYTE Clamp8(int v)
 
 
 
-CImage::CImage()
-	: m_Width(0)
-	, m_Height(0)
-	, m_BitsPerPixel(0)
-	, m_AspectRatioX(0)
-	, m_AspectRatioY(0)
-	, m_FrameFlags(0)
-	, m_pPixels(nullptr)
-	, m_RowBytes(0)
-{
-}
-
-
 CImage::~CImage()
 {
 	Free();

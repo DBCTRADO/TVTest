@@ -42,13 +42,13 @@
 // プラグインクラス
 class CDiskRelay : public TVTest::CTVTestPlugin
 {
-	bool m_fInitialized;                // 初期化済みか?
-	TCHAR m_szIniFileName[MAX_PATH];    // INIファイルのパス
+	bool m_fInitialized = false;                        // 初期化済みか?
+	TCHAR m_szIniFileName[MAX_PATH];                    // INIファイルのパス
 	TCHAR m_szSpareFolder[NUM_SPARE_FOLDERS][MAX_PATH]; // 予備のフォルダ
-	UINT m_LowFreeSpace;                // 空き容量が少ないと判定する閾値
-	HWND m_hwnd;                        // ウィンドウハンドル
-	bool m_fRecording;                  // 録画中か?
-	int m_NextFolder;                   // 次の録画先フォルダ
+	UINT m_LowFreeSpace = 64;                           // 空き容量が少ないと判定する閾値
+	HWND m_hwnd = nullptr;                              // ウィンドウハンドル
+	bool m_fRecording = false;                          // 録画中か?
+	int m_NextFolder = 0;                               // 次の録画先フォルダ
 
 	bool InitializePlugin();
 	bool CheckFreeSpace();
@@ -68,10 +68,6 @@ public:
 
 
 CDiskRelay::CDiskRelay()
-	: m_fInitialized(false)
-	, m_LowFreeSpace(64)
-	, m_hwnd(nullptr)
-	, m_fRecording(false)
 {
 	for (int i = 0; i < NUM_SPARE_FOLDERS; i++)
 		m_szSpareFolder[i][0] = '\0';

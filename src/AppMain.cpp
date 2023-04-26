@@ -65,10 +65,10 @@ public:
 
 private:
 	CAppMain &m_App;
-	HANDLE m_hThread;
-	HANDLE m_hEndEvent;
-	HANDLE m_hContinueEvent;
-	HANDLE m_hMainThread;
+	HANDLE m_hThread = nullptr;
+	HANDLE m_hEndEvent = nullptr;
+	HANDLE m_hContinueEvent = nullptr;
+	HANDLE m_hMainThread = nullptr;
 	DWORD m_Timeout;
 
 	void Finalize();
@@ -78,10 +78,6 @@ private:
 
 CAppTerminator::CAppTerminator(CAppMain &App)
 	: m_App(App)
-	, m_hThread(nullptr)
-	, m_hEndEvent(nullptr)
-	, m_hContinueEvent(nullptr)
-	, m_hMainThread(nullptr)
 {
 }
 
@@ -184,12 +180,7 @@ HICON CAppMain::m_hicoAppSmall = nullptr;
 
 
 CAppMain::CAppMain()
-	: m_hInst(nullptr)
-	, Core(*this)
-	, UICore(*this)
-	, AppCommand(*this)
-	, MainWindow(*this)
-	, SideBar(&CommandManager)
+	: SideBar(&CommandManager)
 	, ChannelDisplay(&EPGDatabase)
 
 	, Epg(EPGDatabase, EventSearchOptions)
@@ -201,17 +192,6 @@ CAppMain::CAppMain()
 	, PluginOptions(&PluginManager)
 	, TSProcessorOptions(TSProcessorManager)
 	, FeaturedEvents(EventSearchOptions)
-
-	, m_fFirstExecute(false)
-	, m_fInitialSettings(false)
-
-	, m_EngineEventListener(*this)
-	, m_StreamInfoEventHandler(*this)
-	, m_CaptureWindowEventHandler(*this)
-
-	, m_ExitTimeout(60000)
-	, m_fEnablePlaybackOnStart(true)
-	, m_fIncrementNetworkPort(true)
 {
 	UICore.SetSkin(&MainWindow);
 

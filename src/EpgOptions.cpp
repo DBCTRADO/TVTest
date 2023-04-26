@@ -34,15 +34,6 @@ namespace TVTest
 
 
 CEpgOptions::CEpgOptions()
-	: m_fSaveEpgFile(true)
-	, m_EpgFileName(TEXT("EpgData"))
-	, m_fUpdateWhenStandby(false)
-	, m_fUpdateBSExtended(false)
-	, m_fUpdateCSExtended(false)
-	, m_fUseEDCBData(false)
-	, m_EpgTimeMode(EpgTimeMode::JST)
-	, m_fSaveLogoFile(true)
-	, m_LogoFileName(TEXT("LogoData"))
 {
 #if 0
 	static const TCHAR szEpgDataFolder[] = TEXT("EpgTimerBon\\EpgData");

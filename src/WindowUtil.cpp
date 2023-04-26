@@ -216,13 +216,6 @@ bool IsMessageInQueue(HWND hwnd, UINT Message)
 
 
 
-CMouseLeaveTrack::CMouseLeaveTrack()
-	: m_hwnd(nullptr)
-	, m_fClientTrack(false)
-	, m_fNonClientTrack(false)
-{
-}
-
 void CMouseLeaveTrack::Initialize(HWND hwnd)
 {
 	m_hwnd = hwnd;
@@ -309,11 +302,6 @@ bool CMouseLeaveTrack::IsCursorInWindow() const
 }
 
 
-CMouseWheelHandler::CMouseWheelHandler()
-{
-	Reset();
-}
-
 void CMouseWheelHandler::Reset()
 {
 	m_DeltaSum = 0;
@@ -390,13 +378,6 @@ int CMouseWheelHandler::GetDefaultScrollChars() const
 }
 
 
-CWindowTimerManager::CWindowTimerManager()
-	: m_hwndTimer(nullptr)
-	, m_TimerIDs(0)
-{
-}
-
-
 void CWindowTimerManager::InitializeTimer(HWND hwnd)
 {
 	m_hwndTimer = hwnd;
@@ -440,12 +421,6 @@ bool CWindowTimerManager::IsTimerEnabled(unsigned int ID) const
 }
 
 
-
-
-CWindowSubclass::CWindowSubclass()
-	: m_hwnd(nullptr)
-{
-}
 
 
 CWindowSubclass::~CWindowSubclass()

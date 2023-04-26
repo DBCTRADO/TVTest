@@ -58,16 +58,16 @@ namespace TVTest
 		const String &GetAppID() const { return m_AppID; }
 
 	private:
-		bool m_fEnableJumpList;
-		bool m_fShowTasks;
+		bool m_fEnableJumpList = true;
+		bool m_fShowTasks = true;
 		TaskList m_TaskList;
-		bool m_fShowRecentChannels;
-		int m_MaxRecentChannels;
-		bool m_fShowChannelIcon;
-		String m_IconDirectory;
-		bool m_fJumpListKeepSingleTask;
-		bool m_fUseUniqueAppID;
-		String m_AppID;
+		bool m_fShowRecentChannels = true;
+		int m_MaxRecentChannels = 10;
+		bool m_fShowChannelIcon = true;
+		String m_IconDirectory{TEXT(".\\JumpListIcons")};
+		bool m_fJumpListKeepSingleTask = false;
+		bool m_fUseUniqueAppID = false;
+		String m_AppID{TEXT("DBCTRADO.") APP_NAME};
 
 		static const int m_DefaultTaskList[];
 	};

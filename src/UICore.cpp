@@ -33,26 +33,6 @@ namespace TVTest
 
 CUICore::CUICore(CAppMain &App)
 	: m_App(App)
-	, m_pSkin(nullptr)
-	, m_fStandby(false)
-	, m_fTransientStandby(false)
-	, m_fFullscreen(false)
-	, m_fAlwaysOnTop(false)
-
-	, m_AspectRatioType(ASPECTRATIO_DEFAULT)
-
-	, m_fViewerInitializeError(false)
-
-	, m_hPowerRequest(INVALID_HANDLE_VALUE)
-	, m_fPowerRequestSet(false)
-	, m_fScreenSaverActiveOriginal(FALSE)
-
-	, m_PopupMenuDPI(0)
-	, m_TunerSelectMenu(*this)
-
-	, m_pColorScheme(nullptr)
-
-	, m_fStatusBarTrace(false)
 {
 }
 

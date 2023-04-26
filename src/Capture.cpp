@@ -52,7 +52,6 @@ enum {
 
 CCaptureImage::CCaptureImage(HGLOBAL hData)
 	: m_hData(hData)
-	, m_fLocked(false)
 {
 	m_CaptureTime.NowLocal();
 }
@@ -170,12 +169,6 @@ LPCTSTR CCaptureImage::GetComment() const
 
 
 
-CCapturePreview::CEventHandler::CEventHandler()
-	: m_pCapturePreview(nullptr)
-{
-}
-
-
 CCapturePreview::CEventHandler::~CEventHandler() = default;
 
 
@@ -204,13 +197,6 @@ bool CCapturePreview::Initialize(HINSTANCE hinst)
 		m_hinst = hinst;
 	}
 	return true;
-}
-
-
-CCapturePreview::CCapturePreview()
-	: m_crBackColor(RGB(0, 0, 0))
-	, m_pEventHandler(nullptr)
-{
 }
 
 
@@ -329,12 +315,6 @@ LRESULT CCapturePreview::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 
 
-CCaptureWindow::CEventHandler::CEventHandler()
-	: m_pCaptureWindow(nullptr)
-{
-}
-
-
 CCaptureWindow::CEventHandler::~CEventHandler() = default;
 
 
@@ -369,10 +349,6 @@ bool CCaptureWindow::Initialize(HINSTANCE hinst)
 
 
 CCaptureWindow::CCaptureWindow()
-	: m_PreviewEventHandler(this)
-	, m_fShowStatusBar(true)
-	, m_pEventHandler(nullptr)
-	, m_fCreateFirst(true)
 {
 	m_WindowPosition.Width = 320;
 	m_WindowPosition.Height = 240;

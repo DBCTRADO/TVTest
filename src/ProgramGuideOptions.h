@@ -66,17 +66,17 @@ namespace TVTest
 
 		CProgramGuide *m_pProgramGuide;
 		CPluginManager *m_pPluginManager;
-		bool m_fOnScreen;
-		bool m_fScrollToCurChannel;
-		int m_BeginHour;
-		int m_ViewHours;
+		bool m_fOnScreen = false;
+		bool m_fScrollToCurChannel = false;
+		int m_BeginHour = -1;
+		int m_ViewHours = 26;
 		int m_ItemWidth;
 		int m_LinesPerHour;
 		Style::Font m_Font;
 		Style::Font m_CurSettingFont;
-		bool m_fUseDirectWrite;
+		bool m_fUseDirectWrite = false;
 		CDirectWriteRenderer::RenderingParams m_DirectWriteRenderingParams;
-		bool m_fUseARIBSymbol;
+		bool m_fUseARIBSymbol = false;
 		UINT m_VisibleEventIcons;
 		CProgramGuideToolList m_ToolList;
 		int m_WheelScrollLines;

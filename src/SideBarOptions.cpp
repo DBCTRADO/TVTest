@@ -127,12 +127,6 @@ CSideBarOptions::CSideBarOptions(CSideBar *pSideBar, const CZoomOptions *pZoomOp
 	: COptions(TEXT("SideBar"))
 	, m_pSideBar(pSideBar)
 	, m_pZoomOptions(pZoomOptions)
-	, m_fShowPopup(true)
-	, m_fShowToolTips(true)
-	, m_fShowChannelLogo(true)
-	, m_PopupOpacity(OPACITY_MAX)
-	, m_Place(PlaceType::Left)
-	, m_himlIcons(nullptr)
 {
 	m_AvailItemList.resize(lengthof(ItemList));
 	for (int i = 0; i < lengthof(ItemList); i++)

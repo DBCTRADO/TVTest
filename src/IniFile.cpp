@@ -27,13 +27,6 @@
 namespace TVTest
 {
 
-CIniFile::CIniFile()
-	: m_OpenFlags(OpenFlag::None)
-	, m_pCurSection(nullptr)
-	, m_hFile(INVALID_HANDLE_VALUE)
-{
-}
-
 CIniFile::~CIniFile()
 {
 	Close();

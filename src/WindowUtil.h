@@ -32,7 +32,7 @@ namespace TVTest
 	class CMouseLeaveTrack
 	{
 	public:
-		CMouseLeaveTrack();
+		CMouseLeaveTrack() = default;
 
 		CMouseLeaveTrack(const CMouseLeaveTrack &) = delete;
 		CMouseLeaveTrack &operator=(const CMouseLeaveTrack &) = delete;
@@ -47,9 +47,9 @@ namespace TVTest
 		bool IsNonClientTrack() const { return m_fNonClientTrack; }
 
 	protected:
-		HWND m_hwnd;
-		bool m_fClientTrack;
-		bool m_fNonClientTrack;
+		HWND m_hwnd = nullptr;
+		bool m_fClientTrack = false;
+		bool m_fNonClientTrack = false;
 
 		bool IsCursorInWindow() const;
 	};
@@ -57,8 +57,6 @@ namespace TVTest
 	class CMouseWheelHandler
 	{
 	public:
-		CMouseWheelHandler();
-
 		void Reset();
 		void ResetDelta();
 		int OnWheel(int Delta);
@@ -71,15 +69,15 @@ namespace TVTest
 		int GetDefaultScrollChars() const;
 
 	protected:
-		int m_DeltaSum;
-		int m_LastDelta;
-		DWORD m_LastTime;
+		int m_DeltaSum = 0;
+		int m_LastDelta = 0;
+		DWORD m_LastTime = 0;
 	};
 
 	class CWindowTimerManager
 	{
 	public:
-		CWindowTimerManager();
+		CWindowTimerManager() = default;
 
 		CWindowTimerManager(const CWindowTimerManager &) = delete;
 		CWindowTimerManager &operator=(const CWindowTimerManager &) = delete;
@@ -91,14 +89,14 @@ namespace TVTest
 		bool IsTimerEnabled(unsigned int ID) const;
 
 	protected:
-		HWND m_hwndTimer;
-		unsigned int m_TimerIDs;
+		HWND m_hwndTimer = nullptr;
+		unsigned int m_TimerIDs = 0;
 	};
 
 	class CWindowSubclass
 	{
 	public:
-		CWindowSubclass();
+		CWindowSubclass() = default;
 		virtual ~CWindowSubclass();
 
 		CWindowSubclass(const CWindowSubclass &) = delete;
@@ -108,7 +106,7 @@ namespace TVTest
 		void RemoveSubclass();
 
 	protected:
-		HWND m_hwnd;
+		HWND m_hwnd = nullptr;
 
 		static LRESULT CALLBACK SubclassProc(
 			HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,

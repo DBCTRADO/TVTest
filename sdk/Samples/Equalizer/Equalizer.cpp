@@ -66,7 +66,7 @@ class CBandPass
 	double m_Coef[MAX_FREQUENCY * MAX_CHANNELS];
 	double m_Ener[MAX_FREQUENCY * MAX_CHANNELS];
 	double m_Volume[MAX_FREQUENCY * MAX_CHANNELS];
-	int m_EqualizerCount;
+	int m_EqualizerCount = 0;
 	double m_PreAmplifier;
 	CRITICAL_SECTION m_Lock;
 
@@ -82,7 +82,6 @@ public:
 
 
 CBandPass::CBandPass()
-	: m_EqualizerCount(0)
 {
 	::InitializeCriticalSection(&m_Lock);
 }
@@ -229,9 +228,9 @@ private:
 	};
 
 	TCHAR m_szIniFileName[MAX_PATH];
-	bool m_fSettingsLoaded;
-	bool m_fShowed;
-	HWND m_hwnd;
+	bool m_fSettingsLoaded = false;
+	bool m_fShowed = false;
+	HWND m_hwnd = nullptr;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
 	int m_DPI;
@@ -249,11 +248,11 @@ private:
 	int m_LineWidth;
 	int m_ClientWidth;
 	int m_ClientHeight;
-	HFONT m_hfont;
-	POINT m_WindowPosition;
+	HFONT m_hfont = nullptr;
+	POINT m_WindowPosition{};
 	CBandPass m_BandPass;
-	bool m_fEnabled;
-	bool m_fEnableDefault;
+	bool m_fEnabled = false;
+	bool m_fEnableDefault = false;
 	EqualizerSettings m_CurSettings;
 	int m_CurSlider;
 	EqualizerSettings m_CustomPresetList[NUM_CUSTOM_PRESETS];
@@ -320,15 +319,7 @@ const double CEqualizer::m_FreqTable[NUM_FREQUENCY-1] = {
 
 
 CEqualizer::CEqualizer()
-	: m_fSettingsLoaded(false)
-	, m_fShowed(false)
-	, m_hwnd(nullptr)
-	, m_fEnabled(false)
-	, m_fEnableDefault(false)
 {
-	m_WindowPosition.x = 0;
-	m_WindowPosition.y = 0;
-
 	ResetSettings();
 
 	for (int i = 0; i < NUM_CUSTOM_PRESETS; i++) {

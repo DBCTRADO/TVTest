@@ -70,7 +70,7 @@ namespace TVTest
 
 		CTSProcessorManager &m_TSProcessorManager;
 		std::vector<std::unique_ptr<CTSProcessorManager::CTSProcessorSettings>> m_SettingsList;
-		CTSProcessorManager::CTSProcessorSettings *m_pCurSettings;
+		CTSProcessorManager::CTSProcessorSettings *m_pCurSettings = nullptr;
 		CListView m_TunerMapListView;
 		std::vector<String> m_ModuleList;
 		std::map<String, ModuleInfo, StringFunctional::LessNoCase> m_ModuleInfoMap;

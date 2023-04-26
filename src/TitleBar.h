@@ -49,10 +49,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			class CTitleBar *m_pTitleBar;
+			class CTitleBar *m_pTitleBar = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler();
 
 			virtual bool OnClose() { return false; }
@@ -114,15 +113,14 @@ namespace TVTest
 
 		struct TitleBarStyle
 		{
-			Style::Margins Padding;
-			Style::Margins LabelMargin;
-			Style::IntValue LabelExtraHeight;
-			Style::Size IconSize;
-			Style::Margins IconMargin;
-			Style::Size ButtonIconSize;
-			Style::Margins ButtonPadding;
+			Style::Margins Padding{0, 0, 0, 0};
+			Style::Margins LabelMargin{4, 2, 4, 2};
+			Style::IntValue LabelExtraHeight{4};
+			Style::Size IconSize{16, 16};
+			Style::Margins IconMargin{4, 0, 0, 0};
+			Style::Size ButtonIconSize{12, 12};
+			Style::Margins ButtonPadding{4};
 
-			TitleBarStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -132,19 +130,19 @@ namespace TVTest
 		TitleBarStyle m_Style;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
-		int m_FontHeight;
+		int m_FontHeight = 0;
 		TitleBarTheme m_Theme;
 		Theme::IconList m_ButtonIcons;
 		CTooltip m_Tooltip;
 		String m_Label;
-		HICON m_hIcon;
-		int m_HotItem;
-		int m_ClickItem;
+		HICON m_hIcon = nullptr;
+		int m_HotItem = -1;
+		int m_ClickItem = -1;
 		CMouseLeaveTrack m_MouseLeaveTrack;
-		bool m_fMaximized;
-		bool m_fFullscreen;
+		bool m_fMaximized = false;
+		bool m_fFullscreen = false;
 		bool m_fSnapLayoutsSupport;
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 
 		static const LPCTSTR CLASS_NAME;
 		static HINSTANCE m_hinst;

@@ -56,10 +56,10 @@ namespace TVTest
 	private:
 		LibISDB::EPGDatabase m_EPGDatabase;
 		LibISDB::EPGDatabaseFilter m_EPGDatabaseFilter;
-		HANDLE m_hThread;
-		HANDLE m_hAbortEvent;
+		HANDLE m_hThread = nullptr;
+		HANDLE m_hAbortEvent = nullptr;
 		String m_Folder;
-		CEventHandler *m_pEventHandler;
+		CEventHandler *m_pEventHandler = nullptr;
 
 		bool LoadFromFile(LPCTSTR pszFileName);
 		static unsigned int __stdcall LoadThread(void *pParameter);

@@ -1297,7 +1297,6 @@ HICON LoadSystemIcon(LPCTSTR pszName, int Width, int Height)
 CStaticStringFormatter::CStaticStringFormatter(LPTSTR pBuffer, size_t BufferLength)
 	: m_pBuffer(pBuffer)
 	, m_BufferLength(BufferLength)
-	, m_Length(0)
 {
 	m_pBuffer[0] = _T('\0');
 }
@@ -1332,12 +1331,6 @@ void CStaticStringFormatter::RemoveTrailingWhitespace()
 
 
 
-
-CGlobalLock::CGlobalLock()
-	: m_hMutex(nullptr)
-	, m_fOwner(false)
-{
-}
 
 CGlobalLock::~CGlobalLock()
 {
@@ -1405,12 +1398,6 @@ void CGlobalLock::Release()
 	}
 }
 
-
-CSemaphore::CSemaphore()
-	: m_hSemaphore(nullptr)
-	, m_MaxCount(0)
-{
-}
 
 CSemaphore::~CSemaphore()
 {
@@ -1733,11 +1720,6 @@ bool IsWindows11OrLater()
 
 }	// namespace OS
 
-
-CTimer::CTimer()
-	: m_hTimer(nullptr)
-{
-}
 
 CTimer::~CTimer()
 {

@@ -91,30 +91,30 @@ namespace TVTest
 
 		void EnableNotify(unsigned int Type, bool fEnabled);
 
-		bool m_fShowOSD;
-		bool m_fPseudoOSD;
-		COLORREF m_TextColor;
+		bool m_fShowOSD = true;
+		bool m_fPseudoOSD = true;
+		COLORREF m_TextColor = RGB(0, 255, 0);
 		COLORREF m_CurTextColor;
-		int m_Opacity;
+		int m_Opacity = 80;
 		LOGFONT m_OSDFont;
 		LOGFONT m_CurOSDFont;
-		int m_FadeTime;
-		ChannelChangeType m_ChannelChangeType;
-		String m_ChannelChangeText;
+		int m_FadeTime = 3000;
+		ChannelChangeType m_ChannelChangeType = ChannelChangeType::LogoAndText;
+		String m_ChannelChangeText{TEXT("%channel-no% %channel-name%")};
 		unsigned int m_EnabledOSD;
 
-		bool m_fLayeredWindow;
-		bool m_fCompositionEnabled;
+		bool m_fLayeredWindow = true;
+		bool m_fCompositionEnabled = false;
 
-		bool m_fEnableNotificationBar;
-		int m_NotificationBarDuration;
-		unsigned int m_NotificationBarFlags;
+		bool m_fEnableNotificationBar = true;
+		int m_NotificationBarDuration = 3000;
+		unsigned int m_NotificationBarFlags = NOTIFY_EVENTNAME | NOTIFY_TSPROCESSORERROR;
 		Style::Font m_NotificationBarFont;
 		Style::Font m_CurNotificationBarFont;
 
 		Style::Font m_DisplayFont;
 		Style::Font m_DisplayFontCur;
-		bool m_fDisplayFontAutoSize;
+		bool m_fDisplayFontAutoSize = false;
 	};
 
 }	// namespace TVTest

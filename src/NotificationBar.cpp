@@ -65,9 +65,6 @@ bool CNotificationBar::Initialize(HINSTANCE hinst)
 
 
 CNotificationBar::CNotificationBar()
-	: m_fAnimate(true)
-	, m_BarHeight(0)
-	, m_TimerCount(0)
 {
 	GetSystemFont(DrawUtil::FontType::Message, &m_StyleFont);
 	m_StyleFont.LogFont.lfHeight = ::MulDiv(m_StyleFont.LogFont.lfHeight, 12, 10);
@@ -386,16 +383,6 @@ void CNotificationBar::ApplyStyle()
 }
 
 
-
-
-CNotificationBar::NotificationBarStyle::NotificationBarStyle()
-	: Padding(4, 2, 4, 2)
-	, IconSize(::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON))
-	, IconMargin(0, 0, 4, 0)
-	, TextMargin(0)
-	, TextExtraHeight(4)
-{
-}
 
 
 void CNotificationBar::NotificationBarStyle::SetStyle(const Style::CStyleManager *pStyleManager)

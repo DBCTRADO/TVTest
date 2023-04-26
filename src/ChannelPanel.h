@@ -144,9 +144,9 @@ namespace TVTest
 			CChannelInfo m_ChannelInfo;
 			int m_OriginalChannelIndex;
 			std::vector<LibISDB::EventInfo> m_EventList;
-			HBITMAP m_hbmLogo;
+			HBITMAP m_hbmLogo = nullptr;
 			DrawUtil::CBitmap m_StretchedLogo;
-			bool m_fExpanded;
+			bool m_fExpanded = false;
 
 		public:
 			CChannelEventInfo(const CChannelInfo *pChannelInfo, int OriginalIndex);
@@ -172,55 +172,53 @@ namespace TVTest
 
 		struct ChannelPanelStyle
 		{
-			Style::Margins ChannelNameMargin;
-			Style::Margins ChannelLogoMargin;
-			Style::Margins EventNameMargin;
-			Style::Size ChannelChevronSize;
-			Style::IntValue ChannelChevronMargin;
-			Style::Margins FeaturedMarkMargin;
+			Style::Margins ChannelNameMargin{2, 2, 2, 2};
+			Style::Margins ChannelLogoMargin{0, 0, 3, 0};
+			Style::Margins EventNameMargin{8, 1, 2, 1};
+			Style::Size ChannelChevronSize{10, 10};
+			Style::IntValue ChannelChevronMargin{12};
+			Style::Margins FeaturedMarkMargin{1};
 
-			ChannelPanelStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
 				const Style::CStyleScaling *pStyleScaling);
 		};
 
-		LibISDB::EPGDatabase *m_pEPGDatabase;
+		LibISDB::EPGDatabase *m_pEPGDatabase = nullptr;
 		ChannelPanelStyle m_Style;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
 		DrawUtil::CFont m_ChannelFont;
-		int m_FontHeight;
-		int m_ChannelChevronMargin;
-		int m_EventNameLines;
-		int m_ChannelNameHeight;
-		int m_EventNameHeight;
-		int m_ItemHeight;
-		int m_ExpandedItemHeight;
+		int m_FontHeight = 0;
+		int m_EventNameLines = 2;
+		int m_ChannelNameHeight = 0;
+		int m_EventNameHeight = 0;
+		int m_ItemHeight = 0;
+		int m_ExpandedItemHeight = 0;
 		ChannelPanelTheme m_Theme;
 		CEpgTheme m_EpgTheme;
-		bool m_fUseEpgColorScheme;
-		bool m_fShowGenreColor;
-		bool m_fShowFeaturedMark;
-		bool m_fShowProgressBar;
-		bool m_fUseARIBSymbol;
-		ProgressBarStyle m_ProgressBarStyle;
+		bool m_fUseEpgColorScheme = false;
+		bool m_fShowGenreColor = false;
+		bool m_fShowFeaturedMark = true;
+		bool m_fShowProgressBar = true;
+		bool m_fUseARIBSymbol = false;
+		ProgressBarStyle m_ProgressBarStyle = ProgressBarStyle::Elapsed;
 		DrawUtil::COffscreen m_Offscreen;
 		Theme::IconList m_Chevron;
-		int m_EventsPerChannel;
-		int m_ExpandAdditionalEvents;
-		int m_ExpandEvents;
-		int m_ScrollPos;
-		int m_OldDPI;
+		int m_EventsPerChannel = 2;
+		int m_ExpandAdditionalEvents = 4;
+		int m_ExpandEvents = m_EventsPerChannel + m_ExpandAdditionalEvents;
+		int m_ScrollPos = 0;
+		int m_OldDPI = 0;
 		CMouseWheelHandler m_MouseWheel;
-		bool m_fScrollToCurChannel;
+		bool m_fScrollToCurChannel = false;
 		std::vector<std::unique_ptr<CChannelEventInfo>> m_ChannelList;
-		int m_CurChannel;
-		CEventHandler *m_pEventHandler;
+		int m_CurChannel = -1;
+		CEventHandler *m_pEventHandler = nullptr;
 		CTooltip m_Tooltip;
 		String m_TooltipText;
-		bool m_fDetailToolTip;
+		bool m_fDetailToolTip = false;
 		CEventInfoPopup m_EventInfoPopup;
 		CEventInfoPopupManager m_EventInfoPopupManager;
 		class CEventInfoPopupHandler
@@ -232,8 +230,8 @@ namespace TVTest
 			bool HitTest(int x, int y, LPARAM *pParam) override;
 			bool ShowPopup(LPARAM Param, CEventInfoPopup *pPopup) override;
 		};
-		CEventInfoPopupHandler m_EventInfoPopupHandler;
-		CLogoManager *m_pLogoManager;
+		CEventInfoPopupHandler m_EventInfoPopupHandler{this};
+		CLogoManager *m_pLogoManager = nullptr;
 		LibISDB::DateTime m_UpdatedTime;
 		LibISDB::DateTime m_CurTime;
 		CFeaturedEventsMatcher m_FeaturedEventsMatcher;

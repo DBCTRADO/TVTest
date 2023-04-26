@@ -36,12 +36,6 @@ Style::Font CUIBase::m_DefaultFont;
 bool CUIBase::m_fValidDefaultFont = false;
 
 
-CUIBase::CUIBase()
-	: m_pStyleScaling(nullptr)
-{
-}
-
-
 CUIBase::~CUIBase() = default;
 
 

@@ -36,7 +36,7 @@ namespace TVTest
 	class CBufferedPaint
 	{
 	public:
-		CBufferedPaint();
+		CBufferedPaint() = default;
 		~CBufferedPaint();
 
 		CBufferedPaint(const CBufferedPaint &) = delete;
@@ -52,7 +52,7 @@ namespace TVTest
 		static bool IsSupported();
 
 	private:
-		HPAINTBUFFER m_hPaintBuffer;
+		HPAINTBUFFER m_hPaintBuffer = nullptr;
 	};
 
 	class CDoubleBufferingDraw

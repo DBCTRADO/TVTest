@@ -179,7 +179,7 @@ namespace TVTest
 			void ShowSignalLevel(bool fShow);
 
 		private:
-			bool m_fShowSignalLevel;
+			bool m_fShowSignalLevel = true;
 			float m_SignalLevel;
 			DWORD m_BitRate;
 		};
@@ -324,12 +324,10 @@ namespace TVTest
 	private:
 		struct InformationPanelStyle
 		{
-			Style::Size ButtonSize;
-			Style::IntValue LineSpacing;
-			Style::Margins ItemButtonMargin;
-			Style::Margins ItemButtonPadding;
-
-			InformationPanelStyle();
+			Style::Size ButtonSize{16, 16};
+			Style::IntValue LineSpacing{1};
+			Style::Margins ItemButtonMargin{4, 0, 0, 0};
+			Style::Margins ItemButtonPadding{2};
 
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
@@ -365,10 +363,10 @@ namespace TVTest
 
 		struct ItemButtonNumber
 		{
-			int Item;
-			int Button;
+			int Item = -1;
+			int Button = -1;
 
-			ItemButtonNumber() : Item(-1), Button(-1) {}
+			ItemButtonNumber() = default;
 			ItemButtonNumber(int item, int button) : Item(item), Button(button) {}
 
 			bool operator==(const ItemButtonNumber &rhs) const noexcept = default;
@@ -386,16 +384,16 @@ namespace TVTest
 		DrawUtil::CBrush m_ProgramInfoBackBrush;
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
-		int m_FontHeight;
+		int m_FontHeight = 0;
 		DrawUtil::CFont m_IconFont;
 		DrawUtil::COffscreen m_Offscreen;
 		CTooltip m_Tooltip;
-		int m_ItemButtonWidth;
+		int m_ItemButtonWidth = 0;
 
-		HWND m_hwndProgramInfo;
-		CProgramInfoSubclass m_ProgramInfoSubclass;
+		HWND m_hwndProgramInfo = nullptr;
+		CProgramInfoSubclass m_ProgramInfoSubclass{this};
 		CRichEditUtil m_RichEditUtil;
-		bool m_fUseRichEdit;
+		bool m_fUseRichEdit = true;
 		CRichEditLinkHandler m_RichEditLink;
 		ItemButtonNumber m_HotButton;
 

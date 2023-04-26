@@ -46,8 +46,8 @@ namespace TVTest
 		};
 
 		KeyInputModeType KeyInputMode[static_cast<size_t>(KeyType::Trailer_)];
-		unsigned int KeyTimeout;
-		bool fKeyTimeoutCancel;
+		unsigned int KeyTimeout = 2000;
+		bool fKeyTimeoutCancel = false;
 
 		CChannelInputOptions();
 	};
@@ -76,10 +76,10 @@ namespace TVTest
 
 	private:
 		const CChannelInputOptions &m_Options;
-		bool m_fInputting;
-		int m_MaxDigits;
-		int m_CurDigits;
-		int m_Number;
+		bool m_fInputting = false;
+		int m_MaxDigits = 0;
+		int m_CurDigits = 0;
+		int m_Number = 0;
 	};
 
 	class CChannelInputOptionsDialog

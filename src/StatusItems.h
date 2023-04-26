@@ -81,9 +81,9 @@ namespace TVTest
 		void OnRButtonDown(int x, int y) override;
 
 	private:
-		int m_OriginalVideoWidth;
-		int m_OriginalVideoHeight;
-		int m_ZoomPercentage;
+		int m_OriginalVideoWidth = 0;
+		int m_OriginalVideoHeight = 0;
+		int m_ZoomPercentage = 0;
 	};
 
 	class CVolumeStatusItem
@@ -108,11 +108,9 @@ namespace TVTest
 	private:
 		struct VolumeStatusStyle
 		{
-			Style::IntValue BarHeight;
-			Style::Margins BarPadding;
-			Style::IntValue BarBorderWidth;
-
-			VolumeStatusStyle();
+			Style::IntValue BarHeight{8};
+			Style::Margins BarPadding{1};
+			Style::IntValue BarBorderWidth{1};
 		};
 
 		VolumeStatusStyle m_Style;
@@ -139,8 +137,8 @@ namespace TVTest
 	class CRecordStatusItem
 		: public CStatusItem
 	{
-		COLORREF m_CircleColor;
-		bool m_fRemain;
+		COLORREF m_CircleColor = RGB(223, 63, 0);
+		bool m_fRemain = false;
 		CTooltip m_Tooltip;
 
 		size_t GetTipText(LPTSTR pszText, size_t MaxLength);
@@ -200,9 +198,9 @@ namespace TVTest
 		void OnRButtonDown(int x, int y) override;
 
 	private:
-		ULONGLONG m_ContinuityErrorPacketCount;
-		ULONGLONG m_ErrorPacketCount;
-		ULONGLONG m_ScramblePacketCount;
+		ULONGLONG m_ContinuityErrorPacketCount = 0;
+		ULONGLONG m_ErrorPacketCount = 0;
+		ULONGLONG m_ScramblePacketCount = 0;
 	};
 
 	class CSignalLevelStatusItem
@@ -221,9 +219,9 @@ namespace TVTest
 		void ShowSignalLevel(bool fShow);
 
 	private:
-		bool m_fShowSignalLevel;
-		float m_SignalLevel;
-		DWORD m_BitRate;
+		bool m_fShowSignalLevel = true;
+		float m_SignalLevel = 0.0f;
+		DWORD m_BitRate = 0;
 	};
 
 	class CClockStatusItem
@@ -249,8 +247,8 @@ namespace TVTest
 	private:
 		void FormatTime(const LibISDB::DateTime &Time, LPTSTR pszText, int MaxLength) const;
 
-		bool m_fTOT;
-		bool m_fInterpolateTOT;
+		bool m_fTOT = false;
+		bool m_fInterpolateTOT = true;
 		LibISDB::DateTime m_Time;
 		LibISDB::MutexLock m_Lock;
 	};
@@ -258,14 +256,14 @@ namespace TVTest
 	class CProgramInfoStatusItem
 		: public CStatusItem
 	{
-		bool m_fNext;
-		bool m_fShowProgress;
-		bool m_fEnablePopupInfo;
+		bool m_fNext = false;
+		bool m_fShowProgress = true;
+		bool m_fEnablePopupInfo = true;
 		CEventInfoPopup m_EventInfoPopup;
 		String m_Text;
-		Theme::BackgroundStyle m_ProgressBackStyle;
-		Theme::BackgroundStyle m_ProgressElapsedStyle;
-		bool m_fValidProgress;
+		Theme::BackgroundStyle m_ProgressBackStyle{Theme::FillStyle(Theme::SolidStyle(Theme::ThemeColor(160, 160, 160)))};
+		Theme::BackgroundStyle m_ProgressElapsedStyle{Theme::FillStyle(Theme::SolidStyle(Theme::ThemeColor(0, 0, 128)))};
+		bool m_fValidProgress = false;
 		LibISDB::EventInfo m_EventInfo;
 		LibISDB::DateTime m_CurTime;
 
@@ -314,8 +312,8 @@ namespace TVTest
 		void OnLButtonDown(int x, int y) override;
 
 	private:
-		DWORD m_StreamRemain;
-		int m_PacketBufferUsedPercentage;
+		DWORD m_StreamRemain = 0;
+		int m_PacketBufferUsedPercentage = 0;
 	};
 
 	class CTunerStatusItem
@@ -345,8 +343,8 @@ namespace TVTest
 		void Draw(HDC hdc, const RECT &ItemRect, const RECT &DrawRect, DrawFlag Flags) override;
 
 	private:
-		DWORD m_VideoBitRate;
-		DWORD m_AudioBitRate;
+		DWORD m_VideoBitRate = 0;
+		DWORD m_AudioBitRate = 0;
 	};
 
 	class CFavoritesStatusItem

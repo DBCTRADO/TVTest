@@ -35,12 +35,6 @@ static unsigned int StrToUInt(LPCTSTR pszValue)
 }
 
 
-CSettings::CSettings()
-	: m_OpenFlags(OpenFlag::None)
-{
-}
-
-
 CSettings::~CSettings()
 {
 	Close();
@@ -411,14 +405,12 @@ bool CSettings::Write(LPCTSTR pszValueName, const LOGFONT *pFont)
 
 CSettingsBase::CSettingsBase()
 	: m_pszSection(TEXT("Settings"))
-	, m_fChanged(false)
 {
 }
 
 
 CSettingsBase::CSettingsBase(LPCTSTR pszSection)
 	: m_pszSection(pszSection)
-	, m_fChanged(false)
 {
 }
 

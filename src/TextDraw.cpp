@@ -38,13 +38,6 @@ const LPCWSTR CTextDraw::m_pszEndProhibitChars =
 	L"(（[［｢「『【〈《“#＃▽▼";
 
 
-CTextDraw::CTextDraw()
-	: m_pEngine(nullptr)
-	, m_Flags(Flag::None)
-{
-}
-
-
 bool CTextDraw::SetEngine(CTextDrawEngine *pEngine)
 {
 	if (pEngine != nullptr) {
@@ -380,13 +373,6 @@ bool CTextDrawEngine::OnWindowPosChanged()
 
 
 
-CTextDrawEngine_GDI::CTextDrawEngine_GDI()
-	: m_hdc(nullptr)
-	, m_hfontOld(nullptr)
-{
-}
-
-
 CTextDrawEngine_GDI::~CTextDrawEngine_GDI()
 {
 	Finalize();
@@ -562,8 +548,6 @@ void CTextDrawEngine_GDI::UnbindDC()
 
 CTextDrawEngine_DirectWrite::CTextDrawEngine_DirectWrite(CDirectWriteRenderer &Renderer)
 	: m_Renderer(Renderer)
-	, m_pFont(nullptr)
-	, m_MaxFontCache(4)
 {
 }
 

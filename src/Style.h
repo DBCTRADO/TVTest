@@ -129,8 +129,6 @@ namespace TVTest
 		class CStyleScaling
 		{
 		public:
-			CStyleScaling();
-
 			bool SetDPI(int DPI);
 			int GetDPI() const;
 			bool SetSystemDPI(int DPI);
@@ -149,9 +147,9 @@ namespace TVTest
 			bool AdjustWindowRect(HWND hwnd, RECT *pRect) const;
 
 		private:
-			int m_DPI;
-			int m_SystemDPI;
-			bool m_fScaleFont;
+			int m_DPI = 96;
+			int m_SystemDPI = 96;
+			bool m_fScaleFont = true;
 		};
 
 		class CStyleManager
@@ -190,15 +188,15 @@ namespace TVTest
 
 			StyleMap m_StyleMap;
 			int m_DPI;
-			int m_ForcedDPI;
+			int m_ForcedDPI = 0;
 			int m_ResolutionX;
 			int m_ResolutionY;
 			int m_ForcedResolutionX;
 			int m_ForcedResolutionY;
-			bool m_fScaleFont;
-			bool m_fHandleDPIChanged;
-			bool m_fUseDarkMenu;
-			bool m_fDarkDialog;
+			bool m_fScaleFont = true;
+			bool m_fHandleDPIChanged = true;
+			bool m_fUseDarkMenu = true;
+			bool m_fDarkDialog = true;
 
 			static UnitType ParseUnit(LPCTSTR pszUnit);
 		};

@@ -32,8 +32,6 @@ namespace TVTest
 
 COSDManager::COSDManager(const COSDOptions *pOptions)
 	: m_pOptions(pOptions)
-	, m_pEventHandler(nullptr)
-	, m_VolumeOSDMaxWidth(0)
 {
 }
 
@@ -463,28 +461,6 @@ void COSDManager::NormalizeStyle(
 }
 
 
-
-
-COSDManager::OSDStyle::OSDStyle()
-	: Margin(8)
-	, TextSizeRatio(28)
-	, TextSizeMin(12)
-	, TextSizeMax(100)
-	, CompositeTextSizeRatio(24)
-	, CompositeTextSizeMin(12)
-	, CompositeTextSizeMax(100)
-	, LogoSize(64, 36)
-//	, LogoEffect(TEXT("gloss"))
-	, fChannelAnimation(true)
-	, VolumeMargin(16)
-	, VolumeTextSizeMin(10)
-	, VolumeTextSizeMax(50)
-	, VolumeHorizontalScale(60)
-	, VolumeSteps(20)
-	, VolumeTextFill(TEXT("■"))
-	, VolumeTextRemain(TEXT("□"))
-{
-}
 
 
 void COSDManager::OSDStyle::SetStyle(const Style::CStyleManager *pStyleManager)

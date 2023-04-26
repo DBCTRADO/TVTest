@@ -30,14 +30,6 @@ const LPCTSTR CImageCodec::m_FormatStringList[] =
 };
 
 
-CImageCodec::CImageCodec()
-	: m_hLib(nullptr)
-	, m_JpegQuality(90)
-	, m_PngCompressionLevel(6)
-{
-}
-
-
 CImageCodec::~CImageCodec()
 {
 	if (m_hLib != nullptr)

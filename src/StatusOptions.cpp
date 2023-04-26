@@ -55,20 +55,8 @@ constexpr UINT TIMER_ID_DOWN = 2;
 CStatusOptions::CStatusOptions(CStatusView *pStatusView)
 	: COptions(TEXT("Status"))
 	, m_pStatusView(pStatusView)
-	, m_ItemID(STATUS_ITEM_LAST + 1)
 	, m_DPI(GetSystemDPI())
-	, m_fShowTOTTime(false)
-	, m_fInterpolateTOTTime(true)
-	, m_fEnablePopupProgramInfo(true)
-	, m_fShowEventProgress(true)
-	, m_PopupEventInfoWidth(0)
-	, m_PopupEventInfoHeight(0)
 	, m_fMultiRow(!IS_HD)
-	, m_MaxRows(2)
-	, m_fShowPopup(true)
-	, m_PopupOpacity(OPACITY_MAX)
-
-	, m_ItemListSubclass(this)
 {
 	static const struct {
 		BYTE ID;

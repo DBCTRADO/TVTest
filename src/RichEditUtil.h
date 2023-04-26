@@ -34,7 +34,7 @@ namespace TVTest
 	public:
 		typedef std::vector<CHARRANGE> CharRangeList;
 
-		CRichEditUtil();
+		CRichEditUtil() = default;
 		~CRichEditUtil();
 
 		CRichEditUtil(const CRichEditUtil &) = delete;
@@ -70,7 +70,7 @@ namespace TVTest
 		static int LinkHitTest(HWND hwndEdit, const POINT &Pos, const CharRangeList &LinkList);
 
 	private:
-		HMODULE m_hLib;
+		HMODULE m_hLib = nullptr;
 
 		static const LPCTSTR m_pszURLChars;
 		static const LPCTSTR m_pszURLFullWidthChars;

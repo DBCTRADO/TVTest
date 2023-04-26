@@ -63,11 +63,10 @@ static TVTest::ControllerButtonInfo g_ButtonList[] = {
 class CTargetWindow
 {
 	HANDLE m_hMap;
-	HWND *m_phwnd;
+	HWND *m_phwnd = nullptr;
 
 public:
 	CTargetWindow()
-		: m_phwnd(nullptr)
 	{
 		// 共有メモリを作成する
 		SECURITY_DESCRIPTOR sd;
@@ -130,8 +129,8 @@ class CGamePad : public TVTest::CTVTestPlugin
 	};
 
 	CTargetWindow m_TargetWindow;             // 操作対象ウィンドウ
-	HANDLE m_hThread;                         // スレッドのハンドル
-	HANDLE m_hEvent;                          // イベントのハンドル
+	HANDLE m_hThread = nullptr;               // スレッドのハンドル
+	HANDLE m_hEvent = nullptr;                // イベントのハンドル
 	ButtonStatus m_ButtonStatus[NUM_BUTTONS]; // ボタンの状態
 	volatile bool m_fInitDevCaps;             // デバイス情報の初期化
 
@@ -144,18 +143,10 @@ class CGamePad : public TVTest::CTVTestPlugin
 	static unsigned int __stdcall ThreadProc(void *pParameter);
 
 public:
-	CGamePad();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
 };
-
-
-CGamePad::CGamePad()
-	: m_hThread(nullptr)
-	, m_hEvent(nullptr)
-{
-}
 
 
 bool CGamePad::GetPluginInfo(TVTest::PluginInfo *pInfo)

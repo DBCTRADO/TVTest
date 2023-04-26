@@ -78,20 +78,20 @@ namespace TVTest
 		void OnParentMove();
 
 	private:
-		HWND m_hwnd;
-		COLORREF m_crBackColor;
-		COLORREF m_crTextColor;
+		HWND m_hwnd = nullptr;
+		COLORREF m_crBackColor = RGB(16, 0, 16);
+		COLORREF m_crTextColor = RGB(0, 255, 128);
 		DrawUtil::CFont m_Font;
-		TextStyle m_TextStyle;
+		TextStyle m_TextStyle = TextStyle::Outline;
 		String m_Text;
-		HBITMAP m_hbmIcon;
-		int m_IconWidth;
-		int m_IconHeight;
-		HBITMAP m_hbm;
-		ImageEffect m_ImageEffect;
+		HBITMAP m_hbmIcon = nullptr;
+		int m_IconWidth = 0;
+		int m_IconHeight = 0;
+		HBITMAP m_hbm = nullptr;
+		ImageEffect m_ImageEffect = ImageEffect::None;
 		struct {
 			int Left, Top, Width, Height;
-		} m_Position;
+		} m_Position = {0, 0, 0, 0};
 		CWindowTimerManager m_Timer;
 		int m_AnimationCount;
 		bool m_fLayeredWindow;

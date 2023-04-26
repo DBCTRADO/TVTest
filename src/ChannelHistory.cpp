@@ -29,13 +29,6 @@ namespace TVTest
 {
 
 
-CChannelHistory::CChannelHistory()
-	: m_MaxChannelHistory(20)
-	, m_CurrentChannel(-1)
-{
-}
-
-
 void CChannelHistory::Clear()
 {
 	m_ChannelList.clear();
@@ -95,8 +88,6 @@ const CTunerChannelInfo *CChannelHistory::Backward()
 
 CRecentChannelList::CRecentChannelList()
 	: CSettingsBase(TEXT("RecentChannel"))
-	, m_MaxChannelHistory(20)
-	, m_MaxChannelHistoryMenu(20)
 {
 }
 

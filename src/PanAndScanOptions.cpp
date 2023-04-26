@@ -143,7 +143,6 @@ static const CPanAndScanOptions::PanAndScanInfo DefaultPresetList[] = {
 CPanAndScanOptions::CPanAndScanOptions()
 	: CSettingsBase(TEXT("PanAndScan"))
 	, CCommandCustomizer(CM_PANANDSCAN_PRESET_FIRST, CM_PANANDSCAN_PRESET_LAST)
-	, m_fStateChanging(false)
 	, m_PresetID(lengthof(DefaultPresetList) + 1)
 {
 	for (const PanAndScanInfo &e : DefaultPresetList)

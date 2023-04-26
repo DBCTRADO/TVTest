@@ -76,10 +76,10 @@ namespace TVTest
 		void GetPagePosition(RECT *pPosition) const;
 
 		PageInfo m_PageList[NUM_PAGES];
-		int m_CurrentPage;
-		CEventHandler *m_pEventHandler;
-		bool m_fCreateFirst;
-		SIZE m_DefaultPageSize;
+		int m_CurrentPage = 0;
+		CEventHandler *m_pEventHandler = nullptr;
+		bool m_fCreateFirst = true;
+		SIZE m_DefaultPageSize{};
 	};
 
 }	// namespace TVTest

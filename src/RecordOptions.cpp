@@ -58,15 +58,7 @@ static const int StatusBarCommandList[] = {
 
 
 CRecordOptions::CRecordOptions()
-	: m_FileName(TEXT("Record_%date%-%time%.ts"))
-	, m_fConfirmChannelChange(true)
-	, m_fConfirmExit(true)
-	, m_fConfirmStop(false)
-	, m_fConfirmStopStatusBarOnly(false)
-	, m_fAlertLowFreeSpace(true)
-	, m_LowFreeSpaceThreshold(2048)
-	, m_fShowRemainTime(false)
-	, m_StatusBarRecordCommand(CM_RECORD_START)
+	: m_StatusBarRecordCommand(CM_RECORD_START)
 {
 }
 

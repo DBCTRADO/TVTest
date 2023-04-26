@@ -32,7 +32,7 @@ namespace TVTest
 	class CSharedMemory
 	{
 	public:
-		CSharedMemory();
+		CSharedMemory() = default;
 		~CSharedMemory();
 
 		CSharedMemory(const CSharedMemory &) = delete;
@@ -51,7 +51,7 @@ namespace TVTest
 	private:
 		void GetLockName(LPCWSTR pszName, String *pLockName) const;
 
-		HANDLE m_hFileMapping;
+		HANDLE m_hFileMapping = nullptr;
 		CGlobalLock m_Lock;
 	};
 

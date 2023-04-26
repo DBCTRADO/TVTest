@@ -130,21 +130,21 @@ namespace TVTest
 		static CDebugHelper DebugHelper;
 #endif
 
-		CAppCore Core;
+		CAppCore Core{*this};
 		CAppEventManager AppEventManager;
 		CCoreEngine CoreEngine;
-		CUICore UICore;
+		CUICore UICore{*this};
 		CLogger Logger;
 		Graphics::CGraphicsCore GraphicsCore;
 		Style::CStyleManager StyleManager;
 		CDirectWriteSystem DirectWriteSystem;
 		CMainMenu MainMenu;
 		CCommandManager CommandManager;
-		CAppCommand AppCommand;
+		CAppCommand AppCommand{*this};
 		CCommandLineOptions CmdLineOptions;
 		CPluginManager PluginManager;
 		LibISDB::EPGDatabase EPGDatabase;
-		CMainWindow MainWindow;
+		CMainWindow MainWindow{*this};
 		CStatusView StatusView;
 		CSideBar SideBar;
 		CMainPanel Panel;
@@ -356,19 +356,19 @@ namespace TVTest
 			bool fFocus;
 		};
 
-		HINSTANCE m_hInst;
+		HINSTANCE m_hInst = nullptr;
 		CFilePath m_IniFileName;
 		CFilePath m_FavoritesFileName;
 		CSettings m_Settings;
-		bool m_fFirstExecute;
-		bool m_fInitialSettings;
-		CEngineEventListener m_EngineEventListener;
-		CStreamInfoEventHandler m_StreamInfoEventHandler;
-		CCaptureWindowEventHandler m_CaptureWindowEventHandler;
+		bool m_fFirstExecute = false;
+		bool m_fInitialSettings = false;
+		CEngineEventListener m_EngineEventListener{*this};
+		CStreamInfoEventHandler m_StreamInfoEventHandler{*this};
+		CCaptureWindowEventHandler m_CaptureWindowEventHandler{*this};
 		COptionDialog m_OptionDialog;
-		unsigned int m_ExitTimeout;
-		bool m_fEnablePlaybackOnStart;
-		bool m_fIncrementNetworkPort;
+		unsigned int m_ExitTimeout = 60000;
+		bool m_fEnablePlaybackOnStart = true;
+		bool m_fIncrementNetworkPort = true;
 
 		static HICON m_hicoApp;
 		static HICON m_hicoAppSmall;

@@ -63,13 +63,6 @@ bool CColorPalette::Initialize(HINSTANCE hinst)
 }
 
 
-CColorPalette::CColorPalette()
-	: m_NumColors(0)
-	, m_BackColor(CLR_INVALID)
-{
-}
-
-
 CColorPalette::~CColorPalette()
 {
 	Destroy();

@@ -86,22 +86,22 @@ namespace TVTest
 			return StringUtility::CompareNoCase(ID1, ID2) == 0;
 		}
 
-		bool m_fSnapAtMainWindow;
-		int m_SnapMargin;
-		bool m_fAttachToMainWindow;
-		int m_Opacity;
+		bool m_fSnapAtMainWindow = true;
+		int m_SnapMargin = 4;
+		bool m_fAttachToMainWindow = true;
+		int m_Opacity = 100;
 		Style::Font m_Font;
 		Style::Font m_CurSettingFont;
-		bool m_fSpecCaptionFont;
+		bool m_fSpecCaptionFont = true;
 		Style::Font m_CaptionFont;
 		Style::Font m_CurSettingCaptionFont;
 		String m_InitialTab;
 		String m_LastTab;
 		PanelItemInfoList m_AvailItemList;
 		PanelItemInfoList m_ItemList;
-		CPanelForm::TabStyle m_TabStyle;
-		bool m_fTabTooltip;
-		bool m_fProgramInfoUseRichEdit;
+		CPanelForm::TabStyle m_TabStyle = CPanelForm::TabStyle::TextOnly;
+		bool m_fTabTooltip = true;
+		bool m_fProgramInfoUseRichEdit = true;
 		CListView m_ItemListView;
 
 	// CBasicDialog

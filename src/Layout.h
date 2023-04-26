@@ -58,10 +58,10 @@ namespace TVTest
 			const RECT &GetPosition() const { return m_Position; }
 
 		protected:
-			CLayoutBase *m_pBase;
+			CLayoutBase *m_pBase = nullptr;
 			int m_ID;
-			bool m_fVisible;
-			RECT m_Position;
+			bool m_fVisible = false;
+			RECT m_Position{};
 
 			friend CLayoutBase;
 		};
@@ -69,10 +69,10 @@ namespace TVTest
 		class CWindowContainer
 			: public CContainer
 		{
-			CBasicWindow *m_pWindow;
-			CUIBase *m_pUIBase;
-			int m_MinWidth;
-			int m_MinHeight;
+			CBasicWindow *m_pWindow = nullptr;
+			CUIBase *m_pUIBase = nullptr;
+			int m_MinWidth = 0;
+			int m_MinHeight = 0;
 
 		public:
 			CWindowContainer(int ID);
@@ -103,16 +103,14 @@ namespace TVTest
 		private:
 			struct PaneInfo
 			{
-				CContainer *pContainer;
-				int FixedSize;
-
-				PaneInfo() : pContainer(nullptr), FixedSize(-1) {}
+				CContainer *pContainer = nullptr;
+				int FixedSize = -1;
 			};
 			PaneInfo m_PaneList[2];
-			StyleFlag m_Style;
-			int m_AdjustPane;
-			int m_BarPos;
-			int m_BarWidth;
+			StyleFlag m_Style = StyleFlag::None;
+			int m_AdjustPane = 0;
+			int m_BarPos = 0;
+			int m_BarWidth = 4;
 
 		// CUIBase
 			void ApplyStyle() override;
@@ -160,15 +158,13 @@ namespace TVTest
 			class ABSTRACT_CLASS(CEventHandler)
 			{
 			protected:
-				CLayoutBase *m_pBase;
+				CLayoutBase *m_pBase = nullptr;
 
 			public:
-				CEventHandler();
 				virtual ~CEventHandler();
 				friend CLayoutBase;
 			};
 
-			CLayoutBase();
 			~CLayoutBase();
 
 			bool Create(HWND hwndParent, DWORD Style, DWORD ExStyle = 0, int ID = 0) override;
@@ -191,12 +187,12 @@ namespace TVTest
 			static bool Initialize(HINSTANCE hinst);
 
 		protected:
-			CEventHandler *m_pEventHandler;
-			CContainer *m_pContainer;
-			CContainer *m_pFocusContainer;
-			COLORREF m_BackColor;
+			CEventHandler *m_pEventHandler = nullptr;
+			CContainer *m_pContainer = nullptr;
+			CContainer *m_pFocusContainer = nullptr;
+			COLORREF m_BackColor = ::GetSysColor(COLOR_3DFACE);
 			DrawUtil::CBrush m_BackBrush;
-			bool m_fLockLayout;
+			bool m_fLockLayout = false;
 
 			LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 

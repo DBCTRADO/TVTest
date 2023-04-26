@@ -29,12 +29,6 @@ namespace TVTest
 {
 
 
-CTextDrawClient::CTextDrawClient()
-	: m_Engine(TextDrawEngine::Undefined)
-{
-}
-
-
 CTextDrawClient::~CTextDrawClient()
 {
 	Finalize();

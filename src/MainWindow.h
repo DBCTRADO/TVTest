@@ -207,10 +207,10 @@ namespace TVTest
 
 		struct MainWindowStyle
 		{
-			Style::Margins ScreenMargin;
-			Style::Margins FullscreenMargin;
+			Style::Margins ScreenMargin{0, 0, 0, 0};
+			Style::Margins FullscreenMargin{0, 0, 0, 0};
 			Style::Margins ResizingMargin;
-			bool fAllowDarkMode;
+			bool fAllowDarkMode = true;
 
 			MainWindowStyle();
 
@@ -269,7 +269,7 @@ namespace TVTest
 
 			CMainWindow *m_pMainWindow;
 			bool m_fMainWindow;
-			bool m_fFixed;
+			bool m_fFixed = false;
 		};
 
 		class CSideBarManager
@@ -284,7 +284,7 @@ namespace TVTest
 
 		private:
 			CMainWindow *m_pMainWindow;
-			bool m_fFixed;
+			bool m_fFixed = false;
 
 			const CChannelInfo *GetChannelInfoByCommand(int Command);
 
@@ -309,7 +309,7 @@ namespace TVTest
 			void SetMoveDelta(int Delta) { m_MoveDelta = Delta; }
 
 		private:
-			int m_MoveDelta;
+			int m_MoveDelta = 1;
 			POINT m_LastMovePos;
 			POINT m_LastCursorPos;
 		};
@@ -368,21 +368,21 @@ namespace TVTest
 			Style::CStyleScaling m_StyleScaling;
 			Layout::CLayoutBase m_LayoutBase;
 			CViewWindow m_ViewWindow;
-			CMainDisplay *m_pDisplay;
+			CMainDisplay *m_pDisplay = nullptr;
 			CTitleBar m_TitleBar;
 			CTitleBarManager m_TitleBarManager;
 			CPanel m_Panel;
-			CPanelEventHandler m_PanelEventHandler;
+			CPanelEventHandler m_PanelEventHandler{*this};
 			Style::Margins m_ScreenMargin;
-			bool m_fShowCursor;
-			bool m_fMenu;
-			bool m_fShowStatusView;
-			bool m_fShowTitleBar;
-			bool m_fShowSideBar;
-			bool m_fShowPanel;
-			CPanelFrame::DockingPlace m_PanelPlace;
-			int m_PanelWidth;
-			int m_PanelHeight;
+			bool m_fShowCursor = false;
+			bool m_fMenu = false;
+			bool m_fShowStatusView = false;
+			bool m_fShowTitleBar = false;
+			bool m_fShowSideBar = false;
+			bool m_fShowPanel = false;
+			CPanelFrame::DockingPlace m_PanelPlace = CPanelFrame::DockingPlace::None;
+			int m_PanelWidth = -1;
+			int m_PanelHeight = -1;
 			CCursorTracker m_CursorTracker;
 
 			bool OnCreate();
@@ -472,31 +472,31 @@ namespace TVTest
 		Layout::CLayoutBase m_LayoutBase;
 		CMainDisplay m_Display;
 		CTitleBar m_TitleBar;
-		CTitleBarManager m_TitleBarManager;
-		CSideBarManager m_SideBarManager;
-		CStatusViewEventHandler m_StatusViewEventHandler;
-		CVideoContainerEventHandler m_VideoContainerEventHandler;
-		CViewWindowEventHandler m_ViewWindowEventHandler;
-		CFullscreen m_Fullscreen;
+		CTitleBarManager m_TitleBarManager{this, true};
+		CSideBarManager m_SideBarManager{this};
+		CStatusViewEventHandler m_StatusViewEventHandler{this};
+		CVideoContainerEventHandler m_VideoContainerEventHandler{this};
+		CViewWindowEventHandler m_ViewWindowEventHandler{this};
+		CFullscreen m_Fullscreen{*this};
 		CNotificationBar m_NotificationBar;
-		CCommandEventListener m_CommandEventListener;
+		CCommandEventListener m_CommandEventListener{this};
 		CWindowTimerManager m_Timer;
 		std::map<HWND, CMenuPainter> m_MenuPainter;
 
 		MainWindowStyle m_Style;
 		MainWindowTheme m_Theme;
-		bool m_fAllowDarkMode;
-		bool m_fDarkMode;
-		bool m_fShowStatusBar;
-		bool m_fShowTitleBar;
-		bool m_fCustomTitleBar;
-		bool m_fPopupTitleBar;
-		bool m_fSplitTitleBar;
-		bool m_fShowSideBar;
-		int m_PanelPaneIndex;
-		bool m_fPanelVerticalAlign;
-		bool m_fCustomFrame;
-		int m_CustomFrameWidth;
+		bool m_fAllowDarkMode = false;
+		bool m_fDarkMode = false;
+		bool m_fShowStatusBar = true;
+		bool m_fShowTitleBar = true;
+		bool m_fCustomTitleBar = true;
+		bool m_fPopupTitleBar = true;
+		bool m_fSplitTitleBar = true;
+		bool m_fShowSideBar = false;
+		int m_PanelPaneIndex = 1;
+		bool m_fPanelVerticalAlign = false;
+		bool m_fCustomFrame = false;
+		int m_CustomFrameWidth = 0;
 		int m_ThinFrameWidth;
 		enum {
 			FRAME_NORMAL,
@@ -504,10 +504,10 @@ namespace TVTest
 			FRAME_NONE
 		};
 
-		bool m_fEnablePlayback;
+		bool m_fEnablePlayback = true;
 
-		bool m_fStandbyInit;
-		bool m_fMinimizeInit;
+		bool m_fStandbyInit = false;
+		bool m_fMinimizeInit = false;
 		ResumeInfo m_Resume;
 
 		enum class WindowState {
@@ -515,9 +515,9 @@ namespace TVTest
 			Minimized,
 			Maximized,
 		};
-		WindowState m_WindowState;
-		bool m_fWindowRegionSet;
-		bool m_fWindowFrameChanged;
+		WindowState m_WindowState = WindowState::Normal;
+		bool m_fWindowRegionSet = false;
+		bool m_fWindowFrameChanged = false;
 
 		enum class WindowSizeMode {
 			HD,
@@ -535,39 +535,39 @@ namespace TVTest
 			}
 			bool IsValid() const { return Width > 0 && Height > 0; }
 		};
-		WindowSizeMode m_WindowSizeMode;
+		WindowSizeMode m_WindowSizeMode = WindowSizeMode::HD;
 		WindowSize m_HDWindowSize;
 		WindowSize m_1SegWindowSize;
 
-		bool m_fLockLayout;
-		bool m_fStatusBarInitialized;
+		bool m_fLockLayout = false;
+		bool m_fStatusBarInitialized = false;
 
-		bool m_fShowCursor;
-		bool m_fNoHideCursor;
+		bool m_fShowCursor = true;
+		bool m_fNoHideCursor = false;
 		CCursorTracker m_CursorTracker;
 
-		bool m_fDragMoveTrigger;
-		bool m_fCaptionLButtonDown;
-		bool m_fDragging;
+		bool m_fDragMoveTrigger = false;
+		bool m_fCaptionLButtonDown = false;
+		bool m_fDragging = false;
 		POINT m_ptDragStartPos;
 		RECT m_rcDragStart;
-		bool m_fEnterSizeMove;
-		bool m_fResizePanel;
+		bool m_fEnterSizeMove = false;
+		bool m_fResizePanel = false;
 
-		bool m_fCreated;
-		bool m_fClosing;
+		bool m_fCreated = false;
+		bool m_fClosing = false;
 
 		CMouseWheelHandler m_WheelHandler;
-		int m_WheelCount;
-		int m_PrevWheelCommand;
-		DWORD m_PrevWheelTime;
+		int m_WheelCount = 0;
+		int m_PrevWheelCommand = 0;
+		DWORD m_PrevWheelTime = 0;
 
-		DWORD m_AspectRatioResetTime;
-		bool m_fForceResetPanAndScan;
-		int m_DefaultAspectRatioMenuItemCount;
-		int m_VideoSizeChangedTimerCount;
-		unsigned int m_ProgramListUpdateTimerCount;
-		bool m_fAlertedLowFreeSpace;
+		DWORD m_AspectRatioResetTime = 0;
+		bool m_fForceResetPanAndScan = false;
+		int m_DefaultAspectRatioMenuItemCount = 0;
+		int m_VideoSizeChangedTimerCount = 0;
+		unsigned int m_ProgramListUpdateTimerCount = 0;
+		bool m_fAlertedLowFreeSpace = false;
 
 		class CDisplayBaseEventHandler
 			: public CDisplayBase::CEventHandler
@@ -577,11 +577,11 @@ namespace TVTest
 		public:
 			CDisplayBaseEventHandler(CMainWindow *pMainWindow);
 		};
-		CDisplayBaseEventHandler m_DisplayBaseEventHandler;
+		CDisplayBaseEventHandler m_DisplayBaseEventHandler{this};
 
 		CChannelInput m_ChannelInput;
 
-		CEpgCaptureEventHandler m_EpgCaptureEventHandler;
+		CEpgCaptureEventHandler m_EpgCaptureEventHandler{this};
 
 		class CClockUpdateTimer
 			: public Util::CTimer
@@ -592,8 +592,8 @@ namespace TVTest
 			void OnTimer() override;
 			CMainWindow *m_pMainWindow;
 		};
-		CClockUpdateTimer m_ClockUpdateTimer;
-		bool m_fAccurateClock;
+		CClockUpdateTimer m_ClockUpdateTimer{this};
+		bool m_fAccurateClock = true;
 
 		struct DirectShowFilterPropertyInfo
 		{

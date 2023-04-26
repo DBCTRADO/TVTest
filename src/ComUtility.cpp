@@ -292,8 +292,8 @@ private:
 
 	CPropertyPageSite *m_pPageSite;
 	std::vector<PageInfo> m_PageList;
-	bool m_fTabInitialized;
-	int m_CurTab;
+	bool m_fTabInitialized = false;
+	int m_CurTab = -1;
 	RECT m_PageRect;
 
 	INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -303,8 +303,6 @@ private:
 
 CPropertyPageFrame::CPropertyPageFrame(IPropertyPage **ppPropPages, int NumPages, CPropertyPageSite *pPageSite)
 	: m_pPageSite(pPageSite)
-	, m_fTabInitialized(false)
-	, m_CurTab(-1)
 {
 	m_fDisableDarkMode = true;
 

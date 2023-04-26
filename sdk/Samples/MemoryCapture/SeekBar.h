@@ -25,15 +25,15 @@ private:
 	static const LPCTSTR m_WindowClassName;
 	static HINSTANCE m_hinst;
 
-	TVTest::CTVTestApp *m_pApp;
-	HWND m_hwnd;
-	int m_DPI;
+	TVTest::CTVTestApp *m_pApp = nullptr;
+	HWND m_hwnd = nullptr;
+	int m_DPI = 96;
 	int m_Margin;
 	int m_BorderWidth;
 	int m_BarHeight;
-	int m_Min;
-	int m_Max;
-	int m_Pos;
+	int m_Min = 0;
+	int m_Max = -1;
+	int m_Pos = -1;
 	bool m_fHot;
 
 	void CalcMetrics();

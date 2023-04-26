@@ -29,17 +29,6 @@ namespace TVTest
 {
 
 
-CBasicWindow::CBasicWindow()
-	: m_hwnd(nullptr)
-{
-	m_WindowPosition.Left = 0;
-	m_WindowPosition.Top = 0;
-	m_WindowPosition.Width = 0;
-	m_WindowPosition.Height = 0;
-	m_WindowPosition.fMaximized = false;
-}
-
-
 CBasicWindow::~CBasicWindow()
 {
 	Destroy();

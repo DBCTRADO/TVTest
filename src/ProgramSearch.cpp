@@ -807,12 +807,6 @@ bool CEventSearcher::MatchRegExp(const LibISDB::EventInfo *pEventInfo)
 
 
 
-CEventSearchOptions::CEventSearchOptions()
-	: m_MaxKeywordHistory(40)
-{
-}
-
-
 bool CEventSearchOptions::SetKeywordHistory(const LPTSTR *pKeywordList, int NumKeywords)
 {
 	if (pKeywordList == nullptr)
@@ -998,12 +992,8 @@ static ULONGLONG GetResultMapKey(const LibISDB::EventInfo *pEventInfo)
 
 
 CEventSearchSettingsDialog::CEventSearchSettingsDialog(CEventSearchOptions &Options)
-	: m_pEventHandler(nullptr)
-	, m_Options(Options)
-	, m_SearchTarget(0)
+	: m_Options(Options)
 {
-	for (bool &e : m_fGenreExpanded)
-		e = false;
 }
 
 
@@ -1821,11 +1811,8 @@ CSearchEventInfo::CSearchEventInfo(
 
 
 CProgramSearchDialog::CProgramSearchDialog(CEventSearchOptions &Options)
-	: m_pEventHandler(nullptr)
-	, m_Options(Options)
+	: m_Options(Options)
 	, m_SearchSettingsDialog(Options)
-	, m_fHighlightResult(true)
-	, m_ResultListHeight(-1)
 {
 	for (int i = 0; i < NUM_COLUMNS; i++)
 		m_ColumnWidth[i] = -1;
@@ -2658,13 +2645,6 @@ void CProgramSearchDialog::OnHighlightResult(bool fHighlight)
 }
 
 
-
-
-CProgramSearchDialog::CEventHandler::CEventHandler()
-	: m_pSearchDialog(nullptr)
-	, m_pSearcher(nullptr)
-{
-}
 
 
 CProgramSearchDialog::CEventHandler::~CEventHandler()

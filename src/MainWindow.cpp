@@ -98,67 +98,7 @@ bool CMainWindow::Initialize(HINSTANCE hinst)
 CMainWindow::CMainWindow(CAppMain &App)
 	: m_App(App)
 	, m_Display(App)
-	, m_TitleBarManager(this, true)
-	, m_SideBarManager(this)
-	, m_StatusViewEventHandler(this)
-	, m_VideoContainerEventHandler(this)
-	, m_ViewWindowEventHandler(this)
-	, m_Fullscreen(*this)
-	, m_CommandEventListener(this)
-
-	, m_fAllowDarkMode(false)
-	, m_fDarkMode(false)
-	, m_fShowStatusBar(true)
-	, m_fShowTitleBar(true)
-	, m_fCustomTitleBar(true)
-	, m_fPopupTitleBar(true)
-	, m_fSplitTitleBar(true)
-	, m_fShowSideBar(false)
-	, m_PanelPaneIndex(1)
-	, m_fPanelVerticalAlign(false)
-	, m_fCustomFrame(false)
-	, m_CustomFrameWidth(0)
-
-	, m_fEnablePlayback(true)
-
-	, m_fStandbyInit(false)
-	, m_fMinimizeInit(false)
-
-	, m_WindowState(WindowState::Normal)
-	, m_fWindowRegionSet(false)
-	, m_fWindowFrameChanged(false)
-	, m_WindowSizeMode(WindowSizeMode::HD)
-
-	, m_fLockLayout(false)
-	, m_fStatusBarInitialized(false)
-
-	, m_fShowCursor(true)
-	, m_fNoHideCursor(false)
-
-	, m_fDragMoveTrigger(false)
-	, m_fCaptionLButtonDown(false)
-	, m_fDragging(false)
-	, m_fEnterSizeMove(false)
-	, m_fResizePanel(false)
-
-	, m_fCreated(false)
-	, m_fClosing(false)
-
-	, m_WheelCount(0)
-	, m_PrevWheelCommand(0)
-	, m_PrevWheelTime(0)
-
-	, m_AspectRatioResetTime(0)
-	, m_fForceResetPanAndScan(false)
-	, m_DefaultAspectRatioMenuItemCount(0)
-	, m_ProgramListUpdateTimerCount(0)
-	, m_fAlertedLowFreeSpace(false)
 	, m_ChannelInput(App.Accelerator.GetChannelInputOptions())
-	, m_DisplayBaseEventHandler(this)
-	, m_EpgCaptureEventHandler(this)
-
-	, m_ClockUpdateTimer(this)
-	, m_fAccurateClock(true)
 {
 	POINT pt = {0, 0};
 	int DPI = GetMonitorDPI(::MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY));
@@ -5552,12 +5492,7 @@ bool CMainWindow::CFullscreen::Initialize(HINSTANCE hinst)
 CMainWindow::CFullscreen::CFullscreen(CMainWindow &MainWindow)
 	: m_MainWindow(MainWindow)
 	, m_App(MainWindow.m_App)
-	, m_pDisplay(nullptr)
 	, m_TitleBarManager(&MainWindow, false)
-	, m_PanelEventHandler(*this)
-	, m_PanelWidth(-1)
-	, m_PanelHeight(-1)
-	, m_PanelPlace(CPanelFrame::DockingPlace::None)
 {
 	RegisterUIChild(&m_LayoutBase);
 	RegisterUIChild(&m_TitleBar);
@@ -6335,9 +6270,6 @@ bool CMainWindow::CFullscreen::CPanelEventHandler::OnMenuSelected(int Command)
 
 
 CMainWindow::MainWindowStyle::MainWindowStyle()
-	: ScreenMargin(0, 0, 0, 0)
-	, FullscreenMargin(0, 0, 0, 0)
-	, fAllowDarkMode(true)
 {
 	int SizingBorderX = 0, SizingBorderY;
 
@@ -6408,7 +6340,6 @@ void CMainWindow::CBarLayout::ReserveArea(RECT *pArea, bool fNoMove)
 CMainWindow::CTitleBarManager::CTitleBarManager(CMainWindow *pMainWindow, bool fMainWindow)
 	: m_pMainWindow(pMainWindow)
 	, m_fMainWindow(fMainWindow)
-	, m_fFixed(false)
 {
 }
 
@@ -6521,7 +6452,6 @@ void CMainWindow::CTitleBarManager::ShowSystemMenu(int x, int y)
 
 CMainWindow::CSideBarManager::CSideBarManager(CMainWindow *pMainWindow)
 	: m_pMainWindow(pMainWindow)
-	, m_fFixed(false)
 {
 }
 
@@ -6844,7 +6774,6 @@ bool CMainWindow::CDisplayBaseEventHandler::OnVisibleChange(bool fVisible)
 
 
 CMainWindow::CCursorTracker::CCursorTracker()
-	: m_MoveDelta(1)
 {
 	Reset();
 }

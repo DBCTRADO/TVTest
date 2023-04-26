@@ -29,30 +29,10 @@ namespace TVTest
 {
 
 
-CChannelInfo::CChannelInfo()
-	: m_Space(-1)
-	, m_ChannelIndex(-1)
-	, m_ChannelNo(0)
-	, m_PhysicalChannel(0)
-	, m_NetworkID(0)
-	, m_TransportStreamID(0)
-	, m_ServiceID(0)
-	, m_ServiceType(0)
-	, m_fEnabled(true)
-{
-}
-
-
 CChannelInfo::CChannelInfo(int Space, int ChannelIndex, int No, LPCTSTR pszName)
 	: m_Space(Space)
 	, m_ChannelIndex(ChannelIndex)
 	, m_ChannelNo(No)
-	, m_PhysicalChannel(0)
-	, m_NetworkID(0)
-	, m_TransportStreamID(0)
-	, m_ServiceID(0)
-	, m_ServiceType(0)
-	, m_fEnabled(true)
 {
 	if (pszName != nullptr)
 		m_Name = pszName;
@@ -597,14 +577,7 @@ bool CChannelList::HasMultiService() const
 
 
 
-CTuningSpaceInfo::CTuningSpaceInfo()
-	: m_Space(TuningSpaceType::Unknown)
-{
-}
-
-
 CTuningSpaceInfo::CTuningSpaceInfo(const CTuningSpaceInfo &Info)
-	: m_Space(TuningSpaceType::Unknown)
 {
 	Create(Info.m_ChannelList.get(), Info.m_Name.c_str());
 }

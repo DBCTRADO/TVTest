@@ -31,12 +31,6 @@ bool CSeekBar::Initialize(HINSTANCE hinst)
 
 
 CSeekBar::CSeekBar()
-	: m_pApp(nullptr)
-	, m_hwnd(nullptr)
-	, m_DPI(96)
-	, m_Min(0)
-	, m_Max(-1)
-	, m_Pos(-1)
 {
 	CalcMetrics();
 }

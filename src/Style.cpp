@@ -37,11 +37,6 @@ namespace Style
 
 CStyleManager::CStyleManager()
 	: m_DPI(TVTest::GetSystemDPI())
-	, m_ForcedDPI(0)
-	, m_fScaleFont(true)
-	, m_fHandleDPIChanged(true)
-	, m_fUseDarkMenu(true)
-	, m_fDarkDialog(true)
 {
 }
 
@@ -475,14 +470,6 @@ UnitType CStyleManager::ParseUnit(LPCTSTR pszUnit)
 }
 
 
-
-
-CStyleScaling::CStyleScaling()
-	: m_DPI(96)
-	, m_SystemDPI(96)
-	, m_fScaleFont(true)
-{
-}
 
 
 bool CStyleScaling::SetDPI(int DPI)

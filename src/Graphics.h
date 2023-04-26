@@ -177,7 +177,7 @@ namespace TVTest
 		class CGraphicsCore
 		{
 		public:
-			CGraphicsCore();
+			CGraphicsCore() = default;
 			~CGraphicsCore();
 
 			CGraphicsCore(const CGraphicsCore &) = delete;
@@ -188,7 +188,7 @@ namespace TVTest
 			bool IsInitialized() const { return m_fInitialized; }
 
 		private:
-			bool m_fInitialized;
+			bool m_fInitialized = false;
 			ULONG_PTR m_Token;
 		};
 

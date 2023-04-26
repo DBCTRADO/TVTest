@@ -227,37 +227,37 @@ namespace TVTest
 
 			CUICore &m_UICore;
 			CPopupMenu m_Menu;
-			HWND m_hwnd;
+			HWND m_hwnd = nullptr;
 			std::vector<PopupInfo> m_PopupList;
 		};
 
 		CAppMain &m_App;
-		CUISkin *m_pSkin;
-		bool m_fStandby;
-		bool m_fTransientStandby;
-		bool m_fResident;
-		bool m_fFullscreen;
-		bool m_fAlwaysOnTop;
+		CUISkin *m_pSkin = nullptr;
+		bool m_fStandby = false;
+		bool m_fTransientStandby = false;
+		bool m_fResident = false;
+		bool m_fFullscreen = false;
+		bool m_fAlwaysOnTop = false;
 
-		int m_AspectRatioType;
+		int m_AspectRatioType = ASPECTRATIO_DEFAULT;
 
 		CIcon m_LogoIconBig;
 		CIcon m_LogoIconSmall;
 
-		bool m_fViewerInitializeError;
+		bool m_fViewerInitializeError = false;
 
-		HANDLE m_hPowerRequest;
-		bool m_fPowerRequestSet;
-		BOOL m_fScreenSaverActiveOriginal;
+		HANDLE m_hPowerRequest = INVALID_HANDLE_VALUE;
+		bool m_fPowerRequestSet = false;
+		BOOL m_fScreenSaverActiveOriginal = FALSE;
 
-		int m_PopupMenuDPI;
-		CTunerSelectMenu m_TunerSelectMenu;
+		int m_PopupMenuDPI = 0;
+		CTunerSelectMenu m_TunerSelectMenu{*this};
 
 		std::vector<CBasicDialog*> m_ModelessDialogList;
 
-		const CColorScheme *m_pColorScheme;
+		const CColorScheme *m_pColorScheme = nullptr;
 
-		bool m_fStatusBarTrace;
+		bool m_fStatusBarTrace = false;
 
 		bool SelectAudio(const CAudioManager::AudioSelectInfo &Info, bool fUpdate = true);
 		bool SelectAudioStream(int Stream);

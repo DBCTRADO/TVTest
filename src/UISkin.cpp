@@ -34,13 +34,6 @@ static CMessageDialog MessageDialog;
 
 
 
-CUISkin::CUISkin()
-	: m_pCore(nullptr)
-	, m_fWheelChannelChanging(false)
-{
-}
-
-
 int CUISkin::ShowMessage(LPCTSTR pszText, LPCTSTR pszCaption, UINT Type) const
 {
 	return ::MessageBox(GetVideoHostWindow(), pszText, pszCaption, Type);

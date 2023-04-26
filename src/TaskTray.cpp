@@ -30,17 +30,6 @@ namespace TVTest
 {
 
 
-CTaskTrayManager::CTaskTrayManager()
-	: m_hwnd(nullptr)
-	, m_TrayIconMessage(0)
-	, m_fResident(false)
-	, m_fMinimizeToTray(true)
-	, m_Status(StatusFlag::None)
-	, m_TaskbarCreatedMessage(0)
-{
-}
-
-
 CTaskTrayManager::~CTaskTrayManager()
 {
 	Finalize();

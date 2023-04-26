@@ -54,15 +54,6 @@ static int MyTrackPopupMenu(
 
 
 
-CMainMenu::CMainMenu()
-	: m_hmenu(nullptr)
-	, m_hmenuPopup(nullptr)
-	, m_hmenuShow(nullptr)
-	, m_fPopup(false)
-{
-}
-
-
 CMainMenu::~CMainMenu()
 {
 	Destroy();
@@ -247,14 +238,6 @@ bool CMainMenu::SetAccelerator(CAccelerator *pAccelerator)
 }
 
 
-
-
-CMenuPainter::CMenuPainter()
-	: m_hwnd(nullptr)
-	, m_DPI(0)
-	, m_fFlatMenu(false)
-{
-}
 
 
 void CMenuPainter::Initialize(HWND hwnd, int DPI)
@@ -514,14 +497,6 @@ bool CMenuPainter::IsThemed() const
 
 
 
-CChannelMenuLogo::CChannelMenuLogo()
-	: m_LogoWidth(26)
-	, m_LogoHeight(16)
-	, m_fNoFrame(false)
-{
-}
-
-
 bool CChannelMenuLogo::Initialize(int IconHeight, InitializeFlag Flags)
 {
 	if (IconHeight <= 16) {
@@ -607,9 +582,8 @@ class CChannelMenuItem
 	const CChannelInfo *m_pChannelInfo;
 	struct Event
 	{
-		bool fValid;
+		bool fValid = false;
 		LibISDB::EventInfo EventInfo;
-		Event() : fValid(false) {}
 	};
 	Event m_EventList[2];
 
@@ -680,18 +654,6 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(int Index) const
 	if (!m_EventList[Index].fValid)
 		return nullptr;
 	return &m_EventList[Index].EventInfo;
-}
-
-
-CChannelMenu::CChannelMenu()
-	: m_Flags(CreateFlag::None)
-	, m_hwnd(nullptr)
-	, m_hmenu(nullptr)
-	, m_TextHeight(0)
-	, m_ChannelNameWidth(0)
-	, m_EventNameWidth(0)
-	, m_MenuLogoMargin(3)
-{
 }
 
 
@@ -1103,28 +1065,19 @@ void CChannelMenu::GetBaseTime(LibISDB::DateTime *pTime)
 
 
 
-CPopupMenu::CPopupMenu()
-	: m_hmenu(nullptr)
-{
-}
-
-
 CPopupMenu::CPopupMenu(HINSTANCE hinst, LPCTSTR pszName)
-	: m_hmenu(nullptr)
 {
 	Load(hinst, pszName);
 }
 
 
 CPopupMenu::CPopupMenu(HINSTANCE hinst, UINT ID)
-	: m_hmenu(nullptr)
 {
 	Load(hinst, ID);
 }
 
 
 CPopupMenu::CPopupMenu(HMENU hmenu)
-	: m_hmenu(nullptr)
 {
 	Attach(hmenu);
 }
@@ -1327,12 +1280,6 @@ int CPopupMenu::Show(
 
 
 
-CIconMenu::CIconMenu()
-	: m_hmenu(nullptr)
-{
-}
-
-
 CIconMenu::~CIconMenu()
 {
 	Finalize();
@@ -1512,14 +1459,6 @@ bool CDropDownMenu::Initialize(HINSTANCE hinst)
 		m_hinst = hinst;
 	}
 	return true;
-}
-
-
-CDropDownMenu::CDropDownMenu()
-	: m_hwnd(nullptr)
-	, m_hwndMessage(nullptr)
-	, m_fDarkMode(false)
-{
 }
 
 
@@ -1898,7 +1837,6 @@ LRESULT CALLBACK CDropDownMenu::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 CDropDownMenu::CItem::CItem(int Command, LPCTSTR pszText)
 	: m_Command(Command)
 	, m_Text(StringFromCStr(pszText))
-	, m_Width(0)
 {
 }
 

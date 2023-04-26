@@ -156,14 +156,13 @@ namespace TVTest
 
 		struct PanelFormStyle
 		{
-			Style::Margins TabPadding;
-			Style::Size TabIconSize;
-			Style::Margins TabIconMargin;
-			Style::Margins TabLabelMargin;
-			Style::IntValue TabIconLabelMargin;
-			Style::Margins ClientMargin;
+			Style::Margins TabPadding{3};
+			Style::Size TabIconSize{16, 16};
+			Style::Margins TabIconMargin{0};
+			Style::Margins TabLabelMargin{0};
+			Style::IntValue TabIconLabelMargin{4};
+			Style::Margins ClientMargin{4};
 
-			PanelFormStyle();
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
 				const Style::CStyleManager *pStyleManager,
@@ -177,16 +176,16 @@ namespace TVTest
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
 		DrawUtil::CMonoColorIconList m_Icons;
-		TabStyle m_TabStyle;
-		int m_TabHeight;
-		int m_TabWidth;
-		int m_TabLineWidth;
-		bool m_fFitTabWidth;
-		int m_CurTab;
-		int m_PrevActivePageID;
-		CEventHandler *m_pEventHandler;
+		TabStyle m_TabStyle = TabStyle::TextOnly;
+		int m_TabHeight = 0;
+		int m_TabWidth = 0;
+		int m_TabLineWidth = 1;
+		bool m_fFitTabWidth = true;
+		int m_CurTab = -1;
+		int m_PrevActivePageID = -1;
+		CEventHandler *m_pEventHandler = nullptr;
 		CTooltip m_Tooltip;
-		bool m_fEnableTooltip;
+		bool m_fEnableTooltip = true;
 
 		static const LPCTSTR m_pszClassName;
 		static HINSTANCE m_hinst;

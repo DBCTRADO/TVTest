@@ -28,41 +28,6 @@ namespace TVTest
 {
 
 
-CCoreEngine::CCoreEngine()
-	: m_DriverType(DriverType::Unknown)
-
-	, m_fEnableTSProcessor(true)
-
-	, m_fPacketBuffering(false)
-
-	, m_OriginalVideoWidth(0)
-	, m_OriginalVideoHeight(0)
-	, m_DisplayVideoWidth(0)
-	, m_DisplayVideoHeight(0)
-	, m_NumAudioChannels(LibISDB::ViewerFilter::AudioChannelCount_Invalid)
-	, m_NumAudioStreams(0)
-	, m_AudioComponentType(0)
-	, m_fMute(false)
-	, m_Volume(50)
-	, m_AudioGain(100)
-	, m_SurroundAudioGain(100)
-	, m_DualMonoMode(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode::Main)
-	, m_fSPDIFPassthrough(false)
-	, m_ErrorPacketCount(0)
-	, m_ContinuityErrorPacketCount(0)
-	, m_ScrambledPacketCount(0)
-	, m_SignalLevel(0.0)
-	, m_BitRate(0)
-	, m_PacketBufferFillPercentage(0)
-	, m_StreamRemain(0)
-	, m_TimerResolution(0)
-	, m_fNoEpg(false)
-
-	, m_AsyncStatusUpdatedFlags(0)
-{
-}
-
-
 CCoreEngine::~CCoreEngine()
 {
 	Close();

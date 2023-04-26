@@ -32,7 +32,6 @@ namespace TVTest
 
 CMainDisplay::CMainDisplay(CAppMain &App)
 	: m_App(App)
-	, m_fViewerEnabled(false)
 	, ChannelDisplayEventHandler(App)
 {
 }

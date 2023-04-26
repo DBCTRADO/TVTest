@@ -28,11 +28,11 @@ namespace TVTest
 	class CTooltip
 	{
 	protected:
-		HWND m_hwndTooltip;
-		HWND m_hwndParent;
+		HWND m_hwndTooltip = nullptr;
+		HWND m_hwndParent = nullptr;
 
 	public:
-		CTooltip();
+		CTooltip() = default;
 		~CTooltip();
 
 		CTooltip(const CTooltip &) = delete;
@@ -61,11 +61,11 @@ namespace TVTest
 
 	class CBalloonTip
 	{
-		HWND m_hwndToolTips;
-		HWND m_hwndOwner;
+		HWND m_hwndToolTips = nullptr;
+		HWND m_hwndOwner = nullptr;
 
 	public:
-		CBalloonTip();
+		CBalloonTip() = default;
 		~CBalloonTip();
 
 		CBalloonTip(const CBalloonTip &) = delete;

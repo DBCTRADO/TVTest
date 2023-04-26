@@ -39,8 +39,6 @@ namespace TVTest
 	class CIUnknownImpl
 	{
 	public:
-		CIUnknownImpl() : m_RefCount(1) {}
-
 		ULONG AddRefImpl() {
 			return ::InterlockedIncrement(&m_RefCount);
 		}
@@ -53,7 +51,7 @@ namespace TVTest
 		}
 
 	protected:
-		LONG m_RefCount;
+		LONG m_RefCount = 1;
 
 		virtual ~CIUnknownImpl() = default;
 	};

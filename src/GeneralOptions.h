@@ -39,7 +39,6 @@ namespace TVTest
 			TVTEST_ENUM_CLASS_TRAILER
 		};
 
-		CGeneralOptions();
 		~CGeneralOptions();
 
 	// COptions
@@ -71,13 +70,13 @@ namespace TVTest
 		};
 
 		String m_BonDriverDirectory;
-		DefaultDriverType m_DefaultDriverType;
+		DefaultDriverType m_DefaultDriverType = DefaultDriverType::Last;
 		String m_DefaultBonDriverName;
 		String m_LastBonDriverName;
-		bool m_fResident;
-		bool m_fKeepSingleTask;
-		bool m_fStandaloneProgramGuide;
-		bool m_fEnable1SegFallback;
+		bool m_fResident = false;
+		bool m_fKeepSingleTask = false;
+		bool m_fStandaloneProgramGuide = false;
+		bool m_fEnable1SegFallback = true;
 	};
 
 }	// namespace TVTest

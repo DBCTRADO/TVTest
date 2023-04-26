@@ -34,12 +34,6 @@ namespace TVTest
 {
 
 
-CProgramGuideFavorites::CProgramGuideFavorites()
-	: m_fFixedWidth(true)
-{
-}
-
-
 void CProgramGuideFavorites::Clear()
 {
 	m_List.clear();
@@ -158,7 +152,6 @@ CProgramGuideFavoritesDialog::CProgramGuideFavoritesDialog(
 	const CProgramGuideFavorites &Favorites,
 	const Theme::BackgroundStyle &ButtonTheme)
 	: m_Favorites(Favorites)
-	, m_CurItem(-1)
 	, m_ButtonTheme(ButtonTheme)
 {
 }

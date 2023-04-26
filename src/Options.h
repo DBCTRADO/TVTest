@@ -49,7 +49,7 @@ namespace TVTest
 			UPDATE_ALL                      = 0xFFFFFFFFUL
 		};
 
-		COptions();
+		COptions() = default;
 		COptions(LPCTSTR pszSection);
 		virtual ~COptions() = default;
 
@@ -67,7 +67,7 @@ namespace TVTest
 		void ActivatePage();
 		void SettingError();
 
-		DWORD m_UpdateFlags;
+		DWORD m_UpdateFlags = 0;
 
 	private:
 		static COptionFrame *m_pFrame;

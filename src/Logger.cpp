@@ -130,9 +130,6 @@ int CLogItem::FormatTime(WCHAR *pszText, int MaxLength) const
 
 
 CLogger::CLogger()
-	: m_SerialNumber(0)
-	, m_fOutputToFile(false)
-	, m_hFile(INVALID_HANDLE_VALUE)
 {
 	TCHAR szFileName[MAX_PATH];
 	const DWORD Result = ::GetModuleFileName(nullptr, szFileName, lengthof(szFileName));

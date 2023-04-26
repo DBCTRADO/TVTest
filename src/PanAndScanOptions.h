@@ -79,8 +79,8 @@ namespace TVTest
 
 		std::vector<PanAndScanInfo> m_PresetList;
 		UINT m_PresetID;
-		bool m_fStateChanging;
-		bool m_fTested;
+		bool m_fStateChanging = false;
+		bool m_fTested = false;
 		CCoreEngine::PanAndScanInfo m_OldPanAndScanInfo;
 	};
 

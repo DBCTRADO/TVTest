@@ -46,24 +46,12 @@ const LPCTSTR IEPG_ASSOCIATE_COMMAND = TEXT("iEpgAssociate");
 CProgramGuideOptions::CProgramGuideOptions(CProgramGuide *pProgramGuide, CPluginManager *pPluginManager)
 	: m_pProgramGuide(pProgramGuide)
 	, m_pPluginManager(pPluginManager)
-	, m_fOnScreen(false)
-	, m_fScrollToCurChannel(false)
-	, m_BeginHour(-1)
-	, m_ViewHours(26)
 	, m_ItemWidth(pProgramGuide->GetItemWidth())
 	, m_LinesPerHour(pProgramGuide->GetLinesPerHour())
-	, m_fUseDirectWrite(false)
-	, m_fUseARIBSymbol(false)
 	, m_VisibleEventIcons(m_pProgramGuide->GetVisibleEventIcons())
 	, m_WheelScrollLines(pProgramGuide->GetWheelScrollLines())
 {
 	m_pProgramGuide->GetFont(&m_Font);
-
-	m_DirectWriteRenderingParams.Gamma = 2.2f;
-	m_DirectWriteRenderingParams.EnhancedContrast = 0.5f;
-	m_DirectWriteRenderingParams.ClearTypeLevel = 0.5f;
-	m_DirectWriteRenderingParams.PixelGeometry = DWRITE_PIXEL_GEOMETRY_RGB;
-	m_DirectWriteRenderingParams.RenderingMode = DWRITE_RENDERING_MODE_DEFAULT;
 }
 
 
@@ -692,8 +680,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 						: m_pProgramGuide(pProgramGuide)
 						, m_OldParams(Params)
 						, m_Font(Font)
-						, m_fApplied(false)
-						, m_fFontChanged(false)
 					{
 					}
 
@@ -736,8 +722,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					CDirectWriteRenderer::RenderingParams m_OldParams;
 					Style::Font m_Font;
 					Style::Font m_OldFont;
-					bool m_fApplied;
-					bool m_fFontChanged;
+					bool m_fApplied = false;
+					bool m_fFontChanged = false;
 					CTextDrawClient::TextDrawEngine m_OldEngine;
 				};
 

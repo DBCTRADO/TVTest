@@ -60,15 +60,7 @@ bool CChannelDisplay::Initialize(HINSTANCE hinst)
 
 
 CChannelDisplay::CChannelDisplay(LibISDB::EPGDatabase *pEPGDatabase)
-	: m_fAutoFontSize(true)
-	, m_hwndTunerScroll(nullptr)
-	, m_hwndChannelScroll(nullptr)
-	, m_TotalTuningSpaces(0)
-	, m_CurTuner(-1)
-	, m_CurChannel(-1)
-	, m_pEPGDatabase(pEPGDatabase)
-	, m_pLogoManager(nullptr)
-	, m_pChannelDisplayEventHandler(nullptr)
+	: m_pEPGDatabase(pEPGDatabase)
 {
 	GetBackgroundStyle(BackgroundType::Categories, &m_TunerAreaBackStyle);
 	GetBackgroundStyle(BackgroundType::Content, &m_ChannelAreaBackStyle);

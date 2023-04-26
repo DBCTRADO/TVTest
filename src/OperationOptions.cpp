@@ -32,24 +32,13 @@ namespace TVTest
 
 
 COperationOptions::COperationOptions()
-	: m_pCommandManager(nullptr)
-	, m_fDisplayDragMove(true)
-	, m_VolumeStep(5)
-	, m_AudioDelayStep(50)
-	, m_WheelCommand(CM_WHEEL_VOLUME)
+	: m_WheelCommand(CM_WHEEL_VOLUME)
 	, m_WheelShiftCommand(CM_WHEEL_CHANNEL)
 	, m_WheelCtrlCommand(CM_WHEEL_AUDIO)
 	, m_WheelTiltCommand(0)
-	, m_fStatusBarWheel(true)
-	, m_fWheelVolumeReverse(false)
-	, m_fWheelChannelReverse(false)
-	, m_WheelChannelDelay(1000)
-	, m_WheelZoomStep(5)
 	, m_LeftDoubleClickCommand(CM_FULLSCREEN)
 	, m_RightClickCommand(CM_MENU)
 	, m_MiddleClickCommand(0)
-	, m_ChannelUpDownOrder(CChannelManager::UpDownOrder::Index)
-	, m_fChannelUpDownSkipSubChannel(true)
 {
 }
 

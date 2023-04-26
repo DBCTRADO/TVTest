@@ -56,14 +56,6 @@ bool CControlPanel::Initialize(HINSTANCE hinst)
 }
 
 
-CControlPanel::CControlPanel()
-	: m_FontHeight(0)
-	, m_hwndMessage(nullptr)
-	, m_HotItem(-1)
-{
-}
-
-
 CControlPanel::~CControlPanel()
 {
 	Destroy();
@@ -569,15 +561,6 @@ void CControlPanel::RealizeStyle()
 
 
 
-CControlPanel::ControlPanelStyle::ControlPanelStyle()
-	: Padding(2)
-	, ItemPadding(4, 2, 4, 2)
-	, TextExtraHeight(4)
-	, IconSize(16, 16)
-{
-}
-
-
 void CControlPanel::ControlPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = ControlPanelStyle();
@@ -599,18 +582,6 @@ void CControlPanel::ControlPanelStyle::NormalizeStyle(
 }
 
 
-
-
-CControlPanelItem::CControlPanelItem()
-	: m_Command(0)
-	, m_fVisible(true)
-	, m_fEnable(true)
-	, m_fCheck(false)
-	, m_fBreak(true)
-	, m_pControlPanel(nullptr)
-{
-	::SetRectEmpty(&m_Position);
-}
 
 
 void CControlPanelItem::GetPosition(int *pLeft, int *pTop, int *pWidth, int *pHeight) const

@@ -32,8 +32,6 @@ namespace TVTest
 
 CDriverInfo::CDriverInfo(LPCTSTR pszFileName)
 	: m_FileName(pszFileName)
-	, m_fChannelFileLoaded(false)
-	, m_fDriverSpaceLoaded(false)
 {
 }
 

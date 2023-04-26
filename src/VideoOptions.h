@@ -40,7 +40,6 @@ namespace TVTest
 			LPCTSTR pszName;
 		};
 
-		CVideoOptions();
 		~CVideoOptions();
 
 	// COptions
@@ -96,14 +95,14 @@ namespace TVTest
 		String m_Mpeg2DecoderName;
 		String m_H264DecoderName;
 		String m_H265DecoderName;
-		LibISDB::DirectShow::VideoRenderer::RendererType m_VideoRendererType;
-		bool m_fResetPanScanEventChange;
-		bool m_fNoMaskSideCut;
-		LibISDB::ViewerFilter::ViewStretchMode m_StretchMode;
-		LibISDB::ViewerFilter::ViewStretchMode m_FullscreenStretchMode;
-		LibISDB::ViewerFilter::ViewStretchMode m_MaximizeStretchMode;
-		bool m_fIgnoreDisplayExtension;
-		bool m_fClipToDevice;
+		LibISDB::DirectShow::VideoRenderer::RendererType m_VideoRendererType = LibISDB::DirectShow::VideoRenderer::RendererType::Default;
+		bool m_fResetPanScanEventChange = true;
+		bool m_fNoMaskSideCut = true;
+		LibISDB::ViewerFilter::ViewStretchMode m_StretchMode = LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+		LibISDB::ViewerFilter::ViewStretchMode m_FullscreenStretchMode = LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+		LibISDB::ViewerFilter::ViewStretchMode m_MaximizeStretchMode = LibISDB::ViewerFilter::ViewStretchMode::KeepAspectRatio;
+		bool m_fIgnoreDisplayExtension = false;
+		bool m_fClipToDevice = true;
 	};
 
 }	// namespace TVTest

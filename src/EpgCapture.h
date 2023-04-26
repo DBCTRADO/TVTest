@@ -63,8 +63,6 @@ namespace TVTest
 			virtual void OnChannelEnd(bool fComplete) {}
 		};
 
-		CEpgCaptureManager();
-
 		bool BeginCapture(
 			LPCTSTR pszTuner = nullptr,
 			const CChannelList *pChannelList = nullptr,
@@ -89,12 +87,12 @@ namespace TVTest
 			CChannelList ChannelList;
 		};
 
-		bool m_fCapturing;
-		int m_CurChannel;
+		bool m_fCapturing = false;
+		int m_CurChannel = -1;
 		std::vector<ChannelGroup> m_ChannelList;
 		Util::CClock m_AccumulateClock;
-		bool m_fChannelChanging;
-		CEventHandler *m_pEventHandler;
+		bool m_fChannelChanging = false;
+		CEventHandler *m_pEventHandler = nullptr;
 	};
 
 }	// namespace TVTest

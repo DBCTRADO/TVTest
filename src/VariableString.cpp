@@ -329,17 +329,8 @@ bool CVariableStringMap::IsDateTimeParameter(LPCTSTR pszKeyword)
 
 
 
-CEventVariableStringMap::CEventVariableStringMap()
-	: m_Flags(Flag::None)
-	, m_fCurrentTimeSet(false)
-{
-}
-
-
 CEventVariableStringMap::CEventVariableStringMap(const EventInfo &Info)
-	: m_Flags(Flag::None)
-	, m_EventInfo(Info)
-	, m_fCurrentTimeSet(false)
+	: m_EventInfo(Info)
 {
 }
 

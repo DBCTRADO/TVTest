@@ -36,7 +36,6 @@ namespace TVTest
 CTSProcessorOptions::CTSProcessorOptions(CTSProcessorManager &TSProcessorManager)
 	: COptions(TEXT("TSProcessor"))
 	, m_TSProcessorManager(TSProcessorManager)
-	, m_pCurSettings(nullptr)
 {
 }
 

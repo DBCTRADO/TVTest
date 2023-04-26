@@ -31,25 +31,6 @@ namespace TVTest
 {
 
 
-CPlaybackOptions::CPlaybackOptions()
-	: m_fRestoreMute(false)
-	, m_fMute(false)
-	, m_fRestorePlayStatus(false)
-	, m_fRestore1SegMode(false)
-	, m_f1SegMode(false)
-	, m_fUseAudioRendererClock(true)
-	, m_fEnablePTSSync(true)
-	, m_fAdjustAudioStreamTime(true)
-	, m_fMinTimerResolution(true)
-	, m_fPacketBuffering(false)
-	, m_PacketBufferLength(40000)
-	, m_PacketBufferPoolPercentage(50)
-	, m_StreamThreadPriority(THREAD_PRIORITY_NORMAL)
-	, m_fAdjust1SegFrameRate(true)
-{
-}
-
-
 CPlaybackOptions::~CPlaybackOptions()
 {
 	Destroy();

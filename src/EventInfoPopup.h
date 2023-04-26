@@ -43,12 +43,11 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			CEventInfoPopup *m_pPopup;
+			CEventInfoPopup *m_pPopup = nullptr;
 
 		public:
 			static constexpr int COMMAND_FIRST = 100;
 
-			CEventHandler();
 			virtual ~CEventHandler();
 
 			virtual bool OnMenuPopup(HMENU hmenu) { return true; }
@@ -82,30 +81,36 @@ namespace TVTest
 
 	private:
 		LibISDB::EventInfo m_EventInfo;
-		HWND m_hwndEdit;
+		HWND m_hwndEdit = nullptr;
 		CRichEditUtil m_RichEditUtil;
 		CRichEditLinkHandler m_RichEditLink;
 		Style::CStyleScaling m_StyleScaling;
 		CEpgTheme m_EpgTheme;
-		Theme::ThemeColor m_BackColor;
-		Theme::ThemeColor m_TextColor;
-		Theme::ThemeColor m_EventTitleColor;
-		Theme::ThemeColor m_TitleBackColor;
-		Theme::ThemeColor m_TitleTextColor;
+		Theme::ThemeColor m_BackColor{::GetSysColor(COLOR_WINDOW)};
+		Theme::ThemeColor m_TextColor{::GetSysColor(COLOR_WINDOWTEXT)};
+		Theme::ThemeColor m_EventTitleColor{m_TextColor};
+		Theme::ThemeColor m_TitleBackColor{RGB(228, 228, 240)};
+		Theme::ThemeColor m_TitleTextColor{RGB(80, 80, 80)};
 		Style::Font m_StyleFont;
 		DrawUtil::CFont m_Font;
 		DrawUtil::CFont m_TitleFont;
-		int m_TitleHeight;
-		int m_TitleLeftMargin;
-		int m_TitleIconTextMargin;
-		int m_ButtonSize;
-		int m_ButtonMargin;
-		bool m_fDetailInfo;
+		int m_TitleHeight = 0;
+		int m_TitleLeftMargin = 2;
+		int m_TitleIconTextMargin = 4;
+		int m_ButtonSize = 14;
+		int m_ButtonMargin = 3;
+		bool m_fDetailInfo =
+#ifdef _DEBUG
+			true
+#else
+			false
+#endif
+			;
 		String m_TitleText;
 		CIcon m_TitleIcon;
-		CEventHandler *m_pEventHandler;
-		bool m_fCursorInWindow;
-		bool m_fMenuShowing;
+		CEventHandler *m_pEventHandler = nullptr;
+		bool m_fCursorInWindow = false;
+		bool m_fMenuShowing = false;
 
 		static const LPCTSTR m_pszWindowClass;
 		static HINSTANCE m_hinst;
@@ -137,10 +142,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			CEventInfoPopup *m_pPopup;
+			CEventInfoPopup *m_pPopup = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler() = default;
 
 			virtual bool HitTest(int x, int y, LPARAM * pParam) = 0;
@@ -159,10 +163,10 @@ namespace TVTest
 
 	private:
 		CEventInfoPopup *m_pPopup;
-		bool m_fEnable;
-		CEventHandler *m_pEventHandler;
-		bool m_fTrackMouseEvent;
-		LPARAM m_HitTestParam;
+		bool m_fEnable = true;
+		CEventHandler *m_pEventHandler = nullptr;
+		bool m_fTrackMouseEvent = false;
+		LPARAM m_HitTestParam = -1;
 
 		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};

@@ -111,18 +111,6 @@ static int CompareLogoVersion(WORD Version1, WORD Version2)
 
 
 
-CLogoManager::CLogoManager()
-	: m_LogoDirectory(TEXT(".\\Logo"))
-	, m_fSaveLogo(false)
-	, m_fSaveBmp(false)
-	, m_fLogoUpdated(false)
-	, m_fLogoIDMapUpdated(false)
-	, m_LogoFileLastWriteTime()
-	, m_LogoIDMapFileLastWriteTime()
-{
-}
-
-
 void CLogoManager::Clear()
 {
 	m_LogoMap.clear();
@@ -717,7 +705,6 @@ CLogoManager::CLogoData::CLogoData(const LibISDB::LogoDownloaderFilter::LogoData
 	, m_LogoType(pData->LogoType)
 	, m_DataSize(pData->DataSize)
 	, m_Time(pData->Time)
-	, m_hbm(nullptr)
 {
 	m_Data = std::make_unique<BYTE[]>(pData->DataSize);
 	std::memcpy(m_Data.get(), pData->pData, pData->DataSize);
@@ -725,7 +712,6 @@ CLogoManager::CLogoData::CLogoData(const LibISDB::LogoDownloaderFilter::LogoData
 
 
 CLogoManager::CLogoData::CLogoData(const CLogoData &Src)
-	: m_hbm(nullptr)
 {
 	*this = Src;
 }

@@ -57,7 +57,7 @@ namespace TVTest
 		CDirectWriteRenderer::RenderingParams *m_pParams;
 		LOGFONT m_Font;
 		CTextDrawClient m_TextDrawClient;
-		CRenderingTester *m_pRenderingTester;
+		CRenderingTester *m_pRenderingTester = nullptr;
 	};
 
 }	// namespace TVTest

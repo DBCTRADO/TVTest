@@ -61,12 +61,6 @@ static Gdiplus::RectF GdiplusRectF(const RECT &Rect)
 
 
 
-CGraphicsCore::CGraphicsCore()
-	: m_fInitialized(false)
-{
-}
-
-
 CGraphicsCore::~CGraphicsCore()
 {
 	Finalize();

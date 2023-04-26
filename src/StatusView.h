@@ -124,17 +124,17 @@ namespace TVTest
 		friend CStatusView;
 
 	protected:
-		CStatusView *m_pStatus;
+		CStatusView *m_pStatus = nullptr;
 		int m_ID;
 		SizeValue m_DefaultWidth;
-		int m_Width;
-		int m_MinWidth;
-		int m_MaxWidth;
-		int m_ActualWidth;
-		int m_MinHeight;
-		bool m_fVisible;
-		bool m_fBreak;
-		StyleFlag m_Style;
+		int m_Width = -1;
+		int m_MinWidth = 8;
+		int m_MaxWidth = -1;
+		int m_ActualWidth = -1;
+		int m_MinHeight = 0;
+		bool m_fVisible = true;
+		bool m_fBreak = false;
+		StyleFlag m_Style = StyleFlag::None;
 
 		bool GetMenuPos(POINT *pPos, UINT *pFlags, RECT *pExcludeRect);
 		enum class DrawTextFlag : unsigned int {
@@ -168,10 +168,9 @@ namespace TVTest
 		class ABSTRACT_CLASS(CEventHandler)
 		{
 		protected:
-			CStatusView *m_pStatusView;
+			CStatusView *m_pStatusView = nullptr;
 
 		public:
-			CEventHandler();
 			virtual ~CEventHandler();
 
 			virtual void OnMouseLeave() {}
@@ -252,11 +251,9 @@ namespace TVTest
 	private:
 		struct StatusViewStyle
 		{
-			Style::Margins ItemPadding;
-			Style::IntValue TextExtraHeight;
-			Style::Size IconSize;
-
-			StatusViewStyle();
+			Style::Margins ItemPadding{4, 2, 4, 2};
+			Style::IntValue TextExtraHeight{4};
+			Style::Size IconSize{16, 16};
 
 			void SetStyle(const Style::CStyleManager *pStyleManager);
 			void NormalizeStyle(
@@ -270,25 +267,25 @@ namespace TVTest
 		StatusViewStyle m_Style;
 		Style::Font m_Font;
 		DrawUtil::CFont m_DrawFont;
-		int m_FontHeight;
-		int m_TextHeight;
-		int m_ItemHeight;
-		bool m_fMultiRow;
-		int m_MaxRows;
-		int m_Rows;
+		int m_FontHeight = 0;
+		int m_TextHeight = 0;
+		int m_ItemHeight = 0;
+		bool m_fMultiRow = false;
+		int m_MaxRows = 2;
+		int m_Rows = 1;
 		StatusViewTheme m_Theme;
 		std::vector<std::unique_ptr<CStatusItem>> m_ItemList;
-		bool m_fSingleMode;
+		bool m_fSingleMode = false;
 		String m_SingleText;
-		int m_HotItem;
+		int m_HotItem = -1;
 		CMouseLeaveTrack m_MouseLeaveTrack;
-		bool m_fOnButtonDown;
-		int m_CapturedItem;
-		CEventHandler *m_pEventHandler;
+		bool m_fOnButtonDown = false;
+		int m_CapturedItem = -1;
+		CEventHandler *m_pEventHandler = nullptr;
 		DrawUtil::COffscreen m_Offscreen;
-		bool m_fBufferedPaint;
+		bool m_fBufferedPaint = false;
 		CBufferedPaint m_BufferedPaint;
-		bool m_fAdjustSize;
+		bool m_fAdjustSize = true;
 
 		void SetHotItem(int Item);
 		void Draw(HDC hdc, const RECT *pPaintRect);

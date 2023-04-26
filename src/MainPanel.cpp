@@ -32,8 +32,6 @@ namespace TVTest
 CMainPanel::CMainPanel()
 	: m_FrameEventHandler(&Frame)
 	, m_FormEventHandler(&Form)
-	, fShowPanelWindow(false)
-	, m_fEnableProgramListUpdate(true)
 {
 	Frame.SetFloating(false);
 	Frame.SetEventHandler(&m_FrameEventHandler);
@@ -226,7 +224,6 @@ void CMainPanel::UpdateControlPanel()
 
 CMainPanel::CFrameEventHandler::CFrameEventHandler(CPanelFrame *pFrame)
 	: m_pFrame(pFrame)
-	, m_SnapEdge(EDGE_NONE)
 {
 }
 

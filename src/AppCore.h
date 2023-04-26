@@ -155,9 +155,9 @@ namespace TVTest
 
 	private:
 		CAppMain &m_App;
-		bool m_fSilent;
-		bool m_fExitOnRecordingStop;
-		bool m_f1SegMode;
+		bool m_fSilent = false;
+		bool m_fExitOnRecordingStop = false;
+		bool m_f1SegMode = false;
 
 		int GetCorresponding1SegService(int Space, WORD NetworkID, WORD TSID, WORD ServiceID) const;
 		bool GenerateRecordFileName(LPTSTR pszFileName, int MaxFileName);

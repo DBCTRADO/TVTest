@@ -88,24 +88,10 @@ bool CPseudoOSD::IsPseudoOSD(HWND hwnd)
 
 
 CPseudoOSD::CPseudoOSD()
-	: m_hwnd(nullptr)
-	, m_crBackColor(RGB(16, 0, 16))
-	, m_crTextColor(RGB(0, 255, 128))
-	, m_TextStyle(TextStyle::Outline)
-	, m_hbmIcon(nullptr)
-	, m_IconWidth(0)
-	, m_IconHeight(0)
-	, m_hbm(nullptr)
-	, m_ImageEffect(ImageEffect::None)
 {
 	LOGFONT lf;
 	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &lf);
 	m_Font.Create(&lf);
-
-	m_Position.Left = 0;
-	m_Position.Top = 0;
-	m_Position.Width = 0;
-	m_Position.Height = 0;
 }
 
 

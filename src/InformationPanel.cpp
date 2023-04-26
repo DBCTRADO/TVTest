@@ -77,12 +77,6 @@ bool CInformationPanel::Initialize(HINSTANCE hinst)
 
 CInformationPanel::CInformationPanel()
 	: CSettingsBase(TEXT("InformationPanel"))
-
-	, m_FontHeight(0)
-
-	, m_hwndProgramInfo(nullptr)
-	, m_ProgramInfoSubclass(this)
-	, m_fUseRichEdit(true)
 {
 	GetDefaultFont(&m_StyleFont);
 
@@ -907,15 +901,6 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 
 
 
-CInformationPanel::InformationPanelStyle::InformationPanelStyle()
-	: ButtonSize(16, 16)
-	, LineSpacing(1)
-	, ItemButtonMargin(4, 0, 0, 0)
-	, ItemButtonPadding(2)
-{
-}
-
-
 void CInformationPanel::InformationPanelStyle::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	*this = InformationPanelStyle();
@@ -1227,7 +1212,6 @@ void CInformationPanel::CAudioDeviceItem::Draw(HDC hdc, const RECT &Rect)
 
 CInformationPanel::CSignalLevelItem::CSignalLevelItem(CInformationPanel *pPanel, bool fVisible)
 	: CItemTemplate(pPanel, fVisible)
-	, m_fShowSignalLevel(true)
 {
 	Reset();
 }

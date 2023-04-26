@@ -41,17 +41,6 @@ const CTaskbarManager::CommandIconInfo CTaskbarManager::m_CommandIconList[] =
 };
 
 
-CTaskbarManager::CTaskbarManager()
-	: m_hwnd(nullptr)
-	, m_TaskbarButtonCreatedMessage(0)
-	, m_pTaskbarList(nullptr)
-	, m_fAppIDInvalid(false)
-	, m_fJumpListInitialized(false)
-	, m_fSaveRecentChannelList(false)
-{
-}
-
-
 CTaskbarManager::~CTaskbarManager()
 {
 	Finalize();

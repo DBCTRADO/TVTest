@@ -810,13 +810,6 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 
 
 
-CEpgIcons::CEpgIcons()
-	: m_hdc(nullptr)
-	, m_hbmOld(nullptr)
-{
-}
-
-
 CEpgIcons::~CEpgIcons()
 {
 	EndDraw();

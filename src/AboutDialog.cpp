@@ -36,12 +36,6 @@ namespace TVTest
 static constexpr size_t MAX_INFO_TEXT = 256;
 
 
-CAboutDialog::CAboutDialog()
-	: m_fDrawLogo(false)
-{
-}
-
-
 CAboutDialog::~CAboutDialog()
 {
 	Destroy();

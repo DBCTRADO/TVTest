@@ -43,7 +43,6 @@ namespace TVTest
 		typedef CIniFile::CEntry CEntry;
 		typedef CIniFile::EntryArray EntryList;
 
-		CSettings();
 		~CSettings();
 
 		bool Open(LPCTSTR pszFileName, OpenFlag Flags);
@@ -89,7 +88,7 @@ namespace TVTest
 
 	private:
 		CIniFile m_IniFile;
-		OpenFlag m_OpenFlags;
+		OpenFlag m_OpenFlags = OpenFlag::None;
 	};
 
 	class ABSTRACT_CLASS(CSettingsBase)
@@ -111,7 +110,7 @@ namespace TVTest
 
 	protected:
 		LPCTSTR m_pszSection;
-		bool m_fChanged;
+		bool m_fChanged = false;
 	};
 
 }	// namespace TVTest

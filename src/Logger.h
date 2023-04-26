@@ -109,11 +109,11 @@ namespace TVTest
 		bool CreateFileLock(CGlobalLock *pLock) const;
 
 		std::vector<std::unique_ptr<CLogItem>> m_LogList;
-		DWORD m_SerialNumber;
-		bool m_fOutputToFile;
+		DWORD m_SerialNumber = 0;
+		bool m_fOutputToFile = false;
 		mutable MutexLock m_Lock;
 		String m_DefaultLogFileName;
-		HANDLE m_hFile;
+		HANDLE m_hFile = INVALID_HANDLE_VALUE;
 	};
 
 }	// namespace TVTest

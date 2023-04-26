@@ -80,7 +80,6 @@ namespace TVTest
 		static inline BYTE IDToComponentTag(IDType ID) { return static_cast<BYTE>(ID & 0xFF); }
 		static inline int IDToStreamIndex(IDType ID) { return static_cast<INT8>(static_cast<BYTE>(ID >> 8)); }
 
-		CAudioManager();
 		int GetAudioCount() const;
 		bool GetAudioInfo(int Index, AudioInfo *pInfo) const;
 		bool GetAudioList(AudioList *pList) const;
@@ -109,9 +108,9 @@ namespace TVTest
 		AudioList m_EventAudioList;
 		AudioList m_AudioList;
 		AudioSelectInfo m_SelectedAudio;
-		WORD m_CurTransportStreamID;
-		WORD m_CurServiceID;
-		WORD m_CurEventID;
+		WORD m_CurTransportStreamID = LibISDB::TRANSPORT_STREAM_ID_INVALID;
+		WORD m_CurServiceID = LibISDB::SERVICE_ID_INVALID;
+		WORD m_CurEventID = LibISDB::EVENT_ID_INVALID;
 		std::unordered_map<DWORD, ServiceAudioSelectInfo> m_ServiceAudioSelectMap;
 
 		static DWORD ServiceMapKey(WORD TSID, WORD ServiceID) {

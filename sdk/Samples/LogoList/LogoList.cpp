@@ -51,8 +51,7 @@ class CLogoList : public TVTest::CTVTestPlugin
 {
 	struct Position
 	{
-		int Left,Top,Width,Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
 	class CServiceInfo
@@ -66,8 +65,8 @@ class CLogoList : public TVTest::CTVTestPlugin
 		~CServiceInfo();
 	};
 
-	HWND m_hwnd;
-	HWND m_hwndList;
+	HWND m_hwnd = nullptr;
+	HWND m_hwndList = nullptr;
 	Position m_WindowPosition;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
@@ -77,8 +76,8 @@ class CLogoList : public TVTest::CTVTestPlugin
 	int m_ServiceNameWidth;
 	int m_ItemWidth;
 	int m_ItemHeight;
-	HFONT m_hfont;
-	HBRUSH m_hbrBack;
+	HFONT m_hfont = nullptr;
+	HBRUSH m_hbrBack = nullptr;
 	std::vector<std::unique_ptr<CServiceInfo>> m_ServiceList;
 
 	bool Enable(bool fEnable);
@@ -93,20 +92,10 @@ class CLogoList : public TVTest::CTVTestPlugin
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-	CLogoList();
 	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
 	virtual bool Initialize();
 	virtual bool Finalize();
 };
-
-
-CLogoList::CLogoList()
-	: m_hwnd(nullptr)
-	, m_hwndList(nullptr)
-	, m_hfont(nullptr)
-	, m_hbrBack(nullptr)
-{
-}
 
 
 // プラグインの情報を返す

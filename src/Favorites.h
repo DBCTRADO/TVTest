@@ -96,7 +96,7 @@ namespace TVTest
 	private:
 		String m_BonDriverFileName;
 		CChannelInfo m_ChannelInfo;
-		bool m_fForceBonDriverChange;
+		bool m_fForceBonDriverChange = false;
 	};
 
 	class CFavoriteItemEnumerator
@@ -121,7 +121,7 @@ namespace TVTest
 			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
-		CFavoritesMenu();
+		CFavoritesMenu() = default;
 		~CFavoritesMenu();
 
 		CFavoritesMenu(const CFavoritesMenu &) = delete;
@@ -147,26 +147,24 @@ namespace TVTest
 		class CFolderItem;
 		class CChannelItem;
 
-		CreateFlag m_Flags;
-		HWND m_hwnd;
-		HMENU m_hmenu;
-		UINT m_FirstCommand;
-		UINT m_LastCommand;
+		CreateFlag m_Flags = CreateFlag::None;
+		HWND m_hwnd = nullptr;
+		HMENU m_hmenu = nullptr;
+		UINT m_FirstCommand = 0;
+		UINT m_LastCommand = 0;
 		DrawUtil::CFont m_Font;
-		int m_ItemHeight;
-		int m_TextHeight;
-		int m_TextWidth;
-		int m_LogoWidth;
-		int m_LogoHeight;
-		int m_IconWidth;
-		int m_IconHeight;
+		int m_ItemHeight = 0;
+		int m_TextHeight = 0;
+		int m_TextWidth = 0;
+		int m_IconWidth = 16;
+		int m_IconHeight = 16;
 		CMenuPainter m_MenuPainter;
-		MARGINS m_Margins;
-		int m_MenuLogoMargin;
+		MARGINS m_Margins{};
+		int m_MenuLogoMargin = 3;
 		CTooltip m_Tooltip;
 		LibISDB::DateTime m_BaseTime;
 		std::vector<std::unique_ptr<CMenuItem>> m_ItemList;
-		HIMAGELIST m_himlIcons;
+		HIMAGELIST m_himlIcons = nullptr;
 		CChannelMenuLogo m_Logo;
 
 		void SetFolderMenu(HMENU hmenu, int MenuPos, HDC hdc, UINT *pCommand, const CFavoriteFolder *pFolder);
@@ -196,15 +194,15 @@ namespace TVTest
 
 		CFavoritesManager *m_pManager;
 
-		int m_IconWidth;
-		int m_IconHeight;
-		bool m_fItemDragging;
-		HIMAGELIST m_himlDrag;
-		HTREEITEM m_hDraggingItem;
-		HTREEITEM m_hDropTargetItem;
-		bool m_fDropToFolder;
-		bool m_fDropInsertAfter;
-		WNDPROC m_pOldEditProc;
+		int m_IconWidth = 0;
+		int m_IconHeight = 0;
+		bool m_fItemDragging = false;
+		HIMAGELIST m_himlDrag = nullptr;
+		HTREEITEM m_hDraggingItem = nullptr;
+		HTREEITEM m_hDropTargetItem = nullptr;
+		bool m_fDropToFolder = false;
+		bool m_fDropInsertAfter = false;
+		WNDPROC m_pOldEditProc = nullptr;
 	};
 
 	class CFavoritesManager
@@ -216,8 +214,6 @@ namespace TVTest
 			String BonDriverFileName;
 			bool fForceBonDriverChange;
 		};
-
-		CFavoritesManager();
 
 		CFavoriteFolder &GetRootFolder() { return m_RootFolder; }
 		const CFavoriteFolder &GetRootFolder() const { return m_RootFolder; }
@@ -241,8 +237,8 @@ namespace TVTest
 		void SaveFolder(const CFavoriteFolder *pFolder, const String &Path, String *pBuffer) const;
 
 		CFavoriteFolder m_RootFolder;
-		bool m_fModified;
-		COrganizeFavoritesDialog m_OrganizeDialog;
+		bool m_fModified = false;
+		COrganizeFavoritesDialog m_OrganizeDialog{this};
 	};
 
 }

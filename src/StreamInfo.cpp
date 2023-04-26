@@ -628,8 +628,8 @@ private:
 	static const ColumnInfo m_ColumnList[NUM_COLUMNS];
 
 	int m_ColumnWidth[NUM_COLUMNS];
-	int m_SortColumn;
-	bool m_fSortDescending;
+	int m_SortColumn = COLUMN_PID;
+	bool m_fSortDescending = false;
 	std::vector<PIDInfo> m_PIDInfoList;
 };
 
@@ -646,8 +646,6 @@ const CPIDInfoPage::ColumnInfo CPIDInfoPage::m_ColumnList[NUM_COLUMNS] = {
 
 
 CPIDInfoPage::CPIDInfoPage()
-	: m_SortColumn(COLUMN_PID)
-	, m_fSortDescending(false)
 {
 	for (int &Width : m_ColumnWidth)
 		Width = -1;
@@ -1047,10 +1045,6 @@ int CALLBACK CPIDInfoPage::ItemCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 
 
 CStreamInfo::CStreamInfo()
-	: m_CurrentPage(0)
-	, m_pEventHandler(nullptr)
-	, m_fCreateFirst(true)
-	, m_DefaultPageSize()
 {
 	m_PageList[PAGE_STREAMINFO].pszTitle = TEXT("情報");
 	m_PageList[PAGE_STREAMINFO].Dialog = std::make_unique<CStreamInfoPage>();
