@@ -20,6 +20,7 @@
 #include <dbt.h>
 #include <process.h>
 #include <vector>
+#include <atomic>
 
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
@@ -133,7 +134,7 @@ class CGamePad : public TVTest::CTVTestPlugin
 	HANDLE m_hThread = nullptr;               // スレッドのハンドル
 	HANDLE m_hEvent = nullptr;                // イベントのハンドル
 	ButtonStatus m_ButtonStatus[NUM_BUTTONS]; // ボタンの状態
-	volatile bool m_fInitDevCaps;             // デバイス情報の初期化
+	std::atomic_bool m_fInitDevCaps;          // デバイス情報の初期化
 
 	bool Start();
 	void End();
