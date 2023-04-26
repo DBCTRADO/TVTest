@@ -59,8 +59,8 @@ private:
 		VIEW_MODE_LIST,
 		VIEW_MODE_LOGO
 	};
-	static const ViewModeType VIEW_MODE_FIRST = VIEW_MODE_LIST;
-	static const ViewModeType VIEW_MODE_LAST  = VIEW_MODE_LOGO;
+	static constexpr ViewModeType VIEW_MODE_FIRST = VIEW_MODE_LIST;
+	static constexpr ViewModeType VIEW_MODE_LAST  = VIEW_MODE_LOGO;
 
 	enum LogoSizeType {
 		LOGO_SIZE_SMALL,
@@ -68,8 +68,8 @@ private:
 		LOGO_SIZE_LARGE,
 		LOGL_SIZE_EXTRALARGE
 	};
-	static const LogoSizeType LOGO_SIZE_FIRST = LOGO_SIZE_SMALL;
-	static const LogoSizeType LOGO_SIZE_LAST  = LOGL_SIZE_EXTRALARGE;
+	static constexpr LogoSizeType LOGO_SIZE_FIRST = LOGO_SIZE_SMALL;
+	static constexpr LogoSizeType LOGO_SIZE_LAST  = LOGL_SIZE_EXTRALARGE;
 
 	struct Bitmap
 	{
@@ -148,7 +148,7 @@ private:
 		int Channel;
 	};
 
-	static const int PANEL_ID = 1;
+	static constexpr int PANEL_ID = 1;
 	static const LPCTSTR WINDOW_CLASS_NAME;
 
 	WCHAR m_szIniFileName[MAX_PATH];

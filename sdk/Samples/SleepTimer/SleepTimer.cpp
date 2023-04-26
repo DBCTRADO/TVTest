@@ -29,10 +29,10 @@
 
 
 // FILETIME の単位
-static const LONGLONG FILETIME_MS   = 10000LL;
-static const LONGLONG FILETIME_SEC  = 1000LL * FILETIME_MS;
-static const LONGLONG FILETIME_MIN  = 60LL * FILETIME_SEC;
-static const LONGLONG FILETIME_HOUR = 60LL * FILETIME_MIN;
+static constexpr LONGLONG FILETIME_MS   = 10000LL;
+static constexpr LONGLONG FILETIME_SEC  = 1000LL * FILETIME_MS;
+static constexpr LONGLONG FILETIME_MIN  = 60LL * FILETIME_SEC;
+static constexpr LONGLONG FILETIME_HOUR = 60LL * FILETIME_MIN;
 
 // FILETIME の時間差を求める
 static LONGLONG DiffFileTime(const FILETIME &ft1, const FILETIME &ft2)
@@ -87,7 +87,7 @@ class CSleepTimer : public TVTest::CTVTestPlugin
 		TIMER_ID_QUERY
 	};
 
-	static const int DEFAULT_POS = INT_MIN;
+	static constexpr int DEFAULT_POS = INT_MIN;
 
 	bool m_fInitialized = false;                         // 初期化済みか?
 	TCHAR m_szIniFileName[MAX_PATH];                     // INIファイルのパス

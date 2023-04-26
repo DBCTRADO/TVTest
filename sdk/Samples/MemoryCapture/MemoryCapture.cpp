@@ -151,7 +151,7 @@ private:
 		WM_APP_FRAME_DECODED
 	};
 
-	static const unsigned int VideoMemorySizeLimitInMB = 40;
+	static constexpr unsigned int VideoMemorySizeLimitInMB = 40;
 
 	bool m_fInitialized = false;
 	HWND m_hwnd = nullptr;
@@ -417,8 +417,8 @@ bool CMemoryCapture::EnablePlugin(bool fEnable)
 		}
 
 		if (m_hwnd == nullptr) {
-			static const DWORD Style = WS_OVERLAPPEDWINDOW;
-			static const DWORD ExStyle = 0;
+			constexpr DWORD Style = WS_OVERLAPPEDWINDOW;
+			constexpr DWORD ExStyle = 0;
 
 			// プライマリモニタの DPI を取得
 			m_DPI = m_pApp->GetDPIFromPoint(0, 0);

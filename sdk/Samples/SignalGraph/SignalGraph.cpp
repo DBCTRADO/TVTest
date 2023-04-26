@@ -216,8 +216,8 @@ bool CSignalGraph::EnablePlugin(bool fEnable)
 		}
 
 		if (m_hwnd == nullptr) {
-			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
-			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
+			constexpr DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+			constexpr DWORD ExStyle = WS_EX_TOOLWINDOW;
 
 			// プライマリモニタの DPI を取得
 			m_DPI = m_pApp->GetDPIFromPoint(0, 0);

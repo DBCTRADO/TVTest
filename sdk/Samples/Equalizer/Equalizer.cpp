@@ -551,8 +551,8 @@ bool CEqualizer::EnablePlugin(bool fEnable)
 
 			CalcMetrics();
 
-			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU;
-			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
+			constexpr DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU;
+			constexpr DWORD ExStyle = WS_EX_TOOLWINDOW;
 			RECT rc;
 			::SetRect(&rc, 0, 0, m_ClientWidth, m_ClientHeight);
 			::AdjustWindowRectEx(&rc, Style, FALSE, ExStyle);
