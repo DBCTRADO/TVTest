@@ -65,6 +65,7 @@ class CLogoList : public TVTest::CTVTestPlugin
 		~CServiceInfo();
 	};
 
+	bool m_fInitialized = false;
 	HWND m_hwnd = nullptr;
 	HWND m_hwndList = nullptr;
 	Position m_WindowPosition;
@@ -177,9 +178,7 @@ LRESULT CALLBACK CLogoList::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPa
 bool CLogoList::Enable(bool fEnable)
 {
 	if (fEnable) {
-		static bool fInitialized = false;
-
-		if (!fInitialized) {
+		if (!m_fInitialized) {
 			// ウィンドウクラスの登録
 			WNDCLASS wc;
 
@@ -195,7 +194,7 @@ bool CLogoList::Enable(bool fEnable)
 			wc.lpszClassName = LOGO_LIST_WINDOW_CLASS;
 			if (::RegisterClass(&wc) == 0)
 				return false;
-			fInitialized = true;
+			m_fInitialized = true;
 		}
 
 		if (m_hwnd == nullptr) {
