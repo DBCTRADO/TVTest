@@ -71,14 +71,14 @@ namespace TVTest
 
 		typedef std::vector<IDType> AudioComponentList;
 
-		static inline IDType MakeID(int Index, BYTE ComponentTag)
+		static constexpr IDType MakeID(int Index, BYTE ComponentTag)
 		{
 			return ComponentTag != LibISDB::COMPONENT_TAG_INVALID ?
 					static_cast<IDType>(ComponentTag) :
 					static_cast<IDType>((static_cast<BYTE>(static_cast<INT8>(Index)) << 8) | LibISDB::COMPONENT_TAG_INVALID);
 		}
-		static inline BYTE IDToComponentTag(IDType ID) { return static_cast<BYTE>(ID & 0xFF); }
-		static inline int IDToStreamIndex(IDType ID) { return static_cast<INT8>(static_cast<BYTE>(ID >> 8)); }
+		static constexpr BYTE IDToComponentTag(IDType ID) { return static_cast<BYTE>(ID & 0xFF); }
+		static constexpr int IDToStreamIndex(IDType ID) { return static_cast<INT8>(static_cast<BYTE>(ID >> 8)); }
 
 		int GetAudioCount() const;
 		bool GetAudioInfo(int Index, AudioInfo *pInfo) const;
