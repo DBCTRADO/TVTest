@@ -72,12 +72,9 @@ CAppMutex::CAppMutex(bool fEnable)
 	if (fEnable) {
 		TCHAR szName[MAX_PATH];
 
-		::GetModuleFileName(nullptr, szName, lengthof(szName));
-		::CharUpperBuff(szName, ::lstrlen(szName));
-		for (int i = 0; szName[i] != '\0'; i++) {
-			if (szName[i] == '\\')
-				szName[i] = ':';
-		}
+		const DWORD Length = ::GetModuleFileName(nullptr, szName, lengthof(szName));
+		::CharUpperBuff(szName, Length);
+		std::ranges::replace(szName, szName + Length, _T('\\'), _T(':'));
 
 		CBasicSecurityAttributes SecAttributes;
 		SecAttributes.Initialize();
@@ -148,8 +145,6 @@ BOOL CALLBACK CTVTestWindowFinder::FindWindowCallback(HWND hwnd, LPARAM lParam)
 
 bool CPortQuery::Query(HWND hwnd, WORD *pUDPPort, WORD MaxPort)
 {
-	size_t i;
-
 	m_hwndSelf = hwnd;
 	m_UDPPortList.clear();
 	::EnumWindows(EnumProc, reinterpret_cast<LPARAM>(this));
@@ -157,11 +152,7 @@ bool CPortQuery::Query(HWND hwnd, WORD *pUDPPort, WORD MaxPort)
 		WORD UDPPort;
 
 		for (UDPPort = *pUDPPort; UDPPort <= MaxPort; UDPPort++) {
-			for (i = 0; i < m_UDPPortList.size(); i++) {
-				if (m_UDPPortList[i] == UDPPort)
-					break;
-			}
-			if (i == m_UDPPortList.size())
+			if (std::ranges::find(m_UDPPortList, UDPPort) == m_UDPPortList.end())
 				break;
 		}
 		if (UDPPort > MaxPort)
