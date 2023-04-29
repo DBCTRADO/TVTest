@@ -391,8 +391,8 @@ void CInitialSettings::InitDecoderList(int ID, const GUID &SubType, LPCTSTR pszD
 			}
 		}
 		if (FilterList.size() > 1) {
-			std::sort(
-				FilterList.begin(), FilterList.end(),
+			std::ranges::sort(
+				FilterList,
 				[](const String Filter1, const String & Filter2) {
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,

@@ -161,10 +161,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 		}
 
 		for (const auto &e : m_AvailItemList) {
-			const int ID = e.ID;
-			if (std::find_if(
-						ItemList.begin(), ItemList.end(),
-						[ID](const StatusItemInfo &Item) -> bool { return Item.ID == ID; }) == ItemList.end()) {
+			if (std::ranges::find(ItemList, e.ID, &StatusItemInfo::ID) == ItemList.end()) {
 				StatusItemInfo Item(e);
 				Item.fVisible = false;
 				ItemList.push_back(Item);

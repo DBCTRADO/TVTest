@@ -538,9 +538,7 @@ bool CChannelList::Sort(SortType Type, bool fDescending)
 			}
 		};
 
-		std::stable_sort(
-			m_ChannelList.begin(), m_ChannelList.end(),
-			CPredicator(Type, fDescending));
+		std::ranges::stable_sort(m_ChannelList, CPredicator(Type, fDescending));
 	}
 
 	return true;

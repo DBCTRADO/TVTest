@@ -1238,8 +1238,8 @@ int CColorSchemeList::FindByName(LPCTSTR pszName, int FirstIndex) const
 void CColorSchemeList::SortByName()
 {
 	if (m_List.size() > 1) {
-		std::sort(
-			m_List.begin(), m_List.end(),
+		std::ranges::sort(
+			m_List,
 			[](const std::unique_ptr<CColorScheme> &ColorScheme1,
 			   const std::unique_ptr<CColorScheme> &ColorScheme2) -> bool {
 				return ::lstrcmpi(ColorScheme1->GetName(), ColorScheme2->GetName()) < 0;

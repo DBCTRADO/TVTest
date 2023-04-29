@@ -203,8 +203,8 @@ bool CDriverManager::Find(LPCTSTR pszDirectory)
 	}
 
 	if (m_DriverList.size() > 1) {
-		std::sort(
-			m_DriverList.begin(), m_DriverList.end(),
+		std::ranges::sort(
+			m_DriverList,
 			[](const std::unique_ptr<CDriverInfo> &Driver1,
 			   const std::unique_ptr<CDriverInfo> &Driver2) {
 				return ::lstrcmpi(Driver1->GetFileName(), Driver2->GetFileName()) < 0;

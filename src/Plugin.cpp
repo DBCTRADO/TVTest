@@ -2641,8 +2641,8 @@ LRESULT CPlugin::OnCallback(PluginParam *pParam, MessageCode Message, LPARAM lPa
 			if (pInfo == nullptr || pInfo->Size != sizeof(PanelItemGetInfo))
 				return FALSE;
 
-			auto it = std::find_if(
-				m_PanelItemList.begin(), m_PanelItemList.end(),
+			auto it = std::ranges::find_if(
+				m_PanelItemList,
 				[&](const std::unique_ptr<PanelItem> &Item) -> bool { return Item->ID == pInfo->ID; });
 			if (it == m_PanelItemList.end())
 				return FALSE;
@@ -4887,7 +4887,7 @@ CPluginManager::~CPluginManager()
 void CPluginManager::SortPluginsByName()
 {
 	if (m_PluginList.size() > 1)
-		std::sort(m_PluginList.begin(), m_PluginList.end(), CompareName);
+		std::ranges::sort(m_PluginList, CompareName);
 }
 
 

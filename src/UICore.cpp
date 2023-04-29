@@ -1527,7 +1527,7 @@ bool CUICore::RegisterModelessDialog(CBasicDialog *pDialog)
 {
 	if (pDialog == nullptr)
 		return false;
-	if (std::find(m_ModelessDialogList.begin(), m_ModelessDialogList.end(), pDialog) != m_ModelessDialogList.end())
+	if (std::ranges::find(m_ModelessDialogList, pDialog) != m_ModelessDialogList.end())
 		return false;
 	m_ModelessDialogList.push_back(pDialog);
 	return true;
@@ -1536,7 +1536,7 @@ bool CUICore::RegisterModelessDialog(CBasicDialog *pDialog)
 
 bool CUICore::UnregisterModelessDialog(CBasicDialog *pDialog)
 {
-	auto itr = std::find(m_ModelessDialogList.begin(), m_ModelessDialogList.end(), pDialog);
+	auto itr = std::ranges::find(m_ModelessDialogList, pDialog);
 	if (itr == m_ModelessDialogList.end())
 		return false;
 	m_ModelessDialogList.erase(itr);

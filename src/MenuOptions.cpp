@@ -302,9 +302,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				for (const MenuInfo &e : m_DefaultMenuItemList) {
 					const int ID = e.ID;
-					auto it = std::find_if(
-						m_MenuItemList.begin(), m_MenuItemList.end(),
-						[=](const MenuItemInfo & Item) -> bool { return Item.ID == ID; });
+					auto it = std::ranges::find(m_MenuItemList, ID, &MenuItemInfo::ID);
 					if (it == m_MenuItemList.end()) {
 						MenuItemInfo Item;
 						Item.ID = ID;
@@ -319,9 +317,7 @@ INT_PTR CMenuOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				for (int ID = e.First; ID <= e.Last; ID++) {
 					if (!CommandManager.IsCommandValid(ID))
 						break;
-					auto it = std::find_if(
-						m_MenuItemList.begin(), m_MenuItemList.end(),
-						[=](const MenuItemInfo & Item) -> bool { return Item.ID == ID; });
+					auto it = std::ranges::find(m_MenuItemList, ID, &MenuItemInfo::ID);
 					if (it == m_MenuItemList.end()) {
 						MenuItemInfo Item;
 						Item.ID = ID;

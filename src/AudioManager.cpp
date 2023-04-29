@@ -292,9 +292,8 @@ bool CAudioManager::OnServiceUpdated()
 	} else {
 		// 選択されていたIDのストリームが無くなったらリセット
 		if (m_SelectedAudio.ID != ID_INVALID) {
-			if (std::find(
-						m_AudioComponentList.begin(),
-						m_AudioComponentList.end(),
+			if (std::ranges::find(
+						m_AudioComponentList,
 						m_SelectedAudio.ID) == m_AudioComponentList.end())
 				SetSelectedAudio(nullptr);
 		}

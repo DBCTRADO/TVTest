@@ -846,7 +846,7 @@ void CPIDInfoPage::UpdateInfo()
 			if (pText != nullptr)
 				Info.Description += pText;
 
-			if (auto it = std::find(EMMPIDList.begin(), EMMPIDList.end(), PID); it != EMMPIDList.end())
+			if (std::ranges::find(EMMPIDList, PID) != EMMPIDList.end())
 				Info.Description += TEXT("EMM");
 
 			for (auto &Service : ServiceList) {

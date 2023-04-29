@@ -391,8 +391,8 @@ void CVideoOptions::SetVideoDecoderList(
 		if (pszDefaultDecoderName != nullptr)
 			DlgComboBox_AddString(m_hDlg, ID, pszDefaultDecoderName);
 		if (FilterList.size() > 1) {
-			std::sort(
-				FilterList.begin(), FilterList.end(),
+			std::ranges::sort(
+				FilterList,
 				[](const String &Filter1, const String &Filter2) {
 					return ::CompareString(
 						LOCALE_USER_DEFAULT,

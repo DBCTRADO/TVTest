@@ -265,8 +265,8 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			LibISDB::DirectShow::DeviceEnumerator DevEnum;
 			if (DevEnum.EnumDevice(CLSID_AudioRendererCategory)
 					&& DevEnum.GetFilterList(&m_AudioDeviceList)) {
-				std::stable_sort(
-					m_AudioDeviceList.begin(), m_AudioDeviceList.end(),
+				std::ranges::stable_sort(
+					m_AudioDeviceList,
 					[](const FilterInfo &Filter1, const FilterInfo &Filter2) {
 						return ::lstrcmp(Filter1.FriendlyName.c_str(), Filter2.FriendlyName.c_str()) < 0;
 					});

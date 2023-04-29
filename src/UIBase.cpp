@@ -276,14 +276,14 @@ void CUIBase::RegisterUIChild(CUIBase *pChild)
 {
 	if (pChild == nullptr)
 		return;
-	if (std::find(m_UIChildList.begin(), m_UIChildList.end(), pChild) == m_UIChildList.end())
+	if (std::ranges::find(m_UIChildList, pChild) == m_UIChildList.end())
 		m_UIChildList.push_back(pChild);
 }
 
 
 void CUIBase::RemoveUIChild(CUIBase *pChild)
 {
-	auto it = std::find(m_UIChildList.begin(), m_UIChildList.end(), pChild);
+	auto it = std::ranges::find(m_UIChildList, pChild);
 	if (it != m_UIChildList.end())
 		m_UIChildList.erase(it);
 }

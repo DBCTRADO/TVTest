@@ -308,9 +308,7 @@ bool CCommandManager::AddEventListener(CEventListener *pEventListener)
 	if (pEventListener == nullptr)
 		return false;
 
-	auto it = std::find(
-		m_EventListenerList.begin(), m_EventListenerList.end(),
-		pEventListener);
+	auto it = std::ranges::find(m_EventListenerList, pEventListener);
 	if (it != m_EventListenerList.end())
 		return false;
 
@@ -322,9 +320,7 @@ bool CCommandManager::AddEventListener(CEventListener *pEventListener)
 
 bool CCommandManager::RemoveEventListener(CEventListener *pEventListener)
 {
-	auto it = std::find(
-		m_EventListenerList.begin(), m_EventListenerList.end(),
-		pEventListener);
+	auto it = std::ranges::find(m_EventListenerList, pEventListener);
 	if (it == m_EventListenerList.end())
 		return false;
 

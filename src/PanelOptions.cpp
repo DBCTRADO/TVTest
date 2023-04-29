@@ -154,8 +154,8 @@ bool CPanelOptions::ReadSettings(CSettings &Settings)
 #if 0
 		for (size_t i = 0; i < m_AvailItemList.size(); i++) {
 			const String &ID = m_AvailItemList[i].ID;
-			if (std::find_if(
-					ItemList.begin(), ItemList.end(),
+			if (std::ranges::find_if(
+					ItemList,
 					[&](const PanelItemInfo & Item) -> bool {
 						return CompareID(Item.ID, ID); }) == ItemList.end()) {
 				PanelItemInfo Item;
@@ -264,8 +264,8 @@ int CPanelOptions::RegisterPanelItem(LPCTSTR pszID, LPCTSTR pszTitle)
 
 	m_AvailItemList.push_back(Item);
 
-	auto it = std::find_if(
-		m_ItemList.begin(), m_ItemList.end(),
+	auto it = std::ranges::find_if(
+		m_ItemList,
 		[&](const PanelItemInfo & Info) -> bool { return CompareID(Info.ID, Item.ID); });
 	if (it == m_ItemList.end())
 		m_ItemList.push_back(Item);
@@ -329,7 +329,7 @@ bool CPanelOptions::ApplyItemList(CPanelForm *pPanelForm) const
 
 	if (TabOrder.size() < m_AvailItemList.size()) {
 		for (int i = 0; i < static_cast<int>(m_AvailItemList.size()); i++) {
-			if (std::find(TabOrder.begin(), TabOrder.end(), i) == TabOrder.end()) {
+			if (std::ranges::find(TabOrder, i) == TabOrder.end()) {
 				TabOrder.push_back(i);
 				pPanelForm->SetTabVisible(i, m_AvailItemList[i].fVisible);
 			}
@@ -387,8 +387,8 @@ INT_PTR CPanelOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			PanelItemInfoList ItemList(m_ItemList);
 			for (const PanelItemInfo &e : m_AvailItemList) {
 				const String &ID = e.ID;
-				if (std::find_if(
-							ItemList.begin(), ItemList.end(),
+				if (std::ranges::find_if(
+							ItemList,
 							[&](const PanelItemInfo & Item) -> bool {
 								return CompareID(Item.ID, ID); }) == ItemList.end()) {
 					PanelItemInfo Item;

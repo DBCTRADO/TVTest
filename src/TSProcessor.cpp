@@ -337,8 +337,8 @@ bool CTSProcessor::GetModuleList(std::vector<String> *pList) const
 	pEnumModule->Release();
 
 	if (pList->size() > 1) {
-		std::sort(
-			pList->begin(), pList->end(),
+		std::ranges::sort(
+			*pList,
 			[](const String &Lib1, const String &Lib2) {
 				return StringUtility::CompareNoCase(Lib1, Lib2) < 0;
 			});

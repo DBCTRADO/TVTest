@@ -1164,7 +1164,7 @@ void CFeaturedEventsCategory::SortItems(CFeaturedEventsSettings::SortType SortTy
 		}
 	};
 
-	std::sort(m_ItemList.begin(), m_ItemList.end(), CItemCompare(SortType));
+	std::ranges::sort(m_ItemList, CItemCompare(SortType));
 }
 
 

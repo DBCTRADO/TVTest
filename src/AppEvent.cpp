@@ -46,7 +46,7 @@ bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 
 bool CAppEventManager::RemoveEventHandler(CAppEventHandler *pHandler)
 {
-	auto itr = std::find(m_HandlerList.begin(), m_HandlerList.end(), pHandler);
+	auto itr = std::ranges::find(m_HandlerList, pHandler);
 	if (itr == m_HandlerList.end())
 		return false;
 	m_HandlerList.erase(itr);

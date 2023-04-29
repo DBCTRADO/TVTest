@@ -120,8 +120,8 @@ bool CNetworkDefinition::LoadSettings(CSettings &Settings)
 		}
 
 		for (const RemoteControlKeyIDAssignInfo &DefInfo : m_DefaultKeyIDAssignList) {
-			auto itr = std::find_if(
-				List.begin(), List.end(),
+			auto itr = std::ranges::find_if(
+				List,
 				[&](const RemoteControlKeyIDAssignInfo &Info) -> bool {
 					return Info.NetworkID == DefInfo.NetworkID
 						&& Info.FirstServiceID <= DefInfo.LastServiceID
@@ -222,17 +222,13 @@ int CNetworkDefinition::GetRemoteControlKeyID(WORD NetworkID, WORD ServiceID) co
 
 CNetworkDefinition::NetworkInfoList::iterator CNetworkDefinition::FindNetworkInfoByID(WORD NetworkID)
 {
-	return std::find_if(
-		m_NetworkInfoList.begin(), m_NetworkInfoList.end(),
-		[&](const NetworkInfo & Info) -> bool { return Info.NetworkID == NetworkID; });
+	return std::ranges::find(m_NetworkInfoList, NetworkID, &NetworkInfo::NetworkID);
 }
 
 
 CNetworkDefinition::NetworkInfoList::const_iterator CNetworkDefinition::FindNetworkInfoByID(WORD NetworkID) const
 {
-	return std::find_if(
-		m_NetworkInfoList.begin(), m_NetworkInfoList.end(),
-		[&](const NetworkInfo & Info) -> bool { return Info.NetworkID == NetworkID; });
+	return std::ranges::find(m_NetworkInfoList, NetworkID, &NetworkInfo::NetworkID);
 }
 
 

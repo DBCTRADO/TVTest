@@ -165,9 +165,8 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 		for (size_t i = 0; i < pList->size() - 1; i++) {
 			const auto &ParameterList = (*pList)[i].ParameterList;
-			auto it = std::find_if(
-				ParameterList.begin(),
-				ParameterList.end(),
+			auto it = std::ranges::find_if(
+				ParameterList,
 				[&](const ParameterInfo &Info) -> bool {
 					return ::lstrcmpiW(Info.pszParameter, Var.pszKeyword) == 0; });
 			if (it != ParameterList.end()) {
