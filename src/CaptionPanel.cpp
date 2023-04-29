@@ -120,7 +120,7 @@ bool CCaptionPanel::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("CaptionPanel.HalfWidthAlnum"), &m_fHalfWidthAlnum);
 	Settings.Read(TEXT("CaptionPanel.HalfWidthEuroLanguagesOnly"), &m_fHalfWidthEuroLanguagesOnly);
 	if (Settings.Read(TEXT("CaptionPanel.SaveCharEncoding"), &Value)
-			&& Value >= CHARENCODING_FIRST && Value <= CHARENCODING_LAST)
+			&& CheckEnumRange(static_cast<CharEncoding>(Value)))
 		m_SaveCharEncoding = static_cast<CharEncoding>(Value);
 	return true;
 }
@@ -363,7 +363,7 @@ void CCaptionPanel::OnCommand(int Command)
 							pSrcText = Text.c_str();
 							SrcLength = Length;
 						}
-						if (m_SaveCharEncoding == CHARENCODING_UTF16) {
+						if (m_SaveCharEncoding == CharEncoding::UTF16) {
 							const WCHAR BOM = 0xFEFF;
 							fOK = ::WriteFile(hFile, &BOM, sizeof(BOM), &Write, nullptr)
 								&& Write == sizeof(BOM)
@@ -371,7 +371,7 @@ void CCaptionPanel::OnCommand(int Command)
 								&& Write == SrcLength * sizeof(WCHAR);
 						} else {
 							const UINT CodePage =
-								m_SaveCharEncoding == CHARENCODING_UTF8 ? CP_UTF8 : 932;
+								m_SaveCharEncoding == CharEncoding::UTF8 ? CP_UTF8 : 932;
 							const int EncodedLen = ::WideCharToMultiByte(CodePage, 0, pSrcText, SrcLength, nullptr, 0, nullptr, nullptr);
 							if (EncodedLen > 0) {
 								std::string EncodedText(EncodedLen, '\0');

@@ -55,7 +55,7 @@ namespace TVTest
 	class CChannelInput
 	{
 	public:
-		enum KeyDownResult {
+		enum class KeyDownResult {
 			NotProcessed,
 			Begin,
 			Completed,

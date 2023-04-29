@@ -179,24 +179,24 @@ CImage * CImage::Resize(int Width, int Height, ResampleType Resample) const
 	bool fResult;
 
 	switch (Resample) {
-	case Resample_NearestNeighbor:
+	case ResampleType::NearestNeighbor:
 		fResult = NearestNeighbor(pImage);
 		break;
 
-	case Resample_Bilinear:
+	case ResampleType::Bilinear:
 	default:
 		fResult = Bilinear(pImage);
 		break;
 
-	case Resample_Averaging:
+	case ResampleType::Averaging:
 		fResult = Averaging(pImage);
 		break;
 
-	case Resample_Lanczos2:
+	case ResampleType::Lanczos2:
 		fResult = GenericResample(pImage, Lanczos2, 2.0);
 		break;
 
-	case Resample_Lanczos3:
+	case ResampleType::Lanczos3:
 		fResult = GenericResample(pImage, Lanczos3, 3.0);
 		break;
 	}

@@ -93,10 +93,10 @@ private:
 		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
-	enum CaptureSizeType
+	enum class CaptureSizeType
 	{
-		CaptureSizeType_Size,
-		CaptureSizeType_Rate
+		Size,
+		Rate,
 	};
 
 	struct CaptureSizeInfo
@@ -170,8 +170,8 @@ private:
 	CSeekBar m_SeekBar;
 	CToolbar m_Toolbar;
 	CaptureSizeInfo m_CaptureSize;
-	CImage::ResampleType m_Resample = CImage::Resample_Lanczos3;
-	CVideoDecoder::DeinterlaceMethod m_Deinterlace = CVideoDecoder::Deinterlace_Blend;
+	CImage::ResampleType m_Resample = CImage::ResampleType::Lanczos3;
+	CVideoDecoder::DeinterlaceMethod m_Deinterlace = CVideoDecoder::DeinterlaceMethod::Blend;
 	CLocalLock m_WindowLock;
 
 	unsigned int m_VideoMemorySizeInMB = 2;
@@ -189,8 +189,8 @@ private:
 	std::size_t m_DecodeSize = 0;
 	HANDLE m_hDecodeThread = nullptr;
 
-	CImageCodec::FormatType m_SaveFormat = CImageCodec::Format_JPEG;
-	CImageCodec::FormatType m_LastSaveFormat = CImageCodec::Format_JPEG;
+	CImageCodec::FormatType m_SaveFormat = CImageCodec::FormatType::JPEG;
+	CImageCodec::FormatType m_LastSaveFormat = CImageCodec::FormatType::JPEG;
 	String m_LastSaveFileName;
 	String m_LastSaveFolder;
 
@@ -259,47 +259,47 @@ const LPCTSTR CMemoryCapture::m_WindowClassName = TEXT("TVTest Memory Capture Wi
 const CMemoryCapture::CaptureSizeInfo CMemoryCapture::m_CaptureSizeList[] =
 {
 	// 倍率
-	{CaptureSizeType_Rate, {1, 4}},
-	{CaptureSizeType_Rate, {1, 3}},
-	{CaptureSizeType_Rate, {1, 2}},
-	{CaptureSizeType_Rate, {2, 3}},
-	{CaptureSizeType_Rate, {3, 4}},
-	{CaptureSizeType_Rate, {1, 1}},
+	{CaptureSizeType::Rate, {1, 4}},
+	{CaptureSizeType::Rate, {1, 3}},
+	{CaptureSizeType::Rate, {1, 2}},
+	{CaptureSizeType::Rate, {2, 3}},
+	{CaptureSizeType::Rate, {3, 4}},
+	{CaptureSizeType::Rate, {1, 1}},
 	// 16:9
-	{CaptureSizeType_Size, { 320,  180}},
-	{CaptureSizeType_Size, { 640,  360}},
-	{CaptureSizeType_Size, { 800,  450}},
-	{CaptureSizeType_Size, { 960,  540}},
-	{CaptureSizeType_Size, {1280,  720}},
-	{CaptureSizeType_Size, {1440,  810}},
-	{CaptureSizeType_Size, {1920, 1080}},
+	{CaptureSizeType::Size, { 320,  180}},
+	{CaptureSizeType::Size, { 640,  360}},
+	{CaptureSizeType::Size, { 800,  450}},
+	{CaptureSizeType::Size, { 960,  540}},
+	{CaptureSizeType::Size, {1280,  720}},
+	{CaptureSizeType::Size, {1440,  810}},
+	{CaptureSizeType::Size, {1920, 1080}},
 	// 4:3
-	{CaptureSizeType_Size, { 320,  240}},
-	{CaptureSizeType_Size, { 640,  480}},
-	{CaptureSizeType_Size, { 720,  540}},
-	{CaptureSizeType_Size, { 800,  600}},
-	{CaptureSizeType_Size, {1024,  768}},
-	{CaptureSizeType_Size, {1280,  960}},
-	{CaptureSizeType_Size, {1440, 1080}},
+	{CaptureSizeType::Size, { 320,  240}},
+	{CaptureSizeType::Size, { 640,  480}},
+	{CaptureSizeType::Size, { 720,  540}},
+	{CaptureSizeType::Size, { 800,  600}},
+	{CaptureSizeType::Size, {1024,  768}},
+	{CaptureSizeType::Size, {1280,  960}},
+	{CaptureSizeType::Size, {1440, 1080}},
 };
 
 // 表示倍率のリスト
 const CMemoryCapture::CaptureSizeInfo CMemoryCapture::m_ZoomRateList[] =
 {
-	{CaptureSizeType_Rate, {1, 4}},
-	{CaptureSizeType_Rate, {1, 3}},
-	{CaptureSizeType_Rate, {1, 2}},
-	{CaptureSizeType_Rate, {2, 3}},
-	{CaptureSizeType_Rate, {3, 4}},
-	{CaptureSizeType_Rate, {1, 1}},
-	{CaptureSizeType_Rate, {3, 2}},
-	{CaptureSizeType_Rate, {2, 1}},
+	{CaptureSizeType::Rate, {1, 4}},
+	{CaptureSizeType::Rate, {1, 3}},
+	{CaptureSizeType::Rate, {1, 2}},
+	{CaptureSizeType::Rate, {2, 3}},
+	{CaptureSizeType::Rate, {3, 4}},
+	{CaptureSizeType::Rate, {1, 1}},
+	{CaptureSizeType::Rate, {3, 2}},
+	{CaptureSizeType::Rate, {2, 1}},
 };
 
 
 CMemoryCapture::CMemoryCapture()
 {
-	m_CaptureSize.Type = CaptureSizeType_Rate;
+	m_CaptureSize.Type = CaptureSizeType::Rate;
 	m_CaptureSize.Rate.Num = 1;
 	m_CaptureSize.Rate.Denom = 1;
 }
@@ -547,7 +547,7 @@ void CMemoryCapture::SaveSettings()
 	::WritePrivateProfileString(
 		TEXT("Settings"), TEXT("CaptureSizeType"),
 		IntString((int)m_CaptureSize.Type), szIniFileName);
-	if (m_CaptureSize.Type == CaptureSizeType_Size) {
+	if (m_CaptureSize.Type == CaptureSizeType::Size) {
 		::WritePrivateProfileString(
 			TEXT("Settings"), TEXT("CaptureWidth"),
 			IntString(m_CaptureSize.Size.Width), szIniFileName);
@@ -621,14 +621,14 @@ void CMemoryCapture::LoadSettings()
 	CaptureSizeInfo CaptureSize;
 	CaptureSize.Type = (CaptureSizeType)
 		::GetPrivateProfileInt(TEXT("Settings"), TEXT("CaptureSizeType"), -1, szIniFileName);
-	if (CaptureSize.Type == CaptureSizeType_Size) {
+	if (CaptureSize.Type == CaptureSizeType::Size) {
 		CaptureSize.Size.Width =
 			::GetPrivateProfileInt(TEXT("Settings"), TEXT("CaptureWidth"), 0, szIniFileName);
 		CaptureSize.Size.Height =
 			::GetPrivateProfileInt(TEXT("Settings"), TEXT("CaptureHeight"), 0, szIniFileName);
 		if (CaptureSize.Size.Width > 0 && CaptureSize.Size.Height > 0)
 			m_CaptureSize = CaptureSize;
-	} else if (CaptureSize.Type == CaptureSizeType_Rate) {
+	} else if (CaptureSize.Type == CaptureSizeType::Rate) {
 		CaptureSize.Rate.Num =
 			::GetPrivateProfileInt(TEXT("Settings"), TEXT("CaptureRateNum"), 0, szIniFileName);
 		CaptureSize.Rate.Denom =
@@ -665,7 +665,7 @@ void CMemoryCapture::LoadAppSettings()
 		WCHAR szFormat[8];
 		if (::GetPrivateProfileStringW(L"Settings", L"CaptureSaveFormat", L"", szFormat, _countof(szFormat), szIniPath) > 0) {
 			CImageCodec::FormatType Format = m_Codec.ParseFormatName(szFormat);
-			if (Format != CImageCodec::Format_Invalid)
+			if (Format != CImageCodec::FormatType::Invalid)
 				m_SaveFormat = Format;
 		}
 
@@ -991,7 +991,7 @@ void CMemoryCapture::GetCaptureImageSize(const CImage *pImage, int *pWidth, int 
 {
 	int Width, Height;
 
-	if (m_CaptureSize.Type == CaptureSizeType_Rate) {
+	if (m_CaptureSize.Type == CaptureSizeType::Rate) {
 		Width = ::MulDiv(pImage->GetDisplayWidth(), m_CaptureSize.Rate.Num, m_CaptureSize.Rate.Denom);
 		Height = ::MulDiv(pImage->GetDisplayHeight(), m_CaptureSize.Rate.Num, m_CaptureSize.Rate.Denom);
 	} else {
@@ -1310,7 +1310,7 @@ bool CMemoryCapture::SaveAs()
 		TEXT("BMP ファイル (*.bmp)\0*.bmp\0")
 		TEXT("JPEG ファイル (*.jpg;*.jpeg;*.jpe)\0*.jpg;*.jpeg;*.jpe\0")
 		TEXT("PNG ファイル (*.png)\0*.png\0");
-	ofn.nFilterIndex = (int)(m_LastSaveFormat + 1);
+	ofn.nFilterIndex = static_cast<int>(m_LastSaveFormat) + 1;
 	if (!m_LastSaveFileName.empty())
 		::lstrcpyn(szFileName, m_LastSaveFileName.c_str(), _countof(szFileName));
 	else
@@ -1668,7 +1668,7 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 	int CurSize = -1;
 	for (std::size_t i = 0; i < _countof(m_CaptureSizeList); i++) {
 		TCHAR szText[64];
-		if (m_CaptureSizeList[i].Type == CaptureSizeType_Size) {
+		if (m_CaptureSizeList[i].Type == CaptureSizeType::Size) {
 			::StringCchPrintf(
 				szText, _countof(szText), TEXT("%d x %d"),
 				m_CaptureSizeList[i].Size.Width, m_CaptureSizeList[i].Size.Height);

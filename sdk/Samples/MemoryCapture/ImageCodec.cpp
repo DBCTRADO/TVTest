@@ -74,16 +74,16 @@ bool CImageCodec::SaveImageToFile(
 	bmi.bmiHeader.biBitCount = 24;
 
 	SaveInfo.pszFileName = pszFileName;
-	SaveInfo.pszFormat = m_FormatStringList[Format];
+	SaveInfo.pszFormat = m_FormatStringList[static_cast<int>(Format)];
 	SaveInfo.pszOption = szOption;
 	SaveInfo.pbmi = &bmi;
 	SaveInfo.pBits = pBuffer;
 
 	switch (Format) {
-	case Format_JPEG:
+	case FormatType::JPEG:
 		::wsprintfW(szOption, L"%d", m_JpegQuality);
 		break;
-	case Format_PNG:
+	case FormatType::PNG:
 		::wsprintfW(szOption, L"%d", m_PngCompressionLevel);
 		break;
 	default:
@@ -106,16 +106,16 @@ CImageCodec::FormatType CImageCodec::ParseFormatName(LPCTSTR pszName) const
 			return (FormatType)i;
 	}
 
-	return Format_Invalid;
+	return FormatType::Invalid;
 }
 
 
 LPCWSTR CImageCodec::GetFormatExtensions(FormatType Format) const
 {
 	switch (Format) {
-	case Format_BMP:  return L".bmp";
-	case Format_JPEG: return L".jpg\0.jpeg\0.jpe";
-	case Format_PNG:  return L".png";
+	case FormatType::BMP:  return L".bmp";
+	case FormatType::JPEG: return L".jpg\0.jpeg\0.jpe";
+	case FormatType::PNG:  return L".png";
 	}
 	return nullptr;
 }

@@ -123,13 +123,12 @@ namespace TVTest
 		};
 		static constexpr size_t MAX_QUEUE_TEXT = 10000;
 
-		enum CharEncoding {
-			CHARENCODING_UTF16,
-			CHARENCODING_UTF8,
-			CHARENCODING_SHIFTJIS
+		enum class CharEncoding {
+			UTF16,
+			UTF8,
+			Shift_JIS,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
-		static constexpr CharEncoding CHARENCODING_FIRST = CHARENCODING_UTF16;
-		static constexpr CharEncoding CHARENCODING_LAST  = CHARENCODING_SHIFTJIS;
 
 		COLORREF m_BackColor = RGB(0, 0, 0);
 		COLORREF m_TextColor = RGB(255, 255, 255);
@@ -148,7 +147,7 @@ namespace TVTest
 		std::vector<LanguageInfo> m_LanguageList;
 		MutexLock m_Lock;
 		CCaptionDRCSMap m_DRCSMap;
-		CharEncoding m_SaveCharEncoding = CHARENCODING_UTF16;
+		CharEncoding m_SaveCharEncoding = CharEncoding::UTF16;
 
 	// LibISDB::CaptionFilter::Handler
 		virtual void OnLanguageUpdate(LibISDB::CaptionFilter *pFilter, LibISDB::CaptionParser *pParser) override;

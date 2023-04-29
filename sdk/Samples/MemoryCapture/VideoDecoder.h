@@ -10,14 +10,14 @@ class CVideoDecoder
 {
 public:
 	// インターレース解除方法(TVTVIDEODEC_DeinterlaceMethod と同じ)
-	enum DeinterlaceMethod
+	enum class DeinterlaceMethod
 	{
-		Deinterlace_Weave,
-		Deinterlace_Blend,
-		Deinterlace_Bob,
-		Deinterlace_ELA,
-		Deinterlace_Yadif,
-		Deinterlace_Yadif_Bob
+		Weave,
+		Blend,
+		Bob,
+		ELA,
+		Yadif,
+		Yadif_Bob,
 	};
 
 	// フレームのフラグ(TVTVIDEODEC_FRAME_* と同じ)
@@ -64,7 +64,7 @@ private:
 	ITVTestVideoFrameDecoder *m_pDecoder = nullptr;
 	CFrameCapture *m_pFrameCapture = nullptr;
 	decltype(TVTestVideoDecoder_CreateInstance) *m_pCreateInstance = nullptr;
-	DeinterlaceMethod m_Deinterlace = Deinterlace_Blend;
+	DeinterlaceMethod m_Deinterlace = DeinterlaceMethod::Blend;
 	LONG m_RefCount = 1;
 
 	STDMETHOD_(ULONG, AddRef)() override;

@@ -8,12 +8,12 @@
 class CImageCodec
 {
 public:
-	enum FormatType
+	enum class FormatType
 	{
-		Format_Invalid = -1,
-		Format_BMP,
-		Format_JPEG,
-		Format_PNG
+		Invalid = -1,
+		BMP,
+		JPEG,
+		PNG,
 	};
 
 	~CImageCodec();

@@ -9,13 +9,13 @@ class CImage
 {
 public:
 	// 再サンプリングの種類
-	enum ResampleType
+	enum class ResampleType
 	{
-		Resample_NearestNeighbor, // 最近傍法
-		Resample_Bilinear,        // 線形補間法
-		Resample_Averaging,       // 平均画素法
-		Resample_Lanczos2,        // Lanczos2
-		Resample_Lanczos3         // Lanczos3
+		NearestNeighbor, // 最近傍法
+		Bilinear,        // 線形補間法
+		Averaging,       // 平均画素法
+		Lanczos2,        // Lanczos2
+		Lanczos3,        // Lanczos3
 	};
 
 	~CImage();
