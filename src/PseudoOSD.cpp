@@ -743,12 +743,8 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		}
 		return 0;
 
-	case WM_SETCURSOR:
-		{
-			CPseudoOSD *pThis = GetThis(hwnd);
-
-			return ::SendMessage(pThis->m_hwndParent, uMsg, wParam, lParam);
-		}
+	case WM_NCHITTEST:
+		return HTTRANSPARENT;
 
 	case WM_DESTROY:
 		{

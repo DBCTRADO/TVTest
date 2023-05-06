@@ -2308,9 +2308,8 @@ void CMainWindow::OnMouseMove(int x, int y)
 
 bool CMainWindow::OnSetCursor(HWND hwndCursor, int HitTestCode, int MouseMessage)
 {
-	if (HitTestCode == HTCLIENT) {
-		if (hwndCursor == m_hwnd
-				|| hwndCursor == m_Display.GetVideoContainer().GetHandle()
+	if (HitTestCode == HTCLIENT && MouseMessage != 0) {
+		if (hwndCursor == m_Display.GetVideoContainer().GetHandle()
 				|| hwndCursor == m_Display.GetViewWindow().GetHandle()
 				|| hwndCursor == m_NotificationBar.GetHandle()
 				|| CPseudoOSD::IsPseudoOSD(hwndCursor)) {
@@ -3958,9 +3957,17 @@ void CMainWindow::ShowCursor(bool fShow)
 	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer != nullptr)
 		pViewer->HideCursor(!fShow);
-	m_Display.GetViewWindow().ShowCursor(fShow);
+	m_Display.GetViewWindow().SetShowCursor(fShow);
 	m_fShowCursor = fShow;
-	::SetCursor(fShow ? ::LoadCursor(nullptr, IDC_ARROW) : nullptr);
+
+	POINT pt;
+	::GetCursorPos(&pt);
+	for (HWND hwnd = ::WindowFromPoint(pt); hwnd != nullptr; hwnd = ::GetAncestor(hwnd, GA_PARENT)) {
+		if (hwnd == m_Display.GetViewWindow().GetHandle()) {
+			SendMessage(WM_SETCURSOR, reinterpret_cast<WPARAM>(hwnd), MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+			break;
+		}
+	}
 }
 
 
@@ -5554,7 +5561,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 		return 0;
 
 	case WM_SETCURSOR:
-		if (LOWORD(lParam) == HTCLIENT) {
+		if (LOWORD(lParam) == HTCLIENT && HIWORD(lParam) != 0) {
 			const HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 
 			if (hwndCursor == hwnd
@@ -5813,9 +5820,17 @@ void CMainWindow::CFullscreen::ShowCursor(bool fShow)
 	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer != nullptr)
 		pViewer->HideCursor(!fShow);
-	m_ViewWindow.ShowCursor(fShow);
+	m_ViewWindow.SetShowCursor(fShow);
 	m_fShowCursor = fShow;
-	::SetCursor(fShow ? ::LoadCursor(nullptr, IDC_ARROW) : nullptr);
+
+	POINT pt;
+	::GetCursorPos(&pt);
+	for (HWND hwnd = ::WindowFromPoint(pt); hwnd != nullptr; hwnd = ::GetAncestor(hwnd, GA_PARENT)) {
+		if (hwnd == m_ViewWindow.GetHandle()) {
+			SendMessage(WM_SETCURSOR, reinterpret_cast<WPARAM>(hwnd), MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
+			break;
+		}
+	}
 }
 
 

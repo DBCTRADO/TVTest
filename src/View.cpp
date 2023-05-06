@@ -313,22 +313,9 @@ void CViewWindow::SetMargin(const Style::Margins &Margin)
 }
 
 
-void CViewWindow::ShowCursor(bool fShow)
+void CViewWindow::SetShowCursor(bool fShow)
 {
-	if (m_fShowCursor != fShow) {
-		m_fShowCursor = fShow;
-		if (m_hwnd != nullptr) {
-			POINT pt;
-
-			::GetCursorPos(&pt);
-			::ScreenToClient(m_hwnd, &pt);
-			const HWND hwnd = ::ChildWindowFromPointEx(m_hwnd, pt, CWP_SKIPINVISIBLE);
-			if (hwnd == m_hwnd
-					|| (m_pVideoContainer != nullptr
-						&& hwnd == m_pVideoContainer->GetHandle()))
-				::SetCursor(fShow ?::LoadCursor(nullptr, IDC_ARROW) : nullptr);
-		}
-	}
+	m_fShowCursor = fShow;
 }
 
 
@@ -437,7 +424,7 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_SETCURSOR:
-		if (LOWORD(lParam) == HTCLIENT) {
+		if (LOWORD(lParam) == HTCLIENT && HIWORD(lParam) != 0) {
 			const HWND hwndCursor = reinterpret_cast<HWND>(wParam);
 
 			if (hwndCursor == hwnd

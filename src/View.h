@@ -227,7 +227,7 @@ namespace TVTest
 		bool SetLogo(HBITMAP hbm);
 		void SetBorder(const Theme::BorderStyle &Style);
 		void SetMargin(const Style::Margins &Margin);
-		void ShowCursor(bool fShow);
+		void SetShowCursor(bool fShow);
 		bool CalcClientRect(RECT *pRect) const;
 		bool CalcWindowRect(RECT *pRect) const;
 

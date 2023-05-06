@@ -52,7 +52,7 @@ bool CNotificationBar::Initialize(HINSTANCE hinst)
 		wc.cbWndExtra = 0;
 		wc.hInstance = hinst;
 		wc.hIcon = nullptr;
-		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc.hCursor = nullptr;
 		wc.hbrBackground = nullptr;
 		wc.lpszMenuName = nullptr;
 		wc.lpszClassName = NOTIFICATION_BAR_WINDOW_CLASS;
@@ -357,6 +357,9 @@ LRESULT CNotificationBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 			::MapWindowPoints(hwnd, hwndParent, &pt, 1);
 			return ::SendMessage(hwndParent, uMsg, wParam, MAKELPARAM(pt.x, pt.y));
 		}
+
+	case WM_NCHITTEST:
+		return HTTRANSPARENT;
 	}
 
 	return CCustomWindow::OnMessage(hwnd, uMsg, wParam, lParam);
