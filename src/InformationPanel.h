@@ -113,12 +113,19 @@ namespace TVTest
 			void Draw(HDC hdc, const RECT &Rect) override;
 
 		private:
-			int m_OriginalVideoWidth;
-			int m_OriginalVideoHeight;
-			int m_DisplayVideoWidth;
-			int m_DisplayVideoHeight;
-			int m_AspectX;
-			int m_AspectY;
+			struct VideoInfo
+			{
+				int OriginalWidth;
+				int OriginalHeight;
+				int DisplayWidth;
+				int DisplayHeight;
+				int AspectX;
+				int AspectY;
+
+				bool operator==(const VideoInfo &rhs) const noexcept = default;
+			};
+
+			VideoInfo m_VideoInfo;
 		};
 
 		class CVideoDecoderItem

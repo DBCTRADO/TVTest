@@ -1032,12 +1032,7 @@ CInformationPanel::CVideoInfoItem::CVideoInfoItem(CInformationPanel *pPanel, boo
 
 void CInformationPanel::CVideoInfoItem::Reset()
 {
-	m_OriginalVideoWidth = 0;
-	m_OriginalVideoHeight = 0;
-	m_DisplayVideoWidth = 0;
-	m_DisplayVideoHeight = 0;
-	m_AspectX = 0;
-	m_AspectY = 0;
+	m_VideoInfo = {};
 }
 
 
@@ -1047,28 +1042,18 @@ bool CInformationPanel::CVideoInfoItem::Update()
 	const LibISDB::ViewerFilter *pViewer =
 		GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 
-	const int OriginalVideoWidth = CoreEngine.GetOriginalVideoWidth();
-	const int OriginalVideoHeight = CoreEngine.GetOriginalVideoHeight();
-	const int DisplayVideoWidth = CoreEngine.GetDisplayVideoWidth();
-	const int DisplayVideoHeight = CoreEngine.GetDisplayVideoHeight();
-	int AspectX, AspectY;
-	if (pViewer == nullptr || !pViewer->GetEffectiveAspectRatio(&AspectX, &AspectY))
-		AspectX = AspectY = 0;
+	VideoInfo NewInfo;
+	NewInfo.OriginalWidth = CoreEngine.GetOriginalVideoWidth();
+	NewInfo.OriginalHeight = CoreEngine.GetOriginalVideoHeight();
+	NewInfo.DisplayWidth = CoreEngine.GetDisplayVideoWidth();
+	NewInfo.DisplayHeight = CoreEngine.GetDisplayVideoHeight();
+	if (pViewer == nullptr || !pViewer->GetEffectiveAspectRatio(&NewInfo.AspectX, &NewInfo.AspectY))
+		NewInfo.AspectX = NewInfo.AspectY = 0;
 
-	if (OriginalVideoWidth == m_OriginalVideoWidth
-			&& OriginalVideoHeight == m_OriginalVideoHeight
-			&& DisplayVideoWidth == m_DisplayVideoWidth
-			&& DisplayVideoHeight == m_DisplayVideoHeight
-			&& AspectX == m_AspectX
-			&& AspectY == m_AspectY)
+	if (m_VideoInfo == NewInfo)
 		return false;
 
-	m_OriginalVideoWidth = OriginalVideoWidth;
-	m_OriginalVideoHeight = OriginalVideoHeight;
-	m_DisplayVideoWidth = DisplayVideoWidth;
-	m_DisplayVideoHeight = DisplayVideoHeight;
-	m_AspectX = AspectX;
-	m_AspectY = AspectY;
+	m_VideoInfo = NewInfo;
 
 	return true;
 }
@@ -1078,12 +1063,22 @@ void CInformationPanel::CVideoInfoItem::Draw(HDC hdc, const RECT &Rect)
 {
 	TCHAR szText[256];
 
-	StringFormat(
-		szText,
-		TEXT("{} x {} [{} x {} ({}:{})]"),
-		m_OriginalVideoWidth, m_OriginalVideoHeight,
-		m_DisplayVideoWidth, m_DisplayVideoHeight,
-		m_AspectX, m_AspectY);
+	if (m_VideoInfo.OriginalWidth == m_VideoInfo.DisplayWidth
+			&& m_VideoInfo.OriginalHeight == m_VideoInfo.DisplayHeight) {
+		StringFormat(
+			szText,
+			TEXT("{} x {} ({}:{})"),
+			m_VideoInfo.DisplayWidth, m_VideoInfo.DisplayHeight,
+			m_VideoInfo.AspectX, m_VideoInfo.AspectY);
+	} else {
+		StringFormat(
+			szText,
+			TEXT("{} x {} [{} x {} ({}:{})]"),
+			m_VideoInfo.OriginalWidth, m_VideoInfo.OriginalHeight,
+			m_VideoInfo.DisplayWidth, m_VideoInfo.DisplayHeight,
+			m_VideoInfo.AspectX, m_VideoInfo.AspectY);
+	}
+
 	DrawItem(hdc, Rect, szText);
 }
 
