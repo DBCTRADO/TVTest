@@ -146,9 +146,16 @@ namespace TVTest
 	private:
 		std::vector<CAppEventHandler*> m_HandlerList;
 
-		template<typename T> void EnumHandlers(T Pred) {
+		template<typename T> void EnumHandlers(T Pred)
+		{
 			for (auto Handler : m_HandlerList)
 				Pred(Handler);
+		}
+
+		template<typename TMember, typename... TArgs> void CallHandlers(TMember Member, TArgs... Args) const
+		{
+			for (auto Handler : m_HandlerList)
+				(Handler->*Member)(Args...);
 		}
 	};
 
