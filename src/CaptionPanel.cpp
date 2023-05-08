@@ -645,7 +645,7 @@ void CCaptionPanel::OnCaption(
 					Buff.replace(0, 1, TEXT("\r\n"));
 					i++;
 				} else {
-					Buff.erase(i);
+					Buff.erase(i, 1);
 				}
 			}
 		}
