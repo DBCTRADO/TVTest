@@ -170,7 +170,8 @@ namespace TVTest
 
 			CBitmap &operator=(const CBitmap &Src);
 
-			bool Create(int Width, int Height, int BitCount);
+			bool Create(int Width, int Height, int BitCount, void **ppBits = nullptr);
+			bool Create(const BITMAPINFO *pbmi, size_t Size, void **ppBits = nullptr);
 			bool Load(HINSTANCE hinst, LPCTSTR pszName, UINT Flags = LR_CREATEDIBSECTION);
 			bool Load(HINSTANCE hinst, int ID, UINT Flags = LR_CREATEDIBSECTION) {
 				return Load(hinst, MAKEINTRESOURCE(ID), Flags);

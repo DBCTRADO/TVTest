@@ -24,6 +24,7 @@
 #include "Graphics.h"
 #include "Util.h"
 #include "DPIUtil.h"
+#include "Image.h"
 #include "Common/DebugDef.h"
 
 
@@ -1023,11 +1024,39 @@ CBitmap &CBitmap::operator=(const CBitmap &Src)
 	return *this;
 }
 
-bool CBitmap::Create(int Width, int Height, int BitCount)
+bool CBitmap::Create(int Width, int Height, int BitCount, void **ppBits)
 {
 	Destroy();
-	m_hbm = CreateDIB(Width, Height, BitCount);
+	m_hbm = CreateDIB(Width, Height, BitCount, ppBits);
 	return m_hbm != nullptr;
+}
+
+bool CBitmap::Create(const BITMAPINFO *pbmi, size_t Size, void **ppBits)
+{
+	Destroy();
+
+	if (pbmi == nullptr || Size < sizeof(BITMAPINFOHEADER))
+		return false;
+
+	const size_t InfoSize = CalcDIBInfoSize(&pbmi->bmiHeader);
+	if (InfoSize > Size)
+		return false;
+
+	void *pBits;
+	m_hbm = ::CreateDIBSection(nullptr, pbmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+	if (m_hbm == nullptr)
+		return false;
+
+	if (Size > InfoSize) {
+		const size_t BitsSize = CalcDIBBitsSize(&pbmi->bmiHeader);
+		if (BitsSize <= Size - InfoSize)
+			std::memcpy(pBits, reinterpret_cast<const BYTE*>(pbmi) + InfoSize, BitsSize);
+	}
+
+	if (ppBits != nullptr)
+		*ppBits = pBits;
+
+	return true;
 }
 
 bool CBitmap::Load(HINSTANCE hinst, LPCTSTR pszName, UINT Flags)
