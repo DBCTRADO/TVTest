@@ -423,6 +423,199 @@ void CStreamInfoPage::SetService()
 		}
 	}
 
+	// ブロードキャスタ情報
+	LibISDB::AnalyzerFilter::BITNetworkList BITList;
+	if (pAnalyzer->GetBITNetworkList(&BITList) && !BITList.empty()) {
+		tvis.hParent = TVI_ROOT;
+		tvis.hInsertAfter = TVI_LAST;
+		tvis.item.mask = TVIF_STATE | TVIF_TEXT;
+		tvis.item.state = 0;
+		tvis.item.stateMask = ~0U;
+		tvis.item.pszText = const_cast<LPTSTR>(TEXT("ブロードキャスタ (BIT)"));
+		hItem = TreeView_InsertItem(hwndTree, &tvis);
+		if (hItem != nullptr) {
+			for (size_t i = 0; i < BITList.size(); i++) {
+				const LibISDB::AnalyzerFilter::BITNetworkInfo &NetworkInfo = BITList[i];
+
+				StringFormat(
+					szText,
+					TEXT("ネットワーク{0} : ONID {1:#04x} ({1})"),
+					i + 1,
+					NetworkInfo.OriginalNetworkID);
+				tvis.hParent = hItem;
+				tvis.item.pszText = szText;
+				HTREEITEM hNetworkItem = TreeView_InsertItem(hwndTree, &tvis);
+
+				tvis.hParent = hNetworkItem;
+				tvis.item.pszText = const_cast<LPTSTR>(TEXT("SI伝送パラメータ"));
+				HTREEITEM hSIParameterRoot = TreeView_InsertItem(hwndTree, &tvis);
+
+				tvis.item.pszText = szText;
+
+				for (size_t j = 0; j < NetworkInfo.SIParameterList.size(); j++) {
+					const LibISDB::AnalyzerFilter::SIParameterInfo &SIParameter = NetworkInfo.SIParameterList[j];
+					StringFormat(
+						szText,
+						TEXT("バージョン {} / 更新日 {}/{:02}/{:02}"),
+						SIParameter.ParameterVersion,
+						SIParameter.UpdateTime.Year, SIParameter.UpdateTime.Month, SIParameter.UpdateTime.Day);
+					tvis.hParent = hSIParameterRoot;
+					HTREEITEM hSIParameterItem = TreeView_InsertItem(hwndTree, &tvis);
+
+					for (size_t k = 0; k < SIParameter.TableList.size(); k++) {
+						const LibISDB::SIParameterDescriptor::TableInfo &Table = SIParameter.TableList[k];
+
+						tvis.hParent = hSIParameterItem;
+
+						if (Table.TableID == LibISDB::SIParameterDescriptor::TABLE_ID_EIT_SCHEDULE_ACTUAL
+								|| Table.TableID == LibISDB::SIParameterDescriptor::TABLE_ID_EIT_SCHEDULE_EXTENDED
+								|| Table.TableID == LibISDB::SIParameterDescriptor::TABLE_ID_EIT_SCHEDULE_OTHER) {
+							switch(Table.TableID) {
+							case LibISDB::SIParameterDescriptor::TABLE_ID_EIT_SCHEDULE_ACTUAL:
+								StringCopy(szText, TEXT("EIT[schedule actual]"));
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_EIT_SCHEDULE_EXTENDED:
+								StringCopy(szText, TEXT("EIT[schedule extended]"));
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_EIT_SCHEDULE_OTHER:
+								StringCopy(szText, TEXT("EIT[schedule other]"));
+								break;
+							}
+							HTREEITEM hEITItem = TreeView_InsertItem(hwndTree, &tvis);
+							for (int MediaIndex = 0; MediaIndex < Table.EIT_Schedule.MediaTypeCount; MediaIndex++) {
+								StringFormat(
+									szText, TEXT("メディアタイプ {}({}) / 運用パターン {} / EIT[other]フラグ {} / 伝送範囲 {}日 / 周期 {}秒"),
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].MediaType,
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].MediaType == 1 ?
+										TEXT("TV") :
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].MediaType == 2 ?
+										TEXT("Audio") :
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].MediaType == 3 ?
+										TEXT("Data") :
+										TEXT("?"),
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].Pattern,
+									NetworkInfo.BroadcasterList.size() == 1 && NetworkInfo.BroadcasterList[0].BroadcasterID == 0xFF ?
+										TEXT("(n/a)") : // 地デジでは無効
+										Table.EIT_Schedule.MediaTypeList[MediaIndex].EITOtherFlag ? TEXT("1") : TEXT("0"),
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].ScheduleRange,
+									Table.EIT_Schedule.MediaTypeList[MediaIndex].BaseCycle);
+								tvis.hParent = hEITItem;
+								tvis.hParent = TreeView_InsertItem(hwndTree, &tvis);
+								for (int CycleIndex = 0; CycleIndex < Table.EIT_Schedule.MediaTypeList[MediaIndex].CycleGroupCount; CycleIndex++) {
+									StringFormat(
+										szText,
+										TEXT("セグメント数 {} / 周期 {}秒"),
+										Table.EIT_Schedule.MediaTypeList[MediaIndex].CycleGroup[CycleIndex].NumOfSegment,
+										Table.EIT_Schedule.MediaTypeList[MediaIndex].CycleGroup[CycleIndex].Cycle);
+									TreeView_InsertItem(hwndTree, &tvis);
+								}
+							}
+						} else {
+							switch (Table.TableID) {
+							case LibISDB::SIParameterDescriptor::TABLE_ID_NIT:
+								StringFormat(szText, TEXT("NIT : 周期 {}秒"), Table.NIT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_SDT_ACTUAL:
+								StringFormat(szText, TEXT("SDT[actual] : 周期 {}秒"), Table.SDT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_SDT_OTHER:
+								StringFormat(szText, TEXT("SDT[other] : 周期 {}秒"), Table.SDT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_EIT_PF_ACTUAL:
+								if (Table.HMLEIT.Valid) {
+									StringFormat(
+										szText,
+										TEXT("EIT[p/f actual] : H-EIT[p/f]周期 {}秒 / M-EIT周期 {}秒 / L-EIT周期 {}秒 / M-EIT番組数 {} / L-EIT番組数 {}"),
+										Table.HMLEIT.HEITTableCycle,
+										Table.HMLEIT.MEITTableCycle,
+										Table.HMLEIT.LEITTableCycle,
+										Table.HMLEIT.NumOfMEITEvent,
+										Table.HMLEIT.NumOfLEITEvent);
+								} else {
+									StringFormat(szText, TEXT("EIT[p/f actual] : 周期 {}秒"), Table.EIT_PF.TableCycle);
+								}
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_EIT_PF_OTHER:
+								StringFormat(szText, TEXT("EIT[p/f other] : 周期 {}秒"), Table.EIT_PF.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_SDTT:
+								StringFormat(szText, TEXT("SDTT : 周期 {}秒"), Table.SDTT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_BIT:
+								StringFormat(szText, TEXT("BIT : 周期 {}秒"), Table.BIT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_NBIT_MSG:
+								StringFormat(szText, TEXT("NBIT[msg] : 周期 {}秒"), Table.NBIT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_NBIT_REF:
+								StringFormat(szText, TEXT("NBIT[ref] : 周期 {}秒"), Table.NBIT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_LDT:
+								StringFormat(szText, TEXT("LDT : 周期 {}秒"), Table.LDT.TableCycle);
+								break;
+							case LibISDB::SIParameterDescriptor::TABLE_ID_CDT:
+								StringFormat(szText, TEXT("CDT : 周期 {}秒"), Table.CDT.TableCycle);
+								break;
+							default:
+								StringFormat(szText, TEXT("Unknown table_id {}"), Table.TableID);
+								break;
+							}
+
+							TreeView_InsertItem(hwndTree, &tvis);
+						}
+					}
+				}
+
+				tvis.hParent = hNetworkItem;
+				tvis.item.pszText = const_cast<LPTSTR>(TEXT("ブロードキャスタ"));
+				HTREEITEM hBroadcasterRoot = TreeView_InsertItem(hwndTree, &tvis);
+
+				tvis.item.pszText = szText;
+
+				for (size_t j = 0; j < NetworkInfo.BroadcasterList.size(); j++) {
+					const LibISDB::AnalyzerFilter::BITBroadcasterInfo &Broadcaster = NetworkInfo.BroadcasterList[j];
+					tvis.hParent = hBroadcasterRoot;
+
+					if (Broadcaster.BroadcasterType == LibISDB::ExtendedBroadcasterDescriptor::BROADCASTER_TYPE_TERRESTRIAL
+							|| Broadcaster.BroadcasterType == LibISDB::ExtendedBroadcasterDescriptor::BROADCASTER_TYPE_TERRESTRIAL_SOUND) {
+						String AffiliationIDs;
+						for (int k = 0; k < Broadcaster.TerrestrialBroadcasterInfo.NumberOfAffiliationIDLoop; k++) {
+							if (!AffiliationIDs.empty())
+								AffiliationIDs += TEXT(", ");
+							TCHAR szID[4];
+							StringFormat(szID, TEXT("{}"), Broadcaster.TerrestrialBroadcasterInfo.AffiliationIDList[k]);
+							AffiliationIDs += szID;
+						}
+						StringFormat(
+							szText,
+							TEXT("地上ブロードキャスタID {} / ブロードキャスタ種別 {} / 系列ID [{}]"),
+							Broadcaster.TerrestrialBroadcasterInfo.TerrestrialBroadcasterID,
+							Broadcaster.BroadcasterType,
+							AffiliationIDs);
+						tvis.hParent = TreeView_InsertItem(hwndTree, &tvis);
+
+						for (int k = 0; k < Broadcaster.TerrestrialBroadcasterInfo.NumberOfBroadcasterIDLoop; k++) {
+							StringFormat(
+								szText,
+								TEXT("関連BS/CSブロードキャスタ{0} : ONID {1:#04x} ({1}) / ブロードキャスタID {2}"),
+								k + 1,
+								Broadcaster.TerrestrialBroadcasterInfo.BroadcasterIDList[k].OriginalNetworkID,
+								Broadcaster.TerrestrialBroadcasterInfo.BroadcasterIDList[k].BroadcasterID);
+							TreeView_InsertItem(hwndTree, &tvis);
+						}
+					} else {
+						StringFormat(
+							szText,
+							TEXT("ブロードキャスタID {} / {}"),
+							Broadcaster.BroadcasterID,
+							Broadcaster.BroadcasterName);
+						TreeView_InsertItem(hwndTree, &tvis);
+					}
+				}
+			}
+		}
+	}
+
 	// 地上/衛星分配システム
 	LibISDB::AnalyzerFilter::TerrestrialDeliverySystemList TerrestrialList;
 	if (pAnalyzer->GetTerrestrialDeliverySystemList(&TerrestrialList)) {
