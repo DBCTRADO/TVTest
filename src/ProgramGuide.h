@@ -61,6 +61,7 @@ namespace TVTest
 			void Clear();
 			size_t Length() const { return m_LayoutList.size(); }
 			void Add(CEventLayout *pLayout);
+			bool Insert(size_t Index, CEventLayout *pLayout);
 			CEventLayout *operator[](size_t Index);
 			const CEventLayout *operator[](size_t Index) const;
 		};
@@ -69,6 +70,7 @@ namespace TVTest
 		{
 			CTunerChannelInfo m_ChannelInfo;
 			LibISDB::EPGDatabase::ServiceInfo m_ServiceInfo;
+			size_t m_Index;
 			HBITMAP m_hbmLogo = nullptr;
 			DrawUtil::CBitmap m_StretchedLogo;
 			std::vector<std::unique_ptr<LibISDB::EventInfo>> m_EventList;
@@ -76,7 +78,7 @@ namespace TVTest
 			EventIDMap m_EventIDMap;
 
 		public:
-			CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver);
+			CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver, size_t Index = 0);
 
 			CServiceInfo(const CServiceInfo &) = delete;
 			CServiceInfo &operator=(const CServiceInfo &) = delete;
@@ -87,6 +89,7 @@ namespace TVTest
 			WORD GetTSID() const { return m_ServiceInfo.TransportStreamID; }
 			WORD GetServiceID() const { return m_ServiceInfo.ServiceID; }
 			LPCTSTR GetServiceName() const { return m_ChannelInfo.GetName(); }
+			size_t GetIndex() const { return m_Index; }
 			void SetLogo(HBITMAP hbm) { m_hbmLogo = hbm; }
 			HBITMAP GetLogo() const { return m_hbmLogo; }
 			HBITMAP GetStretchedLogo(int Width, int Height);
@@ -111,12 +114,13 @@ namespace TVTest
 			size_t NumServices() const { return m_ServiceList.size(); }
 			CServiceInfo *GetItem(size_t Index);
 			const CServiceInfo *GetItem(size_t Index) const;
-			CServiceInfo *GetItemByIDs(WORD TransportStreamID, WORD ServiceID);
-			const CServiceInfo *GetItemByIDs(WORD TransportStreamID, WORD ServiceID) const;
-			int FindItemByIDs(WORD TransportStreamID, WORD ServiceID) const;
-			LibISDB::EventInfo *GetEventByIDs(WORD TransportStreamID, WORD ServiceID, WORD EventID);
-			const LibISDB::EventInfo *GetEventByIDs(WORD TransportStreamID, WORD ServiceID, WORD EventID) const;
+			CServiceInfo *GetItemByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID);
+			const CServiceInfo *GetItemByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const;
+			int FindItemByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const;
+			LibISDB::EventInfo *GetEventByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID, WORD EventID);
+			const LibISDB::EventInfo *GetEventByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID, WORD EventID) const;
 			void Add(CServiceInfo *pInfo);
+			bool Insert(size_t Index, CServiceInfo *pInfo);
 			void Clear();
 		};
 
@@ -423,6 +427,8 @@ namespace TVTest
 		void SetKeepTimePos(bool fKeep);
 		bool GetShowFeaturedMark() const { return m_fShowFeaturedMark; }
 		void SetShowFeaturedMark(bool fShow);
+		bool GetAutoRefresh() const { return m_fAutoRefresh; }
+		void SetAutoRefresh(bool fAuto);
 		const Style::Margins &GetToolbarItemPadding() const;
 
 		void GetInfoPopupSize(int *pWidth, int *pHeight) { m_EventInfoPopup.GetSize(pWidth, pHeight); }
@@ -484,7 +490,25 @@ namespace TVTest
 			Theme::BackgroundStyle FavoriteButtonStyle;
 		};
 
+		class CEPGDatabaseEventListener
+			: public LibISDB::EPGDatabase::EventListener
+		{
+		public:
+			CEPGDatabaseEventListener(CProgramGuide *pProgramGuide);
+
+		private:
+			void OnServiceCompleted(
+				LibISDB::EPGDatabase *pEPGDatabase,
+				uint16_t NetworkID, uint16_t TransportStreamID, uint16_t ServiceID,
+				bool IsExtended) override;
+
+			CProgramGuide *m_pProgramGuide;
+		};
+
+		static constexpr UINT MESSAGE_REFRESHSERVICE = WM_USER;
+
 		LibISDB::EPGDatabase *m_pEPGDatabase = nullptr;
+		CEPGDatabaseEventListener m_EPGDatabaseEventListener{this};
 		ProgramGuide::CServiceList m_ServiceList;
 		ProgramGuide::CEventLayoutList m_EventLayoutList;
 		ProgramGuideStyle m_Style;
@@ -566,8 +590,9 @@ namespace TVTest
 		struct EventSelectInfo
 		{
 			bool fSelected = false;
-			int ListIndex;
-			int EventIndex;
+			int ListIndex = -1;
+			int EventIndex = -1;
+			WORD EventID = 0;
 		};
 		EventSelectInfo m_CurEventItem;
 
@@ -581,6 +606,7 @@ namespace TVTest
 		int m_WheelScrollLines = 0;
 		FilterFlag m_Filter = FilterFlag::None;
 
+		bool m_fAutoRefresh = true;
 		bool m_fEpgUpdating = false;
 		struct {
 			int Pos;
@@ -628,6 +654,10 @@ namespace TVTest
 		bool UpdateList();
 		bool UpdateService(ProgramGuide::CServiceInfo *pService);
 		void UpdateServiceList();
+		bool RefreshService(uint16_t NetworkID, uint16_t TransportStreamID, uint16_t ServiceID);
+		ProgramGuide::CServiceInfo * MakeServiceInfo(
+			size_t GroupIndex, size_t ChannelIndex,
+			ProgramGuide::CServiceInfo *pService = nullptr);
 		void CalcLayout();
 		enum class EventItemStatus : unsigned int {
 			None        = 0x0000U,
@@ -665,6 +695,7 @@ namespace TVTest
 		void GetProgramGuideRect(RECT *pRect) const;
 		void GetProgramGuideSize(SIZE *pSize) const;
 		void GetPageSize(SIZE *pSize) const;
+		void GetColumnRect(int Index, RECT *pRect) const;
 		void Scroll(int XOffset, int YOffset);
 		void SetScrollPos(const POINT &Pos);
 		void SetScrollBar();

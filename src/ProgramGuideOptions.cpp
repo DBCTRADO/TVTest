@@ -158,6 +158,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("ExcludeNoEventServices"), &fExcludeNoEvent))
 			m_pProgramGuide->SetExcludeNoEventServices(fExcludeNoEvent);
 
+		bool fAutoRefresh;
+		if (Settings.Read(TEXT("AutoRefresh"), &fAutoRefresh))
+			m_pProgramGuide->SetAutoRefresh(fAutoRefresh);
+
 		int Width, Height;
 		m_pProgramGuide->GetInfoPopupSize(&Width, &Height);
 		Settings.Read(TEXT("InfoPopupWidth"), &Width);
@@ -353,6 +357,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("KeepTimePos"), m_pProgramGuide->GetKeepTimePos());
 		Settings.Write(TEXT("ShowFeaturedMark"), m_pProgramGuide->GetShowFeaturedMark());
 		Settings.Write(TEXT("ExcludeNoEventServices"), m_pProgramGuide->GetExcludeNoEventServices());
+		Settings.Write(TEXT("AutoRefresh"), m_pProgramGuide->GetAutoRefresh());
 
 		int Width, Height;
 		m_pProgramGuide->GetInfoPopupSize(&Width, &Height);

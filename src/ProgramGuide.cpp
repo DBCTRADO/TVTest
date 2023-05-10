@@ -290,6 +290,7 @@ public:
 	bool InsertItem(size_t Index, CEventItem *pItem);
 	CEventItem *GetItem(size_t Index);
 	const CEventItem *GetItem(size_t Index) const;
+	int FindItemByEventID(WORD EventID) const;
 	void InsertNullItems(const LibISDB::DateTime &FirstTime, const LibISDB::DateTime &LastTime);
 };
 
@@ -328,6 +329,17 @@ const CEventItem *CEventLayout::GetItem(size_t Index) const
 	if (Index >= m_EventList.size())
 		return nullptr;
 	return m_EventList[Index].get();
+}
+
+
+int CEventLayout::FindItemByEventID(WORD EventID) const
+{
+	for (size_t i = 0; i < m_EventList.size(); i++) {
+		const CEventItem *pItem = m_EventList[i].get();
+		if (pItem->GetEventInfo() != nullptr && pItem->GetEventInfo()->EventID == EventID)
+			return static_cast<int>(i);
+	}
+	return -1;
 }
 
 
@@ -399,6 +411,15 @@ void CEventLayoutList::Add(CEventLayout *pLayout)
 }
 
 
+bool CEventLayoutList::Insert(size_t Index, CEventLayout *pLayout)
+{
+	if (Index > m_LayoutList.size())
+		return false;
+	m_LayoutList.emplace(m_LayoutList.begin() + Index, pLayout);
+	return true;
+}
+
+
 CEventLayout *CEventLayoutList::operator[](size_t Index)
 {
 	if (Index >= m_LayoutList.size())
@@ -423,12 +444,13 @@ void CEventLayoutList::EventLayoutDeleter::operator()(CEventLayout *p) const
 
 
 
-CServiceInfo::CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver)
+CServiceInfo::CServiceInfo(const CChannelInfo &ChannelInfo, LPCTSTR pszBonDriver, size_t Index)
 	: m_ChannelInfo(ChannelInfo, pszBonDriver)
 	, m_ServiceInfo(
 		ChannelInfo.GetNetworkID(),
 		ChannelInfo.GetTransportStreamID(),
 		ChannelInfo.GetServiceID())
+	, m_Index(Index)
 {
 }
 
@@ -529,6 +551,7 @@ void CServiceInfo::CalcLayout(
 			if (pEvent->IsCommonEvent) {
 				const LibISDB::EventInfo *pCommonEvent =
 					pServiceList->GetEventByIDs(
+						m_ServiceInfo.NetworkID,
 						m_ServiceInfo.TransportStreamID,
 						pEvent->CommonEvent.ServiceID,
 						pEvent->CommonEvent.EventID);
@@ -747,9 +770,9 @@ const CServiceInfo *CServiceList::GetItem(size_t Index) const
 }
 
 
-CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD ServiceID)
+CServiceInfo *CServiceList::GetItemByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID)
 {
-	const int Index = FindItemByIDs(TransportStreamID, ServiceID);
+	const int Index = FindItemByIDs(NetworkID, TransportStreamID, ServiceID);
 
 	if (Index < 0)
 		return nullptr;
@@ -758,9 +781,9 @@ CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD ServiceID)
 }
 
 
-const CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD ServiceID) const
+const CServiceInfo *CServiceList::GetItemByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const
 {
-	const int Index = FindItemByIDs(TransportStreamID, ServiceID);
+	const int Index = FindItemByIDs(NetworkID, TransportStreamID, ServiceID);
 
 	if (Index < 0)
 		return nullptr;
@@ -769,31 +792,31 @@ const CServiceInfo *CServiceList::GetItemByIDs(WORD TransportStreamID, WORD Serv
 }
 
 
-int CServiceList::FindItemByIDs(WORD TransportStreamID, WORD ServiceID) const
+int CServiceList::FindItemByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const
 {
+	const LibISDB::EPGDatabase::ServiceInfo FindInfo(NetworkID, TransportStreamID, ServiceID);
+
 	for (size_t i = 0; i < m_ServiceList.size(); i++) {
-		const CServiceInfo *pInfo = m_ServiceList[i].get();
-
-		if (pInfo->GetTSID() == TransportStreamID
-				&& pInfo->GetServiceID() == ServiceID)
+		if (m_ServiceList[i]->GetServiceInfo() == FindInfo)
 			return static_cast<int>(i);
 	}
+
 	return -1;
 }
 
 
-LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WORD ServiceID, WORD EventID)
+LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID, WORD EventID)
 {
-	CServiceInfo *pService = GetItemByIDs(TransportStreamID, ServiceID);
+	CServiceInfo *pService = GetItemByIDs(NetworkID, TransportStreamID, ServiceID);
 	if (pService == nullptr)
 		return nullptr;
 	return pService->GetEventByEventID(EventID);
 }
 
 
-const LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WORD ServiceID, WORD EventID) const
+const LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD NetworkID, WORD TransportStreamID, WORD ServiceID, WORD EventID) const
 {
-	const CServiceInfo *pService = GetItemByIDs(TransportStreamID, ServiceID);
+	const CServiceInfo *pService = GetItemByIDs(NetworkID, TransportStreamID, ServiceID);
 	if (pService == nullptr)
 		return nullptr;
 	return pService->GetEventByEventID(EventID);
@@ -803,6 +826,15 @@ const LibISDB::EventInfo *CServiceList::GetEventByIDs(WORD TransportStreamID, WO
 void CServiceList::Add(CServiceInfo *pInfo)
 {
 	m_ServiceList.emplace_back(pInfo);
+}
+
+
+bool CServiceList::Insert(size_t Index, CServiceInfo *pInfo)
+{
+	if (Index > m_ServiceList.size())
+		return false;
+	m_ServiceList.emplace(m_ServiceList.begin() + Index, pInfo);
+	return true;
 }
 
 
@@ -1129,6 +1161,7 @@ void CProgramGuide::SetTheme(const Theme::CThemeManager *pThemeManager)
 
 bool CProgramGuide::SetEPGDatabase(LibISDB::EPGDatabase *pEPGDatabase)
 {
+	TVTEST_ASSERT(m_hwnd == nullptr);
 	m_pEPGDatabase = pEPGDatabase;
 	return true;
 }
@@ -1224,33 +1257,9 @@ bool CProgramGuide::UpdateList()
 					pChannelInfo->GetServiceID()))
 			continue;
 
-		TCHAR szBonDriver[MAX_PATH];
-		if (!m_pChannelProvider->GetBonDriverFileName(m_CurrentChannelGroup, i, szBonDriver, lengthof(szBonDriver)))
-			szBonDriver[0] = _T('\0');
-
-		ProgramGuide::CServiceInfo *pService = nullptr;
-
-		m_pEPGDatabase->EnumEventsSortedByTime(
-			pChannelInfo->GetNetworkID(),
-			pChannelInfo->GetTransportStreamID(),
-			pChannelInfo->GetServiceID(),
-			[&](const LibISDB::EventInfo & Event) -> bool {
-				if (pService == nullptr)
-					pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver);
-				pService->AddEvent(new LibISDB::EventInfo(Event));
-				return true;
-			});
-
-		if (pService == nullptr) {
-			if (m_fExcludeNoEventServices)
-				continue;
-			pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver);
-		}
-
-		const HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
-			pService->GetNetworkID(), pService->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
-		if (hbmLogo != nullptr)
-			pService->SetLogo(hbmLogo);
+		ProgramGuide::CServiceInfo *pService = MakeServiceInfo(m_CurrentChannelGroup, i);
+		if (pService == nullptr)
+			continue;
 
 		if (m_ListMode == ListMode::Week && pService->GetServiceInfo() == CurServiceInfo)
 			m_WeekListService = static_cast<int>(m_ServiceList.NumServices());
@@ -1297,6 +1306,145 @@ void CProgramGuide::UpdateServiceList()
 	UpdateProgramGuide();
 
 	RestoreTimePos();
+}
+
+
+bool CProgramGuide::RefreshService(uint16_t NetworkID, uint16_t TransportStreamID, uint16_t ServiceID)
+{
+	if (m_pEPGDatabase == nullptr
+			|| m_pChannelProvider == nullptr)
+		return false;
+
+	TRACE(
+		TEXT("CProgramGuide::RefreshService() : NID {:x} / TSID {:x} / SID {:x}\n"),
+		NetworkID, TransportStreamID, ServiceID);
+
+	for (size_t i = 0; i < m_pChannelProvider->GetChannelCount(m_CurrentChannelGroup); i++) {
+		const CChannelInfo *pChannelInfo = m_pChannelProvider->GetChannelInfo(m_CurrentChannelGroup, i);
+
+		if (pChannelInfo == nullptr
+				|| !pChannelInfo->IsEnabled()
+				|| IsExcludeService(
+					pChannelInfo->GetNetworkID(),
+					pChannelInfo->GetTransportStreamID(),
+					pChannelInfo->GetServiceID()))
+			continue;
+
+		if (pChannelInfo->GetNetworkID() == NetworkID
+				&& pChannelInfo->GetTransportStreamID() == TransportStreamID
+				&& pChannelInfo->GetServiceID() == ServiceID) {
+			int ListIndex = m_ServiceList.FindItemByIDs(NetworkID, TransportStreamID, ServiceID);
+			const bool fNewService = ListIndex < 0;
+			ProgramGuide::CServiceInfo *pService = MakeServiceInfo(
+				m_CurrentChannelGroup, i,
+				fNewService ? nullptr : m_ServiceList.GetItem(ListIndex));
+			if (pService == nullptr)
+				return false;
+
+			if (fNewService) {
+				for (ListIndex = 0; static_cast<size_t>(ListIndex) < m_ServiceList.NumServices(); ListIndex++) {
+					if (m_ServiceList.GetItem(ListIndex)->GetIndex() > i)
+						break;
+				}
+				m_ServiceList.Insert(ListIndex, pService);
+
+				if (m_ListMode == ListMode::Services) {
+					if (m_CurEventItem.fSelected && m_CurEventItem.ListIndex >= ListIndex)
+						m_CurEventItem.ListIndex++;
+				} else if (m_ListMode == ListMode::Week) {
+					if (m_WeekListService >= static_cast<int>(ListIndex))
+						m_WeekListService++;
+				}
+			}
+
+			if (m_ListMode != ListMode::Week || m_WeekListService == ListIndex) {
+				EventSelectInfo Select;
+				if (m_CurEventItem.fSelected
+						&& (m_ListMode == ListMode::Week || m_CurEventItem.ListIndex == ListIndex)) {
+					Select = m_CurEventItem;
+					m_CurEventItem.fSelected = false;
+				}
+
+				if (m_ListMode == ListMode::Services) {
+					ProgramGuide::CEventLayout *pLayout;
+					if (fNewService) {
+						pLayout = new ProgramGuide::CEventLayout(pService);
+						m_EventLayoutList.Insert(ListIndex, pLayout);
+					} else {
+						pLayout = m_EventLayoutList[ListIndex];
+					}
+
+					LibISDB::DateTime First, Last;
+					GetCurrentTimeRange(&First, &Last);
+					pService->CalcLayout(pLayout, &m_ServiceList, First, Last, m_LinesPerHour);
+				} else {
+					CalcLayout();
+				}
+				SetScrollBar();
+
+				if (!fNewService && m_ListMode == ListMode::Services) {
+					RECT rc;
+					GetColumnRect(ListIndex, &rc);
+					Invalidate(&rc);
+				} else {
+					Invalidate();
+				}
+
+				if (Select.fSelected) {
+					const ProgramGuide::CEventLayout *pEventLayout = m_EventLayoutList[Select.ListIndex];
+					if (pEventLayout != nullptr) {
+						const int EventIndex = pEventLayout->FindItemByEventID(Select.EventID);
+						if (EventIndex >= 0)
+							SelectEvent(Select.ListIndex, EventIndex);
+					}
+					if (!m_CurEventItem.fSelected)
+						SelectEventByIDs(NetworkID, TransportStreamID, ServiceID, Select.EventID);
+				}
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+ProgramGuide::CServiceInfo * CProgramGuide::MakeServiceInfo(
+	size_t GroupIndex, size_t ChannelIndex, ProgramGuide::CServiceInfo *pService)
+{
+	const CChannelInfo *pChannelInfo = m_pChannelProvider->GetChannelInfo(GroupIndex, ChannelIndex);
+
+	TCHAR szBonDriver[MAX_PATH];
+	if (!m_pChannelProvider->GetBonDriverFileName(GroupIndex, ChannelIndex, szBonDriver, lengthof(szBonDriver)))
+		szBonDriver[0] = _T('\0');
+
+	if (pService != nullptr)
+		pService->ClearEvents();
+
+	m_pEPGDatabase->EnumEventsSortedByTime(
+		pChannelInfo->GetNetworkID(),
+		pChannelInfo->GetTransportStreamID(),
+		pChannelInfo->GetServiceID(),
+		[&](const LibISDB::EventInfo &Event) -> bool {
+			if (pService == nullptr)
+				pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver, ChannelIndex);
+			pService->AddEvent(new LibISDB::EventInfo(Event));
+			return true;
+		});
+
+	if (pService == nullptr) {
+		if (m_fExcludeNoEventServices)
+			return nullptr;
+		pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver, ChannelIndex);
+	}
+
+	const HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
+		pService->GetNetworkID(), pService->GetServiceID(), CLogoManager::LOGOTYPE_SMALL);
+	if (hbmLogo != nullptr)
+		pService->SetLogo(hbmLogo);
+
+	return pService;
 }
 
 
@@ -2254,6 +2402,15 @@ void CProgramGuide::GetPageSize(SIZE *pSize) const
 }
 
 
+void CProgramGuide::GetColumnRect(int Index, RECT *pRect) const
+{
+	GetProgramGuideRect(pRect);
+
+	pRect->left += Index * (m_ItemWidth + m_Style.ColumnMargin * 2) + m_Style.ColumnMargin - m_ScrollPos.x;
+	pRect->right = pRect->left + m_ItemWidth;
+}
+
+
 void CProgramGuide::Scroll(int XScroll, int YScroll)
 {
 	POINT Pos = m_ScrollPos;
@@ -3155,7 +3312,7 @@ bool CProgramGuide::SetViewDay(int Day)
 // 指定された番組まで移動する
 bool CProgramGuide::JumpEvent(WORD NetworkID, WORD TSID, WORD ServiceID, WORD EventID)
 {
-	const int ServiceIndex = m_ServiceList.FindItemByIDs(TSID, ServiceID);
+	const int ServiceIndex = m_ServiceList.FindItemByIDs(NetworkID, TSID, ServiceID);
 	if (ServiceIndex < 0)
 		return false;
 	const ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(ServiceIndex);
@@ -3227,7 +3384,7 @@ bool CProgramGuide::ScrollToCurrentService()
 		return false;
 
 	const int ServiceIndex = m_ServiceList.FindItemByIDs(
-		m_CurrentChannel.TransportStreamID, m_CurrentChannel.ServiceID);
+		m_CurrentChannel.NetworkID, m_CurrentChannel.TransportStreamID, m_CurrentChannel.ServiceID);
 	if (ServiceIndex < 0)
 		return false;
 
@@ -3441,6 +3598,12 @@ void CProgramGuide::SetShowFeaturedMark(bool fShow)
 }
 
 
+void CProgramGuide::SetAutoRefresh(bool fAuto)
+{
+	m_fAutoRefresh = fAuto;
+}
+
+
 const Style::Margins &CProgramGuide::GetToolbarItemPadding() const
 {
 	return m_Style.ToolbarItemPadding;
@@ -3593,13 +3756,10 @@ bool CProgramGuide::GetEventRect(int ListIndex, int EventIndex, RECT *pRect) con
 		return false;
 
 	const int LineHeight = GetLineHeight();
-	RECT rc;
-	GetProgramGuideRect(&rc);
+	GetColumnRect(ListIndex, pRect);
 
-	pRect->top = pItem->GetItemPos() * LineHeight + (rc.top - m_ScrollPos.y * LineHeight);
+	pRect->top += pItem->GetItemPos() * LineHeight - m_ScrollPos.y * LineHeight;
 	pRect->bottom = pRect->top + pItem->GetItemLines() * LineHeight;
-	pRect->left = ListIndex * (m_ItemWidth + m_Style.ColumnMargin * 2) + m_Style.ColumnMargin + (rc.left - m_ScrollPos.x);
-	pRect->right = pRect->left + m_ItemWidth;
 
 	return true;
 }
@@ -3679,29 +3839,37 @@ bool CProgramGuide::GetEventIndexByIDs(
 	WORD NetworkID, WORD TSID, WORD ServiceID, WORD EventID,
 	int *pListIndex, int *pEventIndex) const
 {
-	int ListIndex;
+	int ListIndex, FirstListIndex;
 
 	if (m_ListMode == ListMode::Services) {
-		ListIndex = m_ServiceList.FindItemByIDs(TSID, ServiceID);
+		ListIndex = m_ServiceList.FindItemByIDs(NetworkID, TSID, ServiceID);
 		if (ListIndex < 0)
 			return false;
+		FirstListIndex = ListIndex;
+	} else if (m_ListMode == ListMode::Week) {
+		const ProgramGuide::CServiceInfo *pService = m_ServiceList.GetItem(m_WeekListService);
+		if (pService == nullptr
+				|| pService->GetNetworkID() != NetworkID
+				|| pService->GetTSID() != TSID
+				|| pService->GetServiceID() != ServiceID)
+			return false;
+		ListIndex = static_cast<int>(m_EventLayoutList.Length()) - 1;
+		FirstListIndex = 0;
 	} else {
 		return false;
 	}
 
-	const ProgramGuide::CEventLayout *pEventLayout = m_EventLayoutList[ListIndex];
-	if (pEventLayout == nullptr)
-		return false;
-	const size_t NumItems = pEventLayout->NumItems();
-	for (size_t i = 0; i < NumItems; i++) {
-		const ProgramGuide::CEventItem *pItem = pEventLayout->GetItem(i);
-		if (pItem->GetEventInfo() != nullptr
-				&& pItem->GetEventInfo()->EventID == EventID) {
-			if (pListIndex != nullptr)
-				*pListIndex = ListIndex;
-			if (pEventIndex != nullptr)
-				*pEventIndex = static_cast<int>(i);
-			return true;
+	for (; ListIndex >= FirstListIndex; ListIndex--) {
+		const ProgramGuide::CEventLayout *pEventLayout = m_EventLayoutList[ListIndex];
+		if (pEventLayout != nullptr) {
+			const int EventIndex = pEventLayout->FindItemByEventID(EventID);
+			if (EventIndex >= 0) {
+				if (pListIndex != nullptr)
+					*pListIndex = ListIndex;
+				if (pEventIndex != nullptr)
+					*pEventIndex = EventIndex;
+				return true;
+			}
 		}
 	}
 
@@ -3737,6 +3905,7 @@ bool CProgramGuide::SelectEvent(int ListIndex, int EventIndex)
 		pItem->SetSelected(true);
 		m_CurEventItem.ListIndex = ListIndex;
 		m_CurEventItem.EventIndex = EventIndex;
+		m_CurEventItem.EventID = pItem->GetEventInfo()->EventID;
 		RedrawEvent(ListIndex, EventIndex);
 	}
 
@@ -3805,6 +3974,9 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			FeaturedEvents.AddEventHandler(this);
 			if (m_fShowFeaturedMark)
 				m_FeaturedEventsMatcher.BeginMatching(FeaturedEvents.GetSettings());
+
+			if (m_pEPGDatabase != nullptr)
+				m_pEPGDatabase->AddEventListener(&m_EPGDatabaseEventListener);
 
 			LibISDB::GetCurrentEPGTime(&m_CurTime);
 			::SetTimer(hwnd, TIMER_ID_UPDATECURTIME, 1000, nullptr);
@@ -4157,8 +4329,15 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		m_Chevron.Destroy();
 		m_EpgIcons.Destroy();
 		m_TextDrawClient.Finalize();
+		if (m_pEPGDatabase != nullptr)
+			m_pEPGDatabase->RemoveEventListener(&m_EPGDatabaseEventListener);
 		GetAppClass().FeaturedEvents.RemoveEventHandler(this);
 		return 0;
+
+	case MESSAGE_REFRESHSERVICE:
+		if (!m_fAutoRefresh)
+			return FALSE;
+		return RefreshService(LOWORD(wParam), HIWORD(wParam), LOWORD(lParam));
 	}
 
 	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -4201,6 +4380,10 @@ void CProgramGuide::OnCommand(int id)
 
 	case CM_PROGRAMGUIDE_REFRESH:
 		Refresh();
+		return;
+
+	case CM_PROGRAMGUIDE_AUTOREFRESH:
+		SetAutoRefresh(!m_fAutoRefresh);
 		return;
 
 	case CM_PROGRAMGUIDE_IEPGASSOCIATE:
@@ -4498,6 +4681,9 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		hmenu, CM_PROGRAMGUIDE_ENDUPDATE,
 		MF_BYCOMMAND | (m_fEpgUpdating ? MF_ENABLED : MF_GRAYED));
 	::CheckMenuItem(
+		hmenu, CM_PROGRAMGUIDE_AUTOREFRESH,
+		MF_BYCOMMAND | (m_fAutoRefresh ? MF_CHECKED : MF_UNCHECKED));
+	::CheckMenuItem(
 		hmenu, CM_PROGRAMGUIDE_ALWAYSONTOP,
 		MF_BYCOMMAND | (m_pFrame->GetAlwaysOnTop() ? MF_CHECKED : MF_UNCHECKED));
 	::CheckMenuItem(
@@ -4670,6 +4856,24 @@ CProgramGuide::CProgramCustomizer::~CProgramCustomizer()
 }
 
 
+CProgramGuide::CEPGDatabaseEventListener::CEPGDatabaseEventListener(CProgramGuide *pProgramGuide)
+	: m_pProgramGuide(pProgramGuide)
+{
+}
+
+
+void CProgramGuide::CEPGDatabaseEventListener::OnServiceCompleted(
+	LibISDB::EPGDatabase *pEPGDatabase,
+	uint16_t NetworkID, uint16_t TransportStreamID, uint16_t ServiceID,
+	bool IsExtended)
+{
+	m_pProgramGuide->PostMessage(
+		CProgramGuide::MESSAGE_REFRESHSERVICE,
+		MAKEWPARAM(NetworkID, TransportStreamID),
+		MAKELPARAM(ServiceID, IsExtended ? 1 : 0));
+}
+
+
 CProgramGuide::CEventInfoPopupHandler::CEventInfoPopupHandler(CProgramGuide *pProgramGuide)
 	: m_pProgramGuide(pProgramGuide)
 {
@@ -4815,7 +5019,9 @@ bool CProgramGuide::CProgramSearchEventHandler::OnSearch()
 				static_cast<const CTunerChannelInfo*>(ServiceList.GetChannelInfo(i));
 
 			if (m_pProgramGuide->m_ServiceList.GetItemByIDs(
-						pChInfo->GetTransportStreamID(), pChInfo->GetServiceID()) == nullptr) {
+						pChInfo->GetNetworkID(),
+						pChInfo->GetTransportStreamID(),
+						pChInfo->GetServiceID()) == nullptr) {
 				m_pProgramGuide->m_pEPGDatabase->EnumEventsSortedByTime(
 					pChInfo->GetNetworkID(),
 					pChInfo->GetTransportStreamID(),
@@ -4933,7 +5139,8 @@ void CProgramGuide::CProgramSearchEventHandler::DoCommand(
 	int Command, const CSearchEventInfo *pEventInfo)
 {
 	const ProgramGuide::CServiceInfo *pServiceInfo =
-		m_pProgramGuide->m_ServiceList.GetItemByIDs(pEventInfo->TransportStreamID, pEventInfo->ServiceID);
+		m_pProgramGuide->m_ServiceList.GetItemByIDs(
+			pEventInfo->NetworkID, pEventInfo->TransportStreamID, pEventInfo->ServiceID);
 
 	if (Command == CM_PROGRAMGUIDE_JUMPEVENT) {
 		if (pServiceInfo != nullptr) {
