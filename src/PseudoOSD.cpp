@@ -534,15 +534,15 @@ void CPseudoOSD::UpdateLayeredWindow()
 	if (Width < 1 || Height < 1)
 		return;
 
+	DrawUtil::CBitmap Surface;
 	void *pBits;
-	const HBITMAP hbmSurface = DrawUtil::CreateDIB(Width, Height, 32, &pBits);
-	if (hbmSurface == nullptr)
+	if (!Surface.Create(Width, Height, 32, &pBits))
 		return;
 	::ZeroMemory(pBits, Width * 4 * Height);
 
 	const HDC hdc = ::GetDC(m_hwnd);
 	const HDC hdcSrc = ::CreateCompatibleDC(hdc);
-	const HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, hbmSurface));
+	const HBITMAP hbmOld = DrawUtil::SelectObject(hdcSrc, Surface);
 
 	{
 		Graphics::CCanvas Canvas(hdcSrc);
@@ -637,7 +637,6 @@ void CPseudoOSD::UpdateLayeredWindow()
 	::SelectObject(hdcSrc, hbmOld);
 	::DeleteDC(hdcSrc);
 	::ReleaseDC(m_hwnd, hdc);
-	::DeleteObject(hbmSurface);
 }
 
 

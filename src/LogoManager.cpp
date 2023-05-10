@@ -717,20 +717,10 @@ CLogoManager::CLogoData::CLogoData(const CLogoData &Src)
 }
 
 
-CLogoManager::CLogoData::~CLogoData()
-{
-	if (m_hbm != nullptr)
-		::DeleteObject(m_hbm);
-}
-
-
 CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src)
 {
 	if (&Src != this) {
-		if (m_hbm != nullptr) {
-			::DeleteObject(m_hbm);
-			m_hbm = nullptr;
-		}
+		m_Bitmap.Destroy();
 		m_Image.Free();
 		m_NetworkID = Src.m_NetworkID;
 		m_LogoID = Src.m_LogoID;
@@ -747,22 +737,18 @@ CLogoManager::CLogoData &CLogoManager::CLogoData::operator=(const CLogoData &Src
 
 HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 {
-	if (m_hbm == nullptr) {
+	if (!m_Bitmap.IsCreated()) {
 		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
 		if (hDIB == nullptr)
 			return nullptr;
-		const BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
-		void *pBits;
-		m_hbm = ::CreateDIBSection(nullptr, pbmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
-		if (m_hbm == nullptr)
-			return nullptr;
-		std::memcpy(
-			pBits, reinterpret_cast<const BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader),
-			CalcDIBBitsSize(&pbmi->bmiHeader));
-		::GlobalUnlock(hDIB);
+		const BITMAPINFO *pbmi = static_cast<const BITMAPINFO*>(::GlobalLock(hDIB));
+		if (pbmi != nullptr) {
+			m_Bitmap.Create(pbmi, ::GlobalSize(hDIB));
+			::GlobalUnlock(hDIB);
+		}
 		::GlobalFree(hDIB);
 	}
-	return m_hbm;
+	return m_Bitmap.GetHandle();
 }
 
 

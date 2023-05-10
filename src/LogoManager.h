@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include "LibISDB/LibISDB/Filters/LogoDownloaderFilter.hpp"
+#include "DrawUtil.h"
 #include "Graphics.h"
 #include "Image.h"
 
@@ -94,13 +95,12 @@ namespace TVTest
 			WORD m_DataSize;
 			std::unique_ptr<BYTE[]> m_Data;
 			LibISDB::DateTime m_Time;
-			HBITMAP m_hbm = nullptr;
+			DrawUtil::CBitmap m_Bitmap;
 			Graphics::CImage m_Image;
 
 		public:
 			CLogoData(const LibISDB::LogoDownloaderFilter::LogoData *pData);
 			CLogoData(const CLogoData &Src);
-			~CLogoData();
 
 			CLogoData &operator=(const CLogoData &Src);
 
