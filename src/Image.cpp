@@ -38,7 +38,8 @@ namespace TVTest
 
 size_t CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih)
 {
-	size_t Size = sizeof(BITMAPINFOHEADER);
+	size_t Size = pbmih->biSize;
+	TVTEST_ASSERT(Size == sizeof (BITMAPINFOHEADER) || Size == sizeof(BITMAPV4HEADER) || Size == sizeof(BITMAPV5HEADER));
 
 	if (pbmih->biBitCount <= 8)
 		Size += (1_z << pbmih->biBitCount) * sizeof(RGBQUAD);
