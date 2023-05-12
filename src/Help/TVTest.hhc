@@ -65,6 +65,10 @@
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="メニュー">
+			<param name="Local" value="programguide/menu.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="EPG番組表の検索">
 			<param name="Local" value="programguide/search.html">
 			</OBJECT>
