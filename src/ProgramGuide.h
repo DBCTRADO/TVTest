@@ -208,6 +208,7 @@ namespace TVTest
 		enum {
 			COLOR_BACK,
 			COLOR_CHANNELNAMETEXT,
+			COLOR_CHANNELNAMEHIGHLIGHTTEXT,
 			COLOR_CURCHANNELNAMETEXT,
 			COLOR_TIMETEXT,
 			COLOR_TIMELINE,
@@ -490,6 +491,25 @@ namespace TVTest
 			Theme::BackgroundStyle FavoriteButtonStyle;
 		};
 
+		enum class HitTestPart {
+			None,
+			ServiceHeader,
+			ServiceTitle,
+			ServiceChevron,
+			TimeBar,
+			TimeBarPrev,
+			TimeBarNext,
+		};
+
+		struct HitTestInfo
+		{
+			HitTestPart Part = HitTestPart::None;
+			int ListIndex = -1;
+			RECT PartRect{};
+			bool fHotTracking = false;
+			bool fClickable = false;
+		};
+
 		class CEPGDatabaseEventListener
 			: public LibISDB::EPGDatabase::EventListener
 		{
@@ -514,6 +534,7 @@ namespace TVTest
 		ProgramGuideStyle m_Style;
 		ListMode m_ListMode = ListMode::Services;
 		int m_WeekListService = -1;
+		int m_WeekListHeaderTitleWidth = 0;
 		int m_LinesPerHour = 12;
 		Style::Font m_Font;
 		DrawUtil::CFont m_ContentFont;
@@ -541,6 +562,8 @@ namespace TVTest
 		} m_DragInfo;
 		CMouseWheelHandler m_VertWheel;
 		CMouseWheelHandler m_HorzWheel;
+		HitTestInfo m_HitInfo;
+		CMouseLeaveTrack m_MouseLeaveTrack;
 		Theme::IconList m_Chevron;
 		CEpgIcons m_EpgIcons;
 		UINT m_VisibleEventIcons = ((1 << (CEpgIcons::ICON_LAST + 1)) - 1) ^ CEpgIcons::IconFlag(CEpgIcons::ICON_PAY);
@@ -659,6 +682,7 @@ namespace TVTest
 			size_t GroupIndex, size_t ChannelIndex,
 			ProgramGuide::CServiceInfo *pService = nullptr);
 		void CalcLayout();
+		void UpdateLayout();
 		enum class EventItemStatus : unsigned int {
 			None        = 0x0000U,
 			Current     = 0x0001U,
@@ -682,7 +706,7 @@ namespace TVTest
 		void DrawServiceHeader(
 			ProgramGuide::CServiceInfo *pServiceInfo,
 			HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw,
-			int Chevron, bool fLeftAlign = false);
+			int Chevron, bool fLeftAlign, HitTestPart HotPart);
 		void DrawDayHeader(int Day, HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw) const;
 		void DrawTimeBar(HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw, bool fRight);
 		void Draw(HDC hdc, const RECT &PaintRect) override;
@@ -699,6 +723,9 @@ namespace TVTest
 		void Scroll(int XOffset, int YOffset);
 		void SetScrollPos(const POINT &Pos);
 		void SetScrollBar();
+		HitTestInfo HitTest(int x, int y) const;
+		bool SetHitInfo(const HitTestInfo &Info, bool fUpdate = false);
+		void ResetHitInfo(bool fUpdate = false);
 		int GetTimePos() const;
 		bool SetTimePos(int Pos);
 		void StoreTimePos();

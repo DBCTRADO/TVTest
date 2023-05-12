@@ -1021,7 +1021,7 @@ LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 				m_pPopup->Hide();
 		}
 		m_fTrackMouseEvent = false;
-		return 0;
+		break;
 
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE) {

@@ -1109,16 +1109,17 @@ void CProgramGuide::SetTheme(const Theme::CThemeManager *pThemeManager)
 	static const struct {
 		int From, To;
 	} ProgramGuideColorMap[] = {
-		{CColorScheme::COLOR_PROGRAMGUIDE_BACK,            COLOR_BACK},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTEXT,   COLOR_HIGHLIGHT_TEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTITLE,  COLOR_HIGHLIGHT_TITLE},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBACK,   COLOR_HIGHLIGHT_BACK},
-		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBORDER, COLOR_HIGHLIGHT_BORDER},
-		{CColorScheme::COLOR_PROGRAMGUIDE_CHANNELTEXT,     COLOR_CHANNELNAMETEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_CURCHANNELTEXT,  COLOR_CURCHANNELNAMETEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT,        COLOR_TIMETEXT},
-		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,        COLOR_TIMELINE},
-		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,     COLOR_CURTIMELINE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_BACK,                 COLOR_BACK},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTEXT,        COLOR_HIGHLIGHT_TEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTTITLE,       COLOR_HIGHLIGHT_TITLE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBACK,        COLOR_HIGHLIGHT_BACK},
+		{CColorScheme::COLOR_PROGRAMGUIDE_HIGHLIGHTBORDER,      COLOR_HIGHLIGHT_BORDER},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CHANNELTEXT,          COLOR_CHANNELNAMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CHANNELHIGHLIGHTTEXT, COLOR_CHANNELNAMEHIGHLIGHTTEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CURCHANNELTEXT,       COLOR_CURCHANNELNAMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TIMETEXT,             COLOR_TIMETEXT},
+		{CColorScheme::COLOR_PROGRAMGUIDE_TIMELINE,             COLOR_TIMELINE},
+		{CColorScheme::COLOR_PROGRAMGUIDE_CURTIMELINE,          COLOR_CURTIMELINE},
 	};
 	for (const auto &e : ProgramGuideColorMap) {
 		m_Theme.ColorList[e.To] = pThemeManager->GetColor(e.From);
@@ -1179,6 +1180,8 @@ void CProgramGuide::Clear()
 	m_ScrollPos.x = 0;
 	m_ScrollPos.y = 0;
 	m_OldScrollPos = m_ScrollPos;
+	m_HitInfo = {};
+
 	if (m_hwnd != nullptr) {
 		SetCaption();
 		Invalidate();
@@ -1203,6 +1206,8 @@ bool CProgramGuide::UpdateProgramGuide()
 {
 	if (m_hwnd != nullptr && m_pChannelProvider != nullptr) {
 		const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
+
+		ResetHitInfo(true);
 
 		if (m_pFrame != nullptr)
 			m_pFrame->SetCaption(TITLE_TEXT TEXT(" - 番組表を作成しています..."));
@@ -1358,6 +1363,8 @@ bool CProgramGuide::RefreshService(uint16_t NetworkID, uint16_t TransportStreamI
 			}
 
 			if (m_ListMode != ListMode::Week || m_WeekListService == ListIndex) {
+				ResetHitInfo(true);
+
 				EventSelectInfo Select;
 				if (m_CurEventItem.fSelected
 						&& (m_ListMode == ListMode::Week || m_CurEventItem.ListIndex == ListIndex)) {
@@ -1484,6 +1491,15 @@ void CProgramGuide::CalcLayout()
 	}
 
 	SetTooltip();
+}
+
+
+void CProgramGuide::UpdateLayout()
+{
+	CalcLayout();
+	SetScrollBar();
+	ResetHitInfo();
+	Invalidate();
 }
 
 
@@ -1827,7 +1843,7 @@ void CProgramGuide::DrawHeaderBackground(Theme::CThemeDraw &ThemeDraw, const REC
 void CProgramGuide::DrawServiceHeader(
 	ProgramGuide::CServiceInfo *pServiceInfo,
 	HDC hdc, const RECT &Rect, Theme::CThemeDraw &ThemeDraw,
-	int Chevron, bool fLeftAlign)
+	int Chevron, bool fLeftAlign, HitTestPart HotPart)
 {
 	const bool fCur =
 		m_CurrentChannel.ServiceID > 0
@@ -1838,7 +1854,12 @@ void CProgramGuide::DrawServiceHeader(
 	DrawHeaderBackground(ThemeDraw, Rect, fCur);
 
 	const HFONT hfontOld = DrawUtil::SelectObject(hdc, m_TitleFont);
-	const COLORREF TextColor = m_Theme.ColorList[fCur ? COLOR_CURCHANNELNAMETEXT : COLOR_CHANNELNAMETEXT];
+	const COLORREF TextColor = m_Theme.ColorList[
+		fCur ?
+			COLOR_CURCHANNELNAMETEXT :
+		HotPart == HitTestPart::ServiceTitle ?
+			COLOR_CHANNELNAMEHIGHLIGHTTEXT :
+			COLOR_CHANNELNAMETEXT];
 	const COLORREF OldTextColor = ::SetTextColor(hdc, TextColor);
 
 	RECT rc = Rect;
@@ -1856,7 +1877,8 @@ void CProgramGuide::DrawServiceHeader(
 			rc.left,
 			rc.top + m_Style.HeaderIconMargin.Top + ((rc.bottom - rc.top) - Height) / 2,
 			LogoWidth, LogoHeight,
-			hbmStretched != nullptr ? hbmStretched : hbmLogo, nullptr, 192);
+			hbmStretched != nullptr ? hbmStretched : hbmLogo, nullptr,
+			fCur || HotPart == HitTestPart::ServiceTitle ? 255 : 192);
 		rc.left += LogoWidth + m_Style.HeaderIconMargin.Right;
 	}
 
@@ -1867,14 +1889,29 @@ void CProgramGuide::DrawServiceHeader(
 		rc.top + m_Style.HeaderChevronMargin.Top +
 		(((rc.bottom - rc.top) - m_Style.HeaderChevronMargin.Vert()) - m_Style.HeaderChevronSize.Height) / 2,
 		m_Style.HeaderChevronSize.Width, m_Style.HeaderChevronSize.Height,
-		Chevron, TextColor);
+		Chevron, TextColor,
+		HotPart == HitTestPart::ServiceChevron ? 255 : 192);
 	rc.right -= m_Style.HeaderChevronMargin.Left;
 
 	Style::Subtract(&rc, m_Style.HeaderChannelNameMargin);
+
+	if (m_ListMode == ListMode::Week) {
+		RECT rcText = {};
+		::DrawText(
+			hdc, pServiceInfo->GetServiceName(), -1, &rcText,
+			DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
+		// DT_CALCRECT では太字や斜体での文字幅を正しく取得できないため、適当にマージンを取る
+		rcText.right += m_FontHeight / 2;
+		m_WeekListHeaderTitleWidth = (rc.left - Rect.left) + std::min(rcText.right, rc.right - rc.left);
+		if (m_WeekListHeaderTitleWidth < 0)
+			m_WeekListHeaderTitleWidth = 0;
+	}
+
 	::DrawText(
 		hdc, pServiceInfo->GetServiceName(), -1, &rc,
 		(fLeftAlign || hbmLogo != nullptr ? DT_LEFT : DT_CENTER) |
 		DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+
 	::SetTextColor(hdc, OldTextColor);
 	::SelectObject(hdc, hfontOld);
 }
@@ -2104,13 +2141,16 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
 				for (size_t i = 0; i < m_ServiceList.NumServices(); i++) {
 					rc.right = rc.left + (m_ItemWidth + m_Style.ColumnMargin * 2);
-					if (rc.left < PaintRect.right && rc.right > PaintRect.left)
-						DrawServiceHeader(m_ServiceList.GetItem(i), hdc, rc, ThemeDraw, 2);
+					if (rc.left < PaintRect.right && rc.right > PaintRect.left) {
+						DrawServiceHeader(
+							m_ServiceList.GetItem(i), hdc, rc, ThemeDraw, 2, false,
+							m_HitInfo.ListIndex == static_cast<int>(i) ? m_HitInfo.Part : HitTestPart::None);
+					}
 					rc.left = rc.right;
 				}
 			} else if (m_ListMode == ListMode::Week) {
 				rc.bottom = m_HeaderHeight;
-				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService), hdc, rc, ThemeDraw, 3, true);
+				DrawServiceHeader(m_ServiceList.GetItem(m_WeekListService), hdc, rc, ThemeDraw, 3, true, m_HitInfo.Part);
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
 				rc.top = rc.bottom;
 				rc.bottom += m_HeaderHeight;
@@ -2534,6 +2574,135 @@ void CProgramGuide::SetScrollBar()
 }
 
 
+CProgramGuide::HitTestInfo CProgramGuide::HitTest(int x, int y) const
+{
+	HitTestInfo Info;
+
+	RECT rc;
+	::GetClientRect(m_hwnd, &rc);
+
+	if (y >= 0 && y < (m_ListMode == ListMode::Week ? m_HeaderHeight * 2 : m_HeaderHeight)
+			&& x >= m_TimeBarWidth && x < rc.right - m_TimeBarWidth) {
+		const int ChevronArea =
+			m_Style.HeaderChevronSize.Width +
+			m_Style.HeaderChevronMargin.Right + m_Style.HeaderPadding.Right;
+
+		if (m_ListMode == ListMode::Services) {
+			const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
+
+			x += m_ScrollPos.x - m_TimeBarWidth;
+			if (x < static_cast<int>(m_EventLayoutList.Length()) * HeaderWidth) {
+				const int Service = x / HeaderWidth;
+
+				RECT HeaderRect;
+				HeaderRect.left = m_TimeBarWidth + Service * HeaderWidth - m_ScrollPos.x;
+				HeaderRect.right = HeaderRect.left + HeaderWidth;
+				HeaderRect.top = 0;
+				HeaderRect.bottom = m_HeaderHeight;
+
+				if (x % HeaderWidth < HeaderWidth - (m_Style.HeaderChevronMargin.Left + ChevronArea)) {
+					Info.Part = HitTestPart::ServiceTitle;
+					Info.ListIndex = Service;
+					Info.PartRect = HeaderRect;
+					Info.PartRect.right -= m_Style.HeaderChevronMargin.Left + ChevronArea;
+					Info.fHotTracking = true;
+					Info.fClickable = true;
+				} else if (x % HeaderWidth >= HeaderWidth - ChevronArea) {
+					Info.Part = HitTestPart::ServiceChevron;
+					Info.ListIndex = Service;
+					Info.PartRect = HeaderRect;
+					Info.PartRect.left = Info.PartRect.right - ChevronArea;
+					Info.fHotTracking = true;
+					Info.fClickable = true;
+				} else {
+					Info.Part = HitTestPart::ServiceHeader;
+					Info.ListIndex = Service;
+					Info.PartRect = HeaderRect;
+				}
+			}
+		} else if (m_ListMode == ListMode::Week) {
+			const RECT HeaderRect = {m_TimeBarWidth, 0, rc.right - m_TimeBarWidth, m_HeaderHeight};
+
+			if (x >= HeaderRect.right - ChevronArea && y < m_HeaderHeight) {
+				Info.Part = HitTestPart::ServiceChevron;
+				Info.PartRect = HeaderRect;
+				Info.PartRect.left = HeaderRect.right - ChevronArea;
+				Info.fHotTracking = true;
+				Info.fClickable = true;
+			} else if (x < HeaderRect.left + m_WeekListHeaderTitleWidth && y < m_HeaderHeight) {
+				Info.Part = HitTestPart::ServiceTitle;
+				Info.PartRect = HeaderRect;
+				Info.PartRect.right = HeaderRect.left + m_WeekListHeaderTitleWidth;
+				Info.fHotTracking = true;
+				Info.fClickable = true;
+			} else {
+				Info.Part = HitTestPart::ServiceHeader;
+				Info.PartRect = HeaderRect;
+				Info.PartRect.bottom += m_HeaderHeight;
+			}
+		}
+	} else if ((x >= 0 && x < m_TimeBarWidth) || (x < rc.right && x >= rc.right - m_TimeBarWidth)) {
+		RECT TimeBarRect;
+		TimeBarRect.left = x < m_TimeBarWidth ? 0L : rc.right - m_TimeBarWidth;
+		TimeBarRect.right = TimeBarRect.left + m_TimeBarWidth;
+		TimeBarRect.top = 0;
+		TimeBarRect.bottom = rc.bottom;
+
+		if (m_ListMode == ListMode::Services) {
+			if (m_Day > DAY_FIRST && y >= 0 && y < m_HeaderHeight) {
+				Info.Part = HitTestPart::TimeBarPrev;
+				Info.PartRect = TimeBarRect;
+				Info.PartRect.bottom = m_HeaderHeight;
+				Info.fClickable = true;
+			} else if (m_Day < DAY_LAST) {
+				const int Bottom = (m_Hours * m_LinesPerHour - m_ScrollPos.y) * GetLineHeight();
+				if (y - m_HeaderHeight >= Bottom - m_TimeBarWidth && y - m_HeaderHeight < Bottom) {
+					Info.Part = HitTestPart::TimeBarNext;
+					Info.PartRect = TimeBarRect;
+					Info.PartRect.top = Bottom - m_TimeBarWidth;
+					Info.PartRect.bottom = Bottom;
+					Info.fClickable = true;
+				}
+			}
+		}
+
+		if (Info.Part == HitTestPart::None) {
+			Info.Part = HitTestPart::TimeBar;
+			Info.PartRect = TimeBarRect;
+		}
+	}
+
+	return Info;
+}
+
+
+bool CProgramGuide::SetHitInfo(const HitTestInfo &Info, bool fUpdate)
+{
+	if (m_HitInfo.Part == Info.Part && m_HitInfo.ListIndex == Info.ListIndex)
+		return false;
+
+	if (m_HitInfo.Part != HitTestPart::None && m_HitInfo.fHotTracking)
+		Invalidate(&m_HitInfo.PartRect);
+
+	m_HitInfo = Info;
+
+	if (m_HitInfo.Part != HitTestPart::None && m_HitInfo.fHotTracking)
+		Invalidate(&m_HitInfo.PartRect);
+
+	if (fUpdate)
+		Update();
+
+	return true;
+}
+
+
+void CProgramGuide::ResetHitInfo(bool fUpdate)
+{
+	if (m_HitInfo.Part != HitTestPart::None)
+		SetHitInfo({}, fUpdate);
+}
+
+
 int CProgramGuide::GetTimePos() const
 {
 	LibISDB::DateTime Begin;
@@ -2694,10 +2863,14 @@ void CProgramGuide::SetTooltip()
 		m_Tooltip.DeleteAllTools();
 		RECT rc;
 		GetClientRect(&rc);
-		rc.left += m_TimeBarWidth;
 		rc.right -= m_TimeBarWidth;
-		rc.bottom = m_HeaderHeight;
-		m_Tooltip.AddTool(0, rc, TEXT("チャンネル一覧表示へ"));
+		rc.left = rc.right - (m_Style.HeaderPadding.Right + m_Style.HeaderChevronMargin.Right + m_Style.HeaderChevronSize.Width);
+		if (rc.left < m_TimeBarWidth)
+			rc.left = m_TimeBarWidth;
+		if (rc.left < rc.right) {
+			rc.bottom = m_HeaderHeight;
+			m_Tooltip.AddTool(0, rc, TEXT("チャンネル一覧表示へ"));
+		}
 	}
 }
 
@@ -2718,6 +2891,7 @@ void CProgramGuide::OnFontChanged()
 {
 	ResetEventFont();
 	CalcFontMetrics();
+	ResetHitInfo();
 	SetScrollBar();
 	SetTooltip();
 	Invalidate();
@@ -3009,10 +3183,8 @@ bool CProgramGuide::SetServiceListMode()
 		const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
 		m_ScrollPos = m_OldScrollPos;
-		CalcLayout();
-		SetScrollBar();
+		UpdateLayout();
 		SetCaption();
-		Invalidate();
 
 		RestoreTimePos();
 
@@ -3038,6 +3210,7 @@ bool CProgramGuide::SetWeekListMode(int Service)
 
 		m_ListMode = ListMode::Week;
 		m_WeekListService = Service;
+		m_WeekListHeaderTitleWidth = 0;
 
 		const HCURSOR hcurOld = ::SetCursor(::LoadCursor(nullptr, IDC_WAIT));
 
@@ -3045,10 +3218,8 @@ bool CProgramGuide::SetWeekListMode(int Service)
 		m_OldScrollPos = m_ScrollPos;
 		m_ScrollPos.x = 0;
 		m_ScrollPos.y = 0;
-		CalcLayout();
-		SetScrollBar();
+		UpdateLayout();
 		SetCaption();
-		Invalidate();
 
 		RestoreTimePos();
 
@@ -3290,11 +3461,9 @@ bool CProgramGuide::SetViewDay(int Day)
 					m_pFrame->OnListModeChanged();
 			}
 			m_ScrollPos.y = 0;
-			CalcLayout();
-			SetScrollBar();
-			SetCaption();
 			LibISDB::GetCurrentEPGTime(&m_CurTime);
-			Invalidate();
+			UpdateLayout();
+			SetCaption();
 
 			RestoreTimePos();
 
@@ -3419,9 +3588,7 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour, int ItemWidth)
 			m_ScrollPos.x = 0;
 			m_ScrollPos.y = 0;
 			m_OldScrollPos = m_ScrollPos;
-			CalcLayout();
-			SetScrollBar();
-			Invalidate();
+			UpdateLayout();
 		}
 	}
 	return true;
@@ -3532,13 +3699,24 @@ bool CProgramGuide::SetDragScroll(bool fDragScroll)
 {
 	if (m_fDragScroll != fDragScroll) {
 		m_fDragScroll = fDragScroll;
+
 		if (m_hwnd != nullptr) {
+			RECT rc;
 			POINT pt;
 
+			::GetWindowRect(m_hwnd, &rc);
 			::GetCursorPos(&pt);
-			SendMessage(
-				WM_SETCURSOR, reinterpret_cast<WPARAM>(m_hwnd),
-				MAKELPARAM(SendMessage(WM_NCHITTEST, 0, MAKELPARAM(pt.x, pt.y)), WM_MOUSEMOVE));
+			if (::PtInRect(&rc, pt)) {
+				const WORD HitTestCode =
+					static_cast<WORD>(SendMessage(WM_NCHITTEST, 0, MAKELPARAM(pt.x, pt.y)));
+				if (HitTestCode == HTCLIENT) {
+					::ScreenToClient(m_hwnd, &pt);
+					SetHitInfo(HitTest(pt.x, pt.y));
+				}
+				SendMessage(
+					WM_SETCURSOR, reinterpret_cast<WPARAM>(m_hwnd),
+					MAKELPARAM(HitTestCode, WM_MOUSEMOVE));
+			}
 		}
 	}
 	return true;
@@ -3961,6 +4139,9 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			if (m_hDragCursor2 == nullptr)
 				m_hDragCursor2 = ::LoadCursor(m_hinst, MAKEINTRESOURCE(IDC_GRAB2));
 
+			m_HitInfo = {};
+			m_MouseLeaveTrack.Initialize(hwnd);
+
 			m_EpgIcons.Load();
 			m_EventInfoPopupManager.Initialize(hwnd, &m_EventInfoPopupHandler);
 			m_Tooltip.Create(hwnd);
@@ -3998,6 +4179,7 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				Pos.x = std::max(Size.cx - Page.cx, 0L);
 			if (Pos.y > std::max(Size.cy - Page.cy, 0L))
 				Pos.y = std::max(Size.cy - Page.cy, 0L);
+			ResetHitInfo(true);
 			SetScrollBar();
 			SetScrollPos(Pos);
 		}
@@ -4070,52 +4252,50 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_LBUTTONDOWN:
 		{
 			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-			RECT rc;
+
+			SetHitInfo(HitTest(pt.x, pt.y), true);
 
 			::SetFocus(hwnd);
-			::GetClientRect(hwnd, &rc);
-			if (pt.y < m_HeaderHeight
-					&& pt.x >= m_TimeBarWidth && pt.x < rc.right - m_TimeBarWidth) {
-				if (m_ListMode == ListMode::Services) {
-					const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
-					const int x = pt.x + m_ScrollPos.x - m_TimeBarWidth;
 
-					if (x < static_cast<int>(m_EventLayoutList.Length()) * HeaderWidth) {
-						const int Service = x / HeaderWidth;
-						const int ChevronArea =
-							m_Style.HeaderChevronSize.Width +
-							m_Style.HeaderChevronMargin.Right + m_Style.HeaderPadding.Right;
+			if (m_HitInfo.Part != HitTestPart::None) {
+				switch (m_HitInfo.Part) {
+				case HitTestPart::ServiceTitle:
+					{
+						int ServiceIndex;
 
-						if (x % HeaderWidth < HeaderWidth - (m_Style.HeaderChevronMargin.Left + ChevronArea)) {
-							if (m_pEventHandler) {
-								const ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(Service);
+						if (m_ListMode == ListMode::Services)
+							ServiceIndex = m_HitInfo.ListIndex;
+						else if (m_ListMode == ListMode::Week)
+							ServiceIndex = m_WeekListService;
+						else
+							break;
+						if (m_pEventHandler) {
+							const ProgramGuide::CServiceInfo *pServiceInfo = m_ServiceList.GetItem(ServiceIndex);
 
-								if (pServiceInfo != nullptr) {
-									String BonDriver(pServiceInfo->GetChannelInfo().GetTunerName());
-									const LibISDB::EPGDatabase::ServiceInfo ServiceInfo(pServiceInfo->GetServiceInfo());
+							if (pServiceInfo != nullptr) {
+								String BonDriver(pServiceInfo->GetChannelInfo().GetTunerName());
+								const LibISDB::EPGDatabase::ServiceInfo ServiceInfo(pServiceInfo->GetServiceInfo());
 
-									m_pEventHandler->OnServiceTitleLButtonDown(
-										BonDriver.c_str(), &ServiceInfo);
-								}
+								m_pEventHandler->OnServiceTitleLButtonDown(BonDriver.c_str(), &ServiceInfo);
 							}
-						} else if (x % HeaderWidth >= HeaderWidth - ChevronArea) {
-							SetWeekListMode(Service);
 						}
 					}
-				} else if (m_ListMode == ListMode::Week) {
-					SetServiceListMode();
-				}
-			} else if (pt.x < m_TimeBarWidth || pt.x >= rc.right - m_TimeBarWidth) {
-				if (m_ListMode == ListMode::Services) {
-					if (m_Day > DAY_FIRST && pt.y < m_HeaderHeight) {
-						::SendMessage(hwnd, WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + (m_Day - 1), 0);
-					} else if (m_Day < DAY_LAST) {
-						const int y = (m_Hours * m_LinesPerHour - m_ScrollPos.y) * GetLineHeight();
-						if (pt.y - m_HeaderHeight >= y - m_TimeBarWidth
-								&& pt.y - m_HeaderHeight < y) {
-							::SendMessage(hwnd, WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + (m_Day + 1), 0);
-						}
-					}
+					break;
+
+				case HitTestPart::ServiceChevron:
+					if (m_ListMode == ListMode::Services)
+						SetWeekListMode(m_HitInfo.ListIndex);
+					else if (m_ListMode == ListMode::Week)
+						SetServiceListMode();
+					break;
+
+				case HitTestPart::TimeBarPrev:
+					::SendMessage(hwnd, WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + (m_Day - 1), 0);
+					break;
+
+				case HitTestPart::TimeBarNext:
+					::SendMessage(hwnd, WM_COMMAND, CM_PROGRAMGUIDE_DAY_FIRST + (m_Day + 1), 0);
+					break;
 				}
 			} else if (m_fDragScroll) {
 				m_fScrolling = true;
@@ -4184,62 +4364,46 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		return 0;
 
 	case WM_MOUSEMOVE:
-		if (m_fScrolling) {
+		{
 			const int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 
-			if (!m_DragInfo.fCursorMoved
-					&& (m_DragInfo.StartCursorPos.x != x || m_DragInfo.StartCursorPos.y != y))
-				m_DragInfo.fCursorMoved = true;
+			if (m_fScrolling) {
+				if (!m_DragInfo.fCursorMoved
+						&& (m_DragInfo.StartCursorPos.x != x || m_DragInfo.StartCursorPos.y != y))
+					m_DragInfo.fCursorMoved = true;
 
-			const int XScroll = (m_DragInfo.StartScrollPos.x + (m_DragInfo.StartCursorPos.x - x)) - m_ScrollPos.x;
-			const int YScroll = (m_DragInfo.StartScrollPos.y + (m_DragInfo.StartCursorPos.y - y) / GetLineHeight()) - m_ScrollPos.y;
-			if (XScroll != 0 || YScroll != 0)
-				Scroll(XScroll, YScroll);
+				const int XScroll = (m_DragInfo.StartScrollPos.x + (m_DragInfo.StartCursorPos.x - x)) - m_ScrollPos.x;
+				const int YScroll = (m_DragInfo.StartScrollPos.y + (m_DragInfo.StartCursorPos.y - y) / GetLineHeight()) - m_ScrollPos.y;
+				if (XScroll != 0 || YScroll != 0)
+					Scroll(XScroll, YScroll);
+			} else {
+				SetHitInfo(HitTest(x, y));
+
+				m_MouseLeaveTrack.OnMouseMove();
+			}
 		}
+		return 0;
+
+	case WM_NCMOUSEMOVE:
+		m_MouseLeaveTrack.OnNcMouseMove();
+		return 0;
+
+	case WM_MOUSELEAVE:
+		m_MouseLeaveTrack.OnMouseLeave();
+		ResetHitInfo();
+		return 0;
+
+	case WM_NCMOUSELEAVE:
+		m_MouseLeaveTrack.OnNcMouseLeave();
+		ResetHitInfo();
 		return 0;
 
 	case WM_SETCURSOR:
 		if (LOWORD(lParam) == HTCLIENT) {
-			POINT pt;
-			RECT rc;
-
-			::GetCursorPos(&pt);
-			::ScreenToClient(hwnd, &pt);
-			::GetClientRect(hwnd, &rc);
-			if (pt.y < m_HeaderHeight
-					&& pt.x >= m_TimeBarWidth
-					&& pt.x < rc.right - m_TimeBarWidth) {
-				if (m_ListMode == ListMode::Services) {
-					const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
-					const int ChevronArea =
-						m_Style.HeaderChevronSize.Width +
-						m_Style.HeaderChevronMargin.Right + m_Style.HeaderPadding.Right;
-					const int x = pt.x + m_ScrollPos.x - m_TimeBarWidth;
-					if (x < static_cast<int>(m_EventLayoutList.Length()) * HeaderWidth
-							&& (x % HeaderWidth < HeaderWidth - (m_Style.HeaderChevronMargin.Left + ChevronArea)
-								|| x % HeaderWidth >= HeaderWidth - ChevronArea)) {
-						::SetCursor(GetActionCursor());
-						return TRUE;
-					}
-				} else if (m_ListMode == ListMode::Week) {
+			if (m_HitInfo.Part != HitTestPart::None) {
+				if (m_HitInfo.fClickable) {
 					::SetCursor(GetActionCursor());
 					return TRUE;
-				}
-			} else if (pt.x < m_TimeBarWidth
-					|| pt.x >= rc.right - m_TimeBarWidth) {
-				if (m_ListMode == ListMode::Services) {
-					if (m_Day > DAY_FIRST
-							&& pt.y < m_HeaderHeight) {
-						::SetCursor(GetActionCursor());
-						return TRUE;
-					}
-					const int y = (m_Hours * m_LinesPerHour - m_ScrollPos.y) * GetLineHeight();
-					if (m_Day < DAY_LAST
-							&& pt.y - m_HeaderHeight >= y - m_TimeBarWidth
-							&& pt.y - m_HeaderHeight < y) {
-						::SetCursor(GetActionCursor());
-						return TRUE;
-					}
 				}
 			} else if (m_fDragScroll) {
 				::SetCursor(m_hDragCursor1);
@@ -4816,10 +4980,7 @@ void CProgramGuide::ApplyStyle()
 void CProgramGuide::RealizeStyle()
 {
 	if (m_hwnd != nullptr) {
-		CalcLayout();
-		SetScrollBar();
-		SetTooltip();
-		Invalidate();
+		UpdateLayout();
 	}
 }
 
