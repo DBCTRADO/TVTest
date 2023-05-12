@@ -83,6 +83,7 @@ EventInfoPopupEventTitle=#dddddd
 ProgramGuideBack=#333333
 ProgramGuideChannelBack=#222222
 ProgramGuideChannelText=#999999
+ProgramGuideChannelHighlightText=#dddddd
 ProgramGuideCurChannelBack=#1e75bb
 ProgramGuideCurChannelText=#dddddd
 ProgramGuideTimeBack=#222222

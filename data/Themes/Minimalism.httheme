@@ -90,6 +90,7 @@ EventInfoPopupText=#888888
 ProgramGuideBack=#333333
 ProgramGuideChannelBack=#000000
 ProgramGuideChannelText=#999999
+ProgramGuideChannelHighlightText=#bbbbbb
 ProgramGuideCurChannelBack=#333333
 ProgramGuideCurChannelBack2=#444444
 ProgramGuideCurChannelBackGradientDirection=vertical

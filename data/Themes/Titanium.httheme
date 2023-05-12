@@ -63,6 +63,7 @@ ProgramGuideBack=#dcd9d8
 ProgramGuideChannelBack=#aeaaa4
 ProgramGuideChannelBack2=#cac8c4
 ProgramGuideChannelText=#555555
+ProgramGuideChannelHighlightText=#444444
 ProgramGuideCurChannelBack=#cac8c4
 ProgramGuideCurChannelBack2=#dcd9d8
 ProgramGuideCurChannelText=#666666

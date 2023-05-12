@@ -99,6 +99,7 @@ ProgramGuideChannelBack=#000000
 ProgramGuideChannelBack2=#00337f
 ProgramGuideChannelBackGradient=glossy
 ProgramGuideChannelText=#bbbbbb
+ProgramGuideChannelHighlightText=#cccccc
 ProgramGuideCurChannelBack=#00193f
 ProgramGuideCurChannelBack2=#004cbf
 ProgramGuideCurChannelBackGradient=glossy

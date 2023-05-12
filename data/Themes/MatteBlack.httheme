@@ -151,6 +151,7 @@ ProgramGuideChannelBack=#333333
 ProgramGuideChannelBack2=#111111
 ProgramGuideChannelBackGradientDirection=vertical
 ProgramGuideChannelText=#999999
+ProgramGuideChannelHighlightText=#dddddd
 ProgramGuideCurChannelBack=#4486e8
 ProgramGuideCurChannelBack2=#3c76cc
 ProgramGuideCurChannelBackGradientDirection=vertical

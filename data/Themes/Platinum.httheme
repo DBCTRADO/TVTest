@@ -158,6 +158,7 @@ ProgramGuideChannelBack=#dddddd
 ProgramGuideChannelBack2=#bbbbbb
 ProgramGuideChannelBackGradientDirection=vertical-mirror
 ProgramGuideChannelText=#222222
+ProgramGuideChannelHighlightText=#555555
 ProgramGuideCurChannelBack=#bbbbbb
 ProgramGuideCurChannelBack2=#888888
 ProgramGuideCurChannelBackGradient=glossy

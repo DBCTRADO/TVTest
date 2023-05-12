@@ -93,6 +93,7 @@ ProgramGuideBack=#eeeeee
 ProgramGuideChannelBack=#dddddd
 ProgramGuideChannelBack2=#bbbbbb
 ProgramGuideChannelText=#333333
+ProgramGuideChannelHighlightText=#000000
 ProgramGuideCurChannelBack=#838f99
 ProgramGuideCurChannelBack2=#58646e
 ProgramGuideCurChannelText=#ffffff

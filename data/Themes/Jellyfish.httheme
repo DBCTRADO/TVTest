@@ -64,6 +64,7 @@ ProgramGuideBack=#666666
 ProgramGuideChannelBack=#777777
 ProgramGuideChannelBack2=#222222
 ProgramGuideChannelText=#99c1ff
+ProgramGuideChannelHighlightText=#c9dfff
 ProgramGuideCurChannelBack=#99c1ff
 ProgramGuideCurChannelBack2=#3384ff
 ProgramGuideCurChannelText=#333333

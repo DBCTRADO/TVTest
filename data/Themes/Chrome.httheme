@@ -87,6 +87,7 @@ ProgramGuideText=#000000
 ProgramGuideChannelBack=#a8c8f0
 ProgramGuideChannelBack2=#98c0f0
 ProgramGuideChannelText=#4768a0
+ProgramGuideChannelHighlightText=#233450
 ProgramGuideCurChannelBack=#f8fafd
 ProgramGuideCurChannelBack2=#deeaf8
 ProgramGuideCurChannelText=#4768a0
