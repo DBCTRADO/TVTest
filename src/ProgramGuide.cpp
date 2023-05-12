@@ -4483,6 +4483,14 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		OnCommand(LOWORD(wParam));
 		return 0;
 
+	case WM_APPCOMMAND:
+		if (GET_APPCOMMAND_LPARAM(lParam) == APPCOMMAND_BROWSER_BACKWARD) {
+			if (m_ListMode == ListMode::Week)
+				SetServiceListMode();
+			return TRUE;
+		}
+		break;
+
 	case WM_DESTROY:
 		ShowProgramSearch(false);
 		if (m_pProgramCustomizer != nullptr)
