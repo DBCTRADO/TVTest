@@ -114,15 +114,20 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			DlgCheckBox_Check(
 				hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT,
 				m_pProgramGuide->GetExcludeNoEventServices());
+			DlgCheckBox_Check(
+				hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDECOMMONEVENTONLY,
+				m_pProgramGuide->GetExcludeCommonEventOnlyServices());
 
-			AddControl(IDC_EPGCHANNELSETTINGS_CHANNELLIST, AlignFlag::All);
-			AddControls(
-				IDC_EPGCHANNELSETTINGS_CHECKALL,
-				IDC_EPGCHANNELSETTINGS_INVERTCHECK,
-				AlignFlag::Right);
-			AddControl(IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT, AlignFlag::Bottom);
-			AddControl(IDOK, AlignFlag::BottomRight);
-			AddControl(IDCANCEL, AlignFlag::BottomRight);
+			AddControls({
+				{IDC_EPGCHANNELSETTINGS_CHANNELLIST,            AlignFlag::All},
+				{IDC_EPGCHANNELSETTINGS_CHECKALL,               AlignFlag::Right},
+				{IDC_EPGCHANNELSETTINGS_UNCHECKALL,             AlignFlag::Right},
+				{IDC_EPGCHANNELSETTINGS_INVERTCHECK,            AlignFlag::Right},
+				{IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT,         AlignFlag::Bottom},
+				{IDC_EPGCHANNELSETTINGS_EXCLUDECOMMONEVENTONLY, AlignFlag::Bottom},
+				{IDOK,                                          AlignFlag::BottomRight},
+				{IDCANCEL,                                      AlignFlag::BottomRight},
+			});
 
 			ApplyPosition();
 		}
@@ -178,6 +183,8 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 				m_pProgramGuide->SetExcludeNoEventServices(
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT));
+				m_pProgramGuide->SetExcludeCommonEventOnlyServices(
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDECOMMONEVENTONLY));
 			}
 			[[fallthrough]];
 		case IDCANCEL:

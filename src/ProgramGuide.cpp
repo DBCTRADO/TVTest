@@ -1444,6 +1444,20 @@ ProgramGuide::CServiceInfo * CProgramGuide::MakeServiceInfo(
 		if (m_fExcludeNoEventServices)
 			return nullptr;
 		pService = new ProgramGuide::CServiceInfo(*pChannelInfo, szBonDriver, ChannelIndex);
+	} else {
+		if (m_fExcludeCommonEventOnlyServices) {
+			const int NumEvents = pService->NumEvents();
+			int i;
+			for (i = 0; i < NumEvents; i++) {
+				const LibISDB::EventInfo *pEvent = pService->GetEvent(i);
+				if (!pEvent->IsCommonEvent)
+					break;
+			}
+			if (i == NumEvents) {
+				delete pService;
+				return nullptr;
+			}
+		}
 	}
 
 	const HBITMAP hbmLogo = GetAppClass().LogoManager.GetAssociatedLogoBitmap(
@@ -3124,6 +3138,12 @@ bool CProgramGuide::SetExcludeNoEventServices(bool fExclude)
 {
 	m_fExcludeNoEventServices = fExclude;
 	return true;
+}
+
+
+void CProgramGuide::SetExcludeCommonEventOnlyServices(bool fExclude)
+{
+	m_fExcludeCommonEventOnlyServices = fExclude;
 }
 
 

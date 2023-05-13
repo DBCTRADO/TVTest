@@ -376,6 +376,8 @@ namespace TVTest
 
 		bool GetExcludeNoEventServices() const { return m_fExcludeNoEventServices; }
 		bool SetExcludeNoEventServices(bool fExclude);
+		bool GetExcludeCommonEventOnlyServices() const { return m_fExcludeCommonEventOnlyServices; }
+		void SetExcludeCommonEventOnlyServices(bool fExclude);
 		bool SetExcludeServiceList(const ServiceInfoList &List);
 		bool GetExcludeServiceList(ServiceInfoList *pList) const;
 		bool IsExcludeService(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const;
@@ -600,6 +602,7 @@ namespace TVTest
 		int m_CurrentChannelGroup = -1;
 		ServiceInfo m_CurrentChannel;
 		bool m_fExcludeNoEventServices = true;
+		bool m_fExcludeCommonEventOnlyServices = true;
 		ServiceInfoList m_ExcludeServiceList;
 		WORD m_CurrentEventID = 0;
 

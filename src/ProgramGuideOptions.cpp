@@ -158,6 +158,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("ExcludeNoEventServices"), &fExcludeNoEvent))
 			m_pProgramGuide->SetExcludeNoEventServices(fExcludeNoEvent);
 
+		bool fExcludeCommonEventOnly;
+		if (Settings.Read(TEXT("ExcludeCommonEventOnlyServices"), &fExcludeCommonEventOnly))
+			m_pProgramGuide->SetExcludeCommonEventOnlyServices(fExcludeCommonEventOnly);
+
 		bool fAutoRefresh;
 		if (Settings.Read(TEXT("AutoRefresh"), &fAutoRefresh))
 			m_pProgramGuide->SetAutoRefresh(fAutoRefresh);
@@ -357,6 +361,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("KeepTimePos"), m_pProgramGuide->GetKeepTimePos());
 		Settings.Write(TEXT("ShowFeaturedMark"), m_pProgramGuide->GetShowFeaturedMark());
 		Settings.Write(TEXT("ExcludeNoEventServices"), m_pProgramGuide->GetExcludeNoEventServices());
+		Settings.Write(TEXT("ExcludeCommonEventOnlyServices"), m_pProgramGuide->GetExcludeCommonEventOnlyServices());
 		Settings.Write(TEXT("AutoRefresh"), m_pProgramGuide->GetAutoRefresh());
 
 		int Width, Height;
