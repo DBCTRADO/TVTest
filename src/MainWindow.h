@@ -363,6 +363,8 @@ namespace TVTest
 				CFullscreen &m_Fullscreen;
 			};
 
+			static constexpr UINT MESSAGE_SHOWEVENTINFOOSD = WM_USER;
+
 			CMainWindow &m_MainWindow;
 			CAppMain &m_App;
 			Style::CStyleScaling m_StyleScaling;
@@ -384,6 +386,7 @@ namespace TVTest
 			int m_PanelWidth = -1;
 			int m_PanelHeight = -1;
 			CCursorTracker m_CursorTracker;
+			bool m_fShowEventInfoOSD = false;
 
 			bool OnCreate();
 			void OnMouseCommand(int Command);
@@ -580,6 +583,8 @@ namespace TVTest
 		CDisplayBaseEventHandler m_DisplayBaseEventHandler{this};
 
 		CChannelInput m_ChannelInput;
+
+		bool m_fNeedEventInfoOSD = false;
 
 		CEpgCaptureEventHandler m_EpgCaptureEventHandler{this};
 

@@ -184,6 +184,8 @@ namespace TVTest
 
 		bool SelectPanelPage(CCommandManager::InvokeParameters &Params);
 
+		bool ToggleEventInfoOSD(CCommandManager::InvokeParameters &Params);
+
 		CAppMain &m_App;
 
 		static const std::uint8_t m_AudioGainList[];

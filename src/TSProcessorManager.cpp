@@ -681,7 +681,7 @@ void CTSProcessorManager::OnNotify(
 {
 	GetAppClass().MainWindow.PostMessage(
 		WM_APP_SHOWNOTIFICATIONBAR,
-		MAKEWPARAM(static_cast<WORD>(Type), COSDOptions::NOTIFY_TSPROCESSORERROR),
+		MAKEWPARAM(static_cast<WORD>(Type), CNotificationBarOptions::NOTIFY_TSPROCESSORERROR),
 		reinterpret_cast<LPARAM>(DuplicateString(pszMessage)));
 }
 

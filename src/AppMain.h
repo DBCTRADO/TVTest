@@ -41,6 +41,7 @@
 #include "GeneralOptions.h"
 #include "ViewOptions.h"
 #include "OSDOptions.h"
+#include "NotificationBarOptions.h"
 #include "StatusOptions.h"
 #include "SideBarOptions.h"
 #include "MenuOptions.h"
@@ -178,6 +179,7 @@ namespace TVTest
 		CGeneralOptions GeneralOptions;
 		CViewOptions ViewOptions;
 		COSDOptions OSDOptions;
+		CNotificationBarOptions NotificationBarOptions;
 		COSDManager OSDManager;
 		CStatusOptions StatusOptions;
 		CSideBarOptions SideBarOptions;

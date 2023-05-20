@@ -49,11 +49,6 @@ namespace TVTest
 			TVTEST_ENUM_CLASS_TRAILER
 		};
 
-		enum {
-			NOTIFY_EVENTNAME        = 0x00000001,
-			NOTIFY_TSPROCESSORERROR = 0x00000002
-		};
-
 		COSDOptions();
 		~COSDOptions();
 
@@ -76,20 +71,20 @@ namespace TVTest
 		bool GetLayeredWindow() const;
 		void OnDwmCompositionChanged();
 		bool IsOSDEnabled(OSDType Type) const;
-		bool IsNotificationBarEnabled() const { return m_fEnableNotificationBar; }
-		int GetNotificationBarDuration() const { return m_NotificationBarDuration; }
-		const Style::Font &GetNotificationBarFont() const { return m_NotificationBarFont; }
-		bool IsNotifyEnabled(unsigned int Type) const;
+
+		const LOGFONT &GetEventInfoOSDFont() const { return m_EventInfoOSDFont; }
+		unsigned int GetEventInfoOSDDuration() const { return m_EventInfoOSDDuration; }
+		bool GetEventInfoOSDAutoShowChannelChange() const { return m_fEventInfoOSDAutoShowChannelChange; }
+		bool GetEventInfoOSDAutoShowEventChange() const { return m_fEventInfoOSDAutoShowEventChange; }
+		bool GetEventInfoOSDManualShowNoAutoHide() const { return m_fEventInfoOSDManualShowNoAutoHide; }
+		int GetEventInfoOSDOpacity() const { return m_EventInfoOSDOpacity; }
+
 		const Style::Font &GetDisplayFont() const { return m_DisplayFont; }
 		bool IsDisplayFontAutoSize() const { return m_fDisplayFontAutoSize; }
 
 	private:
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
-		static UINT_PTR CALLBACK ChooseFontHookProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-		void EnableNotify(unsigned int Type, bool fEnabled);
 
 		bool m_fShowOSD = true;
 		bool m_fPseudoOSD = true;
@@ -106,11 +101,13 @@ namespace TVTest
 		bool m_fLayeredWindow = true;
 		bool m_fCompositionEnabled = false;
 
-		bool m_fEnableNotificationBar = true;
-		int m_NotificationBarDuration = 3000;
-		unsigned int m_NotificationBarFlags = NOTIFY_EVENTNAME | NOTIFY_TSPROCESSORERROR;
-		Style::Font m_NotificationBarFont;
-		Style::Font m_CurNotificationBarFont;
+		LOGFONT m_EventInfoOSDFont;
+		LOGFONT m_EventInfoOSDFontCur;
+		unsigned int m_EventInfoOSDDuration = 10;
+		bool m_fEventInfoOSDAutoShowChannelChange = false;
+		bool m_fEventInfoOSDAutoShowEventChange = false;
+		bool m_fEventInfoOSDManualShowNoAutoHide = true;
+		int m_EventInfoOSDOpacity = 60;
 
 		Style::Font m_DisplayFont;
 		Style::Font m_DisplayFontCur;

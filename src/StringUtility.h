@@ -112,6 +112,7 @@ namespace TVTest
 		int CompareNoCase(const String &String1, const String &String2, String::size_type Length);
 		int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type Length);
 		bool Trim(String &Str, LPCWSTR pszSpaces = L" \t");
+		bool TrimEnd(String &Str, LPCWSTR pszSpaces = L" \t");
 		bool Replace(String &Str, LPCWSTR pszFrom, LPCWSTR pszTo);
 		bool Replace(String &Str, String::value_type From, String::value_type To);
 		void ToUpper(String &Str);

@@ -502,6 +502,7 @@ bool CAppMain::LoadSettings()
 		GeneralOptions.ReadSettings(Settings);
 		ViewOptions.ReadSettings(Settings);
 		OSDOptions.ReadSettings(Settings);
+		NotificationBarOptions.ReadSettings(Settings);
 		PanelOptions.ReadSettings(Settings);
 		PlaybackOptions.ReadSettings(Settings);
 		VideoOptions.ReadSettings(Settings);
@@ -650,6 +651,7 @@ bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 		{&PluginOptions,                 true},
 		{&ViewOptions,                   false},
 		{&OSDOptions,                    false},
+		{&NotificationBarOptions,        false},
 		{&MenuOptions,                   false},
 		{&ColorSchemeOptions,            false},
 		{&OperationOptions,              false},

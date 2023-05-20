@@ -26,6 +26,7 @@
 #include "OSDOptions.h"
 #include "PseudoOSD.h"
 #include "ChannelList.h"
+#include "EventInfoOSD.h"
 
 
 namespace TVTest
@@ -59,20 +60,35 @@ namespace TVTest
 			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
+		enum class EventInfoOSDFlag : unsigned int {
+			None   = 0x0000U,
+			Manual = 0x0001U,
+			Auto   = 0x0002U,
+			Next   = 0x0004U,
+			TVTEST_ENUM_FLAGS_TRAILER
+		};
+
 		COSDManager(const COSDOptions *pOptions);
 
 		bool Initialize();
 		void SetEventHandler(CEventHandler *pEventHandler);
 		void Reset();
 		void ClearOSD();
+		void ClearCompositedOSD();
 		void OnParentMove();
+		void AdjustPosition();
 		bool ShowOSD(LPCTSTR pszText, ShowFlag Flags = ShowFlag::None);
 		void HideOSD();
 		bool ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, bool fChanging = false);
 		void HideChannelOSD();
 		bool ShowVolumeOSD(int Volume);
 		void HideVolumeOSD();
+		bool ShowEventInfoOSD(const LibISDB::EventInfo &EventInfo, EventInfoOSDFlag Flags);
+		void HideEventInfoOSD();
+		bool IsEventInfoOSDVisible() const;
+		bool IsEventInfoOSDCreated() const;
 		void OnOSDFontChanged();
+		void OnEventInfoOSDFontChanged();
 
 	private:
 		struct OSDStyle
@@ -107,6 +123,8 @@ namespace TVTest
 		CPseudoOSD m_OSD;
 		CPseudoOSD m_VolumeOSD;
 		int m_VolumeOSDMaxWidth = 0;
+		CEventInfoOSD m_EventInfoOSD;
+		EventInfoOSDFlag m_EventInfoOSDFlags = EventInfoOSDFlag::None;
 
 		bool CompositeText(LPCTSTR pszText, const RECT &rcClient, int LeftOffset, DWORD FadeTime);
 		bool CreateTextOSD(

@@ -435,6 +435,12 @@
     <ClCompile Include="DarkMode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EventInfoOSD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NotificationBarOptions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Accelerator.h">
@@ -873,6 +879,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StringFormat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventInfoOSD.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NotificationBarOptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

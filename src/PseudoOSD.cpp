@@ -150,6 +150,12 @@ bool CPseudoOSD::Destroy()
 }
 
 
+bool CPseudoOSD::IsCreated() const
+{
+	return m_hwnd != nullptr;
+}
+
+
 bool CPseudoOSD::Show(DWORD Time, bool fAnimation)
 {
 	if (m_hwnd == nullptr)
@@ -234,6 +240,19 @@ bool CPseudoOSD::IsVisible() const
 	if (m_hwnd == nullptr)
 		return false;
 	return ::IsWindowVisible(m_hwnd) != FALSE;
+}
+
+
+bool CPseudoOSD::Update()
+{
+	if (m_hwnd != nullptr) {
+		if (m_fLayeredWindow)
+			UpdateLayeredWindow();
+		else
+			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+	}
+
+	return true;
 }
 
 
@@ -397,12 +416,13 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 }
 
 
-bool CPseudoOSD::SetImage(HBITMAP hbm, ImageEffect Effect)
+bool CPseudoOSD::SetImage(HBITMAP hbm, ImageEffect Effect, ImageFlag Flags)
 {
 	m_hbm = hbm;
 	m_Text.clear();
 	m_hbmIcon = nullptr;
 	m_ImageEffect = Effect;
+	m_ImageFlags = Flags;
 #if 0
 	if (m_hwnd != nullptr) {
 		/*
@@ -534,17 +554,20 @@ void CPseudoOSD::UpdateLayeredWindow()
 	if (Width < 1 || Height < 1)
 		return;
 
-	DrawUtil::CBitmap Surface;
-	void *pBits;
-	if (!Surface.Create(Width, Height, 32, &pBits))
-		return;
-	::ZeroMemory(pBits, Width * 4 * Height);
-
 	const HDC hdc = ::GetDC(m_hwnd);
 	const HDC hdcSrc = ::CreateCompatibleDC(hdc);
-	const HBITMAP hbmOld = DrawUtil::SelectObject(hdcSrc, Surface);
+	DrawUtil::CBitmap Surface;
+	HBITMAP hbmOld;
 
-	{
+	if (m_hbm != nullptr && !!(m_ImageFlags & ImageFlag::DirectSource)) {
+		hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, m_hbm));
+	} else {
+		void *pBits;
+		if (!Surface.Create(Width, Height, 32, &pBits))
+			return;
+		::ZeroMemory(pBits, Width * 4 * Height);
+		hbmOld = DrawUtil::SelectObject(hdcSrc, Surface);
+
 		Graphics::CCanvas Canvas(hdcSrc);
 
 		::SetRect(&rc, 0, 0, Width, Height);

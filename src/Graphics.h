@@ -60,6 +60,7 @@ namespace TVTest
 			Format_EndEllipsis   = 0x00000040UL,
 			Format_WordEllipsis  = 0x00000080UL,
 			Format_TrimChar      = 0x00000100UL,
+			Format_ClipLastLine  = 0x00000200UL,
 			Draw_Antialias       = 0x00001000UL,
 			Draw_NoAntialias     = 0x00002000UL,
 			Draw_ClearType       = 0x00004000UL,
@@ -100,6 +101,7 @@ namespace TVTest
 			int GetWidth() const;
 			int GetHeight() const;
 			void Clear();
+			HBITMAP CreateBitmap();
 
 		private:
 			std::unique_ptr<Gdiplus::Bitmap> m_Bitmap;

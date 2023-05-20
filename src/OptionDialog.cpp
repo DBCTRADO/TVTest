@@ -38,6 +38,7 @@ COptionDialog::PageInfo COptionDialog::m_PageList[NUM_PAGES] = {
 	{TEXT("一般"),               nullptr, HELP_ID_OPTIONS_GENERAL},
 	{TEXT("表示"),               nullptr, HELP_ID_OPTIONS_VIEW},
 	{TEXT("OSD"),                nullptr, HELP_ID_OPTIONS_OSD},
+	{TEXT("通知バー"),           nullptr, HELP_ID_OPTIONS_NOTIFICATIONBAR},
 	{TEXT("ステータスバー"),     nullptr, HELP_ID_OPTIONS_STATUSBAR},
 	{TEXT("サイドバー"),         nullptr, HELP_ID_OPTIONS_SIDEBAR},
 	{TEXT("メニュー"),           nullptr, HELP_ID_OPTIONS_MENU},
@@ -115,29 +116,30 @@ void COptionDialog::Initialize()
 {
 	CAppMain &App = GetAppClass();
 
-	m_PageList[PAGE_GENERAL     ].pOptions = &App.GeneralOptions;
-	m_PageList[PAGE_VIEW        ].pOptions = &App.ViewOptions;
-	m_PageList[PAGE_OSD         ].pOptions = &App.OSDOptions;
-	m_PageList[PAGE_STATUS      ].pOptions = &App.StatusOptions;
-	m_PageList[PAGE_SIDEBAR     ].pOptions = &App.SideBarOptions;
-	m_PageList[PAGE_MENU        ].pOptions = &App.MenuOptions;
-	m_PageList[PAGE_PANEL       ].pOptions = &App.PanelOptions;
-	m_PageList[PAGE_COLORSCHEME ].pOptions = &App.ColorSchemeOptions;
-	m_PageList[PAGE_OPERATION   ].pOptions = &App.OperationOptions;
-	m_PageList[PAGE_ACCELERATOR ].pOptions = &App.Accelerator;
-	m_PageList[PAGE_CONTROLLER  ].pOptions = &App.ControllerManager;
-	m_PageList[PAGE_DRIVER      ].pOptions = &App.DriverOptions;
-	m_PageList[PAGE_VIDEO       ].pOptions = &App.VideoOptions;
-	m_PageList[PAGE_AUDIO       ].pOptions = &App.AudioOptions;
-	m_PageList[PAGE_PLAYBACK    ].pOptions = &App.PlaybackOptions;
-	m_PageList[PAGE_RECORD      ].pOptions = &App.RecordOptions;
-	m_PageList[PAGE_CAPTURE     ].pOptions = &App.CaptureOptions;
-	m_PageList[PAGE_CHANNELSCAN ].pOptions = &App.ChannelScan;
-	m_PageList[PAGE_EPG         ].pOptions = &App.EpgOptions;
-	m_PageList[PAGE_PROGRAMGUIDE].pOptions = &App.ProgramGuideOptions;
-	m_PageList[PAGE_PLUGIN      ].pOptions = &App.PluginOptions;
-	m_PageList[PAGE_TSPROCESSOR ].pOptions = &App.TSProcessorOptions;
-	m_PageList[PAGE_LOG         ].pOptions = &App.Logger;
+	m_PageList[PAGE_GENERAL        ].pOptions = &App.GeneralOptions;
+	m_PageList[PAGE_VIEW           ].pOptions = &App.ViewOptions;
+	m_PageList[PAGE_OSD            ].pOptions = &App.OSDOptions;
+	m_PageList[PAGE_NOTIFICATIONBAR].pOptions = &App.NotificationBarOptions;
+	m_PageList[PAGE_STATUS         ].pOptions = &App.StatusOptions;
+	m_PageList[PAGE_SIDEBAR        ].pOptions = &App.SideBarOptions;
+	m_PageList[PAGE_MENU           ].pOptions = &App.MenuOptions;
+	m_PageList[PAGE_PANEL          ].pOptions = &App.PanelOptions;
+	m_PageList[PAGE_COLORSCHEME    ].pOptions = &App.ColorSchemeOptions;
+	m_PageList[PAGE_OPERATION      ].pOptions = &App.OperationOptions;
+	m_PageList[PAGE_ACCELERATOR    ].pOptions = &App.Accelerator;
+	m_PageList[PAGE_CONTROLLER     ].pOptions = &App.ControllerManager;
+	m_PageList[PAGE_DRIVER         ].pOptions = &App.DriverOptions;
+	m_PageList[PAGE_VIDEO          ].pOptions = &App.VideoOptions;
+	m_PageList[PAGE_AUDIO          ].pOptions = &App.AudioOptions;
+	m_PageList[PAGE_PLAYBACK       ].pOptions = &App.PlaybackOptions;
+	m_PageList[PAGE_RECORD         ].pOptions = &App.RecordOptions;
+	m_PageList[PAGE_CAPTURE        ].pOptions = &App.CaptureOptions;
+	m_PageList[PAGE_CHANNELSCAN    ].pOptions = &App.ChannelScan;
+	m_PageList[PAGE_EPG            ].pOptions = &App.EpgOptions;
+	m_PageList[PAGE_PROGRAMGUIDE   ].pOptions = &App.ProgramGuideOptions;
+	m_PageList[PAGE_PLUGIN         ].pOptions = &App.PluginOptions;
+	m_PageList[PAGE_TSPROCESSOR    ].pOptions = &App.TSProcessorOptions;
+	m_PageList[PAGE_LOG            ].pOptions = &App.Logger;
 
 	for (int i = 0; i < NUM_PAGES; i++) {
 		COptions *pOptions = m_PageList[i].pOptions;

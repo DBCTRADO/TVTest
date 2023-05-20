@@ -1290,6 +1290,17 @@ void CUICore::SetPopupMenuDPI(int DPI)
 }
 
 
+bool CUICore::ShowEventInfoOSD(COSDManager::EventInfoOSDFlag Flags)
+{
+	LibISDB::EventInfo EventInfo;
+
+	if (!m_App.CoreEngine.GetCurrentEventInfo(&EventInfo, !!(Flags & COSDManager::EventInfoOSDFlag::Next)))
+		return false;
+
+	return m_App.OSDManager.ShowEventInfoOSD(EventInfo, Flags);
+}
+
+
 bool CUICore::DoCommand(int Command)
 {
 	if (m_pSkin == nullptr || Command <= 0 || Command > 0xFFFF)

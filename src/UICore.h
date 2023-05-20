@@ -30,6 +30,7 @@
 #include "Menu.h"
 #include "GUIUtil.h"
 #include "VariableString.h"
+#include "OSDManager.h"
 #include "LibISDB/LibISDB/Base/Logger.hpp"
 
 
@@ -163,6 +164,8 @@ namespace TVTest
 		bool HandleInitMenuPopup(HMENU hmenu);
 		void SetPopupMenuDPI(int DPI);
 		int GetPopupMenuDPI() const { return m_PopupMenuDPI; }
+
+		bool ShowEventInfoOSD(COSDManager::EventInfoOSDFlag Flags = COSDManager::EventInfoOSDFlag::None);
 
 		bool DoCommand(int Command);
 		bool DoCommand(LPCTSTR pszCommand);

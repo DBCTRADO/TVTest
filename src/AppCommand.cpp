@@ -347,6 +347,8 @@ void CAppCommand::RegisterDefaultCommands()
 				CM_PANEL_FIRST, CM_PANEL_LAST, 0,
 				nullptr, CCommandManager::BindHandler(&CAppCommand::SelectPanelPage, this)
 			},
+
+			{CM_EVENTINFOOSD, TEXT("EventInfoOSD"), CCommandManager::BindHandler(&CAppCommand::ToggleEventInfoOSD, this)},
 		});
 }
 
@@ -1692,6 +1694,17 @@ bool CAppCommand::MultiView(CCommandManager::InvokeParameters &Params)
 bool CAppCommand::SelectPanelPage(CCommandManager::InvokeParameters &Params)
 {
 	m_App.Panel.Form.SetCurPageByID(Params.ID - CM_PANEL_FIRST);
+
+	return true;
+}
+
+
+bool CAppCommand::ToggleEventInfoOSD(CCommandManager::InvokeParameters &Params)
+{
+	if (!m_App.OSDManager.IsEventInfoOSDVisible())
+		m_App.UICore.ShowEventInfoOSD(COSDManager::EventInfoOSDFlag::Manual);
+	else
+		m_App.OSDManager.HideEventInfoOSD();
 
 	return true;
 }

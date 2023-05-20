@@ -281,6 +281,19 @@ void CImage::Clear()
 }
 
 
+HBITMAP CImage::CreateBitmap()
+{
+	if (!m_Bitmap)
+		return nullptr;
+
+	HBITMAP hbm = nullptr;
+	if (m_Bitmap->GetHBITMAP(Gdiplus::Color(0, 0, 0, 0), &hbm) != Gdiplus::Ok)
+		return nullptr;
+
+	return hbm;
+}
+
+
 
 
 CBrush::CBrush(BYTE r, BYTE g, BYTE b, BYTE a)
@@ -682,6 +695,10 @@ void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat, TextFlag Flags)
 		FormatFlags |= Gdiplus::StringFormatFlagsNoClip;
 	else
 		FormatFlags &= ~Gdiplus::StringFormatFlagsNoClip;
+	if (!!(Flags & TextFlag::Format_ClipLastLine))
+		FormatFlags |= Gdiplus::StringFormatFlagsLineLimit;
+	else
+		FormatFlags &= ~Gdiplus::StringFormatFlagsLineLimit;
 	pFormat->SetFormatFlags(FormatFlags);
 
 	switch (Flags & TextFlag::Format_HorzAlignMask) {

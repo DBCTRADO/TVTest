@@ -54,16 +54,23 @@ void COSDManager::Reset()
 {
 	m_OSD.Destroy();
 	m_VolumeOSD.Destroy();
+	m_EventInfoOSD.Hide();
 }
 
 
 void COSDManager::ClearOSD()
 {
+	ClearCompositedOSD();
+	m_OSD.Hide();
+	m_VolumeOSD.Hide();
+}
+
+
+void COSDManager::ClearCompositedOSD()
+{
 	LibISDB::ViewerFilter *pViewer = GetAppClass().CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer != nullptr)
 		pViewer->ClearOSD();
-	m_OSD.Hide();
-	m_VolumeOSD.Hide();
 }
 
 
@@ -71,6 +78,22 @@ void COSDManager::OnParentMove()
 {
 	m_OSD.OnParentMove();
 	m_VolumeOSD.OnParentMove();
+	m_EventInfoOSD.OnParentMove();
+}
+
+
+void COSDManager::AdjustPosition()
+{
+	if (m_EventInfoOSD.IsCreated()) {
+		OSDClientInfo ClientInfo;
+		ClientInfo.fForcePseudoOSD = true;
+		if (m_pEventHandler->GetOSDClientInfo(&ClientInfo)) {
+			RECT Rect = ClientInfo.ClientRect;
+			if (m_EventInfoOSD.AdjustPosition(&Rect)) {
+				m_EventInfoOSD.SetPosition(Rect);
+			}
+		}
+	}
 }
 
 
@@ -335,9 +358,81 @@ void COSDManager::HideVolumeOSD()
 }
 
 
+bool COSDManager::ShowEventInfoOSD(const LibISDB::EventInfo &EventInfo, EventInfoOSDFlag Flags)
+{
+	if (m_pEventHandler == nullptr)
+		return false;
+
+	OSDClientInfo ClientInfo;
+	ClientInfo.fForcePseudoOSD = true;
+	if (!m_pEventHandler->GetOSDClientInfo(&ClientInfo))
+		return false;
+	RECT Rect = ClientInfo.ClientRect;
+	if (!m_EventInfoOSD.AdjustPosition(&Rect))
+		return false;
+
+	const LOGFONT &lf = m_pOptions->GetEventInfoOSDFont();
+	m_EventInfoOSD.SetFont(lf);
+	m_EventInfoOSD.SetTitleFont(lf);
+
+	CEventInfoOSD::ColorScheme ColorScheme;
+	ColorScheme.Back.Alpha = static_cast<BYTE>(m_pOptions->GetEventInfoOSDOpacity() * 255 / 100);
+	m_EventInfoOSD.SetColorScheme(ColorScheme);
+
+	m_EventInfoOSD.SetEventInfo(&EventInfo);
+
+	m_EventInfoOSD.SetPosition(Rect);
+
+	if (!!(Flags & EventInfoOSDFlag::Manual)) {
+		m_EventInfoOSDFlags |= EventInfoOSDFlag::Manual;
+		m_EventInfoOSDFlags &= ~EventInfoOSDFlag::Auto;
+	} else if (!!(Flags & EventInfoOSDFlag::Auto)) {
+		m_EventInfoOSDFlags |= EventInfoOSDFlag::Auto;
+		m_EventInfoOSDFlags &= ~EventInfoOSDFlag::Manual;
+	}
+
+	return m_EventInfoOSD.Show(
+		ClientInfo.hwndParent,
+		!!(m_EventInfoOSDFlags & EventInfoOSDFlag::Manual)
+				&& m_pOptions->GetEventInfoOSDManualShowNoAutoHide() ?
+			0U :
+			std::min(m_pOptions->GetEventInfoOSDDuration(), std::numeric_limits<unsigned int>::max() / 1000U) * 1000U);
+}
+
+
+void COSDManager::HideEventInfoOSD()
+{
+	m_EventInfoOSD.Hide();
+}
+
+
+bool COSDManager::IsEventInfoOSDVisible() const
+{
+	return m_EventInfoOSD.IsVisible();
+}
+
+
+bool COSDManager::IsEventInfoOSDCreated() const
+{
+	return m_EventInfoOSD.IsCreated();
+}
+
+
 void COSDManager::OnOSDFontChanged()
 {
 	m_VolumeOSDMaxWidth = 0;
+}
+
+
+void COSDManager::OnEventInfoOSDFontChanged()
+{
+	if (m_EventInfoOSD.IsCreated()) {
+		const LOGFONT &lf = m_pOptions->GetEventInfoOSDFont();
+		m_EventInfoOSD.SetFont(lf);
+		m_EventInfoOSD.SetTitleFont(lf);
+
+		m_EventInfoOSD.Update();
+	}
 }
 
 
@@ -449,6 +544,7 @@ void COSDManager::SetStyle(const Style::CStyleManager *pStyleManager)
 {
 	m_Style.SetStyle(pStyleManager);
 	m_VolumeOSDMaxWidth = 0;
+	m_EventInfoOSD.SetStyle(pStyleManager);
 }
 
 
@@ -458,6 +554,7 @@ void COSDManager::NormalizeStyle(
 {
 	m_Style.NormalizeStyle(pStyleManager, pStyleScaling);
 	m_VolumeOSDMaxWidth = 0;
+	m_EventInfoOSD.NormalizeStyle(pStyleManager, pStyleScaling);
 }
 
 

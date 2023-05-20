@@ -262,6 +262,24 @@ bool Trim(String &Str, LPCWSTR pszSpaces)
 	return true;
 }
 
+bool TrimEnd(String &Str, LPCWSTR pszSpaces)
+{
+	if (IsStringEmpty(pszSpaces))
+		return false;
+
+	String::size_type Length = Str.find_last_not_of(pszSpaces);
+	if (Length == String::npos)
+		Length = 0;
+	else
+		Length++;
+	if (Str.length() == Length)
+		return false;
+
+	Str.resize(Length);
+
+	return true;
+}
+
 bool Replace(String &Str, LPCWSTR pszFrom, LPCWSTR pszTo)
 {
 	if (IsStringEmpty(pszFrom))

@@ -102,26 +102,27 @@
 #define IDD_OPTIONS_GENERAL         43
 #define IDD_OPTIONS_VIEW            44
 #define IDD_OPTIONS_OSD             45
-#define IDD_OPTIONS_STATUS          46
-#define IDD_OPTIONS_SIDEBAR         47
-#define IDD_OPTIONS_MENU            48
-#define IDD_OPTIONS_PANEL           49
-#define IDD_OPTIONS_COLORSCHEME     50
-#define IDD_OPTIONS_OPERATION       51
-#define IDD_OPTIONS_ACCELERATOR     52
-#define IDD_OPTIONS_CONTROLLER      53
-#define IDD_OPTIONS_DRIVER          54
-#define IDD_OPTIONS_VIDEO           55
-#define IDD_OPTIONS_AUDIO           56
-#define IDD_OPTIONS_PLAYBACK        57
-#define IDD_OPTIONS_RECORD          58
-#define IDD_OPTIONS_CAPTURE         59
-#define IDD_OPTIONS_CHANNELSCAN     60
-#define IDD_OPTIONS_EPG             61
-#define IDD_OPTIONS_PROGRAMGUIDE    62
-#define IDD_OPTIONS_PLUGIN          63
-#define IDD_OPTIONS_TSPROCESSOR     64
-#define IDD_OPTIONS_LOG             65
+#define IDD_OPTIONS_NOTIFICATIONBAR 46
+#define IDD_OPTIONS_STATUS          47
+#define IDD_OPTIONS_SIDEBAR         48
+#define IDD_OPTIONS_MENU            49
+#define IDD_OPTIONS_PANEL           50
+#define IDD_OPTIONS_COLORSCHEME     51
+#define IDD_OPTIONS_OPERATION       52
+#define IDD_OPTIONS_ACCELERATOR     53
+#define IDD_OPTIONS_CONTROLLER      54
+#define IDD_OPTIONS_DRIVER          55
+#define IDD_OPTIONS_VIDEO           56
+#define IDD_OPTIONS_AUDIO           57
+#define IDD_OPTIONS_PLAYBACK        58
+#define IDD_OPTIONS_RECORD          59
+#define IDD_OPTIONS_CAPTURE         60
+#define IDD_OPTIONS_CHANNELSCAN     61
+#define IDD_OPTIONS_EPG             62
+#define IDD_OPTIONS_PROGRAMGUIDE    63
+#define IDD_OPTIONS_PLUGIN          64
+#define IDD_OPTIONS_TSPROCESSOR     65
+#define IDD_OPTIONS_LOG             66
 #define IDD_RECORDOPTION            70
 #define IDD_SAVECOLORSCHEME         71
 #define IDD_CHANNELSCAN             72
@@ -285,28 +286,30 @@
 #define CM_POPUPTITLEBAR                        255
 #define CM_POPUPSTATUSBAR                       256
 #define CM_CAPTURESTATUSBAR                     269
-#define CM_ZOOMMENU                             270
-#define CM_ASPECTRATIOMENU                      271
-#define CM_CHANNELMENU                          272
-#define CM_SERVICEMENU                          273
-#define CM_TUNINGSPACEMENU                      274
-#define CM_FAVORITESMENU                        275
-#define CM_RECENTCHANNELMENU                    276
-#define CM_VOLUMEMENU                           277
-#define CM_AUDIOMENU                            278
-#define CM_VIDEOMENU                            279
-#define CM_RESETMENU                            280
-#define CM_BARMENU                              281
-#define CM_PLUGINMENU                           282
-#define CM_FILTERPROPERTYMENU                   283
+#define CM_EVENTINFOOSD                         270
 
-#define CM_SIDEBAR_PLACE_FIRST                  290
+#define CM_ZOOMMENU                             300
+#define CM_ASPECTRATIOMENU                      301
+#define CM_CHANNELMENU                          302
+#define CM_SERVICEMENU                          303
+#define CM_TUNINGSPACEMENU                      304
+#define CM_FAVORITESMENU                        305
+#define CM_RECENTCHANNELMENU                    306
+#define CM_VOLUMEMENU                           307
+#define CM_AUDIOMENU                            308
+#define CM_VIDEOMENU                            309
+#define CM_RESETMENU                            310
+#define CM_BARMENU                              311
+#define CM_PLUGINMENU                           312
+#define CM_FILTERPROPERTYMENU                   313
+
+#define CM_SIDEBAR_PLACE_FIRST                  400
 #define CM_SIDEBAR_PLACE_LEFT                   (CM_SIDEBAR_PLACE_FIRST + 0)
 #define CM_SIDEBAR_PLACE_RIGHT                  (CM_SIDEBAR_PLACE_FIRST + 1)
 #define CM_SIDEBAR_PLACE_TOP                    (CM_SIDEBAR_PLACE_FIRST + 2)
 #define CM_SIDEBAR_PLACE_BOTTOM                 (CM_SIDEBAR_PLACE_FIRST + 3)
 #define CM_SIDEBAR_PLACE_LAST                   (CM_SIDEBAR_PLACE_FIRST + 3)
-#define CM_SIDEBAROPTIONS                       294
+#define CM_SIDEBAROPTIONS                       404
 
 #define CM_AUDIOGAIN_FIRST                      800
 #define CM_AUDIOGAIN_NONE                       (CM_AUDIOGAIN_FIRST + 0)
@@ -651,22 +654,34 @@
 #define IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS   1022
 #define IDC_OSDOPTIONS_FIRST                       IDC_OSDOPTIONS_COMPOSITE
 #define IDC_OSDOPTIONS_LAST                        IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS
-#define IDC_NOTIFICATIONBAR_ENABLE                 1030
-#define IDC_NOTIFICATIONBAR_NOTIFYEVENTNAME        1031
-#define IDC_NOTIFICATIONBAR_NOTIFYTSPROCESSORERROR 1032
-#define IDC_NOTIFICATIONBAR_DURATION_LABEL         1033
-#define IDC_NOTIFICATIONBAR_DURATION               1034
-#define IDC_NOTIFICATIONBAR_DURATION_UPDOWN        1035
-#define IDC_NOTIFICATIONBAR_DURATION_UNIT          1036
-#define IDC_NOTIFICATIONBAR_FONT_LABEL             1037
-#define IDC_NOTIFICATIONBAR_FONT_INFO              1038
-#define IDC_NOTIFICATIONBAR_FONT_CHOOSE            1039
-#define IDC_NOTIFICATIONBAR_FIRST                  IDC_NOTIFICATIONBAR_NOTIFYEVENTNAME
-#define IDC_NOTIFICATIONBAR_LAST                   IDC_NOTIFICATIONBAR_FONT_CHOOSE
+#define IDC_EVENTINFOOSD_GROUP                     1030
+#define IDC_EVENTINFOOSD_FONT_LABEL                1031
+#define IDC_EVENTINFOOSD_FONT_INFO                 1032
+#define IDC_EVENTINFOOSD_FONT_CHOOSE               1033
+#define IDC_EVENTINFOOSD_DURATION_LABEL            1035
+#define IDC_EVENTINFOOSD_DURATION                  1036
+#define IDC_EVENTINFOOSD_DURATION_UPDOWN           1037
+#define IDC_EVENTINFOOSD_DURATION_UNIT             1038
+#define IDC_EVENTINFOOSD_AUTOSHOW_CHANNELCHANGE    1039
+#define IDC_EVENTINFOOSD_AUTOSHOW_EVENTCHANGE      1040
+#define IDC_EVENTINFOOSD_MANUALSHOW_NOAUTOHIDE     1041
 #define IDC_DISPLAYMENU_FONT_LABEL                 1050
 #define IDC_DISPLAYMENU_FONT_INFO                  1051
 #define IDC_DISPLAYMENU_FONT_CHOOSE                1052
 #define IDC_DISPLAYMENU_AUTOFONTSIZE               1053
+
+#define IDC_NOTIFICATIONBAR_ENABLE                 1000
+#define IDC_NOTIFICATIONBAR_NOTIFYEVENTNAME        1001
+#define IDC_NOTIFICATIONBAR_NOTIFYTSPROCESSORERROR 1002
+#define IDC_NOTIFICATIONBAR_DURATION_LABEL         1003
+#define IDC_NOTIFICATIONBAR_DURATION               1004
+#define IDC_NOTIFICATIONBAR_DURATION_UPDOWN        1005
+#define IDC_NOTIFICATIONBAR_DURATION_UNIT          1006
+#define IDC_NOTIFICATIONBAR_FONT_LABEL             1007
+#define IDC_NOTIFICATIONBAR_FONT_INFO              1008
+#define IDC_NOTIFICATIONBAR_FONT_CHOOSE            1009
+#define IDC_NOTIFICATIONBAR_FIRST                  IDC_NOTIFICATIONBAR_NOTIFYEVENTNAME
+#define IDC_NOTIFICATIONBAR_LAST                   IDC_NOTIFICATIONBAR_FONT_CHOOSE
 
 #define IDC_STATUSOPTIONS_ITEMLIST       1000
 #define IDC_STATUSOPTIONS_DEFAULT        1001
