@@ -710,19 +710,18 @@ bool GetSystemFont(FontType Type, LOGFONT *pLogFont)
 {
 	if (pLogFont == nullptr)
 		return false;
-	if (Type == FontType::Default) {
-		return ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pLogFont) == sizeof(LOGFONT);
-	} else {
-		NONCLIENTMETRICS ncm;
-		ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
-		::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
 
-		const LOGFONT *plf = GetNonClientFont(ncm, Type);
-		if (plf == nullptr)
-			return false;
+	NONCLIENTMETRICS ncm;
+	ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
+	if (!::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0))
+		return false;
 
-		*pLogFont = *plf;
-	}
+	const LOGFONT *plf = GetNonClientFont(ncm, Type);
+	if (plf == nullptr)
+		return false;
+
+	*pLogFont = *plf;
+
 	return true;
 }
 
@@ -735,25 +734,19 @@ bool GetSystemFontWithDPI(FontType Type, LOGFONT *pLogFont, int DPI)
 
 	bool fNeedScaling = false;
 
-	if (Type == FontType::Default) {
-		if (::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pLogFont) != sizeof(LOGFONT))
+	NONCLIENTMETRICS ncm;
+	ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
+	if (!SystemParametersInfoWithDPI(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0, DPI)) {
+		if (!::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0))
 			return false;
 		fNeedScaling = true;
-	} else {
-		NONCLIENTMETRICS ncm;
-		ncm.cbSize = CCSIZEOF_STRUCT(NONCLIENTMETRICS, lfMessageFont);
-		if (!SystemParametersInfoWithDPI(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0, DPI)) {
-			if (!::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0))
-				return false;
-			fNeedScaling = true;
-		}
-
-		const LOGFONT *plf = GetNonClientFont(ncm, Type);
-		if (plf == nullptr)
-			return false;
-
-		*pLogFont = *plf;
 	}
+
+	const LOGFONT *plf = GetNonClientFont(ncm, Type);
+	if (plf == nullptr)
+		return false;
+
+	*pLogFont = *plf;
 
 	if (fNeedScaling) {
 		const int SystemDPI = GetSystemDPI();
@@ -788,7 +781,8 @@ bool GetDefaultUIFont(LOGFONT *pFont)
 		}
 	}
 
-	return GetSystemFont(FontType::Default, pFont);
+	// 通常ここには到達しないはずだが一応フォールバックを用意
+	return ::GetObject(::GetStockObject(DEFAULT_GUI_FONT), sizeof(LOGFONT), pFont) != sizeof(LOGFONT);
 }
 
 

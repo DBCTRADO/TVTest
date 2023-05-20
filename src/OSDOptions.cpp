@@ -91,10 +91,10 @@ COSDOptions::COSDOptions()
 	if (Aero.IsEnabled())
 		m_fCompositionEnabled = true;
 
-	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &m_OSDFont);
-
 	LOGFONT lf;
 	DrawUtil::GetDefaultUIFont(&lf);
+
+	m_OSDFont = lf;
 
 	m_EventInfoOSDFont = lf;
 	if (m_EventInfoOSDFont.lfWeight < FW_BOLD)

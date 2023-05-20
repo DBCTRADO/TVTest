@@ -98,7 +98,6 @@ namespace TVTest
 		HBITMAP ResizeBitmap(HBITMAP hbmSrc, int Width, int Height, int BitCount = 24, int StretchMode = STRETCH_HALFTONE);
 
 		enum class FontType {
-			Default,
 			Message,
 			Menu,
 			Caption,

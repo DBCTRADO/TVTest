@@ -90,7 +90,7 @@ bool CPseudoOSD::IsPseudoOSD(HWND hwnd)
 CPseudoOSD::CPseudoOSD()
 {
 	LOGFONT lf;
-	DrawUtil::GetSystemFont(DrawUtil::FontType::Default, &lf);
+	DrawUtil::GetDefaultUIFont(&lf);
 	m_Font.Create(&lf);
 }
 
