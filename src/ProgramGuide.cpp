@@ -1174,7 +1174,6 @@ void CProgramGuide::Clear()
 	m_ServiceList.Clear();
 	m_CurrentChannelProvider = -1;
 	m_CurrentChannelGroup = -1;
-	//m_CurrentChannel.Clear();
 	m_EventLayoutList.Clear();
 	m_CurEventItem.fSelected = false;
 	m_ScrollPos.x = 0;
@@ -1535,7 +1534,7 @@ CProgramGuide::EventItemStatus CProgramGuide::GetEventItemStatus(
 
 	if (!!(Mask & EventItemStatus::Current)) {
 		if (m_CurrentEventID != 0
-				&& m_CurrentChannel.ServiceID != 0
+				&& m_CurrentChannel.ServiceID != LibISDB::SERVICE_ID_INVALID
 				&& pOrigEventInfo->NetworkID == m_CurrentChannel.NetworkID
 				&& pOrigEventInfo->TransportStreamID == m_CurrentChannel.TransportStreamID
 				&& pOrigEventInfo->ServiceID == m_CurrentChannel.ServiceID
@@ -1860,7 +1859,7 @@ void CProgramGuide::DrawServiceHeader(
 	int Chevron, bool fLeftAlign, HitTestPart HotPart)
 {
 	const bool fCur =
-		m_CurrentChannel.ServiceID > 0
+		m_CurrentChannel.ServiceID != LibISDB::SERVICE_ID_INVALID
 		&& pServiceInfo->GetNetworkID() == m_CurrentChannel.NetworkID
 		&& pServiceInfo->GetTSID() == m_CurrentChannel.TransportStreamID
 		&& pServiceInfo->GetServiceID() == m_CurrentChannel.ServiceID;
@@ -3569,7 +3568,7 @@ bool CProgramGuide::ScrollToCurrentService()
 {
 	if (m_ListMode != ListMode::Services)
 		return false;
-	if (m_CurrentChannel.ServiceID == 0)
+	if (m_CurrentChannel.ServiceID == LibISDB::SERVICE_ID_INVALID)
 		return false;
 
 	const int ServiceIndex = m_ServiceList.FindItemByIDs(

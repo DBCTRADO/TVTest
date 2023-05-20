@@ -358,7 +358,7 @@ void CEpg::CProgramGuideEventHandler::OnDestroy()
 }
 
 
-int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelList, const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
+int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelList, const CProgramGuide::ServiceInfo *pServiceInfo)
 {
 	for (int i = 0; i < pChannelList->NumChannels(); i++) {
 		const CChannelInfo *pChannelInfo = pChannelList->GetChannelInfo(i);
@@ -372,7 +372,7 @@ int CEpg::CProgramGuideEventHandler::FindChannel(const CChannelList *pChannelLis
 }
 
 
-void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo)
+void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const CProgramGuide::ServiceInfo *pServiceInfo)
 {
 	CAppMain &App = GetAppClass();
 

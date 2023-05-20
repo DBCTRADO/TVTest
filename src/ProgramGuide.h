@@ -251,19 +251,8 @@ namespace TVTest
 			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
-		struct ServiceInfo
-		{
-			WORD NetworkID = 0;
-			WORD TransportStreamID = 0;
-			WORD ServiceID = 0;
-
-			ServiceInfo() = default;
-			ServiceInfo(WORD NID, WORD TSID, WORD SID)
-				: NetworkID(NID), TransportStreamID(TSID), ServiceID(SID) {}
-			void Clear() { *this = ServiceInfo(); }
-		};
-
-		typedef std::vector<ServiceInfo> ServiceInfoList;
+		using ServiceInfo = LibISDB::EPGDatabase::ServiceInfo;
+		using ServiceInfoList = std::vector<ServiceInfo>;
 
 		class ABSTRACT_CLASS(CFrame)
 		{
@@ -296,7 +285,7 @@ namespace TVTest
 
 			virtual bool OnClose() { return true; }
 			virtual void OnDestroy() {}
-			virtual void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const LibISDB::EPGDatabase::ServiceInfo * pServiceInfo) {}
+			virtual void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const ServiceInfo *pServiceInfo) {}
 			virtual bool OnRefresh() { return true; }
 			virtual bool OnKeyDown(UINT KeyCode, UINT Flags) { return false; }
 			virtual bool OnMenuInitialize(HMENU hmenu, UINT CommandBase) { return false; }

@@ -99,12 +99,12 @@ namespace TVTest
 		{
 			bool OnClose() override;
 			void OnDestroy() override;
-			void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo) override;
+			void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const CProgramGuide::ServiceInfo *pServiceInfo) override;
 			bool OnKeyDown(UINT KeyCode, UINT Flags) override;
 			bool OnMenuInitialize(HMENU hmenu, UINT CommandBase) override;
 			bool OnMenuSelected(UINT Command) override;
 
-			int FindChannel(const CChannelList *pChannelList, const LibISDB::EPGDatabase::ServiceInfo *pServiceInfo);
+			int FindChannel(const CChannelList *pChannelList, const CProgramGuide::ServiceInfo *pServiceInfo);
 		};
 
 		class CProgramGuideDisplayEventHandler
