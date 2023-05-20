@@ -250,14 +250,19 @@ int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type L
 
 bool Trim(String &Str, LPCWSTR pszSpaces)
 {
-	if (IsStringEmpty(pszSpaces))
+	if (Str.empty() || IsStringEmpty(pszSpaces))
 		return false;
 
 	const String::size_type First = Str.find_first_not_of(pszSpaces);
-	if (First == String::npos)
-		return false;
-
-	Str = Str.substr(First, Str.find_last_not_of(pszSpaces) - First + 1);
+	if (First == String::npos) {
+		Str.clear();
+	} else {
+		const String::size_type Last = Str.find_last_not_of(pszSpaces);
+		const String::size_type Length = Last - First + 1;
+		if (Length == Str.length())
+			return false;
+		Str = Str.substr(First, Length);
+	}
 
 	return true;
 }
