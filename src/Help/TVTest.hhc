@@ -96,6 +96,10 @@
 			<param name="Local" value="options\osd.html">
 			</OBJECT>
 		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="通知バー">
+			<param name="Local" value="options\notificationbar.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
 			<param name="Name" value="ステータスバー">
 			<param name="Local" value="options\statusbar.html">
 			</OBJECT>

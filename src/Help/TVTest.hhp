@@ -38,6 +38,7 @@ options\epg.html
 options\general.html
 options\log.html
 options\menu.html
+options\notificationbar.html
 options\operation.html
 options\osd.html
 options\panel.html
@@ -75,6 +76,7 @@ HELP_ID_OPTIONS_EPG=options\epg.html
 HELP_ID_OPTIONS_GENERAL=options\general.html
 HELP_ID_OPTIONS_LOG=options\log.html
 HELP_ID_OPTIONS_MENU=options\menu.html
+HELP_ID_OPTIONS_NOTIFICATIONBAR=options\notificationbar.html
 HELP_ID_OPTIONS_OPERATION=options\operation.html
 HELP_ID_OPTIONS_OSD=options\osd.html
 HELP_ID_OPTIONS_PANEL=options\panel.html
