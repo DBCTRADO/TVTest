@@ -23,6 +23,7 @@
 
 
 #include "DrawUtil.h"
+#include "Graphics.h"
 #include "WindowUtil.h"
 
 
@@ -110,6 +111,7 @@ namespace TVTest
 
 		void Draw(HDC hdc, const RECT &PaintRect) const;
 		void DrawImageEffect(HDC hdc, const RECT *pRect) const;
+		void DrawImageEffect(Graphics::CCanvas &Canvas, const RECT *pRect) const;
 		void UpdateLayeredWindow();
 
 		static const LPCTSTR m_pszWindowClass;

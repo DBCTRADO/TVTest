@@ -545,6 +545,30 @@ void CPseudoOSD::DrawImageEffect(HDC hdc, const RECT *pRect) const
 }
 
 
+void CPseudoOSD::DrawImageEffect(Graphics::CCanvas &Canvas, const RECT *pRect) const
+{
+	if (!!(m_ImageEffect & ImageEffect::Gloss)) {
+		RECT Rect = *pRect;
+		Rect.bottom = (Rect.top + Rect.bottom) / 2;
+		Canvas.FillGradient(
+			Graphics::CColor(255, 255, 255, 192),
+			Graphics::CColor(255, 255, 255, 32),
+			Rect, Graphics::GradientDirection::Vert);
+		Rect.top = Rect.bottom;
+		Rect.bottom = pRect->bottom;
+		Canvas.FillGradient(
+			Graphics::CColor(0, 0, 0, 32),
+			Graphics::CColor(0, 0, 0, 0),
+			Rect, Graphics::GradientDirection::Vert);
+	}
+
+	if (!!(m_ImageEffect & ImageEffect::Dark)) {
+		Graphics::CBrush Brush(0, 0, 0, 64);
+		Canvas.FillRect(&Brush, *pRect);
+	}
+}
+
+
 void CPseudoOSD::UpdateLayeredWindow()
 {
 	RECT rc;
@@ -556,100 +580,103 @@ void CPseudoOSD::UpdateLayeredWindow()
 
 	const HDC hdc = ::GetDC(m_hwnd);
 	const HDC hdcSrc = ::CreateCompatibleDC(hdc);
-	DrawUtil::CBitmap Surface;
+	DrawUtil::CBitmap Bitmap;
 	HBITMAP hbmOld;
 
 	if (m_hbm != nullptr && !!(m_ImageFlags & ImageFlag::DirectSource)) {
 		hbmOld = static_cast<HBITMAP>(::SelectObject(hdcSrc, m_hbm));
 	} else {
-		void *pBits;
-		if (!Surface.Create(Width, Height, 32, &pBits))
+		Graphics::CImage CanvasImage;
+
+		if (!CanvasImage.Create(Width, Height, 32))
 			return;
-		::ZeroMemory(pBits, Width * 4 * Height);
-		hbmOld = DrawUtil::SelectObject(hdcSrc, Surface);
+		CanvasImage.Clear();
 
-		Graphics::CCanvas Canvas(hdcSrc);
+		{
+			Graphics::CCanvas Canvas(&CanvasImage);
 
-		::SetRect(&rc, 0, 0, Width, Height);
+			::SetRect(&rc, 0, 0, Width, Height);
 
-		if (!m_Text.empty()) {
-			if (m_hbmIcon != nullptr) {
+			if (!m_Text.empty()) {
+				if (m_hbmIcon != nullptr) {
+					Graphics::CImage Image;
+
+					Image.CreateFromBitmap(m_hbmIcon);
+					int IconWidth;
+					if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
+						IconWidth = m_IconWidth * (m_AnimationCount + 1) / ANIMATION_FRAMES;
+					else
+						IconWidth = m_IconWidth;
+					Canvas.DrawImage(
+						0, (Height - m_IconHeight) / 2,
+						IconWidth, m_IconHeight,
+						&Image, 0, 0, m_IconWidth, m_IconHeight);
+					RECT rcIcon;
+					rcIcon.left = 0;
+					rcIcon.top = (Height - m_IconHeight) / 2;
+					rcIcon.right = rcIcon.left + IconWidth;
+					rcIcon.bottom = rcIcon.top + m_IconHeight;
+					if (rcIcon.top < 0)
+						rcIcon.top = 0;
+					if (rcIcon.right > Width)
+						rcIcon.right = Width;
+					if (rcIcon.bottom > Height)
+						rcIcon.bottom = Height;
+					DrawImageEffect(Canvas, &rcIcon);
+					rc.left += IconWidth;
+				}
+
+				if (!!(m_TextStyle & TextStyle::FillBackground)) {
+					Graphics::CBrush BackBrush(0, 0, 0, 128);
+					Canvas.FillRect(&BackBrush, rc);
+				}
+
+				Graphics::CBrush TextBrush(
+					GetRValue(m_crTextColor),
+					GetGValue(m_crTextColor),
+					GetBValue(m_crTextColor),
+					255);
+				LOGFONT lf;
+				m_Font.GetLogFont(&lf);
+
+				Graphics::TextFlag DrawTextFlags =
+					Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
+				if (!!(m_TextStyle & TextStyle::Right))
+					DrawTextFlags |= Graphics::TextFlag::Format_Right;
+				else if (!!(m_TextStyle & TextStyle::HorzCenter))
+					DrawTextFlags |= Graphics::TextFlag::Format_HorzCenter;
+				if (!!(m_TextStyle & TextStyle::Bottom))
+					DrawTextFlags |= Graphics::TextFlag::Format_Bottom;
+				if (!!(m_TextStyle & TextStyle::VertCenter))
+					DrawTextFlags |= Graphics::TextFlag::Format_VertCenter;
+				if (!(m_TextStyle & TextStyle::MultiLine))
+					DrawTextFlags |= Graphics::TextFlag::Format_NoWrap;
+
+				if (!!(m_TextStyle & TextStyle::MultiLine)
+						&& m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
+					rc.right = rc.left + m_Position.Width - m_IconWidth;
+
+				if (!!(m_TextStyle & TextStyle::Outline)) {
+					Canvas.DrawOutlineText(
+						m_Text.c_str(), lf, rc, &TextBrush,
+						Graphics::CColor(0, 0, 0, 160),
+						GetOutlineWidth(std::abs(lf.lfHeight)),
+						DrawTextFlags);
+				} else {
+					Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
+				}
+			} else if (m_hbm != nullptr) {
 				Graphics::CImage Image;
-
-				Image.CreateFromBitmap(m_hbmIcon);
-				int IconWidth;
-				if (m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
-					IconWidth = m_IconWidth * (m_AnimationCount + 1) / ANIMATION_FRAMES;
-				else
-					IconWidth = m_IconWidth;
-				Canvas.DrawImage(
-					0, (Height - m_IconHeight) / 2,
-					IconWidth, m_IconHeight,
-					&Image, 0, 0, m_IconWidth, m_IconHeight);
-				RECT rcIcon;
-				rcIcon.left = 0;
-				rcIcon.top = (Height - m_IconHeight) / 2;
-				rcIcon.right = rcIcon.left + IconWidth;
-				rcIcon.bottom = rcIcon.top + m_IconHeight;
-				if (rcIcon.top < 0)
-					rcIcon.top = 0;
-				if (rcIcon.right > Width)
-					rcIcon.right = Width;
-				if (rcIcon.bottom > Height)
-					rcIcon.bottom = Height;
-				DrawImageEffect(hdcSrc, &rcIcon);
-				rc.left += IconWidth;
-			}
-
-			if (!!(m_TextStyle & TextStyle::FillBackground)) {
-				Graphics::CBrush BackBrush(0, 0, 0, 128);
-				Canvas.FillRect(&BackBrush, rc);
-			}
-
-			Graphics::CBrush TextBrush(
-				GetRValue(m_crTextColor),
-				GetGValue(m_crTextColor),
-				GetBValue(m_crTextColor),
-				254);	// 255にすると描画がおかしくなる
-			LOGFONT lf;
-			m_Font.GetLogFont(&lf);
-
-			Graphics::TextFlag DrawTextFlags =
-				Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
-			if (!!(m_TextStyle & TextStyle::Right))
-				DrawTextFlags |= Graphics::TextFlag::Format_Right;
-			else if (!!(m_TextStyle & TextStyle::HorzCenter))
-				DrawTextFlags |= Graphics::TextFlag::Format_HorzCenter;
-			if (!!(m_TextStyle & TextStyle::Bottom))
-				DrawTextFlags |= Graphics::TextFlag::Format_Bottom;
-			if (!!(m_TextStyle & TextStyle::VertCenter))
-				DrawTextFlags |= Graphics::TextFlag::Format_VertCenter;
-			if (!(m_TextStyle & TextStyle::MultiLine))
-				DrawTextFlags |= Graphics::TextFlag::Format_NoWrap;
-
-			if (!!(m_TextStyle & TextStyle::MultiLine)
-					&& m_Timer.IsTimerEnabled(TIMER_ID_ANIMATION))
-				rc.right = rc.left + m_Position.Width - m_IconWidth;
-
-			if (!!(m_TextStyle & TextStyle::Outline)) {
-				Canvas.DrawOutlineText(
-					m_Text.c_str(), lf, rc, &TextBrush,
-					Graphics::CColor(0, 0, 0, 160),
-					GetOutlineWidth(std::abs(lf.lfHeight)),
-					DrawTextFlags);
-			} else {
-				Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
-			}
-		} else if (m_hbm != nullptr) {
-			Graphics::CImage Image;
-			if (Image.CreateFromBitmap(m_hbm)) {
-				Canvas.DrawImage(&Image, 0, 0);
-				BITMAP bm;
-				::GetObject(m_hbm, sizeof(BITMAP), &bm);
-				RECT rcBitmap = {0, 0, bm.bmWidth, bm.bmHeight};
-				DrawImageEffect(hdcSrc, &rcBitmap);
+				if (Image.CreateFromBitmap(m_hbm)) {
+					Canvas.DrawImage(&Image, 0, 0);
+					const RECT rcImage = {0, 0, Image.GetWidth(), Image.GetHeight()};
+					DrawImageEffect(Canvas, &rcImage);
+				}
 			}
 		}
+
+		Bitmap.Attach(CanvasImage.CreateBitmap());
+		hbmOld = DrawUtil::SelectObject(hdcSrc, Bitmap);
 	}
 
 	SIZE sz = {Width, Height};
