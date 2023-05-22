@@ -73,6 +73,7 @@ class CEventItem
 	int m_TitleLines = 0;
 	int m_ItemPos = -1;
 	int m_ItemLines = 0;
+	int m_ItemColumns = 1;
 	bool m_fSelected = false;
 
 	int GetTitleText(LPTSTR pszText, int MaxLength, bool fUseARIBSymbol) const;
@@ -101,6 +102,8 @@ public:
 	void SetItemPos(int Pos) { m_ItemPos = Pos; }
 	int GetItemLines() const { return m_ItemLines; }
 	void SetItemLines(int Lines) { m_ItemLines = Lines; }
+	int GetItemColumns() const { return m_ItemColumns; }
+	void SetItemColumns(int Columns) { m_ItemColumns = Columns; }
 	bool IsNullItem() const { return m_pEventInfo == nullptr; }
 	void SetSelected(bool fSelected) { m_fSelected = fSelected; }
 	bool IsSelected() const { return m_fSelected; }
@@ -292,6 +295,7 @@ public:
 	const CEventItem *GetItem(size_t Index) const;
 	int FindItemByEventID(WORD EventID) const;
 	void InsertNullItems(const LibISDB::DateTime &FirstTime, const LibISDB::DateTime &LastTime);
+	int GetMaxItemColumnCount() const;
 };
 
 
@@ -394,6 +398,20 @@ void CEventLayout::InsertNullItems(const LibISDB::DateTime &FirstTime, const Lib
 			pPrevItem = pItem;
 		}
 	}
+}
+
+
+int CEventLayout::GetMaxItemColumnCount() const
+{
+	int MaxColumns = 0;
+
+	for (auto &pItem : m_EventList) {
+		if (!pItem->IsNullItem() && pItem->GetItemLines() > 0
+				&& MaxColumns < pItem->GetItemColumns())
+			MaxColumns = pItem->GetItemColumns();
+	}
+
+	return MaxColumns;
 }
 
 
@@ -1371,7 +1389,7 @@ bool CProgramGuide::RefreshService(uint16_t NetworkID, uint16_t TransportStreamI
 					m_CurEventItem.fSelected = false;
 				}
 
-				if (m_ListMode == ListMode::Services) {
+				if (m_ListMode == ListMode::Services && !m_fCombineCommonEvents) {
 					ProgramGuide::CEventLayout *pLayout;
 					if (fNewService) {
 						pLayout = new ProgramGuide::CEventLayout(pService);
@@ -1388,7 +1406,7 @@ bool CProgramGuide::RefreshService(uint16_t NetworkID, uint16_t TransportStreamI
 				}
 				SetScrollBar();
 
-				if (!fNewService && m_ListMode == ListMode::Services) {
+				if (!fNewService && m_ListMode == ListMode::Services && !m_fCombineCommonEvents) {
 					RECT rc;
 					GetColumnRect(ListIndex, &rc);
 					Invalidate(&rc);
@@ -1485,6 +1503,49 @@ void CProgramGuide::CalcLayout()
 				pLayout, &m_ServiceList,
 				First, Last, m_LinesPerHour);
 			m_EventLayoutList.Add(pLayout);
+
+			if (m_fCombineCommonEvents && i > 0) {
+				for (size_t j = 0; j < pLayout->NumItems(); j++) {
+					ProgramGuide::CEventItem *pItem = pLayout->GetItem(j);
+					if (!pItem->IsNullItem() && pItem->GetItemLines() > 0) {
+						const LibISDB::EventInfo *pCommonEventInfo = pItem->GetCommonEventInfo();
+						if (pCommonEventInfo != nullptr) {
+							for (int k = static_cast<int>(i) - 1; k >= 0; k--) {
+								ProgramGuide::CEventLayout *pPrevLayout = m_EventLayoutList[k];
+								const ProgramGuide::CServiceInfo *pPrevServiceInfo = pPrevLayout->GetServiceInfo();
+								if (pPrevServiceInfo->GetNetworkID() != pCommonEventInfo->NetworkID)
+									break;
+								if (pPrevServiceInfo->GetServiceID() == pCommonEventInfo->ServiceID) {
+									const int ItemIndex = pPrevLayout->FindItemByEventID(pCommonEventInfo->EventID);
+									if (ItemIndex >= 0) {
+										ProgramGuide::CEventItem *pEvent = pPrevLayout->GetItem(ItemIndex);
+										if (pEvent->GetItemPos() == pItem->GetItemPos()
+												&& pEvent->GetItemLines() == pItem->GetItemLines()) {
+											pItem->SetItemColumns(0);
+											pEvent->SetItemColumns(pEvent->GetItemColumns() + 1);
+										}
+										break;
+									}
+								} else {
+									bool fContinue = false;
+									for (size_t ItemIndex = 0; ItemIndex < pPrevLayout->NumItems(); ItemIndex++) {
+										const ProgramGuide::CEventItem *pEvent = pPrevLayout->GetItem(ItemIndex);
+										if (!pEvent->IsNullItem()) {
+											if (pEvent->GetCommonEventInfo() == pCommonEventInfo) {
+												if (pEvent->GetItemColumns() == 0)
+													fContinue = true;
+												break;
+											}
+										}
+									}
+									if (!fContinue)
+										break;
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	} else if (m_ListMode == ListMode::Week) {
 		ProgramGuide::CServiceInfo *pCurService = m_ServiceList.GetItem(m_WeekListService);
@@ -1781,11 +1842,11 @@ void CProgramGuide::DrawEventText(
 
 void CProgramGuide::DrawEventList(
 	ProgramGuide::CEventLayout *pLayout,
-	HDC hdc, const RECT &Rect, const RECT &PaintRect,
+	HDC hdc, const RECT &ColumnRect, const RECT &PaintRect,
 	Theme::CThemeDraw &ThemeDraw, CTextDraw &TextDraw, bool fBackground)
 {
 	const int LineHeight = GetLineHeight();
-	const int CurTimePos = Rect.top + GetCurTimeLinePos();
+	const int CurTimePos = ColumnRect.top + GetCurTimeLinePos();
 
 	const HFONT hfontOld = static_cast<HFONT>(::GetCurrentObject(hdc, OBJ_FONT));
 	const COLORREF OldTextColor = ::GetTextColor(hdc);
@@ -1794,19 +1855,22 @@ void CProgramGuide::DrawEventList(
 		m_EpgIcons.BeginDraw(hdc, m_Style.EventIconSize.Width, m_Style.EventIconSize.Height);
 
 	RECT rcItem;
-	rcItem.left = Rect.left;
-	rcItem.right = Rect.right;
+	rcItem.left = ColumnRect.left + m_Style.ColumnMargin;
 
 	for (size_t i = 0; i < pLayout->NumItems(); i++) {
 		ProgramGuide::CEventItem *pItem = pLayout->GetItem(i);
 
-		if (!pItem->IsNullItem() && pItem->GetItemLines() > 0) {
-			rcItem.top = Rect.top + pItem->GetItemPos() * LineHeight;
+		if (!pItem->IsNullItem() && pItem->GetItemLines() > 0 && pItem->GetItemColumns() > 0) {
+			rcItem.top = ColumnRect.top + pItem->GetItemPos() * LineHeight;
 			if (rcItem.top >= PaintRect.bottom)
 				break;
 			rcItem.bottom = rcItem.top + pItem->GetItemLines() * LineHeight;
 			if (rcItem.bottom <= PaintRect.top)
 				continue;
+
+			rcItem.right = ColumnRect.right - m_Style.ColumnMargin;
+			if (pItem->GetItemColumns() > 1)
+				rcItem.right += (pItem->GetItemColumns() - 1) * m_ColumnWidth;
 
 			if (fBackground)
 				DrawEventBackground(pItem, hdc, rcItem, ThemeDraw, TextDraw, LineHeight, CurTimePos);
@@ -2153,7 +2217,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 			if (m_ListMode == ListMode::Services) {
 				rc.left = m_TimeBarWidth - m_ScrollPos.x;
 				for (size_t i = 0; i < m_ServiceList.NumServices(); i++) {
-					rc.right = rc.left + (m_ItemWidth + m_Style.ColumnMargin * 2);
+					rc.right = rc.left + m_ColumnWidth;
 					if (rc.left < PaintRect.right && rc.right > PaintRect.left) {
 						DrawServiceHeader(
 							m_ServiceList.GetItem(i), hdc, rc, ThemeDraw, 2, false,
@@ -2168,7 +2232,7 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 				rc.top = rc.bottom;
 				rc.bottom += m_HeaderHeight;
 				for (int i = 0; i < static_cast<int>(m_EventLayoutList.Length()); i++) {
-					rc.right = rc.left + (m_ItemWidth + m_Style.ColumnMargin * 2);
+					rc.right = rc.left + m_ColumnWidth;
 					if (rc.left < PaintRect.right && rc.right > PaintRect.left)
 						DrawDayHeader(i, hdc, rc, ThemeDraw);
 					rc.left = rc.right;
@@ -2193,38 +2257,42 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 
 			const int PixelsPerHour = GetLineHeight() * m_LinesPerHour;
 			const int CurTimePos = rc.top + GetCurTimeLinePos();
-			const int XOrigin = m_TimeBarWidth + m_Style.ColumnMargin - m_ScrollPos.x;
 			const int TimeLineWidth = GetHairlineWidth();
 
-			// 番組背景の描画
-			rc.left = XOrigin;
-
-			for (size_t i = 0; i < m_EventLayoutList.Length(); i++) {
-				rc.right = rc.left + m_ItemWidth;
+			RECT rcLine;
+			rcLine.left = std::max(rcGuide.left, PaintRect.left);
+			rcLine.right = std::min(rcGuide.right, PaintRect.right);
+			if (rcLine.left < rcLine.right) {
+				// 1時間毎の線の描画
 				for (int j = 0; j < m_Hours; j++) {
 					const int y = rc.top + j * PixelsPerHour;
 					if (y >= PaintRect.top && y < PaintRect.bottom) {
-						RECT rcLine;
-						rcLine.left = rc.left - m_Style.ColumnMargin;
-						rcLine.right = rc.right + m_Style.ColumnMargin;
 						rcLine.top = y;
 						rcLine.bottom = y + TimeLineWidth;
 						DrawUtil::Fill(hdc, &rcLine, m_Theme.ColorList[COLOR_TIMELINE]);
 					}
-					if (((m_ListMode == ListMode::Services && m_Day == DAY_TODAY) || m_ListMode == ListMode::Week)
-							&& CurTimePos >= y && CurTimePos < y + PixelsPerHour) {
-						RECT rcCurTime;
-
-						rcCurTime.left = rc.left - m_Style.ColumnMargin;
-						rcCurTime.right = rc.right + m_Style.ColumnMargin;
-						rcCurTime.top = CurTimePos - m_Style.CurTimeLineWidth / 2;
-						rcCurTime.bottom = rcCurTime.top + m_Style.CurTimeLineWidth;
-						DrawUtil::Fill(hdc, &rcCurTime, m_Theme.ColorList[COLOR_CURTIMELINE]);
-					}
 				}
-				if (rc.left < PaintRect.right && rc.right > PaintRect.left)
-					DrawEventList(m_EventLayoutList[i], hdc, rc, PaintRect, ThemeDraw, TextDraw, true);
-				rc.left = rc.right + m_Style.ColumnMargin * 2;
+
+				// 現在時刻の線の描画
+				if ((m_ListMode == ListMode::Services && m_Day == DAY_TODAY) || m_ListMode == ListMode::Week) {
+					rcLine.top = CurTimePos - m_Style.CurTimeLineWidth / 2;
+					rcLine.bottom = rcLine.top + m_Style.CurTimeLineWidth;
+					DrawUtil::Fill(hdc, &rcLine, m_Theme.ColorList[COLOR_CURTIMELINE]);
+				}
+			}
+
+			// 番組背景の描画
+			const int XOrigin = m_TimeBarWidth - m_ScrollPos.x;
+			rc.left = XOrigin;
+			for (size_t i = 0; i < m_EventLayoutList.Length(); i++) {
+				ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[i];
+				const int ColumnCount = pLayout->GetMaxItemColumnCount();
+				rc.right = rc.left + m_ColumnWidth;
+				if (ColumnCount > 0
+						&& rc.left < PaintRect.right
+						&& rc.left + ColumnCount * m_ColumnWidth > PaintRect.left)
+					DrawEventList(pLayout, hdc, rc, PaintRect, ThemeDraw, TextDraw, true);
+				rc.left = rc.right;
 			}
 
 			// 番組テキストの描画
@@ -2236,10 +2304,14 @@ void CProgramGuide::Draw(HDC hdc, const RECT &PaintRect)
 
 			rc.left = XOrigin;
 			for (size_t i = 0; i < m_EventLayoutList.Length(); i++) {
-				rc.right = rc.left + m_ItemWidth;
-				if (rc.left < PaintRect.right && rc.right > PaintRect.left)
+				ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[i];
+				const int ColumnCount = pLayout->GetMaxItemColumnCount();
+				rc.right = rc.left + m_ColumnWidth;
+				if (ColumnCount > 0
+						&& rc.left < PaintRect.right
+						&& rc.left + ColumnCount * m_ColumnWidth > PaintRect.left)
 					DrawEventList(m_EventLayoutList[i], hdc, rc, PaintRect, ThemeDraw, TextDraw, false);
-				rc.left = rc.right + m_Style.ColumnMargin * 2;
+				rc.left = rc.right;
 			}
 
 			TextDraw.ResetClipping();
@@ -2440,7 +2512,7 @@ void CProgramGuide::GetProgramGuideRect(RECT *pRect) const
 
 void CProgramGuide::GetProgramGuideSize(SIZE *pSize) const
 {
-	pSize->cx = (m_ItemWidth + m_Style.ColumnMargin * 2) * static_cast<int>(m_EventLayoutList.Length());
+	pSize->cx = m_ColumnWidth * static_cast<int>(m_EventLayoutList.Length());
 	pSize->cy = m_LinesPerHour * m_Hours;
 }
 
@@ -2459,7 +2531,7 @@ void CProgramGuide::GetColumnRect(int Index, RECT *pRect) const
 {
 	GetProgramGuideRect(pRect);
 
-	pRect->left += Index * (m_ItemWidth + m_Style.ColumnMargin * 2) + m_Style.ColumnMargin - m_ScrollPos.x;
+	pRect->left += Index * m_ColumnWidth + m_Style.ColumnMargin - m_ScrollPos.x;
 	pRect->right = pRect->left + m_ItemWidth;
 }
 
@@ -2580,7 +2652,7 @@ void CProgramGuide::SetScrollBar()
 	si.nPage = (rc.bottom - rc.top) / GetLineHeight();
 	si.nPos = m_ScrollPos.y;
 	::SetScrollInfo(m_hwnd, SB_VERT, &si, TRUE);
-	si.nMax = static_cast<int>(m_EventLayoutList.Length()) * (m_ItemWidth + m_Style.ColumnMargin * 2) - 1;
+	si.nMax = static_cast<int>(m_EventLayoutList.Length()) * m_ColumnWidth - 1;
 	si.nPage = rc.right - rc.left;
 	si.nPos = m_ScrollPos.x;
 	::SetScrollInfo(m_hwnd, SB_HORZ, &si, TRUE);
@@ -2601,26 +2673,24 @@ CProgramGuide::HitTestInfo CProgramGuide::HitTest(int x, int y) const
 			m_Style.HeaderChevronMargin.Right + m_Style.HeaderPadding.Right;
 
 		if (m_ListMode == ListMode::Services) {
-			const int HeaderWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
-
 			x += m_ScrollPos.x - m_TimeBarWidth;
-			if (x < static_cast<int>(m_EventLayoutList.Length()) * HeaderWidth) {
-				const int Service = x / HeaderWidth;
+			if (x < static_cast<int>(m_EventLayoutList.Length()) * m_ColumnWidth) {
+				const int Service = x / m_ColumnWidth;
 
 				RECT HeaderRect;
-				HeaderRect.left = m_TimeBarWidth + Service * HeaderWidth - m_ScrollPos.x;
-				HeaderRect.right = HeaderRect.left + HeaderWidth;
+				HeaderRect.left = m_TimeBarWidth + Service * m_ColumnWidth - m_ScrollPos.x;
+				HeaderRect.right = HeaderRect.left + m_ColumnWidth;
 				HeaderRect.top = 0;
 				HeaderRect.bottom = m_HeaderHeight;
 
-				if (x % HeaderWidth < HeaderWidth - (m_Style.HeaderChevronMargin.Left + ChevronArea)) {
+				if (x % m_ColumnWidth < m_ColumnWidth - (m_Style.HeaderChevronMargin.Left + ChevronArea)) {
 					Info.Part = HitTestPart::ServiceTitle;
 					Info.ListIndex = Service;
 					Info.PartRect = HeaderRect;
 					Info.PartRect.right -= m_Style.HeaderChevronMargin.Left + ChevronArea;
 					Info.fHotTracking = true;
 					Info.fClickable = true;
-				} else if (x % HeaderWidth >= HeaderWidth - ChevronArea) {
+				} else if (x % m_ColumnWidth >= m_ColumnWidth - ChevronArea) {
 					Info.Part = HitTestPart::ServiceChevron;
 					Info.ListIndex = Service;
 					Info.PartRect = HeaderRect;
@@ -2828,7 +2898,7 @@ void CProgramGuide::SetTooltip()
 		rc.bottom = m_HeaderHeight;
 		int ToolCount = 0;
 		for (int i = 0; i < NumServices; i++) {
-			rc.right = rc.left + (m_ItemWidth + m_Style.ColumnMargin * 2);
+			rc.right = rc.left + m_ColumnWidth;
 			rc.left = rc.right - (m_Style.HeaderPadding.Right + m_Style.HeaderChevronMargin.Right + m_Style.HeaderChevronSize.Width);
 			if (rc.left >= rcHeader.right)
 				break;
@@ -3133,16 +3203,21 @@ void CProgramGuide::SetCurrentEvent(WORD EventID)
 }
 
 
-bool CProgramGuide::SetExcludeNoEventServices(bool fExclude)
+void CProgramGuide::SetExcludeNoEventServices(bool fExclude)
 {
 	m_fExcludeNoEventServices = fExclude;
-	return true;
 }
 
 
 void CProgramGuide::SetExcludeCommonEventOnlyServices(bool fExclude)
 {
 	m_fExcludeCommonEventOnlyServices = fExclude;
+}
+
+
+void CProgramGuide::SetCombineCommonEvents(bool fCombine)
+{
+	m_fCombineCommonEvents = fCombine;
 }
 
 
@@ -3535,9 +3610,8 @@ bool CProgramGuide::JumpEvent(WORD NetworkID, WORD TSID, WORD ServiceID, WORD Ev
 	SIZE Size, Page;
 	GetProgramGuideSize(&Size);
 	GetPageSize(&Page);
-	const int ItemWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 	POINT Pos;
-	Pos.x = ItemWidth * ServiceIndex - (Page.cx - ItemWidth) / 2;
+	Pos.x = m_ColumnWidth * ServiceIndex - (Page.cx - m_ColumnWidth) / 2;
 	if (Pos.x < 0)
 		Pos.x = 0;
 	else if (Pos.x > std::max(Size.cx - Page.cx, 0L))
@@ -3579,9 +3653,8 @@ bool CProgramGuide::ScrollToCurrentService()
 	SIZE Size, Page;
 	GetProgramGuideSize(&Size);
 	GetPageSize(&Page);
-	const int ItemWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 	POINT Pos;
-	Pos.x = ItemWidth * ServiceIndex - (Page.cx - ItemWidth) / 2;
+	Pos.x = m_ColumnWidth * ServiceIndex - (Page.cx - m_ColumnWidth) / 2;
 	if (Pos.x < 0)
 		Pos.x = 0;
 	else if (Pos.x > std::max(Size.cx - Page.cx, 0L))
@@ -3604,6 +3677,7 @@ bool CProgramGuide::SetUIOptions(int LinesPerHour, int ItemWidth)
 		m_ItemLogicalWidth = ItemWidth;
 		if (m_hwnd != nullptr) {
 			m_ItemWidth = m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
+			m_ColumnWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 			m_ScrollPos.x = 0;
 			m_ScrollPos.y = 0;
 			m_OldScrollPos = m_ScrollPos;
@@ -3949,12 +4023,14 @@ const ProgramGuide::CEventItem *CProgramGuide::GetEventItem(int ListIndex, int E
 bool CProgramGuide::GetEventRect(int ListIndex, int EventIndex, RECT *pRect) const
 {
 	const ProgramGuide::CEventItem *pItem = GetEventItem(ListIndex, EventIndex);
-	if (pItem == nullptr)
+	if (pItem == nullptr || pItem->GetItemColumns() == 0)
 		return false;
 
-	const int LineHeight = GetLineHeight();
 	GetColumnRect(ListIndex, pRect);
+	if (pItem->GetItemColumns() > 1)
+		pRect->right += (pItem->GetItemColumns() - 1) * m_ColumnWidth;
 
+	const int LineHeight = GetLineHeight();
 	pRect->top += pItem->GetItemPos() * LineHeight - m_ScrollPos.y * LineHeight;
 	pRect->bottom = pRect->top + pItem->GetItemLines() * LineHeight;
 
@@ -3986,48 +4062,69 @@ bool CProgramGuide::RedrawEventByIDs(WORD NetworkID, WORD TSID, WORD ServiceID, 
 }
 
 
-bool CProgramGuide::EventHitTest(int x, int y, int *pListIndex, int *pEventIndex, RECT *pItemRect) const
+bool CProgramGuide::EventHitTest(int x, int y, int *pListIndex, int *pEventIndex) const
 {
 	RECT rc;
-
 	GetProgramGuideRect(&rc);
-	if (::PtInRect(&rc, POINT{x, y})) {
-		const int XPos = x - rc.left + m_ScrollPos.x;
-		const int ServiceWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 
-		if (XPos % ServiceWidth < m_Style.ColumnMargin
-				|| XPos % ServiceWidth >= m_Style.ColumnMargin + m_ItemWidth)
-			return false;
-		const int List = XPos / ServiceWidth;
-		if (List < static_cast<int>(m_EventLayoutList.Length())) {
-			const ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[List];
-			const int LineHeight = GetLineHeight();
-			const int YOrigin = rc.top - m_ScrollPos.y * LineHeight;
+	if (!::PtInRect(&rc, POINT{x, y}))
+		return false;
 
-			y -= YOrigin;
-			for (size_t i = 0; i < pLayout->NumItems(); i++) {
-				const ProgramGuide::CEventItem *pItem = pLayout->GetItem(i);
+	const int XPos = x - rc.left + m_ScrollPos.x;
+	int List = XPos / m_ColumnWidth;
+	if (List < 0 || List >= static_cast<int>(m_EventLayoutList.Length()))
+		return false;
 
-				if (!pItem->IsNullItem() && pItem->GetItemLines() > 0) {
-					rc.top = pItem->GetItemPos() * LineHeight;
-					rc.bottom = rc.top + pItem->GetItemLines() * LineHeight;
-					if (y >= rc.top && y < rc.bottom) {
-						if (pListIndex != nullptr)
-							*pListIndex = List;
-						if (pEventIndex != nullptr)
-							*pEventIndex = static_cast<int>(i);
-						if (pItemRect != nullptr) {
-							pItemRect->top = rc.top + YOrigin;
-							pItemRect->bottom = pItemRect->top + (rc.bottom - rc.top);
-							pItemRect->left = List * ServiceWidth - m_ScrollPos.x + m_Style.ColumnMargin;
-							pItemRect->right = pItemRect->left + m_ItemWidth;
+	const ProgramGuide::CEventLayout *pLayout = m_EventLayoutList[List];
+	const int LineHeight = GetLineHeight();
+	const int YOrigin = rc.top - m_ScrollPos.y * LineHeight;
+
+	for (size_t i = 0; i < pLayout->NumItems(); i++) {
+		const ProgramGuide::CEventItem *pItem = pLayout->GetItem(i);
+
+		if (!pItem->IsNullItem() && pItem->GetItemLines() > 0) {
+			rc.top = pItem->GetItemPos() * LineHeight + YOrigin;
+			rc.bottom = rc.top + pItem->GetItemLines() * LineHeight;
+			if (y >= rc.top && y < rc.bottom) {
+				int ColumnCount = pItem->GetItemColumns();
+
+				if (ColumnCount == 0) {
+					const LibISDB::EventInfo *pEventInfo = pItem->GetCommonEventInfo();
+					if (pEventInfo == nullptr)
+						return false;
+
+					for (int j = List - 1; j >= 0; j--) {
+						const ProgramGuide::CEventLayout *pPrevLayout = m_EventLayoutList[j];
+						if (pPrevLayout->GetServiceInfo()->GetServiceID() == pEventInfo->ServiceID) {
+							const int Index = pPrevLayout->FindItemByEventID(pEventInfo->EventID);
+							if (Index >= 0) {
+								pItem = pPrevLayout->GetItem(Index);
+								if (j + pItem->GetItemColumns() < List)
+									return false;
+								ColumnCount = pItem->GetItemColumns();
+								List = j;
+								i = Index;
+								break;
+							}
 						}
-						return true;
 					}
+					if (ColumnCount == 0)
+						return false;
 				}
+
+				if (XPos < List * m_ColumnWidth + m_Style.ColumnMargin
+						|| XPos >= (List + ColumnCount) * m_ColumnWidth - m_Style.ColumnMargin)
+					return false;
+
+				if (pListIndex != nullptr)
+					*pListIndex = List;
+				if (pEventIndex != nullptr)
+					*pEventIndex = static_cast<int>(i);
+				return true;
 			}
 		}
 	}
+
 	return false;
 }
 
@@ -4984,6 +5081,7 @@ void CProgramGuide::ApplyStyle()
 		CalcFontMetrics();
 
 		m_ItemWidth = m_pStyleScaling->LogicalPixelsToPhysicalPixels(m_ItemLogicalWidth);
+		m_ColumnWidth = m_ItemWidth + m_Style.ColumnMargin * 2;
 		m_TextLeftMargin =
 			m_Style.EventIconSize.Width +
 			m_Style.EventIconMargin.Left + m_Style.EventIconMargin.Right;

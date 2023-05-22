@@ -162,6 +162,10 @@ bool CProgramGuideOptions::LoadSettings(CSettings &Settings)
 		if (Settings.Read(TEXT("ExcludeCommonEventOnlyServices"), &fExcludeCommonEventOnly))
 			m_pProgramGuide->SetExcludeCommonEventOnlyServices(fExcludeCommonEventOnly);
 
+		bool fCombineCommonEvents;
+		if (Settings.Read(TEXT("CombineCommonEvents"), &fCombineCommonEvents))
+			m_pProgramGuide->SetCombineCommonEvents(fCombineCommonEvents);
+
 		bool fAutoRefresh;
 		if (Settings.Read(TEXT("AutoRefresh"), &fAutoRefresh))
 			m_pProgramGuide->SetAutoRefresh(fAutoRefresh);
@@ -362,6 +366,7 @@ bool CProgramGuideOptions::SaveSettings(CSettings &Settings)
 		Settings.Write(TEXT("ShowFeaturedMark"), m_pProgramGuide->GetShowFeaturedMark());
 		Settings.Write(TEXT("ExcludeNoEventServices"), m_pProgramGuide->GetExcludeNoEventServices());
 		Settings.Write(TEXT("ExcludeCommonEventOnlyServices"), m_pProgramGuide->GetExcludeCommonEventOnlyServices());
+		Settings.Write(TEXT("CombineCommonEvents"), m_pProgramGuide->GetCombineCommonEvents());
 		Settings.Write(TEXT("AutoRefresh"), m_pProgramGuide->GetAutoRefresh());
 
 		int Width, Height;

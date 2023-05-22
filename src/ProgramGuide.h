@@ -364,9 +364,11 @@ namespace TVTest
 		void ClearCurrentEvent() { SetCurrentEvent(0); }
 
 		bool GetExcludeNoEventServices() const { return m_fExcludeNoEventServices; }
-		bool SetExcludeNoEventServices(bool fExclude);
+		void SetExcludeNoEventServices(bool fExclude);
 		bool GetExcludeCommonEventOnlyServices() const { return m_fExcludeCommonEventOnlyServices; }
 		void SetExcludeCommonEventOnlyServices(bool fExclude);
+		bool GetCombineCommonEvents() const { return m_fCombineCommonEvents; }
+		void SetCombineCommonEvents(bool fCombine);
 		bool SetExcludeServiceList(const ServiceInfoList &List);
 		bool GetExcludeServiceList(ServiceInfoList *pList) const;
 		bool IsExcludeService(WORD NetworkID, WORD TransportStreamID, WORD ServiceID) const;
@@ -537,6 +539,7 @@ namespace TVTest
 		int m_GDIFontHeight;
 		int m_ItemLogicalWidth = 140;
 		int m_ItemWidth;
+		int m_ColumnWidth;
 		int m_TextLeftMargin;
 		int m_HeaderHeight;
 		int m_TimeBarWidth;
@@ -592,6 +595,7 @@ namespace TVTest
 		ServiceInfo m_CurrentChannel;
 		bool m_fExcludeNoEventServices = true;
 		bool m_fExcludeCommonEventOnlyServices = true;
+		bool m_fCombineCommonEvents = true;
 		ServiceInfoList m_ExcludeServiceList;
 		WORD m_CurrentEventID = 0;
 
@@ -692,7 +696,7 @@ namespace TVTest
 			Theme::CThemeDraw &ThemeDraw, CTextDraw &TextDraw, int LineHeight);
 		void DrawEventList(
 			ProgramGuide::CEventLayout *pLayout,
-			HDC hdc, const RECT &Rect, const RECT &PaintRect,
+			HDC hdc, const RECT &ColumnRect, const RECT &PaintRect,
 			Theme::CThemeDraw &ThemeDraw, CTextDraw &TextDraw, bool fBackground);
 		void DrawHeaderBackground(Theme::CThemeDraw &ThemeDraw, const RECT &Rect, bool fCur) const;
 		void DrawServiceHeader(
@@ -731,7 +735,7 @@ namespace TVTest
 		bool GetEventRect(int ListIndex, int EventIndex, RECT *pRect) const;
 		bool RedrawEvent(int ListIndex, int EventIndex);
 		bool RedrawEventByIDs(WORD NetworkID, WORD TSID, WORD ServiceID, WORD EventID);
-		bool EventHitTest(int x, int y, int *pListIndex, int *pEventIndex, RECT *pItemRect = nullptr) const;
+		bool EventHitTest(int x, int y, int *pListIndex, int *pEventIndex) const;
 		bool GetEventIndexByIDs(
 			WORD NetworkID, WORD TSID, WORD ServiceID, WORD EventID,
 			int *pListIndex, int *pEventIndex) const;

@@ -117,6 +117,9 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			DlgCheckBox_Check(
 				hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDECOMMONEVENTONLY,
 				m_pProgramGuide->GetExcludeCommonEventOnlyServices());
+			DlgCheckBox_Check(
+				hDlg, IDC_EPGCHANNELSETTINGS_COMBINECOMMONEVENTS,
+				m_pProgramGuide->GetCombineCommonEvents());
 
 			AddControls({
 				{IDC_EPGCHANNELSETTINGS_CHANNELLIST,            AlignFlag::All},
@@ -125,6 +128,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 				{IDC_EPGCHANNELSETTINGS_INVERTCHECK,            AlignFlag::Right},
 				{IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT,         AlignFlag::Bottom},
 				{IDC_EPGCHANNELSETTINGS_EXCLUDECOMMONEVENTONLY, AlignFlag::Bottom},
+				{IDC_EPGCHANNELSETTINGS_COMBINECOMMONEVENTS,    AlignFlag::Bottom},
 				{IDOK,                                          AlignFlag::BottomRight},
 				{IDCANCEL,                                      AlignFlag::BottomRight},
 			});
@@ -185,6 +189,8 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDENOEVENT));
 				m_pProgramGuide->SetExcludeCommonEventOnlyServices(
 					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_EXCLUDECOMMONEVENTONLY));
+				m_pProgramGuide->SetCombineCommonEvents(
+					DlgCheckBox_IsChecked(hDlg, IDC_EPGCHANNELSETTINGS_COMBINECOMMONEVENTS));
 			}
 			[[fallthrough]];
 		case IDCANCEL:
