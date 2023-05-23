@@ -529,9 +529,11 @@
     <ClCompile Include="DPIUtil.cpp" />
     <ClCompile Include="Epg.cpp" />
     <ClCompile Include="EpgDataStore.cpp" />
+    <ClCompile Include="EventInfoOSD.cpp" />
     <ClCompile Include="GUIUtil.cpp" />
     <ClCompile Include="MainDisplay.cpp" />
     <ClCompile Include="MainPanel.cpp" />
+    <ClCompile Include="NotificationBarOptions.cpp" />
     <ClCompile Include="PathUtil.cpp" />
     <ClCompile Include="ProgramGuideTool.cpp" />
     <ClCompile Include="SharedMemory.cpp" />
@@ -674,9 +676,11 @@
     <ClInclude Include="DPIUtil.h" />
     <ClInclude Include="Epg.h" />
     <ClInclude Include="EpgDataStore.h" />
+    <ClInclude Include="EventInfoOSD.h" />
     <ClInclude Include="GUIUtil.h" />
     <ClInclude Include="MainDisplay.h" />
     <ClInclude Include="MainPanel.h" />
+    <ClInclude Include="NotificationBarOptions.h" />
     <ClInclude Include="PathUtil.h" />
     <ClInclude Include="ProgramGuideTool.h" />
     <ClInclude Include="SharedMemory.h" />
