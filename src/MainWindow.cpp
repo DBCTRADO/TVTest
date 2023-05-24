@@ -5680,7 +5680,7 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 		break;
 
 	case WM_CLOSE:
-		m_fShowEventInfoOSD = m_App.OSDManager.IsEventInfoOSDCreated();
+		m_fShowEventInfoOSD = m_App.OSDManager.IsEventInfoOSDVisible();
 		break;
 
 	case WM_DESTROY:
@@ -5838,7 +5838,7 @@ bool CMainWindow::CFullscreen::OnCreate()
 	m_TitleBar.SetMaximizeMode(m_MainWindow.GetMaximize());
 	m_TitleBar.SetFullscreenMode(true);
 
-	m_fShowEventInfoOSD = m_App.OSDManager.IsEventInfoOSDCreated();
+	m_fShowEventInfoOSD = m_App.OSDManager.IsEventInfoOSDVisible();
 	m_App.OSDManager.Reset();
 
 	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();

@@ -239,7 +239,8 @@ bool CPseudoOSD::IsVisible() const
 {
 	if (m_hwnd == nullptr)
 		return false;
-	return ::IsWindowVisible(m_hwnd) != FALSE;
+	//return ::IsWindowVisible(m_hwnd) != FALSE;
+	return (GetWindowStyle(m_hwnd) & WS_VISIBLE) != 0;
 }
 
 
@@ -269,14 +270,6 @@ bool CPseudoOSD::SetText(LPCTSTR pszText, HBITMAP hbmIcon, int IconWidth, int Ic
 		m_IconHeight = 0;
 	}
 	m_hbm = nullptr;
-	/*
-	if (IsVisible()) {
-		if (m_fLayeredWindow)
-			UpdateLayeredWindow();
-		else
-			::RedrawWindow(m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
-	}
-	*/
 	return true;
 }
 
