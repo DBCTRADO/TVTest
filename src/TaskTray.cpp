@@ -80,7 +80,7 @@ bool CTaskTrayManager::SetMinimizeToTray(bool fMinimizeToTray)
 					if (!AddTrayIcon())
 						return false;
 				}
-				::ShowWindow(m_hwnd, fMinimizeToTray ? SW_HIDE : SW_SHOW);
+				::ShowWindow(m_hwnd, fMinimizeToTray ? SW_HIDE : SW_SHOWMINNOACTIVE);
 			}
 		}
 		m_fMinimizeToTray = fMinimizeToTray;

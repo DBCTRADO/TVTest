@@ -895,27 +895,41 @@ int CAppMain::Main(HINSTANCE hInstance, LPCTSTR pszCmdLine, int nCmdShow)
 	if (pEPGDatabaseFilter != nullptr)
 		pEPGDatabaseFilter->SetEPGDatabase(&EPGDatabase);
 
+	if (nCmdShow == SW_SHOWMINIMIZED || nCmdShow == SW_SHOWMINNOACTIVE || nCmdShow == SW_MINIMIZE)
+		CmdLineOptions.m_fMinimize = true;
+	if (CmdLineOptions.m_fStandby && CmdLineOptions.m_fMinimize)
+		CmdLineOptions.m_fMinimize = false;
+
+	const bool fMinimizeToTray = CmdLineOptions.m_fTray || ViewOptions.GetMinimizeToTray();
+
+	DWORD WindowStyle = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+	DWORD WindowExStyle = 0;
+	if (CmdLineOptions.m_fMinimize) {
+		WindowStyle |= WS_MINIMIZE;
+		WindowExStyle |= WS_EX_NOACTIVATE;
+		if (!fMinimizeToTray)
+			WindowExStyle |= WS_EX_APPWINDOW;
+	}
+
 	// ウィンドウの作成
-	if (!MainWindow.Create(nullptr, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)) {
+	if (!MainWindow.Create(nullptr, WindowStyle, WindowExStyle)) {
 		AddLog(CLogItem::LogType::Error, TEXT("ウィンドウが作成できません。"));
 		if (!Core.IsSilent())
 			MessageBox(nullptr, TEXT("ウィンドウが作成できません。"), nullptr, MB_OK | MB_ICONSTOP);
 		return 0;
 	}
 
-	if (nCmdShow == SW_SHOWMINIMIZED || nCmdShow == SW_SHOWMINNOACTIVE || nCmdShow == SW_MINIMIZE)
-		CmdLineOptions.m_fMinimize = true;
-	if (CmdLineOptions.m_fStandby && CmdLineOptions.m_fMinimize)
-		CmdLineOptions.m_fMinimize = false;
 	if (!CmdLineOptions.m_fStandby && !CmdLineOptions.m_fMinimize)
 		MainWindow.Show(nCmdShow);
 
 	GeneralOptions.Apply(COptions::UPDATE_ALL);
 
 	TaskTrayManager.Initialize(MainWindow.GetHandle(), WM_APP_TRAYICON);
-	TaskTrayManager.SetMinimizeToTray(CmdLineOptions.m_fTray || ViewOptions.GetMinimizeToTray());
-	if (CmdLineOptions.m_fMinimize)
+	TaskTrayManager.SetMinimizeToTray(fMinimizeToTray);
+	if (CmdLineOptions.m_fMinimize) {
 		MainWindow.InitMinimize();
+		MainWindow.SetWindowExStyle(MainWindow.GetWindowExStyle() & ~(WS_EX_NOACTIVATE | WS_EX_APPWINDOW));
+	}
 
 	if (CmdLineOptions.m_fMpeg2 || CmdLineOptions.m_fH264 || CmdLineOptions.m_fH265) {
 		CoreEngine.SetStreamTypePlayable(
