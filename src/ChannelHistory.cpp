@@ -146,31 +146,61 @@ bool CRecentChannelList::Add(const CTunerChannelInfo &ChannelInfo)
 }
 
 
-bool CRecentChannelList::SetMenu(HMENU hmenu, bool fClear) const
+bool CRecentChannelList::SetMenu(HWND hwnd, HMENU hmenu)
 {
-	ClearMenu(hmenu);
+	m_ChannelMenu.Destroy();
+
+	for (int i = ::GetMenuItemCount(hmenu) - 3; i >= 0; i--)
+		::DeleteMenu(hmenu, i, MF_BYPOSITION);
+
+	CChannelList ChannelList;
 
 	for (int i = 0; i < m_MaxChannelHistoryMenu; i++) {
 		const CTunerChannelInfo *pChannelInfo = GetChannelInfo(i);
 		if (pChannelInfo == nullptr)
 			break;
-
-		TCHAR szText[64];
-		size_t Length = 0;
-		if (i < 36)
-			Length = StringFormat(szText, TEXT("&{:c}: "), i < 10 ? i + _T('0') : (i - 10) + _T('A'));
-		CopyToMenuText(
-			pChannelInfo->GetName(),
-			szText + Length, static_cast<int>(lengthof(szText) - Length));
-		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CM_CHANNELHISTORY_FIRST + i, szText);
+		ChannelList.AddChannel(*pChannelInfo);
 	}
 
-	if (fClear && NumChannels() > 0) {
-		::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
-		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, CM_CHANNELHISTORY_CLEAR, TEXT("履歴をクリア"));
+	if (ChannelList.NumChannels() > 0) {
+		m_ChannelMenu.Create(
+			&ChannelList, -1, CM_CHANNELHISTORY_FIRST, CM_CHANNELHISTORY_LAST, hmenu, hwnd,
+			CChannelMenu::CreateFlag::ShowEventInfo |
+			CChannelMenu::CreateFlag::ShowLogo |
+			CChannelMenu::CreateFlag::NoClear |
+			CChannelMenu::CreateFlag::IncludeDisabled);
+		m_ChannelMenu.RegisterExtraItem(CM_CHANNELHISTORY_CLEAR);
+	} else {
+		::InsertMenu(hmenu, 0, MF_GRAYED, 0, TEXT("なし"));
 	}
+
+	::EnableMenuItem(hmenu, CM_CHANNELHISTORY_CLEAR, ChannelList.NumChannels() > 0 ? MF_ENABLED : MF_GRAYED);
 
 	return true;
+}
+
+
+bool CRecentChannelList::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+	return m_ChannelMenu.OnMeasureItem(hwnd, wParam, lParam);
+}
+
+
+bool CRecentChannelList::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+	return m_ChannelMenu.OnDrawItem(hwnd, wParam, lParam);
+}
+
+
+bool CRecentChannelList::OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+	return m_ChannelMenu.OnMenuSelect(hwnd, wParam, lParam);
+}
+
+
+bool CRecentChannelList::OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+	return m_ChannelMenu.OnUninitMenuPopup(hwnd, wParam, lParam);
 }
 
 

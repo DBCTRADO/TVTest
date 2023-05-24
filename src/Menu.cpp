@@ -601,6 +601,7 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
 {
 	if (Index < 0 || Index >= lengthof(m_EventList)
 			|| (Index > 0 && !m_EventList[Index - 1].fValid)
+			|| m_pChannelInfo->GetNetworkID() == 0
 			|| m_pChannelInfo->GetServiceID() == 0)
 		return nullptr;
 
@@ -624,7 +625,8 @@ const LibISDB::EventInfo *CChannelMenuItem::GetEventInfo(
 
 			if (App.Core.GetCurrentStreamIDInfo(&StreamID)
 					&& m_pChannelInfo->GetNetworkID() == StreamID.NetworkID
-					&& m_pChannelInfo->GetTransportStreamID() == StreamID.TransportStreamID) {
+					&& (m_pChannelInfo->GetTransportStreamID() == 0
+						|| m_pChannelInfo->GetTransportStreamID() == StreamID.TransportStreamID)) {
 				if (!App.CoreEngine.GetCurrentEventInfo(
 							&m_EventList[Index].EventInfo,
 							m_pChannelInfo->GetServiceID(),
@@ -705,22 +707,27 @@ bool CChannelMenu::Create(
 	LibISDB::DateTime Time;
 	if (!fCurServices)
 		GetBaseTime(&Time);
-	m_ChannelNameWidth = 0;
-	m_EventNameWidth = 0;
+
 	if (hmenu == nullptr) {
 		m_hmenu = ::CreatePopupMenu();
 	} else {
 		m_hmenu = hmenu;
 		m_Flags |= CreateFlag::Shared;
-		ClearMenu(hmenu);
+		if (!(Flags & CreateFlag::NoClear))
+			ClearMenu(hmenu);
 	}
+
+	m_ChannelNameWidth = 0;
+	m_EventNameWidth = 0;
+
 	MENUITEMINFO mii;
 	mii.cbSize = sizeof(MENUITEMINFO);
 	mii.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_ID | MIIM_DATA;
 	int PrevSpace = -1;
-	for (int i = 0, j = 0; i < m_ChannelList.NumChannels() && m_FirstCommand + i <= m_LastCommand; i++) {
+
+	for (int i = 0, MenuPos = 0, Rows = 0; i < m_ChannelList.NumChannels() && m_FirstCommand + i <= m_LastCommand; i++) {
 		const CChannelInfo *pChInfo = m_ChannelList.GetChannelInfo(i);
-		if (!pChInfo->IsEnabled())
+		if (!pChInfo->IsEnabled() && !(Flags & CreateFlag::IncludeDisabled))
 			continue;
 
 		TCHAR szText[256];
@@ -741,10 +748,10 @@ bool CChannelMenu::Create(
 			m_ChannelNameWidth = rc.right;
 		mii.wID = m_FirstCommand + i;
 		mii.fType = MFT_OWNERDRAW;
-		if ((MaxRows > 0 && j == MaxRows)
+		if ((MaxRows > 0 && Rows == MaxRows)
 				|| (!!(Flags & CreateFlag::SpaceBreak) && pChInfo->GetSpace() != PrevSpace)) {
 			mii.fType |= MFT_MENUBREAK;
-			j = 0;
+			Rows = 0;
 		}
 		mii.fState = MFS_ENABLED;
 		if (i == CurChannel)
@@ -767,11 +774,12 @@ bool CChannelMenu::Create(
 					m_EventNameWidth = rc.right;
 			}
 		}
-		::InsertMenuItem(m_hmenu, i, TRUE, &mii);
+		::InsertMenuItem(m_hmenu, MenuPos, TRUE, &mii);
 		if (i == CurChannel)
 			DrawUtil::SelectObject(hdc, m_Font);
 		PrevSpace = pChInfo->GetSpace();
-		j++;
+		MenuPos++;
+		Rows++;
 	}
 	::SelectObject(hdc, hfontOld);
 	::ReleaseDC(hwnd, hdc);
@@ -795,24 +803,35 @@ bool CChannelMenu::Create(
 void CChannelMenu::Destroy()
 {
 	if (m_hmenu) {
+		const bool fDestroy = !(m_Flags & CreateFlag::Shared);
 		MENUITEMINFO mii;
 
 		mii.cbSize = sizeof(MENUITEMINFO);
-		mii.fMask = MIIM_DATA;
 		for (int i = ::GetMenuItemCount(m_hmenu) - 1; i >= 0; i--) {
-			if (::GetMenuItemInfo(m_hmenu, i, TRUE, &mii))
-				delete reinterpret_cast<CChannelMenuItem*>(mii.dwItemData);
+			mii.fMask = MIIM_ID | MIIM_DATA | MIIM_FTYPE;
+			if (::GetMenuItemInfo(m_hmenu, i, TRUE, &mii)) {
+				if (mii.wID >= m_FirstCommand && mii.wID <= m_LastCommand) {
+					delete reinterpret_cast<CChannelMenuItem*>(mii.dwItemData);
+					if (!fDestroy)
+						::DeleteMenu(m_hmenu, i, MF_BYPOSITION);
+				} else if (!fDestroy
+						&& std::ranges::find(m_ExtraItemList, mii.wID) != m_ExtraItemList.end()) {
+					mii.fMask = MIIM_FTYPE;
+					mii.fType &= ~MFT_OWNERDRAW;
+					::SetMenuItemInfo(m_hmenu, i, TRUE, &mii);
+				}
+			}
 		}
-		if (!(m_Flags & CreateFlag::Shared))
+		if (fDestroy)
 			::DestroyMenu(m_hmenu);
-		else
-			ClearMenu(m_hmenu);
 		m_hmenu = nullptr;
 	}
+
 	m_ChannelList.Clear();
 	m_MenuPainter.Finalize();
 	m_Tooltip.Destroy();
 	m_hwnd = nullptr;
+	m_ExtraItemList.clear();
 }
 
 
@@ -841,12 +860,46 @@ bool CChannelMenu::SetHighlightedItem(int Index)
 }
 
 
+bool CChannelMenu::AppendExtraItem(UINT ID, LPCTSTR pszText, UINT Flags)
+{
+	if (m_hmenu == nullptr || pszText == nullptr)
+		return false;
+	if (!(Flags & MF_SEPARATOR))
+		Flags |= MF_OWNERDRAW;
+	if (!::AppendMenu(m_hmenu, Flags, ID, pszText))
+		return false;
+	if (!(Flags & MF_SEPARATOR))
+		m_ExtraItemList.push_back(ID);
+	return true;
+}
+
+
+bool CChannelMenu::RegisterExtraItem(UINT ID)
+{
+	m_ExtraItemList.push_back(ID);
+
+	if (m_hmenu != nullptr) {
+		MENUITEMINFO mii;
+		mii.cbSize = sizeof(MENUITEMINFO);
+		mii.fMask = MIIM_FTYPE;
+		if (::GetMenuItemInfo(m_hmenu, ID, FALSE, &mii)) {
+			mii.fType |= MFT_OWNERDRAW;
+			::SetMenuItemInfo(m_hmenu, ID, FALSE, &mii);
+		}
+	}
+
+	return true;
+}
+
+
 bool CChannelMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 	LPMEASUREITEMSTRUCT pmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
 
-	if (m_hmenu != nullptr && pmis->CtlType == ODT_MENU
-			&& pmis->itemID >= m_FirstCommand && pmis->itemID <= m_LastCommand) {
+	if (m_hmenu == nullptr || pmis->CtlType != ODT_MENU)
+		return false;
+
+	if (pmis->itemID >= m_FirstCommand && pmis->itemID <= m_LastCommand) {
 		pmis->itemWidth =
 			m_ChannelNameWidth + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
 		if (!!(m_Flags & CreateFlag::ShowLogo))
@@ -858,6 +911,23 @@ bool CChannelMenu::OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 			m_Margins.cyTopHeight + m_Margins.cyBottomHeight;
 		return true;
 	}
+
+	if (std::ranges::find(m_ExtraItemList, pmis->itemID) != m_ExtraItemList.end()) {
+		TCHAR szText[256];
+		const int Length = ::GetMenuString(m_hmenu, pmis->itemID, szText, lengthof(szText), MF_BYCOMMAND);
+		if (Length > 0) {
+			HDC hdc = ::GetDC(hwnd);
+			RECT rc = {};
+			::DrawText(hdc, szText, Length, &rc, DT_SINGLELINE | DT_CALCRECT);
+			pmis->itemWidth = rc.right + m_Margins.cxLeftWidth + m_Margins.cxRightWidth;
+			if (!!(m_Flags & CreateFlag::ShowLogo))
+				pmis->itemWidth += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
+			pmis->itemHeight = m_TextHeight + m_Margins.cyTopHeight + m_Margins.cyBottomHeight;
+			::ReleaseDC(hwnd, hdc);
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -867,12 +937,9 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
 
 	if (m_hmenu == nullptr || hwnd != m_hwnd || pdis->CtlType != ODT_MENU
-			|| pdis->itemID < m_FirstCommand || pdis->itemID > m_LastCommand)
+			|| ((pdis->itemID < m_FirstCommand || pdis->itemID > m_LastCommand)
+				&& std::ranges::find(m_ExtraItemList, pdis->itemID) == m_ExtraItemList.end()))
 		return false;
-
-	const CChannelMenuItem *pItem = reinterpret_cast<CChannelMenuItem*>(pdis->itemData);
-	const CChannelInfo *pChInfo = pItem->GetChannelInfo();
-	TCHAR szText[256];
 
 	m_MenuPainter.DrawItemBackground(pdis->hDC, pdis->rcItem, pdis->itemState);
 	const COLORREF crTextColor = m_MenuPainter.GetTextColor(pdis->itemState);
@@ -887,32 +954,47 @@ bool CChannelMenu::OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	rc.top = pdis->rcItem.top + m_Margins.cyTopHeight;
 	rc.bottom = pdis->rcItem.bottom - m_Margins.cyBottomHeight;
 
-	if (!!(m_Flags & CreateFlag::ShowLogo)) {
-		m_Logo.DrawLogo(
-			pdis->hDC,
-			rc.left,
-			rc.top + ((rc.bottom - rc.top) - m_Logo.GetLogoHeight()) / 2,
-			*pChInfo);
-		rc.left += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
-	}
+	if (pdis->itemID >= m_FirstCommand && pdis->itemID <= m_LastCommand) {
+		const CChannelMenuItem *pItem = reinterpret_cast<CChannelMenuItem*>(pdis->itemData);
+		const CChannelInfo *pChInfo = pItem->GetChannelInfo();
+		TCHAR szText[256];
 
-	rc.right = rc.left + m_ChannelNameWidth;
-	StringFormat(
-		szText, TEXT("{}: {}"),
-		pChInfo->GetChannelNo(), pChInfo->GetName());
-	::DrawText(
-		pdis->hDC, szText, -1, &rc,
-		DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+		if (!!(m_Flags & CreateFlag::ShowLogo)) {
+			m_Logo.DrawLogo(
+				pdis->hDC,
+				rc.left,
+				rc.top + ((rc.bottom - rc.top) - m_Logo.GetLogoHeight()) / 2,
+				*pChInfo);
+			rc.left += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
+		}
 
-	if (!!(m_Flags & CreateFlag::ShowEventInfo)) {
-		const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
-		if (pEventInfo != nullptr) {
-			const int Length = GetEventText(pEventInfo, szText, lengthof(szText));
-			rc.left = rc.right + m_TextHeight;
+		rc.right = rc.left + m_ChannelNameWidth;
+		StringFormat(
+			szText, TEXT("{}: {}"),
+			pChInfo->GetChannelNo(), pChInfo->GetName());
+		::DrawText(
+			pdis->hDC, szText, -1, &rc,
+			DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+
+		if (!!(m_Flags & CreateFlag::ShowEventInfo)) {
+			const LibISDB::EventInfo *pEventInfo = pItem->GetEventInfo(0);
+			if (pEventInfo != nullptr) {
+				const int Length = GetEventText(pEventInfo, szText, lengthof(szText));
+				rc.left = rc.right + m_TextHeight;
+				rc.right = pdis->rcItem.right - m_Margins.cxRightWidth;
+				::DrawText(
+					pdis->hDC, szText, Length, &rc,
+					DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+			}
+		}
+	} else {
+		TCHAR szText[256];
+		const int Length = ::GetMenuString(m_hmenu, pdis->itemID, szText, lengthof(szText), MF_BYCOMMAND);
+		if (Length > 0) {
+			if (!!(m_Flags & CreateFlag::ShowLogo))
+				rc.left += m_Logo.GetLogoWidth() + m_MenuLogoMargin;
 			rc.right = pdis->rcItem.right - m_Margins.cxRightWidth;
-			::DrawText(
-				pdis->hDC, szText, Length, &rc,
-				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+			::DrawText(pdis->hDC, szText, Length, &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 		}
 	}
 

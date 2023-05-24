@@ -1097,6 +1097,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				return TRUE;
 			if (m_App.FavoritesMenu.OnMeasureItem(hwnd, wParam, lParam))
 				return TRUE;
+			if (m_App.RecentChannelList.OnMeasureItem(hwnd, wParam, lParam))
+				return TRUE;
 		}
 		break;
 
@@ -1106,6 +1108,8 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if (m_App.ChannelMenu.OnDrawItem(hwnd, wParam, lParam))
 			return TRUE;
 		if (m_App.FavoritesMenu.OnDrawItem(hwnd, wParam, lParam))
+			return TRUE;
+		if (m_App.RecentChannelList.OnDrawItem(hwnd, wParam, lParam))
 			return TRUE;
 		break;
 
@@ -1194,12 +1198,16 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			return 0;
 		if (m_App.FavoritesMenu.OnUninitMenuPopup(hwnd, wParam, lParam))
 			return 0;
+		if (m_App.RecentChannelList.OnUninitMenuPopup(hwnd, wParam, lParam))
+			return 0;
 		break;
 
 	case WM_MENUSELECT:
 		if (m_App.ChannelMenu.OnMenuSelect(hwnd, wParam, lParam))
 			return 0;
 		if (m_App.FavoritesMenu.OnMenuSelect(hwnd, wParam, lParam))
+			return 0;
+		if (m_App.RecentChannelList.OnMenuSelect(hwnd, wParam, lParam))
 			return 0;
 		break;
 
@@ -3067,7 +3075,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			hmenu, CM_ADDTOFAVORITES,
 			MF_BYCOMMAND | (m_App.ChannelManager.GetCurrentChannelInfo() != nullptr ? MF_ENABLED : MF_GRAYED));
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_CHANNELHISTORY)) {
-		m_App.RecentChannelList.SetMenu(hmenu);
+		m_App.RecentChannelList.SetMenu(m_hwnd, hmenu);
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_ASPECTRATIO)) {
 		int ItemCount = ::GetMenuItemCount(hmenu);
 

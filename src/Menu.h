@@ -151,6 +151,8 @@ namespace TVTest
 			ShowToolTip     = 0x0004U,
 			SpaceBreak      = 0x0008U,
 			CurrentServices = 0x0010U,
+			NoClear         = 0x0020U,
+			IncludeDisabled = 0x0040U,
 			Shared          = 0x1000U,
 			TVTEST_ENUM_FLAGS_TRAILER
 		};
@@ -175,6 +177,7 @@ namespace TVTest
 		MARGINS m_Margins;
 		int m_MenuLogoMargin = 3;
 		CTooltip m_Tooltip;
+		std::vector<UINT> m_ExtraItemList;
 
 		int GetEventText(const LibISDB::EventInfo *pEventInfo, LPTSTR pszText, int MaxLength) const;
 		void CreateFont(HDC hdc);
@@ -194,6 +197,10 @@ namespace TVTest
 		void Destroy();
 		int Show(UINT Flags, int x, int y, const RECT *pExcludeRect = nullptr);
 		bool SetHighlightedItem(int Index);
+		bool AppendExtraItem(UINT ID, LPCTSTR pszText, UINT Flags = MF_ENABLED);
+		bool AppendSeparator() { return AppendExtraItem(0, nullptr, MF_SEPARATOR); }
+		bool RegisterExtraItem(UINT ID);
+
 		bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
 		bool OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
 		bool OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam);

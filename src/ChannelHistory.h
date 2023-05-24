@@ -26,6 +26,7 @@
 #include <memory>
 #include "ChannelList.h"
 #include "Settings.h"
+#include "Menu.h"
 
 
 namespace TVTest
@@ -56,7 +57,12 @@ namespace TVTest
 		const CTunerChannelInfo *GetChannelInfo(int Index) const;
 		bool Add(const CTunerChannelInfo &ChannelInfo);
 		bool Add(LPCTSTR pszDriverName, const CChannelInfo *pChannelInfo);
-		bool SetMenu(HMENU hmenu, bool fClear = true) const;
+
+		bool SetMenu(HWND hwnd, HMENU hmenu);
+		bool OnMeasureItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool OnDrawItem(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool OnMenuSelect(HWND hwnd, WPARAM wParam, LPARAM lParam);
+		bool OnUninitMenuPopup(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
 	// CSettingsBase
 		bool ReadSettings(CSettings &Settings) override;
@@ -66,6 +72,7 @@ namespace TVTest
 		std::deque<std::unique_ptr<CTunerChannelInfo>> m_ChannelList;
 		int m_MaxChannelHistory = 20;
 		int m_MaxChannelHistoryMenu = 20;
+		CChannelMenu m_ChannelMenu;
 	};
 
 }	// namespace TVTest
