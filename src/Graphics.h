@@ -95,8 +95,10 @@ namespace TVTest
 			bool LoadFromResource(HINSTANCE hinst, LPCWSTR pszName);
 			bool LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType);
 			bool Create(int Width, int Height, int BitsPerPixel);
+			// HBITMAP と HPALETTE は CImage を破棄するまで有効でなければならない
 			bool CreateFromBitmap(HBITMAP hbm, HPALETTE hpal = nullptr);
-			bool CreateFromDIB(const BITMAPINFO *pbmi, const void *pBits);
+			// pBits の画像データは CImage を破棄するまで有効でなければならない
+			bool CreateFromDIB(const BITMAPINFO *pbmi, void *pBits);
 			bool IsCreated() const;
 			int GetWidth() const;
 			int GetHeight() const;

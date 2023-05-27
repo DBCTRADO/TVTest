@@ -510,11 +510,10 @@ bool CChannelMenuLogo::Initialize(int IconHeight, InitializeFlag Flags)
 	m_fNoFrame = !!(Flags & InitializeFlag::NoFrame);
 
 	if (!m_fNoFrame) {
-		DrawUtil::CBitmap FrameImage;
-		FrameImage.Load(
+		m_FrameBitmap.Load(
 			GetAppClass().GetResourceInstance(),
 			m_LogoHeight <= 16 ? MAKEINTRESOURCE(IDB_LOGOFRAME16) : MAKEINTRESOURCE(IDB_LOGOFRAME32));
-		m_FrameImage.CreateFromBitmap(FrameImage.GetHandle());
+		m_FrameImage.CreateFromBitmap(m_FrameBitmap.GetHandle());
 	}
 
 	return true;

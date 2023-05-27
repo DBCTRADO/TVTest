@@ -273,14 +273,16 @@ INT_PTR COptionDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						const HBITMAP hbm = static_cast<HBITMAP>(::CopyImage(ii.hbmColor, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 						::DeleteObject(ii.hbmColor);
 						::DeleteObject(ii.hbmMask);
-						Graphics::CImage Image;
-						Image.CreateFromBitmap(hbm);
-						::DeleteObject(hbm);
-						Graphics::CCanvas Canvas(pdis->hDC);
-						Canvas.SetComposition(true);
-						Canvas.DrawImage(rc.left, y, m_IconWidth, m_IconHeight, &Image, 0, 0, IconWidth, IconHeight);
-						if (fSelected)
+						{
+							Graphics::CImage Image;
+							Image.CreateFromBitmap(hbm);
+							Graphics::CCanvas Canvas(pdis->hDC);
+							Canvas.SetComposition(true);
 							Canvas.DrawImage(rc.left, y, m_IconWidth, m_IconHeight, &Image, 0, 0, IconWidth, IconHeight);
+							if (fSelected)
+								Canvas.DrawImage(rc.left, y, m_IconWidth, m_IconHeight, &Image, 0, 0, IconWidth, IconHeight);
+						}
+						::DeleteObject(hbm);
 					}
 #endif
 					::DestroyIcon(hicon);

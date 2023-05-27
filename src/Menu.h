@@ -138,7 +138,8 @@ namespace TVTest
 		int m_LogoWidth = 26;
 		int m_LogoHeight = 16;
 		bool m_fNoFrame = false;
-		Graphics::CImage m_FrameImage;
+		DrawUtil::CBitmap m_FrameBitmap;
+		Graphics::CImage m_FrameImage; // m_FrameBitmap より先に破棄されるようにする必要がある
 	};
 
 	class CChannelMenu

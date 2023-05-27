@@ -370,35 +370,10 @@ bool CLogoManager::LoadLogoIDMap(LPCTSTR pszFileName)
 HBITMAP CLogoManager::GetLogoBitmap(WORD NetworkID, WORD LogoID, BYTE LogoType)
 {
 	BlockLock Lock(m_Lock);
-
-	ULONGLONG Key;
-	LogoMap::iterator itr;
-	if (LogoType == LOGOTYPE_SMALL || LogoType == LOGOTYPE_BIG) {
-		static const BYTE SmallLogoPriority[] = {2, 0, 1, 5, 3, 4};
-		static const BYTE BigLogoPriority[] = {5, 3, 4, 2, 0, 1};
-		const BYTE *pPriority = LogoType == LOGOTYPE_SMALL ? SmallLogoPriority : BigLogoPriority;
-		for (BYTE i = 0; i <= 5; i++) {
-			Key = GetMapKey(NetworkID, LogoID, pPriority[i]);
-			itr = m_LogoMap.find(Key);
-			if (itr != m_LogoMap.end())
-				break;
-		}
-		if (itr == m_LogoMap.end())
-			LogoType = pPriority[0];
-	} else {
-		Key = GetMapKey(NetworkID, LogoID, LogoType);
-		itr = m_LogoMap.find(Key);
-	}
-	if (itr == m_LogoMap.end()) {
-		CLogoData *pLogoData = LoadLogoData(NetworkID, LogoID, LogoType);
-		if (pLogoData != nullptr) {
-			m_LogoMap.emplace(Key, pLogoData);
-			m_fLogoUpdated = true;
-			return pLogoData->GetBitmap(&m_ImageCodec);
-		}
+	CLogoData *pLogoData = FindLogoData(NetworkID, LogoID, LogoType);
+	if (pLogoData == nullptr)
 		return nullptr;
-	}
-	return itr->second->GetBitmap(&m_ImageCodec);
+	return pLogoData->GetBitmap(&m_ImageCodec);
 }
 
 
@@ -415,11 +390,10 @@ HBITMAP CLogoManager::GetAssociatedLogoBitmap(WORD NetworkID, WORD ServiceID, BY
 const Graphics::CImage *CLogoManager::GetLogoImage(WORD NetworkID, WORD LogoID, BYTE LogoType)
 {
 	BlockLock Lock(m_Lock);
-	const ULONGLONG Key = GetMapKey(NetworkID, LogoID, LogoType);
-	LogoMap::iterator itr = m_LogoMap.find(Key);
-	if (itr == m_LogoMap.end())
+	CLogoData *pLogoData = FindLogoData(NetworkID, LogoID, LogoType);
+	if (pLogoData == nullptr)
 		return nullptr;
-	return itr->second->GetImage(&m_ImageCodec);
+	return pLogoData->GetImage(&m_ImageCodec);
 }
 
 
@@ -632,6 +606,42 @@ bool CLogoManager::SetLogoIDMap(WORD NetworkID, WORD ServiceID, WORD LogoID, boo
 }
 
 
+CLogoManager::CLogoData *CLogoManager::FindLogoData(WORD NetworkID, WORD LogoID, BYTE LogoType)
+{
+	ULONGLONG Key;
+	LogoMap::iterator itr;
+
+	if (LogoType == LOGOTYPE_SMALL || LogoType == LOGOTYPE_BIG) {
+		static const BYTE SmallLogoPriority[] = {2, 0, 1, 5, 3, 4};
+		static const BYTE BigLogoPriority[] = {5, 3, 4, 2, 0, 1};
+		const BYTE *pPriority = LogoType == LOGOTYPE_SMALL ? SmallLogoPriority : BigLogoPriority;
+		for (BYTE i = 0; i <= 5; i++) {
+			Key = GetMapKey(NetworkID, LogoID, pPriority[i]);
+			itr = m_LogoMap.find(Key);
+			if (itr != m_LogoMap.end())
+				break;
+		}
+		if (itr == m_LogoMap.end())
+			LogoType = pPriority[0];
+	} else {
+		Key = GetMapKey(NetworkID, LogoID, LogoType);
+		itr = m_LogoMap.find(Key);
+	}
+
+	if (itr == m_LogoMap.end()) {
+		CLogoData *pLogoData = LoadLogoData(NetworkID, LogoID, LogoType);
+		if (pLogoData != nullptr) {
+			m_LogoMap.emplace(Key, pLogoData);
+			m_fLogoUpdated = true;
+			return pLogoData;
+		}
+		return nullptr;
+	}
+
+	return itr->second.get();
+}
+
+
 CLogoManager::CLogoData *CLogoManager::LoadLogoData(WORD NetworkID, WORD LogoID, BYTE LogoType)
 {
 	TCHAR szDirectory[MAX_PATH], szFileName[MAX_PATH], szMask[32];
@@ -755,14 +765,10 @@ HBITMAP CLogoManager::CLogoData::GetBitmap(CImageCodec *pCodec)
 const Graphics::CImage *CLogoManager::CLogoData::GetImage(CImageCodec *pCodec)
 {
 	if (!m_Image.IsCreated()) {
-		const HGLOBAL hDIB = pCodec->LoadAribPngFromMemory(m_Data.get(), m_DataSize);
-		if (hDIB == nullptr)
+		HBITMAP hbm = GetBitmap(pCodec);
+		if (hbm == nullptr)
 			return nullptr;
-		const BITMAPINFO *pbmi = static_cast<BITMAPINFO*>(::GlobalLock(hDIB));
-		const bool fResult = m_Image.CreateFromDIB(pbmi, reinterpret_cast<const BYTE*>(pbmi) + CalcDIBInfoSize(&pbmi->bmiHeader));
-		::GlobalUnlock(hDIB);
-		::GlobalFree(hDIB);
-		if (!fResult)
+		if (!m_Image.CreateFromBitmap(hbm))
 			return nullptr;
 	}
 	return &m_Image;

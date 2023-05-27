@@ -204,6 +204,7 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 
 	// Bitmap::FromHBITMAP() はアルファチャンネルが無視される
 	if (bm.bmBitsPixel == 32) {
+#if 0
 		if (!Create(bm.bmWidth, bm.bmHeight, 32))
 			return false;
 
@@ -224,6 +225,16 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 			q += Data.Stride;
 		}
 		m_Bitmap->UnlockBits(&Data);
+#else
+		BITMAPINFO bmi = {};
+		bmi.bmiHeader.biSize = sizeof(BITMAPINFO);
+		bmi.bmiHeader.biWidth = bm.bmWidth;
+		bmi.bmiHeader.biHeight = bm.bmHeight;
+		bmi.bmiHeader.biPlanes = 1;
+		bmi.bmiHeader.biBitCount = 32;
+		if (!CreateFromDIB(&bmi, bm.bmBits))
+			return false;
+#endif
 	} else {
 		m_Bitmap.reset(Gdiplus::Bitmap::FromHBITMAP(hbm, hpal));
 	}
@@ -232,9 +243,61 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 }
 
 
-bool CImage::CreateFromDIB(const BITMAPINFO *pbmi, const void *pBits)
+bool CImage::CreateFromDIB(const BITMAPINFO *pbmi, void *pBits)
 {
-	m_Bitmap.reset(new Gdiplus::Bitmap(pbmi, const_cast<void*>(pBits)));
+	Free();
+
+	if (pbmi == nullptr || pBits == nullptr)
+		return false;
+
+	// Bitmap::FromBITMAPINFO() はアルファチャンネルが無視される
+	if (pbmi->bmiHeader.biBitCount == 32) {
+		const int Width = pbmi->bmiHeader.biWidth;
+		const int Height = std::abs(pbmi->bmiHeader.biHeight);
+
+#if 0
+		if (!Create(Width, Height, 32))
+			return false;
+
+		const Gdiplus::Rect rc(0, 0, Width, Height);
+		Gdiplus::BitmapData Data;
+
+		if (m_Bitmap->LockBits(
+					&rc, Gdiplus::ImageLockModeWrite,
+					m_Bitmap->GetPixelFormat(), &Data) != Gdiplus::Ok) {
+			Free();
+			return false;
+		}
+
+		const BYTE *p = static_cast<const BYTE*>(pBits);
+		std::ptrdiff_t Stride = Width * 4;
+		if (pbmi->bmiHeader.biHeight > 0) {
+			p += (Height - 1) * Stride;
+			Stride = -Stride;
+		}
+
+		BYTE *q = static_cast<BYTE*>(Data.Scan0);
+		for (UINT y = 0; y < Data.Height; y++) {
+			std::memcpy(q, p, Width * 4);
+			p += Stride;
+			q += Data.Stride;
+		}
+
+		m_Bitmap->UnlockBits(&Data);
+#else
+		BYTE *p = static_cast<BYTE*>(pBits);
+		int Stride = Width * 4;
+		if (pbmi->bmiHeader.biHeight > 0) {
+			p += (Height - 1) * Stride;
+			Stride = -Stride;
+		}
+
+		m_Bitmap.reset(new Gdiplus::Bitmap(Width, Height, Stride, PixelFormat32bppARGB, p));
+#endif
+	} else {
+		m_Bitmap.reset(Gdiplus::Bitmap::FromBITMAPINFO(pbmi, pBits));
+	}
+
 	return static_cast<bool>(m_Bitmap);
 }
 

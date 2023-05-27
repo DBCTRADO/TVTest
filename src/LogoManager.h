@@ -96,7 +96,7 @@ namespace TVTest
 			std::unique_ptr<BYTE[]> m_Data;
 			LibISDB::DateTime m_Time;
 			DrawUtil::CBitmap m_Bitmap;
-			Graphics::CImage m_Image;
+			Graphics::CImage m_Image; // m_Bitmap より先に破棄されるようにする必要がある
 
 		public:
 			CLogoData(const LibISDB::LogoDownloaderFilter::LogoData *pData);
@@ -140,6 +140,7 @@ namespace TVTest
 		FILETIME m_LogoIDMapFileLastWriteTime{};
 
 		bool SetLogoIDMap(WORD NetworkID, WORD ServiceID, WORD LogoID, bool fUpdate = true);
+		CLogoData *FindLogoData(WORD NetworkID, WORD LogoID, BYTE LogoType);
 		CLogoData *LoadLogoData(WORD NetworkID, WORD LogoID, BYTE LogoType);
 
 	// LibISDB::LogoDownloaderFilter::LogoHandler
