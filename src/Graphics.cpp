@@ -402,6 +402,18 @@ bool CBrush::CreateSolidBrush(const CColor &Color)
 
 CFont::CFont(const LOGFONT &lf)
 {
+	Create(lf);
+}
+
+
+void CFont::Free()
+{
+	m_Font.reset();
+}
+
+
+bool CFont::Create(const LOGFONT &lf)
+{
 	int FontStyle = 0;
 	if (lf.lfWeight >= FW_BOLD)
 		FontStyle |= Gdiplus::FontStyleBold;
@@ -411,18 +423,21 @@ CFont::CFont(const LOGFONT &lf)
 		FontStyle |= Gdiplus::FontStyleUnderline;
 	if (lf.lfStrikeOut)
 		FontStyle |= Gdiplus::FontStyleStrikeout;
+
 	m_Font.reset(
 		new Gdiplus::Font(
 			lf.lfFaceName,
 			static_cast<Gdiplus::REAL>(std::abs(lf.lfHeight)),
 			FontStyle,
 			Gdiplus::UnitPixel));
+
+	return static_cast<bool>(m_Font);
 }
 
 
-void CFont::Free()
+bool CFont::IsCreated() const
 {
-	m_Font.reset();
+	return static_cast<bool>(m_Font);
 }
 
 
@@ -534,15 +549,14 @@ bool CCanvas::FillGradient(
 
 
 bool CCanvas::DrawText(
-	LPCTSTR pszText, const LOGFONT &lf,
+	LPCTSTR pszText, const CFont &Font,
 	const RECT &Rect, const CBrush *pBrush, TextFlag Flags)
 {
 	if (!m_Graphics
 			|| IsStringEmpty(pszText)
+			|| !Font.m_Font
 			|| pBrush == nullptr || !pBrush->m_Brush)
 		return false;
-
-	CFont Font(lf);
 
 	Gdiplus::StringFormat Format;
 	SetStringFormat(&Format, Flags);
@@ -584,7 +598,7 @@ bool CCanvas::DrawText(
 
 
 bool CCanvas::GetTextSize(
-	LPCTSTR pszText, const LOGFONT &lf, TextFlag Flags, SIZE *pSize)
+	LPCTSTR pszText, const CFont &Font, TextFlag Flags, SIZE *pSize)
 {
 	if (pSize == nullptr)
 		return false;
@@ -594,13 +608,11 @@ bool CCanvas::GetTextSize(
 	pSize->cx = 0;
 	pSize->cy = 0;
 
-	if (!m_Graphics)
+	if (!m_Graphics || !Font.m_Font)
 		return false;
 
 	if (IsStringEmpty(pszText))
 		return true;
-
-	CFont Font(lf);
 
 	Gdiplus::StringFormat Format;
 	SetStringFormat(&Format, Flags);
@@ -648,17 +660,16 @@ bool CCanvas::GetTextSize(
 
 
 bool CCanvas::DrawOutlineText(
-	LPCTSTR pszText, const LOGFONT &lf,
+	LPCTSTR pszText, const CFont &Font,
 	const RECT &Rect, const CBrush *pBrush,
 	const CColor &OutlineColor, float OutlineWidth,
 	TextFlag Flags)
 {
 	if (!m_Graphics
 			|| IsStringEmpty(pszText)
+			|| !Font.m_Font
 			|| pBrush == nullptr || !pBrush->m_Brush)
 		return false;
-
-	CFont Font(lf);
 
 	Gdiplus::StringFormat Format;
 	SetStringFormat(&Format, Flags);
@@ -691,7 +702,7 @@ bool CCanvas::DrawOutlineText(
 
 
 bool CCanvas::GetOutlineTextSize(
-	LPCTSTR pszText, const LOGFONT &lf, float OutlineWidth, TextFlag Flags, SIZE *pSize)
+	LPCTSTR pszText, const CFont &Font, float OutlineWidth, TextFlag Flags, SIZE *pSize)
 {
 	if (pSize == nullptr)
 		return false;
@@ -701,13 +712,11 @@ bool CCanvas::GetOutlineTextSize(
 	pSize->cx = 0;
 	pSize->cy = 0;
 
-	if (!m_Graphics)
+	if (!m_Graphics || !Font.m_Font)
 		return false;
 
 	if (IsStringEmpty(pszText))
 		return true;
-
-	CFont Font(lf);
 
 	Gdiplus::StringFormat Format;
 	SetStringFormat(&Format, Flags);

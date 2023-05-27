@@ -385,6 +385,7 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 		Graphics::CCanvas Canvas(hdc);
 		LOGFONT lf;
 		m_Font.GetLogFont(&lf);
+		Graphics::CFont Font(lf);
 
 		Graphics::TextFlag TextFlags =
 			Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
@@ -393,10 +394,10 @@ bool CPseudoOSD::CalcTextSize(SIZE *pSize)
 
 		if (!!(m_TextStyle & TextStyle::Outline)) {
 			fResult = Canvas.GetOutlineTextSize(
-				m_Text.c_str(), lf, GetOutlineWidth(std::abs(lf.lfHeight)), TextFlags, pSize);
+				m_Text.c_str(), Font, GetOutlineWidth(std::abs(lf.lfHeight)), TextFlags, pSize);
 		} else {
 			fResult = Canvas.GetTextSize(
-				m_Text.c_str(), lf, TextFlags, pSize);
+				m_Text.c_str(), Font, TextFlags, pSize);
 		}
 	}
 
@@ -631,6 +632,7 @@ void CPseudoOSD::UpdateLayeredWindow()
 					255);
 				LOGFONT lf;
 				m_Font.GetLogFont(&lf);
+				Graphics::CFont Font(lf);
 
 				Graphics::TextFlag DrawTextFlags =
 					Graphics::TextFlag::Draw_Antialias | Graphics::TextFlag::Draw_Hinting;
@@ -651,12 +653,12 @@ void CPseudoOSD::UpdateLayeredWindow()
 
 				if (!!(m_TextStyle & TextStyle::Outline)) {
 					Canvas.DrawOutlineText(
-						m_Text.c_str(), lf, rc, &TextBrush,
+						m_Text.c_str(), Font, rc, &TextBrush,
 						Graphics::CColor(0, 0, 0, 160),
 						GetOutlineWidth(std::abs(lf.lfHeight)),
 						DrawTextFlags);
 				} else {
-					Canvas.DrawText(m_Text.c_str(), lf, rc, &TextBrush, DrawTextFlags);
+					Canvas.DrawText(m_Text.c_str(), Font, rc, &TextBrush, DrawTextFlags);
 				}
 			} else if (m_hbm != nullptr) {
 				Graphics::CImage Image;

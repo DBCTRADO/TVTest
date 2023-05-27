@@ -260,6 +260,7 @@ void CEventInfoOSD::Draw(Graphics::CCanvas &Canvas, const RECT &Rect) const
 	LOGFONT lf = m_TitleFont;
 	lf.lfHeight = -FontSize;
 	lf.lfWidth = 0;
+	Graphics::CFont Font(lf);
 
 	const float OutlineWidth = static_cast<float>(m_Style.TextOutline.Value * FontSize) / 100.0f;
 
@@ -272,9 +273,9 @@ void CEventInfoOSD::Draw(Graphics::CCanvas &Canvas, const RECT &Rect) const
 
 	SIZE TitleSize = {ContentRect.right - ContentRect.left, ContentRect.bottom - ContentRect.top};
 	if (OutlineWidth > 0.0f)
-		Canvas.GetOutlineTextSize(Text.c_str(), lf, OutlineWidth, TextFlags, &TitleSize);
+		Canvas.GetOutlineTextSize(Text.c_str(), Font, OutlineWidth, TextFlags, &TitleSize);
 	else
-		Canvas.GetTextSize(Text.c_str(), lf, TextFlags, &TitleSize);
+		Canvas.GetTextSize(Text.c_str(), Font, TextFlags, &TitleSize);
 
 	Graphics::CBrush Brush(GraphicsColorFromThemeColor(m_ColorScheme.Title));
 	RECT TitleRect = {
@@ -285,11 +286,11 @@ void CEventInfoOSD::Draw(Graphics::CCanvas &Canvas, const RECT &Rect) const
 		};
 	if (OutlineWidth > 0.0f) {
 		Canvas.DrawOutlineText(
-			Text.c_str(), lf, TitleRect, &Brush,
+			Text.c_str(), Font, TitleRect, &Brush,
 			GraphicsColorFromThemeColor(m_ColorScheme.TitleOutline), OutlineWidth,
 			DrawTextFlags);
 	} else {
-		Canvas.DrawText(Text.c_str(), lf, TitleRect, &Brush, DrawTextFlags);
+		Canvas.DrawText(Text.c_str(), Font, TitleRect, &Brush, DrawTextFlags);
 	}
 	TitleRect.bottom = ContentRect.top + TitleSize.cy;
 
@@ -341,16 +342,18 @@ void CEventInfoOSD::Draw(Graphics::CCanvas &Canvas, const RECT &Rect) const
 			lf = m_Font;
 			lf.lfHeight = -FontSize;
 			lf.lfWidth = 0;
+			if (!CompareLogFont(&lf, &m_Font))
+				Font.Create(lf);
 
 			Brush.CreateSolidBrush(GraphicsColorFromThemeColor(m_ColorScheme.Text));
 			const RECT TextRect = {ContentRect.left, TitleRect.bottom, ContentRect.right, ContentRect.bottom};
 			if (OutlineWidth > 0.0f) {
 				Canvas.DrawOutlineText(
-					Text.c_str(), lf, TextRect, &Brush,
+					Text.c_str(), Font, TextRect, &Brush,
 					GraphicsColorFromThemeColor(m_ColorScheme.TextOutline), OutlineWidth,
 					DrawTextFlags);
 			} else {
-				Canvas.DrawText(Text.c_str(), lf, TextRect, &Brush, DrawTextFlags);
+				Canvas.DrawText(Text.c_str(), Font, TextRect, &Brush, DrawTextFlags);
 			}
 		}
 	}

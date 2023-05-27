@@ -133,7 +133,10 @@ namespace TVTest
 		public:
 			CFont() = default;
 			CFont(const LOGFONT &lf);
+
 			void Free();
+			bool Create(const LOGFONT &lf);
+			bool IsCreated() const;
 
 		private:
 			std::unique_ptr<Gdiplus::Font> m_Font;
@@ -158,17 +161,17 @@ namespace TVTest
 				const CColor &Color1, const CColor &Color2,
 				const RECT &Rect, GradientDirection Direction);
 			bool DrawText(
-				LPCTSTR pszText, const LOGFONT &lf,
+				LPCTSTR pszText, const CFont &Font,
 				const RECT &Rect, const CBrush *pBrush, TextFlag Flags);
 			bool GetTextSize(
-				LPCTSTR pszText, const LOGFONT &lf, TextFlag Flags, SIZE *pSize);
+				LPCTSTR pszText, const CFont &Font, TextFlag Flags, SIZE *pSize);
 			bool DrawOutlineText(
-				LPCTSTR pszText, const LOGFONT &lf,
+				LPCTSTR pszText, const CFont &Font,
 				const RECT &Rect, const CBrush *pBrush,
 				const CColor &OutlineColor, float OutlineWidth,
 				TextFlag Flags);
 			bool GetOutlineTextSize(
-				LPCTSTR pszText, const LOGFONT &lf,
+				LPCTSTR pszText, const CFont &Font,
 				float OutlineWidth, TextFlag Flags, SIZE *pSize);
 
 		private:
