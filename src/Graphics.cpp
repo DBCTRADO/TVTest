@@ -398,7 +398,7 @@ bool CCanvas::SetComposition(bool fComposite)
 }
 
 
-bool CCanvas::DrawImage(CImage *pImage, int x, int y)
+bool CCanvas::DrawImage(const CImage *pImage, int x, int y)
 {
 	if (!m_Graphics
 			|| pImage == nullptr || !pImage->m_Bitmap)
@@ -412,7 +412,7 @@ bool CCanvas::DrawImage(CImage *pImage, int x, int y)
 
 bool CCanvas::DrawImage(
 	int DstX, int DstY, int DstWidth, int DstHeight,
-	CImage *pImage, int SrcX, int SrcY, int SrcWidth, int SrcHeight, float Opacity)
+	const CImage *pImage, int SrcX, int SrcY, int SrcWidth, int SrcHeight, float Opacity)
 {
 	if (m_Graphics
 			&& pImage != nullptr && pImage->m_Bitmap) {
@@ -436,7 +436,7 @@ bool CCanvas::DrawImage(
 }
 
 
-bool CCanvas::FillRect(CBrush *pBrush, const RECT &Rect)
+bool CCanvas::FillRect(const CBrush *pBrush, const RECT &Rect)
 {
 	if (m_Graphics
 			&& pBrush != nullptr && pBrush->m_Brush) {
@@ -472,7 +472,7 @@ bool CCanvas::FillGradient(
 
 bool CCanvas::DrawText(
 	LPCTSTR pszText, const LOGFONT &lf,
-	const RECT &Rect, CBrush *pBrush, TextFlag Flags)
+	const RECT &Rect, const CBrush *pBrush, TextFlag Flags)
 {
 	if (!m_Graphics
 			|| IsStringEmpty(pszText)
@@ -586,7 +586,7 @@ bool CCanvas::GetTextSize(
 
 bool CCanvas::DrawOutlineText(
 	LPCTSTR pszText, const LOGFONT &lf,
-	const RECT &Rect, CBrush *pBrush,
+	const RECT &Rect, const CBrush *pBrush,
 	const CColor &OutlineColor, float OutlineWidth,
 	TextFlag Flags)
 {

@@ -147,22 +147,22 @@ namespace TVTest
 
 			bool Clear(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			bool SetComposition(bool fComposite);
-			bool DrawImage(CImage *pImage, int x, int y);
+			bool DrawImage(const CImage *pImage, int x, int y);
 			bool DrawImage(
 				int DstX, int DstY, int DstWidth, int DstHeight,
-				CImage *pImage, int SrcX, int SrcY, int SrcWidth, int SrcHeight, float Opacity = 1.0f);
-			bool FillRect(CBrush *pBrush, const RECT &Rect);
+				const CImage *pImage, int SrcX, int SrcY, int SrcWidth, int SrcHeight, float Opacity = 1.0f);
+			bool FillRect(const CBrush *pBrush, const RECT &Rect);
 			bool FillGradient(
 				const CColor &Color1, const CColor &Color2,
 				const RECT &Rect, GradientDirection Direction);
 			bool DrawText(
 				LPCTSTR pszText, const LOGFONT &lf,
-				const RECT &Rect, CBrush *pBrush, TextFlag Flags);
+				const RECT &Rect, const CBrush *pBrush, TextFlag Flags);
 			bool GetTextSize(
 				LPCTSTR pszText, const LOGFONT &lf, TextFlag Flags, SIZE *pSize);
 			bool DrawOutlineText(
 				LPCTSTR pszText, const LOGFONT &lf,
-				const RECT &Rect, CBrush *pBrush,
+				const RECT &Rect, const CBrush *pBrush,
 				const CColor &OutlineColor, float OutlineWidth,
 				TextFlag Flags);
 			bool GetOutlineTextSize(
