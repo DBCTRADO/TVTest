@@ -88,7 +88,7 @@ namespace TVTest
 
 	private:
 		HWND m_hwnd = nullptr;
-		COLORREF m_crBackColor = RGB(16, 0, 16);
+		COLORREF m_crBackColor = RGB(0, 0, 0);
 		COLORREF m_crTextColor = RGB(0, 255, 128);
 		DrawUtil::CFont m_Font;
 		TextStyle m_TextStyle = TextStyle::Outline;
