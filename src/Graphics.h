@@ -108,6 +108,8 @@ namespace TVTest
 		private:
 			std::unique_ptr<Gdiplus::Bitmap> m_Bitmap;
 
+			bool VerifyConstruct();
+
 			friend class CCanvas;
 		};
 
@@ -121,9 +123,12 @@ namespace TVTest
 			void Free();
 			bool CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a = 255);
 			bool CreateSolidBrush(const CColor &Color);
+			bool IsCreated() const;
 
 		private:
 			std::unique_ptr<Gdiplus::SolidBrush> m_Brush;
+
+			bool VerifyConstruct();
 
 			friend class CCanvas;
 		};
@@ -140,6 +145,8 @@ namespace TVTest
 
 		private:
 			std::unique_ptr<Gdiplus::Font> m_Font;
+
+			bool VerifyConstruct();
 
 			friend class CCanvas;
 		};
@@ -181,6 +188,7 @@ namespace TVTest
 		private:
 			std::unique_ptr<Gdiplus::Graphics> m_Graphics;
 
+			bool VerifyConstruct();
 			void SetStringFormat(Gdiplus::StringFormat *pFormat, TextFlag Flags);
 			void SetTextRenderingHint(TextFlag Flags);
 		};

@@ -111,6 +111,7 @@ CImage &CImage::operator=(const CImage &Src)
 					Src.m_Bitmap->GetWidth(),
 					Src.m_Bitmap->GetHeight(),
 					Src.m_Bitmap->GetPixelFormat()));
+			VerifyConstruct();
 		}
 	}
 	return *this;
@@ -126,14 +127,14 @@ void CImage::Free()
 bool CImage::LoadFromFile(LPCWSTR pszFileName)
 {
 	m_Bitmap.reset(Gdiplus::Bitmap::FromFile(pszFileName));
-	return static_cast<bool>(m_Bitmap);
+	return VerifyConstruct();
 }
 
 
 bool CImage::LoadFromResource(HINSTANCE hinst, LPCWSTR pszName)
 {
 	m_Bitmap.reset(Gdiplus::Bitmap::FromResource(hinst, pszName));
-	return static_cast<bool>(m_Bitmap);
+	return VerifyConstruct();
 }
 
 
@@ -168,7 +169,7 @@ bool CImage::LoadFromResource(HINSTANCE hinst, LPCTSTR pszName, LPCTSTR pszType)
 	}
 	m_Bitmap.reset(Gdiplus::Bitmap::FromStream(pStream));
 	pStream->Release();
-	return static_cast<bool>(m_Bitmap);
+	return VerifyConstruct();
 }
 
 
@@ -187,7 +188,7 @@ bool CImage::Create(int Width, int Height, int BitsPerPixel)
 	default: return false;
 	}
 	m_Bitmap.reset(new Gdiplus::Bitmap(Width, Height, Format));
-	if (!m_Bitmap)
+	if (!VerifyConstruct())
 		return false;
 	Clear();
 	return true;
@@ -237,9 +238,11 @@ bool CImage::CreateFromBitmap(HBITMAP hbm, HPALETTE hpal)
 #endif
 	} else {
 		m_Bitmap.reset(Gdiplus::Bitmap::FromHBITMAP(hbm, hpal));
+		if (!VerifyConstruct())
+			return false;
 	}
 
-	return static_cast<bool>(m_Bitmap);
+	return true;
 }
 
 
@@ -293,12 +296,16 @@ bool CImage::CreateFromDIB(const BITMAPINFO *pbmi, void *pBits)
 		}
 
 		m_Bitmap.reset(new Gdiplus::Bitmap(Width, Height, Stride, PixelFormat32bppARGB, p));
+		if (!VerifyConstruct())
+			return false;
 #endif
 	} else {
 		m_Bitmap.reset(Gdiplus::Bitmap::FromBITMAPINFO(pbmi, pBits));
+		if (!VerifyConstruct())
+			return false;
 	}
 
-	return static_cast<bool>(m_Bitmap);
+	return true;
 }
 
 
@@ -357,17 +364,29 @@ HBITMAP CImage::CreateBitmap()
 }
 
 
+bool CImage::VerifyConstruct()
+{
+	if (!m_Bitmap)
+		return false;
+	if (m_Bitmap->GetLastStatus() != Gdiplus::Ok) {
+		m_Bitmap.reset();
+		return false;
+	}
+	return true;
+}
+
+
 
 
 CBrush::CBrush(BYTE r, BYTE g, BYTE b, BYTE a)
-	: m_Brush(new Gdiplus::SolidBrush(Gdiplus::Color(a, r, g, b)))
 {
+	CreateSolidBrush(r, g, b, a);
 }
 
 
 CBrush::CBrush(const CColor &Color)
-	: m_Brush(new Gdiplus::SolidBrush(GdiplusColor(Color)))
 {
+	CreateSolidBrush(Color);
 }
 
 
@@ -382,10 +401,11 @@ bool CBrush::CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a)
 	const Gdiplus::Color Color(a, r, g, b);
 
 	if (m_Brush) {
-		m_Brush->SetColor(Color);
+		if (m_Brush->SetColor(Color) != Gdiplus::Ok)
+			return false;
 	} else {
 		m_Brush.reset(new Gdiplus::SolidBrush(Color));
-		if (!m_Brush)
+		if (!VerifyConstruct())
 			return false;
 	}
 	return true;
@@ -395,6 +415,24 @@ bool CBrush::CreateSolidBrush(BYTE r, BYTE g, BYTE b, BYTE a)
 bool CBrush::CreateSolidBrush(const CColor &Color)
 {
 	return CreateSolidBrush(Color.Red, Color.Green, Color.Blue, Color.Alpha);
+}
+
+
+bool CBrush::IsCreated() const
+{
+	return static_cast<bool>(m_Brush);
+}
+
+
+bool CBrush::VerifyConstruct()
+{
+	if (!m_Brush)
+		return false;
+	if (m_Brush->GetLastStatus() != Gdiplus::Ok) {
+		m_Brush.reset();
+		return false;
+	}
+	return true;
 }
 
 
@@ -431,7 +469,7 @@ bool CFont::Create(const LOGFONT &lf)
 			FontStyle,
 			Gdiplus::UnitPixel));
 
-	return static_cast<bool>(m_Font);
+	return VerifyConstruct();
 }
 
 
@@ -441,19 +479,35 @@ bool CFont::IsCreated() const
 }
 
 
+bool CFont::VerifyConstruct()
+{
+	if (!m_Font)
+		return false;
+	if (m_Font->GetLastStatus() != Gdiplus::Ok) {
+		m_Font.reset();
+		return false;
+	}
+	return true;
+}
+
+
 
 
 CCanvas::CCanvas(HDC hdc)
 {
-	if (hdc != nullptr)
+	if (hdc != nullptr) {
 		m_Graphics.reset(new Gdiplus::Graphics(hdc));
+		VerifyConstruct();
+	}
 }
 
 
 CCanvas::CCanvas(CImage *pImage)
 {
-	if (pImage != nullptr && pImage->m_Bitmap)
+	if (pImage != nullptr && pImage->m_Bitmap) {
 		m_Graphics.reset(new Gdiplus::Graphics(pImage->m_Bitmap.get()));
+		VerifyConstruct();
+	}
 }
 
 
@@ -797,6 +851,18 @@ float CCanvas::GetFontDescent(const CFont &Font) const
 		return 0.0f;
 
 	return Font.m_Font->GetSize() * static_cast<float>(Family.GetCellDescent(Style)) / static_cast<float>(EmHeight);
+}
+
+
+bool CCanvas::VerifyConstruct()
+{
+	if (!m_Graphics)
+		return false;
+	if (m_Graphics->GetLastStatus() != Gdiplus::Ok) {
+		m_Graphics.reset();
+		return false;
+	}
+	return true;
 }
 
 
