@@ -82,6 +82,7 @@ namespace TVTest
 			Style::IntValue TextOutline{20};
 			bool fUseHinting = true;
 			bool fUsePath = true;
+			bool fShowLogo = true;
 		};
 
 		LibISDB::EventInfo m_EventInfo;
