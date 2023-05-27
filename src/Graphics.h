@@ -174,6 +174,10 @@ namespace TVTest
 				LPCTSTR pszText, const CFont &Font,
 				float OutlineWidth, TextFlag Flags, SIZE *pSize);
 
+			float GetLineSpacing(const CFont &Font) const;
+			float GetFontAscent(const CFont &Font) const;
+			float GetFontDescent(const CFont &Font) const;
+
 		private:
 			std::unique_ptr<Gdiplus::Graphics> m_Graphics;
 

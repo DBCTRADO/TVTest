@@ -756,6 +756,50 @@ bool CCanvas::GetOutlineTextSize(
 }
 
 
+float CCanvas::GetLineSpacing(const CFont &Font) const
+{
+	if (!m_Graphics || !Font.m_Font)
+		return 0.0f;
+	return Font.m_Font->GetHeight(m_Graphics.get());
+}
+
+
+float CCanvas::GetFontAscent(const CFont &Font) const
+{
+	if (!m_Graphics || !Font.m_Font)
+		return 0.0f;
+
+	Gdiplus::FontFamily Family;
+	if (Font.m_Font->GetFamily(&Family) != Gdiplus::Ok)
+		return 0.0f;
+
+	const INT Style = Font.m_Font->GetStyle();
+	const UINT16 EmHeight = Family.GetEmHeight(Style);
+	if (EmHeight == 0)
+		return 0.0f;
+
+	return Font.m_Font->GetSize() * static_cast<float>(Family.GetCellAscent(Style)) / static_cast<float>(EmHeight);
+}
+
+
+float CCanvas::GetFontDescent(const CFont &Font) const
+{
+	if (!m_Graphics || !Font.m_Font)
+		return 0.0f;
+
+	Gdiplus::FontFamily Family;
+	if (Font.m_Font->GetFamily(&Family) != Gdiplus::Ok)
+		return 0.0f;
+
+	const INT Style = Font.m_Font->GetStyle();
+	const UINT16 EmHeight = Family.GetEmHeight(Style);
+	if (EmHeight == 0)
+		return 0.0f;
+
+	return Font.m_Font->GetSize() * static_cast<float>(Family.GetCellDescent(Style)) / static_cast<float>(EmHeight);
+}
+
+
 void CCanvas::SetStringFormat(Gdiplus::StringFormat *pFormat, TextFlag Flags)
 {
 	INT FormatFlags = pFormat->GetFormatFlags();
