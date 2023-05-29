@@ -1147,7 +1147,7 @@ void CUICore::InitTunerMenu(HMENU hmenu)
 {
 	m_App.ChannelMenu.Destroy();
 
-	CPopupMenu Menu(hmenu);
+	CPopupMenu Menu(hmenu, false);
 	Menu.Clear();
 
 	const bool fIsTunerOpen = m_App.CoreEngine.IsTunerOpen();

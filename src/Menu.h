@@ -214,7 +214,7 @@ namespace TVTest
 		enum class PopupMenuType {
 			Resource,
 			Created,
-			Attached,
+			Shared,
 		};
 
 		HMENU m_hmenu = nullptr;
@@ -224,7 +224,7 @@ namespace TVTest
 		CPopupMenu() = default;
 		CPopupMenu(HINSTANCE hinst, LPCTSTR pszName);
 		CPopupMenu(HINSTANCE hinst, UINT ID);
-		CPopupMenu(HMENU hmenu);
+		CPopupMenu(HMENU hmenu, bool fOwn);
 		~CPopupMenu();
 
 		CPopupMenu(const CPopupMenu &) = delete;
@@ -234,7 +234,7 @@ namespace TVTest
 		bool IsCreated() const { return m_hmenu != nullptr; }
 		bool Load(HINSTANCE hinst, LPCTSTR pszName);
 		bool Load(HINSTANCE hinst, UINT ID) { return Load(hinst, MAKEINTRESOURCE(ID)); }
-		bool Attach(HMENU hmenu);
+		bool Attach(HMENU hmenu, bool fOwn);
 		void Destroy();
 		int GetItemCount() const;
 		void Clear();

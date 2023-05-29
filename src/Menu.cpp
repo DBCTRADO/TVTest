@@ -1158,9 +1158,9 @@ CPopupMenu::CPopupMenu(HINSTANCE hinst, UINT ID)
 }
 
 
-CPopupMenu::CPopupMenu(HMENU hmenu)
+CPopupMenu::CPopupMenu(HMENU hmenu, bool fOwn)
 {
-	Attach(hmenu);
+	Attach(hmenu, fOwn);
 }
 
 
@@ -1194,13 +1194,13 @@ bool CPopupMenu::Load(HINSTANCE hinst, LPCTSTR pszName)
 }
 
 
-bool CPopupMenu::Attach(HMENU hmenu)
+bool CPopupMenu::Attach(HMENU hmenu, bool fOwn)
 {
 	if (hmenu == nullptr)
 		return false;
 	Destroy();
 	m_hmenu = hmenu;
-	m_Type = PopupMenuType::Attached;
+	m_Type = fOwn ? PopupMenuType::Created : PopupMenuType::Shared;
 	return true;
 }
 
@@ -1208,7 +1208,7 @@ bool CPopupMenu::Attach(HMENU hmenu)
 void CPopupMenu::Destroy()
 {
 	if (m_hmenu != nullptr) {
-		if (m_Type != PopupMenuType::Attached)
+		if (m_Type != PopupMenuType::Shared)
 			::DestroyMenu(m_hmenu);
 		m_hmenu = nullptr;
 	}

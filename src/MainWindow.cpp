@@ -3141,7 +3141,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 				m_pCore->GetPopupMenuDPI());
 		}
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_AUDIO)) {
-		CPopupMenu Menu(hmenu);
+		CPopupMenu Menu(hmenu, false);
 		Menu.Clear();
 
 		const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
@@ -3363,7 +3363,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 			CM_SPDIF_DISABLED + static_cast<int>(SPDIFOptions.Mode));
 		m_App.Accelerator.SetMenuAccel(hmenu);
 	} else if (hmenu == m_App.MainMenu.GetSubMenu(CMainMenu::SUBMENU_VIDEO)) {
-		CPopupMenu Menu(hmenu);
+		CPopupMenu Menu(hmenu, false);
 		Menu.Clear();
 
 		const LibISDB::AnalyzerFilter *pAnalyzer = m_App.CoreEngine.GetFilter<LibISDB::AnalyzerFilter>();
