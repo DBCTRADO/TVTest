@@ -49,6 +49,7 @@ private:
 	void SetService();
 
 	static void GetTreeViewText(HWND hwndTree, HTREEITEM hItem, bool fSiblings, String *pText, int Level = 0);
+	static void ExpandTreeViewItem(HWND hwndTree, HTREEITEM hItem, unsigned int Flags);
 };
 
 
@@ -115,11 +116,17 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				::ScreenToClient(pnmhdr->hwndFrom, &tvhti.pt);
 				const HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
 				if (hItem != nullptr) {
+					enum {
+						COMMAND_COPY = 1,
+						COMMAND_EXPAND,
+					};
 					CPopupMenu Menu;
 					Menu.Create();
-					Menu.Append(1, TEXT("コピー(&C)"));
+					Menu.Append(COMMAND_COPY, TEXT("コピー(&C)"));
+					Menu.Append(COMMAND_EXPAND, TEXT("ツリーを展開(&X)"));
+
 					switch (Menu.Show(hDlg, nullptr, TPM_RIGHTBUTTON | TPM_RETURNCMD)) {
-					case 1:
+					case COMMAND_COPY:
 						{
 							String Text;
 
@@ -127,6 +134,10 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 							if (!Text.empty())
 								CopyTextToClipboard(GetAppClass().UICore.GetMainWindow(), Text.c_str());
 						}
+						break;
+
+					case COMMAND_EXPAND:
+						ExpandTreeViewItem(pnmhdr->hwndFrom, hItem, TVE_EXPAND);
 						break;
 					}
 				}
@@ -754,6 +765,18 @@ void CStreamInfoPage::GetTreeViewText(
 		if (!fSiblings)
 			break;
 		tvi.hItem = TreeView_GetNextSibling(hwndTree, tvi.hItem);
+	}
+}
+
+
+void CStreamInfoPage::ExpandTreeViewItem(HWND hwndTree, HTREEITEM hItem, unsigned int Flags)
+{
+	TreeView_Expand(hwndTree, hItem, Flags);
+
+	for (HTREEITEM hChild = TreeView_GetChild(hwndTree, hItem);
+			hChild != nullptr;
+			hChild = TreeView_GetNextSibling(hwndTree, hChild)) {
+		ExpandTreeViewItem(hwndTree, hChild, Flags);
 	}
 }
 
