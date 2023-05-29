@@ -248,18 +248,6 @@ namespace TVTest
 		bool CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID, UINT Flags = MF_BYCOMMAND);
 		HMENU GetSubMenu(int Pos) const;
 		int Show(HWND hwnd, const POINT *pPos = nullptr, UINT Flags = TPM_RIGHTBUTTON, const RECT *pExcludeRect = nullptr);
-		int Show(
-			HMENU hmenu, HWND hwnd, const POINT *pPos = nullptr, UINT Flags = TPM_RIGHTBUTTON,
-			bool fToggle = true, const RECT *pExcludeRect = nullptr);
-		int Show(
-			HINSTANCE hinst, LPCTSTR pszName, HWND hwnd, const POINT *pPos = nullptr,
-			UINT Flags = TPM_RIGHTBUTTON, bool fToggle = true, const RECT *pExcludeRect = nullptr);
-		int Show(
-			HINSTANCE hinst, int ID, HWND hwnd, const POINT *pPos = nullptr,
-			UINT Flags = TPM_RIGHTBUTTON, bool fToggle = true, const RECT *pExcludeRect = nullptr)
-		{
-			return Show(hinst, MAKEINTRESOURCE(ID), hwnd, pPos, Flags, fToggle, pExcludeRect);
-		}
 	};
 
 	class CIconMenu

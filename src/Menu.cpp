@@ -1317,48 +1317,6 @@ int CPopupMenu::Show(HWND hwnd, const POINT *pPos, UINT Flags, const RECT *pExcl
 }
 
 
-int CPopupMenu::Show(
-	HMENU hmenu, HWND hwnd, const POINT *pPos,
-	UINT Flags, bool fToggle, const RECT *pExcludeRect)
-{
-	int Result;
-
-	if (m_hmenu == nullptr) {
-		m_hmenu = hmenu;
-		m_Type = PopupMenuType::Attached;
-		Result = MyTrackPopupMenu(m_hmenu, Flags, hwnd, pPos, pExcludeRect);
-		m_hmenu = nullptr;
-	} else {
-		if (fToggle)
-			::EndMenu();
-		Result = 0;
-	}
-
-	return Result;
-}
-
-
-int CPopupMenu::Show(
-	HINSTANCE hinst, LPCTSTR pszName, HWND hwnd, const POINT *pPos,
-	UINT Flags, bool fToggle, const RECT *pExcludeRect)
-{
-	int Result;
-
-	if (m_hmenu == nullptr) {
-		if (!Load(hinst, pszName))
-			return 0;
-		Result = MyTrackPopupMenu(GetPopupHandle(), Flags, hwnd, pPos, pExcludeRect);
-		Destroy();
-	} else {
-		if (fToggle)
-			::EndMenu();
-		Result = 0;
-	}
-
-	return Result;
-}
-
-
 
 
 CIconMenu::~CIconMenu()
