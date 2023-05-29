@@ -246,11 +246,9 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		case IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS:
 			{
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS), &rc);
-				const POINT pt = {rc.left, rc.bottom};
 				CUICore::CTitleStringMap StrMap(GetAppClass());
-				StrMap.InputParameter(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, pt);
+				StrMap.InputParameter(hDlg, IDC_OPTIONS_TITLETEXTFORMAT, rc);
 			}
 			return TRUE;
 
@@ -258,13 +256,12 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			{
 				RECT rc;
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OPTIONS_TITLETEXTFORMAT_PRESETS), &rc);
-				const HMENU hmenu = ::CreatePopupMenu();
-				for (int i = 0; i < lengthof(TitleTextFormatPresets); i++) {
-					::AppendMenu(
-						hmenu, MF_STRING | MF_ENABLED, i + 1,
-						TitleTextFormatPresets[i].pszDescript);
-				}
-				const int Result = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, rc.left, rc.bottom, 0, hDlg, nullptr);
+				CPopupMenu Menu;
+				Menu.Create();
+				for (int i = 0; i < lengthof(TitleTextFormatPresets); i++)
+					Menu.Append(i + 1, TitleTextFormatPresets[i].pszDescript);
+				const POINT pt = {rc.left, rc.bottom};
+				const int Result = Menu.Show(hDlg, &pt, TPM_RETURNCMD, &rc);
 				if (Result > 0 && Result <= lengthof(TitleTextFormatPresets)) {
 					::SetDlgItemText(
 						hDlg, IDC_OPTIONS_TITLETEXTFORMAT,

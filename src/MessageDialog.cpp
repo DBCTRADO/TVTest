@@ -184,13 +184,11 @@ INT_PTR CMessageDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 		case EN_MSGFILTER:
 			if (reinterpret_cast<MSGFILTER*>(lParam)->msg == WM_RBUTTONUP) {
-				const HMENU hmenu = ::CreatePopupMenu();
-				POINT pt;
+				CPopupMenu Menu;
 
-				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_ERROR_COPY, TEXT("コピー(&C)"));
-				::GetCursorPos(&pt);
-				::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
-				::DestroyMenu(hmenu);
+				Menu.Create();
+				Menu.Append(IDC_ERROR_COPY, TEXT("コピー(&C)"));
+				Menu.Show(hDlg, nullptr, TPM_RIGHTBUTTON);
 			}
 			return TRUE;
 		}

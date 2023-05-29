@@ -656,11 +656,11 @@ LRESULT CEventInfoPopup::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_NCRBUTTONDOWN:
 		if (wParam == HTCAPTION) {
 			const POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
-			const HMENU hmenu = ::CreatePopupMenu();
+			CPopupMenu Menu;
 
-			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("番組名をコピー(&C)"));
-			const int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
-			::DestroyMenu(hmenu);
+			Menu.Create();
+			Menu.Append(1, TEXT("番組名をコピー(&C)"));
+			const int Command = Menu.Show(hwnd, &pt, TPM_RIGHTBUTTON | TPM_RETURNCMD);
 			switch (Command) {
 			case 1:
 				CopyTextToClipboard(hwnd, m_EventInfo.EventName.c_str());
@@ -851,25 +851,23 @@ void CEventInfoPopup::ShowContextMenu()
 		COMMAND_COPYEVENTNAME,
 		COMMAND_SEARCH
 	};
-	const HMENU hmenu = ::CreatePopupMenu();
+	CPopupMenu Menu;
 
-	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("コピー(&C)"));
-	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
-	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPYEVENTNAME, TEXT("番組名をコピー(&E)"));
+	Menu.Create();
+	Menu.Append(COMMAND_COPY, TEXT("コピー(&C)"));
+	Menu.Append(COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
+	Menu.Append(COMMAND_COPYEVENTNAME, TEXT("番組名をコピー(&E)"));
 	if (m_pEventHandler != nullptr)
-		m_pEventHandler->OnMenuPopup(hmenu);
+		m_pEventHandler->OnMenuPopup(Menu.GetPopupHandle());
 	if (CRichEditUtil::IsSelected(m_hwndEdit)) {
 		const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
 		if (KeywordSearch.GetSearchEngineCount() > 0) {
-			::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
-			KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH, CEventHandler::COMMAND_FIRST - COMMAND_SEARCH);
+			Menu.AppendSeparator();
+			KeywordSearch.InitializeMenu(Menu.GetPopupHandle(), COMMAND_SEARCH, CEventHandler::COMMAND_FIRST - COMMAND_SEARCH);
 		}
 	}
 
-	POINT pt;
-	::GetCursorPos(&pt);
-	const int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, m_hwnd, nullptr);
-	::DestroyMenu(hmenu);
+	const int Command = Menu.Show(m_hwnd, nullptr, TPM_RIGHTBUTTON | TPM_RETURNCMD);
 
 	switch (Command) {
 	case COMMAND_COPY:

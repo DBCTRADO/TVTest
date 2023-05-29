@@ -864,14 +864,13 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 
 	case WM_RBUTTONUP:
 		if (!static_cast<const CProgramInfoItem*>(m_pInfoPanel->GetItem(ITEM_PROGRAMINFO))->GetInfoText().empty()) {
-			const HMENU hmenu = ::CreatePopupMenu();
-			POINT pt;
+			CPopupMenu Menu;
 
-			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("コピー(&C)"));
-			::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 2, TEXT("すべて選択(&A)"));
+			Menu.Create();
+			Menu.Append(1, TEXT("コピー(&C)"));
+			Menu.Append(2, TEXT("すべて選択(&A)"));
 
-			::GetCursorPos(&pt);
-			const int Command = ::TrackPopupMenu(hmenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
+			const int Command = Menu.Show(hwnd, nullptr, TPM_RETURNCMD);
 			if (Command == 1) {
 				DWORD Start, End;
 
@@ -886,7 +885,6 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 			} else if (Command == 2) {
 				::SendMessage(hwnd, EM_SETSEL, 0, -1);
 			}
-			::DestroyMenu(hmenu);
 		}
 		return 0;
 

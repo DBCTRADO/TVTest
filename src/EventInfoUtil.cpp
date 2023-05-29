@@ -40,23 +40,21 @@ bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit)
 		COMMAND_SELECTALL,
 		COMMAND_SEARCH
 	};
-	const HMENU hmenu = ::CreatePopupMenu();
+	CPopupMenu Menu;
 
-	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_COPY, TEXT("コピー(&C)"));
-	::AppendMenu(hmenu, MF_STRING | MF_ENABLED, COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
+	Menu.Create();
+	Menu.Append(COMMAND_COPY, TEXT("コピー(&C)"));
+	Menu.Append(COMMAND_SELECTALL, TEXT("すべて選択(&A)"));
 
 	if (CRichEditUtil::IsSelected(hwndEdit)) {
 		const CKeywordSearch &KeywordSearch = GetAppClass().KeywordSearch;
 		if (KeywordSearch.GetSearchEngineCount() > 0) {
-			::AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);
-			KeywordSearch.InitializeMenu(hmenu, COMMAND_SEARCH);
+			Menu.AppendSeparator();
+			KeywordSearch.InitializeMenu(Menu.GetPopupHandle(), COMMAND_SEARCH);
 		}
 	}
 
-	POINT pt;
-	::GetCursorPos(&pt);
-	const int Command = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwndParent, nullptr);
-	::DestroyMenu(hmenu);
+	const int Command = Menu.Show(hwndParent, nullptr, TPM_RIGHTBUTTON | TPM_RETURNCMD);
 
 	switch (Command) {
 	case COMMAND_COPY:

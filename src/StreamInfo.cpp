@@ -115,11 +115,10 @@ INT_PTR CStreamInfoPage::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				::ScreenToClient(pnmhdr->hwndFrom, &tvhti.pt);
 				const HTREEITEM hItem = TreeView_HitTest(pnmhdr->hwndFrom, &tvhti);
 				if (hItem != nullptr) {
-					const HMENU hmenu = ::CreatePopupMenu();
-					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("コピー(&C)"));
-					POINT pt;
-					::GetCursorPos(&pt);
-					switch (::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr)) {
+					CPopupMenu Menu;
+					Menu.Create();
+					Menu.Append(1, TEXT("コピー(&C)"));
+					switch (Menu.Show(hDlg, nullptr, TPM_RIGHTBUTTON | TPM_RETURNCMD)) {
 					case 1:
 						{
 							String Text;

@@ -1538,13 +1538,15 @@ INT_PTR COrganizeFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 					CFavoriteItem *pItem = GetItem(pnmh->hwndFrom, hItem);
 					if (pItem == nullptr)
 						break;
-					const HMENU hmenu = ::CreatePopupMenu();
-					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_DELETE, TEXT("削除(&D)"));
-					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_RENAME, TEXT("名前の変更(&R)"));
+
+					CPopupMenu Menu;
+					Menu.Create();
+					Menu.Append(IDC_FAVORITES_DELETE, TEXT("削除(&D)"));
+					Menu.Append(IDC_FAVORITES_RENAME, TEXT("名前の変更(&R)"));
 					if (pItem->GetType() == CFavoriteItem::ItemType::Channel)
-						::AppendMenu(hmenu, MF_STRING | MF_ENABLED, IDC_FAVORITES_PROPERTIES, TEXT("プロパティ(&P)..."));
-					const int Result = ::TrackPopupMenu(hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hDlg, nullptr);
-					::DestroyMenu(hmenu);
+						Menu.Append(IDC_FAVORITES_PROPERTIES, TEXT("プロパティ(&P)..."));
+
+					const int Result = Menu.Show(hDlg, &pt, TPM_RIGHTBUTTON | TPM_RETURNCMD);
 					switch (Result) {
 					case IDC_FAVORITES_DELETE:
 						TreeView_DeleteItem(pnmh->hwndFrom, hItem);

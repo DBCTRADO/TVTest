@@ -295,11 +295,9 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS:
 			{
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT_PARAMS), &rc);
-				const POINT pt = {rc.left, rc.bottom};
 				CUICore::CTitleStringMap StrMap(GetAppClass());
-				StrMap.InputParameter(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, pt);
+				StrMap.InputParameter(hDlg, IDC_OSDOPTIONS_CHANNELCHANGE_TEXT, rc);
 			}
 			return TRUE;
 

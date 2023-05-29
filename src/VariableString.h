@@ -52,7 +52,7 @@ namespace TVTest
 		virtual bool GetString(LPCWSTR pszKeyword, String *pString) = 0;
 		virtual bool NormalizeString(String *pString) const { return false; }
 		virtual bool GetParameterList(ParameterGroupList *pList) const = 0;
-		bool InputParameter(HWND hDlg, int EditID, const POINT &MenuPos);
+		bool InputParameter(HWND hDlg, int EditID, const RECT &DropDownRect);
 
 	protected:
 		bool GetTimeString(LPCWSTR pszKeyword, const LibISDB::DateTime &Time, String *pString) const;

@@ -378,17 +378,15 @@ static BOOL ServiceListViewOnLinkClick(HWND hDlg, NMLVLINK *pLink)
 		{COMMAND_INVERTCHECK, TEXT("選択の反転")},
 	};
 
-	const HMENU hmenu = ::CreatePopupMenu();
+	CPopupMenu Menu;
+	Menu.Create();
 	for (const auto &e : CommandList) {
-		::AppendMenu(hmenu, MF_STRING | MF_ENABLED, e.ID, e.pszText);
+		Menu.Append(e.ID, e.pszText);
 	}
 
 	POINT pt = {rc.right, rc.bottom};
 	::ClientToScreen(hwndList, &pt);
-	const int Command = ::TrackPopupMenu(
-		hmenu, TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
-		pt.x, pt.y, 0, hDlg, nullptr);
-	::DestroyMenu(hmenu);
+	const int Command = Menu.Show(hDlg, &pt, TPM_RIGHTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD);
 	if (Command > 0) {
 		const int ItemCount = ListView_GetItemCount(hwndList);
 		bool fCheck = Command == COMMAND_CHECKALL;

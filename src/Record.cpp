@@ -1104,11 +1104,9 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 		case IDC_RECORD_FILENAMEFORMAT:
 			{
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORD_FILENAMEFORMAT), &rc);
-				const POINT pt = {rc.left, rc.bottom};
 				CEventVariableStringMap EventVarStrMap;
-				EventVarStrMap.InputParameter(hDlg, IDC_RECORD_FILENAME, pt);
+				EventVarStrMap.InputParameter(hDlg, IDC_RECORD_FILENAME, rc);
 			}
 			return TRUE;
 

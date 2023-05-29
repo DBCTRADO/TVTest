@@ -454,11 +454,9 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 		case IDC_RECORDOPTIONS_FILENAMEFORMAT:
 			{
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_RECORDOPTIONS_FILENAMEFORMAT), &rc);
-				const POINT pt = {rc.left, rc.bottom};
 				CEventVariableStringMap EventVarStrMap;
-				EventVarStrMap.InputParameter(hDlg, IDC_RECORDOPTIONS_FILENAME, pt);
+				EventVarStrMap.InputParameter(hDlg, IDC_RECORDOPTIONS_FILENAME, rc);
 			}
 			return TRUE;
 

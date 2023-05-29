@@ -541,11 +541,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS:
 			{
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_FILENAME_PARAMETERS), &rc);
-				const POINT pt = {rc.left, rc.bottom};
 				CCaptureVariableStringMap VarStrMap;
-				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_FILENAME, pt);
+				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_FILENAME, rc);
 			}
 			return TRUE;
 
@@ -575,11 +573,9 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS:
 			{
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_CAPTUREOPTIONS_COMMENT_PARAMETERS), &rc);
-				const POINT pt = {rc.left, rc.bottom};
 				CCaptureVariableStringMap VarStrMap;
-				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_COMMENT, pt);
+				VarStrMap.InputParameter(hDlg, IDC_CAPTUREOPTIONS_COMMENT, rc);
 			}
 			return TRUE;
 		}

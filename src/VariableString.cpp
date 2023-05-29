@@ -190,14 +190,16 @@ bool CBasicVariableStringMap::GetParameterList(ParameterGroupList *pList) const
 
 
 
-bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &MenuPos)
+bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const RECT &DropDownRect)
 {
 	ParameterGroupList GroupList;
 
 	if (!GetParameterList(&GroupList) || GroupList.empty())
 		return false;
 
-	const HMENU hmenuRoot = ::CreatePopupMenu();
+	CPopupMenu Menu;
+
+	Menu.Create();
 
 	for (size_t i = 0; i < GroupList.size(); i++) {
 		const ParameterGroup &Group = GroupList[i];
@@ -205,12 +207,9 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 
 		if (!Group.Text.empty()) {
 			hmenu = ::CreatePopupMenu();
-			::AppendMenu(
-				hmenuRoot, MF_POPUP | MF_STRING | MF_ENABLED,
-				reinterpret_cast<UINT_PTR>(hmenu),
-				Group.Text.c_str());
+			Menu.Append(hmenu, Group.Text.c_str());
 		} else {
-			hmenu = hmenuRoot;
+			hmenu = Menu.GetPopupHandle();
 		}
 
 		for (int j = 0; j < static_cast<int>(Group.ParameterList.size()); j++) {
@@ -224,8 +223,8 @@ bool CVariableStringMap::InputParameter(HWND hDlg, int EditID, const POINT &Menu
 		}
 	}
 
-	const int Command = ::TrackPopupMenu(hmenuRoot, TPM_RETURNCMD, MenuPos.x, MenuPos.y, 0, hDlg, nullptr);
-	::DestroyMenu(hmenuRoot);
+	const POINT pt = {DropDownRect.left, DropDownRect.bottom};
+	const int Command = Menu.Show(hDlg, &pt, TPM_RETURNCMD, &DropDownRect);
 	if (Command <= 0)
 		return false;
 

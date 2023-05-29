@@ -23,6 +23,7 @@
 #include "Panel.h"
 #include "DrawUtil.h"
 #include "DPIUtil.h"
+#include "Menu.h"
 #include "resource.h"
 #include "Common/DebugDef.h"
 
@@ -459,15 +460,15 @@ LRESULT CPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if (m_fShowTitle && pt.y < m_TitleHeight
 					&& m_pEventHandler != nullptr) {
-				const HMENU hmenu = ::CreatePopupMenu();
+				CPopupMenu Menu;
 
-				::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 1, TEXT("閉じる(&C)"));
+				Menu.Create();
+				Menu.Append(1, TEXT("閉じる(&C)"));
 				if (m_fEnableFloating)
-					::AppendMenu(hmenu, MF_STRING | MF_ENABLED, 2, TEXT("切り離す(&F)"));
-				m_pEventHandler->OnMenuPopup(hmenu);
+					Menu.Append(2, TEXT("切り離す(&F)"));
+				m_pEventHandler->OnMenuPopup(Menu.GetPopupHandle());
 				::ClientToScreen(hwnd, &pt);
-				const int Command = ::TrackPopupMenu(
-					hmenu, TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, nullptr);
+				const int Command = Menu.Show(hwnd, &pt, TPM_RIGHTBUTTON | TPM_RETURNCMD);
 				switch (Command) {
 				case 0:
 					break;

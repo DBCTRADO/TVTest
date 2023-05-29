@@ -321,11 +321,10 @@ INT_PTR CProgramGuideTool::CProgramGuideToolDialog::DlgProc(HWND hDlg, UINT uMsg
 
 		case IDC_PROGRAMGUIDETOOL_PARAMETER:
 			{
-				CEpgVariableStringMap VarStrMap;
 				RECT rc;
-
 				::GetWindowRect(::GetDlgItem(hDlg, IDC_PROGRAMGUIDETOOL_PARAMETER), &rc);
-				VarStrMap.InputParameter(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, POINT{rc.left, rc.bottom});
+				CEpgVariableStringMap VarStrMap;
+				VarStrMap.InputParameter(hDlg, IDC_PROGRAMGUIDETOOL_COMMAND, rc);
 			}
 			return TRUE;
 
