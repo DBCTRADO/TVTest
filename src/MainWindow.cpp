@@ -1395,16 +1395,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		}
 		return 0;
 
-	/*
-	case WM_APP_IMAGESAVE:
-		{
-			::MessageBox(
-				nullptr, TEXT("画像の保存でエラーが発生しました。"), nullptr,
-				MB_OK | MB_ICONEXCLAMATION);
-		}
-		return 0;
-	*/
-
 	case WM_APP_TRAYICON:
 		switch (lParam) {
 		case WM_RBUTTONDOWN:

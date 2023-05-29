@@ -48,7 +48,6 @@ namespace TVTest
 
 // (*) が付いたものは、変えると異なるバージョン間での互換性が無くなるので注意
 	constexpr UINT WM_APP_SERVICEUPDATE          = WM_APP + 0;
-	constexpr UINT WM_APP_IMAGESAVE              = WM_APP + 2;
 	constexpr UINT WM_APP_TRAYICON               = WM_APP + 3;
 	constexpr UINT WM_APP_QUERYPORT              = WM_APP + 5;  // (*)
 	constexpr UINT WM_APP_FILEWRITEERROR         = WM_APP + 6;
