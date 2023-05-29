@@ -5619,10 +5619,9 @@ public:
 			::ClientToScreen(m_pStatus->GetHandle(), &pt);
 			m_Menu.SetDarkMode(IsDarkMenu());
 			m_Menu.Show(
-				GetParent(
-					m_pStatus->GetHandle()), m_pProgramGuide->GetHandle(), &pt,
-					CM_PROGRAMGUIDE_CHANNELGROUP_FIRST + m_pProgramGuide->GetCurrentChannelGroup(),
-					0, m_pStyleScaling->GetDPI());
+				GetParent(m_pStatus->GetHandle()), m_pProgramGuide->GetHandle(), &pt,
+				CM_PROGRAMGUIDE_CHANNELGROUP_FIRST + m_pProgramGuide->GetCurrentChannelGroup(),
+				0, m_pStyleScaling->GetDPI());
 		} else {
 			POINT pt;
 			RECT rc;
