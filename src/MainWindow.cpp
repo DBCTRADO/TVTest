@@ -1489,17 +1489,14 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// 通知バーの表示
 		TRACE(TEXT("WM_APP_SHOWNOTIFICATIONBAR"));
 		{
-			LPCTSTR pszMessage = reinterpret_cast<LPCTSTR>(lParam);
+			BlockLock Lock(m_NotificationLock);
 
-			if (pszMessage != nullptr) {
-				if (m_App.NotificationBarOptions.IsNotifyEnabled(HIWORD(wParam))) {
-					ShowNotificationBar(
-						pszMessage,
-						static_cast<CNotificationBar::MessageType>(LOWORD(wParam)),
-						6000);
-				}
-				delete [] pszMessage;
+			for (const NotificationInfo &Info : m_PendingNotificationList) {
+				if (m_App.NotificationBarOptions.IsNotifyEnabled(Info.NotifyType))
+					ShowNotificationBar(Info.Text.c_str(), Info.MessageType, Info.Duration, Info.fSkippable);
 			}
+
+			m_PendingNotificationList.clear();
 		}
 		return 0;
 
@@ -4719,6 +4716,34 @@ bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const
 	m_App.Epg.fShowProgramGuide = fShow;
 
 	m_pCore->SetCommandCheckedState(CM_PROGRAMGUIDE, m_App.Epg.fShowProgramGuide);
+
+	return true;
+}
+
+
+bool CMainWindow::PostNotification(
+	LPCTSTR pszText,
+	unsigned int NotifyType,
+	CNotificationBar::MessageType MessageType,
+	bool fSkippable)
+{
+	if (IsStringEmpty(pszText))
+		return false;
+
+	BlockLock Lock(m_NotificationLock);
+
+	NotificationInfo &Info = m_PendingNotificationList.emplace_back();
+
+	Info.Text = pszText;
+	Info.NotifyType = NotifyType;
+	Info.MessageType = MessageType;
+	Info.Duration = 6000;
+	Info.fSkippable = fSkippable;
+
+	if (!PostMessage(WM_APP_SHOWNOTIFICATIONBAR, 0, 0)) {
+		m_PendingNotificationList.clear();
+		return false;
+	}
 
 	return true;
 }
