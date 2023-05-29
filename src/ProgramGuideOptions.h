@@ -81,6 +81,7 @@ namespace TVTest
 		CProgramGuideToolList m_ToolList;
 		int m_WheelScrollLines;
 		String m_ProgramLDoubleClickCommand;
+		std::vector<String> m_CommandList;
 		CTooltip m_Tooltip;
 
 	// CBasicDialog

@@ -583,6 +583,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 			DlgComboBox_AddString(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, TEXT("iEPG関連付け実行"));
 			if (Sel < 0 && m_ProgramLDoubleClickCommand.compare(IEPG_ASSOCIATE_COMMAND) == 0)
 				Sel = 1;
+			m_CommandList.clear();
 			for (int i = 0; i < m_pPluginManager->NumPlugins(); i++) {
 				const CPlugin *pPlugin = m_pPluginManager->GetPlugin(i);
 
@@ -591,21 +592,19 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 					pPlugin->GetProgramGuideCommandInfo(j, &CommandInfo);
 					if (CommandInfo.Type == PROGRAMGUIDE_COMMAND_TYPE_PROGRAM) {
-						TCHAR szCommand[512];
+						String Command;
 
 						StringFormat(
-							szCommand, TEXT("{}:{}"),
+							&Command, TEXT("{}:{}"),
 							::PathFindFileName(pPlugin->GetFileName()),
 							CommandInfo.pszText);
 						const LRESULT Index = DlgComboBox_AddString(
 							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
 							CommandInfo.pszName);
-						DlgComboBox_SetItemData(
-							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
-							Index, reinterpret_cast<LPARAM>(DuplicateString(szCommand)));
 						if (Sel < 0 && !m_ProgramLDoubleClickCommand.empty()
-								&& StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, szCommand) == 0)
+								&& StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, Command) == 0)
 							Sel = static_cast<int>(Index);
+						m_CommandList.emplace_back(std::move(Command));
 					}
 				}
 			}
@@ -1020,10 +1019,8 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 						m_ProgramLDoubleClickCommand.clear();
 					} else if (Sel == 1) {
 						m_ProgramLDoubleClickCommand = IEPG_ASSOCIATE_COMMAND;
-					} else {
-						m_ProgramLDoubleClickCommand =
-							reinterpret_cast<LPCTSTR>(
-								DlgComboBox_GetItemData(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, Sel));
+					} else if (static_cast<size_t>(Sel - 2) < m_CommandList.size()) {
+						m_ProgramLDoubleClickCommand = m_CommandList[Sel - 2];
 					}
 				}
 
@@ -1056,11 +1053,6 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 
 	case WM_DESTROY:
 		{
-			for (LRESULT i = DlgComboBox_GetCount(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK) - 1; i > 1; i--) {
-				delete [] reinterpret_cast<LPTSTR>(
-					DlgComboBox_GetItemData(hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK, i));
-			}
-
 			for (int i = 0; i <= CEpgIcons::ICON_LAST; i++) {
 				const HBITMAP hbm = reinterpret_cast<HBITMAP>(
 					::SendDlgItemMessage(
@@ -1071,6 +1063,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 					::DeleteObject(hbm);
 			}
 
+			m_CommandList.clear();
 			m_Tooltip.Destroy();
 		}
 		return TRUE;
