@@ -37,8 +37,6 @@ namespace TVTest
 	bool UInt64ToString(ULONGLONG Value, LPTSTR pszString, int MaxLength, int Radix = 10);
 	bool StringIsDigit(LPCTSTR pszString);
 
-	[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString);
-	[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString);
 	int RemoveTrailingWhitespace(LPTSTR pszString);
 	LPTSTR SkipLeadingWhitespace(LPTSTR pszString);
 	LPCTSTR SkipLeadingWhitespace(LPCTSTR pszString);

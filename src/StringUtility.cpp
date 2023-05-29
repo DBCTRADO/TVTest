@@ -75,30 +75,6 @@ bool StringIsDigit(LPCTSTR pszString)
 }
 
 
-[[nodiscard]] LPSTR DuplicateString(LPCSTR pszString)
-{
-	if (pszString == nullptr)
-		return nullptr;
-
-	const size_t Length = lstrlenA(pszString) + 1;
-	const LPSTR pszNewString = new char[Length];
-	std::memcpy(pszNewString, pszString, Length);
-	return pszNewString;
-}
-
-
-[[nodiscard]] LPWSTR DuplicateString(LPCWSTR pszString)
-{
-	if (pszString == nullptr)
-		return nullptr;
-
-	const size_t Length = lstrlenW(pszString) + 1;
-	const LPWSTR pszNewString = new WCHAR[Length];
-	std::memcpy(pszNewString, pszString, Length * sizeof(WCHAR));
-	return pszNewString;
-}
-
-
 static inline bool IsWhitespace(TCHAR c)
 {
 	return c == _T(' ') || c == _T('\r') || c == _T('\n') || c == _T('\t');
