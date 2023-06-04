@@ -96,7 +96,7 @@ INT_PTR CTSProcessorErrorDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					m_pTSProcessor->GetDeviceName(i, &Name);
 					const LRESULT Index = DlgComboBox_AddString(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Name.c_str());
 					DlgComboBox_SetItemData(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Index, i);
-					if (StringUtility::CompareNoCase(m_Device, Name) == 0)
+					if (StringUtility::IsEqualNoCase(m_Device, Name))
 						Sel = static_cast<int>(Index);
 				}
 				DlgComboBox_SetCurSel(hDlg, IDC_TSPROCESSORERROR_DEVICELIST, Sel);

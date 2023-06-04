@@ -113,7 +113,7 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 
 		const String Param = pEngine->URL.substr(Begin + 1, End - Begin - 1);
 		static const struct {
-			LPCTSTR pszParam;
+			StringView Param;
 			UINT CodePage;
 		} ParameterList[] = {
 			{TEXT("keyword:utf-8"),       CP_UTF8},
@@ -123,7 +123,7 @@ bool CKeywordSearch::Search(int Index, LPCTSTR pszKeyword) const
 		};
 		bool fFound = false;
 		for (const auto &e : ParameterList) {
-			if (StringUtility::CompareNoCase(Param, e.pszParam) == 0) {
+			if (StringUtility::IsEqualNoCase(Param, e.Param)) {
 				EncodeURL(e.CodePage, pszKeyword, &Buffer);
 				fFound = true;
 				break;

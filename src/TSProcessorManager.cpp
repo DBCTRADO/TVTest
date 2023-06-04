@@ -470,8 +470,8 @@ void CTSProcessorManager::OnTunerChange(LPCTSTR pszOldTuner, LPCTSTR pszNewTuner
 		} else {
 			pOldFilter = &pSettings->m_DefaultFilter;
 		}
-		if (StringUtility::CompareNoCase(pOldFilter->Device, pNewFilter->Device) != 0
-				|| StringUtility::CompareNoCase(pOldFilter->Filter, pNewFilter->Filter) != 0)
+		if (!StringUtility::IsEqualNoCase(pOldFilter->Device, pNewFilter->Device)
+				|| !StringUtility::IsEqualNoCase(pOldFilter->Filter, pNewFilter->Filter))
 			pTSProcessor->CloseFilter();
 		if (!IsEqualFileName(pOldFilter->Module.c_str(), pNewFilter->Module.c_str()))
 			pTSProcessor->UnloadModule();

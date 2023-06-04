@@ -81,8 +81,8 @@ bool CStyleManager::Load(LPCTSTR pszFileName)
 						IntValue Value;
 						if (ParseValue(e.Value.c_str(), &Value))
 							Set(e.Name.c_str(), Value);
-					} else if (StringUtility::CompareNoCase(e.Value, TEXT("true")) == 0
-							|| StringUtility::CompareNoCase(e.Value, TEXT("false")) == 0) {
+					} else if (StringUtility::IsEqualNoCase(e.Value, TEXT("true"))
+							|| StringUtility::IsEqualNoCase(e.Value, TEXT("false"))) {
 						Set(e.Name.c_str(), e.Value[0] == _T('t'));
 					} else if (e.Value.length() >= 2
 							&& e.Value.front() == _T('\"')

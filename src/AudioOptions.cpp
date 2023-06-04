@@ -277,7 +277,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				if (!m_AudioDevice.MonikerName.empty()) {
 					for (int i = 0; i < DevEnum.GetDeviceCount(); i++) {
-						if (StringUtility::CompareNoCase(m_AudioDevice.MonikerName, m_AudioDeviceList[i].MonikerName) == 0) {
+						if (StringUtility::IsEqualNoCase(m_AudioDevice.MonikerName, m_AudioDeviceList[i].MonikerName)) {
 							Sel = i + 1;
 							break;
 						}
@@ -285,7 +285,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				if (Sel == 0 && !m_AudioDevice.FriendlyName.empty()) {
 					for (int i = 0; i < DevEnum.GetDeviceCount(); i++) {
-						if (StringUtility::CompareNoCase(m_AudioDevice.FriendlyName, m_AudioDeviceList[i].FriendlyName) == 0) {
+						if (StringUtility::IsEqualNoCase(m_AudioDevice.FriendlyName, m_AudioDeviceList[i].FriendlyName)) {
 							Sel = i + 1;
 							break;
 						}
@@ -318,7 +318,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					if (FilterFinder.GetFilterInfo(i, &idAudioFilter, &AudioFilter)) {
 						DlgComboBox_AddString(hDlg, IDC_OPTIONS_AUDIOFILTER, AudioFilter.c_str());
 						if (Sel == 0 && !m_AudioFilterName.empty()
-								&& StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) == 0)
+								&& StringUtility::IsEqualNoCase(m_AudioFilterName, AudioFilter))
 							Sel = i + 1;
 					}
 				}
@@ -485,11 +485,11 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				int Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIODEVICE));
 				if (Sel > 0 && static_cast<unsigned int>(Sel) <= m_AudioDeviceList.size())
 					AudioDevice = m_AudioDeviceList[Sel - 1];
-				if (StringUtility::CompareNoCase(m_AudioDevice.FriendlyName, AudioDevice.FriendlyName) != 0
+				if (!StringUtility::IsEqualNoCase(m_AudioDevice.FriendlyName, AudioDevice.FriendlyName)
 						|| (m_AudioDevice.MonikerName.empty() && Sel >= 2
-							&& StringUtility::CompareNoCase(AudioDevice.MonikerName, m_AudioDeviceList[Sel - 2].MonikerName) == 0)
+							&& StringUtility::IsEqualNoCase(AudioDevice.MonikerName, m_AudioDeviceList[Sel - 2].MonikerName))
 						|| (!m_AudioDevice.MonikerName.empty()
-							&& StringUtility::CompareNoCase(m_AudioDevice.MonikerName, AudioDevice.MonikerName) != 0)) {
+							&& !StringUtility::IsEqualNoCase(m_AudioDevice.MonikerName, AudioDevice.MonikerName))) {
 					m_AudioDevice = std::move(AudioDevice);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
@@ -498,7 +498,7 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AUDIOFILTER));
 				if (Sel > 0)
 					GetDlgComboBoxItemString(hDlg, IDC_OPTIONS_AUDIOFILTER, Sel, &AudioFilter);
-				if (StringUtility::CompareNoCase(m_AudioFilterName, AudioFilter) != 0) {
+				if (!StringUtility::IsEqualNoCase(m_AudioFilterName, AudioFilter)) {
 					m_AudioFilterName = std::move(AudioFilter);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}

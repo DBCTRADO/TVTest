@@ -602,7 +602,7 @@ INT_PTR CProgramGuideOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 							hDlg, IDC_PROGRAMGUIDEOPTIONS_PROGRAMLDOUBLECLICK,
 							CommandInfo.pszName);
 						if (Sel < 0 && !m_ProgramLDoubleClickCommand.empty()
-								&& StringUtility::CompareNoCase(m_ProgramLDoubleClickCommand, Command) == 0)
+								&& StringUtility::IsEqualNoCase(m_ProgramLDoubleClickCommand, Command))
 							Sel = static_cast<int>(Index);
 						m_CommandList.emplace_back(std::move(Command));
 					}

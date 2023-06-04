@@ -142,7 +142,7 @@ bool CStatusOptions::ReadSettings(CSettings &Settings)
 					Item.IDText = ID;
 					size_t j = 0;
 					for (j = 0; j < ItemList.size(); j++) {
-						if (StringUtility::CompareNoCase(ItemList[j].IDText, Item.IDText) == 0)
+						if (StringUtility::IsEqualNoCase(ItemList[j].IDText, Item.IDText))
 							break;
 					}
 					if (j < ItemList.size())
@@ -311,7 +311,7 @@ int CStatusOptions::RegisterItem(LPCTSTR pszID)
 
 	for (auto &e : m_ItemList) {
 		if (e.ID < 0
-				&& StringUtility::CompareNoCase(e.IDText, Item.IDText) == 0) {
+				&& StringUtility::IsEqualNoCase(e.IDText, Item.IDText)) {
 			e.ID = Item.ID;
 			break;
 		}

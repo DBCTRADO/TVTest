@@ -102,8 +102,10 @@ int CWheelCommandManager::ParseCommand(LPCTSTR pszCommand) const
 	if (IsStringEmpty(pszCommand))
 		return 0;
 
+	const StringView Command(pszCommand);
+
 	for (const auto &e : m_CommandList) {
-		if (StringUtility::CompareNoCase(e.IDText, pszCommand) == 0) {
+		if (StringUtility::IsEqualNoCase(e.IDText, Command)) {
 			return e.ID;
 		}
 	}

@@ -849,7 +849,7 @@ bool CEventSearchOptions::AddKeywordHistory(LPCTSTR pszKeyword)
 		return false;
 
 	for (auto it = m_KeywordHistory.begin(); it != m_KeywordHistory.end(); ++it) {
-		if (StringUtility::CompareNoCase(*it, pszKeyword) == 0) {
+		if (StringUtility::IsEqualNoCase(*it, pszKeyword)) {
 			if (it == m_KeywordHistory.begin()
 					&& it->compare(pszKeyword) == 0)
 				return true;

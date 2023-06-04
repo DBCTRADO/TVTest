@@ -83,7 +83,7 @@ namespace TVTest
 
 		static bool CompareID(const String &ID1, const String &ID2)
 		{
-			return StringUtility::CompareNoCase(ID1, ID2) == 0;
+			return StringUtility::IsEqualNoCase(ID1, ID2);
 		}
 
 		bool m_fSnapAtMainWindow = true;

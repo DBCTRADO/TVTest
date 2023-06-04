@@ -433,8 +433,10 @@ CIniFile::SectionList::iterator CIniFile::FindSection(LPCWSTR pszName)
 	if (IsStringEmpty(pszName))
 		return m_SectionList.end();
 
+	const StringView Name(pszName);
+
 	for (auto i = m_SectionList.begin(); i != m_SectionList.end(); i++) {
-		if (StringUtility::CompareNoCase(i->SectionName, pszName) == 0)
+		if (StringUtility::IsEqualNoCase(i->SectionName, Name))
 			return i;
 	}
 
@@ -446,8 +448,10 @@ CIniFile::SectionList::const_iterator CIniFile::FindSection(LPCWSTR pszName) con
 	if (IsStringEmpty(pszName))
 		return m_SectionList.end();
 
+	const StringView Name(pszName);
+
 	for (auto i = m_SectionList.begin(); i != m_SectionList.end(); i++) {
-		if (StringUtility::CompareNoCase(i->SectionName, pszName) == 0)
+		if (StringUtility::IsEqualNoCase(i->SectionName, Name))
 			return i;
 	}
 
@@ -456,8 +460,10 @@ CIniFile::SectionList::const_iterator CIniFile::FindSection(LPCWSTR pszName) con
 
 CIniFile::EntryList::iterator CIniFile::FindValue(EntryList &Entries, LPCWSTR pszName)
 {
+	const StringView Name(pszName);
+
 	for (auto i = Entries.begin(); i != Entries.end(); i++) {
-		if (!i->Name.empty() && StringUtility::CompareNoCase(i->Name, pszName) == 0)
+		if (!i->Name.empty() && StringUtility::IsEqualNoCase(i->Name, Name))
 			return i;
 	}
 
@@ -466,8 +472,10 @@ CIniFile::EntryList::iterator CIniFile::FindValue(EntryList &Entries, LPCWSTR ps
 
 CIniFile::EntryList::const_iterator CIniFile::FindValue(const EntryList &Entries, LPCWSTR pszName) const
 {
+	const StringView Name(pszName);
+
 	for (auto i = Entries.begin(); i != Entries.end(); i++) {
-		if (!i->Name.empty() && StringUtility::CompareNoCase(i->Name, pszName) == 0)
+		if (!i->Name.empty() && StringUtility::IsEqualNoCase(i->Name, Name))
 			return i;
 	}
 

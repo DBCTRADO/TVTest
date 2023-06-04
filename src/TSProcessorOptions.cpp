@@ -502,10 +502,10 @@ void CTSProcessorOptions::UpdateDeviceFilterList(HWND hDlg, int ModuleID, int De
 
 		for (const auto &Dev : pModuleInfo->DeviceList) {
 			DlgComboBox_AddString(hDlg, DeviceID, Dev.Name.c_str());
-			if (StringUtility::CompareNoCase(DeviceName, Dev.Name) == 0) {
+			if (StringUtility::IsEqualNoCase(DeviceName, Dev.Name)) {
 				for (const String &Filter : Dev.FilterList) {
 					DlgComboBox_AddString(hDlg, FilterID, Filter.c_str());
-					if (StringUtility::CompareNoCase(FilterName, Filter) == 0)
+					if (StringUtility::IsEqualNoCase(FilterName, Filter))
 						FilterSel = static_cast<int>(DlgComboBox_GetCount(hDlg, FilterID)) - 1;
 				}
 				DeviceSel = static_cast<int>(DlgComboBox_GetCount(hDlg, DeviceID)) - 1;

@@ -224,6 +224,11 @@ int CompareNoCase(const String &String1, LPCWSTR pszString2, String::size_type L
 	return ::StrCmpNIW(String1.c_str(), pszString2, static_cast<int>(Length));
 }
 
+bool IsEqualNoCase(StringView String1, StringView String2)
+{
+	return LibISDB::StringEqualsI(String1, String2);
+}
+
 bool Trim(String &Str, LPCWSTR pszSpaces)
 {
 	if (Str.empty() || IsStringEmpty(pszSpaces))

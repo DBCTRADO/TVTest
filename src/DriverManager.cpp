@@ -311,7 +311,7 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 		std::vector<String> Attributes;
 		if (StringUtility::Split(e.Value, TEXT("|"), &Attributes)) {
 			static const struct {
-				LPCTSTR pszName;
+				StringView Name;
 				TunerSpec::Flag Flag;
 			} FlagList[] = {
 				{TEXT("network"),         TunerSpec::Flag::Network},
@@ -323,7 +323,7 @@ bool CDriverManager::LoadTunerSpec(LPCTSTR pszFileName)
 			for (String Attribute : Attributes) {
 				StringUtility::Trim(Attribute);
 				for (auto &Map : FlagList) {
-					if (StringUtility::CompareNoCase(Attribute, Map.pszName) == 0) {
+					if (StringUtility::IsEqualNoCase(Attribute, Map.Name)) {
 						Info.Spec.Flags |= Map.Flag;
 						break;
 					}

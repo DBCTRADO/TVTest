@@ -172,7 +172,7 @@ bool COSDManager::ShowChannelOSD(const CChannelInfo *pInfo, LPCTSTR pszText, boo
 		if (hbmLogo != nullptr) {
 			if (fChanging)
 				ImageEffect = CPseudoOSD::ImageEffect::Dark;
-			else if (StringUtility::CompareNoCase(m_Style.LogoEffect, TEXT("gloss")) == 0)
+			else if (StringUtility::IsEqualNoCase(m_Style.LogoEffect, TEXT("gloss")))
 				ImageEffect = CPseudoOSD::ImageEffect::Gloss;
 		}
 
