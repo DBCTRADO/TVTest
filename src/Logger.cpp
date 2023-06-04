@@ -316,7 +316,7 @@ bool CLogger::SaveToFile(LPCTSTR pszFileName, bool fAppend)
 	{
 		// 既定ファイルにかぎり書き込みを排他制御する
 		CGlobalLock Lock;
-		if ((pszFileName != nullptr && StringUtility::CompareNoCase(m_DefaultLogFileName, pszFileName) != 0)
+		if ((pszFileName != nullptr && !IsEqualFileName(m_DefaultLogFileName.c_str(), pszFileName))
 				|| (CreateFileLock(&Lock) && Lock.Wait(LOG_FILE_ADVISORY_LOCK_WAIT_TIMEOUT))) {
 			bool fBOM = !fAppend;
 			DWORD Size;
