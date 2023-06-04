@@ -304,7 +304,19 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 	if (uMsg == WM_INITDIALOG) {
 		pThis = reinterpret_cast<CBasicDialog*>(lParam);
 		pThis->m_hDlg = hDlg;
-		pThis->m_fOwnDPIScaling = IsWindowPerMonitorDPIV1(hDlg);
+
+		if (IsWindowPerMonitorDPIV1(hDlg)) {
+			pThis->m_fOwnDPIScaling = true;
+		} else if (IsPerMonitorDPIV2Available()) {
+			auto pSetDialogDpiChangeBehavior =
+				GET_MODULE_FUNCTION(TEXT("user32.dll"), SetDialogDpiChangeBehavior);
+			pThis->m_fOwnDPIScaling =
+				pSetDialogDpiChangeBehavior != nullptr
+				&& pSetDialogDpiChangeBehavior(hDlg, DDC_DISABLE_ALL, DDC_DISABLE_ALL);
+		} else {
+			pThis->m_fOwnDPIScaling = false;
+		}
+
 		::SetProp(hDlg, PROP_NAME, pThis);
 	} else {
 		pThis = GetThis(hDlg);
@@ -470,12 +482,14 @@ void CBasicDialog::ApplyStyle()
 
 void CBasicDialog::RealizeStyle()
 {
-	if (m_hDlg != nullptr && m_fOwnDPIScaling) {
+	if (m_hDlg != nullptr) {
 		const int DPI = m_pStyleScaling->GetDPI();
 
-		if (m_CurrentDPI != DPI) {
-			m_CurrentDPI = DPI;
+		if (m_CurrentDPI == DPI)
+			return;
+		m_CurrentDPI = DPI;
 
+		if (m_fOwnDPIScaling) {
 			if (m_ItemList.empty()) {
 				HWND hwnd = nullptr;
 
@@ -1960,6 +1974,7 @@ INT_PTR CResizableDialog::HandleMessage(HWND hDlg, UINT uMsg, WPARAM wParam, LPA
 		break;
 
 	case WM_DESTROY:
+		m_ControlList.clear();
 		return CBasicDialog::HandleMessage(hDlg, uMsg, wParam, lParam);
 	}
 

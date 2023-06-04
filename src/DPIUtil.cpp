@@ -296,6 +296,12 @@ bool IsWindowPerMonitorDPIV2(HWND hwnd)
 }
 
 
+bool IsPerMonitorDPIV2Available()
+{
+	return Util::OS::IsWindows10CreatorsUpdateOrLater();
+}
+
+
 DPIBlockBase::DPIBlockBase(DPI_AWARENESS_CONTEXT Context)
 	: m_OldContext((Context != nullptr) ? MySetThreadDpiAwarenessContext(Context) : nullptr)
 {

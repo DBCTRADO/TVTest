@@ -48,6 +48,7 @@ namespace TVTest
 	DPI_AWARENESS_CONTEXT GetWindowDPIAwareness(HWND hwnd);
 	bool IsWindowPerMonitorDPIV1(HWND hwnd);
 	bool IsWindowPerMonitorDPIV2(HWND hwnd);
+	bool IsPerMonitorDPIV2Available();
 
 	class DPIBlockBase
 	{
