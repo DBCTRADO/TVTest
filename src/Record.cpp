@@ -800,11 +800,7 @@ bool CRecordManager::GetWritePluginList(std::vector<String> *pList)
 	::FindClose(hFind);
 
 	if (pList->size() > 1) {
-		std::ranges::sort(
-			*pList,
-			[](const String & Lib1, const String & Lib2) {
-				return StringUtility::CompareNoCase(Lib1, Lib2) < 0;
-			});
+		std::ranges::sort(*pList, StringFunctional::LessNoCase());
 	}
 
 	return true;
