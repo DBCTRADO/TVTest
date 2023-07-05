@@ -1010,26 +1010,16 @@ bool CFeaturedEventsCategory::OnRButtonUp(int x, int y)
 {
 	CFeaturedEvents &FeaturedEvents = GetAppClass().FeaturedEvents;
 	CFeaturedEventsSettings &Settings = FeaturedEvents.GetSettings();
-	const HMENU hmenu = ::LoadMenu(
-		GetAppClass().GetResourceInstance(),
-		MAKEINTRESOURCE(IDM_FEATUREDEVENTS));
+	CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_FEATUREDEVENTS);
 
-	::CheckMenuItem(
-		hmenu, CM_FEATUREDEVENTS_SHOWEVENTTEXT,
-		MF_BYCOMMAND | (Settings.GetShowEventText() ? MF_CHECKED : MF_UNCHECKED));
-	::CheckMenuRadioItem(
-		hmenu,
+	Menu.CheckItem(CM_FEATUREDEVENTS_SHOWEVENTTEXT, Settings.GetShowEventText());
+	Menu.CheckRadioItem(
 		CM_FEATUREDEVENTS_SORT_FIRST,
 		CM_FEATUREDEVENTS_SORT_LAST,
-		CM_FEATUREDEVENTS_SORT_FIRST + static_cast<int>(Settings.GetSortType()),
-		MF_BYCOMMAND);
+		CM_FEATUREDEVENTS_SORT_FIRST + static_cast<int>(Settings.GetSortType()));
 
-	POINT pt;
-	::GetCursorPos(&pt);
-	const int Result = ::TrackPopupMenu(
-		::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON | TPM_RETURNCMD,
-		pt.x, pt.y, 0, m_pHomeDisplay->GetHandle(), nullptr);
-	::DestroyMenu(hmenu);
+	const int Result = Menu.Show(
+		m_pHomeDisplay->GetHandle(), nullptr, TPM_RIGHTBUTTON | TPM_RETURNCMD);
 
 	switch (Result) {
 	case CM_FEATUREDEVENTS_SETTINGS:

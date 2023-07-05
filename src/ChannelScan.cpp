@@ -1084,12 +1084,9 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				const NMITEMACTIVATE *pnmia = reinterpret_cast<const NMITEMACTIVATE*>(lParam);
 
 				if (pnmia->iItem >= 0) {
-					const HMENU hmenu = ::LoadMenu(GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDM_CHANNELSCAN));
-					POINT pt;
+					CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_CHANNELSCAN);
 
-					::GetCursorPos(&pt);
-					::TrackPopupMenu(GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
-					::DestroyMenu(hmenu);
+					Menu.Show(hDlg);
 				}
 			}
 			break;

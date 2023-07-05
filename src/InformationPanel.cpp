@@ -504,18 +504,15 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 	case WM_RBUTTONUP:
 		{
-			const HMENU hmenu = ::LoadMenu(m_hinst, MAKEINTRESOURCE(IDM_INFORMATIONPANEL));
+			CPopupMenu Menu(m_hinst, IDM_INFORMATIONPANEL);
 
 			for (int i = 0; i < NUM_ITEMS; i++) {
-				CheckMenuItem(
-					hmenu, CM_INFORMATIONPANEL_ITEM_FIRST + i,
-					MF_BYCOMMAND | (IsItemVisible(i) ? MFS_CHECKED : MFS_UNCHECKED));
+				Menu.CheckItem(CM_INFORMATIONPANEL_ITEM_FIRST + i, IsItemVisible(i));
 			}
 
 			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd, &pt);
-			::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, nullptr);
-			::DestroyMenu(hmenu);
+			Menu.Show(hwnd, &pt);
 		}
 		return TRUE;
 

@@ -4870,13 +4870,13 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 	POINT pt = {x, y};
 	TCHAR szText[256], szMenu[64];
 
-	const HMENU hmenu = ::LoadMenu(GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDM_PROGRAMGUIDE));
-	const HMENU hmenuPopup = ::GetSubMenu(hmenu, 0);
+	CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_PROGRAMGUIDE);
+	const HMENU hmenuPopup = Menu.GetPopupHandle();
 
-	::CheckMenuRadioItem(
-		hmenu, CM_PROGRAMGUIDE_DAY_FIRST,
+	Menu.CheckRadioItem(
+		CM_PROGRAMGUIDE_DAY_FIRST,
 		CM_PROGRAMGUIDE_DAY_LAST,
-		CM_PROGRAMGUIDE_DAY_FIRST + m_Day, MF_BYCOMMAND);
+		CM_PROGRAMGUIDE_DAY_FIRST + m_Day);
 	MENUITEMINFO mii;
 	mii.cbSize = sizeof(mii);
 	mii.fMask = MIIM_STRING;
@@ -4886,12 +4886,12 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 
 		GetDayTimeRange(i - CM_PROGRAMGUIDE_DAY_FIRST, &Time, nullptr);
 		mii.cch = lengthof(szText);
-		::GetMenuItemInfo(hmenu, i, FALSE, &mii);
+		::GetMenuItemInfo(hmenuPopup, i, FALSE, &mii);
 		const int Length = ::lstrlen(szText);
 		StringFormat(
 			szText + Length, lengthof(szText) - Length, TEXT(" {}/{}({}) {}時～"),
 			Time.Month, Time.Day, GetDayOfWeekText(Time.DayOfWeek), Time.Hour);
-		::SetMenuItemInfo(hmenu, i, FALSE, &mii);
+		::SetMenuItemInfo(hmenuPopup, i, FALSE, &mii);
 	}
 
 	const HMENU hmenuChannelGroup = ::GetSubMenu(hmenuPopup, MENU_CHANNELGROUP);
@@ -4942,56 +4942,32 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 			}
 		}
 	}
-	::EnableMenuItem(
-		hmenuPopup, MENU_CHANNELGROUP,
-		MF_BYPOSITION | (::GetMenuItemCount(hmenuChannelGroup) > 0 ? MF_ENABLED : MF_GRAYED));
+	Menu.EnableSubMenu(MENU_CHANNELGROUP, ::GetMenuItemCount(hmenuChannelGroup) > 0);
 
 	for (int i = 0; (static_cast<unsigned int>(m_Filter) >> i) != 0; i++) {
 		if (((static_cast<unsigned int>(m_Filter) >> i) & 1) != 0)
-			::CheckMenuItem(hmenu, CM_PROGRAMGUIDE_FILTER_FIRST + i, MF_BYCOMMAND | MF_CHECKED);
+			Menu.CheckItem(CM_PROGRAMGUIDE_FILTER_FIRST + i, true);
 	}
 
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_SEARCH,
-		MF_BYCOMMAND | (m_ProgramSearch.IsCreated() ? MF_CHECKED : MF_UNCHECKED));
-	::EnableMenuItem(
-		hmenu, CM_PROGRAMGUIDE_CHANNELSETTINGS,
-		MF_BYCOMMAND |
-			(m_pChannelProvider != nullptr &&
-				m_pChannelProvider->GetChannelCount(m_CurrentChannelGroup) > 0 ? MF_ENABLED : MF_GRAYED));
-	::EnableMenuItem(
-		hmenu, CM_PROGRAMGUIDE_UPDATE,
-		MF_BYCOMMAND |
-			(!m_fEpgUpdating
-				&& m_pChannelProvider != nullptr
-				&& m_pChannelProvider->GetBonDriver(szText, lengthof(szText)) ? MF_ENABLED : MF_GRAYED));
-	::EnableMenuItem(
-		hmenu, CM_PROGRAMGUIDE_ENDUPDATE,
-		MF_BYCOMMAND | (m_fEpgUpdating ? MF_ENABLED : MF_GRAYED));
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_AUTOREFRESH,
-		MF_BYCOMMAND | (m_fAutoRefresh ? MF_CHECKED : MF_UNCHECKED));
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_ALWAYSONTOP,
-		MF_BYCOMMAND | (m_pFrame->GetAlwaysOnTop() ? MF_CHECKED : MF_UNCHECKED));
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_DRAGSCROLL,
-		MF_BYCOMMAND | (m_fDragScroll ? MF_CHECKED : MF_UNCHECKED));
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_POPUPEVENTINFO,
-		MF_BYCOMMAND | (m_fShowToolTip ? MF_CHECKED : MF_UNCHECKED));
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_SHOWFEATUREDMARK,
-		MF_BYCOMMAND | (m_fShowFeaturedMark ? MF_CHECKED : MF_UNCHECKED));
-	::CheckMenuItem(
-		hmenu, CM_PROGRAMGUIDE_KEEPTIMEPOS,
-		MF_BYCOMMAND | (m_fKeepTimePos ? MF_CHECKED : MF_UNCHECKED));
-	::EnableMenuItem(
-		hmenu, CM_PROGRAMGUIDE_IEPGASSOCIATE,
-		MF_BYCOMMAND | (m_CurEventItem.fSelected ? MF_ENABLED : MF_GRAYED));
-	::EnableMenuItem(
-		hmenu, CM_PROGRAMGUIDE_ADDTOFAVORITES,
-		MF_BYCOMMAND | (m_pChannelProvider != nullptr ? MF_ENABLED : MF_GRAYED));
+	Menu.CheckItem(CM_PROGRAMGUIDE_SEARCH, m_ProgramSearch.IsCreated());
+	Menu.EnableItem(
+		CM_PROGRAMGUIDE_CHANNELSETTINGS,
+		m_pChannelProvider != nullptr &&
+			m_pChannelProvider->GetChannelCount(m_CurrentChannelGroup) > 0);
+	Menu.EnableItem(
+		CM_PROGRAMGUIDE_UPDATE,
+		!m_fEpgUpdating
+			&& m_pChannelProvider != nullptr
+			&& m_pChannelProvider->GetBonDriver(szText, lengthof(szText)));
+	Menu.EnableItem(CM_PROGRAMGUIDE_ENDUPDATE, m_fEpgUpdating);
+	Menu.CheckItem(CM_PROGRAMGUIDE_AUTOREFRESH, m_fAutoRefresh);
+	Menu.CheckItem(CM_PROGRAMGUIDE_ALWAYSONTOP, m_pFrame->GetAlwaysOnTop());
+	Menu.CheckItem(CM_PROGRAMGUIDE_DRAGSCROLL, m_fDragScroll);
+	Menu.CheckItem(CM_PROGRAMGUIDE_POPUPEVENTINFO, m_fShowToolTip);
+	Menu.CheckItem(CM_PROGRAMGUIDE_SHOWFEATUREDMARK, m_fShowFeaturedMark);
+	Menu.CheckItem(CM_PROGRAMGUIDE_KEEPTIMEPOS, m_fKeepTimePos);
+	Menu.EnableItem(CM_PROGRAMGUIDE_IEPGASSOCIATE, m_CurEventItem.fSelected);
+	Menu.EnableItem(CM_PROGRAMGUIDE_ADDTOFAVORITES, m_pChannelProvider != nullptr);
 
 	if (m_CurEventItem.fSelected) {
 		if (m_pProgramCustomizer != nullptr) {
@@ -5020,8 +4996,7 @@ void CProgramGuide::ShowPopupMenu(int x, int y)
 		m_pFrame->OnMenuInitialize(hmenuPopup);
 
 	::ClientToScreen(m_hwnd, &pt);
-	::TrackPopupMenu(hmenuPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0, m_hwnd, nullptr);
-	::DestroyMenu(hmenu);
+	Menu.Show(m_hwnd, &pt);
 }
 
 
@@ -5359,14 +5334,14 @@ bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
 	const CSearchEventInfo *pEventInfo)
 {
 	// 検索結果の一覧の右クリックメニューを表示
-	const HMENU hmenu = ::LoadMenu(GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDM_PROGRAMSEARCH));
-	const HMENU hmenuPopup = ::GetSubMenu(hmenu, 0);
+	CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_PROGRAMSEARCH);
+	const HMENU hmenuPopup = Menu.GetPopupHandle();
 
 	if (m_pProgramGuide->IsExcludeService(
 				pEventInfo->NetworkID,
 				pEventInfo->TransportStreamID,
 				pEventInfo->ServiceID))
-		::EnableMenuItem(hmenu, CM_PROGRAMGUIDE_JUMPEVENT, MF_BYCOMMAND | MF_GRAYED);
+		Menu.EnableItem(CM_PROGRAMGUIDE_JUMPEVENT, false);
 
 	if (m_pProgramGuide->m_pProgramCustomizer != nullptr) {
 		const POINT pt = {50, 50};
@@ -5377,13 +5352,8 @@ bool CProgramGuide::CProgramSearchEventHandler::OnRButtonClick(
 
 	m_pProgramGuide->AppendToolMenu(hmenuPopup);
 
-	POINT pt;
-	::GetCursorPos(&pt);
-	const int Command = ::TrackPopupMenu(
-		hmenuPopup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
-		pt.x, pt.y, 0, m_pProgramGuide->GetHandle(), nullptr);
-	::DestroyMenu(hmenu);
-
+	const int Command = Menu.Show(
+		m_pProgramGuide->GetHandle(), nullptr, TPM_RETURNCMD | TPM_RIGHTBUTTON);
 	if (Command > 0) {
 		DoCommand(Command, pEventInfo);
 	}
@@ -7313,15 +7283,11 @@ LRESULT CProgramGuideFrameBase::DefaultMessageHandler(HWND hwnd, UINT uMsg, WPAR
 			POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 			::ClientToScreen(hwnd, &pt);
 
-			const HMENU hmenu = ::LoadMenu(
-				GetAppClass().GetResourceInstance(),
-				MAKEINTRESOURCE(IDM_PROGRAMGUIDETOOLBAR));
-			const HMENU hmenuPopup = ::GetSubMenu(hmenu, 0);
-			OnMenuInitialize(hmenuPopup);
-			::TrackPopupMenu(
-				hmenuPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0,
-				m_pProgramGuide->GetHandle(), nullptr);
-			::DestroyMenu(hmenu);
+			CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_PROGRAMGUIDETOOLBAR);
+
+			OnMenuInitialize(Menu.GetPopupHandle());
+
+			Menu.Show(m_pProgramGuide->GetHandle(), &pt);
 		}
 		return 0;
 

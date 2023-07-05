@@ -639,55 +639,44 @@ INT_PTR CColorSchemeOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 			case LBN_EX_RBUTTONUP:
 				{
-					const HMENU hmenu = ::LoadMenu(GetAppClass().GetResourceInstance(), MAKEINTRESOURCE(IDM_COLORSCHEME));
+					CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_COLORSCHEME);
 
-					::EnableMenuItem(
-						hmenu, IDC_COLORSCHEME_SELECTSAMECOLOR,
-						MF_BYCOMMAND | (m_ColorPalette.GetSel() >= 0 ? MFS_ENABLED : MFS_GRAYED));
+					Menu.EnableItem(IDC_COLORSCHEME_SELECTSAMECOLOR, m_ColorPalette.GetSel() >= 0);
 					if (DlgListBox_GetSelCount(hDlg, IDC_COLORSCHEME_LIST) == 1) {
 						int Sel;
 
 						DlgListBox_GetSelItems(hDlg, IDC_COLORSCHEME_LIST, &Sel, 1);
 						const int Gradient = CColorScheme::GetColorGradient(Sel);
 						if (Gradient >= 0) {
-							::EnableMenuItem(::GetSubMenu(hmenu, 0), 2, MF_BYPOSITION | MFS_ENABLED);
-							::CheckMenuRadioItem(
-								hmenu,
+							Menu.EnableSubMenu(2, true);
+							Menu.CheckRadioItem(
 								IDC_COLORSCHEME_GRADIENT_NORMAL, IDC_COLORSCHEME_GRADIENT_INTERLACED,
-								IDC_COLORSCHEME_GRADIENT_NORMAL + static_cast<int>(m_GradientList[Gradient].Type),
-								MF_BYCOMMAND);
-							::EnableMenuItem(::GetSubMenu(hmenu, 0), 3, MF_BYPOSITION | MFS_ENABLED);
-							::CheckMenuRadioItem(
-								hmenu,
+								IDC_COLORSCHEME_GRADIENT_NORMAL + static_cast<int>(m_GradientList[Gradient].Type));
+							Menu.EnableSubMenu(3, true);
+							Menu.CheckRadioItem(
 								IDC_COLORSCHEME_DIRECTION_HORZ, IDC_COLORSCHEME_DIRECTION_VERTMIRROR,
-								IDC_COLORSCHEME_DIRECTION_HORZ + static_cast<int>(m_GradientList[Gradient].Direction),
-								MF_BYCOMMAND);
+								IDC_COLORSCHEME_DIRECTION_HORZ + static_cast<int>(m_GradientList[Gradient].Direction));
 							if (!CColorScheme::IsGradientDirectionEnabled(Gradient)) {
 								if (m_GradientList[Gradient].Direction == Theme::GradientDirection::Horz
 										|| m_GradientList[Gradient].Direction == Theme::GradientDirection::HorzMirror) {
-									::EnableMenuItem(hmenu, IDC_COLORSCHEME_DIRECTION_VERT, MF_BYCOMMAND | MFS_GRAYED);
-									::EnableMenuItem(hmenu, IDC_COLORSCHEME_DIRECTION_VERTMIRROR, MF_BYCOMMAND | MFS_GRAYED);
+									Menu.EnableItem(IDC_COLORSCHEME_DIRECTION_VERT, false);
+									Menu.EnableItem(IDC_COLORSCHEME_DIRECTION_VERTMIRROR, false);
 								} else {
-									::EnableMenuItem(hmenu, IDC_COLORSCHEME_DIRECTION_HORZ, MF_BYCOMMAND | MFS_GRAYED);
-									::EnableMenuItem(hmenu, IDC_COLORSCHEME_DIRECTION_HORZMIRROR, MF_BYCOMMAND | MFS_GRAYED);
+									Menu.EnableItem(IDC_COLORSCHEME_DIRECTION_HORZ, false);
+									Menu.EnableItem(IDC_COLORSCHEME_DIRECTION_HORZMIRROR, false);
 								}
 							}
 						}
 						const int Border = CColorScheme::GetColorBorder(Sel);
 						if (Border >= 0) {
-							::EnableMenuItem(::GetSubMenu(hmenu, 0), 4, MF_BYPOSITION | MFS_ENABLED);
-							::CheckMenuRadioItem(
-								hmenu,
+							Menu.EnableSubMenu(4, true);
+							Menu.CheckRadioItem(
 								IDC_COLORSCHEME_BORDER_NONE, IDC_COLORSCHEME_BORDER_RAISED,
-								IDC_COLORSCHEME_BORDER_NONE + static_cast<int>(m_BorderList[Border]),
-								MF_BYCOMMAND);
+								IDC_COLORSCHEME_BORDER_NONE + static_cast<int>(m_BorderList[Border]));
 						}
 					}
 
-					POINT pt;
-					::GetCursorPos(&pt);
-					::TrackPopupMenu(::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hDlg, nullptr);
-					::DestroyMenu(hmenu);
+					Menu.Show(hDlg);
 				}
 				break;
 			}

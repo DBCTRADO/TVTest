@@ -5943,24 +5943,13 @@ INT_PTR CPluginOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 					lvi.iItem = Sel;
 					lvi.iSubItem = 0;
 					if (ListView_GetItem(pnmh->hwndFrom, &lvi)) {
-						const HMENU hmenu =
-							::LoadMenu(
-								GetAppClass().GetResourceInstance(),
-								MAKEINTRESOURCE(IDM_PLUGIN));
 						const CPlugin *pPlugin = reinterpret_cast<const CPlugin*>(lvi.lParam);
-						POINT pt;
+						CPopupMenu Menu(GetAppClass().GetResourceInstance(), IDM_PLUGIN);
 
-						::EnableMenuItem(
-							hmenu, IDC_PLUGIN_SETTINGS,
-							pPlugin->HasSettings() ? MFS_ENABLED : MFS_GRAYED);
-						::EnableMenuItem(
-							hmenu, IDC_PLUGIN_UNLOAD,
-							pPlugin->CanUnload() ? MFS_ENABLED : MFS_GRAYED);
-						::GetCursorPos(&pt);
-						::TrackPopupMenu(
-							::GetSubMenu(hmenu, 0), TPM_RIGHTBUTTON,
-							pt.x, pt.y, 0, hDlg, nullptr);
-						::DestroyMenu(hmenu);
+						Menu.EnableItem(IDC_PLUGIN_SETTINGS, pPlugin->HasSettings());
+						Menu.EnableItem(IDC_PLUGIN_UNLOAD, pPlugin->CanUnload());
+
+						Menu.Show(hDlg);
 					}
 				}
 			}
