@@ -370,7 +370,7 @@ bool CInformationPanel::CreateProgramInfoEdit()
 		if (m_hwndProgramInfo == nullptr)
 			return false;
 		CRichEditUtil::DisableAutoFont(m_hwndProgramInfo);
-		::SendMessage(m_hwndProgramInfo, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_LINK);
+		::SendMessage(m_hwndProgramInfo, EM_SETEVENTMASK, 0, ENM_MOUSEEVENTS | ENM_KEYEVENTS | ENM_LINK);
 		::SendMessage(
 			m_hwndProgramInfo, EM_SETBKGNDCOLOR, 0,
 			static_cast<COLORREF>(m_Theme.ProgramInfoStyle.Back.Fill.GetSolidColor()));
@@ -560,6 +560,16 @@ LRESULT CInformationPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				switch (pMsgFilter->msg) {
 				case WM_RBUTTONUP:
 					EventInfoUtil::EventInfoContextMenu(hwnd, m_hwndProgramInfo);
+					break;
+
+				/*
+					複数行(リッチ)エディットコントロールは Esc キーが押されると親ウィンドウに WM_CLOSE をポストするため、
+					それによってウィンドウが破棄されてしまうので、Esc キーを処理させないようにする。
+				*/
+				case WM_KEYDOWN:
+				case WM_KEYUP:
+					if (pMsgFilter->wParam == VK_ESCAPE)
+						return 1;
 					break;
 
 				default:
@@ -887,6 +897,16 @@ LRESULT CInformationPanel::CProgramInfoSubclass::OnMessage(
 			}
 		}
 		return 0;
+
+	/*
+		複数行(リッチ)エディットコントロールは Esc キーが押されると親ウィンドウに WM_CLOSE をポストするため、
+		それによってウィンドウが破棄されてしまうので、Esc キーを処理させないようにする。
+	*/
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		if (wParam == VK_ESCAPE)
+			return 0;
+		break;
 
 	case WM_NCDESTROY:
 		m_pInfoPanel->m_hwndProgramInfo = nullptr;

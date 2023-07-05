@@ -722,6 +722,16 @@ LRESULT CCaptionPanel::CEditSubclass::OnMessage(
 		}
 		return 0;
 
+	/*
+		複数行(リッチ)エディットコントロールは Esc キーが押されると親ウィンドウに WM_CLOSE をポストするため、
+		それによってウィンドウが破棄されてしまうので、Esc キーを処理させないようにする。
+	*/
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		if (wParam == VK_ESCAPE)
+			return 0;
+		break;
+
 	case WM_NCDESTROY:
 		m_pCaptionPanel->m_hwndEdit = nullptr;
 		break;
