@@ -1284,6 +1284,14 @@ bool CPopupMenu::EnableItem(UINT ID, bool fEnable)
 }
 
 
+bool CPopupMenu::EnableSubMenu(UINT Pos, bool fEnable)
+{
+	if (m_hmenu == nullptr)
+		return false;
+	return ::EnableMenuItem(GetPopupHandle(), Pos, MF_BYPOSITION | (fEnable ? MF_ENABLED : MF_GRAYED)) >= 0;
+}
+
+
 bool CPopupMenu::CheckItem(UINT ID, bool fCheck)
 {
 	if (m_hmenu == nullptr)

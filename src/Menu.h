@@ -244,6 +244,7 @@ namespace TVTest
 		bool Append(HMENU hmenu, LPCTSTR pszText, UINT Flags = MF_ENABLED);
 		bool AppendSeparator();
 		bool EnableItem(UINT ID, bool fEnable);
+		bool EnableSubMenu(UINT Pos, bool fEnable);
 		bool CheckItem(UINT ID, bool fCheck);
 		bool CheckRadioItem(UINT FirstID, UINT LastID, UINT CheckID, UINT Flags = MF_BYCOMMAND);
 		HMENU GetSubMenu(int Pos) const;
