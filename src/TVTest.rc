@@ -722,6 +722,7 @@ BEGIN
     CM_OPTIONS,                     "設定"
     CM_CLOSE,                       "閉じる(待機/復帰)"
     CM_EXIT,                        "終了"
+    CM_SHOW,                        "ウィンドウを表示"
     CM_MENU,                        "メニュー"
     CM_ACTIVATE,                    "アクティブ化"
     CM_MINIMIZE,                    "最小化/元のサイズに戻す"

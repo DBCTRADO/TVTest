@@ -231,7 +231,7 @@ void CAppCommand::RegisterDefaultCommands()
 
 			{CM_CLOSE, TEXT("Close"), CCommandManager::BindHandler(&CAppCommand::Close, this)},
 			{CM_EXIT, TEXT("Exit"), CCommandManager::BindHandler(&CAppCommand::Exit, this)},
-			{CM_SHOW, nullptr, MainWindowHandler},
+			{CM_SHOW, TEXT("Show"), MainWindowHandler},
 
 			{CM_MENU, TEXT("Menu"), MainWindowHandler},
 
