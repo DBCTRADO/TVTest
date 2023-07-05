@@ -102,8 +102,6 @@ namespace TVTest
 		void Reserve(String &Str, size_t Size);
 		void Assign(String &Str, const String::value_type *pszSrc);
 		const String::value_type *GetCStrOrNull(const String &Str);
-		int Format(String &Str, LPCWSTR pszFormat, ...);
-		int FormatV(String &Str, LPCWSTR pszFormat, va_list Args);
 		int Compare(const String &String1, LPCWSTR pszString2);
 		int CompareNoCase(const String &String1, const String &String2);
 		int CompareNoCase(const String &String1, LPCWSTR pszString2);

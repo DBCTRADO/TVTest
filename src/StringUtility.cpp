@@ -149,38 +149,6 @@ const String::value_type *GetCStrOrNull(const String &Str)
 	return Str.c_str();
 }
 
-int Format(String &Str, LPCWSTR pszFormat, ...)
-{
-	va_list Args;
-	va_start(Args, pszFormat);
-	const int Length = FormatV(Str, pszFormat, Args);
-	va_end(Args);
-
-	return Length;
-}
-
-int FormatV(String &Str, LPCWSTR pszFormat, va_list Args)
-{
-	if (pszFormat == nullptr) {
-		Str.clear();
-		return 0;
-	}
-
-	va_list CopyArgs;
-	va_copy(CopyArgs, Args);
-	const int Length = ::_vscwprintf(pszFormat, Args);
-	if (Length <= 0) {
-		Str.clear();
-	} else {
-		Str.resize(Length + 1);
-		::_vsnwprintf_s(Str.data(), Str.length(), _TRUNCATE, pszFormat, CopyArgs);
-		Str.pop_back();
-	}
-	va_end(CopyArgs);
-
-	return static_cast<int>(Str.length());
-}
-
 int Compare(const String &String1, LPCWSTR pszString2)
 {
 	if (IsStringEmpty(pszString2)) {
