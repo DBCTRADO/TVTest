@@ -344,9 +344,9 @@ HMENU CreatePopupMenuFromControls(HWND hDlg, const int *pIDList, int IDListLengt
 			const HWND hwnd = GetDlgItem(hDlg, pIDList[i]);
 			TCHAR szText[256];
 			GetWindowText(hwnd, szText, lengthof(szText));
-			unsigned int Flags = MFT_STRING;
+			unsigned int Flags = MF_STRING;
 			if (!IsWindowEnabled(hwnd))
-				Flags |= MFS_GRAYED;
+				Flags |= MF_GRAYED;
 			AppendMenu(hmenu, Flags, pIDList[i], szText);
 		} else {
 			AppendMenu(hmenu, MF_SEPARATOR, 0, nullptr);

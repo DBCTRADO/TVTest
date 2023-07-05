@@ -330,7 +330,7 @@ void CAccelerator::SetMenuAccelText(HMENU hmenu, int Command)
 		*p = '\0';
 	ModifyMenu(
 		hmenu, Command,
-		MF_BYCOMMAND | MFT_STRING | GetMenuState(hmenu, Command, MF_BYCOMMAND),
+		MF_BYCOMMAND | MF_STRING | GetMenuState(hmenu, Command, MF_BYCOMMAND),
 		Command, szText);
 }
 

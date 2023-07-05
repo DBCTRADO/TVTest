@@ -187,9 +187,9 @@ bool CMainMenu::PopupSubMenu(
 void CMainMenu::EnableItem(UINT ID, bool fEnable)
 {
 	if (m_hmenuPopup != nullptr) {
-		::EnableMenuItem(m_hmenuPopup, ID, MF_BYCOMMAND | (fEnable ? MFS_ENABLED : MFS_GRAYED));
+		::EnableMenuItem(m_hmenuPopup, ID, MF_BYCOMMAND | (fEnable ? MF_ENABLED : MF_GRAYED));
 		if (m_hmenuShow != nullptr && m_hmenuShow != m_hmenuPopup)
-			::EnableMenuItem(m_hmenuShow, ID, MF_BYCOMMAND | (fEnable ? MFS_ENABLED : MFS_GRAYED));
+			::EnableMenuItem(m_hmenuShow, ID, MF_BYCOMMAND | (fEnable ? MF_ENABLED : MF_GRAYED));
 	}
 }
 
@@ -197,9 +197,9 @@ void CMainMenu::EnableItem(UINT ID, bool fEnable)
 void CMainMenu::CheckItem(UINT ID, bool fCheck)
 {
 	if (m_hmenuPopup != nullptr) {
-		::CheckMenuItem(m_hmenuPopup, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED));
+		::CheckMenuItem(m_hmenuPopup, ID, MF_BYCOMMAND | (fCheck ? MF_CHECKED : MF_UNCHECKED));
 		if (m_hmenuShow != nullptr && m_hmenuShow != m_hmenuPopup)
-			::CheckMenuItem(m_hmenuShow, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED));
+			::CheckMenuItem(m_hmenuShow, ID, MF_BYCOMMAND | (fCheck ? MF_CHECKED : MF_UNCHECKED));
 	}
 }
 
@@ -1280,7 +1280,7 @@ bool CPopupMenu::EnableItem(UINT ID, bool fEnable)
 {
 	if (m_hmenu == nullptr)
 		return false;
-	return ::EnableMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fEnable ? MFS_ENABLED : MFS_GRAYED)) >= 0;
+	return ::EnableMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fEnable ? MF_ENABLED : MF_GRAYED)) >= 0;
 }
 
 
@@ -1296,7 +1296,7 @@ bool CPopupMenu::CheckItem(UINT ID, bool fCheck)
 {
 	if (m_hmenu == nullptr)
 		return false;
-	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MFS_CHECKED : MFS_UNCHECKED)) != static_cast<DWORD>(-1);
+	return ::CheckMenuItem(m_hmenu, ID, MF_BYCOMMAND | (fCheck ? MF_CHECKED : MF_UNCHECKED)) != static_cast<DWORD>(-1);
 }
 
 
