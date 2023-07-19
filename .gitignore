@@ -403,3 +403,5 @@ FodyWeavers.xsd
 [Rr]elease_[Mm][Dd]/
 TVTestVersionHash.h
 TVTest.chm
+!/src/TVTest_Image/libpng/arm/
+!/src/TVTest_Image/zlib/win32/
