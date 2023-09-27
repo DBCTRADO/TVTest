@@ -724,7 +724,7 @@ bool CServiceInfo::SaveiEpgFile(const LibISDB::EventInfo *pEventInfo, LPCTSTR ps
 			break;
 		}
 		char szStation[16];
-		StringFormat(
+		StringVFormat(
 			szStation,
 			pszStationFormat, m_ServiceInfo.ServiceID);
 		Length = static_cast<DWORD>(StringFormat(

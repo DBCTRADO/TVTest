@@ -74,7 +74,7 @@ namespace TVTest
 		bool Create(HWND hwndOwner) override;
 
 	// CLogger
-		template<typename... TArgs> bool AddLog(CLogItem::LogType Type, StringView Format, const TArgs&... Args)
+		template<typename... TArgs> bool AddLog(CLogItem::LogType Type, StringView Format, TArgs&&... Args)
 		{
 			return AddLogV(Type, Format, MakeFormatArgs(Args...));
 		}

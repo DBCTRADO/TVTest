@@ -235,11 +235,11 @@ namespace TVTest
 		LPCTSTR GetIniFileName() const { return m_IniFileName.c_str(); }
 		LPCTSTR GetFavoritesFileName() const { return m_FavoritesFileName.c_str(); }
 
-		template<typename... TArgs> void AddLog(CLogItem::LogType Type, StringView Format, const TArgs&... Args)
+		template<typename... TArgs> void AddLog(CLogItem::LogType Type, StringView Format, TArgs&&... Args)
 		{
 			Logger.AddLog(Type, Format, Args...);
 		}
-		template<typename... TArgs> void AddLog(StringView Format, const TArgs&... Args)
+		template<typename... TArgs> void AddLog(StringView Format, TArgs&&... Args)
 		{
 			Logger.AddLog(CLogItem::LogType::Information, Format, Args...);
 		}

@@ -139,7 +139,7 @@ namespace TVTest
 		LPCTSTR GetString() const { return m_pBuffer; }
 		void Clear();
 		void Append(LPCTSTR pszString);
-		template<typename... TArgs> void AppendFormat(StringView Format, const TArgs&... Args)
+		template<typename... TArgs> void AppendFormat(StringView Format, TArgs&&... Args)
 		{
 			AppendFormatV(Format, MakeFormatArgs(Args...));
 		}

@@ -796,7 +796,7 @@ bool MakeUniqueFileName(String *pFileName, size_t MaxLength, LPCTSTR pszNumberFo
 
 			TCHAR szNumber[16];
 
-			StringFormat(szNumber, pszNumberFormat, i);
+			StringVFormat(szNumber, pszNumberFormat, i);
 			Name = BaseName;
 			Name += szNumber;
 			Name += pszExtension;

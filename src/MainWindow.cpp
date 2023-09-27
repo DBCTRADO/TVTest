@@ -3166,7 +3166,7 @@ bool CMainWindow::OnInitMenuPopup(HMENU hmenu)
 							Length += StringFormat(pszText + Length, MaxText - Length, TEXT("+{}"), szLang2);
 						}
 					} else if (Info.IsDualMono()) {
-						Length = StringFormat(
+						Length = StringVFormat(
 							pszText, MaxText,
 							Info.DualMono == CAudioManager::DualMonoMode::Main ?
 								TEXT("主音声") :

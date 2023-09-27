@@ -116,7 +116,7 @@ int FormatEventTime(
 		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("{:02}:{:02}") : TEXT("{}:{:02}");
 	TCHAR szStartTime[32], szEndTime[32];
 
-	StringFormat(
+	StringVFormat(
 		szStartTime,
 		pszTimeFormat,
 		stStart.wHour,
@@ -127,7 +127,7 @@ int FormatEventTime(
 		if (Duration > 0) {
 			SYSTEMTIME EndTime = stStart;
 			if (OffsetSystemTime(&EndTime, Duration * TimeConsts::SYSTEMTIME_SECOND)) {
-				StringFormat(
+				StringVFormat(
 					szEndTime, pszTimeFormat,
 					EndTime.wHour, EndTime.wMinute);
 			}

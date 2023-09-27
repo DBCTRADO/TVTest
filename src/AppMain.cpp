@@ -1325,7 +1325,7 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 	}
 
 	if (!::PathIsDirectory(szPath)) {
-		StringFormat(szMessage, pszMessage, szPath);
+		StringVFormat(szMessage, pszMessage, szPath);
 		if (::MessageBox(
 					hwnd, szMessage, TEXT("フォルダ作成の確認"),
 					MB_YESNO | MB_ICONINFORMATION) != IDYES)

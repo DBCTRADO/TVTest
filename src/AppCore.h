@@ -78,7 +78,7 @@ namespace TVTest
 		CAppCore(const CAppCore &) = delete;
 		CAppCore &operator=(const CAppCore &) = delete;
 
-		template<typename... TArgs> void OnError(StringView Format, const TArgs&... Args)
+		template<typename... TArgs> void OnError(StringView Format, TArgs&&... Args)
 		{
 			return OnErrorV(Format, MakeFormatArgs(Args...));
 		}
