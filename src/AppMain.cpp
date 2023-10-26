@@ -1335,7 +1335,7 @@ CAppMain::CreateDirectoryResult CAppMain::CreateDirectory(
 		if (Result != ERROR_SUCCESS && Result != ERROR_ALREADY_EXISTS) {
 			StringFormat(
 				szMessage,
-				TEXT("フォルダ \"{}\" を作成できません。(エラーコード {{:#x})"), szPath, Result);
+				TEXT("フォルダ \"{}\" を作成できません。(エラーコード {:#x})"), szPath, Result);
 			AddLog(CLogItem::LogType::Error, szMessage);
 			::MessageBox(hwnd, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 			return CreateDirectoryResult::Error;
