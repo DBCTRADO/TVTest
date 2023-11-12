@@ -622,7 +622,7 @@ void CCaptionPanel::OnCaption(
 
 		String Buff(pText);
 
-		if (m_fIgnoreSmall && !pParser->Is1Seg()) {
+		if (m_fIgnoreSmall && !pParser->Is1Seg() && Lang.LanguageCode == LibISDB::LANGUAGE_CODE_JPN) {
 			for (int i = static_cast<int>(pFormatList->size()) - 1; i >= 0; i--) {
 				if ((*pFormatList)[i].Size == LibISDB::ARIBStringDecoder::CharSize::Small) {
 					const size_t Pos = (*pFormatList)[i].Pos;
