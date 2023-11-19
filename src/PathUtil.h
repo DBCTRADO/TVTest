@@ -84,7 +84,7 @@ namespace TVTest
 template<> struct std::formatter<TVTest::CFilePath, TCHAR>
 	: public std::formatter<TVTest::String, TCHAR>
 {
-	template<typename TContext> auto format(const TVTest::CFilePath &Value, TContext &Context)
+	template<typename TContext> auto format(const TVTest::CFilePath &Value, TContext &Context) const
 	{
 		return formatter<TVTest::String, TCHAR>::format(Value, Context);
 	}
