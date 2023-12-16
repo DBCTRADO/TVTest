@@ -120,9 +120,6 @@ bool CViewOptions::ReadSettings(CSettings &Settings)
 	StyleUtil::ReadFontSettings(Settings, TEXT("TitleBarFont"), &m_TitleBarFont);
 	Settings.Read(TEXT("ShowLogo"), &m_fShowLogo);
 	Settings.Read(TEXT("LogoFileName"), &m_LogoFileName);
-	Settings.Read(TEXT("NoScreenSaver"), &m_fNoScreenSaver);
-	Settings.Read(TEXT("NoMonitorLowPower"), &m_fNoMonitorLowPower);
-	Settings.Read(TEXT("NoMonitorLowPowerActiveOnly"), &m_fNoMonitorLowPowerActiveOnly);
 
 	return true;
 }
@@ -153,9 +150,6 @@ bool CViewOptions::WriteSettings(CSettings &Settings)
 	StyleUtil::WriteFontSettings(Settings, TEXT("TitleBarFont"), m_TitleBarFont);
 	Settings.Write(TEXT("ShowLogo"), m_fShowLogo);
 	Settings.Write(TEXT("LogoFileName"), m_LogoFileName);
-	Settings.Write(TEXT("NoScreenSaver"), m_fNoScreenSaver);
-	Settings.Write(TEXT("NoMonitorLowPower"), m_fNoMonitorLowPower);
-	Settings.Write(TEXT("NoMonitorLowPowerActiveOnly"), m_fNoMonitorLowPowerActiveOnly);
 
 	return true;
 }
@@ -226,15 +220,7 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				hDlg, IDC_OPTIONS_LOGOFILENAME, IDC_OPTIONS_LOGOFILENAME_BROWSE,
 				m_fShowLogo);
 
-			// 抑止設定
-			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOSCREENSAVER, m_fNoScreenSaver);
-			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER, m_fNoMonitorLowPower);
-			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPowerActiveOnly);
-			EnableDlgItem(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPower);
-
 			AddControls({
-				{IDC_OPTIONS_WINDOW_SEPARATOR,           AlignFlag::Horz},
-				{IDC_OPTIONS_PREVENT_SEPARATOR,          AlignFlag::Horz},
 				{IDC_OPTIONS_TITLETEXTFORMAT,            AlignFlag::Horz},
 				{IDC_OPTIONS_TITLETEXTFORMAT_PARAMETERS, AlignFlag::Right},
 			});
@@ -316,12 +302,6 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				}
 			}
 			return TRUE;
-
-		case IDC_OPTIONS_NOMONITORLOWPOWER:
-			EnableDlgItemSyncCheckBox(
-				hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,
-				IDC_OPTIONS_NOMONITORLOWPOWER);
-			return TRUE;
 		}
 		return TRUE;
 
@@ -398,14 +378,6 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					App.UICore.SetTitleFont(Font);
 					App.Panel.Frame.GetPanel()->SetTitleFont(Font);
 				}
-
-				m_fNoScreenSaver =
-					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOSCREENSAVER);
-				m_fNoMonitorLowPower =
-					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER);
-				m_fNoMonitorLowPowerActiveOnly =
-					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY);
-				App.UICore.PreventDisplaySave(App.UICore.IsViewerEnabled());
 
 				m_fChanged = true;
 			}

@@ -79,9 +79,6 @@ namespace TVTest
 		const Style::Font &GetTitleBarFont() const { return m_TitleBarFont; }
 		bool GetShowLogo() const { return m_fShowLogo; }
 		LPCTSTR GetLogoFileName() const { return m_LogoFileName.c_str(); }
-		bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
-		bool GetNoMonitorLowPower() const { return m_fNoMonitorLowPower; }
-		bool GetNoMonitorLowPowerActiveOnly() const { return m_fNoMonitorLowPowerActiveOnly; }
 
 	private:
 	// CBasicDialog
@@ -107,10 +104,6 @@ namespace TVTest
 		Style::Font m_TitleBarFont;
 		bool m_fShowLogo = true;
 		String m_LogoFileName{APP_NAME TEXT("_Logo.bmp")};
-
-		bool m_fNoScreenSaver = false;
-		bool m_fNoMonitorLowPower = false;
-		bool m_fNoMonitorLowPowerActiveOnly = false;
 
 		Style::Font m_CurTitleBarFont;
 	};

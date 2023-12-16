@@ -2665,13 +2665,13 @@ bool CMainWindow::OnSysCommand(UINT Command)
 {
 	switch ((Command & 0xFFFFFFF0UL)) {
 	case SC_MONITORPOWER:
-		if (m_App.ViewOptions.GetNoMonitorLowPower()
+		if (m_App.GeneralOptions.GetNoMonitorLowPower()
 				&& m_pCore->IsViewerEnabled())
 			return true;
 		break;
 
 	case SC_SCREENSAVE:
-		if (m_App.ViewOptions.GetNoScreenSaver()
+		if (m_App.GeneralOptions.GetNoScreenSaver()
 				&& m_pCore->IsViewerEnabled())
 			return true;
 		break;
@@ -5655,13 +5655,13 @@ LRESULT CMainWindow::CFullscreen::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam,
 	case WM_SYSCOMMAND:
 		switch (wParam & 0xFFFFFFF0) {
 		case SC_MONITORPOWER:
-			if (m_App.ViewOptions.GetNoMonitorLowPower()
+			if (m_App.GeneralOptions.GetNoMonitorLowPower()
 					&& m_App.UICore.IsViewerEnabled())
 				return 0;
 			break;
 
 		case SC_SCREENSAVE:
-			if (m_App.ViewOptions.GetNoScreenSaver()
+			if (m_App.GeneralOptions.GetNoScreenSaver()
 					&& m_App.UICore.IsViewerEnabled())
 				return 0;
 			break;

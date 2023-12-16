@@ -882,9 +882,9 @@ bool CUICore::SetAlwaysOnTop(bool fTop)
 bool CUICore::PreventDisplaySave(bool fPrevent)
 {
 	if (fPrevent) {
-		const bool fNoScreenSaver = m_App.ViewOptions.GetNoScreenSaver();
-		const bool fNoMonitorLowPower = m_App.ViewOptions.GetNoMonitorLowPower();
-		const bool fNoMonitorLowPowerActiveOnly = m_App.ViewOptions.GetNoMonitorLowPowerActiveOnly();
+		const bool fNoScreenSaver = m_App.GeneralOptions.GetNoScreenSaver();
+		const bool fNoMonitorLowPower = m_App.GeneralOptions.GetNoMonitorLowPower();
+		const bool fNoMonitorLowPowerActiveOnly = m_App.GeneralOptions.GetNoMonitorLowPowerActiveOnly();
 
 		if (!fNoScreenSaver && m_fScreenSaverActiveOriginal) {
 			SystemParametersInfo(

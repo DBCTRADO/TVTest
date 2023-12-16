@@ -79,6 +79,9 @@ bool CGeneralOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("KeepSingleTask"), &m_fKeepSingleTask);
 	Settings.Read(TEXT("StandaloneProgramGuide"), &m_fStandaloneProgramGuide);
 	Settings.Read(TEXT("Enable1SegFallback"), &m_fEnable1SegFallback);
+	Settings.Read(TEXT("NoScreenSaver"), &m_fNoScreenSaver);
+	Settings.Read(TEXT("NoMonitorLowPower"), &m_fNoMonitorLowPower);
+	Settings.Read(TEXT("NoMonitorLowPowerActiveOnly"), &m_fNoMonitorLowPowerActiveOnly);
 
 	return true;
 }
@@ -94,6 +97,9 @@ bool CGeneralOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("KeepSingleTask"), m_fKeepSingleTask);
 	Settings.Write(TEXT("StandaloneProgramGuide"), m_fStandaloneProgramGuide);
 	Settings.Write(TEXT("Enable1SegFallback"), m_fEnable1SegFallback);
+	Settings.Write(TEXT("NoScreenSaver"), m_fNoScreenSaver);
+	Settings.Write(TEXT("NoMonitorLowPower"), m_fNoMonitorLowPower);
+	Settings.Write(TEXT("NoMonitorLowPowerActiveOnly"), m_fNoMonitorLowPowerActiveOnly);
 
 	return true;
 }
@@ -207,6 +213,12 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
 				App.TaskbarOptions.GetEnableJumpList());
 
+			// 抑止設定
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOSCREENSAVER, m_fNoScreenSaver);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER, m_fNoMonitorLowPower);
+			DlgCheckBox_Check(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPowerActiveOnly);
+			EnableDlgItem(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY, m_fNoMonitorLowPower);
+
 			AddControls({
 				{IDC_OPTIONS_DRIVERDIRECTORY,        AlignFlag::Horz},
 				{IDC_OPTIONS_DRIVERDIRECTORY_BROWSE, AlignFlag::Right},
@@ -278,6 +290,12 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				IDC_OPTIONS_JUMPLISTKEEPSINGLETASK,
 				IDC_OPTIONS_ENABLEJUMPLIST);
 			return TRUE;
+
+		case IDC_OPTIONS_NOMONITORLOWPOWER:
+			EnableDlgItemSyncCheckBox(
+				hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY,
+				IDC_OPTIONS_NOMONITORLOWPOWER);
+			return TRUE;
 		}
 		return TRUE;
 
@@ -332,6 +350,15 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				TaskbarOptions.SetJumpListKeepSingleTask(
 					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_JUMPLISTKEEPSINGLETASK));
 				TaskbarOptions.SetChanged();
+
+				m_fNoScreenSaver =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOSCREENSAVER);
+				m_fNoMonitorLowPower =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWER);
+				m_fNoMonitorLowPowerActiveOnly =
+					DlgCheckBox_IsChecked(hDlg, IDC_OPTIONS_NOMONITORLOWPOWERACTIVEONLY);
+				CAppMain &App = GetAppClass();
+				App.UICore.PreventDisplaySave(App.UICore.IsViewerEnabled());
 
 				m_fChanged = true;
 			}

@@ -60,6 +60,10 @@ namespace TVTest
 		bool GetKeepSingleTask() const;
 		bool GetStandaloneProgramGuide() const { return m_fStandaloneProgramGuide; }
 
+		bool GetNoScreenSaver() const { return m_fNoScreenSaver; }
+		bool GetNoMonitorLowPower() const { return m_fNoMonitorLowPower; }
+		bool GetNoMonitorLowPowerActiveOnly() const { return m_fNoMonitorLowPowerActiveOnly; }
+
 	private:
 	// CBasicDialog
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
@@ -77,6 +81,10 @@ namespace TVTest
 		bool m_fKeepSingleTask = false;
 		bool m_fStandaloneProgramGuide = false;
 		bool m_fEnable1SegFallback = true;
+
+		bool m_fNoScreenSaver = false;
+		bool m_fNoMonitorLowPower = false;
+		bool m_fNoMonitorLowPowerActiveOnly = false;
 	};
 
 }	// namespace TVTest
