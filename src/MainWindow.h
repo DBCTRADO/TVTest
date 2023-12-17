@@ -215,6 +215,7 @@ namespace TVTest
 			Style::Margins ScreenMargin{0, 0, 0, 0};
 			Style::Margins FullscreenMargin{0, 0, 0, 0};
 			Style::Margins ResizingMargin;
+			String WindowCornerStyle;
 			bool fAllowDarkMode = true;
 
 			MainWindowStyle();

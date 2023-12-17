@@ -19,6 +19,7 @@
 
 
 #include "stdafx.h"
+#include <dwmapi.h>
 #include "TVTest.h"
 #include "AppMain.h"
 #include "AboutDialog.h"
@@ -1630,6 +1631,28 @@ bool CMainWindow::OnNCCreate(const CREATESTRUCT *pcs)
 bool CMainWindow::OnCreate(const CREATESTRUCT *pcs)
 {
 	InitializeUI();
+
+	// ウィンドウの角を丸くするかの設定
+	// Windows 11 で標準のウィンドウ枠を使う場合のみ有効
+	if (!m_Style.WindowCornerStyle.empty() && Util::OS::IsWindows11OrLater()) {
+		static const struct {
+			LPCWSTR pszStyle;
+			DWM_WINDOW_CORNER_PREFERENCE CornerPreference;
+		} CornerStyleList[] = {
+			{TEXT("square"),      DWMWCP_DONOTROUND},
+			{TEXT("round"),       DWMWCP_ROUND},
+			{TEXT("small-round"), DWMWCP_ROUNDSMALL},
+		};
+
+		for (auto &Style : CornerStyleList) {
+			if (StringUtility::IsEqualNoCase(m_Style.WindowCornerStyle, Style.pszStyle)) {
+				::DwmSetWindowAttribute(
+					m_hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+					&Style.CornerPreference, sizeof(DWMWA_WINDOW_CORNER_PREFERENCE));
+				break;
+			}
+		}
+	}
 
 	if (m_Style.fAllowDarkMode && SetWindowAllowDarkMode(m_hwnd, true)) {
 		m_fAllowDarkMode = true;
@@ -6374,6 +6397,7 @@ void CMainWindow::MainWindowStyle::SetStyle(const Style::CStyleManager *pStyleMa
 	pStyleManager->Get(TEXT("screen.margin"), &ScreenMargin);
 	pStyleManager->Get(TEXT("fullscreen.margin"), &FullscreenMargin);
 	pStyleManager->Get(TEXT("main-window.resizing-margin"), &ResizingMargin);
+	pStyleManager->Get(TEXT("main-window.corner.style"), &WindowCornerStyle);
 	pStyleManager->Get(TEXT("main-window.allow-dark-mode"), &fAllowDarkMode);
 }
 
