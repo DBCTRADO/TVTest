@@ -70,7 +70,7 @@ INT_PTR CTSProcessorOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 
 			m_TunerMapListView.Attach(::GetDlgItem(hDlg, IDC_TSPROCESSOR_TUNERMAP));
 			m_TunerMapListView.SetExtendedStyle(
-				LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES);
+				LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
 			static const struct {
 				LPCTSTR pszText;
 				int Format;

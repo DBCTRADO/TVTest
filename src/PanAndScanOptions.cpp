@@ -343,7 +343,9 @@ INT_PTR CPanAndScanOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
 			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PANANDSCAN_LIST);
 
-			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(
+				hwndList,
+				LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 
 			LVCOLUMN lvc;

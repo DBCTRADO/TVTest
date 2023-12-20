@@ -497,7 +497,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			DlgCheckBox_Check(hDlg, IDC_SIDEBAR_SHOWCHANNELLOGO, m_fShowChannelLogo);
 
 			HWND hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_ITEMLIST);
-			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(
+				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 			m_himlIcons = CreateIconImageList();
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
@@ -513,7 +514,8 @@ INT_PTR CSideBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SetItemList(hwndList, &m_ItemList[0], static_cast<int>(m_ItemList.size()));
 
 			hwndList = ::GetDlgItem(hDlg, IDC_SIDEBAR_COMMANDLIST);
-			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(
+				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 			ListView_SetImageList(hwndList, m_himlIcons, LVSIL_SMALL);
 			::GetClientRect(hwndList, &rc);

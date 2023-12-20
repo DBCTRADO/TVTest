@@ -775,7 +775,7 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			const HWND hwndList = ::GetDlgItem(hDlg, IDC_CHANNELSCAN_CHANNELLIST);
 			ListView_SetExtendedListViewStyle(
 				hwndList,
-				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP | LVS_EX_GRIDLINES);
+				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP | LVS_EX_GRIDLINES | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 
 			const HDC hdc = ::GetDC(hwndList);

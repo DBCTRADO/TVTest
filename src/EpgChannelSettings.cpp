@@ -60,7 +60,7 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 			::SetWindowTheme(hwndList, L"explorer", nullptr);
 			ListView_SetExtendedListViewStyle(
 				hwndList,
-				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
+				LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 
 			const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, m_CurrentDPI);

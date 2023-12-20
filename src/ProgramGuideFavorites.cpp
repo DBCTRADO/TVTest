@@ -188,7 +188,7 @@ INT_PTR CProgramGuideFavoritesDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wPara
 
 			m_fChanging = true;
 
-			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT);
+			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_TEXT | LVCF_SUBITEM;
 			lvc.fmt = LVCFMT_LEFT;

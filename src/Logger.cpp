@@ -392,7 +392,8 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			const HWND hwndList = GetDlgItem(hDlg, IDC_LOG_LIST);
 
 			ListView_SetExtendedListViewStyle(
-				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES);
+				hwndList,
+				LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_SUBITEMIMAGES | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 
 			static const LPCTSTR IconList[] = {

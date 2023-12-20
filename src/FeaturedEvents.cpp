@@ -237,7 +237,8 @@ static void InitServiceListView(
 {
 	::SetWindowTheme(hwndList, L"explorer", nullptr);
 	ListView_SetExtendedListViewStyle(
-		hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+		hwndList,
+		LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
 
 	const int IconWidth = GetSystemMetricsWithDPI(SM_CXSMICON, DPI);
 	const int IconHeight = GetSystemMetricsWithDPI(SM_CYSMICON, DPI);
@@ -650,7 +651,8 @@ INT_PTR CFeaturedEventsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 			const HWND hwndList = ::GetDlgItem(hDlg, IDC_FEATUREDEVENTS_SEARCHSETTINGSLIST);
 
 			ListView_SetExtendedListViewStyle(
-				hwndList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+				hwndList,
+				LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 
 			LVCOLUMN lvc;

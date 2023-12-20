@@ -785,7 +785,7 @@ INT_PTR CAccelerator::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		{
 			m_ListView.Attach(::GetDlgItem(hDlg, IDC_ACCELERATOR_LIST));
 			m_ListView.SetExtendedStyle(
-				LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP);
+				LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 
 			m_ListView.InsertColumn(COLUMN_COMMAND, TEXT("機能"));
 			m_ListView.InsertColumn(COLUMN_KEY, TEXT("キー"));

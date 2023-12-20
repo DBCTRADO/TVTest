@@ -1934,7 +1934,8 @@ INT_PTR CProgramSearchDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARA
 		// 検索結果一覧
 		{
 			const HWND hwndList = ::GetDlgItem(hDlg, IDC_PROGRAMSEARCH_RESULT);
-			ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+			ListView_SetExtendedListViewStyle(
+				hwndList, LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 			SetListViewTooltipsTopMost(hwndList);
 
 			bool fNeedFontSize = false;

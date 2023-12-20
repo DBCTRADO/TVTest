@@ -64,7 +64,8 @@ bool CListView::InitCheckList()
 		return false;
 
 	ListView_SetExtendedListViewStyle(
-		m_hwnd, LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
+		m_hwnd,
+		LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP | LVS_EX_DOUBLEBUFFER);
 
 	RECT rc;
 	::GetClientRect(m_hwnd, &rc);
