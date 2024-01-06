@@ -413,19 +413,28 @@ INT_PTR CLogger::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			ListView_SetImageList(hwndList, himl, LVSIL_SMALL);
 
-			// LVS_EX_SUBITEMIMAGES を指定すると、最初のカラムにもアイコン用のスペースが
-			// 確保されてしまうので、幅0のダミーのカラムを作成して回避する
+			/*
+				LVS_EX_SUBITEMIMAGES を指定すると、最初のカラムにもアイコン用のスペースが
+				確保されてしまうので、幅1でサイズ変更できないダミーのカラムを作成して回避する。
+				ただし、最初のカラムに LVCFMT_FIXED_WIDTH を指定しても無視されるため、
+				ダミーのダミーのカラムを最初に追加しておき、後で削除している。
+			*/
 			LVCOLUMN lvc;
 			lvc.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
 			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 0;
 			lvc.pszText = const_cast<LPTSTR>(TEXT(""));
-			ListView_InsertColumn(hwndList, COLUMN_DUMMY, &lvc);
+			ListView_InsertColumn(hwndList, COLUMN_DUMMY, &lvc); // ダミーのダミーを追加
+			lvc.fmt = LVCFMT_LEFT | LVCFMT_FIXED_WIDTH | LVCFMT_NO_DPI_SCALE;
+			lvc.cx = 1; // この幅を0にすると、最初の一回だけサイズ変更できる謎挙動になってしまう
+			ListView_InsertColumn(hwndList, COLUMN_DUMMY + 1, &lvc);
+			lvc.fmt = LVCFMT_LEFT;
 			lvc.cx = 80;
 			lvc.pszText = const_cast<LPTSTR>(TEXT("日時"));
-			ListView_InsertColumn(hwndList, COLUMN_TIME, &lvc);
+			ListView_InsertColumn(hwndList, COLUMN_TIME + 1, &lvc);
 			lvc.pszText = const_cast<LPTSTR>(TEXT("内容"));
-			ListView_InsertColumn(hwndList, COLUMN_TEXT, &lvc);
+			ListView_InsertColumn(hwndList, COLUMN_TEXT + 1, &lvc);
+			ListView_DeleteColumn(hwndList, COLUMN_DUMMY); // ダミーのダミーを削除
 
 			LVITEM lvi;
 			lvi.iItem = 0;
