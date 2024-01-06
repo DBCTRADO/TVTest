@@ -115,7 +115,9 @@ void CEventInfoPopup::UpdateEventInfo()
 		TCHAR szBuf[EpgUtil::MAX_EVENT_TIME_LENGTH];
 		if (EpgUtil::FormatEventTime(
 					m_EventInfo, szBuf, lengthof(szBuf),
-					EpgUtil::FormatEventTimeFlag::Date | EpgUtil::FormatEventTimeFlag::Year) > 0) {
+					EpgUtil::FormatEventTimeFlag::Date |
+					EpgUtil::FormatEventTimeFlag::Year |
+					EpgUtil::FormatEventTimeFlag::UndecidedText) > 0) {
 			Formatter.Append(szBuf);
 			Formatter.Append(TEXT("\r\n"));
 			TitleLines++;
