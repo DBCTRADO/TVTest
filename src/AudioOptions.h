@@ -45,6 +45,8 @@ namespace TVTest
 
 		typedef std::vector<AudioLanguageInfo> AudioLanguageList;
 
+		using AACDecoderType = LibISDB::ViewerFilter::AACDecoderType;
+
 		~CAudioOptions();
 
 	// CSettingsBase
@@ -59,6 +61,7 @@ namespace TVTest
 		const String & GetAudioDeviceName() const { return m_AudioDevice.FriendlyName; }
 		const String & GetAudioDeviceMoniker() const { return m_AudioDevice.MonikerName; }
 		LPCTSTR GetAudioFilterName() const { return StringUtility::GetCStrOrNull(m_AudioFilterName); }
+		AACDecoderType GetAACDecoder() const { return m_AACDecoder; }
 		const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &GetSpdifOptions() const { return m_SPDIFOptions; }
 		bool SetSpdifOptions(const LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions &Options);
 		bool GetDownMixSurround() const { return m_fDownMixSurround; }
@@ -90,6 +93,7 @@ namespace TVTest
 
 		FilterInfo m_AudioDevice;
 		String m_AudioFilterName;
+		AACDecoderType m_AACDecoder = AACDecoderType::Default;
 
 		LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions m_SPDIFOptions{
 			LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode::Disabled,

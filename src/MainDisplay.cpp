@@ -116,7 +116,7 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 			TEXT("映像なし") :
 			LibISDB::GetStreamTypeText(VideoStreamType));
 
-	const LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
+	LibISDB::ViewerFilter *pViewer = m_App.CoreEngine.GetFilter<LibISDB::ViewerFilter>();
 	if (pViewer == nullptr)
 		return false;
 
@@ -131,6 +131,8 @@ bool CMainDisplay::BuildViewer(BYTE VideoStreamType)
 	OpenSettings.AudioDevice.MonikerName = m_App.AudioOptions.GetAudioDeviceMoniker();
 	if (m_App.AudioOptions.GetAudioFilterName() != nullptr)
 		OpenSettings.AudioFilterList.emplace_back(m_App.AudioOptions.GetAudioFilterName());
+
+	pViewer->SetAACDecoderType(m_App.AudioOptions.GetAACDecoder());
 
 	if (!m_App.CoreEngine.BuildMediaViewer(OpenSettings)) {
 		m_App.Core.OnError(&m_App.CoreEngine, TEXT("DirectShowの初期化ができません。"));

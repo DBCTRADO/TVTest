@@ -100,6 +100,9 @@ bool CAudioOptions::ReadSettings(CSettings &Settings)
 	Settings.Read(TEXT("AudioDevice"), &m_AudioDevice.FriendlyName);
 	Settings.Read(TEXT("AudioDeviceMoniker"), &m_AudioDevice.MonikerName);
 	Settings.Read(TEXT("AudioFilter"), &m_AudioFilterName);
+	int AACDecoder;
+	if (Settings.Read(TEXT("AACDecoder"), &AACDecoder))
+		m_AACDecoder = static_cast<AACDecoderType>(AACDecoder);
 	int SpdifMode;
 	if (Settings.Read(TEXT("SpdifMode"), &SpdifMode))
 		m_SPDIFOptions.Mode = static_cast<LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode>(SpdifMode);
@@ -163,6 +166,7 @@ bool CAudioOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("AudioDevice"), m_AudioDevice.FriendlyName);
 	Settings.Write(TEXT("AudioDeviceMoniker"), m_AudioDevice.MonikerName);
 	Settings.Write(TEXT("AudioFilter"), m_AudioFilterName);
+	Settings.Write(TEXT("AACDecoder"), static_cast<int>(m_AACDecoder));
 	Settings.Write(TEXT("SpdifMode"), static_cast<int>(m_SPDIFOptions.Mode));
 	Settings.Write(TEXT("SpdifChannels"), m_SPDIFOptions.PassthroughChannels);
 	Settings.Write(TEXT("DownMixSurround"), m_fDownMixSurround);
@@ -233,6 +237,8 @@ bool CAudioOptions::ApplyMediaViewerOptions()
 
 	if (pViewer == nullptr)
 		return false;
+
+	pViewer->SetAACDecoderType(m_AACDecoder);
 
 	pViewer->SetDownMixSurround(m_fDownMixSurround);
 
@@ -324,6 +330,21 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_AUDIOFILTER, Sel);
+
+			for (int i = 0; ; i++) {
+				const AACDecoderType Type = static_cast<AACDecoderType>(i);
+				LPCTSTR pszDecoder = LibISDB::ViewerFilter::GetAACDecoderName(Type);
+				if (pszDecoder == nullptr)
+					break;
+				std::string Version;
+				LibISDB::ViewerFilter::GetAACDecoderVersion(Type, &Version);
+				WCHAR szVersionW[32];
+				::MultiByteToWideChar(CP_ACP, 0, Version.c_str(), -1, szVersionW, lengthof(szVersionW));
+				String Text;
+				StringFormat(&Text, TEXT("{} ({})"), pszDecoder, szVersionW);
+				DlgComboBox_AddString(hDlg, IDC_OPTIONS_AACDECODER, Text.c_str());
+			}
+			DlgComboBox_SetCurSel(hDlg, IDC_OPTIONS_AACDECODER, static_cast<int>(m_AACDecoder));
 
 			static const LPCTSTR SpdifModeList[] = {
 				TEXT("パススルー出力を行わない"),
@@ -502,6 +523,10 @@ INT_PTR CAudioOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					m_AudioFilterName = std::move(AudioFilter);
 					SetGeneralUpdateFlag(UPDATE_GENERAL_BUILDMEDIAVIEWER);
 				}
+
+				Sel = static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_OPTIONS_AACDECODER));
+				if (Sel >= 0)
+					m_AACDecoder = static_cast<AACDecoderType>(Sel);
 
 				LibISDB::DirectShow::AudioDecoderFilter::SPDIFOptions SPDIFOptions;
 				SPDIFOptions.Mode = static_cast<LibISDB::DirectShow::AudioDecoderFilter::SPDIFMode>(
