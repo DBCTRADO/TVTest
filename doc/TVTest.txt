@@ -60,17 +60,17 @@
   ドできません。
   TVTest のビルドには以下の SDK/ライブラリが必要になります。
 
-  ・Microsoft Windows SDK v10 以上
+  ・Microsoft Windows 11 SDK
   ・LibISDB                  https://github.com/DBCTRADO/LibISDB
+  ・FAAD2                    https://github.com/knik0/faad2
   ・Fraunhofer FDK AAC (*1)  https://github.com/mstorsjo/fdk-aac
-  ・FAAD2 (*1)               https://github.com/knik0/faad2
   ・libmad                   http://www.underbit.com/products/mad/
   ・liba52                   http://liba52.sourceforge.net/
   ・libjpeg (*2)             http://www.ijg.org/
   ・libpng (*2)              http://libpng.org/
   ・zlib (*2)                http://zlib.net/
 
-  (*1) ビルド時にいずれかを選択
+  (*1) オプション
   (*2) TVTest_Image.dll のビルドに必要
 
   必要なライブラリは TVTest / LibISDB のリポジトリに含まれています。
@@ -126,6 +126,8 @@
                         (テーマファイル *.httheme を配置する)
 
   (最低限 TVTest.exe と TVTest_Image.dll があれば動作はします)
+
+  ビルドで生成される以外のファイルは、data フォルダ内にあります。
 
   本体とプラグインをビルドした後、Git Bash で package.sh を実行すれば、必要なファ
   イルを集めたアーカイブを作成することができます。
@@ -378,6 +380,11 @@
 
   S/PDIF パススルー出力を行う場合、パソコンのサウンドデバイスが AAC のパススルー
   出力に対応している必要があります。
+
+  また、接続されているアンプなどの機器が AAC のデコードに対応している必要があり
+  ます。接続した機器が AAC に対応していない場合、大きな音でノイズが再生される可
+  能性があるので注意してください。
+
   パススルー出力を行いたい場合、設定の [再生] > [S/PDIFパススルー] で指定してく
   ださい。また、メニューの [音声切替] やステータスバーの音声の項目の右クリックメ
   ニューから、一時的にパススルーの有効/無効を切り替えることができます。
