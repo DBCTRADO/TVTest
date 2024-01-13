@@ -979,4 +979,4 @@ LRESULT CStatusOptions::CItemListSubclass::OnMessage(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

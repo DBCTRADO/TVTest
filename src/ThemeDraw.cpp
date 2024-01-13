@@ -129,6 +129,6 @@ bool CThemeDraw::Draw(const BorderStyle &Style, RECT *pRect)
 }
 
 
-}	// namespace Theme
+} // namespace Theme
 
-}	// namespace TVTest
+} // namespace TVTest

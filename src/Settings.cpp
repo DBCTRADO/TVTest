@@ -451,4 +451,4 @@ bool CSettingsBase::SaveSettings(LPCTSTR pszFileName)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -76,16 +76,16 @@ const LibISDB::DirectShow::AudioDecoderFilter::DownMixMatrix CAudioOptions::m_De
 };
 
 const DWORD CAudioOptions::m_AudioLanguageList[] = {
-	LibISDB::LANGUAGE_CODE_JPN,	// 日本語
-	LibISDB::LANGUAGE_CODE_ENG,	// 英語
-	LibISDB::LANGUAGE_CODE_DEU,	// ドイツ語
-	LibISDB::LANGUAGE_CODE_FRA,	// フランス語
-	LibISDB::LANGUAGE_CODE_ITA,	// イタリア語
-	LibISDB::LANGUAGE_CODE_KOR,	// 韓国語
-	LibISDB::LANGUAGE_CODE_RUS,	// ロシア語
-	LibISDB::LANGUAGE_CODE_SPA,	// スペイン語
-	LibISDB::LANGUAGE_CODE_ZHO,	// 中国語
-	LibISDB::LANGUAGE_CODE_ETC,	// その他
+	LibISDB::LANGUAGE_CODE_JPN, // 日本語
+	LibISDB::LANGUAGE_CODE_ENG, // 英語
+	LibISDB::LANGUAGE_CODE_DEU, // ドイツ語
+	LibISDB::LANGUAGE_CODE_FRA, // フランス語
+	LibISDB::LANGUAGE_CODE_ITA, // イタリア語
+	LibISDB::LANGUAGE_CODE_KOR, // 韓国語
+	LibISDB::LANGUAGE_CODE_RUS, // ロシア語
+	LibISDB::LANGUAGE_CODE_SPA, // スペイン語
+	LibISDB::LANGUAGE_CODE_ZHO, // 中国語
+	LibISDB::LANGUAGE_CODE_ETC, // その他
 };
 
 
@@ -741,4 +741,4 @@ void CAudioOptions::CSurroundOptionsDialog::SetDownMixMatrix(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -94,7 +94,7 @@ namespace TVTest
 		void DeleteAllTools();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

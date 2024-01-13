@@ -585,6 +585,6 @@ int CThemeManager::ParseStyleName(LPCTSTR pszName) const
 }
 
 
-}	// namespace Theme
+} // namespace Theme
 
-}	// namespace TVTest
+} // namespace TVTest

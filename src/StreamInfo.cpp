@@ -855,7 +855,7 @@ const CPIDInfoPage::ColumnInfo CPIDInfoPage::m_ColumnList[NUM_COLUMNS] = {
 	{TEXT("出力"),     TEXT("Output"),      9, LVCFMT_RIGHT},
 	{TEXT("ドロップ"), TEXT("Dropped"),     9, LVCFMT_RIGHT},
 	{TEXT("エラー"),   TEXT("Error"),       9, LVCFMT_RIGHT},
-//	{TEXT("暗号化"),   TEXT("Scrambled"),   9, LVCFMT_RIGHT},
+	//{TEXT("暗号化"),   TEXT("Scrambled"),   9, LVCFMT_RIGHT},
 	{TEXT("内容"),     TEXT("Description"), 0, LVCFMT_LEFT},
 };
 
@@ -1254,7 +1254,7 @@ int CALLBACK CPIDInfoPage::ItemCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lP
 }
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -1480,4 +1480,4 @@ void CStreamInfo::GetPagePosition(RECT *pPosition) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

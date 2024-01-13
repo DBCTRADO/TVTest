@@ -114,4 +114,4 @@ int CWheelCommandManager::ParseCommand(LPCTSTR pszCommand) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

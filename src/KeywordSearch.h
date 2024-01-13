@@ -49,7 +49,7 @@ namespace TVTest
 		std::vector<SearchEngineInfo> m_SearchEngineList;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

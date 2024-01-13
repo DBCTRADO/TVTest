@@ -219,4 +219,4 @@ void CTaskbarSharedProperties::TunerChannelInfoToRecentChannelInfo(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

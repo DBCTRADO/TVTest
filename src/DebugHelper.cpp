@@ -91,7 +91,7 @@ bool CDebugHelper::Initialize()
 			return false;
 		}
 	}
-#endif	// ENABLE_DEBUG_HELPER
+#endif // ENABLE_DEBUG_HELPER
 	return true;
 }
 
@@ -358,7 +358,7 @@ LONG WINAPI CDebugHelper::ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
 
 		//return EXCEPTION_EXECUTE_HANDLER;
 	}
-#endif	// ENABLE_DEBUG_HELPER
+#endif // ENABLE_DEBUG_HELPER
 
 	return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -416,7 +416,7 @@ int CDebugHelper::FormatSymbolFromAddress(
 	return Length;
 }
 
-#endif	// ENABLE_DEBUG_HELPER
+#endif // ENABLE_DEBUG_HELPER
 
 
-}	// namespace TVTest
+} // namespace TVTest

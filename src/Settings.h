@@ -113,7 +113,7 @@ namespace TVTest
 		bool m_fChanged = false;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

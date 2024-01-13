@@ -260,7 +260,7 @@ namespace TVTest
 		bool OnMenuSelected(int Command) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

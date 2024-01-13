@@ -276,7 +276,7 @@ namespace TVTest
 		void OnFeaturedEventsSettingsChanged(CFeaturedEvents &FeaturedEvents) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

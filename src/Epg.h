@@ -142,7 +142,7 @@ namespace TVTest
 		CChannelProviderManager m_ChannelProviderManager;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -85,7 +85,7 @@ namespace TVTest
 		CDisplayBase m_DisplayBase;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -432,4 +432,4 @@ void CInitialSettings::GetDecoderSetting(int ID, String *pDecoderName) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

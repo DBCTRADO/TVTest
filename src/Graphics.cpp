@@ -920,6 +920,6 @@ void CCanvas::SetTextRenderingHint(TextFlag Flags)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest
 
-}	// namespace Graphics
+} // namespace Graphics

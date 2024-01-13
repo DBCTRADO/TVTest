@@ -170,7 +170,7 @@ CServiceUpdateInfo::CServiceUpdateInfo(LibISDB::TSEngine *pEngine, LibISDB::Anal
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 

@@ -144,4 +144,4 @@ void CTextDrawClient::CDirectWriteEngine::Finalize()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

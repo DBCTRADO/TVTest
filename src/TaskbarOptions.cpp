@@ -72,7 +72,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 				break;
 			StringUtility::Trim(Command);
 			if (Command.empty()) {
-				m_TaskList.push_back(0);	// Separator
+				m_TaskList.push_back(0); // Separator
 			} else {
 				const int ID = CommandManager.ParseIDText(Command);
 				if (ID != 0)
@@ -87,7 +87,7 @@ bool CTaskbarOptions::ReadSettings(CSettings &Settings)
 
 bool CTaskbarOptions::WriteSettings(CSettings &Settings)
 {
-#if 0	// まだ設定インターフェースが無い
+#if 0 // まだ設定インターフェースが無い
 	Settings.Clear();
 
 	Settings.Write(TEXT("ShowTasks"), m_fShowTasks);
@@ -130,4 +130,4 @@ void CTaskbarOptions::SetEnableJumpList(bool fEnable)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

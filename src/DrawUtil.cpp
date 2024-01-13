@@ -1715,7 +1715,7 @@ bool COffscreen::CopyTo(HDC hdc, const RECT *pDstRect)
 }
 
 
-}	// namespace DrawUtil
+} // namespace DrawUtil
 
 
 
@@ -1896,4 +1896,4 @@ bool CUxTheme::GetTransitionDuration(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -1908,4 +1908,4 @@ INT_PTR CChannelScan::CScanDialog::DlgProc(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

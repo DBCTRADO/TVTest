@@ -65,7 +65,7 @@ namespace TVTest
 		static unsigned int __stdcall LoadThread(void *pParameter);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
-#endif	/* TVTEST_EPG_DATA_LOADER_H */
+#endif /* TVTEST_EPG_DATA_LOADER_H */

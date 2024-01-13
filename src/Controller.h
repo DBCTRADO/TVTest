@@ -162,7 +162,7 @@ namespace TVTest
 		CController *GetCurController() const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

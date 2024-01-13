@@ -358,4 +358,4 @@ bool CDriverManager::GetTunerSpec(LPCTSTR pszTunerName, TunerSpec *pSpec) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

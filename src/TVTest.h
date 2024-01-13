@@ -83,7 +83,7 @@ namespace TVTest
 #define DEFERRED_CHANNEL_FILE_EXTENSION TEXT(".ch1")
 
 
-#endif	// ndef RC_INVOKED
+#endif // ndef RC_INVOKED
 
 
-#endif	// ndef TVTEST_H
+#endif // ndef TVTEST_H

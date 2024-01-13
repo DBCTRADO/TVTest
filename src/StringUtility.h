@@ -189,7 +189,7 @@ namespace TVTest
 		return Str;
 	}
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

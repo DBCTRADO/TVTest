@@ -120,7 +120,7 @@ namespace TVTest
 		void MakeAudioList();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -138,7 +138,7 @@ namespace TVTest
 			const Style::CStyleScaling *pStyleScaling) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

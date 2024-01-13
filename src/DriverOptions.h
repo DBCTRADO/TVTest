@@ -115,7 +115,7 @@ namespace TVTest
 		CDriverSettings *GetCurSelDriverSettings() const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

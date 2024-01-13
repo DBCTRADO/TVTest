@@ -120,7 +120,7 @@ namespace TVTest
 		static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

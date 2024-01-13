@@ -120,7 +120,7 @@ namespace TVTest
 		bool m_fDarkMode = false;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

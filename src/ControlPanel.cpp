@@ -683,4 +683,4 @@ void CControlPanelItem::GetMenuPos(POINT *pPos) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

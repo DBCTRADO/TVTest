@@ -185,4 +185,4 @@ BOOL CALLBACK CPortQuery::EnumProc(HWND hwnd, LPARAM lParam)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -157,4 +157,4 @@ int CRawInput::KeyDataToIndex(int Data) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

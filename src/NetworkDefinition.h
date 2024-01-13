@@ -83,7 +83,7 @@ namespace TVTest
 		static const RemoteControlKeyIDAssignInfo m_DefaultKeyIDAssignList[];
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

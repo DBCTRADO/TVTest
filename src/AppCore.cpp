@@ -1532,4 +1532,4 @@ bool CAppCore::GetVariableStringEventInfo(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

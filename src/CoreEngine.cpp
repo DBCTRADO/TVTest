@@ -903,4 +903,4 @@ void CCoreEngine::OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::Reco
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

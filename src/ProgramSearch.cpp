@@ -2677,4 +2677,4 @@ bool CProgramSearchDialog::CEventHandler::Match(const LibISDB::EventInfo *pEvent
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -211,9 +211,9 @@ namespace TVTest
 			HWND hwnd, HFONT hfont, const IntValue &Extra = IntValue(),
 			TEXTMETRIC *pTextMetric = nullptr);
 
-	}	// namespace Style
+	} // namespace Style
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
-#endif	// ndef TVTEST_STYLE_H
+#endif // ndef TVTEST_STYLE_H

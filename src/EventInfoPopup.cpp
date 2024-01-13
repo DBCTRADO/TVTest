@@ -1061,4 +1061,4 @@ LRESULT CEventInfoPopupManager::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

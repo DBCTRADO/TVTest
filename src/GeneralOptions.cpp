@@ -371,4 +371,4 @@ INT_PTR CGeneralOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

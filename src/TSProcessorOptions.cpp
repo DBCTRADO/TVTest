@@ -705,4 +705,4 @@ INT_PTR CTSProcessorOptions::CTunerMapDialog::DlgProc(HWND hDlg, UINT uMsg, WPAR
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

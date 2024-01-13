@@ -326,4 +326,4 @@ void CListView::AdjustSingleColumnWidth()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

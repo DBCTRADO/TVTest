@@ -886,6 +886,6 @@ CLayoutBase::CEventHandler::~CEventHandler()
 }
 
 
-}	// namespace Layout
+} // namespace Layout
 
-}	// namespace TVTest
+} // namespace TVTest

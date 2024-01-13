@@ -86,7 +86,7 @@ namespace TVTest
 		bool TunerMapDialog(CTSProcessorManager::TunerFilterInfo *pInfo);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

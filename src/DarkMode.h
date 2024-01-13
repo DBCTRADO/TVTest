@@ -47,7 +47,7 @@ namespace TVTest
 	bool IsHighContrast();
 	bool IsDarkModeSettingChanged(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -1341,4 +1341,4 @@ INT_PTR CRecordManager::CRecordSettingsDialog::DlgProc(HWND hDlg, UINT uMsg, WPA
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

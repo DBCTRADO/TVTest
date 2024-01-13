@@ -463,4 +463,4 @@ CProgramGuideFavorites::FavoriteInfo *CProgramGuideFavoritesDialog::GetCurItemIn
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

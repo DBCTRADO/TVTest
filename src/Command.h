@@ -159,7 +159,7 @@ namespace TVTest
 		std::vector<CEventListener*> m_EventListenerList;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

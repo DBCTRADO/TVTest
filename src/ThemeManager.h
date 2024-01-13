@@ -133,9 +133,9 @@ namespace TVTest
 			static const StyleInfo m_StyleList[NUM_STYLES];
 		};
 
-	}	// namespace Theme
+	} // namespace Theme
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

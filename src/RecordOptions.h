@@ -91,7 +91,7 @@ namespace TVTest
 		int GetStatusBarRecordCommand() const { return m_StatusBarRecordCommand; }
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

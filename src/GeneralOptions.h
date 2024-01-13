@@ -87,7 +87,7 @@ namespace TVTest
 		bool m_fNoMonitorLowPowerActiveOnly = false;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

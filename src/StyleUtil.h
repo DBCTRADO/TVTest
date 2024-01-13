@@ -50,4 +50,4 @@ namespace TVTest
 }
 
 
-#endif	// ndef TVTEST_STYLE_UTIL_H
+#endif // ndef TVTEST_STYLE_UTIL_H

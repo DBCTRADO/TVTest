@@ -798,4 +798,4 @@ void CSideBar::SideBarStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

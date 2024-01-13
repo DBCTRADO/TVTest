@@ -223,4 +223,4 @@ void CProgramGuideToolbarOptions::UpdateItemState()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

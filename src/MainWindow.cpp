@@ -34,7 +34,7 @@
 #include "resource.h"
 #include "Common/DebugDef.h"
 
-#pragma comment(lib,"imm32.lib")	// for ImmAssociateContext(Ex)
+#pragma comment(lib,"imm32.lib") // for ImmAssociateContext(Ex)
 
 
 namespace TVTest
@@ -455,7 +455,7 @@ bool CMainWindow::ReadSettings(CSettings &Settings)
 		m_ThinFrameWidth = std::max(Value, 1);
 	Value = FRAME_NORMAL;
 	if (!Settings.Read(TEXT("FrameType"), &Value)) {
-		if (Settings.Read(TEXT("ThinFrame"), &f) && f)	// 以前のバージョンとの互換用
+		if (Settings.Read(TEXT("ThinFrame"), &f) && f) // 以前のバージョンとの互換用
 			Value = FRAME_CUSTOM;
 	}
 	SetCustomFrame(Value != FRAME_NORMAL, Value == FRAME_CUSTOM ? m_ThinFrameWidth : 0);
@@ -487,7 +487,7 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("AlwaysOnTop"), m_pCore->GetAlwaysOnTop());
 	Settings.Write(TEXT("ShowStatusBar"), m_fShowStatusBar);
 	Settings.Write(TEXT("ShowTitleBar"), m_fShowTitleBar);
-//	Settings.Write(TEXT("PopupTitleBar"), m_fPopupTitleBar);
+	//Settings.Write(TEXT("PopupTitleBar"), m_fPopupTitleBar);
 	Settings.Write(TEXT("PanelDockingIndex"), m_PanelPaneIndex);
 	Settings.Write(TEXT("PanelVerticalAlign"), m_fPanelVerticalAlign);
 	Settings.Write(TEXT("FullscreenPanelWidth"), m_Fullscreen.GetPanelWidth());
@@ -496,7 +496,7 @@ bool CMainWindow::WriteSettings(CSettings &Settings)
 	Settings.Write(
 		TEXT("FrameType"),
 		!m_fCustomFrame ? FRAME_NORMAL : (m_CustomFrameWidth == 0 ? FRAME_NONE : FRAME_CUSTOM));
-//	Settings.Write(TEXT("ThinFrameWidth"), m_ThinFrameWidth);
+	//Settings.Write(TEXT("ThinFrameWidth"), m_ThinFrameWidth);
 	Settings.Write(TEXT("CustomTitleBar"), m_fCustomTitleBar);
 	Settings.Write(TEXT("SplitTitleBar"), m_fSplitTitleBar);
 	Settings.Write(TEXT("ShowSideBar"), m_fShowSideBar);
@@ -6683,7 +6683,7 @@ bool CMainWindow::CSideBarManager::DrawIcon(const CSideBar::DrawIconInfo *pInfo)
 				if (hbmLogo != nullptr) {
 					const int Width = pInfo->IconRect.right - pInfo->IconRect.left;
 					const int Height = pInfo->IconRect.bottom - pInfo->IconRect.top;
-					const int IconHeight = Height * 10 / 16;	// 本来の比率より縦長にしている(見栄えのため)
+					const int IconHeight = Height * 10 / 16; // 本来の比率より縦長にしている(見栄えのため)
 					const HBITMAP hbmOld = SelectBitmap(pInfo->hdcBuffer, hbmLogo);
 					const int OldStretchMode = ::SetStretchBltMode(pInfo->hdc, STRETCH_HALFTONE);
 					BITMAP bm;
@@ -7026,4 +7026,4 @@ void CMainWindow::CClockUpdateTimer::OnTimer()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

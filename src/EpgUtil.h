@@ -234,7 +234,7 @@ namespace TVTest
 		Theme::ThemeColor m_ColorList[NUM_COLORS];
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

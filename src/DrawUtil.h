@@ -320,9 +320,9 @@ namespace TVTest
 			bool CopyTo(HDC hdc, const RECT *pDstRect = nullptr);
 		};
 
-	}	// namespace DrawUtil
+	} // namespace DrawUtil
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #include <uxtheme.h>
@@ -370,7 +370,7 @@ namespace TVTest
 		static void ScaleMargins(MARGINS *pMargins, int Num, int Denom);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

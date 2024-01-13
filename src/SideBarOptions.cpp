@@ -904,4 +904,4 @@ bool CSideBarOptions::IsAvailableItem(int ID) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

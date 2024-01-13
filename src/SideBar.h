@@ -186,7 +186,7 @@ namespace TVTest
 		void RealizeStyle() override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

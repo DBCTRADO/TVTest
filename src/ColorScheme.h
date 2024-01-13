@@ -419,8 +419,8 @@ namespace TVTest
 
 		enum class SaveFlag : unsigned int {
 			None      = 0x0000U,
-			NoDefault = 0x0001U,	// デフォルトと同じ設定を保存しない
-			NoName    = 0x0002U,	// 名前を保存しない
+			NoDefault = 0x0001U, // デフォルトと同じ設定を保存しない
+			NoName    = 0x0002U, // 名前を保存しない
 			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
@@ -518,7 +518,7 @@ namespace TVTest
 		std::vector<std::unique_ptr<CColorScheme>> m_List;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

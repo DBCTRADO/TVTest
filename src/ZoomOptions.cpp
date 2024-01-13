@@ -527,4 +527,4 @@ bool CZoomOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxLength)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

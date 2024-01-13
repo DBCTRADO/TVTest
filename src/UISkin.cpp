@@ -75,4 +75,4 @@ void CUISkin::SetWheelChannelChanging(bool fChanging, DWORD Delay)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

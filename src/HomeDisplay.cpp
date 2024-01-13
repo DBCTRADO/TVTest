@@ -2263,4 +2263,4 @@ CHomeDisplay::CCategory::CCategory(CHomeDisplay *pHomeDisplay)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -184,4 +184,4 @@ void CDoubleBufferingDraw::OnPaint(HWND hwnd)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

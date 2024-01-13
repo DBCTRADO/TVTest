@@ -30,9 +30,9 @@ namespace TVTest
 
 		bool EventInfoContextMenu(HWND hwndParent, HWND hwndEdit);
 
-	}	// namespace EventInfoUtil
+	} // namespace EventInfoUtil
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

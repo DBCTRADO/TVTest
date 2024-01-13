@@ -171,7 +171,7 @@ namespace TVTest
 		LRESULT OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

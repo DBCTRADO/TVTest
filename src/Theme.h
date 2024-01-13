@@ -188,9 +188,9 @@ namespace TVTest
 		bool SubtractBorderRect(const BorderStyle &Style, RECT *pRect);
 		bool GetBorderWidths(const BorderStyle &Style, RECT *pRect);
 
-	}	// namespace Theme
+	} // namespace Theme
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

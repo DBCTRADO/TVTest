@@ -56,7 +56,7 @@ namespace TVTest
 		void LogFontToCharFormat(const LOGFONT *plf, CHARFORMAT *pcf);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

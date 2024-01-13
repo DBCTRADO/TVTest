@@ -255,4 +255,4 @@ void CMainDisplay::CChannelDisplayEventHandler::OnMouseMessage(UINT Msg, int x, 
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

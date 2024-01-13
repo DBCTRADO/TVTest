@@ -47,7 +47,7 @@ namespace TVTest
 		VideoDecoderSettings m_VideoDecoderSettings;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

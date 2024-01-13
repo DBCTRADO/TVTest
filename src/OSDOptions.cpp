@@ -413,4 +413,4 @@ INT_PTR COSDOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

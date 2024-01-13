@@ -87,7 +87,7 @@ namespace TVTest
 		CProgramGuideFavorites::FavoriteInfo *GetCurItemInfo();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

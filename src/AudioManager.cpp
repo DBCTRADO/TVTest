@@ -439,4 +439,4 @@ void CAudioManager::MakeAudioList()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

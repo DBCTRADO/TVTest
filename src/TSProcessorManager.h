@@ -133,7 +133,7 @@ namespace TVTest
 			Interface::NotifyType Type, LPCWSTR pszMessage) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

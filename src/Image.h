@@ -76,7 +76,7 @@ namespace TVTest
 #endif
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

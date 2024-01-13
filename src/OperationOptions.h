@@ -94,7 +94,7 @@ namespace TVTest
 		void InitWheelSettings(int ID, int CurCommand) const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

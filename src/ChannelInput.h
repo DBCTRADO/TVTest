@@ -98,6 +98,6 @@ namespace TVTest
 		CChannelInputOptions &m_Options;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 #endif

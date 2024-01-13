@@ -51,7 +51,7 @@ namespace TVTest
 		bool PreTranslateMessage(MSG *pmsg);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

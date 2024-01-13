@@ -72,7 +72,7 @@ namespace TVTest
 		static const int m_DefaultTaskList[];
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

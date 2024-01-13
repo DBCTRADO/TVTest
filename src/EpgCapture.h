@@ -95,7 +95,7 @@ namespace TVTest
 		CEventHandler *m_pEventHandler = nullptr;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

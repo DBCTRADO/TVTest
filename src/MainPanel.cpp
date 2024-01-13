@@ -480,4 +480,4 @@ void CMainPanel::CChannelPanelEventHandler::OnChannelClick(const CChannelInfo *p
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

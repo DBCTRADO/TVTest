@@ -132,4 +132,4 @@ bool CVideoDecoderOptions::ApplyVideoDecoderSettings()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

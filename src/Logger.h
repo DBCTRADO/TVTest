@@ -116,7 +116,7 @@ namespace TVTest
 		HANDLE m_hFile = INVALID_HANDLE_VALUE;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

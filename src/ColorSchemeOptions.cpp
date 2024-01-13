@@ -946,4 +946,4 @@ void CColorSchemeOptions::SetListItemSize()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

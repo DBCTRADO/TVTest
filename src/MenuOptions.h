@@ -94,7 +94,7 @@ namespace TVTest
 		CListView m_ItemListView;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

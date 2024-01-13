@@ -66,4 +66,4 @@ void COptions::SettingError()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

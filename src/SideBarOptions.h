@@ -100,7 +100,7 @@ namespace TVTest
 		bool IsAvailableItem(int ID) const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

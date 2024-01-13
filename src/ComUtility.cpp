@@ -568,4 +568,4 @@ HRESULT ShowPropertyPageFrame(IUnknown *pObject, HWND hwndOwner, HINSTANCE hinst
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

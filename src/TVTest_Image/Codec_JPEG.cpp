@@ -18,7 +18,7 @@
 */
 
 
-#include <stdio.h>		// "jpeglib.h"で使用されている
+#include <stdio.h> // "jpeglib.h"で使用されている
 #include <setjmp.h>
 #include <windows.h>
 #include <tchar.h>
@@ -190,6 +190,6 @@ bool SaveJPEGFile(const ImageSaveInfo *pInfo)
 }
 
 
-}	// namespace ImageLib
+} // namespace ImageLib
 
-}	// namespace TVTest
+} // namespace TVTest

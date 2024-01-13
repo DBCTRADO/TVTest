@@ -50,7 +50,7 @@ namespace TVTest
 		void UpdateItemState();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

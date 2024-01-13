@@ -35,13 +35,13 @@ namespace TVTest
 
 const CVideoOptions::RendererInfo CVideoOptions::m_RendererList[] = {
 	{LibISDB::DirectShow::VideoRenderer::RendererType::Default,            TEXT("システムデフォルト")},
-//	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR7,               TEXT("VMR7")},
+	//{LibISDB::DirectShow::VideoRenderer::RendererType::VMR7,               TEXT("VMR7")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR9,               TEXT("VMR9")},
-//	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR7Renderless,     TEXT("VMR7 Renderless")},
+	//{LibISDB::DirectShow::VideoRenderer::RendererType::VMR7Renderless,     TEXT("VMR7 Renderless")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::VMR9Renderless,     TEXT("VMR9 Renderless")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::EVR,                TEXT("EVR")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::EVRCustomPresenter, TEXT("EVR (Custom Presenter)")},
-//	{LibISDB::DirectShow::VideoRenderer::RendererType::OverlayMixer,       TEXT("Overlay Mixer")},
+	//{LibISDB::DirectShow::VideoRenderer::RendererType::OverlayMixer,       TEXT("Overlay Mixer")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::madVR,              TEXT("madVR")},
 	{LibISDB::DirectShow::VideoRenderer::RendererType::MPCVideoRenderer,   TEXT("MPC Video Renderer")},
 };
@@ -447,4 +447,4 @@ void CVideoOptions::GetVideoDecoderSetting(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -1918,4 +1918,4 @@ void CDropDownMenu::CItem::Draw(HDC hdc, const RECT *pRect)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

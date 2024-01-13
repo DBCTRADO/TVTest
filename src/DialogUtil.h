@@ -265,7 +265,7 @@ namespace TVTest
 	bool InitDropDownButton(HWND hDlg, int ID);
 	bool InitDropDownButtonWithText(HWND hDlg, int ID);
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

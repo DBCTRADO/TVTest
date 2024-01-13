@@ -107,7 +107,7 @@ namespace TVTest
 		bool IsValid() const { return m_Space > CChannelManager::SPACE_INVALID && m_Channel >= 0; }
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

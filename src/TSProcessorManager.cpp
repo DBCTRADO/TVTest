@@ -738,4 +738,4 @@ bool CTSProcessorManager::CTSProcessorSettings::IsTunerFilterMapEnabled() const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

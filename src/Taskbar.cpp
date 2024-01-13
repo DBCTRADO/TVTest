@@ -681,4 +681,4 @@ int CTaskbarManager::GetCommandIcon(int Command) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

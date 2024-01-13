@@ -846,4 +846,4 @@ void CPanelForm::PanelFormStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

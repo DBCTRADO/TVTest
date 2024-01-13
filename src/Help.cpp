@@ -99,4 +99,4 @@ bool CHtmlHelp::PreTranslateMessage(MSG *pmsg)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

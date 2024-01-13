@@ -191,7 +191,7 @@ namespace TVTest
 		static const std::uint8_t m_AudioGainList[];
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -77,7 +77,7 @@ namespace TVTest
 		DWORD m_LockTimeout = 10000;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
-#endif	// TVTEST_EPG_DATA_STORE_H
+#endif // TVTEST_EPG_DATA_STORE_H

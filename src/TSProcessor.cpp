@@ -966,4 +966,4 @@ STDMETHODIMP CTSProcessor::OutputPacket(Interface::ITSPacket *pPacket)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

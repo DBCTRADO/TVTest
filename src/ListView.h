@@ -61,7 +61,7 @@ namespace TVTest
 		HWND m_hwnd = nullptr;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -62,7 +62,7 @@ bool CEpgDataLoader::LoadFromFile(LPCTSTR pszFileName)
 	if (pszFileName == nullptr)
 		return false;
 
-	static constexpr DWORD MAX_READ_SIZE = 0x1000000UL;	// 16MiB
+	static constexpr DWORD MAX_READ_SIZE = 0x1000000UL; // 16MiB
 	static constexpr DWORD BUFFER_SIZE = 188 * 4096;
 	LARGE_INTEGER FileSize;
 	DWORD ReadSize, RemainSize;
@@ -314,4 +314,4 @@ unsigned int __stdcall CEpgDataLoader::LoadThread(void *pParameter)
 CEpgDataLoader::CEventHandler::~CEventHandler() = default;
 
 
-}	// namespace TVTest
+} // namespace TVTest

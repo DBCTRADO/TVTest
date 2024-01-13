@@ -81,8 +81,8 @@ namespace TVTest
 			LOGOTYPE_64x36,
 			LOGOTYPE_FIRST  = LOGOTYPE_48x24,
 			LOGOTYPE_LAST   = LOGOTYPE_64x36,
-			LOGOTYPE_SMALL  = 0xFF,	// 取得できる中から小さいもの優先
-			LOGOTYPE_BIG    = 0xFE	// 取得できる中から大きいもの優先
+			LOGOTYPE_SMALL  = 0xFF, // 取得できる中から小さいもの優先
+			LOGOTYPE_BIG    = 0xFE  // 取得できる中から大きいもの優先
 		};
 
 	private:
@@ -147,7 +147,7 @@ namespace TVTest
 		void OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoData &Data) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

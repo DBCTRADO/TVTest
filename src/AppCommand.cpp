@@ -1715,4 +1715,4 @@ bool CAppCommand::ToggleEventInfoOSD(CCommandManager::InvokeParameters &Params)
 const CCommandManager::CommandHandler CAppCommand::CommandParameters::NullHandler;
 
 
-}	// namespace TVTest
+} // namespace TVTest

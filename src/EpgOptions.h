@@ -173,7 +173,7 @@ namespace TVTest
 		bool GetEpgFileFullPath(LPTSTR pszFileName);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

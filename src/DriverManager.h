@@ -107,7 +107,7 @@ namespace TVTest
 		std::vector<TunerSpecInfo> m_TunerSpecList;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

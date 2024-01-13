@@ -357,14 +357,14 @@ HGLOBAL LoadAribPng(const void *pData, size_t DataSize)
 		return nullptr;
 
 	static const BYTE Adam7[8][2][2] = {
-		{{ 1, 0}, { 1, 0}},	// No interlace
-		{{ 8, 0}, { 8, 0}},	// Interlaced image 1
-		{{ 8, 4}, { 8, 0}},	// Interlaced image 2
-		{{ 4, 0}, { 8, 4}},	// Interlaced image 3
-		{{ 4, 2}, { 4, 0}},	// Interlaced image 4
-		{{ 2, 0}, { 4, 2}},	// Interlaced image 5
-		{{ 2, 1}, { 2, 0}},	// Interlaced image 6
-		{{ 1, 0}, { 2, 1}},	// Interlaced image 7
+		{{ 1, 0}, { 1, 0}}, // No interlace
+		{{ 8, 0}, { 8, 0}}, // Interlaced image 1
+		{{ 8, 4}, { 8, 0}}, // Interlaced image 2
+		{{ 4, 0}, { 8, 4}}, // Interlaced image 3
+		{{ 4, 2}, { 4, 0}}, // Interlaced image 4
+		{{ 2, 0}, { 4, 2}}, // Interlaced image 5
+		{{ 2, 1}, { 2, 0}}, // Interlaced image 6
+		{{ 1, 0}, { 2, 1}}, // Interlaced image 7
 	};
 	IHDR ImageHeader;
 	const BYTE *pCompressedImageData = nullptr;
@@ -531,31 +531,31 @@ Decode:
 				}
 				const int x1 = x * Adam7[i][0][0] + Adam7[i][0][1];
 				switch (ImageHeader.ColorType) {
-				case 0:	// Grayscale
+				case 0: // Grayscale
 					pDestLine[x1 * 4 + 0] = Sample[0];
 					pDestLine[x1 * 4 + 1] = Sample[0];
 					pDestLine[x1 * 4 + 2] = Sample[0];
 					pDestLine[x1 * 4 + 3] = 0xFF;
 					break;
-				case 4:	// Grayscale + Alpha
+				case 4: // Grayscale + Alpha
 					pDestLine[x1 * 4 + 0] = Sample[0];
 					pDestLine[x1 * 4 + 1] = Sample[0];
 					pDestLine[x1 * 4 + 2] = Sample[0];
 					pDestLine[x1 * 4 + 3] = Sample[1];
 					break;
-				case 2:	// True color
+				case 2: // True color
 					pDestLine[x1 * 4 + 0] = (Sample[2] * 255) / SampleMask;
 					pDestLine[x1 * 4 + 1] = (Sample[1] * 255) / SampleMask;
 					pDestLine[x1 * 4 + 2] = (Sample[0] * 255) / SampleMask;
 					pDestLine[x1 * 4 + 3] = 0xFF;
 					break;
-				case 6:	// True color + Alpha
+				case 6: // True color + Alpha
 					pDestLine[x1 * 4 + 0] = (Sample[2] * 255) / SampleMask;
 					pDestLine[x1 * 4 + 1] = (Sample[1] * 255) / SampleMask;
 					pDestLine[x1 * 4 + 2] = (Sample[0] * 255) / SampleMask;
 					pDestLine[x1 * 4 + 3] = (Sample[3] * 255) / SampleMask;
 					break;
-				case 3:	// Indexed
+				case 3: // Indexed
 					{
 						const RGBA &Color = DefaultPalette[Sample[0] < 128 ? Sample[0] : 8];
 						pDestLine[x1 * 4 + 0] = Color.Blue;
@@ -575,6 +575,6 @@ Decode:
 }
 
 
-}	// namespace ImageLib
+} // namespace ImageLib
 
-}	// namespace TVTest
+} // namespace TVTest

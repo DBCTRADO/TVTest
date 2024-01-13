@@ -84,7 +84,7 @@ namespace TVTest
 		CCoreEngine::PanAndScanInfo m_OldPanAndScanInfo;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

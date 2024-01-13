@@ -46,7 +46,7 @@ namespace TVTest
 		CChannelList m_ChannelList;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

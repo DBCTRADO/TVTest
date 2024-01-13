@@ -603,4 +603,4 @@ void COSDManager::OSDStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

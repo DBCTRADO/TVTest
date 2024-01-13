@@ -52,7 +52,7 @@ namespace TVTest
 		bool SearchFilters();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

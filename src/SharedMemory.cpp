@@ -218,4 +218,4 @@ void CSharedMemory::GetLockName(LPCWSTR pszName, String *pLockName) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

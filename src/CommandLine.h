@@ -111,7 +111,7 @@ namespace TVTest
 		String m_Command;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

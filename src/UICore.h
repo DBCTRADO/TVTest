@@ -281,7 +281,7 @@ namespace TVTest
 		void OnLog(LibISDB::Logger::LogType Type, LPCTSTR pszOutput) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

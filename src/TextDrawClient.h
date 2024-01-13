@@ -68,7 +68,7 @@ namespace TVTest
 		std::unique_ptr<CDirectWriteEngine> m_DirectWriteEngine;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

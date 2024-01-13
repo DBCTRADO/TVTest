@@ -86,7 +86,7 @@ namespace TVTest
 		static bool m_fValidDefaultFont;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
-#endif	// ndef TVTEST_UI_BASE_H
+#endif // ndef TVTEST_UI_BASE_H

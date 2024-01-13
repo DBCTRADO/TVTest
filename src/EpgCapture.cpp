@@ -290,4 +290,4 @@ bool CEpgCaptureManager::NextChannel()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

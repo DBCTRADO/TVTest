@@ -202,7 +202,7 @@ bool SetListBoxHExtent(HWND hDlg, int ID)
 		}
 		SelectObject(hdc, hfontOld);
 		ReleaseDC(hwnd, hdc);
-		MaxWidth += 2;	/* 余白 */
+		MaxWidth += 2; /* 余白 */
 	}
 	SendDlgItemMessage(hDlg, ID, LB_SETHORIZONTALEXTENT, MaxWidth, 0);
 	return true;
@@ -563,4 +563,4 @@ bool InitDropDownButtonWithText(HWND hDlg, int ID)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -220,4 +220,4 @@ INT_PTR CChannelInputOptionsDialog::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

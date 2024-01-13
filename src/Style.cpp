@@ -724,6 +724,6 @@ int GetFontHeight(HWND hwnd, HFONT hfont, const IntValue &Extra, TEXTMETRIC *pTe
 }
 
 
-}	// namespace Style
+} // namespace Style
 
-}	// namespace TVTest
+} // namespace TVTest

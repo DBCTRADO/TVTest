@@ -1053,7 +1053,7 @@ bool CTuningSpaceList::LoadFromFile(LPCTSTR pszFileName)
 
 		p += ::StrSpn(p, TEXT("\r\n \t"));
 
-		if (*p == _T('#') || *p == _T(';')) {	// コメント
+		if (*p == _T('#') || *p == _T(';')) { // コメント
 			p++;
 			if (*p == _T('#')) {
 				p++;
@@ -1170,4 +1170,4 @@ Next:
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

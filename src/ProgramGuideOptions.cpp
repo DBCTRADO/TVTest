@@ -1116,4 +1116,4 @@ void CProgramGuideOptions::DeleteAllTools()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -106,7 +106,7 @@ namespace TVTest
 		HCURSOR m_hLinkCursor = ::LoadCursor(nullptr, IDC_HAND);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

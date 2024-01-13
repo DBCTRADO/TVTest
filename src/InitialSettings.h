@@ -70,7 +70,7 @@ namespace TVTest
 		void GetDecoderSetting(int ID, String *pDecoderName) const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

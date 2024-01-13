@@ -161,7 +161,7 @@ namespace TVTest
 		std::vector<CEventHandler*> m_EventHandlerList;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

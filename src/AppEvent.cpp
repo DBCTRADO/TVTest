@@ -301,4 +301,4 @@ void CAppEventManager::OnEventInfoChanged()
 CAppEventHandler::~CAppEventHandler() = default;
 
 
-}	// namespace TVTest
+} // namespace TVTest

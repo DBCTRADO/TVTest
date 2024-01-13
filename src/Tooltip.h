@@ -83,7 +83,7 @@ namespace TVTest
 		bool Hide();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -257,4 +257,4 @@ bool CTaskTrayManager::HandleMessage(UINT Message, WPARAM wParam, LPARAM lParam)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -532,4 +532,4 @@ void CMenuOptions::GetItemText(int ID, LPTSTR pszText, int MaxLength) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

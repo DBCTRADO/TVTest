@@ -517,4 +517,4 @@ bool CEpg::CProgramGuideProgramCustomizer::OnLButtonDoubleClick(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

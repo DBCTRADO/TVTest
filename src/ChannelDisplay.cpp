@@ -1037,7 +1037,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				case SB_BOTTOM:        Pos = m_TotalTuningSpaces - m_VisibleTunerItems; break;
 				case SB_THUMBPOSITION:
 				case SB_THUMBTRACK:    Pos = HIWORD(wParam); break;
-				default:	return 0;
+				default: return 0;
 				}
 				SetTunerScrollPos(Pos, true);
 			} else if (hwndScroll == m_hwndChannelScroll) {
@@ -1051,7 +1051,7 @@ LRESULT CChannelDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				case SB_BOTTOM:        Pos = 1000; break;
 				case SB_THUMBPOSITION:
 				case SB_THUMBTRACK:    Pos = HIWORD(wParam); break;
-				default:	return 0;
+				default: return 0;
 				}
 				SetChannelScrollPos(Pos, true);
 			}
@@ -1446,4 +1446,4 @@ void CChannelDisplay::ChannelDisplayStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

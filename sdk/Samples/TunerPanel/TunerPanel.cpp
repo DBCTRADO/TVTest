@@ -506,7 +506,7 @@ void CTunerPanel::GetTunerList()
 						// 局ロゴを取得する
 						UINT AvailLogos = m_pApp->GetAvailableLogoType(Channel.NetworkID, Channel.ServiceID);
 						if (AvailLogos != 0) {
-							static const BYTE LogoPriority[6] = {3, 5, 4, 2, 0, 1};	// 大きい順に優先
+							static const BYTE LogoPriority[6] = {3, 5, 4, 2, 0, 1}; // 大きい順に優先
 							for (BYTE LogoIndex = 0; LogoIndex <= 5; LogoIndex++) {
 								BYTE LogoType = LogoPriority[LogoIndex];
 								if (AvailLogos & (1U << LogoType)) {

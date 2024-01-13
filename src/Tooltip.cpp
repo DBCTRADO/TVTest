@@ -356,4 +356,4 @@ bool CBalloonTip::Hide()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

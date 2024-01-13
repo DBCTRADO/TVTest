@@ -249,4 +249,4 @@ bool CKeywordSearch::EncodeURL(UINT CodePage, LPCWSTR pszSrc, String *pDst) cons
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

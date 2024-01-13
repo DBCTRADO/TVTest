@@ -117,7 +117,7 @@ namespace TVTest
 		bool m_fEnableProgramListUpdate = true;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

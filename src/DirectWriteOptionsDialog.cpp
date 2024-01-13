@@ -310,4 +310,4 @@ float CDirectWriteOptionsDialog::GetItemFloatValue(int ID)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

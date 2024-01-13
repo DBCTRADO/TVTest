@@ -51,7 +51,7 @@ namespace TVTest
 		int KeyDataToIndex(int Data) const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

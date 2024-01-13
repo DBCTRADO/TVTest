@@ -186,7 +186,7 @@ namespace TVTest
 		bool m_fNeedRecreate = false;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

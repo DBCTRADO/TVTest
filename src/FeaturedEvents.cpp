@@ -1119,4 +1119,4 @@ bool CFeaturedEvents::ShowDialog(HWND hwndOwner)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

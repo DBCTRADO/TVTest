@@ -330,4 +330,4 @@ void CUIBase::ResetDefaultFont()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

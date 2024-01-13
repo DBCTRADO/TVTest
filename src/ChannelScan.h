@@ -160,7 +160,7 @@ namespace TVTest
 		static unsigned int __stdcall ScanProc(LPVOID lpParameter);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -532,4 +532,4 @@ void CRichEditLinkHandler::LeaveCursor()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

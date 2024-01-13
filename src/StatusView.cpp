@@ -182,8 +182,10 @@ void CStatusItem::DrawIcon(
 
 	const Style::Size IconSize = m_pStatus->GetIconSize();
 	const COLORREF cr = ::GetTextColor(hdc);
-	//if (!fEnabled)
-	//	cr = MixColor(cr, ::GetBkColor(hdc));
+#if 0
+	if (!fEnabled)
+		cr = MixColor(cr, ::GetBkColor(hdc));
+#endif
 	IconList.Draw(
 		hdc,
 		Rect.left + ((Rect.right - Rect.left) - IconSize.Width) / 2,
@@ -1410,4 +1412,4 @@ void CStatusView::StatusViewStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

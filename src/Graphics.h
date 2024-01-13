@@ -211,9 +211,9 @@ namespace TVTest
 			ULONG_PTR m_Token;
 		};
 
-	}	// namespace Graphics
+	} // namespace Graphics
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

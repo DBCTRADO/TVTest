@@ -171,7 +171,7 @@ DWORD WINAPI CAppTerminator::WatchThread(LPVOID lpParameter)
 	return 0;
 }
 
-#endif	// WATCH_EXIT
+#endif // WATCH_EXIT
 
 
 
@@ -664,8 +664,8 @@ bool CAppMain::SaveSettings(SaveSettingsFlag Flags)
 		{&TaskbarOptions,                false},
 		{&VideoDecoderOptions,           true},
 		{&Logger,                        false},
-//		{&ZoomOptions,                   false},
-//		{&PanAndScanOptions,             false},
+		//{&ZoomOptions,                   false},
+		//{&PanAndScanOptions,             false},
 		{&Epg.ProgramGuideFrameSettings, true},
 		{&HomeDisplay,                   true},
 		{&FeaturedEvents,                true},
@@ -1780,4 +1780,4 @@ bool CAppMain::CCaptureWindowEventHandler::OnKeyDown(UINT KeyCode, UINT Flags)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -480,4 +480,4 @@ LRESULT CWindowSubclass::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

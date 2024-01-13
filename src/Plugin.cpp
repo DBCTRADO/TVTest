@@ -204,7 +204,7 @@ HBITMAP CControllerPlugin::GetImage(ImageType Type) const
 	switch (Type) {
 	case ImageType::Controller: ID = m_ControllerImageID; break;
 	case ImageType::SelButtons: ID = m_SelButtonsImageID; break;
-	default:	return nullptr;
+	default: return nullptr;
 	}
 	if (ID == 0)
 		return nullptr;
@@ -4909,7 +4909,7 @@ bool CPluginManager::LoadPlugins(LPCTSTR pszDirectory, const std::vector<LPCTSTR
 	if (pszDirectory == nullptr)
 		return false;
 	const int DirectoryLength = ::lstrlen(pszDirectory);
-	if (DirectoryLength + 7 >= MAX_PATH)	// +7 = "\\*.tvtp"
+	if (DirectoryLength + 7 >= MAX_PATH) // +7 = "\\*.tvtp"
 		return false;
 
 	FreePlugins();
@@ -5976,4 +5976,4 @@ void CPluginOptions::RealizeStyle()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

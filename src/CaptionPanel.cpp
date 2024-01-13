@@ -1030,4 +1030,4 @@ bool CCaptionDRCSMap::SaveRaw(const DRCSBitmap *pBitmap, LPCTSTR pszFileName)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

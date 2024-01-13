@@ -408,7 +408,7 @@ namespace TVTest
 		static int CALLBACK ResultCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

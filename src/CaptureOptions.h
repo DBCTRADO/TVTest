@@ -127,7 +127,7 @@ namespace TVTest
 		static const PercentageType m_PercentageList[PERCENTAGE_LAST + 1];
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

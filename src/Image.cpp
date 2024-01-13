@@ -311,4 +311,4 @@ HGLOBAL CImageCodec::LoadAribPngFromFile(LPCTSTR pszFileName)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

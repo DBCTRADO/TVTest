@@ -140,7 +140,7 @@ namespace TVTest
 		void OpenTheme();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

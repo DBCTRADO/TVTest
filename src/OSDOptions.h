@@ -114,7 +114,7 @@ namespace TVTest
 		bool m_fDisplayFontAutoSize = false;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

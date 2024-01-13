@@ -110,7 +110,7 @@ namespace TVTest
 		bool GetCommandText(int Command, LPTSTR pszText, size_t MaxLength) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

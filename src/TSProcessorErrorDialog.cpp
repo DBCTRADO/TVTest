@@ -222,4 +222,4 @@ bool CTSProcessorErrorDialog::SearchFilters()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

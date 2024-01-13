@@ -111,7 +111,7 @@ namespace TVTest
 		int GetCommandIcon(int Command) const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -434,4 +434,4 @@ bool CChannelSpec::SetServiceID(int ServiceID)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

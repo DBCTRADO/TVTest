@@ -2154,4 +2154,4 @@ void CResizableDialog::RealizeStyle()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

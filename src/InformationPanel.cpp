@@ -1699,4 +1699,4 @@ void CInformationPanel::CProgramInfoItem::SetNext(bool fNext)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

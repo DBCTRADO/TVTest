@@ -787,4 +787,4 @@ void CTitleBar::TitleBarStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

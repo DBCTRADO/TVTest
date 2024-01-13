@@ -35,7 +35,7 @@ namespace TVTest
 	using LibISDB::FormatContext;
 	using LibISDB::MakeFormatArgs;
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

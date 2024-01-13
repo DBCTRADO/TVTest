@@ -803,4 +803,4 @@ LRESULT CALLBACK CPseudoOSD::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

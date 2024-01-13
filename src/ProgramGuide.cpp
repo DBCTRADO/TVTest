@@ -182,7 +182,7 @@ bool CEventItem::SetCommonEvent(const LibISDB::EventInfo *pEvent)
 	m_pCommonEventInfo = pEvent;
 	/*
 	if (m_pEventInfo->EventName.empty())
-		m_TitleLines=pItem->m_TitleLines;	// とりあえず
+		m_TitleLines=pItem->m_TitleLines; // とりあえず
 	*/
 	return true;
 }
@@ -862,7 +862,7 @@ void CServiceList::Clear()
 }
 
 
-}	// namespace ProgramGuide
+} // namespace ProgramGuide
 
 
 
@@ -6572,7 +6572,7 @@ bool CDateToolbar::SetButtons(const LibISDB::DateTime *pDateList, int Days, int 
 		TCHAR szText[32];
 		StringFormat(
 			szText,
-			TEXT("{:02}/{:02}({})"),	// {:02} にしているのは幅を揃えるため
+			TEXT("{:02}/{:02}({})"), // {:02} にしているのは幅を揃えるため
 			Date.Month, Date.Day, GetDayOfWeekText(Date.DayOfWeek));
 		RECT rc = {0, 0, 0, 0};
 		::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6848,7 +6848,7 @@ bool CTimeToolbar::SetButtons(const TimeInfo *pTimeList, int TimeListLength)
 		TCHAR szText[32];
 		StringFormat(
 			szText,
-			TEXT("{:02}時～"),	// {:02} にしているのは幅を揃えるため
+			TEXT("{:02}時～"), // {:02} にしているのは幅を揃えるため
 			TimeInfo.Hour);
 		RECT rc = {0, 0, 0, 0};
 		::DrawText(hdc, szText, -1, &rc, DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT);
@@ -6933,7 +6933,7 @@ void CTimeToolbar::RealizeStyle()
 }
 
 
-}	// namespace ProgramGuideBar
+} // namespace ProgramGuideBar
 
 
 
@@ -8034,4 +8034,4 @@ LRESULT CProgramGuideDisplay::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

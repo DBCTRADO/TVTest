@@ -59,7 +59,7 @@ namespace TVTest
 		HINSTANCE hinst, const LPCTSTR *ppszIcons, int IconCount, IconSizeType Size);
 	void SetWindowIcon(HWND hwnd, HINSTANCE hinst, LPCTSTR pszIcon);
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

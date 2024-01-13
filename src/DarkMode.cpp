@@ -140,7 +140,7 @@ PreferredAppMode WINAPI SetPreferredAppMode(PreferredAppMode Mode)
 }
 
 
-}	// namespace
+} // namespace
 
 
 bool IsDarkThemeSupported()
@@ -240,4 +240,4 @@ bool IsDarkModeSettingChanged(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

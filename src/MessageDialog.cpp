@@ -275,4 +275,4 @@ bool CMessageDialog::Show(HWND hwndOwner)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

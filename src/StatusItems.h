@@ -364,7 +364,7 @@ namespace TVTest
 		Theme::IconList m_Icons;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

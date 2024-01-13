@@ -115,7 +115,7 @@ namespace TVTest
 		virtual void OnSubclassRemoved() {}
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

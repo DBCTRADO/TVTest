@@ -165,7 +165,7 @@ namespace TVTest
 		friend CControlPanel;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

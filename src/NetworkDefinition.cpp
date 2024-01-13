@@ -42,8 +42,8 @@ WORD StrToWord(const String &Str)
 
 
 const CNetworkDefinition::RemoteControlKeyIDAssignInfo CNetworkDefinition::m_DefaultKeyIDAssignList[] = {
-	{ 4,   101,   103,   100,  0},	// BS 1-3ch
-	{ 4,   141,   229,   100, 10},	// BS 4-12ch
+	{ 4,   101,   103,   100,  0}, // BS 1-3ch
+	{ 4,   141,   229,   100, 10}, // BS 4-12ch
 	{10, 32769, 33767, 32768,  0},
 };
 
@@ -273,4 +273,4 @@ CNetworkDefinition::NetworkInfo::NetworkInfo(WORD nid, LPCTSTR name, NetworkType
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

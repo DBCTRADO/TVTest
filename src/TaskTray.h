@@ -78,7 +78,7 @@ namespace TVTest
 		bool NeedTrayIcon() const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

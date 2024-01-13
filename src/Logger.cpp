@@ -591,4 +591,4 @@ bool CLogger::CreateFileLock(CGlobalLock *pLock) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

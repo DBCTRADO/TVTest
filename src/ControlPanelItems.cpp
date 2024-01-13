@@ -337,4 +337,4 @@ void CControlPanelButton::Draw(HDC hdc, const RECT &Rect)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

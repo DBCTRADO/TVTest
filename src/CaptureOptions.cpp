@@ -132,11 +132,11 @@ const SIZE CCaptureOptions::m_SizeList[SIZE_LAST + 1] = {
 
 
 const CCaptureOptions::PercentageType CCaptureOptions::m_PercentageList[PERCENTAGE_LAST + 1] = {
-	{3, 4},	// 75%
-	{2, 3},	// 66%
-	{1, 2},	// 50%
-	{1, 3},	// 33%
-	{1, 4},	// 25%
+	{3, 4}, // 75%
+	{2, 3}, // 66%
+	{1, 2}, // 50%
+	{1, 3}, // 33%
+	{1, 4}, // 25%
 };
 
 
@@ -659,4 +659,4 @@ void CCaptureOptions::UpdateFileNamePreview()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -146,4 +146,4 @@ void SetWindowIcon(HWND hwnd, HINSTANCE hinst, LPCTSTR pszIcon)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

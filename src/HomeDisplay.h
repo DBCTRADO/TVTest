@@ -181,7 +181,7 @@ namespace TVTest
 		bool RedrawCategoryItem(int Category);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

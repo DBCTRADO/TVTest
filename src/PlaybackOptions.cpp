@@ -272,4 +272,4 @@ INT_PTR CPlaybackOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

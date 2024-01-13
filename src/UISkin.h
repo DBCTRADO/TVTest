@@ -86,7 +86,7 @@ namespace TVTest
 		friend CUICore;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

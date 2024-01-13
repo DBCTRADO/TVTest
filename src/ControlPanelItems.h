@@ -135,6 +135,6 @@ namespace TVTest
 		virtual void Draw(HDC hdc, const RECT &Rect) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 #endif

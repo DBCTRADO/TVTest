@@ -518,6 +518,6 @@ UINT64 HashNoCase64(const String &Str)
 }
 
 
-}	// namespace StringUtility
+} // namespace StringUtility
 
-}	// namespace TVTest
+} // namespace TVTest

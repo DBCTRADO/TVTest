@@ -296,7 +296,7 @@ namespace TVTest
 		void OnWriteError(LibISDB::RecorderFilter *pRecorder, LibISDB::RecorderFilter::RecordingTask *pTask) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

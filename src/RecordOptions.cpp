@@ -591,4 +591,4 @@ INT_PTR CRecordOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

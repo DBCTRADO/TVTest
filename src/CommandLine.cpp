@@ -290,7 +290,7 @@ bool CArgsParser::GetValue(SYSTEMTIME *pValue) const
 				return false;
 			if (TimeCount > 2) {
 				Time.wSecond = TimeValue[2];
-				if (Time.wSecond > 59)	// Windowsに閏秒は無いらしい
+				if (Time.wSecond > 59) // Windowsに閏秒は無いらしい
 					return false;
 			}
 		}
@@ -584,4 +584,4 @@ bool CCommandLineOptions::IsChannelSpecified() const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

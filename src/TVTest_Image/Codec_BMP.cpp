@@ -124,6 +124,6 @@ bool SaveBMPFile(const ImageSaveInfo *pInfo)
 }
 
 
-}	// namespace ImageLib
+} // namespace ImageLib
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -309,7 +309,7 @@ CMemoryCapture::CMemoryCapture()
 bool CMemoryCapture::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
-	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS;	// 設定ダイアログあり
+	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS; // 設定ダイアログあり
 	pInfo->pszPluginName  = L"メモリーキャプチャー";
 	pInfo->pszCopyright   = L"Public Domain";
 	pInfo->pszDescription = L"画像をキャプチャします。";
@@ -1664,7 +1664,7 @@ void CMemoryCapture::ShowContextMenu(int x, int y)
 
 	// キャプチャーサイズ
 	HMENU hmenuSize = ::GetSubMenu(hmenuPopup, 9);
-	::DeleteMenu(hmenuSize, 0, MF_BYPOSITION);	// ダミーを削除
+	::DeleteMenu(hmenuSize, 0, MF_BYPOSITION); // ダミーを削除
 	int CurSize = -1;
 	for (std::size_t i = 0; i < _countof(m_CaptureSizeList); i++) {
 		TCHAR szText[64];

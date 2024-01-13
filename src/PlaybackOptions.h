@@ -92,7 +92,7 @@ namespace TVTest
 		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

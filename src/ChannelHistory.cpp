@@ -277,4 +277,4 @@ bool CRecentChannelList::WriteSettings(CSettings &Settings)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

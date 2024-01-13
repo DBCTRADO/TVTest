@@ -82,7 +82,7 @@ namespace TVTest
 		SIZE m_DefaultPageSize{};
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

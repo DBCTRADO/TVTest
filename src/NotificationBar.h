@@ -126,7 +126,7 @@ namespace TVTest
 		void ApplyStyle() override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

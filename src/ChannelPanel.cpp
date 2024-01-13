@@ -1574,4 +1574,4 @@ void CChannelPanel::ChannelPanelStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

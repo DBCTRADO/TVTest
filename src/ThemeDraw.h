@@ -58,9 +58,9 @@ namespace TVTest
 			HDC m_hdc = nullptr;
 		};
 
-	}	// namespace Theme
+	} // namespace Theme
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

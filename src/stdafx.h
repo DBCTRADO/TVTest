@@ -43,7 +43,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 
-#define _WIN32_DCOM	// for CoInitializeEx()
+#define _WIN32_DCOM // for CoInitializeEx()
 
 // Windows のヘッダで出る警告を抑止
 #pragma warning(push)

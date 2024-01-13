@@ -739,7 +739,7 @@ namespace TVTest
 			UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

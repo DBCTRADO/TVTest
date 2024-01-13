@@ -378,4 +378,4 @@ LRESULT CColorPalette::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

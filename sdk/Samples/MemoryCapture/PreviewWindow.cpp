@@ -155,7 +155,7 @@ void CPreviewWindow::Draw(HDC hdc)
 
 		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 		bmi.bmiHeader.biWidth = m_pImage->GetWidth();
-		bmi.bmiHeader.biHeight = -m_pImage->GetHeight();	// トップダウン
+		bmi.bmiHeader.biHeight = -m_pImage->GetHeight(); // トップダウン
 		bmi.bmiHeader.biPlanes = 1;
 		bmi.bmiHeader.biBitCount = m_pImage->GetBitsPerPixel();
 

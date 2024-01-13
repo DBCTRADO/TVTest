@@ -1258,4 +1258,4 @@ void CFavoritesStatusItem::OnRButtonDown(int x, int y)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

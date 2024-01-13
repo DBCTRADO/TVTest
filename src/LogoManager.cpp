@@ -819,4 +819,4 @@ bool CLogoManager::CLogoData::SaveBmpToFile(CImageCodec *pCodec, LPCTSTR pszFile
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

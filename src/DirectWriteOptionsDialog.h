@@ -60,7 +60,7 @@ namespace TVTest
 		CRenderingTester *m_pRenderingTester = nullptr;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -552,7 +552,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 		LPCTSTR pszText;
 		LPCTSTR pszSubText[16];
 	} GenreList[] = {
-		{	TEXT("ニュース／報道"),
+		{
+			TEXT("ニュース／報道"),
 			{
 				TEXT("定時・総合"),
 				TEXT("天気"),
@@ -572,7 +573,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("スポーツ"),
+		{
+			TEXT("スポーツ"),
 			{
 				TEXT("スポーツニュース"),
 				TEXT("野球"),
@@ -592,7 +594,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("情報／ワイドショー"),
+		{
+			TEXT("情報／ワイドショー"),
 			{
 				TEXT("芸能・ワイドショー"),
 				TEXT("ファッション"),
@@ -612,7 +615,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("ドラマ"),
+		{
+			TEXT("ドラマ"),
 			{
 				TEXT("国内ドラマ"),
 				TEXT("海外ドラマ"),
@@ -632,7 +636,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("音楽"),
+		{
+			TEXT("音楽"),
 			{
 				TEXT("国内ロック・ポップス"),
 				TEXT("海外ロック・ポップス"),
@@ -652,7 +657,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("バラエティ"),
+		{
+			TEXT("バラエティ"),
 			{
 				TEXT("クイズ"),
 				TEXT("ゲーム"),
@@ -672,7 +678,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("映画"),
+		{
+			TEXT("映画"),
 			{
 				TEXT("洋画"),
 				TEXT("邦画"),
@@ -692,7 +699,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("アニメ／特撮"),
+		{
+			TEXT("アニメ／特撮"),
 			{
 				TEXT("国内アニメ"),
 				TEXT("海外アニメ"),
@@ -712,7 +720,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("ドキュメンタリー／教養"),
+		{
+			TEXT("ドキュメンタリー／教養"),
 			{
 				TEXT("社会・時事"),
 				TEXT("歴史・紀行"),
@@ -732,7 +741,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("劇場／公演"),
+		{
+			TEXT("劇場／公演"),
 			{
 				TEXT("現代劇・新劇"),
 				TEXT("ミュージカル"),
@@ -752,7 +762,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("趣味／教育"),
+		{
+			TEXT("趣味／教育"),
 			{
 				TEXT("旅・釣り・アウトドア"),
 				TEXT("園芸・ペット・手芸"),
@@ -772,7 +783,8 @@ LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 				TEXT("その他")
 			}
 		},
-		{	TEXT("福祉"),
+		{
+			TEXT("福祉"),
 			{
 				TEXT("高齢者"),
 				TEXT("障害者"),
@@ -1024,7 +1036,7 @@ CEpgTheme::CEpgTheme()
 		m_ColorList[i].Set(240, 240, 240);
 	m_ColorList[COLOR_CONTENT_NEWS       ].Set(255, 255, 224);
 	m_ColorList[COLOR_CONTENT_SPORTS     ].Set(255, 255, 224);
-//	m_ColorList[COLOR_CONTENT_INFORMATION].Set(255, 255, 224);
+	//m_ColorList[COLOR_CONTENT_INFORMATION].Set(255, 255, 224);
 	m_ColorList[COLOR_CONTENT_DRAMA      ].Set(255, 224, 224);
 	m_ColorList[COLOR_CONTENT_MUSIC      ].Set(224, 255, 224);
 	m_ColorList[COLOR_CONTENT_VARIETY    ].Set(224, 224, 255);
@@ -1175,4 +1187,4 @@ Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

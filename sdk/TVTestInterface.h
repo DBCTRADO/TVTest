@@ -522,9 +522,9 @@ MIDL_INTERFACE("5CB26641-E1B3-4E8E-884A-8BEF5240B7EC") IFilterManager : public I
 };
 
 
-}	// namespace Interface
+} // namespace Interface
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #include <poppack.h>
@@ -551,4 +551,4 @@ MIDL_INTERFACE("03481710-D73E-4674-839F-03EDE2D60ED8") ISpecifyPropertyPages2 : 
 #endif
 
 
-#endif	// TVTEST_INTERFACE_H
+#endif // TVTEST_INTERFACE_H

@@ -38,8 +38,8 @@ namespace TVTest
 	public:
 		enum class Flag : unsigned int {
 			None               = 0x0000U,
-			EndEllipsis        = 0x0001U,	// 収まりきらない場合省略記号を付加
-			JapaneseHyphnation = 0x0002U,	// 禁則処理
+			EndEllipsis        = 0x0001U, // 収まりきらない場合省略記号を付加
+			JapaneseHyphnation = 0x0002U, // 禁則処理
 			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
@@ -187,7 +187,7 @@ namespace TVTest
 		CDirectWriteBrush m_Brush;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -105,7 +105,7 @@ namespace TVTest
 		bool m_fClipToDevice = true;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

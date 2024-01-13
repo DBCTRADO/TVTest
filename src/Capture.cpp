@@ -680,4 +680,4 @@ void CCaptureWindow::CCopyStatusItem::OnLButtonDown(int x, int y)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

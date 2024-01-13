@@ -386,7 +386,7 @@ namespace TVTest
 
 	CAppMain &GetAppClass();
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

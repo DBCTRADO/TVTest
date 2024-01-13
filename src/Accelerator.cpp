@@ -205,11 +205,11 @@ static const struct {
 	{APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE, TEXT("Dictate or Command/Control")},
 };
 
-}	// namespace
+} // namespace
 
 
 const CAccelerator::KeyInfo CAccelerator::m_DefaultAccelList[] = {
-//	{CM_ZOOM_100,       VK_HOME,   0,       false},
+	//{CM_ZOOM_100,       VK_HOME,   0,       false},
 	{CM_FULLSCREEN,     VK_RETURN, MOD_ALT, false},
 	{CM_ALWAYSONTOP,    'T',       0,       false},
 	{CM_VOLUME_MUTE,    'M',       0,       false},
@@ -1209,4 +1209,4 @@ void CAccelerator::OnUnknownInput(const BYTE *pData, int Size)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

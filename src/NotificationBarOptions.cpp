@@ -165,4 +165,4 @@ INT_PTR CNotificationBarOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

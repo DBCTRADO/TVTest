@@ -502,7 +502,7 @@ namespace TVTest
 		bool StorePluginOptions();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -366,4 +366,4 @@ void CAboutDialog::ApplyStyle()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

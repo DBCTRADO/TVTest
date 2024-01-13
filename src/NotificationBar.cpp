@@ -411,4 +411,4 @@ void CNotificationBar::NotificationBarStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

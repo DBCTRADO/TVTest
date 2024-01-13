@@ -827,4 +827,4 @@ void CDisplayEventHandlerBase::RelayMouseMessage(CDisplayView *pView, UINT Messa
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

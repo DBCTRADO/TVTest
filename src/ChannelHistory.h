@@ -75,7 +75,7 @@ namespace TVTest
 		CChannelMenu m_ChannelMenu;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

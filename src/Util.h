@@ -306,7 +306,7 @@ namespace TVTest
 			bool IsWindows11();
 			bool IsWindows11OrLater();
 
-		}	// namespace OS
+		} // namespace OS
 
 		class CClock
 		{
@@ -388,9 +388,9 @@ namespace TVTest
 			T m_FixedBuffer[N];
 		};
 
-	}	// namespace Util
+	} // namespace Util
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #include "LibISDB/LibISDB/Utilities/Lock.hpp"
@@ -402,7 +402,7 @@ namespace TVTest
 	using LibISDB::BlockLock;
 	using LibISDB::TryBlockLock;
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

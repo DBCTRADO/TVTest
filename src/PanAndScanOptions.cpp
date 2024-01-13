@@ -833,4 +833,4 @@ bool CPanAndScanOptions::GetCommandText(int Command, LPTSTR pszText, size_t MaxL
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

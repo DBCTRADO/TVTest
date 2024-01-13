@@ -67,7 +67,7 @@ namespace TVTest
 		Style::Font m_CurNotificationBarFont;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

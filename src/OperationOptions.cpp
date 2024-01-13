@@ -337,4 +337,4 @@ void COperationOptions::InitWheelSettings(int ID, int CurCommand) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

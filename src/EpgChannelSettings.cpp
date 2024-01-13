@@ -208,4 +208,4 @@ INT_PTR CEpgChannelSettings::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

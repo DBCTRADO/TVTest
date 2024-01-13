@@ -237,7 +237,7 @@ bool CRegExpEngine_ECMAScript::Match(LPCTSTR pText, size_t Length, CRegExp::Text
 	return true;
 }
 
-#endif	// TVTEST_STD_REGEX_SUPPORT
+#endif // TVTEST_STD_REGEX_SUPPORT
 
 
 
@@ -367,7 +367,7 @@ bool CRegExpEngine_VBScript::Match(LPCTSTR pText, size_t Length, CRegExp::TextRa
 	return true;
 }
 
-#endif	// TVTEST_VBSCRIPT_REGEXP_SUPPORT
+#endif // TVTEST_VBSCRIPT_REGEXP_SUPPORT
 
 
 
@@ -563,7 +563,7 @@ void CRegExpEngine_Bregonig::GetLibraryPath(LPTSTR pszPath)
 	StringCopy(::PathFindFileName(pszPath), TEXT("bregonig.dll"));
 }
 
-#endif	// TVTEST_BREGONIG_SUPPORT
+#endif // TVTEST_BREGONIG_SUPPORT
 
 
 
@@ -665,4 +665,4 @@ bool CRegExp::GetEngineName(LPTSTR pszName, size_t MaxLength) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

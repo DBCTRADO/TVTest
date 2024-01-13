@@ -89,7 +89,7 @@ namespace TVTest
 		std::vector<std::unique_ptr<CProgramGuideTool>> m_ToolList;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

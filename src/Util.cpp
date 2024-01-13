@@ -1718,7 +1718,7 @@ bool IsWindows11OrLater()
 }
 
 
-}	// namespace OS
+} // namespace OS
 
 
 CTimer::~CTimer()
@@ -1753,6 +1753,6 @@ void CALLBACK CTimer::TimerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 }
 
 
-}	// namespace Util
+} // namespace Util
 
-}	// namespace TVTest
+} // namespace TVTest

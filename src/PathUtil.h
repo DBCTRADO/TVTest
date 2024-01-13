@@ -51,7 +51,7 @@ namespace TVTest
 		bool IsExists(const String &Path);
 		bool IsFileExists(const String &Path);
 
-	}	// namespace PathUtil
+	} // namespace PathUtil
 
 	class CFilePath : public String
 	{
@@ -79,7 +79,7 @@ namespace TVTest
 		bool IsFileExists() const { return PathUtil::IsFileExists(*this); }
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 template<> struct std::formatter<TVTest::CFilePath, TCHAR>
 	: public std::formatter<TVTest::String, TCHAR>

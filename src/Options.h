@@ -74,7 +74,7 @@ namespace TVTest
 		static DWORD m_GeneralUpdateFlags;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

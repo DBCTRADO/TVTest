@@ -196,6 +196,6 @@ bool WritePointSize(CSettings &Settings, LPCTSTR pszValueName, const Style::Font
 }
 
 
-}	// namespace StyleUtil
+} // namespace StyleUtil
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -733,4 +733,4 @@ bool CTextDrawEngine_DirectWrite::SetMaxFontCache(std::size_t MaxCache)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

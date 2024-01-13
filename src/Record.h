@@ -238,7 +238,7 @@ namespace TVTest
 		static bool ShowWritePluginSetting(HWND hwndOwner, LPCTSTR pszPlugin);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

@@ -111,7 +111,7 @@ namespace TVTest
 		int GetItemIDFromIDText(const String &IDText) const;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

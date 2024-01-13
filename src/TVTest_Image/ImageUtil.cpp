@@ -94,4 +94,4 @@ void CopyToRGB24(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

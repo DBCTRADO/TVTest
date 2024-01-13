@@ -1072,7 +1072,7 @@ LRESULT CProgramListPanel::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		}
 		return 0;
 
-#if 0	// テキストが長過ぎてツールチップを使うと問題がある
+#if 0 // テキストが長過ぎてツールチップを使うと問題がある
 	case WM_NOTIFY:
 		switch (reinterpret_cast<LPNMHDR>(lParam)->code) {
 		case TTN_NEEDTEXT:
@@ -1507,4 +1507,4 @@ void CProgramListPanel::ProgramListPanelStyle::NormalizeStyle(
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

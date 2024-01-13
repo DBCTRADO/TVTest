@@ -96,7 +96,7 @@ namespace TVTest
 		static LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

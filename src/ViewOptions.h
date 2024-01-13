@@ -108,7 +108,7 @@ namespace TVTest
 		Style::Font m_CurTitleBarFont;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

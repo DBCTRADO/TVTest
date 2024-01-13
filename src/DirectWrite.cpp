@@ -804,4 +804,4 @@ bool CDirectWriteRenderer::UpdateRenderingParams()
 
 
 
-}	// namespace TVTest
+} // namespace TVTest

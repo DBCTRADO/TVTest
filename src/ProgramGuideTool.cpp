@@ -54,10 +54,10 @@ private:
 
 
 const CEpgVariableStringMap::ParameterInfo CEpgVariableStringMap::m_EpgParameterList[] = {
-//	{TEXT("eid"),          TEXT("イベントID")},
+	//{TEXT("eid"),          TEXT("イベントID")},
 	{TEXT("nid"),          TEXT("ネットワークID")},
 	{TEXT("tsid"),         TEXT("ストリームID")},
-//	{TEXT("sid"),          TEXT("サービスID")},
+	//{TEXT("sid"),          TEXT("サービスID")},
 	{TEXT("tvpid"),        TEXT("iEPGファイル")},
 	{TEXT("duration-sec"), TEXT("番組の長さ(秒単位)")},
 	{TEXT("duration-min"), TEXT("番組の長さ(分単位)")},
@@ -401,4 +401,4 @@ const CProgramGuideTool *CProgramGuideToolList::GetTool(size_t Index) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

@@ -676,4 +676,4 @@ unsigned int __stdcall CEpgOptions::CEpgFileLoader::LoadThread(void *pParameter)
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

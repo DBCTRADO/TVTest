@@ -1137,4 +1137,4 @@ LRESULT CDropHelper::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

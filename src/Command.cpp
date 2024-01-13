@@ -399,4 +399,4 @@ void CCommandManager::CCommandLister::Reset()
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

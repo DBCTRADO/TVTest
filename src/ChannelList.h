@@ -205,7 +205,7 @@ namespace TVTest
 		bool MakeTuningSpaceList(const CChannelList *pList, int Spaces = 0);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

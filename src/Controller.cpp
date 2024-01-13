@@ -835,4 +835,4 @@ bool CControllerManager::ControllerSettings::operator==(const ControllerSettings
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

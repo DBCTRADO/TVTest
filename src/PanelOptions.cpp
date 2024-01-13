@@ -260,7 +260,7 @@ int CPanelOptions::RegisterPanelItem(LPCTSTR pszID, LPCTSTR pszTitle)
 	Item.fVisible = true;
 
 	if (GetItemIDFromIDText(Item.ID) >= 0)
-		return -1;	// ID重複
+		return -1; // ID重複
 
 	m_AvailItemList.push_back(Item);
 
@@ -595,4 +595,4 @@ int CPanelOptions::GetItemIDFromIDText(const String &IDText) const
 }
 
 
-}	// namespace TVTest
+} // namespace TVTest

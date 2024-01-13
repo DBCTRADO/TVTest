@@ -116,7 +116,7 @@ namespace TVTest
 		void UpdateLanguagePriorityControls();
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

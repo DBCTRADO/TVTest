@@ -199,7 +199,7 @@ namespace TVTest
 		STDMETHODIMP OutputPacket(Interface::ITSPacket *pPacket) override;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

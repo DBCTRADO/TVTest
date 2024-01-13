@@ -87,7 +87,7 @@ namespace TVTest
 		static INT_PTR CALLBACK SaveDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

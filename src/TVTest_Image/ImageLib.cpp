@@ -88,6 +88,6 @@ HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName)
 }
 
 
-}	// namespace ImageLib
+} // namespace ImageLib
 
-}	// namespace TVTest
+} // namespace TVTest
