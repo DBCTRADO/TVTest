@@ -88,6 +88,9 @@ bool CEpgOptions::ReadSettings(CSettings &Settings)
 		LogoManager.SetSaveLogo(fSaveLogo);
 	if (Settings.Read(TEXT("SaveBmpLogo"), &fSaveLogo))
 		LogoManager.SetSaveLogoBmp(fSaveLogo);
+	if (bool fForceUpdate; Settings.Read(TEXT("LogoForceUpdate"), &fForceUpdate))
+		LogoManager.SetForceUpdate(fForceUpdate);
+
 	TCHAR szLogoDir[MAX_PATH];
 	if (Settings.Read(TEXT("LogoDirectory"), szLogoDir, MAX_PATH)) {
 		LogoManager.SetLogoDirectory(szLogoDir);
@@ -126,6 +129,7 @@ bool CEpgOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("LogoDataFileName"), m_LogoFileName);
 	Settings.Write(TEXT("SaveRawLogo"), LogoManager.GetSaveLogo());
 	Settings.Write(TEXT("SaveBmpLogo"), LogoManager.GetSaveLogoBmp());
+	Settings.Write(TEXT("LogoForceUpdate"), LogoManager.GetForceUpdate());
 	Settings.Write(TEXT("LogoDirectory"), LogoManager.GetLogoDirectory());
 
 	StyleUtil::WriteFontSettings(Settings, TEXT("EventInfoFont"), m_EventInfoFont);
@@ -340,6 +344,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_fSaveLogoFile);
 			DlgCheckBox_Check(hDlg, IDC_LOGOOPTIONS_SAVERAWLOGO, LogoManager.GetSaveLogo());
 			DlgCheckBox_Check(hDlg, IDC_LOGOOPTIONS_SAVEBMPLOGO, LogoManager.GetSaveLogoBmp());
+			DlgCheckBox_Check(hDlg, IDC_LOGOOPTIONS_FORCEUPDATE, LogoManager.GetForceUpdate());
 			::SendDlgItemMessage(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, EM_LIMITTEXT, MAX_PATH - 1, 0);
 			::SetDlgItemText(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, LogoManager.GetLogoDirectory());
 
@@ -496,6 +501,7 @@ INT_PTR CEpgOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				GetDlgItemString(hDlg, IDC_LOGOOPTIONS_DATAFILENAME, &m_LogoFileName);
 				LogoManager.SetSaveLogo(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVERAWLOGO));
 				LogoManager.SetSaveLogoBmp(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_SAVEBMPLOGO));
+				LogoManager.SetForceUpdate(DlgCheckBox_IsChecked(hDlg, IDC_LOGOOPTIONS_FORCEUPDATE));
 				String Path;
 				GetDlgItemString(hDlg, IDC_LOGOOPTIONS_LOGOFOLDER, &Path);
 				LogoManager.SetLogoDirectory(Path.c_str());

@@ -53,6 +53,8 @@ namespace TVTest
 		bool GetSaveLogo() const { return m_fSaveLogo; }
 		bool SetSaveLogoBmp(bool fSave);
 		bool GetSaveLogoBmp() const { return m_fSaveBmp; }
+		void SetForceUpdate(bool fForce);
+		bool GetForceUpdate() const { return m_fForceUpdate; }
 		bool AssociateLogoID(WORD NetworkID, WORD ServiceID, WORD LogoID);
 		bool SaveLogoFile(LPCTSTR pszFileName);
 		bool LoadLogoFile(LPCTSTR pszFileName);
@@ -130,6 +132,7 @@ namespace TVTest
 		CFilePath m_LogoDirectory{TEXT(".\\Logo")};
 		bool m_fSaveLogo = false;
 		bool m_fSaveBmp = false;
+		bool m_fForceUpdate = false;
 		LogoMap m_LogoMap;
 		LogoIDMap m_LogoIDMap;
 		CImageCodec m_ImageCodec;

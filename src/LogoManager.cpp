@@ -144,6 +144,14 @@ bool CLogoManager::SetSaveLogoBmp(bool fSave)
 }
 
 
+void CLogoManager::SetForceUpdate(bool fForce)
+{
+	BlockLock Lock(m_Lock);
+
+	m_fForceUpdate = fForce;
+}
+
+
 bool CLogoManager::AssociateLogoID(WORD NetworkID, WORD ServiceID, WORD LogoID)
 {
 	BlockLock Lock(m_Lock);
@@ -516,18 +524,24 @@ void CLogoManager::OnLogoDownloaded(const LibISDB::LogoDownloaderFilter::LogoDat
 	bool fUpdated = false, fDataUpdated = false;
 	CLogoData *pLogoData;
 	if (itr != m_LogoMap.end()) {
-		// バージョンが新しい場合のみ更新
-		const int VerCmp = CompareLogoVersion(itr->second->GetLogoVersion(), Data.LogoVersion);
+		const int VerCmp =
+			m_fForceUpdate ?
+				-1 :
+				// バージョンが新しい場合のみ更新
+				CompareLogoVersion(itr->second->GetLogoVersion(), Data.LogoVersion);
 		if (VerCmp < 0
 				|| (VerCmp == 0 && itr->second->GetTime() < Data.Time)) {
 			// BS/CSはバージョンが共通のため、データを比較して更新を確認する
 			if (Data.DataSize != itr->second->GetDataSize()
 					|| std::memcmp(Data.pData, itr->second->GetData(), Data.DataSize) != 0) {
+				TRACE(
+					TEXT("Update logo data : NID {:04x} / Logo ID {:03x} / Type {:02x} / Version {:03x} -> {:03x}\n"),
+					Data.NetworkID, Data.LogoID, Data.LogoType, itr->second->GetLogoVersion(), Data.LogoVersion);
 				pLogoData = new CLogoData(&Data);
 				itr->second.reset(pLogoData);
 				fUpdated = true;
 				fDataUpdated = true;
-			} else if (VerCmp < 0) {
+			} else if (VerCmp < 0 && itr->second->GetLogoVersion() != Data.LogoVersion) {
 				itr->second->SetLogoVersion(Data.LogoVersion);
 				fUpdated = true;
 			}
