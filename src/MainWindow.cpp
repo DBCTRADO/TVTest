@@ -1318,8 +1318,6 @@ LRESULT CMainWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 			if (pInfo->m_fStreamChanged) {
 				if (m_Timer.IsTimerEnabled(TIMER_ID_RESETERRORCOUNT))
 					m_Timer.BeginTimer(TIMER_ID_RESETERRORCOUNT, 2000);
-
-				m_Display.GetDisplayBase().SetVisible(false);
 			}
 
 			if (!m_App.Core.IsChannelScanning()
@@ -4741,6 +4739,13 @@ bool CMainWindow::ShowProgramGuide(bool fShow, ShowProgramGuideFlag Flags, const
 	m_pCore->SetCommandCheckedState(CM_PROGRAMGUIDE, m_App.Epg.fShowProgramGuide);
 
 	return true;
+}
+
+
+bool CMainWindow::IsProgramGuideOnScreenDisplaying() const
+{
+	return m_App.Epg.fShowProgramGuide
+		&& !m_App.Epg.ProgramGuideFrame.IsCreated();
 }
 
 

@@ -391,23 +391,35 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 			return;
 	}
 
+	int Space = -1, Channel = -1;
+
 	const CChannelList *pChannelList = App.ChannelManager.GetCurrentChannelList();
 	if (pChannelList != nullptr) {
 		const int Index = FindChannel(pChannelList, pServiceInfo);
 		if (Index >= 0) {
-			App.Core.SetChannel(App.ChannelManager.GetCurrentSpace(), Index);
-			return;
+			Space = App.ChannelManager.GetCurrentSpace();
+			Channel = Index;
 		}
 	}
-	for (int i = 0; i < App.ChannelManager.NumSpaces(); i++) {
-		pChannelList = App.ChannelManager.GetChannelList(i);
-		if (pChannelList != nullptr) {
-			const int Index = FindChannel(pChannelList, pServiceInfo);
-			if (Index >= 0) {
-				App.Core.SetChannel(i, Index);
-				return;
+	if (Channel < 0) {
+		for (int i = 0; i < App.ChannelManager.NumSpaces(); i++) {
+			pChannelList = App.ChannelManager.GetChannelList(i);
+			if (pChannelList != nullptr) {
+				const int Index = FindChannel(pChannelList, pServiceInfo);
+				if (Index >= 0) {
+					Space = i;
+					Channel = Index;
+					break;
+				}
 			}
 		}
+	}
+
+	if (Channel >= 0) {
+		App.Core.SetChannel(Space, Channel);
+
+		if (App.MainWindow.IsProgramGuideOnScreenDisplaying())
+			App.MainWindow.ShowProgramGuide(false);
 	}
 }
 

@@ -177,6 +177,7 @@ namespace TVTest
 		bool ShowProgramGuide(
 			bool fShow, ShowProgramGuideFlag Flags = ShowProgramGuideFlag::None,
 			const ProgramGuideSpaceInfo *pSpaceInfo = nullptr);
+		bool IsProgramGuideOnScreenDisplaying() const;
 
 		bool PostNotification(
 			LPCTSTR pszText,
