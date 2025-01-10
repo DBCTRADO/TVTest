@@ -5023,6 +5023,18 @@ void CMainWindow::SetWindowVisible()
 	}
 	if (::IsIconic(m_hwnd)) {
 		::ShowWindow(m_hwnd, SW_RESTORE);
+
+		/*
+			Windows 11 で、プログラム開始時にシステムトレイに入れるようにした場合、
+			ウィンドウ枠を細くしているとウィンドウの左上と右上のみ角が小さく丸められる謎現象が起こる。
+			一度枠の幅を0にしてから本来の幅に戻せば直るので、とりあえずそれで対応している。
+		*/
+		if (m_fMinimizeInit && m_fCustomFrame && m_CustomFrameWidth != 0
+				&& Util::OS::IsWindows11OrLater()) {
+			SetCustomFrame(true, 0);
+			SetCustomFrame(true, m_ThinFrameWidth);
+		}
+
 		Update();
 		fRestore = true;
 	} else if (!fShow) {
