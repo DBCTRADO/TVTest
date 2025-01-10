@@ -147,8 +147,7 @@ bool CMainWindow::Create(HWND hwndParent, DWORD Style, DWORD ExStyle, int ID)
 
 bool CMainWindow::Show(int CmdShow, bool fForce)
 {
-	if (!m_fShowTitleBar || m_fCustomTitleBar)
-		SetWindowStyle(GetWindowStyle() & ~WS_CAPTION, true);
+	UpdateCaptionStyle();
 
 	if (::ShowWindow(m_hwnd, !fForce && m_WindowPosition.fMaximized ? SW_SHOWMAXIMIZED : CmdShow))
 		return false;
@@ -665,7 +664,7 @@ void CMainWindow::SetTitleBarVisible(bool fVisible)
 			if (!fMaximize)
 				GetPosition(&rc);
 			if (!m_fCustomTitleBar)
-				SetWindowStyle(GetWindowStyle()^WS_CAPTION, fMaximize);
+				UpdateCaptionStyle();
 			else if (!fVisible)
 				m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR, false);
 			if (!fMaximize) {
@@ -707,7 +706,7 @@ void CMainWindow::SetCustomTitleBar(bool fCustom)
 				if (!fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR, false);
 				m_pCore->UpdateTitle();
-				SetWindowStyle(GetWindowStyle()^WS_CAPTION, true);
+				UpdateCaptionStyle();
 				if (fCustom)
 					m_LayoutBase.SetContainerVisible(CONTAINER_ID_TITLEBAR, true);
 			}
@@ -739,6 +738,7 @@ void CMainWindow::SetCustomFrame(bool fCustomFrame, int Width)
 		if (fCustomFrame)
 			m_CustomFrameWidth = Width;
 		if (m_hwnd != nullptr) {
+			UpdateCaptionStyle();
 			// 最大化状態でウィンドウ枠を変えるとおかしくなるので、元に戻された時に変える
 			if (::IsZoomed(m_hwnd))
 				m_fWindowFrameChanged = true;
@@ -4982,6 +4982,21 @@ void CMainWindow::UpdateWindowFrame()
 }
 
 
+void CMainWindow::UpdateCaptionStyle()
+{
+	const DWORD OldStyle = GetWindowStyle();
+	DWORD NewStyle = OldStyle;
+
+	if (!m_fShowTitleBar || m_fCustomTitleBar)
+		NewStyle &= ~WS_CAPTION;
+	else
+		NewStyle |= WS_CAPTION;
+
+	if (NewStyle != OldStyle)
+		SetWindowStyle(NewStyle, true);
+}
+
+
 void CMainWindow::SetWindowVisible()
 {
 	bool fRestore = false, fShow = false;
@@ -4995,6 +5010,7 @@ void CMainWindow::SetWindowVisible()
 	}
 	if (!GetVisible()) {
 		if (m_fMinimizeInit || m_fStandbyInit) {
+			UpdateCaptionStyle();
 			Show(SW_SHOWNORMAL);
 			if (m_fMinimizeInit)
 				fRestore = true;

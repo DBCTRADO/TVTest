@@ -727,6 +727,7 @@ namespace TVTest
 		void HookChildWindow(HWND hwnd);
 		void SetMaximizedRegion(bool fSet);
 		void UpdateWindowFrame();
+		void UpdateCaptionStyle();
 		void SendCommand(int Command) { SendMessage(WM_COMMAND, Command, 0); }
 		void PostCommand(int Command) { PostMessage(WM_COMMAND, Command, 0); }
 
