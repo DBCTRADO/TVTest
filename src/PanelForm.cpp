@@ -158,11 +158,14 @@ CPanelForm::CPage *CPanelForm::GetPageByID(int ID)
 
 bool CPanelForm::SetCurTab(int Index)
 {
-	if (Index < -1 || static_cast<size_t>(Index) >= m_WindowList.size())
+	if (Index < -1) {
 		return false;
-
-	if (!m_WindowList[Index]->m_fVisible)
-		return false;
+	 } else if (Index >= 0) {
+		if (static_cast<size_t>(Index) >= m_WindowList.size())
+			return false;
+		if (!m_WindowList[Index]->m_fVisible)
+			return false;
+	 }
 
 	if (m_CurTab != Index) {
 		if (m_CurTab >= 0) {
