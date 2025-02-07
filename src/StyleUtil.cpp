@@ -138,12 +138,12 @@ bool ReadFontSettings(
 
 		Key = pszValueName;
 		Key += TEXT("Weight");
-		if (Settings.Read(TEXT("NotificationBarFontWeight"), &Value))
+		if (Settings.Read(Key.c_str(), &Value))
 			pFont->LogFont.lfWeight = Value;
 
 		Key = pszValueName;
 		Key += TEXT("Italic");
-		if (Settings.Read(TEXT("NotificationBarFontItalic"), &Value))
+		if (Settings.Read(Key.c_str(), &Value))
 			pFont->LogFont.lfItalic = Value;
 	}
 
