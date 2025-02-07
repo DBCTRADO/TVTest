@@ -384,8 +384,6 @@ LRESULT CSideBar::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			InitializeUI();
 
-			const CREATESTRUCT *pcs = reinterpret_cast<const CREATESTRUCT*>(lParam);
-
 			m_Tooltip.Create(hwnd);
 			m_Tooltip.Enable(m_fShowTooltips);
 			SetTooltipFont();
