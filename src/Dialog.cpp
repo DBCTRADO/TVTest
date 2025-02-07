@@ -326,8 +326,10 @@ INT_PTR CALLBACK CBasicDialog::DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 				pThis->m_hDlg = nullptr;
 			}
 			::RemoveProp(hDlg, PROP_NAME);
-			pThis->OnDestroyed();
-			// ここで既に pThis が delete されている可能性がある
+			if (pThis != nullptr) {
+				pThis->OnDestroyed();
+				// ここで既に pThis が delete されている可能性がある
+			}
 			return TRUE;
 		}
 	}
