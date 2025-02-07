@@ -249,7 +249,6 @@ bool Canonicalize(String *pPath)
 			const StringView Item(pPath->data() + Next, Pos - Next);
 			if (Item.compare(L".") == 0) {
 				pPath->erase(Next, Pos - Next + 1);
-				Pos = Next;
 			} else if (Item.compare(L"..") == 0) {
 				if (Next < 2)
 					return false;
