@@ -868,7 +868,7 @@ bool CFont::operator==(const CFont &Font) const
 	if (m_hfont == nullptr)
 		return Font.m_hfont == nullptr;
 	if (Font.m_hfont == nullptr)
-		return m_hfont == nullptr;
+		return false;
 	LOGFONT lf1, lf2;
 	GetLogFont(&lf1);
 	Font.GetLogFont(&lf2);
