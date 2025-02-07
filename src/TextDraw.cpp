@@ -130,13 +130,12 @@ int CTextDraw::CalcLineCount(LPCWSTR pszText, int Width)
 			continue;
 		}
 
-		int Length = GetLineLength(p);
+		const int Length = GetLineLength(p);
 		if (Length == 0)
 			break;
 
 		int Fit = GetFitCharCount(p, Length, Width);
 		Fit = AdjustLineLength(p, Fit);
-		Length -= Fit;
 		p += Fit;
 		Lines++;
 
@@ -205,7 +204,6 @@ bool CTextDraw::Draw(LPCWSTR pszText, const RECT &Rect, int LineHeight, DrawFlag
 				LineFlags |= DrawFlag::Align_Justified;
 		}
 		m_pEngine->DrawText(p, Fit, rc, LineFlags);
-		Length -= Fit;
 		p += Fit;
 		y += LineHeight;
 
