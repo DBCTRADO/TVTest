@@ -1679,6 +1679,8 @@ void CChannelScan::Scan()
 							|| (App.NetworkDefinition.IsBSNetworkID(NetworkID) && ServiceID < 190 && ServiceCount > 0)
 							// 地デジのサブチャンネル
 							|| (NetworkID == TransportStreamID && ServiceCount > 0)
+							// サービス名がハイフンのみ(恐らく閉局)
+							|| (Name == L"－")
 						)
 						pChInfo->Enable(false);
 
