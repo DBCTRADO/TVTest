@@ -283,6 +283,7 @@ namespace TVTest
 		public:
 			virtual ~CEventHandler();
 
+			virtual void OnCreate() {}
 			virtual bool OnClose() { return true; }
 			virtual void OnDestroy() {}
 			virtual void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const ServiceInfo *pServiceInfo) {}

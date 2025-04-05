@@ -334,6 +334,12 @@ void CEpg::CChannelProviderManager::CFavoritesChannelProvider::AddSubItems(
 }
 
 
+void CEpg::CProgramGuideEventHandler::OnCreate()
+{
+	GetAppClass().AppEventManager.AddEventHandler(&m_AppEventHandler);
+}
+
+
 bool CEpg::CProgramGuideEventHandler::OnClose()
 {
 	CAppMain &App = GetAppClass();
@@ -349,6 +355,8 @@ void CEpg::CProgramGuideEventHandler::OnDestroy()
 	m_pProgramGuide->Clear();
 
 	CAppMain &App = GetAppClass();
+
+	App.AppEventManager.RemoveEventHandler(&m_AppEventHandler);
 
 	if (App.UICore.GetStandby()
 			&& App.UICore.GetTransientStandby()
@@ -417,9 +425,6 @@ void CEpg::CProgramGuideEventHandler::OnServiceTitleLButtonDown(LPCTSTR pszDrive
 
 	if (Channel >= 0) {
 		App.Core.SetChannel(Space, Channel);
-
-		if (App.MainWindow.IsProgramGuideOnScreenDisplaying())
-			App.MainWindow.ShowProgramGuide(false);
 	}
 }
 
@@ -440,6 +445,28 @@ bool CEpg::CProgramGuideEventHandler::OnMenuInitialize(HMENU hmenu, UINT Command
 bool CEpg::CProgramGuideEventHandler::OnMenuSelected(UINT Command)
 {
 	return GetAppClass().PluginManager.SendProgramGuideMenuSelectedEvent(Command);
+}
+
+
+void CEpg::CProgramGuideEventHandler::CProgramGuideAppEventHandler::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
+{
+	if (!(Status & AppEvent::ChannelChangeStatus::Detected))
+		CloseOnScreenProgramGuide();
+}
+
+
+void CEpg::CProgramGuideEventHandler::CProgramGuideAppEventHandler::OnServiceChanged()
+{
+	CloseOnScreenProgramGuide();
+}
+
+
+void CEpg::CProgramGuideEventHandler::CProgramGuideAppEventHandler::CloseOnScreenProgramGuide()
+{
+	CAppMain &App = GetAppClass();
+
+	if (App.MainWindow.IsProgramGuideOnScreenDisplaying())
+		App.MainWindow.ShowProgramGuide(false);
 }
 
 

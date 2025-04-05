@@ -4277,6 +4277,9 @@ LRESULT CProgramGuide::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 			LibISDB::GetCurrentEPGTime(&m_CurTime);
 			::SetTimer(hwnd, TIMER_ID_UPDATECURTIME, 1000, nullptr);
+
+			if (m_pEventHandler != nullptr)
+				m_pEventHandler->OnCreate();
 		}
 		return 0;
 

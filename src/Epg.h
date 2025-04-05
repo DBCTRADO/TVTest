@@ -24,6 +24,7 @@
 
 #include "ProgramGuide.h"
 #include "Favorites.h"
+#include "AppEvent.h"
 
 
 namespace TVTest
@@ -97,6 +98,7 @@ namespace TVTest
 		class CProgramGuideEventHandler
 			: public CProgramGuide::CEventHandler
 		{
+			void OnCreate() override;
 			bool OnClose() override;
 			void OnDestroy() override;
 			void OnServiceTitleLButtonDown(LPCTSTR pszDriverFileName, const CProgramGuide::ServiceInfo *pServiceInfo) override;
@@ -105,6 +107,17 @@ namespace TVTest
 			bool OnMenuSelected(UINT Command) override;
 
 			int FindChannel(const CChannelList *pChannelList, const CProgramGuide::ServiceInfo *pServiceInfo);
+
+			class CProgramGuideAppEventHandler
+				: public CAppEventHandler
+			{
+				void OnChannelChanged(AppEvent::ChannelChangeStatus Status) override;
+				void OnServiceChanged() override;
+
+				void CloseOnScreenProgramGuide();
+			};
+
+			CProgramGuideAppEventHandler m_AppEventHandler;
 		};
 
 		class CProgramGuideDisplayEventHandler
