@@ -1169,22 +1169,30 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					SetUpdateFlag(UPDATE_CHANNELLIST);
 
 					if (fOK) {
-						LPTSTR pSequence = ::PathFindExtension(szFileName);
-						if (pSequence > szFileName && *(--pSequence) == _T('0')) {
+						// 連番の BonDriver が存在する場合はチャンネルファイルをコピーするか尋ねる
+						TCHAR szSequenceFileName[MAX_PATH];
+						::PathRenameExtension(szFileName, TEXT(".dll"));
+						StringCopy(szSequenceFileName, szFileName);
+						LPTSTR pSequence = ::PathFindExtension(szSequenceFileName);
+						if (pSequence > szSequenceFileName
+								&& (*(pSequence - 1) == _T('0') || !std::_istdigit(*(pSequence - 1)))) {
+							if (*(pSequence - 1) == _T('0'))
+								pSequence--;
 							StringCopy(pSequence + 1, TEXT(".dll"));
 							unsigned int Exists = 0;
 							for (int i = 1; i <= 9; i++) {
 								*pSequence = _T('0') + i;
-								if (::PathFileExists(szFileName))
+								if (::PathFileExists(szSequenceFileName))
 									Exists |= 1U << i;
 							}
 							if (Exists != 0) {
-								LPCTSTR pszName = ::PathFindFileName(szFileName);
+								LPCTSTR pszName = ::PathFindFileName(szSequenceFileName);
 								TCHAR szText[256 + MAX_PATH * 10];
 								CStaticStringFormatter Formatter(szText, lengthof(szText));
 
-								*pSequence = _T('0');
-								Formatter.AppendFormat(TEXT("{} のチャンネルスキャン結果を\n以下の BonDriver にも反映させますか？\n\n"), pszName);
+								Formatter.AppendFormat(
+									TEXT("{} のチャンネルスキャン結果を\n以下の BonDriver にも反映させますか？\n\n"),
+									::PathFindFileName(szFileName));
 								for (int i = 1; i <= 9; i++) {
 									if ((Exists & (1U << i)) != 0) {
 										*pSequence = _T('0') + i;
@@ -1194,16 +1202,16 @@ INT_PTR CChannelScan::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 								if (::MessageBox(hDlg, Formatter.GetString(), TEXT("チャンネルスキャン"), MB_YESNO | MB_ICONINFORMATION) == IDYES) {
 									for (int i = 1; i <= 9; i++) {
 										if ((Exists & (1U << i)) != 0) {
-											::PathRenameExtension(szFileName, CHANNEL_FILE_EXTENSION);
+											::PathRenameExtension(szSequenceFileName, CHANNEL_FILE_EXTENSION);
 											*pSequence = _T('0') + i;
-											if (m_TuningSpaceList.SaveToFile(szFileName)) {
-												App.AddLog(TEXT("チャンネルファイルを \"{}\" に保存しました。"), szFileName);
-												::PathRenameExtension(szFileName, TEXT(".dll"));
-												App.Core.UpdateChannelList(szFileName, &m_TuningSpaceList);
+											if (m_TuningSpaceList.SaveToFile(szSequenceFileName)) {
+												App.AddLog(TEXT("チャンネルファイルを \"{}\" に保存しました。"), szSequenceFileName);
+												::PathRenameExtension(szSequenceFileName, TEXT(".dll"));
+												App.Core.UpdateChannelList(szSequenceFileName, &m_TuningSpaceList);
 											} else {
 												StringFormat(
 													szText,
-													TEXT("チャンネルファイル \"{}\" を保存できません。"), szFileName);
+													TEXT("チャンネルファイル \"{}\" を保存できません。"), szSequenceFileName);
 												App.AddLogRaw(CLogItem::LogType::Error, szText);
 												if (::MessageBox(hDlg, szText, nullptr, MB_OKCANCEL | MB_ICONEXCLAMATION) != IDOK)
 													break;
