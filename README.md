@@ -20,4 +20,4 @@ CAS 処理は実装されていないため、一般のテレビ放送を視聴�
 
 ライセンス
 ----------
-GPL v2
+GNU General Public License v2.0 or later (GPL-2.0-or-later)
