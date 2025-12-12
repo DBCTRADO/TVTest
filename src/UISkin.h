@@ -24,6 +24,7 @@
 
 #include "AppEvent.h"
 #include "NotificationBar.h"
+#include "Graphics.h"
 #include "LibISDB/LibISDB/Base/ErrorHandler.hpp"
 
 
@@ -48,7 +49,7 @@ namespace TVTest
 		virtual bool GetZoomRate(int *pRate, int *pFactor) = 0;
 		virtual void SetTitleText(LPCTSTR pszTitleText, LPCTSTR pszWindowText) = 0;
 		virtual bool SetTitleFont(const Style::Font & Font) = 0;
-		virtual bool SetLogo(HBITMAP hbm) = 0;
+		virtual bool SetLogo(Graphics::CImage *pImage) = 0;
 		virtual bool SetAlwaysOnTop(bool fTop) = 0;
 		virtual bool SetFullscreen(bool fFullscreen) = 0;
 		virtual bool SetStandby(bool fStandby) = 0;

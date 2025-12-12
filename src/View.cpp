@@ -232,8 +232,6 @@ CViewWindow::~CViewWindow()
 	Destroy();
 	if (m_pEventHandler != nullptr)
 		m_pEventHandler->m_pView = nullptr;
-	if (m_hbmLogo != nullptr)
-		::DeleteObject(m_hbmLogo);
 }
 
 
@@ -275,13 +273,12 @@ void CViewWindow::SetEventHandler(CEventHandler *pEventHandler)
 }
 
 
-bool CViewWindow::SetLogo(HBITMAP hbm)
+bool CViewWindow::SetLogo(Graphics::CImage *pImage)
 {
-	if (hbm == nullptr && m_hbmLogo == nullptr)
-		return true;
-	if (m_hbmLogo)
-		::DeleteObject(m_hbmLogo);
-	m_hbmLogo = hbm;
+	if (pImage != nullptr)
+		m_LogoImage = std::move(*pImage);
+	else
+		m_LogoImage.Free();
 	if (m_hwnd)
 		Redraw();
 	return true;
@@ -369,26 +366,26 @@ LRESULT CViewWindow::OnMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		{
 			PAINTSTRUCT ps;
 			RECT rcClient;
-			const HBRUSH hbr = static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH));
 
 			::BeginPaint(hwnd, &ps);
 			::GetClientRect(hwnd, &rcClient);
-			if (m_hbmLogo) {
-				RECT rcImage;
-				BITMAP bm;
 
-				::GetObject(m_hbmLogo, sizeof(BITMAP), &bm);
-				rcImage.left = (rcClient.right - bm.bmWidth) / 2;
-				rcImage.top = (rcClient.bottom - bm.bmHeight) / 2;
-				rcImage.right = rcImage.left + bm.bmWidth;
-				rcImage.bottom = rcImage.top + bm.bmHeight;
-				DrawUtil::DrawBitmap(
-					ps.hdc,
-					rcImage.left, rcImage.top, bm.bmWidth, bm.bmHeight,
-					m_hbmLogo);
-				DrawUtil::FillBorder(ps.hdc, &rcClient, &rcImage, &ps.rcPaint, hbr);
+			if (m_LogoImage.IsCreated()) {
+				const int LogoWidth = m_LogoImage.GetWidth();
+				const int LogoHeight = m_LogoImage.GetHeight();
+				RECT rcImage;
+
+				rcImage.left = (rcClient.right - LogoWidth) / 2;
+				rcImage.top = (rcClient.bottom - LogoHeight) / 2;
+				rcImage.right = rcImage.left + LogoWidth;
+				rcImage.bottom = rcImage.top + LogoHeight;
+
+				Graphics::CBrush Brush(0, 0, 0);
+				Graphics::CCanvas Canvas(ps.hdc);
+				Canvas.FillRect(&Brush, rcClient);
+				Canvas.DrawImage(&m_LogoImage, rcImage.left, rcImage.top);
 			} else {
-				::FillRect(ps.hdc, &ps.rcPaint, hbr);
+				::FillRect(ps.hdc, &ps.rcPaint, static_cast<HBRUSH>(::GetStockObject(BLACK_BRUSH)));
 			}
 			{
 				Theme::CThemeDraw ThemeDraw(BeginThemeDraw(ps.hdc));

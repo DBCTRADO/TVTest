@@ -1518,19 +1518,12 @@ bool CUICore::SetLogo(LPCTSTR pszFileName)
 		StringCopy(szFileName, pszFileName);
 	}
 
-	const HBITMAP hbm = static_cast<HBITMAP>(
-		::LoadImage(
-			nullptr, szFileName, IMAGE_BITMAP,
-			0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION));
-	if (hbm == nullptr)
+	Graphics::CImage Image;
+
+	if (!Image.LoadFromFile(szFileName))
 		return false;
 
-	if (!m_pSkin->SetLogo(hbm)) {
-		::DeleteObject(hbm);
-		return false;
-	}
-
-	return true;
+	return m_pSkin->SetLogo(&Image);
 }
 
 

@@ -290,7 +290,11 @@ INT_PTR CViewOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				InitOpenFileName(&ofn);
 				ofn.hwndOwner = hDlg;
 				ofn.lpstrFilter =
-					TEXT("BMPファイル(*.bmp)\0*.bmp\0")
+					TEXT("画像ファイル (*.bmp;*.gif;*.jpg;*.jpeg;*.png)\0*.bmp;*.gif;*.jpg;*.jpeg;*.png\0")
+					TEXT("BMPファイル (*.bmp)\0*.bmp\0")
+					TEXT("GIFファイル (*.gif)\0*.gif\0")
+					TEXT("JPEGファイル (*.jpg;*.jpeg)\0*.jpg;*.jpeg\0")
+					TEXT("PNGファイル (*.png)\0*.png\0")
 					TEXT("すべてのファイル\0*.*\0");
 				ofn.lpstrFile = szFileName;
 				ofn.nMaxFile = lengthof(szFileName);

@@ -89,6 +89,7 @@ namespace TVTest
 			CImage(const CImage &Src);
 
 			CImage &operator=(const CImage &Src);
+			CImage &operator=(CImage &&Src) noexcept;
 
 			void Free();
 			bool LoadFromFile(LPCWSTR pszFileName);

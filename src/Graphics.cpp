@@ -118,6 +118,15 @@ CImage &CImage::operator=(const CImage &Src)
 }
 
 
+CImage &CImage::operator=(CImage &&Src) noexcept
+{
+	if (&Src != this) {
+		m_Bitmap = std::move(Src.m_Bitmap);
+	}
+	return *this;
+}
+
+
 void CImage::Free()
 {
 	m_Bitmap.reset();

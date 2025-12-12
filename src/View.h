@@ -25,6 +25,7 @@
 #include "BasicWindow.h"
 #include "UIBase.h"
 #include "Theme.h"
+#include "Graphics.h"
 #include "LibISDB/LibISDB/Windows/Viewer/ViewerFilter.hpp"
 
 
@@ -224,7 +225,7 @@ namespace TVTest
 		void SetVideoContainer(CVideoContainerWindow *pVideoContainer);
 		void SetMessageWindow(HWND hwnd);
 		void SetEventHandler(CEventHandler *pEventHandler);
-		bool SetLogo(HBITMAP hbm);
+		bool SetLogo(Graphics::CImage *pImage);
 		void SetBorder(const Theme::BorderStyle &Style);
 		void SetMargin(const Style::Margins &Margin);
 		void SetShowCursor(bool fShow);
@@ -239,7 +240,7 @@ namespace TVTest
 		CVideoContainerWindow *m_pVideoContainer = nullptr;
 		HWND m_hwndMessage = nullptr;
 		CEventHandler *m_pEventHandler = nullptr;
-		HBITMAP m_hbmLogo = nullptr;
+		Graphics::CImage m_LogoImage;
 		Theme::BorderStyle m_BorderStyle{Theme::BorderType::None, RGB(128, 128, 128)};
 		Style::Margins m_Margin;
 		bool m_fShowCursor = true;

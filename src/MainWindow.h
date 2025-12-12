@@ -646,7 +646,7 @@ namespace TVTest
 		bool GetZoomRate(int *pRate, int *pFactor) override;
 		void SetTitleText(LPCTSTR pszTitleText, LPCTSTR pszWindowText) override;
 		bool SetTitleFont(const Style::Font &Font) override;
-		bool SetLogo(HBITMAP hbm) override;
+		bool SetLogo(Graphics::CImage *pImage) override;
 		bool SetAlwaysOnTop(bool fTop) override;
 		bool SetFullscreen(bool fFullscreen) override;
 		bool SetStandby(bool fStandby) override;

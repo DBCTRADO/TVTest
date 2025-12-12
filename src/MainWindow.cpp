@@ -4623,9 +4623,9 @@ bool CMainWindow::SetTitleFont(const Style::Font &Font)
 }
 
 
-bool CMainWindow::SetLogo(HBITMAP hbm)
+bool CMainWindow::SetLogo(Graphics::CImage *pImage)
 {
-	return m_Display.GetViewWindow().SetLogo(hbm);
+	return m_Display.GetViewWindow().SetLogo(pImage);
 }
 
 
