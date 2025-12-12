@@ -485,6 +485,7 @@ Decode:
 			BYTE *r = q;
 
 			if (FilterType > 4) {
+				::GlobalUnlock(hDIB);
 				::GlobalFree(hDIB);
 				return nullptr;
 			}
@@ -570,6 +571,8 @@ Decode:
 		if (i == 0)
 			break;
 	}
+
+	::GlobalUnlock(hDIB);
 
 	return hDIB;
 }
