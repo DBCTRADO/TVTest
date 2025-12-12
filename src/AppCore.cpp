@@ -1514,7 +1514,7 @@ bool CAppCore::GetVariableStringEventInfo(
 					fNext = true;
 			}
 		}
-		if (pAnalyzer->GetEventInfo(Index, &pInfo->Event, fNext))
+		if (pAnalyzer->GetEventInfo(Index, &pInfo->Event, true, fNext))
 			fEventInfoValid = true;
 		pInfo->Event.ServiceID = ServiceID;
 	} else {
