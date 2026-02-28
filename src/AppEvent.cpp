@@ -1,12 +1,28 @@
+/*
+  TVTest
+  Copyright(c) 2008-2022 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "AppEvent.h"
 #include <algorithm>
 #include "Common/DebugDef.h"
-
-
-#define CALL_HANDLERS(func) \
-	EnumHandlers([&](CAppEventHandler *pHandler) { pHandler->func; })
 
 
 namespace TVTest
@@ -15,7 +31,7 @@ namespace TVTest
 
 bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 {
-	if (pHandler==nullptr)
+	if (pHandler == nullptr)
 		return false;
 
 	m_HandlerList.push_back(pHandler);
@@ -26,8 +42,8 @@ bool CAppEventManager::AddEventHandler(CAppEventHandler *pHandler)
 
 bool CAppEventManager::RemoveEventHandler(CAppEventHandler *pHandler)
 {
-	auto itr=std::find(m_HandlerList.begin(),m_HandlerList.end(),pHandler);
-	if (itr==m_HandlerList.end())
+	auto itr = std::ranges::find(m_HandlerList, pHandler);
+	if (itr == m_HandlerList.end())
 		return false;
 	m_HandlerList.erase(itr);
 	return true;
@@ -36,213 +52,253 @@ bool CAppEventManager::RemoveEventHandler(CAppEventHandler *pHandler)
 
 void CAppEventManager::OnTunerChanged()
 {
-	CALL_HANDLERS(OnTunerChanged());
+	CallHandlers(&CAppEventHandler::OnTunerChanged);
 }
 
 
 void CAppEventManager::OnTunerOpened()
 {
-	CALL_HANDLERS(OnTunerOpened());
+	CallHandlers(&CAppEventHandler::OnTunerOpened);
 }
 
 
 void CAppEventManager::OnTunerClosed()
 {
-	CALL_HANDLERS(OnTunerClosed());
+	CallHandlers(&CAppEventHandler::OnTunerClosed);
 }
 
 
 void CAppEventManager::OnTunerShutDown()
 {
-	CALL_HANDLERS(OnTunerShutDown());
+	CallHandlers(&CAppEventHandler::OnTunerShutDown);
 }
 
 
-void CAppEventManager::OnChannelChanged(unsigned int Status)
+void CAppEventManager::OnChannelChanged(AppEvent::ChannelChangeStatus Status)
 {
-	CALL_HANDLERS(OnChannelChanged(Status));
+	CallHandlers(&CAppEventHandler::OnChannelChanged, Status);
 }
 
 
 void CAppEventManager::OnServiceChanged()
 {
-	CALL_HANDLERS(OnServiceChanged());
+	CallHandlers(&CAppEventHandler::OnServiceChanged);
 }
 
 
 void CAppEventManager::OnServiceInfoUpdated()
 {
-	CALL_HANDLERS(OnServiceInfoUpdated());
+	CallHandlers(&CAppEventHandler::OnServiceInfoUpdated);
 }
 
 
 void CAppEventManager::OnServiceListUpdated()
 {
-	CALL_HANDLERS(OnServiceListUpdated());
+	CallHandlers(&CAppEventHandler::OnServiceListUpdated);
 }
 
 
 void CAppEventManager::OnChannelListChanged()
 {
-	CALL_HANDLERS(OnChannelListChanged());
+	CallHandlers(&CAppEventHandler::OnChannelListChanged);
 }
 
 
 void CAppEventManager::OnRecordingStart(AppEvent::RecordingStartInfo *pInfo)
 {
-	CALL_HANDLERS(OnRecordingStart(pInfo));
+	CallHandlers(&CAppEventHandler::OnRecordingStart, pInfo);
 }
 
 
 void CAppEventManager::OnRecordingStarted()
 {
-	CALL_HANDLERS(OnRecordingStarted());
+	CallHandlers(&CAppEventHandler::OnRecordingStarted);
 }
 
 
 void CAppEventManager::OnRecordingStopped()
 {
-	CALL_HANDLERS(OnRecordingStopped());
+	CallHandlers(&CAppEventHandler::OnRecordingStopped);
 }
 
 
 void CAppEventManager::OnRecordingPaused()
 {
-	CALL_HANDLERS(OnRecordingPaused());
+	CallHandlers(&CAppEventHandler::OnRecordingPaused);
 }
 
 
 void CAppEventManager::OnRecordingResumed()
 {
-	CALL_HANDLERS(OnRecordingResumed());
+	CallHandlers(&CAppEventHandler::OnRecordingResumed);
 }
 
 
 void CAppEventManager::OnRecordingFileChanged(LPCTSTR pszFileName)
 {
-	CALL_HANDLERS(OnRecordingFileChanged(pszFileName));
+	CallHandlers(&CAppEventHandler::OnRecordingFileChanged, pszFileName);
 }
 
 
 void CAppEventManager::On1SegModeChanged(bool f1SegMode)
 {
-	CALL_HANDLERS(On1SegModeChanged(f1SegMode));
+	CallHandlers(&CAppEventHandler::On1SegModeChanged, f1SegMode);
 }
 
 
 void CAppEventManager::OnFullscreenChanged(bool fFullscreen)
 {
-	CALL_HANDLERS(OnFullscreenChanged(fFullscreen));
+	CallHandlers(&CAppEventHandler::OnFullscreenChanged, fFullscreen);
 }
 
 
 void CAppEventManager::OnPlaybackStateChanged(bool fPlayback)
 {
-	CALL_HANDLERS(OnPlaybackStateChanged(fPlayback));
+	CallHandlers(&CAppEventHandler::OnPlaybackStateChanged, fPlayback);
+}
+
+
+void CAppEventManager::OnVideoFormatChanged()
+{
+	CallHandlers(&CAppEventHandler::OnVideoFormatChanged);
 }
 
 
 void CAppEventManager::OnPanAndScanChanged()
 {
-	CALL_HANDLERS(OnPanAndScanChanged());
+	CallHandlers(&CAppEventHandler::OnPanAndScanChanged);
+}
+
+
+void CAppEventManager::OnAspectRatioTypeChanged(int Type)
+{
+	CallHandlers(&CAppEventHandler::OnAspectRatioTypeChanged, Type);
 }
 
 
 void CAppEventManager::OnVolumeChanged(int Volume)
 {
-	CALL_HANDLERS(OnVolumeChanged(Volume));
+	CallHandlers(&CAppEventHandler::OnVolumeChanged, Volume);
 }
 
 
 void CAppEventManager::OnMuteChanged(bool fMute)
 {
-	CALL_HANDLERS(OnMuteChanged(fMute));
+	CallHandlers(&CAppEventHandler::OnMuteChanged, fMute);
 }
 
 
-void CAppEventManager::OnDualMonoModeChanged(CAudioDecFilter::DualMonoMode Mode)
+void CAppEventManager::OnDualMonoModeChanged(LibISDB::DirectShow::AudioDecoderFilter::DualMonoMode Mode)
 {
-	CALL_HANDLERS(OnDualMonoModeChanged(Mode));
-}
-
-
-void CAppEventManager::OnStereoModeChanged(CAudioDecFilter::StereoMode Mode)
-{
-	CALL_HANDLERS(OnStereoModeChanged(Mode));
+	CallHandlers(&CAppEventHandler::OnDualMonoModeChanged, Mode);
 }
 
 
 void CAppEventManager::OnAudioStreamChanged(int Stream)
 {
-	CALL_HANDLERS(OnAudioStreamChanged(Stream));
+	CallHandlers(&CAppEventHandler::OnAudioStreamChanged, Stream);
+}
+
+
+void CAppEventManager::OnAudioFormatChanged()
+{
+	CallHandlers(&CAppEventHandler::OnAudioFormatChanged);
 }
 
 
 void CAppEventManager::OnColorSchemeChanged()
 {
-	CALL_HANDLERS(OnColorSchemeChanged());
+	CallHandlers(&CAppEventHandler::OnColorSchemeChanged);
 }
 
 
 void CAppEventManager::OnStandbyChanged(bool fStandby)
 {
-	CALL_HANDLERS(OnStandbyChanged(fStandby));
+	CallHandlers(&CAppEventHandler::OnStandbyChanged, fStandby);
 }
 
 
 void CAppEventManager::OnExecute(LPCTSTR pszCommandLine)
 {
-	CALL_HANDLERS(OnExecute(pszCommandLine));
+	CallHandlers(&CAppEventHandler::OnExecute, pszCommandLine);
 }
 
 
 void CAppEventManager::OnEngineReset()
 {
-	CALL_HANDLERS(OnEngineReset());
+	CallHandlers(&CAppEventHandler::OnEngineReset);
 }
 
 
 void CAppEventManager::OnStatisticsReset()
 {
-	CALL_HANDLERS(OnStatisticsReset());
+	CallHandlers(&CAppEventHandler::OnStatisticsReset);
 }
 
 
 void CAppEventManager::OnSettingsChanged()
 {
-	CALL_HANDLERS(OnSettingsChanged());
+	CallHandlers(&CAppEventHandler::OnSettingsChanged);
 }
 
 
 void CAppEventManager::OnClose()
 {
-	CALL_HANDLERS(OnClose());
+	CallHandlers(&CAppEventHandler::OnClose);
 }
 
 
 void CAppEventManager::OnStartupDone()
 {
-	CALL_HANDLERS(OnStartupDone());
+	CallHandlers(&CAppEventHandler::OnStartupDone);
 }
 
 
 void CAppEventManager::OnFavoritesChanged()
 {
-	CALL_HANDLERS(OnFavoritesChanged());
+	CallHandlers(&CAppEventHandler::OnFavoritesChanged);
 }
 
 
 void CAppEventManager::OnVariableChanged()
 {
-	CALL_HANDLERS(OnVariableChanged());
+	CallHandlers(&CAppEventHandler::OnVariableChanged);
 }
 
 
-
-
-CAppEventHandler::~CAppEventHandler()
+void CAppEventManager::OnDarkModeChanged(bool fDarkMode)
 {
+	CallHandlers(&CAppEventHandler::OnDarkModeChanged, fDarkMode);
 }
 
 
-}	// namespace TVTest
+void CAppEventManager::OnMainWindowDarkModeChanged(bool fDarkMode)
+{
+	CallHandlers(&CAppEventHandler::OnMainWindowDarkModeChanged, fDarkMode);
+}
+
+
+void CAppEventManager::OnProgramGuideDarkModeChanged(bool fDarkMode)
+{
+	CallHandlers(&CAppEventHandler::OnProgramGuideDarkModeChanged, fDarkMode);
+}
+
+
+void CAppEventManager::OnEventChanged()
+{
+	CallHandlers(&CAppEventHandler::OnEventChanged);
+}
+
+
+void CAppEventManager::OnEventInfoChanged()
+{
+	CallHandlers(&CAppEventHandler::OnEventInfoChanged);
+}
+
+
+
+
+CAppEventHandler::~CAppEventHandler() = default;
+
+
+} // namespace TVTest

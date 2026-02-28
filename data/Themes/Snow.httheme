@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Snow
+Base=light
 StatusBack=#ffffff
 StatusBack2=#d8e0ff
 StatusText=#555555
@@ -50,11 +51,15 @@ TitleBarText=#555555
 TitleBarHighlightBack=#c0ceff
 TitleBarHighlightBack2=#d8e0ff
 TitleBarHighlightText=#555555
+EventInfoPopupBack=#ffffff
+EventInfoPopupText=#555555
+EventInfoPopupEventTitle=#555555
 ProgramGuideBack=#ffffff
 ;ProgramGuideText=#555555
 ProgramGuideChannelBack=#ffffff
 ProgramGuideChannelBack2=#d8e0ff
 ProgramGuideChannelText=#555555
+ProgramGuideChannelHighlightText=#222222
 ProgramGuideCurChannelBack=#c0ceff
 ProgramGuideCurChannelBack2=#d8e0ff
 ProgramGuideCurChannelText=#555555

@@ -1,49 +1,48 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="default.css" type="text/css">
-	<title>�����ݒ�_�C�A���O</title>
+	<title>初期設定ダイアログ</title>
 </head>
 <body>
 
-<h1>�����ݒ�_�C�A���O</h1>
+<h1>初期設定ダイアログ</h1>
 
 <p>
-�����ݒ�_�C�A���O�ł́ATVTest �̏����ݒ���s���܂��B<br>
-�����ł̐ݒ�́A<a href="options.html">�ݒ�_�C�A���O</a>�Ōォ��ύX���邱�Ƃ��ł��܂��B
+初期設定ダイアログでは、TVTest の初期設定を行います。<br>
+ここでの設定は、<a href="options.html">設定ダイアログ</a>で後から変更することができます。
 </p>
 
 <p>
-�����ݒ�_�C�A���O�́ATVTest ���ŏ��ɋN�������ۂɕ\������܂����A<a href="commandline.html">�R�}���h���C��</a>�� /init ���w�肷�邱�Ƃɂ���Ă��\�������邱�Ƃ��ł��܂��B<br>
-����ɋN�����Ȃ��Ȃ����ꍇ�ȂǁA�N�������邱�Ƃ��ł����ɐݒ�̕ύX���s���Ȃ��悤�ȏꍇ�Ɏg�p���܂��B
+初期設定ダイアログは、TVTest を最初に起動した際に表示されますが、<a href="commandline.html">コマンドライン</a>で /init を指定することによっても表示させることができます。<br>
+正常に起動しなくなった場合など、起動させることができずに設定の変更が行えないような場合に使用します。
 </p>
 
 <p>
-�e�ݒ荀�ڂ̓��e�͈ȉ��̒ʂ�ł��B
+各設定項目の内容は以下の通りです。
 </p>
 
 <h2>BonDriver</h2>
-<p class="descript">�g�p���� BonDriver �̃t�@�C�����ł��B<br>
-������ BonDriver ���g���ꍇ�ABonDriver �̕ύX�̓��j���[�Ȃǂ���ȒP�ɂł��܂��̂ŁA�����ł͓K���Ɉ�I��ł��������B</p>
+<p class="descript">使用する BonDriver のファイル名です。<br>
+複数の BonDriver を使う場合、BonDriver の変更はメニューなどから簡単にできますので、ここでは適当に一つ選んでください。</p>
 
-<h2>�f�R�[�_</h2>
-<p class="descript">MPEG-2 �f�R�[�_��I�����܂��B<br>
-�u�����v��I������ƁA���p�\�ȃf�R�[�_���������Ďg�p���܂��B<br>
-���X�g�ɂ����Ă����ۂɂ͎g�p�ł��Ȃ����̂�����܂��B<br>
-�ڂ�����<a href="appendix/decoder.html">�f�R�[�_�ƃ����_��</a>���Q�Ƃ��Ă��������B
+<h2>デコーダ</h2>
+<p class="descript">MPEG-2 / H.264 / H.265 デコーダを選択します。<br>
+「自動」を選択すると、利用可能なデコーダを検索して使用します。<br>
+リストにあっても実際には使用できないものもあります。<br>
+詳しくは<a href="appendix/decoder.html">デコーダとレンダラ</a>を参照してください。
 </p>
 
-<h2>�����_��</h2>
-<p class="descript">�r�f�I�����_����I�����܂��B<br>
-�����_���ɂ���ĉ掿��p�t�H�[�}���X�ɉe����^���܂��B<br>
-�悭������Ȃ��ꍇ�̓f�t�H���g�A�L���v�`����(���肵��)�s�������ꍇ�́AVMR9 Renderless ��I�����Ă��������B<br>
-Vista �ȍ~�̏ꍇ�� EVR �������Ǝv���܂�(�������L���v�`���̉掿�ɖ�肠��)�B<br>
-�ڂ�����<a href="appendix/decoder.html">�f�R�[�_�ƃ����_��</a>���Q�Ƃ��Ă��������B
+<h2>レンダラ</h2>
+<p class="descript">ビデオレンダラを選択します。<br>
+レンダラによって画質やパフォーマンスに影響を与えます。<br>
+特に理由が無ければ、通常は EVR または EVR (Custom Presenter) を選ぶのが良いでしょう。<br>
+詳しくは<a href="appendix/decoder.html">デコーダとレンダラ</a>を参照してください。
 </p>
 
-<h2>�^��t�@�C���̕ۑ���t�H���_</h2>
-<p class="descript">�^�悵���t�@�C����ۑ�����t�H���_���w�肵�܂��B</p>
+<h2>録画ファイルの保存先フォルダ</h2>
+<p class="descript">録画したファイルを保存するフォルダを指定します。</p>
 
 </body>
 </html>

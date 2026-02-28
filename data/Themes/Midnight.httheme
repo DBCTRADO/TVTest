@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Midnight
+Base=dark
 StatusBack=#222222
 StatusBack2=#666666
 StatusText=#aaaaaa
@@ -48,10 +49,14 @@ TitleBarText=#aaaaaa
 TitleBarHighlightBack=#222222
 TitleBarHighlightBack2=#000000
 TitleBarHighlightText=#aaaaaa
+EventInfoPopupBack=#000000
+EventInfoPopupText=#aaaaaa
+EventInfoPopupEventTitle=#aaaaaa
 ProgramGuideBack=#555555
 ProgramGuideChannelBack=#222222
 ProgramGuideChannelBack2=#666666
 ProgramGuideChannelText=#aaaaaa
+ProgramGuideChannelHighlightText=#cccccc
 ProgramGuideCurChannelBack=#000000
 ProgramGuideCurChannelBack2=#444444
 ProgramGuideCurChannelText=#aaaaaa

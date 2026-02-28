@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="../default.css" type="text/css">
 	<title>Tips</title>
 </head>
@@ -9,55 +9,55 @@
 
 <h1>Tips</h1>
 
-<h2>���� BinDriver �̃`�����l���ɒ��ڐ؂�ւ���</h2>
+<h2>他の BinDriver のチャンネルに直接切り替える</h2>
 <p class="descript">
-�X�e�[�^�X�o�[�̈�ԍ�(�f�t�H���g�̏ꍇ)�ɂ��� [�n�f�W] �Ȃǂƕ\������Ă��镔�����E�N���b�N����ƁA���ڑ��� BonDriver �̃`�����l���ɐ؂�ւ����܂��B<br>
+ステータスバーの一番左(デフォルトの場合)にある [地デジ] などと表示されている部分を右クリックすると、直接他の BonDriver のチャンネルに切り替えられます。<br>
 </p>
 
-<h2>���{�^���}�E�X�̃{�^���ɋ@�\�����蓖�Ă�</h2>
-<p class="descript">�ݒ�� [<a href="../options/accelerator.html">�L�[���蓖��</a>] �ŁA���̃��X�g���犄�蓖�Ă����@�\��I�����Ă���{�^���������܂��B<br>
-�}�E�X���[�e�B���e�B�Ȃǂ̐ݒ�ɂ���Ă͊��蓖�Ăł��܂���B</p>
+<h2>多ボタンマウスのボタンに機能を割り当てる</h2>
+<p class="descript">設定の [<a href="../options/accelerator.html">キー割り当て</a>] で、左のリストから割り当てたい機能を選択してからボタンを押します。<br>
+マウスユーティリティなどの設定によっては割り当てできません。</p>
 
-<h2>�^�C�g���o�[�𕁒ʂ̂��̂ɂ���</h2>
-<p class="descript">���j���[�� [�o�[/�g] -&gt; [�Ǝ��^�C�g���o�[���g�p] �̃`�F�b�N���O���܂��B</p>
+<h2>タイトルバーを普通のものにする</h2>
+<p class="descript">メニューの [バー/枠] -&gt; [独自タイトルバーを使用] のチェックを外します。</p>
 
-<h2>�E�B���h�E�̘g���ׂ�����</h2>
-<p class="descript">���j���[�� [�o�[/�g] -&gt; [�E�B���h�E�g : �ׂ�����] ���`�F�b�N����ƁA��1�h�b�g(�f�t�H���g�̏ꍇ)�ׂ̍��g�ɂȂ�܂��B<br>
-�E�B���h�E�g���ׂ������ꍇ�̕��́A�ݒ�t�@�C��(TVTest.ini)�� [Settings] �� <code>ThinFrameWidth=x</code> �̌`�Őݒ�ł��܂��B</p>
+<h2>ウィンドウの枠を細くする</h2>
+<p class="descript">メニューの [バー/枠] -&gt; [ウィンドウ枠 : 細くする] をチェックすると、幅1ドット(デフォルトの場合)の細い枠になります。<br>
+ウィンドウ枠を細くした場合の幅は、設定ファイル(TVTest.ini)の [Settings] に <code>ThinFrameWidth=x</code> の形で設定できます。</p>
 
-<h2>�^�C�g���o�[���\���ɂ������A�}�E�X�I�[�o�[�Ŏ����\������Ȃ��悤�ɂ���</h2>
-<p class="descript">�^�C�g���o�[���\���ɂ����ۂ́A�E�B���h�E�̏㕔�ɃJ�[�\���������Ă����ƈꎞ�I�ɕ\������܂����A�����}�~�������ꍇ�͐ݒ�t�@�C��(TVTest.ini)�� [Settings] �Ɉȉ��̐ݒ��ǉ����Ă��������B</p>
+<h2>タイトルバーを非表示にした時、マウスオーバーで自動表示されないようにする</h2>
+<p class="descript">タイトルバーを非表示にした際は、ウィンドウの上部にカーソルを持っていくと一時的に表示されますが、それを抑止したい場合は設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。</p>
 <div class="group">
-<pre><code>; �^�C�g���o�[�̎����\����}�~
+<pre><code>; タイトルバーの自動表示を抑止
 PopupTitleBar=no</code></pre>
 </div>
-<p class="descript">���̐ݒ�͑S��ʕ\�����ɂ͓K�p����܂���B</p>
+<p class="descript">この設定は全画面表示時には適用されません。</p>
 
-<h2>�ŏ���/�ő剻���ȂǂɃ^�C�g���̕������ς���</h2>
-<p class="descript">�ŏ�������ő剻���Ƀ^�C�g���̕�����̌`����ς������ꍇ�A�ݒ�t�@�C��(TVTest.ini)�� [Settings] �Ɉȉ��̐ݒ��ǉ����Ă��������B<br>
-<a href="../options/view.html">�\���ݒ�</a>�� [�^�C�g���o�[������̌`��] �Ɠ������̂��w��ł��܂��B</p>
+<h2>最小化/最大化時などにタイトルの文字列を変える</h2>
+<p class="descript">最小化時や最大化時にタイトルの文字列の形式を変えたい場合、設定ファイル(TVTest.ini)の [Settings] に以下の設定を追加してください。<br>
+<a href="../options/view.html">表示設定</a>の [タイトルバー文字列の形式] と同じものが指定できます。</p>
 <div class="group">
 <table class="info">
-<tr><th>MinimizedTitleTextFormat</th><td>�ŏ������̕�����ł��B</td></tr>
-<tr><th>MaximizedTitleTextFormat</th><td>�ő剻/�S��ʕ\�����̕�����ł��B</td></tr>
-<tr><th>TaskbarTitleTextFormat</th><td>�^�X�N�o�[�ɕ\�����镶����ł��B<br><a href="../menu.html">���j���[</a>�� [�o�[/�g] -&gt; [�Ǝ��^�C�g���o�[���g�p] ���`�F�b�N����Ă��鎞�̂ݗL���ł��B</td></tr>
+<tr><th>MinimizedTitleTextFormat</th><td>最小化時の文字列です。</td></tr>
+<tr><th>MaximizedTitleTextFormat</th><td>最大化/全画面表示時の文字列です。</td></tr>
+<tr><th>TaskbarTitleTextFormat</th><td>タスクバーに表示する文字列です。<br><a href="../menu.html">メニュー</a>の [バー/枠] -&gt; [独自タイトルバーを使用] がチェックされている時のみ有効です。</td></tr>
 </table>
 </div>
 
-<h2>EPG �̕\�������� Windows �̃^�C���]�[���̐ݒ�ɍ��킹��</h2>
-<p class="descript">�f�t�H���g�ł́AEPG �̔ԑg���̓����͓��{����(UTC+9)�ɂȂ��Ă��܂��B<br>
-�ݒ�t�@�C��(TVTest.ini)�� [Settings] �ɂ��� <code>EpgTimeMode</code> �ňȉ��̂悤�ɐݒ��ύX���邱�Ƃ��ł��܂��B<br>
+<h2>EPG の表示日時を Windows のタイムゾーンの設定に合わせる</h2>
+<p class="descript">デフォルトでは、EPG の番組情報の日時は日本時間(UTC+9)になっています。<br>
+設定ファイル(TVTest.ini)の [Settings] にある <code>EpgTimeMode</code> で以下のように設定を変更することができます。<br>
 </p>
 <div class="group">
 <table class="info">
-<tr><th>EpgTimeMode=0</th><td>EPG �̓���(��{�I�ɓ��{����)</td></tr>
-<tr><th>EpgTimeMode=1</th><td>���{����(UTC+9)</td></tr>
-<tr><th>EpgTimeMode=2</th><td>Windows �̃^�C���]�[���̐ݒ�ɍ��킹������</td></tr>
-<tr><th>EpgTimeMode=3</th><td>UTC(���萢�E��)</td></tr>
+<tr><th>EpgTimeMode=0</th><td>EPG の日時(基本的に日本時間)</td></tr>
+<tr><th>EpgTimeMode=1</th><td>日本時間(UTC+9)</td></tr>
+<tr><th>EpgTimeMode=2</th><td>Windows のタイムゾーンの設定に合わせた日時</td></tr>
+<tr><th>EpgTimeMode=3</th><td>UTC(協定世界時)</td></tr>
 </table>
 </div>
 <p class="descript">
-0 �� 1 �͌��݂̂Ƃ���ʏ퓯���ł����A0 �̏ꍇ�͉Ď��Ԃ����f����܂���̂ŁA���{�ɉĎ��Ԑ��x���������ꂽ�ꍇ�͕ς���Ă��܂��B
+0 と 1 は現在のところ通常同じですが、0 の場合は夏時間が反映されませんので、日本に夏時間制度が導入された場合は変わってきます。
 </p>
 
 </body>

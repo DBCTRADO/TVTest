@@ -1,10 +1,10 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.6.24 [August 4, 2016]
- * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
- * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
- * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * Copyright (c) 2018-2023 Cosmin Truta
+ * Copyright (c) 1998-2002,2004,2006-2018 Glenn Randers-Pehrson
+ * Copyright (c) 1996-1997 Andreas Dilger
+ * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -21,12 +21,23 @@ png_get_valid(png_const_structrp png_ptr, png_const_inforp info_ptr,
     png_uint_32 flag)
 {
    if (png_ptr != NULL && info_ptr != NULL)
+   {
+#ifdef PNG_READ_tRNS_SUPPORTED
+      /* png_handle_PLTE() may have canceled a valid tRNS chunk but left the
+       * 'valid' flag for the detection of duplicate chunks. Do not report a
+       * valid tRNS chunk in this case.
+       */
+      if (flag == PNG_INFO_tRNS && png_ptr->num_trans == 0)
+         return(0);
+#endif
+
       return(info_ptr->valid & flag);
+   }
 
    return(0);
 }
 
-png_size_t PNGAPI
+size_t PNGAPI
 png_get_rowbytes(png_const_structrp png_ptr, png_const_inforp info_ptr)
 {
    if (png_ptr != NULL && info_ptr != NULL)
@@ -338,7 +349,7 @@ ppi_from_ppm(png_uint_32 ppm)
    png_fixed_point result;
    if (ppm <= PNG_UINT_31_MAX && png_muldiv(&result, (png_int_32)ppm, 127,
        5000) != 0)
-      return result;
+      return (png_uint_32)result;
 
    /* Overflow. */
    return 0;
@@ -367,7 +378,7 @@ png_get_y_pixels_per_inch(png_const_structrp png_ptr, png_const_inforp info_ptr)
 static png_fixed_point
 png_fixed_inches_from_microns(png_const_structrp png_ptr, png_int_32 microns)
 {
-   /* Convert from metres * 1,000,000 to inches * 100,000, meters to
+   /* Convert from meters * 1,000,000 to inches * 100,000, meters to
     * inches is simply *(100/2.54), so we want *(10/2.54) == 500/127.
     * Notice that this can overflow - a warning is output and 0 is
     * returned.
@@ -741,8 +752,7 @@ png_get_iCCP(png_const_structrp png_ptr, png_inforp info_ptr,
 
    if (png_ptr != NULL && info_ptr != NULL &&
        (info_ptr->valid & PNG_INFO_iCCP) != 0 &&
-       name != NULL && compression_type != NULL && profile != NULL &&
-           proflen != NULL)
+       name != NULL && profile != NULL && proflen != NULL)
    {
       *name = info_ptr->iccp_name;
       *profile = info_ptr->iccp_profile;
@@ -750,11 +760,13 @@ png_get_iCCP(png_const_structrp png_ptr, png_inforp info_ptr,
       /* This is somewhat irrelevant since the profile data returned has
        * actually been uncompressed.
        */
-      *compression_type = PNG_COMPRESSION_TYPE_BASE;
+      if (compression_type != NULL)
+         *compression_type = PNG_COMPRESSION_TYPE_BASE;
       return (PNG_INFO_iCCP);
    }
 
    return (0);
+
 }
 #endif
 
@@ -767,6 +779,35 @@ png_get_sPLT(png_const_structrp png_ptr, png_inforp info_ptr,
    {
       *spalettes = info_ptr->splt_palettes;
       return info_ptr->splt_palettes_num;
+   }
+
+   return (0);
+}
+#endif
+
+#ifdef PNG_eXIf_SUPPORTED
+png_uint_32 PNGAPI
+png_get_eXIf(png_const_structrp png_ptr, png_inforp info_ptr,
+    png_bytep *exif)
+{
+  png_warning(png_ptr, "png_get_eXIf does not work; use png_get_eXIf_1");
+  PNG_UNUSED(info_ptr)
+  PNG_UNUSED(exif)
+  return 0;
+}
+
+png_uint_32 PNGAPI
+png_get_eXIf_1(png_const_structrp png_ptr, png_const_inforp info_ptr,
+    png_uint_32 *num_exif, png_bytep *exif)
+{
+   png_debug1(1, "in %s retrieval function", "eXIf");
+
+   if (png_ptr != NULL && info_ptr != NULL &&
+       (info_ptr->valid & PNG_INFO_eXIf) != 0 && exif != NULL)
+   {
+      *num_exif = info_ptr->num_exif;
+      *exif = info_ptr->exif;
+      return (PNG_INFO_eXIf);
    }
 
    return (0);
@@ -1121,7 +1162,7 @@ png_get_unknown_chunks(png_const_structrp png_ptr, png_inforp info_ptr,
 
 #ifdef PNG_READ_RGB_TO_GRAY_SUPPORTED
 png_byte PNGAPI
-png_get_rgb_to_gray_status (png_const_structrp png_ptr)
+png_get_rgb_to_gray_status(png_const_structrp png_ptr)
 {
    return (png_byte)(png_ptr ? png_ptr->rgb_to_gray_status : 0);
 }
@@ -1135,7 +1176,7 @@ png_get_user_chunk_ptr(png_const_structrp png_ptr)
 }
 #endif
 
-png_size_t PNGAPI
+size_t PNGAPI
 png_get_compression_buffer_size(png_const_structrp png_ptr)
 {
    if (png_ptr == NULL)
@@ -1162,27 +1203,27 @@ png_get_compression_buffer_size(png_const_structrp png_ptr)
 /* These functions were added to libpng 1.2.6 and were enabled
  * by default in libpng-1.4.0 */
 png_uint_32 PNGAPI
-png_get_user_width_max (png_const_structrp png_ptr)
+png_get_user_width_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_width_max : 0);
 }
 
 png_uint_32 PNGAPI
-png_get_user_height_max (png_const_structrp png_ptr)
+png_get_user_height_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_height_max : 0);
 }
 
 /* This function was added to libpng 1.4.0 */
 png_uint_32 PNGAPI
-png_get_chunk_cache_max (png_const_structrp png_ptr)
+png_get_chunk_cache_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_chunk_cache_max : 0);
 }
 
 /* This function was added to libpng 1.4.1 */
 png_alloc_size_t PNGAPI
-png_get_chunk_malloc_max (png_const_structrp png_ptr)
+png_get_chunk_malloc_max(png_const_structrp png_ptr)
 {
    return (png_ptr ? png_ptr->user_chunk_malloc_max : 0);
 }
@@ -1191,13 +1232,13 @@ png_get_chunk_malloc_max (png_const_structrp png_ptr)
 /* These functions were added to libpng 1.4.0 */
 #ifdef PNG_IO_STATE_SUPPORTED
 png_uint_32 PNGAPI
-png_get_io_state (png_const_structrp png_ptr)
+png_get_io_state(png_const_structrp png_ptr)
 {
    return png_ptr->io_state;
 }
 
 png_uint_32 PNGAPI
-png_get_io_chunk_type (png_const_structrp png_ptr)
+png_get_io_chunk_type(png_const_structrp png_ptr)
 {
    return png_ptr->chunk_name;
 }

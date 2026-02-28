@@ -1,25 +1,38 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ƒXƒyƒNƒgƒ‰ƒ€EƒAƒiƒ‰ƒCƒU[
+	ã‚¹ãƒšã‚¯ãƒˆãƒ©ãƒ ãƒ»ã‚¢ãƒŠãƒ©ã‚¤ã‚¶ãƒ¼
 
-	fft4g.c ‚Í http://www.kurims.kyoto-u.ac.jp/~ooura/fft-j.html ‚Å”z•z‚³‚ê‚Ä
-	‚¢‚é‚à‚Ì‚ÅA‘å‰Y‘ñÆ‚É’˜ìŒ ‚ª‚ ‚è‚Ü‚·B
+	fft4g.c ã¯ http://www.kurims.kyoto-u.ac.jp/~ooura/fft-j.html ã§é…å¸ƒã•ã‚Œã¦
+	ã„ã‚‹ã‚‚ã®ã§ã€å¤§æµ¦æ‹“å“‰æ°ã«è‘—ä½œæ¨©ãŒã‚ã‚Šã¾ã™ã€‚
 	Copyright Takuya OOURA, 1996-2001
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	E‰¹ºƒTƒ“ƒvƒ‹‚ğæ“¾‚·‚é
-	EƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+	ãƒ»éŸ³å£°ã‚µãƒ³ãƒ—ãƒ«ã‚’å–å¾—ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»TVTest ã«åˆã‚ã›ã¦ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰ã«ã™ã‚‹
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
-#include <gdiplus.h>
+#include <objbase.h>
 #include <shlwapi.h>
+#include <algorithm>
 #define _USE_MATH_DEFINES
 #include <cmath>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ƒNƒ‰ƒX‚Æ‚µ‚ÄÀ‘•
+
+// Windows SDK version 2104 (10.0.20348.0) ã‚ˆã‚Šå‰ã¯ Gdiplus ã« min / max ã®å®£è¨€ãŒå¿…è¦
+namespace Gdiplus {
+	using std::min;
+	using std::max;
+}
+#include <gdiplus.h>
+
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // ã‚¯ãƒ©ã‚¹ã¨ã—ã¦å®Ÿè£…
 #include "TVTestPlugin.h"
 #include "resource.h"
 
@@ -31,29 +44,18 @@
 extern "C" void rdft(int n, int isgn, double *a, int *ip, double *w);
 
 
-// FFT ˆ—‚ğs‚¤ƒTƒ“ƒvƒ‹”
-#define FFT_SIZE_BITS 10
-#define FFT_SIZE (1 << FFT_SIZE_BITS)
-// ‘Ñˆæ•ªŠ„”
-#define NUM_BANDS 20
-// ƒŒƒxƒ‹•ªŠ„”
-#define NUM_LEVELS 30
-
-
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CSpectrumAnalyzer : public TVTest::CTVTestPlugin
 {
 public:
-	CSpectrumAnalyzer();
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 
 private:
 	struct Position
 	{
-		int Left, Top, Width, Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
 
 	class CCriticalLock
@@ -76,24 +78,32 @@ private:
 		CRITICAL_SECTION m_CriticalSection;
 	};
 
-	bool m_fInitialized;
-	HWND m_hwnd;
+	// FFT å‡¦ç†ã‚’è¡Œã†ã‚µãƒ³ãƒ—ãƒ«æ•°
+	static constexpr int FFT_SIZE_BITS = 10;
+	static constexpr int FFT_SIZE = 1 << FFT_SIZE_BITS;
+	// å¸¯åŸŸåˆ†å‰²æ•°
+	static constexpr int NUM_BANDS = 20;
+	// ãƒ¬ãƒ™ãƒ«åˆ†å‰²æ•°
+	static constexpr int NUM_LEVELS = 30;
+
+	bool m_fInitialized = false;
+	HWND m_hwnd = nullptr;
 	Position m_WindowPosition;
 	int m_DPI;
-	Gdiplus::Color m_BackColor;
-	Gdiplus::Color m_SpectrumColor1;
-	Gdiplus::Color m_SpectrumColor2;
-	Gdiplus::SolidBrush *m_pBrush;
-	Gdiplus::Graphics *m_pOffscreen;
-	Gdiplus::Bitmap *m_pOffscreenImage;
+	Gdiplus::Color m_BackColor{255, 0, 0, 0};
+	Gdiplus::Color m_SpectrumColor1{255, 0, 224, 0};
+	Gdiplus::Color m_SpectrumColor2{255, 255, 128, 0};
+	Gdiplus::SolidBrush *m_pBrush = nullptr;
+	Gdiplus::Graphics *m_pOffscreen = nullptr;
+	Gdiplus::Bitmap *m_pOffscreenImage = nullptr;
 
-	short *m_pSampleBuffer;
-	double *m_pFFTBuffer;
-	int *m_pFFTWorkBuffer;
-	double *m_pFFTSinTable;
-	DWORD m_BufferUsed;
-	DWORD m_BufferPos;
-	double *m_pPower;
+	short *m_pSampleBuffer = nullptr;
+	double *m_pFFTBuffer = nullptr;
+	int *m_pFFTWorkBuffer = nullptr;
+	double *m_pFFTSinTable = nullptr;
+	DWORD m_BufferUsed = 0;
+	DWORD m_BufferPos = 0;
+	double *m_pPower = nullptr;
 	struct {
 		double Real;
 		double Delayed;
@@ -109,7 +119,7 @@ private:
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static LRESULT CALLBACK AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData);
-	static CSpectrumAnalyzer *GetThis(HWND hwnd);
+	static CSpectrumAnalyzer * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	template<typename T> static inline void SafeDelete(T *&p)
@@ -132,63 +142,43 @@ private:
 };
 
 
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
 const LPCTSTR CSpectrumAnalyzer::WINDOW_CLASS_NAME = TEXT("TVTest Spectrum Analyzer Window");
 
 
-CSpectrumAnalyzer::CSpectrumAnalyzer()
-	: m_fInitialized(false)
-	, m_hwnd(nullptr)
-	, m_BackColor(255, 0, 0, 0)
-	, m_SpectrumColor1(255, 0, 224, 0)
-	, m_SpectrumColor2(255, 255, 128, 0)
-	, m_pBrush(nullptr)
-	, m_pOffscreen(nullptr)
-	, m_pOffscreenImage(nullptr)
-	, m_pSampleBuffer(nullptr)
-	, m_pFFTBuffer(nullptr)
-	, m_pFFTWorkBuffer(nullptr)
-	, m_pFFTSinTable(nullptr)
-	, m_BufferUsed(0)
-	, m_BufferPos(0)
-	, m_pPower(nullptr)
-{
-}
-
-
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CSpectrumAnalyzer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
 	pInfo->pszPluginName  = L"Spectrum Analyzer";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ƒXƒyƒNƒgƒ‰ƒ€EƒAƒiƒ‰ƒCƒU[";
+	pInfo->pszDescription = L"ã‚¹ãƒšã‚¯ãƒˆãƒ©ãƒ ãƒ»ã‚¢ãƒŠãƒ©ã‚¤ã‚¶ãƒ¼";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CSpectrumAnalyzer::Initialize()
 {
-	// ƒAƒCƒRƒ“‚ğ“o˜^
+	// ã‚¢ã‚¤ã‚³ãƒ³ã‚’ç™»éŒ²
 	m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON));
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CSpectrumAnalyzer::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚ªì¬‚³‚ê‚Ä‚¢‚½‚ç”jŠü‚·‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒä½œæˆã•ã‚Œã¦ã„ãŸã‚‰ç ´æ£„ã™ã‚‹
 	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
-	// İ’è‚ğ•Û‘¶
+	// è¨­å®šã‚’ä¿å­˜
 	if (m_fInitialized) {
 		TCHAR szIniFileName[MAX_PATH];
 
@@ -201,26 +191,30 @@ bool CSpectrumAnalyzer::Finalize()
 			TCHAR m_szBuffer[16];
 		};
 
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowLeft"),
-									IntString(m_WindowPosition.Left), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowTop"),
-									IntString(m_WindowPosition.Top), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowWidth"),
-									IntString(m_WindowPosition.Width), szIniFileName);
-		::WritePrivateProfileString(TEXT("Settings"), TEXT("WindowHeight"),
-									IntString(m_WindowPosition.Height), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowLeft"),
+			IntString(m_WindowPosition.Left), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowTop"),
+			IntString(m_WindowPosition.Top), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowWidth"),
+			IntString(m_WindowPosition.Width), szIniFileName);
+		::WritePrivateProfileString(
+			TEXT("Settings"), TEXT("WindowHeight"),
+			IntString(m_WindowPosition.Height), szIniFileName);
 	}
 
 	return true;
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒø/–³Œø‚ÌØ‚è‘Ö‚¦
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹/ç„¡åŠ¹ã®åˆ‡ã‚Šæ›¿ãˆ
 bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 {
 	if (fEnable) {
 		if (!m_fInitialized) {
-			// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX“o˜^
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ç™»éŒ²
 			WNDCLASS wc;
 			wc.style = CS_HREDRAW | CS_VREDRAW;
 			wc.lpfnWndProc = WndProc;
@@ -235,7 +229,7 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 			if (::RegisterClass(&wc) == 0)
 				return false;
 
-			// İ’è‚Ì“Ç‚İ‚İ
+			// è¨­å®šã®èª­ã¿è¾¼ã¿
 			TCHAR szIniFileName[MAX_PATH];
 			::GetModuleFileName(g_hinstDLL, szIniFileName, _countof(szIniFileName));
 			::PathRenameExtension(szIniFileName, TEXT(".ini"));
@@ -251,20 +245,20 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 			m_fInitialized = true;
 		}
 
-		// ƒEƒBƒ“ƒhƒE‚ğì¬‚·‚é
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ä½œæˆã™ã‚‹
 		if (m_hwnd == nullptr) {
-			static const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
-			static const DWORD ExStyle = WS_EX_TOOLWINDOW;
+			constexpr DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+			constexpr DWORD ExStyle = WS_EX_TOOLWINDOW;
 
-			// ƒvƒ‰ƒCƒ}ƒŠƒ‚ƒjƒ^‚Ì DPI ‚ğæ“¾
+			// ãƒ—ãƒ©ã‚¤ãƒãƒªãƒ¢ãƒ‹ã‚¿ã® DPI ã‚’å–å¾—
 			m_DPI = m_pApp->GetDPIFromPoint(0, 0);
 			if (m_DPI == 0)
 				m_DPI = 96;
 
-			// ƒfƒtƒHƒ‹ƒg‚ÌƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğæ“¾
+			// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’å–å¾—
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				int Width = NUM_BANDS * 10, Height = NUM_LEVELS * 4;
-				// DPIİ’è‚É‡‚í‚¹‚ÄƒXƒP[ƒŠƒ“ƒO
+				// DPIè¨­å®šã«åˆã‚ã›ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°
 				if (m_DPI != 96) {
 					Width = ::MulDiv(Width, m_DPI, 96);
 					Height = ::MulDiv(Height, m_DPI, 96);
@@ -277,7 +271,7 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 					m_WindowPosition.Height = rc.bottom - rc.top;
 			}
 
-			// ƒEƒBƒ“ƒhƒE‚Ìì¬
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 			if (::CreateWindowEx(
 					ExStyle, WINDOW_CLASS_NAME, TEXT("Spectrum Analyzer"), Style,
 					0, 0, m_WindowPosition.Width, m_WindowPosition.Height,
@@ -285,7 +279,7 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 				return false;
 		}
 
-		// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì•œŒ³
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®å¾©å…ƒ
 		WINDOWPLACEMENT wp;
 		wp.length = sizeof(WINDOWPLACEMENT);
 		::GetWindowPlacement(m_hwnd, &wp);
@@ -306,13 +300,13 @@ bool CSpectrumAnalyzer::EnablePlugin(bool fEnable)
 }
 
 
-// ƒXƒyƒNƒgƒ‰ƒ€‚ğ•`‰æ
+// ã‚¹ãƒšã‚¯ãƒˆãƒ©ãƒ ã‚’æç”»
 void CSpectrumAnalyzer::DrawSpectrum(Gdiplus::Graphics &Graphics, int Width, int Height)
 {
 	Graphics.Clear(m_BackColor);
 
-	const int BarWidth = max(Width / NUM_BANDS, 4);
-	const int CellHeight = max(Height / NUM_LEVELS, 3);
+	const int BarWidth = std::max(Width / NUM_BANDS, 4);
+	const int CellHeight = std::max(Height / NUM_LEVELS, 3);
 	const int BaseX = (Width - BarWidth * NUM_BANDS) / 2;
 	const int BaseY = (Height - CellHeight * NUM_LEVELS) / 2;
 
@@ -348,7 +342,7 @@ void CSpectrumAnalyzer::DrawSpectrum(Gdiplus::Graphics &Graphics, int Width, int
 }
 
 
-// WM_PAINT ‚Ìˆ—
+// WM_PAINT ã®å‡¦ç†
 void CSpectrumAnalyzer::OnPaint(HWND hwnd)
 {
 	PAINTSTRUCT ps;
@@ -398,7 +392,7 @@ void CSpectrumAnalyzer::OnPaint(HWND hwnd)
 }
 
 
-// ƒXƒyƒNƒgƒ‰ƒ€XV
+// ã‚¹ãƒšã‚¯ãƒˆãƒ©ãƒ æ›´æ–°
 void CSpectrumAnalyzer::UpdateSpectrum()
 {
 	m_FFTLock.Lock();
@@ -428,29 +422,39 @@ void CSpectrumAnalyzer::UpdateSpectrum()
 		Peak = std::log10(Peak) * 10.0;
 		m_PeakList[i].Real = Peak;
 		if (Peak < m_PeakList[i].Delayed)
-			Peak = max(m_PeakList[i].Delayed - 2.5, Peak);
+			Peak = std::max(m_PeakList[i].Delayed - 2.5, Peak);
 		m_PeakList[i].Delayed = Peak;
 	}
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CSpectrumAnalyzer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer*>(pClientData);
+	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		pThis->EnablePlugin(lParam1 != 0);
 		return TRUE;
 
 	case TVTest::EVENT_STANDBY:
-		// ‘Ò‹@ó‘Ô‚ª•Ï‰»‚µ‚½
+		// å¾…æ©ŸçŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			// ‘Ò‹@ó‘Ô‚Ì‚ÍƒEƒBƒ“ƒhƒE‚ğ‰B‚·
+			// å¾…æ©ŸçŠ¶æ…‹ã®æ™‚ã¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éš ã™
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
+		}
+		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// ãƒ¡ã‚¤ãƒ³ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰çŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸ
+		if (pThis->m_hwnd != nullptr) {
+			// ãƒ¡ã‚¤ãƒ³ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«åˆã‚ã›ã¦ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰çŠ¶æ…‹ã‚’å¤‰æ›´ã™ã‚‹
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
 		}
 		return TRUE;
 	}
@@ -459,10 +463,10 @@ LRESULT CALLBACK CSpectrumAnalyzer::EventCallback(UINT Event, LPARAM lParam1, LP
 }
 
 
-// ‰¹ºƒR[ƒ‹ƒoƒbƒNŠÖ”
+// éŸ³å£°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
 LRESULT CALLBACK CSpectrumAnalyzer::AudioCallback(short *pData, DWORD Samples, int Channels, void *pClientData)
 {
-	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer*>(pClientData);
+	CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer *>(pClientData);
 
 	DWORD BufferUsed = pThis->m_BufferUsed;
 	DWORD j = pThis->m_BufferPos;
@@ -483,15 +487,14 @@ LRESULT CALLBACK CSpectrumAnalyzer::AudioCallback(short *pData, DWORD Samples, i
 
 		if (BufferUsed == FFT_SIZE) {
 			pThis->m_FFTLock.Lock();
-			// double‚É•ÏŠ·
+			// doubleã«å¤‰æ›
 			for (int k = 0; k < FFT_SIZE; k++) {
 				pThis->m_pFFTBuffer[k]=
 					(double)pThis->m_pSampleBuffer[(j + k) % FFT_SIZE] / 32768.0;
 			}
 
-			// FFTˆ—Às
-			rdft(FFT_SIZE, 1, pThis->m_pFFTBuffer,
-				 pThis->m_pFFTWorkBuffer, pThis->m_pFFTSinTable);
+			// FFTå‡¦ç†å®Ÿè¡Œ
+			rdft(FFT_SIZE, 1, pThis->m_pFFTBuffer, pThis->m_pFFTWorkBuffer, pThis->m_pFFTSinTable);
 			pThis->m_FFTLock.Unlock();
 
 			BufferUsed = 0;
@@ -505,10 +508,10 @@ LRESULT CALLBACK CSpectrumAnalyzer::AudioCallback(short *pData, DWORD Samples, i
 }
 
 
-CSpectrumAnalyzer *CSpectrumAnalyzer::GetThis(HWND hwnd)
+CSpectrumAnalyzer * CSpectrumAnalyzer::GetThis(HWND hwnd)
 {
-	// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾
-	return reinterpret_cast<CSpectrumAnalyzer*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—
+	return reinterpret_cast<CSpectrumAnalyzer *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
@@ -518,13 +521,13 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer*>(pcs->lpCreateParams);
+			CSpectrumAnalyzer *pThis = static_cast<CSpectrumAnalyzer *>(pcs->lpCreateParams);
 
-			// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚Å‚«‚é‚æ‚¤‚É‚·‚é
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
 
-			// ƒƒ‚ƒŠŠm•Û
+			// ãƒ¡ãƒ¢ãƒªç¢ºä¿
 			pThis->m_pSampleBuffer = new short[FFT_SIZE];
 			pThis->m_pFFTBuffer = new double[FFT_SIZE];
 			for (int i = 0; i < FFT_SIZE; i++)
@@ -542,10 +545,14 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 			pThis->m_BufferUsed = 0;
 			pThis->m_BufferPos = 0;
 
-			// ‰¹ºƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^
+			// ãƒ¡ã‚¤ãƒ³ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰ã§ã‚ã‚Œã°ãã‚Œã«åˆã‚ã›ã¦ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰ã«ã™ã‚‹
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
+
+			// éŸ³å£°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ç™»éŒ²
 			pThis->m_pApp->SetAudioCallback(AudioCallback, pThis);
 
-			// •\¦XV—pƒ^ƒCƒ}‚Ìİ’è
+			// è¡¨ç¤ºæ›´æ–°ç”¨ã‚¿ã‚¤ãƒã®è¨­å®š
 			::SetTimer(hwnd, 1, 200, nullptr);
 		}
 		return TRUE;
@@ -569,7 +576,7 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xFFF0) == SC_CLOSE) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
 			CSpectrumAnalyzer *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
@@ -581,10 +588,10 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 #define WM_DPICHANGED 0x02E0
 #endif
 	case WM_DPICHANGED:
-		// DPI ‚ª•Ï‚í‚Á‚½
+		// DPI ãŒå¤‰ã‚ã£ãŸ
 		{
 			CSpectrumAnalyzer *pThis = GetThis(hwnd);
-			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+			const RECT *prc = reinterpret_cast<const RECT *>(lParam);
 
 			pThis->m_DPI = HIWORD(wParam);
 
@@ -600,22 +607,22 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 		{
 			CSpectrumAnalyzer *pThis = GetThis(hwnd);
 
-			// ‰¹ºƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^‰ğœ
+			// éŸ³å£°ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ç™»éŒ²è§£é™¤
 			pThis->m_pApp->SetAudioCallback(nullptr);
 
-			// ƒŠƒ\[ƒX‰ğ•ú
+			// ãƒªã‚½ãƒ¼ã‚¹è§£æ”¾
 			SafeDelete(pThis->m_pBrush);
 			SafeDelete(pThis->m_pOffscreen);
 			SafeDelete(pThis->m_pOffscreenImage);
 
-			// ƒƒ‚ƒŠŠJ•ú
+			// ãƒ¡ãƒ¢ãƒªé–‹æ”¾
 			SafeDeleteArray(pThis->m_pSampleBuffer);
 			SafeDeleteArray(pThis->m_pFFTBuffer);
 			SafeDeleteArray(pThis->m_pFFTWorkBuffer);
 			SafeDeleteArray(pThis->m_pFFTSinTable);
 			SafeDeleteArray(pThis->m_pPower);
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u•Û‘¶
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ä¿å­˜
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof (WINDOWPLACEMENT);
 			if (::GetWindowPlacement(hwnd, &wp)) {
@@ -636,8 +643,8 @@ LRESULT CALLBACK CSpectrumAnalyzer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
-TVTest::CTVTestPlugin *CreatePluginClass()
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CSpectrumAnalyzer;
 }

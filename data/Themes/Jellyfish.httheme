@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Jellyfish
+Base=dark
 StatusBack=#555555
 StatusBack2=#222222
 StatusText=#99c1ff
@@ -55,11 +56,15 @@ TitleBarText=#99c1ff
 TitleBarHighlightBack=#99c1ff
 TitleBarHighlightBack2=#3384ff
 TitleBarHighlightText=#333333
+EventInfoPopupBack=#555555
+EventInfoPopupText=#99c1ff
+EventInfoPopupEventTitle=#99c1ff
 ProgramGuideBack=#666666
 ;ProgramGuideText=#000000
 ProgramGuideChannelBack=#777777
 ProgramGuideChannelBack2=#222222
 ProgramGuideChannelText=#99c1ff
+ProgramGuideChannelHighlightText=#c9dfff
 ProgramGuideCurChannelBack=#99c1ff
 ProgramGuideCurChannelBack2=#3384ff
 ProgramGuideCurChannelText=#333333

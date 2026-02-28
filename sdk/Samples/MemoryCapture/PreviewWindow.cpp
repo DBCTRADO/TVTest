@@ -1,3 +1,6 @@
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
 #include "PreviewWindow.h"
@@ -26,22 +29,13 @@ bool CPreviewWindow::Initialize(HINSTANCE hinst)
 }
 
 
-CPreviewWindow::CPreviewWindow()
-	: m_hwnd(nullptr)
-	, m_pImage(nullptr)
-	, m_fFitImageToWindow(true)
-	, m_ZoomNum(50)
-	, m_ZoomDenom(100)
-{
-}
-
-
 bool CPreviewWindow::Create(HWND hwndParent)
 {
-	return ::CreateWindowEx(0, m_WindowClassName, TEXT(""),
-							WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
-							0, 0, 0, 0,
-							hwndParent, nullptr, m_hinst, this) != nullptr;
+	return ::CreateWindowEx(
+		0, m_WindowClassName, TEXT(""),
+		WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS,
+		0, 0, 0, 0,
+		hwndParent, nullptr, m_hinst, this) != nullptr;
 }
 
 
@@ -95,7 +89,7 @@ void CPreviewWindow::SetFitImageToWindow(bool fFit)
 }
 
 
-// ‰æ‘œ‚Ì•\¦ƒTƒCƒY‚ğæ“¾‚·‚é
+// ç”»åƒã®è¡¨ç¤ºã‚µã‚¤ã‚ºã‚’å–å¾—ã™ã‚‹
 bool CPreviewWindow::GetDisplaySize(int *pWidth, int *pHeight) const
 {
 	if (m_pImage == nullptr)
@@ -138,7 +132,7 @@ bool CPreviewWindow::GetDisplaySize(int *pWidth, int *pHeight) const
 }
 
 
-// •`‰æ
+// æç”»
 void CPreviewWindow::Draw(HDC hdc)
 {
 	RECT rcClient;
@@ -161,18 +155,19 @@ void CPreviewWindow::Draw(HDC hdc)
 
 		bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 		bmi.bmiHeader.biWidth = m_pImage->GetWidth();
-		bmi.bmiHeader.biHeight = -m_pImage->GetHeight();	// ƒgƒbƒvƒ_ƒEƒ“
+		bmi.bmiHeader.biHeight = -m_pImage->GetHeight(); // ãƒˆãƒƒãƒ—ãƒ€ã‚¦ãƒ³
 		bmi.bmiHeader.biPlanes = 1;
 		bmi.bmiHeader.biBitCount = m_pImage->GetBitsPerPixel();
 
 		int OldStretchMode = ::SetStretchBltMode(hdc, STRETCH_HALFTONE);
-		::StretchDIBits(hdc,
-						x, y, DispWidth, DispHeight,
-						0, 0, m_pImage->GetWidth(), m_pImage->GetHeight(),
-						m_pImage->GetPixels(), &bmi, DIB_RGB_COLORS, SRCCOPY);
+		::StretchDIBits(
+			hdc,
+			x, y, DispWidth, DispHeight,
+			0, 0, m_pImage->GetWidth(), m_pImage->GetHeight(),
+			m_pImage->GetPixels(), &bmi, DIB_RGB_COLORS, SRCCOPY);
 		::SetStretchBltMode(hdc, OldStretchMode);
 
-		// —]”’‚ğ“h‚è‚Â‚Ô‚·
+		// ä½™ç™½ã‚’å¡—ã‚Šã¤ã¶ã™
 		RECT rc = rcClient;
 		if (y > 0) {
 			rc.bottom = y;
@@ -200,21 +195,21 @@ void CPreviewWindow::Draw(HDC hdc)
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
-CPreviewWindow *CPreviewWindow::GetThis(HWND hwnd)
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
+CPreviewWindow * CPreviewWindow::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CPreviewWindow*>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	return reinterpret_cast<CPreviewWindow *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CPreviewWindow::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CPreviewWindow *pThis = static_cast<CPreviewWindow*>(pcs->lpCreateParams);
+			CPreviewWindow *pThis = static_cast<CPreviewWindow *>(pcs->lpCreateParams);
 
 			pThis->m_hwnd = hwnd;
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));

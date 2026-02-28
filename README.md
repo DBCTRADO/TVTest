@@ -8,8 +8,9 @@ CAS 処理は実装されていないため、一般のテレビ放送を視聴�
 
 依存ライブラリ
 --------------
-* DirectShow BaseClasses
-* [FAAD2](http://www.audiocoding.com/faad2.html)
+* [DirectShow BaseClasses](https://github.com/Microsoft/Windows-classic-samples/tree/master/Samples/Win7Samples/multimedia/directshow/baseclasses)
+* [Fraunhofer FDK AAC](https://github.com/mstorsjo/fdk-aac)
+* [FAAD2](https://github.com/knik0/faad2)
 * [libmad](http://www.underbit.com/products/mad/)
 * [liba52](http://liba52.sourceforge.net/)
 * [libjpeg](http://www.ijg.org/)
@@ -19,4 +20,4 @@ CAS 処理は実装されていないため、一般のテレビ放送を視聴�
 
 ライセンス
 ----------
-GPL v2
+GNU General Public License v2.0 or later (GPL-2.0-or-later)

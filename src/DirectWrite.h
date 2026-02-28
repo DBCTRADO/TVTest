@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2020 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_DIRECTWRITE_H
 #define TVTEST_DIRECTWRITE_H
 
@@ -12,8 +32,12 @@ namespace TVTest
 	class CDirectWriteSystem
 	{
 	public:
-		CDirectWriteSystem();
+		CDirectWriteSystem() = default;
 		~CDirectWriteSystem();
+
+		CDirectWriteSystem(const CDirectWriteSystem &) = delete;
+		CDirectWriteSystem &operator=(const CDirectWriteSystem &) = delete;
+
 		bool Initialize();
 		void Finalize();
 		bool IsInitialized() const;
@@ -21,10 +45,10 @@ namespace TVTest
 		IDWriteFactory *GetDWriteFactory();
 
 	private:
-		HMODULE m_hD2DLib;
-		HMODULE m_hDWriteLib;
-		ID2D1Factory *m_pD2DFactory;
-		IDWriteFactory *m_pDWriteFactory;
+		HMODULE m_hD2DLib = nullptr;
+		HMODULE m_hDWriteLib = nullptr;
+		ID2D1Factory *m_pD2DFactory = nullptr;
+		IDWriteFactory *m_pDWriteFactory = nullptr;
 	};
 
 	class CDirectWriteRenderer;
@@ -32,16 +56,22 @@ namespace TVTest
 	class CDirectWriteResource
 	{
 	public:
-		virtual ~CDirectWriteResource() {}
+		CDirectWriteResource() = default;
+		virtual ~CDirectWriteResource() = default;
+
+		CDirectWriteResource(const CDirectWriteResource &) = delete;
+		CDirectWriteResource &operator=(const CDirectWriteResource &) = delete;
+
 		virtual void Destroy() = 0;
 		virtual bool IsCreated() const = 0;
 	};
 
-	class CDirectWriteFont : public CDirectWriteResource
+	class CDirectWriteFont
+		: public CDirectWriteResource
 	{
 	public:
-		CDirectWriteFont();
 		~CDirectWriteFont();
+
 		bool Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf);
 		void Destroy() override;
 		bool IsCreated() const override;
@@ -49,15 +79,16 @@ namespace TVTest
 		bool GetLogFont(LOGFONT *pLogFont) const;
 
 	private:
-		IDWriteTextFormat *m_pTextFormat;
-		LOGFONT m_LogFont;
+		IDWriteTextFormat *m_pTextFormat = nullptr;
+		LOGFONT m_LogFont{};
 	};
 
-	class CDirectWriteBrush : public CDirectWriteResource
+	class CDirectWriteBrush
+		: public CDirectWriteResource
 	{
 	public:
-		CDirectWriteBrush();
 		~CDirectWriteBrush();
+
 		bool Create(CDirectWriteRenderer &Renderer, BYTE Red, BYTE Green, BYTE Blue, BYTE Alpha = 255);
 		void Destroy() override;
 		bool IsCreated() const override;
@@ -65,7 +96,7 @@ namespace TVTest
 		ID2D1Brush *GetBrush();
 
 	private:
-		ID2D1SolidColorBrush *m_pBrush;
+		ID2D1SolidColorBrush *m_pBrush = nullptr;
 	};
 
 	class CDirectWriteRenderer
@@ -73,22 +104,22 @@ namespace TVTest
 	public:
 		struct RenderingParams
 		{
-			enum {
-				PARAM_GAMMA             = 0x01U,
-				PARAM_ENHANCED_CONTRAST = 0x02U,
-				PARAM_CLEARTYPE_LEVEL   = 0x04U,
-				PARAM_PIXEL_GEOMETRY    = 0x08U,
-				PARAM_RENDERING_MODE    = 0x10U
+			enum class ParamFlag : unsigned int {
+				None             = 0x0000U,
+				Gamma            = 0x0001U,
+				EnhancedContrast = 0x0002U,
+				ClearTypeLevel   = 0x0004U,
+				PixelGeometry    = 0x0008U,
+				RenderingMode    = 0x0010U,
+				TVTEST_ENUM_FLAGS_TRAILER
 			};
 
-			unsigned int Mask;
-			float Gamma;
-			float EnhancedContrast;
-			float ClearTypeLevel;
-			DWRITE_PIXEL_GEOMETRY PixelGeometry;
-			DWRITE_RENDERING_MODE RenderingMode;
-
-			RenderingParams() : Mask(0) {}
+			ParamFlag Mask = ParamFlag::None;
+			float Gamma = 2.2f;
+			float EnhancedContrast = 0.5f;
+			float ClearTypeLevel = 0.5f;
+			DWRITE_PIXEL_GEOMETRY PixelGeometry = DWRITE_PIXEL_GEOMETRY_RGB;
+			DWRITE_RENDERING_MODE RenderingMode = DWRITE_RENDERING_MODE_DEFAULT;
 		};
 
 		struct FontMetrics
@@ -105,16 +136,22 @@ namespace TVTest
 			float Height;
 		};
 
-		enum {
-			DRAW_TEXT_ALIGN_HORZ_CENTER = 0x0001U,
-			DRAW_TEXT_ALIGN_RIGHT       = 0x0002U,
-			DRAW_TEXT_ALIGN_JUSTIFIED   = 0x0004U,
-			DRAW_TEXT_ALIGN_VERT_CENTER = 0x0008U,
-			DRAW_TEXT_ALIGN_BOTTOM      = 0x0010U
+		enum class DrawTextFlag : unsigned int {
+			None             = 0x0000U,
+			Align_HorzCenter = 0x0001U,
+			Align_Right      = 0x0002U,
+			Align_Justified  = 0x0004U,
+			Align_VertCenter = 0x0008U,
+			Align_Bottom     = 0x0010U,
+			TVTEST_ENUM_FLAGS_TRAILER
 		};
 
 		CDirectWriteRenderer(CDirectWriteSystem &System);
 		~CDirectWriteRenderer();
+
+		CDirectWriteRenderer(const CDirectWriteRenderer &) = delete;
+		CDirectWriteRenderer &operator=(const CDirectWriteRenderer &) = delete;
+
 		bool Initialize(HWND hwnd);
 		void Finalize();
 		bool IsInitialized() const;
@@ -131,7 +168,7 @@ namespace TVTest
 		bool OnWindowPosChanged();
 		bool DrawText(
 			LPCWSTR pText, int Length, const RECT &Rect,
-			CDirectWriteFont &Font, CDirectWriteBrush &Brush, unsigned int Flags = 0);
+			CDirectWriteFont &Font, CDirectWriteBrush &Brush, DrawTextFlag Flags = DrawTextFlag::None);
 		int GetFitCharCount(LPCWSTR pText, int Length, int Width, CDirectWriteFont &Font);
 		bool IsNeedRecreate() const { return m_fNeedRecreate; }
 		bool GetFontMetrics(CDirectWriteFont &Font, FontMetrics *pMetrics);
@@ -141,15 +178,15 @@ namespace TVTest
 		bool UpdateRenderingParams();
 
 		CDirectWriteSystem &m_System;
-		ID2D1DCRenderTarget *m_pRenderTarget;
-		HWND m_hwnd;
-		HDC m_hdc;
-		HMONITOR m_hMonitor;
+		ID2D1DCRenderTarget *m_pRenderTarget = nullptr;
+		HWND m_hwnd = nullptr;
+		HDC m_hdc = nullptr;
+		HMONITOR m_hMonitor = nullptr;
 		RenderingParams m_RenderingParams;
-		bool m_fNeedRecreate;
+		bool m_fNeedRecreate = false;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

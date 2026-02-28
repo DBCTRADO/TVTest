@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Classic
+Base=light
 StatusBack=#dddddd
 StatusBack2=#bbbbbb
 StatusText=#333333
@@ -85,10 +86,14 @@ SideBarHighlightBack=#99c1ff
 SideBarHighlightBack2=#66a3ff
 SideBarHighlightIcon=#eeeeee
 SideBarHighlightBorder=#3384ff
+EventInfoPopupBack=#666666
+EventInfoPopupText=#eeeeee
+EventInfoPopupEventTitle=#ffffff
 ProgramGuideBack=#eeeeee
 ProgramGuideChannelBack=#dddddd
 ProgramGuideChannelBack2=#bbbbbb
 ProgramGuideChannelText=#333333
+ProgramGuideChannelHighlightText=#000000
 ProgramGuideCurChannelBack=#838f99
 ProgramGuideCurChannelBack2=#58646e
 ProgramGuideCurChannelText=#ffffff

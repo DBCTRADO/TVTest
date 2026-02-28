@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2020 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include <vector>
 #include <cmath>
@@ -5,11 +25,6 @@
 #include "DirectWrite.h"
 #include "ComUtility.h"
 #include "Common/DebugDef.h"
-
-
-#ifndef _WIN32_WINNT_WIN8
-static const DWRITE_TEXT_ALIGNMENT DWRITE_TEXT_ALIGNMENT_JUSTIFIED = static_cast<DWRITE_TEXT_ALIGNMENT>(3);
-#endif
 
 
 namespace TVTest
@@ -38,15 +53,6 @@ static inline D2D1_RECT_F D2DRectF(const RECT &Rect)
 
 
 
-CDirectWriteSystem::CDirectWriteSystem()
-	: m_hD2DLib(nullptr)
-	, m_hDWriteLib(nullptr)
-	, m_pD2DFactory(nullptr)
-	, m_pDWriteFactory(nullptr)
-{
-}
-
-
 CDirectWriteSystem::~CDirectWriteSystem()
 {
 	Finalize();
@@ -68,16 +74,16 @@ bool CDirectWriteSystem::Initialize()
 	}
 
 	if (m_pD2DFactory == nullptr) {
-		typedef HRESULT (WINAPI *D2D1CreateFactoryFunc)(
+		typedef HRESULT (WINAPI * D2D1CreateFactoryFunc)(
 			D2D1_FACTORY_TYPE factoryType,
 			REFIID riid,
-			const D2D1_FACTORY_OPTIONS *pFactoryOptions,
+			const D2D1_FACTORY_OPTIONS * pFactoryOptions,
 			void **ppIFactory);
 		D2D1CreateFactoryFunc pD2D1CreateFactory =
 			reinterpret_cast<D2D1CreateFactoryFunc>(::GetProcAddress(m_hD2DLib, "D2D1CreateFactory"));
 		if (pD2D1CreateFactory == nullptr)
 			return false;
-		HRESULT hr = pD2D1CreateFactory(
+		const HRESULT hr = pD2D1CreateFactory(
 			D2D1_FACTORY_TYPE_SINGLE_THREADED,
 			__uuidof(ID2D1Factory),
 			nullptr,
@@ -91,7 +97,7 @@ bool CDirectWriteSystem::Initialize()
 			GET_LIBRARY_FUNCTION(m_hDWriteLib, DWriteCreateFactory);
 		if (pDWriteCreateFactory == nullptr)
 			return false;
-		HRESULT hr = pDWriteCreateFactory(
+		const HRESULT hr = pDWriteCreateFactory(
 			DWRITE_FACTORY_TYPE_SHARED,
 			__uuidof(IDWriteFactory),
 			reinterpret_cast<IUnknown**>(&m_pDWriteFactory));
@@ -150,12 +156,6 @@ IDWriteFactory *CDirectWriteSystem::GetDWriteFactory()
 
 
 
-CDirectWriteFont::CDirectWriteFont()
-	: m_pTextFormat(nullptr)
-{
-}
-
-
 CDirectWriteFont::~CDirectWriteFont()
 {
 	Destroy();
@@ -175,9 +175,9 @@ bool CDirectWriteFont::Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf)
 	if (lf.lfHeight < 0 || Renderer.GetDC() == nullptr) {
 		FontSize = static_cast<float>(std::abs(lf.lfHeight));
 	} else {
-		HDC hdc = Renderer.GetDC();
-		HFONT hfont = ::CreateFontIndirect(&lf);
-		HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
+		const HDC hdc = Renderer.GetDC();
+		const HFONT hfont = ::CreateFontIndirect(&lf);
+		const HGDIOBJ hOldFont = ::SelectObject(hdc, hfont);
 		TEXTMETRIC tm;
 		::GetTextMetrics(hdc, &tm);
 		FontSize = static_cast<float>(tm.tmHeight - tm.tmInternalLeading);
@@ -186,7 +186,7 @@ bool CDirectWriteFont::Create(CDirectWriteRenderer &Renderer, const LOGFONT &lf)
 	}
 
 	IDWriteTextFormat *pTextFormat;
-	HRESULT hr = pFactory->CreateTextFormat(
+	const HRESULT hr = pFactory->CreateTextFormat(
 		lf.lfFaceName,
 		nullptr,
 		static_cast<DWRITE_FONT_WEIGHT>(lf.lfWeight),
@@ -242,12 +242,6 @@ bool CDirectWriteFont::GetLogFont(LOGFONT *pLogFont) const
 
 
 
-CDirectWriteBrush::CDirectWriteBrush()
-	: m_pBrush(nullptr)
-{
-}
-
-
 CDirectWriteBrush::~CDirectWriteBrush()
 {
 	Destroy();
@@ -264,7 +258,7 @@ bool CDirectWriteBrush::Create(CDirectWriteRenderer &Renderer, BYTE Red, BYTE Gr
 		return false;
 
 	ID2D1SolidColorBrush *pBrush;
-	HRESULT hr = pRenderTarget->CreateSolidColorBrush(
+	const HRESULT hr = pRenderTarget->CreateSolidColorBrush(
 		D2DColorF(Red, Green, Blue, Alpha),
 		&pBrush);
 	if (SUCCEEDED(hr))
@@ -314,11 +308,6 @@ ID2D1Brush *CDirectWriteBrush::GetBrush()
 
 CDirectWriteRenderer::CDirectWriteRenderer(CDirectWriteSystem &System)
 	: m_System(System)
-	, m_pRenderTarget(nullptr)
-	, m_hwnd(nullptr)
-	, m_hdc(nullptr)
-	, m_hMonitor(nullptr)
-	, m_fNeedRecreate(false)
 {
 }
 
@@ -351,7 +340,7 @@ bool CDirectWriteRenderer::Initialize(HWND hwnd)
 		D2D1_RENDER_TARGET_USAGE_NONE,
 		D2D1_FEATURE_LEVEL_DEFAULT);
 	ID2D1DCRenderTarget *pRenderTarget;
-	HRESULT hr = pFactory->CreateDCRenderTarget(&Props, &pRenderTarget);
+	const HRESULT hr = pFactory->CreateDCRenderTarget(&Props, &pRenderTarget);
 	if (SUCCEEDED(hr)) {
 		m_pRenderTarget = pRenderTarget;
 		m_hwnd = hwnd;
@@ -396,7 +385,7 @@ ID2D1RenderTarget *CDirectWriteRenderer::GetRenderTarget()
 
 bool CDirectWriteRenderer::BeginDraw(HDC hdc, const RECT &Rect)
 {
-	if (hdc==nullptr)
+	if (hdc == nullptr)
 		return false;
 
 	if (m_pRenderTarget == nullptr) {
@@ -418,7 +407,7 @@ bool CDirectWriteRenderer::EndDraw()
 	if (m_pRenderTarget == nullptr)
 		return false;
 
-	HRESULT hr = m_pRenderTarget->EndDraw();
+	const HRESULT hr = m_pRenderTarget->EndDraw();
 
 	m_fNeedRecreate = hr == D2DERR_RECREATE_TARGET;
 	if (m_fNeedRecreate) {
@@ -483,39 +472,39 @@ bool CDirectWriteRenderer::ResetClipping()
 
 bool CDirectWriteRenderer::SetRenderingParams(const RenderingParams &Params)
 {
-	m_RenderingParams.Mask = 0;
+	m_RenderingParams.Mask = RenderingParams::ParamFlag::None;
 
-	if ((Params.Mask & RenderingParams::PARAM_GAMMA) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::Gamma)
 			&& Params.Gamma > 0.0f
 			&& Params.Gamma <= 256.0f) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_GAMMA;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::Gamma;
 		m_RenderingParams.Gamma = Params.Gamma;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_ENHANCED_CONTRAST) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::EnhancedContrast)
 			&& Params.EnhancedContrast >= 0.0f) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_ENHANCED_CONTRAST;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::EnhancedContrast;
 		m_RenderingParams.EnhancedContrast = Params.EnhancedContrast;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_CLEARTYPE_LEVEL) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::ClearTypeLevel)
 			&& Params.ClearTypeLevel >= 0.0f
 			&& Params.ClearTypeLevel <= 1.0f) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_CLEARTYPE_LEVEL;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::ClearTypeLevel;
 		m_RenderingParams.ClearTypeLevel = Params.ClearTypeLevel;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_PIXEL_GEOMETRY) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::PixelGeometry)
 			&& Params.PixelGeometry >= DWRITE_PIXEL_GEOMETRY_FLAT
 			&& Params.PixelGeometry <= DWRITE_PIXEL_GEOMETRY_BGR) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_PIXEL_GEOMETRY;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::PixelGeometry;
 		m_RenderingParams.PixelGeometry = Params.PixelGeometry;
 	}
 
-	if ((Params.Mask & RenderingParams::PARAM_RENDERING_MODE) != 0
+	if (!!(Params.Mask & RenderingParams::ParamFlag::RenderingMode)
 			&& Params.RenderingMode >= DWRITE_RENDERING_MODE_ALIASED
 			&& Params.RenderingMode <= DWRITE_RENDERING_MODE_OUTLINE) {
-		m_RenderingParams.Mask |= RenderingParams::PARAM_RENDERING_MODE;
+		m_RenderingParams.Mask |= RenderingParams::ParamFlag::RenderingMode;
 		m_RenderingParams.RenderingMode = Params.RenderingMode;
 	}
 
@@ -532,7 +521,7 @@ bool CDirectWriteRenderer::OnWindowPosChanged()
 		return false;
 
 	bool fUpdated = false;
-	HMONITOR hMonitor = ::MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONULL);
+	const HMONITOR hMonitor = ::MonitorFromWindow(m_hwnd, MONITOR_DEFAULTTONULL);
 
 	if (hMonitor != nullptr && hMonitor != m_hMonitor) {
 		m_hMonitor = hMonitor;
@@ -546,7 +535,7 @@ bool CDirectWriteRenderer::OnWindowPosChanged()
 
 bool CDirectWriteRenderer::DrawText(
 	LPCWSTR pText, int Length, const RECT &Rect,
-	CDirectWriteFont &Font, CDirectWriteBrush &Brush, unsigned int Flags)
+	CDirectWriteFont &Font, CDirectWriteBrush &Brush, DrawTextFlag Flags)
 {
 	if (pText == nullptr)
 		return false;
@@ -562,22 +551,21 @@ bool CDirectWriteRenderer::DrawText(
 
 		if (pBrush != nullptr) {
 			pTextFormat->SetTextAlignment(
-				(Flags & DRAW_TEXT_ALIGN_HORZ_CENTER) != 0 ?
+				!!(Flags & DrawTextFlag::Align_HorzCenter) ?
 					DWRITE_TEXT_ALIGNMENT_CENTER :
-				(Flags & DRAW_TEXT_ALIGN_RIGHT) != 0 ?
+				!!(Flags & DrawTextFlag::Align_Right) ?
 					DWRITE_TEXT_ALIGNMENT_TRAILING :
-				((Flags & DRAW_TEXT_ALIGN_JUSTIFIED) != 0
-					&& Util::OS::IsWindows8OrLater()) ?
+				(!!(Flags & DrawTextFlag::Align_Justified) && Util::OS::IsWindows8OrLater()) ?
 					DWRITE_TEXT_ALIGNMENT_JUSTIFIED :
 					DWRITE_TEXT_ALIGNMENT_LEADING);
 			pTextFormat->SetParagraphAlignment(
-				(Flags & DRAW_TEXT_ALIGN_VERT_CENTER) != 0 ?
+				!!(Flags & DrawTextFlag::Align_VertCenter) ?
 					DWRITE_PARAGRAPH_ALIGNMENT_CENTER :
-				(Flags & DRAW_TEXT_ALIGN_BOTTOM) != 0 ?
+				!!(Flags & DrawTextFlag::Align_Bottom) ?
 					DWRITE_PARAGRAPH_ALIGNMENT_FAR :
 					DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
 			pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-			DWRITE_TRIMMING Trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
+			const DWRITE_TRIMMING Trimming = {DWRITE_TRIMMING_GRANULARITY_NONE, 0, 0};
 			pTextFormat->SetTrimming(&Trimming, nullptr);
 
 			m_pRenderTarget->DrawText(
@@ -730,14 +718,13 @@ bool CDirectWriteRenderer::GetTextMetrics(
 		IDWriteTextFormat *pTextFormat = Font.GetTextFormat();
 
 		if (pTextFormat != nullptr) {
-			D2D1_SIZE_F Size;
 			IDWriteTextLayout *pTextLayout;
 
 			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 			pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 			if (Length < 0)
 				Length = ::lstrlenW(pText);
-			Size = m_pRenderTarget->GetSize();
+			const D2D1_SIZE_F Size = m_pRenderTarget->GetSize();
 			hr = pFactory->CreateTextLayout(
 				pText,
 				Length,
@@ -781,18 +768,18 @@ bool CDirectWriteRenderer::UpdateRenderingParams()
 
 		HRESULT hr = pFactory->CreateMonitorRenderingParams(m_hMonitor, &pRenderingParams);
 		if (SUCCEEDED(hr)) {
-			if (m_RenderingParams.Mask != 0) {
+			if (m_RenderingParams.Mask != RenderingParams::ParamFlag::None) {
 				IDWriteRenderingParams *pCustomRenderingParams;
 				hr = pFactory->CreateCustomRenderingParams(
-					(m_RenderingParams.Mask & RenderingParams::PARAM_GAMMA) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::Gamma) ?
 						m_RenderingParams.Gamma : pRenderingParams->GetGamma(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_ENHANCED_CONTRAST) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::EnhancedContrast) ?
 						m_RenderingParams.EnhancedContrast : pRenderingParams->GetEnhancedContrast(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_CLEARTYPE_LEVEL) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::ClearTypeLevel) ?
 						m_RenderingParams.ClearTypeLevel : pRenderingParams->GetClearTypeLevel(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_PIXEL_GEOMETRY) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::PixelGeometry) ?
 						m_RenderingParams.PixelGeometry : pRenderingParams->GetPixelGeometry(),
-					(m_RenderingParams.Mask & RenderingParams::PARAM_RENDERING_MODE) != 0 ?
+					!!(m_RenderingParams.Mask & RenderingParams::ParamFlag::RenderingMode) ?
 						m_RenderingParams.RenderingMode : pRenderingParams->GetRenderingMode(),
 					&pCustomRenderingParams);
 				if (SUCCEEDED(hr)) {
@@ -817,4 +804,4 @@ bool CDirectWriteRenderer::UpdateRenderingParams()
 
 
 
-}	// namespace TVTest
+} // namespace TVTest

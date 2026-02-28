@@ -1,70 +1,75 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="../default.css" type="text/css">
 	<title>OSD</title>
 </head>
 <body>
 <h1>OSD</h1>
 
-<h2>OSD�\��</h2>
-<p class="descript">�`�����l���؂�ւ����Ɖ��ʂ̕ύX���ɁA��ʕ\�����s���܂��B</p>
+<h2>OSD表示</h2>
+<p class="descript">チャンネル切り替え時と音量の変更時に、画面表示を行います。</p>
 <div class="group">
-	<h2>�f���ƍ�������</h2>
-	<p class="descript">�f���ƍ������� OSD ��\�����܂��B<br>
-	�f�������_���� VMR-7 / VMR-9 / EVR �ȊO�̏ꍇ�A���̐ݒ�͖����ɂȂ�܂��B</p>
+	<h2>映像と合成する</h2>
+	<p class="descript">映像と合成して OSD を表示します。<br>
+	映像レンダラが VMR-7 / VMR-9 / EVR 以外の場合、この設定は無効になります。</p>
 
-	<h2>�����F</h2>
-	<p class="descript">�����̐F���w�肵�܂��B<br>
-	��(RGB���ׂ�0)�͓��ߐF�ɂȂ邽�ߎg�p�ł��܂���B</p>
+	<h2>文字色</h2>
+	<p class="descript">文字の色を指定します。<br>
+	黒(RGBすべて0)は透過色になるため使用できません。</p>
 
-	<h2>�t�H���g</h2>
-	<p class="descript">OSD �̃t�H���g��I�����܂��B<br>
-	�t�H���g�̃T�C�Y�͉�ʂ̑傫���ɍ��킹���܂����A<a href="../appendix/stylefile.html">�X�^�C���t�@�C��</a>�Œ������邱�Ƃ��ł��܂��B</p>
+	<h2>フォント</h2>
+	<p class="descript">OSD のフォントを選択します。<br>
+	フォントのサイズは画面の大きさに合わせられますが、<a href="../appendix/stylefile.html">スタイルファイル</a>で調整することができます。</p>
 
-	<h2>�\������</h2>
-	<p class="descript">OSD �̕\�����Ԃ��w�肵�܂��B<br>
-	[�f���ƍ�������] ���`�F�b�N���Ă���ꍇ�́A���߂ɂ��Ȃ��ƃ`�����l���؂�ւ����ɕ\�����o�܂���B<br>
-	(�Đ�����Ă��Ȃ��� OSD �̕\�����ł��܂��񂪁A�V�����`�����l�����Đ������O�ɕ\�����Ԃ��߂��Ă��܂�����)</p>
+	<h2>表示時間</h2>
+	<p class="descript">OSD の表示時間を指定します。<br>
+	[映像と合成する] をチェックしている場合は、長めにしないとチャンネル切り替え時に表示が出ません。<br>
+	(再生されていないと OSD の表示ができませんが、新しいチャンネルが再生される前に表示時間を過ぎてしまうため)</p>
 
-	<h2>�ȉ���OSD�\�����s��</h2>
-	<p class="descript">�`�F�b�N���ꂽ������s�����ۂ� OSD �\�������܂��B</p>
+	<h2>以下のOSD表示を行う</h2>
+	<p class="descript">チェックされた操作を行った際に OSD 表示させます。</p>
 
-	<h2>�`�����l���ؑւ̕\��</h2>
-	<p class="descript">�`�����l���؂�ւ����̕\�����e��I�����܂��B<br>
-	�u���S�̂݁v��I�������ꍇ���A���S���擾����Ă��Ȃ��ꍇ�̓e�L�X�g��\�����܂��B</p>
+	<h2>チャンネル切替の表示</h2>
+	<p class="descript">チャンネル切り替え時の表示内容を選択します。<br>
+	「ロゴのみ」を選択した場合も、ロゴが取得されていない場合はテキストを表示します。</p>
 
-	<h2>�`�����l���ؑւ̃e�L�X�g</h2>
-	<p class="descript">�`�����l���؂�ւ����ɕ\������e�L�X�g�̓��e��ݒ肵�܂��B</p>
+	<h2>チャンネル切替のテキスト</h2>
+	<p class="descript">チャンネル切り替え時に表示するテキストの内容を設定します。</p>
 </div>
 
-<h2>�ʒm�o�[�\��</h2>
-<p class="descript">��ʏ㕔�ɒʒm�o�[�̕\�����s���܂��B</p>
+<h2>番組情報 OSD</h2>
+<p class="descript">番組情報を画面上に表示する番組情報 OSD の設定を行います。<br>
+番組情報 OSD はチャンネル切り替え時などに自動表示するか、キー割り当てなどで表示することができます。</p>
 <div class="group">
-	<h2>�ԑg�؂�ւ�莞�̔ԑg��</h2>
-	<p class="descript">�ԑg���؂�ւ�����ۂɁA�ԑg�����\�������悤�ɂ��܂��B</p>
+	<h2>フォント</h2>
+	<p class="descript">番組情報 OSD のフォントを選択します。<br>
+	フォントのサイズは画面の大きさに合わせられますが、<a href="../appendix/stylefile.html">スタイルファイル</a>で調整することができます。</p>
 
-	<h2>TS�v���Z�b�T�[�̃G���[</h2>
-	<p class="descript"><a href="tsprocessor.html">TS�v���Z�b�T�[</a>�̃G���[���ʒm�����悤�ɂ��܂��B</p>
+	<h2>表示時間</h2>
+	<p class="descript">番組情報 OSD を非表示にするまでの時間を秒単位で指定します。</p>
 
-	<h2>�\������</h2>
-	<p class="descript">�ʒm�o�[��\�����鎞�Ԃ�b�P�ʂŎw�肵�܂��B</p>
+	<h2>チャンネル切替時に自動表示</h2>
+	<p class="descript">チャンネルの切り替え時に番組情報 OSD を表示します。</p>
 
-	<h2>�t�H���g</h2>
-	<p class="descript">�ʒm�o�[�̃t�H���g��I�����܂��B</p>
+	<h2>番組切り替わり時に自動表示</h2>
+	<p class="descript">番組の切り替わり時に番組情報 OSD を表示します。</p>
+
+	<h2>手動表示時は自動的に非表示にしない</h2>
+	<p class="descript">キー割り当てなどで手動表示した際は、自動的に非表示にしないようにします。</p>
 </div>
 
-<h2>�z�[��/�`�����l���I�����</h2>
-<p class="descript">�z�[����ʂƃ`�����l���I����ʂ̐ݒ���s���܂��B</p>
+<h2>ホーム/チャンネル選択画面</h2>
+<p class="descript">ホーム画面とチャンネル選択画面の設定を行います。</p>
 <div class="group">
-	<h2>�t�H���g</h2>
-	<p class="descript">�t�H���g��I�����܂��B<br>
-	[�t�H���g�T�C�Y����ʂ̑傫���ɍ��킹��] ���`�F�b�N����Ă���ꍇ�A�T�C�Y�͖�������܂��B</p>
+	<h2>フォント</h2>
+	<p class="descript">フォントを選択します。<br>
+	[フォントサイズを画面の大きさに合わせる] がチェックされている場合、サイズは無視されます。</p>
 
-	<h2>�t�H���g�T�C�Y����ʂ̑傫���ɍ��킹��</h2>
-	<p class="descript">��ʂ̑傫���ɍ��킹�ăt�H���g�̃T�C�Y��ς���悤�ɂ��܂��B<br>
-	���̍ۂ̃T�C�Y��<a href="../appendix/stylefile.html">�X�^�C���t�@�C��</a>�Œ������邱�Ƃ��ł��܂��B</p>
+	<h2>フォントサイズを画面の大きさに合わせる</h2>
+	<p class="descript">画面の大きさに合わせてフォントのサイズを変えるようにします。<br>
+	その際のサイズは<a href="../appendix/stylefile.html">スタイルファイル</a>で調整することができます。</p>
 </div>
 
 </body>

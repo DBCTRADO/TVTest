@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Jeans
+Base=dark
 StatusBack=#22446a
 StatusBack2=#112235
 StatusText=#ababbe
@@ -50,11 +51,15 @@ TitleBarText=#ababbe
 TitleBarHighlightBack=#22446a
 TitleBarHighlightBack2=#33669f
 TitleBarHighlightText=#bfbfce
+EventInfoPopupBack=#22446a
+EventInfoPopupText=#ababbe
+EventInfoPopupEventTitle=#bfbfce
 ProgramGuideBack=#22446a
 ;ProgramGuideText=#000000
 ProgramGuideChannelBack=#22446a
 ProgramGuideChannelBack2=#112235
 ProgramGuideChannelText=#ababbe
+ProgramGuideChannelHighlightText=#bfbfce
 ProgramGuideCurChannelBack=#22446a
 ProgramGuideCurChannelBack2=#33669f
 ProgramGuideCurChannelText=#bfbfce

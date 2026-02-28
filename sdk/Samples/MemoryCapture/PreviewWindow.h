@@ -4,13 +4,11 @@
 #include "Image.h"
 
 
-// プレビューウィンドウクラス
+// 繝励Ξ繝薙Η繝ｼ繧ｦ繧｣繝ｳ繝峨え繧ｯ繝ｩ繧ｹ
 class CPreviewWindow
 {
 public:
 	static bool Initialize(HINSTANCE hinst);
-
-	CPreviewWindow();
 
 	bool Create(HWND hwndParent);
 	void SetPosition(int Left, int Top, int Width, int Height);
@@ -25,14 +23,14 @@ private:
 	static const LPCTSTR m_WindowClassName;
 	static HINSTANCE m_hinst;
 
-	HWND m_hwnd;
-	const CImage *m_pImage;
-	bool m_fFitImageToWindow;
-	int m_ZoomNum;
-	int m_ZoomDenom;
+	HWND m_hwnd = nullptr;
+	const CImage *m_pImage = nullptr;
+	bool m_fFitImageToWindow = true;
+	int m_ZoomNum = 50;
+	int m_ZoomDenom = 100;
 
 	void Draw(HDC hdc);
 
-	static CPreviewWindow *GetThis(HWND hwnd);
+	static CPreviewWindow * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

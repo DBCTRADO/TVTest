@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=GrayClassic
+Base=dark
 StatusBack=#777777
 StatusBack2=#222222
 StatusText=#bbbbbb
@@ -75,11 +76,15 @@ NotificationBarBack=#222222
 NotificationBarBack2=#333333
 NotificationBarText=#bbbbbb
 NotificationBarErrorText=#ff4444
+EventInfoPopupBack=#777777
+EventInfoPopupText=#dddddd
+EventInfoPopupEventTitle=#eeeeee
 ProgramGuideBack=#666666
 ;ProgramGuideText=#000000
 ProgramGuideChannelBack=#777777
 ProgramGuideChannelBack2=#222222
 ProgramGuideChannelText=#bbbbbb
+ProgramGuideChannelHighlightText=#dddddd
 ProgramGuideCurChannelBack=#3384ff
 ProgramGuideCurChannelBack2=#33d6ff
 ProgramGuideCurChannelText=#333333

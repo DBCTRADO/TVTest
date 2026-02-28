@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2020 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "EpgUtil.h"
@@ -6,694 +26,800 @@
 #include "Common/DebugDef.h"
 
 
-
+namespace TVTest
+{
 
 namespace EpgUtil
 {
 
-	VideoType GetVideoType(BYTE ComponentType)
-	{
-		if ((ComponentType&0x0F)>=1 && (ComponentType&0x0F)<=4) {
-			switch (ComponentType>>4) {
-			case 0x0:
-			case 0xA:
-			case 0xD:
-			case 0xF:
-				return VIDEO_TYPE_SD;
-			case 0x9:
-			case 0xB:
-			case 0xC:
-			case 0xE:
-				return VIDEO_TYPE_HD;
+
+VideoType GetVideoType(BYTE ComponentType)
+{
+	if ((ComponentType & 0x0F) >= 1 && (ComponentType & 0x0F) <= 4) {
+		switch (ComponentType >> 4) {
+		case 0x0:
+		case 0xA:
+		case 0xD:
+		case 0xF:
+			return VideoType::SD;
+		case 0x9:
+		case 0xB:
+		case 0xC:
+		case 0xE:
+			return VideoType::HD;
+		}
+	}
+	return VideoType::Unknown;
+}
+
+
+int FormatEventTime(
+	const LibISDB::EventInfo &EventInfo,
+	LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags)
+{
+	if (pszTime == nullptr || MaxLength < 1)
+		return 0;
+
+	if (!EventInfo.StartTime.IsValid()) {
+		pszTime[0] = _T('\0');
+		return 0;
+	}
+
+	return FormatEventTime(
+		EventInfo.StartTime, EventInfo.Duration,
+		pszTime, MaxLength, Flags);
+}
+
+
+int FormatEventTime(
+	const LibISDB::DateTime &StartTime, DWORD Duration,
+	LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags)
+{
+	return FormatEventTime(StartTime.ToSYSTEMTIME(), Duration, pszTime, MaxLength, Flags);
+}
+
+
+int FormatEventTime(
+	const SYSTEMTIME &StartTime, DWORD Duration,
+	LPTSTR pszTime, int MaxLength, FormatEventTimeFlag Flags)
+{
+	if (pszTime == nullptr || MaxLength < 1)
+		return 0;
+
+	SYSTEMTIME stStart;
+
+	if (!!(Flags & FormatEventTimeFlag::NoConvert)) {
+		stStart = StartTime;
+	} else {
+		EpgTimeToDisplayTime(StartTime, &stStart);
+	}
+
+	TCHAR szDate[32];
+	if (!!(Flags & FormatEventTimeFlag::Date)) {
+		size_t Length = 0;
+		if (!!(Flags & FormatEventTimeFlag::Year)) {
+			Length = StringFormat(
+				szDate, TEXT("{}/"),
+				stStart.wYear);
+		}
+		StringFormat(
+			szDate + Length, lengthof(szDate) - Length,
+			TEXT("{}/{}({}) "),
+			stStart.wMonth,
+			stStart.wDay,
+			GetDayOfWeekText(stStart.wDayOfWeek));
+	} else {
+		szDate[0] = _T('\0');
+	}
+
+	const LPCTSTR pszTimeFormat =
+		!!(Flags & FormatEventTimeFlag::Hour2Digits) ? TEXT("{:02}:{:02}") : TEXT("{}:{:02}");
+	TCHAR szStartTime[32], szEndTime[32];
+
+	StringVFormat(
+		szStartTime,
+		pszTimeFormat,
+		stStart.wHour,
+		stStart.wMinute);
+
+	szEndTime[0] = _T('\0');
+	if (!(Flags & FormatEventTimeFlag::StartOnly)) {
+		if (Duration > 0) {
+			SYSTEMTIME EndTime = stStart;
+			if (OffsetSystemTime(&EndTime, Duration * TimeConsts::SYSTEMTIME_SECOND)) {
+				StringVFormat(
+					szEndTime, pszTimeFormat,
+					EndTime.wHour, EndTime.wMinute);
 			}
-		}
-		return VIDEO_TYPE_UNKNOWN;
-	}
-
-
-	LPCTSTR GetComponentTypeText(BYTE StreamContent,BYTE ComponentType)
-	{
-		switch (StreamContent) {
-		case 0x01:
-		case 0x05:
-			return GetVideoComponentTypeText(ComponentType);
-
-		case 0x02:
-			return GetAudioComponentTypeText(ComponentType);
-		}
-
-		return NULL;
-	}
-
-
-	LPCTSTR GetVideoComponentTypeText(BYTE ComponentType)
-	{
-		static const struct {
-			BYTE ComponentType;
-			LPCTSTR pszText;
-		} VideoComponentTypeList[] = {
-			{0x01,TEXT("480i[4:3]")},
-			{0x02,TEXT("480i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0x03,TEXT("480i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0x04,TEXT("480i[>16:9]")},
-			{0x91,TEXT("2160p[4:3]")},
-			{0x92,TEXT("2160p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0x93,TEXT("2160p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0x94,TEXT("2160p[>16:9]")},
-			{0xA1,TEXT("480p[4:3]")},
-			{0xA2,TEXT("480p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xA3,TEXT("480p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0xA4,TEXT("480p[>16:9]")},
-			{0xB1,TEXT("1080i[4:3]")},
-			{0xB2,TEXT("1080i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xB3,TEXT("1080i[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0xB4,TEXT("1080i[>16:9]")},
-			{0xC1,TEXT("720p[4:3]")},
-			{0xC2,TEXT("720p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xC3,TEXT("720p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0xC4,TEXT("720p[>16:9]")},
-			{0xD1,TEXT("240p[4:3]")},
-			{0xD2,TEXT("240p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xD3,TEXT("240p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0xD4,TEXT("240p[>16:9]")},
-			{0xE1,TEXT("1080p[4:3]")},
-			{0xE2,TEXT("1080p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xE3,TEXT("1080p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0xE4,TEXT("1080p[>16:9]")},
-			{0xF1,TEXT("180p[4:3]")},
-			{0xF2,TEXT("180p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚ ‚è
-			{0xF3,TEXT("180p[16:9]")},	// ƒpƒ“ƒxƒNƒgƒ‹‚È‚µ
-			{0xF4,TEXT("180p[>16:9]")},
-		};
-
-		for (int i=0;i<lengthof(VideoComponentTypeList);i++) {
-			if (VideoComponentTypeList[i].ComponentType==ComponentType)
-				return VideoComponentTypeList[i].pszText;
-		}
-
-		return NULL;
-	}
-
-
-	LPCTSTR GetAudioComponentTypeText(BYTE ComponentType)
-	{
-		static const struct {
-			BYTE ComponentType;
-			LPCTSTR pszText;
-		} AudioComponentTypeList[] = {
-			{0x01,TEXT("Mono")},					// 1/0
-			{0x02,TEXT("Dual mono")},				// 1/0 + 1/0
-			{0x03,TEXT("Stereo")},					// 2/0
-			{0x04,TEXT("3ch[2/1]")},
-			{0x05,TEXT("3ch[3/0]")},
-			{0x06,TEXT("4ch[2/2]")},
-			{0x07,TEXT("4ch[3/1]")},
-			{0x08,TEXT("5ch")},						// 3/2
-			{0x09,TEXT("5.1ch")},					// 3/2.1
-			{0x0A,TEXT("6.1ch[3/3.1]")},
-			{0x0B,TEXT("6.1ch[2/0/0-2/0/2-0.1]")},
-			{0x0C,TEXT("7.1ch[5/2.1]")},
-			{0x0D,TEXT("7.1ch[3/2/2.1]")},
-			{0x0E,TEXT("7.1ch[2/0/0-3/0/2-0.1]")},
-			{0x0F,TEXT("7.1ch[0/2/0-3/0/2-0.1]")},
-			{0x10,TEXT("10.2ch")},					// 2/0/0-3/2/3-0.2
-			{0x11,TEXT("22.2ch")},					// 3/3/3-5/2/3-3/0/0.2
-			{0x40,TEXT("‹ŠoáŠQÒ—p‰¹º‰ğà")},
-			{0x41,TEXT("’®ŠoáŠQÒ—p‰¹º")},
-		};
-
-		for (int i=0;i<lengthof(AudioComponentTypeList);i++) {
-			if (AudioComponentTypeList[i].ComponentType==ComponentType)
-				return AudioComponentTypeList[i].pszText;
-		}
-
-		return NULL;
-	}
-
-
-	int FormatEventTime(const CEventInfoData *pEventInfo,
-						LPTSTR pszTime,int MaxLength,unsigned int Flags)
-	{
-		if (pszTime==NULL || MaxLength<1)
-			return 0;
-
-		if (pEventInfo==NULL || !pEventInfo->m_bValidStartTime) {
-			pszTime[0]=_T('\0');
-			return 0;
-		}
-
-		return FormatEventTime(pEventInfo->m_StartTime,pEventInfo->m_Duration,
-							   pszTime,MaxLength,Flags);
-	}
-
-
-	int FormatEventTime(const SYSTEMTIME &StartTime,DWORD Duration,
-						LPTSTR pszTime,int MaxLength,unsigned int Flags)
-	{
-		if (pszTime==NULL || MaxLength<1)
-			return 0;
-
-		SYSTEMTIME stStart;
-
-		if ((Flags & EVENT_TIME_NO_CONVERT)!=0) {
-			stStart=StartTime;
 		} else {
-			EpgTimeToDisplayTime(StartTime,&stStart);
+			if (!!(Flags & FormatEventTimeFlag::UndecidedText))
+				StringCopy(szEndTime, TEXT("(çµ‚äº†æœªå®š)"));
 		}
-
-		TCHAR szDate[32];
-		if ((Flags & EVENT_TIME_DATE)!=0) {
-			int Length=0;
-			if ((Flags & EVENT_TIME_YEAR)!=0) {
-				Length=StdUtil::snprintf(szDate,lengthof(szDate),TEXT("%d/"),
-										 stStart.wYear);
-			}
-			StdUtil::snprintf(szDate+Length,lengthof(szDate)-Length,
-							  TEXT("%d/%d(%s) "),
-							  stStart.wMonth,
-							  stStart.wDay,
-							  GetDayOfWeekText(stStart.wDayOfWeek));
-		} else {
-			szDate[0]=_T('\0');
-		}
-
-		LPCTSTR pszTimeFormat=
-			(Flags & EVENT_TIME_HOUR_2DIGITS)!=0?TEXT("%02d:%02d"):TEXT("%d:%02d");
-		TCHAR szStartTime[32],szEndTime[32];
-
-		StdUtil::snprintf(szStartTime,lengthof(szStartTime),
-						  pszTimeFormat,
-						  stStart.wHour,
-						  stStart.wMinute);
-
-		szEndTime[0]=_T('\0');
-		if ((Flags & EVENT_TIME_START_ONLY)==0) {
-			if (Duration>0) {
-				SYSTEMTIME EndTime=stStart;
-				if (OffsetSystemTime(&EndTime,Duration*TimeConsts::SYSTEMTIME_SECOND)) {
-					StdUtil::snprintf(szEndTime,lengthof(szEndTime),pszTimeFormat,
-									  EndTime.wHour,EndTime.wMinute);
-				}
-			} else {
-				if ((Flags & EVENT_TIME_UNDECIDED_TEXT)!=0)
-					::lstrcpy(szEndTime,TEXT("(I—¹–¢’è)"));
-			}
-		}
-
-		return StdUtil::snprintf(pszTime,MaxLength,TEXT("%s%s%s%s"),
-								 szDate,
-								 szStartTime,
-								 (Flags & EVENT_TIME_START_ONLY)==0?TEXT("`"):TEXT(""),
-								 szEndTime);
 	}
 
+	return static_cast<int>(StringFormat(
+		pszTime, MaxLength, TEXT("{}{}{}{}"),
+		szDate,
+		szStartTime,
+		!(Flags & FormatEventTimeFlag::StartOnly) ? TEXT("ï½") : TEXT(""),
+		szEndTime));
+}
 
-	bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime,SYSTEMTIME *pDisplayTime)
-	{
-		if (pDisplayTime==NULL)
-			return false;
 
-		switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
-		case CEpgOptions::EPGTIME_RAW:
-			*pDisplayTime=EpgTime;
+bool EpgTimeToDisplayTime(const SYSTEMTIME &EpgTime, SYSTEMTIME *pDisplayTime)
+{
+	if (pDisplayTime == nullptr)
+		return false;
+
+	switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
+	case CEpgOptions::EpgTimeMode::Raw:
+		*pDisplayTime = EpgTime;
+		return true;
+
+	case CEpgOptions::EpgTimeMode::JST:
+		{
+			LibISDB::DateTime From, To;
+			SYSTEMTIME st;
+			TIME_ZONE_INFORMATION tzi;
+
+			From.FromSYSTEMTIME(EpgTime);
+			if (!LibISDB::EPGTimeToUTCTime(From, &To))
+				return false;
+			st = To.ToSYSTEMTIME();
+			return GetJSTTimeZoneInformation(&tzi)
+				&& ::SystemTimeToTzSpecificLocalTime(&tzi, &st, pDisplayTime);
+		}
+
+	case CEpgOptions::EpgTimeMode::Local:
+		{
+			LibISDB::DateTime From, To;
+
+			From.FromSYSTEMTIME(EpgTime);
+			if (!LibISDB::EPGTimeToLocalTime(From, &To))
+				return false;
+			*pDisplayTime = To.ToSYSTEMTIME();
+		}
+		return true;
+
+	case CEpgOptions::EpgTimeMode::UTC:
+		{
+			LibISDB::DateTime From, To;
+
+			From.FromSYSTEMTIME(EpgTime);
+			if (!LibISDB::EPGTimeToUTCTime(From, &To))
+				return false;
+			*pDisplayTime = To.ToSYSTEMTIME();
+		}
+		return true;
+	}
+
+	return false;
+}
+
+
+bool EpgTimeToDisplayTime(const LibISDB::DateTime &EpgTime, LibISDB::DateTime *pDisplayTime)
+{
+	if (pDisplayTime == nullptr)
+		return false;
+
+	SYSTEMTIME st;
+
+	if (!EpgTimeToDisplayTime(EpgTime.ToSYSTEMTIME(), &st))
+		return false;
+
+	pDisplayTime->FromSYSTEMTIME(st);
+
+	return true;
+}
+
+
+bool EpgTimeToDisplayTime(SYSTEMTIME *pTime)
+{
+	if (pTime == nullptr)
+		return false;
+
+	SYSTEMTIME st;
+
+	if (!EpgTimeToDisplayTime(*pTime, &st))
+		return false;
+
+	*pTime = st;
+
+	return true;
+}
+
+
+bool EpgTimeToDisplayTime(LibISDB::DateTime *pTime)
+{
+	if (pTime == nullptr)
+		return false;
+
+	LibISDB::DateTime Time;
+
+	if (!EpgTimeToDisplayTime(*pTime, &Time))
+		return false;
+
+	*pTime = Time;
+
+	return true;
+}
+
+
+bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime, SYSTEMTIME *pEpgTime)
+{
+	if (pEpgTime == nullptr)
+		return false;
+
+	switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
+	case CEpgOptions::EpgTimeMode::Raw:
+		*pEpgTime = DisplayTime;
+		return true;
+
+	case CEpgOptions::EpgTimeMode::JST:
+		{
+			SYSTEMTIME st;
+			TIME_ZONE_INFORMATION tzi;
+			LibISDB::DateTime From, To;
+
+			if (!GetJSTTimeZoneInformation(&tzi)
+					|| !::TzSpecificLocalTimeToSystemTime(&tzi, &DisplayTime, &st))
+				return false;
+			From.FromSYSTEMTIME(st);
+			if (!LibISDB::UTCTimeToEPGTime(From, &To))
+				return false;
+			*pEpgTime = To.ToSYSTEMTIME();
+		}
+		return true;
+
+	case CEpgOptions::EpgTimeMode::Local:
+		{
+			SYSTEMTIME st;
+			LibISDB::DateTime From, To;
+
+			if (!::TzSpecificLocalTimeToSystemTime(nullptr, &DisplayTime, &st))
+				return false;
+			From.FromSYSTEMTIME(st);
+			if (!LibISDB::UTCTimeToEPGTime(From, &To))
+				return false;
+			*pEpgTime = To.ToSYSTEMTIME();
+		}
+		return true;
+
+	case CEpgOptions::EpgTimeMode::UTC:
+		{
+			LibISDB::DateTime From, To;
+
+			From.FromSYSTEMTIME(DisplayTime);
+			if (!LibISDB::UTCTimeToEPGTime(From, &To))
+				return false;
+			*pEpgTime = To.ToSYSTEMTIME();
+		}
+		return true;
+	}
+
+	return false;
+}
+
+
+bool DisplayTimeToEpgTime(const LibISDB::DateTime &DisplayTime, LibISDB::DateTime *pEpgTime)
+{
+	if (pEpgTime == nullptr)
+		return false;
+
+	SYSTEMTIME st;
+
+	if (!DisplayTimeToEpgTime(DisplayTime.ToSYSTEMTIME(), &st))
+		return false;
+
+	pEpgTime->FromSYSTEMTIME(st);
+
+	return true;
+}
+
+
+bool DisplayTimeToEpgTime(SYSTEMTIME *pTime)
+{
+	if (pTime == nullptr)
+		return false;
+
+	SYSTEMTIME st;
+
+	if (!DisplayTimeToEpgTime(*pTime, &st))
+		return false;
+
+	*pTime = st;
+
+	return true;
+}
+
+
+bool DisplayTimeToEpgTime(LibISDB::DateTime *pTime)
+{
+	if (pTime == nullptr)
+		return false;
+
+	LibISDB::DateTime Time;
+
+	if (!DisplayTimeToEpgTime(*pTime, &Time))
+		return false;
+
+	*pTime = Time;
+
+	return true;
+}
+
+
+bool GetEventGenre(const LibISDB::EventInfo &EventInfo,
+				   int *pLevel1, int *pLevel2)
+{
+	return GetEventGenre(EventInfo.ContentNibble, pLevel1, pLevel2);
+}
+
+
+bool GetEventGenre(
+	const LibISDB::EventInfo::ContentNibbleInfo &ContentNibble,
+	int *pLevel1, int *pLevel2)
+{
+	for (int i = 0; i < ContentNibble.NibbleCount; i++) {
+		if (ContentNibble.NibbleList[i].ContentNibbleLevel1 != 0xE) {
+			if (pLevel1 != nullptr)
+				*pLevel1 = ContentNibble.NibbleList[i].ContentNibbleLevel1;
+			if (pLevel2 != nullptr)
+				*pLevel2 = ContentNibble.NibbleList[i].ContentNibbleLevel2;
 			return true;
+		}
+	}
 
-		case CEpgOptions::EPGTIME_JST:
-			{
-				SYSTEMTIME st;
-				TIME_ZONE_INFORMATION tzi;
+	if (pLevel1 != nullptr)
+		*pLevel1 = -1;
+	if (pLevel2 != nullptr)
+		*pLevel2 = -1;
 
-				return EpgTimeToUtc(&EpgTime,&st)
-					&& GetJSTTimeZoneInformation(&tzi)
-					&& ::SystemTimeToTzSpecificLocalTime(&tzi,&st,pDisplayTime);
+	return false;
+}
+
+
+String GetEventDisplayText(const LibISDB::EventInfo &EventInfo, bool fUseARIBSymbol)
+{
+	if (!EventInfo.EventText.empty()) {
+		LPCTSTR p = EventInfo.EventText.c_str();
+		while (*p != '\0') {
+			if (*p <= 0x20) {
+				p++;
+				continue;
 			}
 
-		case CEpgOptions::EPGTIME_LOCAL:
-			return EpgTimeToLocalTime(&EpgTime,pDisplayTime);
+			if (fUseARIBSymbol)
+				return MapARIBSymbol(p);
+			else
+				return String(p);
+		}
+	}
 
-		case CEpgOptions::EPGTIME_UTC:
-			return EpgTimeToUtc(&EpgTime,pDisplayTime);
+	if (!EventInfo.ExtendedText.empty()) {
+		String Text;
+
+		for (auto it = EventInfo.ExtendedText.begin(); it != EventInfo.ExtendedText.end(); ++it) {
+			if (!it->Description.empty()
+					&& (it != EventInfo.ExtendedText.begin()
+						|| it->Description.find(TEXT("ç•ªçµ„å†…å®¹")) == String::npos)) {
+				Text += it->Description;
+				Text += TEXT("\r\n");
+			}
+
+			LPCTSTR p = it->Text.c_str();
+			while (*p != '\0' && *p <= 0x20)
+				p++;
+			Text += p;
+			Text += TEXT("\r\n");
 		}
 
-		return false;
+		if (fUseARIBSymbol)
+			return MapARIBSymbol(Text);
+		else
+			return Text;
 	}
 
-
-	bool EpgTimeToDisplayTime(SYSTEMTIME *pTime)
-	{
-		if (pTime==NULL)
-			return false;
-
-		SYSTEMTIME st;
-
-		if (!EpgTimeToDisplayTime(*pTime,&st))
-			return false;
-
-		*pTime=st;
-
-		return true;
-	}
+	return String();
+}
 
 
-	bool DisplayTimeToEpgTime(const SYSTEMTIME &DisplayTime,SYSTEMTIME *pEpgTime)
-	{
-		if (pEpgTime==NULL)
-			return false;
+/*
+	[å­—] ã®ã‚ˆã†ãªè¡¨è¨˜ã‚’ ARIB å¤–å­—ã«å¤‰æ›ã™ã‚‹ã€‚ã¨ã‚Šã‚ãˆãšä¸€éƒ¨ã®æ–‡å­—ã®ã¿ã€‚
+	LibISDB ã® ARIBString.cpp ã§å®Ÿè£…ã™ã¹ãã‹ï¼Ÿ
+*/
+size_t MapARIBSymbol(LPCWSTR pszSource, LPWSTR pszDest, size_t DestLength)
+{
+	if (pszSource == nullptr || pszDest == nullptr || DestLength == 0)
+		return 0;
 
-		switch (GetAppClass().EpgOptions.GetEpgTimeMode()) {
-		case CEpgOptions::EPGTIME_RAW:
-			*pEpgTime=DisplayTime;
-			return true;
+	struct ARIBSymbolMap {
+		LPCWSTR pszString;
+		LPCWSTR pszSymbol;
+	};
 
-		case CEpgOptions::EPGTIME_JST:
-			{
-				SYSTEMTIME st;
-				TIME_ZONE_INFORMATION tzi;
+	static const ARIBSymbolMap MapList[] = {
+		{L"[HV]",       L"\U0001f14a"},
+		{L"[SD]",       L"\U0001f14c"},
+		{L"[ï¼°]",       L"\U0001f13f"},
+		{L"[ï¼·]",       L"\U0001f146"},
+		{L"[MV]",       L"\U0001f14b"},
+		{L"[æ‰‹]",       L"\U0001f210"},
+		{L"[å­—]",       L"\U0001f211"},
+		{L"[åŒ]",       L"\U0001f212"},
+		{L"[ãƒ‡]",       L"\U0001f213"},
+		{L"[ï¼³]",       L"\U0001f142"},
+		{L"[äºŒ]",       L"\U0001f214"},
+		{L"[å¤š]",       L"\U0001f215"},
+		{L"[è§£]",       L"\U0001f216"},
+		{L"[SS]",       L"\U0001f14d"},
+		{L"[ï¼¢]",       L"\U0001f131"},
+		{L"[ï¼®]",       L"\U0001f13d"},
+		{L"[å¤©]",       L"\U0001f217"},
+		{L"[äº¤]",       L"\U0001f218"},
+		{L"[æ˜ ]",       L"\U0001f219"},
+		{L"[ç„¡]",       L"\U0001f21a"},
+		{L"[æ–™]",       L"\U0001f21b"},
+		{L"[å¹´é½¢åˆ¶é™]", L"\u26bf"},
+		{L"[å‰]",       L"\U0001f21c"},
+		{L"[å¾Œ]",       L"\U0001f21d"},
+		{L"[å†]",       L"\U0001f21e"},
+		{L"[æ–°]",       L"\U0001f21f"},
+		{L"[åˆ]",       L"\U0001f220"},
+		{L"[çµ‚]",       L"\U0001f221"},
+		{L"[ç”Ÿ]",       L"\U0001f222"},
+		{L"[è²©]",       L"\U0001f223"},
+		{L"[å£°]",       L"\U0001f224"},
+		{L"[å¹]",       L"\U0001f225"},
+		{L"[PPV]",      L"\U0001f14e"},
+		{L"(ç§˜)",       L"\u3299"},
+	};
 
-				return GetJSTTimeZoneInformation(&tzi)
-					&& ::TzSpecificLocalTimeToSystemTime(&tzi,&DisplayTime,&st)
-					&& UtcToEpgTime(&st,pEpgTime);
-			}
+	LPCWSTR p = pszSource;
+	size_t DestPos = 0;
 
-		case CEpgOptions::EPGTIME_LOCAL:
-			{
-				SYSTEMTIME st;
+	while (*p != L'\0' && DestPos + 1 < DestLength) {
+		bool fMapped = false;
 
-				return ::TzSpecificLocalTimeToSystemTime(NULL,&DisplayTime,&st)
-					&& UtcToEpgTime(&st,pEpgTime);
-			}
-
-		case CEpgOptions::EPGTIME_UTC:
-			return UtcToEpgTime(&DisplayTime,pEpgTime);
-		}
-
-		return false;
-	}
-
-
-	bool DisplayTimeToEpgTime(SYSTEMTIME *pTime)
-	{
-		if (pTime==NULL)
-			return false;
-
-		SYSTEMTIME st;
-
-		if (!DisplayTimeToEpgTime(*pTime,&st))
-			return false;
-
-		*pTime=st;
-
-		return true;
-	}
-
-
-	bool GetLanguageText(DWORD LanguageCode,LPTSTR pszText,int MaxText,LanguageTextType Type)
-	{
-		static const struct {
-			DWORD LanguageCode;
-			LPCTSTR pszLongText;
-			LPCTSTR pszSimpleText;
-			LPCTSTR pszShortText;
-		} LanguageList[] = {
-			{LANGUAGE_CODE_JPN,	TEXT("“ú–{Œê"),		TEXT("“ú–{Œê"),	TEXT("“ú")},
-			{LANGUAGE_CODE_ENG,	TEXT("‰pŒê"),		TEXT("‰pŒê"),	TEXT("‰p")},
-			{LANGUAGE_CODE_DEU,	TEXT("ƒhƒCƒcŒê"),	TEXT("“ÆŒê"),	TEXT("“Æ")},
-			{LANGUAGE_CODE_FRA,	TEXT("ƒtƒ‰ƒ“ƒXŒê"),	TEXT("•§Œê"),	TEXT("•§")},
-			{LANGUAGE_CODE_ITA,	TEXT("ƒCƒ^ƒŠƒAŒê"),	TEXT("ˆÉŒê"),	TEXT("ˆÉ")},
-			{LANGUAGE_CODE_RUS,	TEXT("ƒƒVƒAŒê"),	TEXT("˜IŒê"),	TEXT("˜I")},
-			{LANGUAGE_CODE_ZHO,	TEXT("’†‘Œê"),		TEXT("’†‘Œê"),	TEXT("’†")},
-			{LANGUAGE_CODE_KOR,	TEXT("ŠØ‘Œê"),		TEXT("ŠØ‘Œê"),	TEXT("ŠØ")},
-			{LANGUAGE_CODE_SPA,	TEXT("ƒXƒyƒCƒ“Œê"),	TEXT("¼Œê"),	TEXT("¼")},
-			{LANGUAGE_CODE_ETC,	TEXT("ŠO‘Œê"),		TEXT("ŠO‘Œê"),	TEXT("ŠO")},
-		};
-
-		if (pszText==NULL || MaxText<1)
-			return false;
-
-		for (int i=0;i<lengthof(LanguageList);i++) {
-			if (LanguageList[i].LanguageCode==LanguageCode) {
-				LPCTSTR pszLang;
-
-				switch (Type) {
-				default:
-				case LANGUAGE_TEXT_LONG:	pszLang=LanguageList[i].pszLongText;	break;
-				case LANGUAGE_TEXT_SIMPLE:	pszLang=LanguageList[i].pszSimpleText;	break;
-				case LANGUAGE_TEXT_SHORT:	pszLang=LanguageList[i].pszShortText;	break;
-				}
-
-				::lstrcpyn(pszText,pszLang,MaxText);
-
-				return true;
-			}
-		}
-
-		TCHAR szLang[4];
-		szLang[0]=static_cast<TCHAR>((LanguageCode>>16)&0xFF);
-		szLang[1]=static_cast<TCHAR>((LanguageCode>>8)&0xFF);
-		szLang[2]=static_cast<TCHAR>(LanguageCode&0xFF);
-		szLang[3]=_T('\0');
-		::CharUpperBuff(szLang,3);
-		::lstrcpyn(pszText,szLang,MaxText);
-
-		return true;
-	}
-
-
-	bool GetEventGenre(const CEventInfoData &EventInfo,
-					   int *pLevel1,int *pLevel2)
-	{
-		return GetEventGenre(EventInfo.m_ContentNibble,pLevel1,pLevel2);
-	}
-
-
-	bool GetEventGenre(const CEventInfoData::ContentNibble &ContentNibble,
-					   int *pLevel1,int *pLevel2)
-	{
-		for (int i=0;i<ContentNibble.NibbleCount;i++) {
-			if (ContentNibble.NibbleList[i].ContentNibbleLevel1!=0xE) {
-				if (pLevel1!=nullptr)
-					*pLevel1=ContentNibble.NibbleList[i].ContentNibbleLevel1;
-				if (pLevel2!=nullptr)
-					*pLevel2=ContentNibble.NibbleList[i].ContentNibbleLevel2;
-				return true;
+		for (const ARIBSymbolMap &Map : MapList) {
+			size_t i;
+			for (i = 0; p[i] != L'\0' && p[i] == Map.pszString[i]; i++);
+			if (Map.pszString[i] == L'\0') {
+				const size_t Length = Map.pszSymbol[1] != L'\0' ? 2 : 1;
+				if (DestLength - DestPos <= Length)
+					goto End;
+				for (size_t j = 0; j < Length; j++)
+					pszDest[DestPos++] = Map.pszSymbol[j];
+				p += i;
+				fMapped = true;
 			}
 		}
 
-		if (pLevel1!=nullptr)
-			*pLevel1=-1;
-		if (pLevel2!=nullptr)
-			*pLevel2=-1;
-
-		return false;
+		if (!fMapped)
+			pszDest[DestPos++] = *p++;
 	}
 
+End:
+	pszDest[DestPos] = L'\0';
 
-	LPCTSTR GetEventDisplayText(const CEventInfo &EventInfo)
-	{
-		LPCTSTR p;
+	return DestPos;
+}
 
-		if (!EventInfo.m_EventText.empty()) {
-			p=EventInfo.m_EventText.c_str();
-			while (*p!='\0') {
-				if (*p<=0x20) {
-					p++;
-					continue;
-				}
-				return p;
-			}
-		}
 
-		if (!EventInfo.m_EventExtendedText.empty()) {
-			p=EventInfo.m_EventExtendedText.c_str();
-			TCHAR szContent[]=TEXT("”Ô‘g“à—e");
-			if (::StrCmpN(p,szContent,lengthof(szContent)-1)==0)
-				p+=lengthof(szContent)-1;
-			while (*p!='\0') {
-				if (*p<=0x20) {
-					p++;
-					continue;
-				}
-				return p;
-			}
-		}
+size_t MapARIBSymbol(LPCWSTR pszSource, String *pDest)
+{
+	if (pDest == nullptr)
+		return 0;
 
-		return NULL;
+	if (pszSource == nullptr) {
+		pDest->clear();
+		return 0;
 	}
+
+	pDest->resize(::lstrlenW(pszSource) + 1);
+	const size_t Length = MapARIBSymbol(pszSource, pDest->data(), pDest->length());
+	pDest->resize(Length);
+	return Length;
+}
+
+
+String MapARIBSymbol(LPCWSTR pszSource)
+{
+	String Text;
+	MapARIBSymbol(pszSource, &Text);
+	return Text;
+}
+
+
+String MapARIBSymbol(const String &Source)
+{
+	String Dest;
+
+	Dest.resize(Source.length() + 1);
+	const size_t Length = MapARIBSymbol(Source.c_str(), Dest.data(), Dest.length());
+	Dest.resize(Length);
+	return Dest;
+}
 
 }
 
 
 
 
-LPCTSTR CEpgGenre::GetText(int Level1,int Level2) const
+LPCTSTR CEpgGenre::GetText(int Level1, int Level2) const
 {
 	static const struct {
 		LPCTSTR pszText;
 		LPCTSTR pszSubText[16];
 	} GenreList[] = {
-		{TEXT("ƒjƒ…[ƒX^•ñ“¹"),
+		{
+			TEXT("ãƒ‹ãƒ¥ãƒ¼ã‚¹ï¼å ±é“"),
 			{
-				TEXT("’èE‘‡"),
-				TEXT("“V‹C"),
-				TEXT("“ÁWEƒhƒLƒ…ƒƒ“ƒg"),
-				TEXT("­¡E‘‰ï"),
-				TEXT("ŒoÏEs‹µ"),
-				TEXT("ŠCŠOE‘Û"),
-				TEXT("‰ğà"),
-				TEXT("“¢˜_E‰ï’k"),
-				TEXT("•ñ“¹“Á”Ô"),
-				TEXT("ƒ[ƒJƒ‹E’nˆæ"),
-				TEXT("Œğ’Ê"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("å®šæ™‚ãƒ»ç·åˆ"),
+				TEXT("å¤©æ°—"),
+				TEXT("ç‰¹é›†ãƒ»ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆ"),
+				TEXT("æ”¿æ²»ãƒ»å›½ä¼š"),
+				TEXT("çµŒæ¸ˆãƒ»å¸‚æ³"),
+				TEXT("æµ·å¤–ãƒ»å›½éš›"),
+				TEXT("è§£èª¬"),
+				TEXT("è¨è«–ãƒ»ä¼šè«‡"),
+				TEXT("å ±é“ç‰¹ç•ª"),
+				TEXT("ãƒ­ãƒ¼ã‚«ãƒ«ãƒ»åœ°åŸŸ"),
+				TEXT("äº¤é€š"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒXƒ|[ƒc"),
+		{
+			TEXT("ã‚¹ãƒãƒ¼ãƒ„"),
 			{
-				TEXT("ƒXƒ|[ƒcƒjƒ…[ƒX"),
-				TEXT("–ì‹…"),
-				TEXT("ƒTƒbƒJ["),
-				TEXT("ƒSƒ‹ƒt"),
-				TEXT("‚»‚Ì‘¼‚Ì‹…‹Z"),
-				TEXT("‘Š–oEŠi“¬‹Z"),
-				TEXT("ƒIƒŠƒ“ƒsƒbƒNE‘Û‘å‰ï"),
-				TEXT("ƒ}ƒ‰ƒ\ƒ“E—¤ãE…‰j"),
-				TEXT("ƒ‚[ƒ^[ƒXƒ|[ƒc"),
-				TEXT("ƒ}ƒŠƒ“EƒEƒBƒ“ƒ^[ƒXƒ|[ƒc"),
-				TEXT("‹£”nEŒö‰c‹£‹Z"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ã‚¹ãƒãƒ¼ãƒ„ãƒ‹ãƒ¥ãƒ¼ã‚¹"),
+				TEXT("é‡çƒ"),
+				TEXT("ã‚µãƒƒã‚«ãƒ¼"),
+				TEXT("ã‚´ãƒ«ãƒ•"),
+				TEXT("ãã®ä»–ã®çƒæŠ€"),
+				TEXT("ç›¸æ’²ãƒ»æ ¼é—˜æŠ€"),
+				TEXT("ã‚ªãƒªãƒ³ãƒ”ãƒƒã‚¯ãƒ»å›½éš›å¤§ä¼š"),
+				TEXT("ãƒãƒ©ã‚½ãƒ³ãƒ»é™¸ä¸Šãƒ»æ°´æ³³"),
+				TEXT("ãƒ¢ãƒ¼ã‚¿ãƒ¼ã‚¹ãƒãƒ¼ãƒ„"),
+				TEXT("ãƒãƒªãƒ³ãƒ»ã‚¦ã‚£ãƒ³ã‚¿ãƒ¼ã‚¹ãƒãƒ¼ãƒ„"),
+				TEXT("ç«¶é¦¬ãƒ»å…¬å–¶ç«¶æŠ€"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("î•ñ^ƒƒCƒhƒVƒ‡["),
+		{
+			TEXT("æƒ…å ±ï¼ãƒ¯ã‚¤ãƒ‰ã‚·ãƒ§ãƒ¼"),
 			{
-				TEXT("Œ|”\EƒƒCƒhƒVƒ‡["),
-				TEXT("ƒtƒ@ƒbƒVƒ‡ƒ“"),
-				TEXT("•é‚ç‚µEZ‚Ü‚¢"),
-				TEXT("Œ’NEˆã—Ã"),
-				TEXT("ƒVƒ‡ƒbƒsƒ“ƒOE’Ê”Ì"),
-				TEXT("ƒOƒ‹ƒE—¿—"),
-				TEXT("ƒCƒxƒ“ƒg"),
-				TEXT("”Ô‘gĞ‰îE‚¨’m‚ç‚¹"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("èŠ¸èƒ½ãƒ»ãƒ¯ã‚¤ãƒ‰ã‚·ãƒ§ãƒ¼"),
+				TEXT("ãƒ•ã‚¡ãƒƒã‚·ãƒ§ãƒ³"),
+				TEXT("æš®ã‚‰ã—ãƒ»ä½ã¾ã„"),
+				TEXT("å¥åº·ãƒ»åŒ»ç™‚"),
+				TEXT("ã‚·ãƒ§ãƒƒãƒ”ãƒ³ã‚°ãƒ»é€šè²©"),
+				TEXT("ã‚°ãƒ«ãƒ¡ãƒ»æ–™ç†"),
+				TEXT("ã‚¤ãƒ™ãƒ³ãƒˆ"),
+				TEXT("ç•ªçµ„ç´¹ä»‹ãƒ»ãŠçŸ¥ã‚‰ã›"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒhƒ‰ƒ}"),
+		{
+			TEXT("ãƒ‰ãƒ©ãƒ"),
 			{
-				TEXT("‘“àƒhƒ‰ƒ}"),
-				TEXT("ŠCŠOƒhƒ‰ƒ}"),
-				TEXT("‘ãŒ€"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("å›½å†…ãƒ‰ãƒ©ãƒ"),
+				TEXT("æµ·å¤–ãƒ‰ãƒ©ãƒ"),
+				TEXT("æ™‚ä»£åŠ‡"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("‰¹Šy"),
+		{
+			TEXT("éŸ³æ¥½"),
 			{
-				TEXT("‘“àƒƒbƒNEƒ|ƒbƒvƒX"),
-				TEXT("ŠCŠOƒƒbƒNEƒ|ƒbƒvƒX"),
-				TEXT("ƒNƒ‰ƒVƒbƒNEƒIƒyƒ‰"),
-				TEXT("ƒWƒƒƒYEƒtƒ…[ƒWƒ‡ƒ“"),
-				TEXT("‰Ì—w‹ÈE‰‰‰Ì"),
-				TEXT("ƒ‰ƒCƒuEƒRƒ“ƒT[ƒg"),
-				TEXT("ƒ‰ƒ“ƒLƒ“ƒOEƒŠƒNƒGƒXƒg"),
-				TEXT("ƒJƒ‰ƒIƒPE‚Ì‚Ç©–"),
-				TEXT("–¯—wE–MŠy"),
-				TEXT("“¶—wEƒLƒbƒY"),
-				TEXT("–¯‘°‰¹ŠyEƒ[ƒ‹ƒhƒ~ƒ…[ƒWƒbƒN"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("å›½å†…ãƒ­ãƒƒã‚¯ãƒ»ãƒãƒƒãƒ—ã‚¹"),
+				TEXT("æµ·å¤–ãƒ­ãƒƒã‚¯ãƒ»ãƒãƒƒãƒ—ã‚¹"),
+				TEXT("ã‚¯ãƒ©ã‚·ãƒƒã‚¯ãƒ»ã‚ªãƒšãƒ©"),
+				TEXT("ã‚¸ãƒ£ã‚ºãƒ»ãƒ•ãƒ¥ãƒ¼ã‚¸ãƒ§ãƒ³"),
+				TEXT("æ­Œè¬¡æ›²ãƒ»æ¼”æ­Œ"),
+				TEXT("ãƒ©ã‚¤ãƒ–ãƒ»ã‚³ãƒ³ã‚µãƒ¼ãƒˆ"),
+				TEXT("ãƒ©ãƒ³ã‚­ãƒ³ã‚°ãƒ»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ"),
+				TEXT("ã‚«ãƒ©ã‚ªã‚±ãƒ»ã®ã©è‡ªæ…¢"),
+				TEXT("æ°‘è¬¡ãƒ»é‚¦æ¥½"),
+				TEXT("ç«¥è¬¡ãƒ»ã‚­ãƒƒã‚º"),
+				TEXT("æ°‘æ—éŸ³æ¥½ãƒ»ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒŸãƒ¥ãƒ¼ã‚¸ãƒƒã‚¯"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒoƒ‰ƒGƒeƒB"),
+		{
+			TEXT("ãƒãƒ©ã‚¨ãƒ†ã‚£"),
 			{
-				TEXT("ƒNƒCƒY"),
-				TEXT("ƒQ[ƒ€"),
-				TEXT("ƒg[ƒNƒoƒ‰ƒGƒeƒB"),
-				TEXT("‚¨Î‚¢EƒRƒƒfƒB"),
-				TEXT("‰¹Šyƒoƒ‰ƒGƒeƒB"),
-				TEXT("—·ƒoƒ‰ƒGƒeƒB"),
-				TEXT("—¿—ƒoƒ‰ƒGƒeƒB"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ã‚¯ã‚¤ã‚º"),
+				TEXT("ã‚²ãƒ¼ãƒ "),
+				TEXT("ãƒˆãƒ¼ã‚¯ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				TEXT("ãŠç¬‘ã„ãƒ»ã‚³ãƒ¡ãƒ‡ã‚£"),
+				TEXT("éŸ³æ¥½ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				TEXT("æ—…ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				TEXT("æ–™ç†ãƒãƒ©ã‚¨ãƒ†ã‚£"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("‰f‰æ"),
+		{
+			TEXT("æ˜ ç”»"),
 			{
-				TEXT("—m‰æ"),
-				TEXT("–M‰æ"),
-				TEXT("ƒAƒjƒ"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("æ´‹ç”»"),
+				TEXT("é‚¦ç”»"),
+				TEXT("ã‚¢ãƒ‹ãƒ¡"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒAƒjƒ^“ÁB"),
+		{
+			TEXT("ã‚¢ãƒ‹ãƒ¡ï¼ç‰¹æ’®"),
 			{
-				TEXT("‘“àƒAƒjƒ"),
-				TEXT("ŠCŠOƒAƒjƒ"),
-				TEXT("“ÁB"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("å›½å†…ã‚¢ãƒ‹ãƒ¡"),
+				TEXT("æµ·å¤–ã‚¢ãƒ‹ãƒ¡"),
+				TEXT("ç‰¹æ’®"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ƒhƒLƒ…ƒƒ“ƒ^ƒŠ[^‹³—{"),
+		{
+			TEXT("ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ã‚¿ãƒªãƒ¼ï¼æ•™é¤Š"),
 			{
-				TEXT("Ğ‰ïE–"),
-				TEXT("—ğjE‹Is"),
-				TEXT("©‘RE“®•¨EŠÂ‹«"),
-				TEXT("‰F’ˆE‰ÈŠwEˆãŠw"),
-				TEXT("ƒJƒ‹ƒ`ƒƒ[E“`“•¶‰»"),
-				TEXT("•¶ŠwE•¶Œ|"),
-				TEXT("ƒXƒ|[ƒc"),
-				TEXT("ƒhƒLƒ…ƒƒ“ƒ^ƒŠ[‘S”Ê"),
-				TEXT("ƒCƒ“ƒ^ƒrƒ…[E“¢˜_"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ç¤¾ä¼šãƒ»æ™‚äº‹"),
+				TEXT("æ­´å²ãƒ»ç´€è¡Œ"),
+				TEXT("è‡ªç„¶ãƒ»å‹•ç‰©ãƒ»ç’°å¢ƒ"),
+				TEXT("å®‡å®™ãƒ»ç§‘å­¦ãƒ»åŒ»å­¦"),
+				TEXT("ã‚«ãƒ«ãƒãƒ£ãƒ¼ãƒ»ä¼çµ±æ–‡åŒ–"),
+				TEXT("æ–‡å­¦ãƒ»æ–‡èŠ¸"),
+				TEXT("ã‚¹ãƒãƒ¼ãƒ„"),
+				TEXT("ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ã‚¿ãƒªãƒ¼å…¨èˆ¬"),
+				TEXT("ã‚¤ãƒ³ã‚¿ãƒ“ãƒ¥ãƒ¼ãƒ»è¨è«–"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("Œ€ê^Œö‰‰"),
+		{
+			TEXT("åŠ‡å ´ï¼å…¬æ¼”"),
 			{
-				TEXT("Œ»‘ãŒ€EVŒ€"),
-				TEXT("ƒ~ƒ…[ƒWƒJƒ‹"),
-				TEXT("ƒ_ƒ“ƒXEƒoƒŒƒG"),
-				TEXT("—ŒêE‰‰Œ|"),
-				TEXT("‰Ì•‘ŠêEŒÃ“T"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("ç¾ä»£åŠ‡ãƒ»æ–°åŠ‡"),
+				TEXT("ãƒŸãƒ¥ãƒ¼ã‚¸ã‚«ãƒ«"),
+				TEXT("ãƒ€ãƒ³ã‚¹ãƒ»ãƒãƒ¬ã‚¨"),
+				TEXT("è½èªãƒ»æ¼”èŠ¸"),
+				TEXT("æ­Œèˆä¼ãƒ»å¤å…¸"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("ï–¡^‹³ˆç"),
+		{
+			TEXT("è¶£å‘³ï¼æ•™è‚²"),
 			{
-				TEXT("—·E’Ş‚èEƒAƒEƒgƒhƒA"),
-				TEXT("‰€Œ|EƒyƒbƒgEèŒ|"),
-				TEXT("‰¹ŠyE”üpEHŒ|"),
-				TEXT("ˆÍŒéE«Šû"),
-				TEXT("–ƒEƒpƒ`ƒ“ƒR"),
-				TEXT("ÔEƒI[ƒgƒoƒC"),
-				TEXT("ƒRƒ“ƒsƒ…[ƒ^ETVƒQ[ƒ€"),
-				TEXT("‰ï˜bEŒêŠw"),
-				TEXT("—c™E¬Šw¶"),
-				TEXT("’†Šw¶E‚Z¶"),
-				TEXT("‘åŠw¶EóŒ±"),
-				TEXT("¶ŠUŠwKE‘Ši"),
-				TEXT("‹³ˆç–â‘è"),
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("æ—…ãƒ»é‡£ã‚Šãƒ»ã‚¢ã‚¦ãƒˆãƒ‰ã‚¢"),
+				TEXT("åœ’èŠ¸ãƒ»ãƒšãƒƒãƒˆãƒ»æ‰‹èŠ¸"),
+				TEXT("éŸ³æ¥½ãƒ»ç¾è¡“ãƒ»å·¥èŠ¸"),
+				TEXT("å›²ç¢ãƒ»å°†æ£‹"),
+				TEXT("éº»é›€ãƒ»ãƒ‘ãƒãƒ³ã‚³"),
+				TEXT("è»Šãƒ»ã‚ªãƒ¼ãƒˆãƒã‚¤"),
+				TEXT("ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ãƒ»TVã‚²ãƒ¼ãƒ "),
+				TEXT("ä¼šè©±ãƒ»èªå­¦"),
+				TEXT("å¹¼å…ãƒ»å°å­¦ç”Ÿ"),
+				TEXT("ä¸­å­¦ç”Ÿãƒ»é«˜æ ¡ç”Ÿ"),
+				TEXT("å¤§å­¦ç”Ÿãƒ»å—é¨“"),
+				TEXT("ç”Ÿæ¶¯å­¦ç¿’ãƒ»è³‡æ ¼"),
+				TEXT("æ•™è‚²å•é¡Œ"),
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
-		{TEXT("•Ÿƒ"),
+		{
+			TEXT("ç¦ç¥‰"),
 			{
-				TEXT("‚—îÒ"),
-				TEXT("áŠQÒ"),
-				TEXT("Ğ‰ï•Ÿƒ"),
-				TEXT("ƒ{ƒ‰ƒ“ƒeƒBƒA"),
-				TEXT("è˜b"),
-				TEXT("•¶š(š–‹)"),
-				TEXT("‰¹º‰ğà"),
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				NULL,
-				TEXT("‚»‚Ì‘¼")
+				TEXT("é«˜é½¢è€…"),
+				TEXT("éšœå®³è€…"),
+				TEXT("ç¤¾ä¼šç¦ç¥‰"),
+				TEXT("ãƒœãƒ©ãƒ³ãƒ†ã‚£ã‚¢"),
+				TEXT("æ‰‹è©±"),
+				TEXT("æ–‡å­—(å­—å¹•)"),
+				TEXT("éŸ³å£°è§£èª¬"),
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				nullptr,
+				TEXT("ãã®ä»–")
 			}
 		},
 	};
 
-	if (Level2<0) {
-		if (Level1>=0 && Level1<lengthof(GenreList))
+	if (Level2 < 0) {
+		if (Level1 >= 0 && Level1 < lengthof(GenreList))
 			return GenreList[Level1].pszText;
-		if (Level1==GENRE_OTHER)
-			return TEXT("‚»‚Ì‘¼");
-		return NULL;
+		if (Level1 == GENRE_OTHER)
+			return TEXT("ãã®ä»–");
+		return nullptr;
 	}
-	if (Level1>=0 && Level1<lengthof(GenreList)
-			&& Level2>=0 && Level2<16)
+	if (Level1 >= 0 && Level1 < lengthof(GenreList)
+			&& Level2 >= 0 && Level2 < 16)
 		return GenreList[Level1].pszSubText[Level2];
-	return NULL;
+	return nullptr;
 }
 
 
-
-
-CEpgIcons::CEpgIcons()
-	: m_hdc(NULL)
-	, m_hbmOld(NULL)
-{
-}
 
 
 CEpgIcons::~CEpgIcons()
@@ -704,30 +830,30 @@ CEpgIcons::~CEpgIcons()
 
 bool CEpgIcons::Load()
 {
-	return CBitmap::Load(GetAppClass().GetInstance(),IDB_PROGRAMGUIDEICONS,LR_DEFAULTCOLOR);
+	return CBitmap::Load(GetAppClass().GetInstance(), IDB_PROGRAMGUIDEICONS, LR_DEFAULTCOLOR);
 }
 
 
-bool CEpgIcons::BeginDraw(HDC hdc,int IconWidth,int IconHeight)
+bool CEpgIcons::BeginDraw(HDC hdc, int IconWidth, int IconHeight)
 {
 	if (!IsCreated())
 		return false;
 
 	EndDraw();
 
-	m_hdc=::CreateCompatibleDC(hdc);
-	if (m_hdc==NULL)
+	m_hdc = ::CreateCompatibleDC(hdc);
+	if (m_hdc == nullptr)
 		return false;
-	m_hbmOld=DrawUtil::SelectObject(m_hdc,*this);
+	m_hbmOld = DrawUtil::SelectObject(m_hdc, *this);
 
-	if (IconWidth>0 && IconHeight>0
-			&& (IconWidth!=ICON_WIDTH || IconHeight!=ICON_HEIGHT)) {
-		m_StretchBuffer.Create((ICON_LAST+1)*IconWidth,IconHeight,hdc);
-		m_StretchedIcons=0;
+	if (IconWidth > 0 && IconHeight > 0
+			&& (IconWidth != ICON_WIDTH || IconHeight != ICON_HEIGHT)) {
+		m_StretchBuffer.Create((ICON_LAST + 1) * IconWidth, IconHeight, hdc);
+		m_StretchedIcons = 0;
 	}
 
-	m_IconWidth=IconWidth;
-	m_IconHeight=IconHeight;
+	m_IconWidth = IconWidth;
+	m_IconHeight = IconHeight;
 
 	return true;
 }
@@ -735,86 +861,90 @@ bool CEpgIcons::BeginDraw(HDC hdc,int IconWidth,int IconHeight)
 
 void CEpgIcons::EndDraw()
 {
-	if (m_hdc!=NULL) {
-		::SelectObject(m_hdc,m_hbmOld);
+	if (m_hdc != nullptr) {
+		::SelectObject(m_hdc, m_hbmOld);
 		::DeleteDC(m_hdc);
-		m_hdc=NULL;
-		m_hbmOld=NULL;
+		m_hdc = nullptr;
+		m_hbmOld = nullptr;
 	}
 	m_StretchBuffer.Destroy();
 }
 
 
 bool CEpgIcons::DrawIcon(
-	HDC hdcDst,int DstX,int DstY,int Width,int Height,
-	int Icon,BYTE Opacity,const RECT *pClipping)
+	HDC hdcDst, int DstX, int DstY, int Width, int Height,
+	int Icon, BYTE Opacity, const RECT *pClipping)
 {
-	if (m_hdc==NULL
-			|| hdcDst==NULL
-			|| Width<=0 || Height<=0
-			|| Icon<0 || Icon>ICON_LAST)
+	if (m_hdc == nullptr
+			|| hdcDst == nullptr
+			|| Width <= 0 || Height <= 0
+			|| Icon < 0 || Icon > ICON_LAST)
 		return false;
 
 	HDC hdcSrc;
-	int IconWidth,IconHeight;
+	int IconWidth, IconHeight;
 
-	if ((Width!=ICON_WIDTH || Height!=ICON_HEIGHT)
-			&& Opacity<255
+	if ((Width != ICON_WIDTH || Height != ICON_HEIGHT)
+			&& Opacity < 255
 			&& m_StretchBuffer.IsCreated()) {
-		hdcSrc=m_StretchBuffer.GetDC();
-		IconWidth=m_IconWidth;
-		IconHeight=m_IconHeight;
-		if ((m_StretchedIcons & IconFlag(Icon))==0) {
-			int OldStretchMode=::SetStretchBltMode(hdcSrc,STRETCH_HALFTONE);
-			::StretchBlt(hdcSrc,Icon*IconWidth,0,IconWidth,IconHeight,
-						 m_hdc,Icon*ICON_WIDTH,0,ICON_WIDTH,ICON_HEIGHT,
-						 SRCCOPY);
-			::SetStretchBltMode(hdcSrc,OldStretchMode);
-			m_StretchedIcons|=IconFlag(Icon);
+		hdcSrc = m_StretchBuffer.GetDC();
+		IconWidth = m_IconWidth;
+		IconHeight = m_IconHeight;
+		if ((m_StretchedIcons & IconFlag(Icon)) == 0) {
+			const int OldStretchMode = ::SetStretchBltMode(hdcSrc, STRETCH_HALFTONE);
+			::StretchBlt(
+				hdcSrc, Icon * IconWidth, 0, IconWidth, IconHeight,
+				m_hdc, Icon * ICON_WIDTH, 0, ICON_WIDTH, ICON_HEIGHT,
+				SRCCOPY);
+			::SetStretchBltMode(hdcSrc, OldStretchMode);
+			m_StretchedIcons |= IconFlag(Icon);
 		}
 	} else {
-		hdcSrc=m_hdc;
-		IconWidth=ICON_WIDTH;
-		IconHeight=ICON_HEIGHT;
+		hdcSrc = m_hdc;
+		IconWidth = ICON_WIDTH;
+		IconHeight = ICON_HEIGHT;
 	}
 
-	RECT rcDraw,rcDst;
+	RECT rcDraw, rcDst;
 
-	if (pClipping!=NULL) {
-		::SetRect(&rcDst,DstX,DstY,DstX+Width,DstY+Height);
-		if (!::IntersectRect(&rcDraw,&rcDst,pClipping))
+	if (pClipping != nullptr) {
+		::SetRect(&rcDst, DstX, DstY, DstX + Width, DstY + Height);
+		if (!::IntersectRect(&rcDraw, &rcDst, pClipping))
 			return true;
 	} else {
-		::SetRect(&rcDraw,DstX,DstY,DstX+Width,DstY+Height);
+		::SetRect(&rcDraw, DstX, DstY, DstX + Width, DstY + Height);
 	}
 
-	int DstWidth=rcDraw.right-rcDraw.left;
-	int DstHeight=rcDraw.bottom-rcDraw.top;
-	int SrcX=(IconWidth*(rcDraw.left-DstX)+Width/2)/Width;
-	int SrcY=(IconHeight*(rcDraw.top-DstY)+Height/2)/Height;
-	int SrcWidth=(IconWidth*(rcDraw.right-DstX)+Width/2)/Width-SrcX;
-	if (SrcWidth<1)
-		SrcWidth=1;
-	int SrcHeight=(IconHeight*(rcDraw.bottom-DstY)+Height/2)/Height-SrcY;
-	if (SrcHeight<1)
-		SrcHeight=1;
+	const int DstWidth = rcDraw.right - rcDraw.left;
+	const int DstHeight = rcDraw.bottom - rcDraw.top;
+	const int SrcX = (IconWidth * (rcDraw.left - DstX) + Width / 2) / Width;
+	const int SrcY = (IconHeight * (rcDraw.top - DstY) + Height / 2) / Height;
+	int SrcWidth = (IconWidth * (rcDraw.right - DstX) + Width / 2) / Width - SrcX;
+	if (SrcWidth < 1)
+		SrcWidth = 1;
+	int SrcHeight = (IconHeight * (rcDraw.bottom - DstY) + Height / 2) / Height - SrcY;
+	if (SrcHeight < 1)
+		SrcHeight = 1;
 
-	if (Opacity==255) {
-		if (DstWidth==SrcWidth && DstHeight==SrcHeight) {
-			::BitBlt(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
-					 hdcSrc,Icon*IconWidth+SrcX,SrcY,SRCCOPY);
+	if (Opacity == 255) {
+		if (DstWidth == SrcWidth && DstHeight == SrcHeight) {
+			::BitBlt(
+				hdcDst, rcDraw.left, rcDraw.top, DstWidth, DstHeight,
+				hdcSrc, Icon * IconWidth + SrcX, SrcY, SRCCOPY);
 		} else {
-			int OldStretchMode=::SetStretchBltMode(hdcDst,STRETCH_HALFTONE);
-			::StretchBlt(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
-						 hdcSrc,Icon*IconWidth+SrcX,SrcY,SrcWidth,SrcHeight,
-						 SRCCOPY);
-			::SetStretchBltMode(hdcDst,OldStretchMode);
+			const int OldStretchMode = ::SetStretchBltMode(hdcDst, STRETCH_HALFTONE);
+			::StretchBlt(
+				hdcDst, rcDraw.left, rcDraw.top, DstWidth, DstHeight,
+				hdcSrc, Icon * IconWidth + SrcX, SrcY, SrcWidth, SrcHeight,
+				SRCCOPY);
+			::SetStretchBltMode(hdcDst, OldStretchMode);
 		}
 	} else {
-		BLENDFUNCTION bf={AC_SRC_OVER,0,Opacity,0};
-		::GdiAlphaBlend(hdcDst,rcDraw.left,rcDraw.top,DstWidth,DstHeight,
-						hdcSrc,Icon*IconWidth+SrcX,SrcY,SrcWidth,SrcHeight,
-						bf);
+		const BLENDFUNCTION bf = {AC_SRC_OVER, 0, Opacity, 0};
+		::GdiAlphaBlend(
+			hdcDst, rcDraw.left, rcDraw.top, DstWidth, DstHeight,
+			hdcSrc, Icon * IconWidth + SrcX, SrcY, SrcWidth, SrcHeight,
+			bf);
 	}
 
 	return true;
@@ -823,24 +953,24 @@ bool CEpgIcons::DrawIcon(
 
 bool CEpgIcons::DrawIcons(
 	unsigned int IconFlags,
-	HDC hdcDst,int DstX,int DstY,int Width,int Height,
-	int IntervalX,int IntervalY,
-	BYTE Opacity,const RECT *pClipping)
+	HDC hdcDst, int DstX, int DstY, int Width, int Height,
+	int IntervalX, int IntervalY,
+	BYTE Opacity, const RECT *pClipping)
 {
-	if (IconFlags==0)
+	if (IconFlags == 0)
 		return false;
 
-	int x=DstX,y=DstY;
-	int Icon=0;
+	int x = DstX, y = DstY;
+	int Icon = 0;
 
-	for (unsigned int Flag=IconFlags;Flag!=0;Flag>>=1) {
-		if (pClipping!=nullptr
-				&& (x>=pClipping->right || y>=pClipping->bottom))
+	for (unsigned int Flag = IconFlags; Flag != 0; Flag >>= 1) {
+		if (pClipping != nullptr
+				&& (x >= pClipping->right || y >= pClipping->bottom))
 			break;
-		if ((Flag&1)!=0) {
-			DrawIcon(hdcDst,x,y,Width,Height,Icon,Opacity,pClipping);
-			x+=IntervalX;
-			y+=IntervalY;
+		if ((Flag & 1) != 0) {
+			DrawIcon(hdcDst, x, y, Width, Height, Icon, Opacity, pClipping);
+			x += IntervalX;
+			y += IntervalY;
 		}
 		Icon++;
 	}
@@ -849,47 +979,47 @@ bool CEpgIcons::DrawIcons(
 }
 
 
-unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
+unsigned int CEpgIcons::GetEventIcons(const LibISDB::EventInfo *pEventInfo)
 {
-	unsigned int ShowIcons=0;
+	unsigned int ShowIcons = 0;
 
-	if (!pEventInfo->m_VideoList.empty()) {
-		EpgUtil::VideoType Video=EpgUtil::GetVideoType(pEventInfo->m_VideoList[0].ComponentType);
-		if (Video==EpgUtil::VIDEO_TYPE_HD)
-			ShowIcons|=IconFlag(ICON_HD);
-		else if (Video==EpgUtil::VIDEO_TYPE_SD)
-			ShowIcons|=IconFlag(ICON_SD);
+	if (!pEventInfo->VideoList.empty()) {
+		const EpgUtil::VideoType Video = EpgUtil::GetVideoType(pEventInfo->VideoList[0].ComponentType);
+		if (Video == EpgUtil::VideoType::HD)
+			ShowIcons |= IconFlag(ICON_HD);
+		else if (Video == EpgUtil::VideoType::SD)
+			ShowIcons |= IconFlag(ICON_SD);
 	}
 
-	if (!pEventInfo->m_AudioList.empty()) {
-		const CEventInfoData::AudioInfo *pAudioInfo=pEventInfo->GetMainAudioInfo();
+	if (!pEventInfo->AudioList.empty()) {
+		const LibISDB::EventInfo::AudioInfo *pAudioInfo = pEventInfo->GetMainAudioInfo();
 
-		if (pAudioInfo->ComponentType==0x02) {
-			if (pAudioInfo->bESMultiLingualFlag
-					&& pAudioInfo->LanguageCode!=pAudioInfo->LanguageCode2)
-				ShowIcons|=IconFlag(ICON_MULTILINGUAL);
+		if (pAudioInfo->ComponentType == 0x02) {
+			if (pAudioInfo->ESMultiLingualFlag
+					&& pAudioInfo->LanguageCode != pAudioInfo->LanguageCode2)
+				ShowIcons |= IconFlag(ICON_MULTILINGUAL);
 			else
-				ShowIcons|=IconFlag(ICON_SUB);
+				ShowIcons |= IconFlag(ICON_SUB);
 		} else {
-			if (pAudioInfo->ComponentType==0x09)
-				ShowIcons|=IconFlag(ICON_5_1CH);
-			if (pEventInfo->m_AudioList.size()>=2
-					&& pEventInfo->m_AudioList[0].LanguageCode!=0
-					&& pEventInfo->m_AudioList[1].LanguageCode!=0) {
-				if (pEventInfo->m_AudioList[0].LanguageCode!=
-						pEventInfo->m_AudioList[1].LanguageCode)
-					ShowIcons|=IconFlag(ICON_MULTILINGUAL);
+			if (pAudioInfo->ComponentType == 0x09)
+				ShowIcons |= IconFlag(ICON_5_1CH);
+			if (pEventInfo->AudioList.size() >= 2
+					&& pEventInfo->AudioList[0].LanguageCode != 0
+					&& pEventInfo->AudioList[1].LanguageCode != 0) {
+				if (pEventInfo->AudioList[0].LanguageCode !=
+						pEventInfo->AudioList[1].LanguageCode)
+					ShowIcons |= IconFlag(ICON_MULTILINGUAL);
 				else
-					ShowIcons|=IconFlag(ICON_SUB);
+					ShowIcons |= IconFlag(ICON_SUB);
 			}
 		}
 	}
 
-	if (GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->m_NetworkID)) {
-		if (pEventInfo->m_bFreeCaMode)
-			ShowIcons|=IconFlag(ICON_PAY);
+	if (GetAppClass().NetworkDefinition.IsSatelliteNetworkID(pEventInfo->NetworkID)) {
+		if (pEventInfo->FreeCAMode)
+			ShowIcons |= IconFlag(ICON_PAY);
 		else
-			ShowIcons|=IconFlag(ICON_FREE);
+			ShowIcons |= IconFlag(ICON_FREE);
 	}
 
 	return ShowIcons;
@@ -900,158 +1030,161 @@ unsigned int CEpgIcons::GetEventIcons(const CEventInfoData *pEventInfo)
 
 CEpgTheme::CEpgTheme()
 {
-	m_ColorList[COLOR_EVENTNAME].Set(0,0,0);
-	m_ColorList[COLOR_EVENTTEXT].Set(0,0,0);
-	for (int i=COLOR_CONTENT_FIRST;i<=COLOR_CONTENT_LAST;i++)
-		m_ColorList[i].Set(240,240,240);
-	m_ColorList[COLOR_CONTENT_NEWS       ].Set(255,255,224);
-	m_ColorList[COLOR_CONTENT_SPORTS     ].Set(255,255,224);
-//	m_ColorList[COLOR_CONTENT_INFORMATION].Set(255,255,224);
-	m_ColorList[COLOR_CONTENT_DRAMA      ].Set(255,224,224);
-	m_ColorList[COLOR_CONTENT_MUSIC      ].Set(224,255,224);
-	m_ColorList[COLOR_CONTENT_VARIETY    ].Set(224,224,255);
-	m_ColorList[COLOR_CONTENT_MOVIE      ].Set(224,255,255);
-	m_ColorList[COLOR_CONTENT_ANIME      ].Set(255,224,255);
-	m_ColorList[COLOR_CONTENT_DOCUMENTARY].Set(255,255,224);
-	m_ColorList[COLOR_CONTENT_THEATER    ].Set(224,255,255);
+	m_ColorList[COLOR_EVENTNAME].Set(0, 0, 0);
+	m_ColorList[COLOR_EVENTTEXT].Set(0, 0, 0);
+	for (int i = COLOR_CONTENT_FIRST; i <= COLOR_CONTENT_LAST; i++)
+		m_ColorList[i].Set(240, 240, 240);
+	m_ColorList[COLOR_CONTENT_NEWS       ].Set(255, 255, 224);
+	m_ColorList[COLOR_CONTENT_SPORTS     ].Set(255, 255, 224);
+	//m_ColorList[COLOR_CONTENT_INFORMATION].Set(255, 255, 224);
+	m_ColorList[COLOR_CONTENT_DRAMA      ].Set(255, 224, 224);
+	m_ColorList[COLOR_CONTENT_MUSIC      ].Set(224, 255, 224);
+	m_ColorList[COLOR_CONTENT_VARIETY    ].Set(224, 224, 255);
+	m_ColorList[COLOR_CONTENT_MOVIE      ].Set(224, 255, 255);
+	m_ColorList[COLOR_CONTENT_ANIME      ].Set(255, 224, 255);
+	m_ColorList[COLOR_CONTENT_DOCUMENTARY].Set(255, 255, 224);
+	m_ColorList[COLOR_CONTENT_THEATER    ].Set(224, 255, 255);
 }
 
 
-void CEpgTheme::SetTheme(const TVTest::Theme::CThemeManager *pThemeManager)
+void CEpgTheme::SetTheme(const Theme::CThemeManager *pThemeManager)
 {
-	m_ColorList[COLOR_EVENTNAME]=
+	m_ColorList[COLOR_EVENTNAME] =
 		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_EVENTTITLE);
-	m_ColorList[COLOR_EVENTTEXT]=
+	m_ColorList[COLOR_EVENTTEXT] =
 		pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_TEXT);
 
-	for (int i=COLOR_CONTENT_FIRST,j=0;i<=COLOR_CONTENT_LAST;i++,j++) {
-		m_ColorList[i]=
-			pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_CONTENT_FIRST+j);
+	for (int i = COLOR_CONTENT_FIRST, j = 0; i <= COLOR_CONTENT_LAST; i++, j++) {
+		m_ColorList[i] =
+			pThemeManager->GetColor(CColorScheme::COLOR_PROGRAMGUIDE_CONTENT_FIRST + j);
 	}
 }
 
 
-bool CEpgTheme::SetColor(int Type,const TVTest::Theme::ThemeColor &Color)
+bool CEpgTheme::SetColor(int Type, const Theme::ThemeColor &Color)
 {
-	if (Type<0 || Type>=NUM_COLORS)
+	if (Type < 0 || Type >= NUM_COLORS)
 		return false;
-	m_ColorList[Type]=Color;
+	m_ColorList[Type] = Color;
 	return true;
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetColor(int Type) const
+Theme::ThemeColor CEpgTheme::GetColor(int Type) const
 {
-	if (Type<0 || Type>=NUM_COLORS)
-		return TVTest::Theme::ThemeColor();
+	if (Type < 0 || Type >= NUM_COLORS)
+		return Theme::ThemeColor();
 	return m_ColorList[Type];
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
+Theme::ThemeColor CEpgTheme::GetGenreColor(int Genre) const
 {
-	return m_ColorList[Genre>=0 && Genre<=CEventInfoData::CONTENT_LAST?
-					   COLOR_CONTENT_FIRST+Genre:
-					   COLOR_CONTENT_OTHER];
+	return m_ColorList[
+		Genre >= 0 && Genre <= CEpgGenre::GENRE_LAST ?
+			COLOR_CONTENT_FIRST + Genre :
+			COLOR_CONTENT_OTHER];
 }
 
 
-TVTest::Theme::ThemeColor CEpgTheme::GetGenreColor(const CEventInfoData &EventInfo) const
+Theme::ThemeColor CEpgTheme::GetGenreColor(const LibISDB::EventInfo &EventInfo) const
 {
 	int Genre;
 
-	if (!EpgUtil::GetEventGenre(EventInfo,&Genre))
+	if (!EpgUtil::GetEventGenre(EventInfo, &Genre))
 		return m_ColorList[COLOR_CONTENT_OTHER];
 
 	return GetGenreColor(Genre);
 }
 
 
-TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	int Genre,unsigned int Flags) const
+Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	int Genre, ContentStyleFlag Flags) const
 {
-	return GetContentBackgroundStyle(GetGenreColor(Genre),Flags);
+	return GetContentBackgroundStyle(GetGenreColor(Genre), Flags);
 }
 
 
-TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	const CEventInfoData &EventInfo,unsigned int Flags) const
+Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	const LibISDB::EventInfo &EventInfo, ContentStyleFlag Flags) const
 {
-	return GetContentBackgroundStyle(GetGenreColor(EventInfo),Flags);
+	return GetContentBackgroundStyle(GetGenreColor(EventInfo), Flags);
 }
 
 
 bool CEpgTheme::DrawContentBackground(
-	HDC hdc,TVTest::Theme::CThemeDraw &ThemeDraw,const RECT &Rect,
-	const CEventInfoData &EventInfo,unsigned int Flags) const
+	HDC hdc, Theme::CThemeDraw &ThemeDraw, const RECT &Rect,
+	const LibISDB::EventInfo &EventInfo, DrawContentBackgroundFlag Flags) const
 {
-	if (hdc==nullptr)
+	if (hdc == nullptr)
 		return false;
 
-	unsigned int StyleFlags=0;
-	if ((Flags & DRAW_CONTENT_BACKGROUND_CURRENT)!=0)
-		StyleFlags|=CONTENT_STYLE_CURRENT;
-	if ((Flags & DRAW_CONTENT_BACKGROUND_NOBORDER)!=0)
-		StyleFlags|=CONTENT_STYLE_NOBORDER;
-	ThemeDraw.Draw(GetContentBackgroundStyle(EventInfo,StyleFlags),Rect);
+	ContentStyleFlag StyleFlags = ContentStyleFlag::None;
+	if (!!(Flags & DrawContentBackgroundFlag::Current))
+		StyleFlags |= ContentStyleFlag::Current;
+	if (!!(Flags & DrawContentBackgroundFlag::NoBorder))
+		StyleFlags |= ContentStyleFlag::NoBorder;
+	ThemeDraw.Draw(GetContentBackgroundStyle(EventInfo, StyleFlags), Rect);
 
-	if ((Flags & DRAW_CONTENT_BACKGROUND_SEPARATOR)!=0) {
-		RECT rc=Rect;
-		rc.bottom=rc.top+ThemeDraw.GetStyleScaling()->ToPixels(1,TVTest::Style::UNIT_LOGICAL_PIXEL);
-		DrawUtil::Fill(hdc,&rc,MixColor(GetGenreColor(EventInfo),RGB(0,0,0),224));
+	if (!!(Flags & DrawContentBackgroundFlag::Separator)) {
+		RECT rc = Rect;
+		rc.bottom = rc.top + ThemeDraw.GetStyleScaling()->ToPixels(1, Style::UnitType::LogicalPixel);
+		DrawUtil::Fill(hdc, &rc, MixColor(GetGenreColor(EventInfo), RGB(0, 0, 0), 224));
 	}
 
 	return true;
 }
 
 
-TVTest::Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
-	const TVTest::Theme::ThemeColor &Color,unsigned int Flags) const
+Theme::BackgroundStyle CEpgTheme::GetContentBackgroundStyle(
+	const Theme::ThemeColor &Color, ContentStyleFlag Flags) const
 {
-	TVTest::Theme::BackgroundStyle BackStyle;
+	Theme::BackgroundStyle BackStyle;
 
-	if ((Flags & CONTENT_STYLE_CURRENT)==0) {
-		BackStyle.Fill.Type=TVTest::Theme::FILL_SOLID;
-		BackStyle.Fill.Solid=TVTest::Theme::SolidStyle(Color);
+	if (!(Flags & ContentStyleFlag::Current)) {
+		BackStyle.Fill.Type = Theme::FillType::Solid;
+		BackStyle.Fill.Solid = Theme::SolidStyle(Color);
 	} else {
-		double h,s,v,s1,v1;
-		TVTest::Theme::ThemeColor Color1,Color2;
-		RGBToHSV(Color.Red,Color.Green,Color.Blue,&h,&s,&v);
-		s1=s;
-		v1=v;
-		if (s1<0.1 || v1<=0.95) {
-			v1+=0.05;
-			if (v1>1.0)
-				v1=1.0;
+		double h, s, v, s1, v1;
+		RGBToHSV(Color.Red, Color.Green, Color.Blue, &h, &s, &v);
+		s1 = s;
+		v1 = v;
+		if (s1 < 0.1 || v1 <= 0.95) {
+			v1 += 0.05;
+			if (v1 > 1.0)
+				v1 = 1.0;
 		} else {
-			s1-=s*0.5;
-			if (s1<0.0)
-				s1=0.0;
+			s1 -= s * 0.5;
+			if (s1 < 0.0)
+				s1 = 0.0;
 		}
-		Color1=HSVToRGB(h,s1,v1);
-		s1=s;
-		v1=v;
-		if (s1>=0.1 && s1<=0.9) {
-			s1+=s*0.5;
-			if (s1>1.0)
-				s1=1.0;
+		const Theme::ThemeColor Color1 = HSVToRGB(h, s1, v1);
+		s1 = s;
+		v1 = v;
+		if (s1 >= 0.1 && s1 <= 0.9) {
+			s1 += s * 0.5;
+			if (s1 > 1.0)
+				s1 = 1.0;
 		} else {
-			v1-=0.05;
-			if (v1<0.0)
-				v1=0.0;
+			v1 -= 0.05;
+			if (v1 < 0.0)
+				v1 = 0.0;
 		}
-		Color2=HSVToRGB(h,s1,v1);
-		BackStyle.Fill.Type=TVTest::Theme::FILL_GRADIENT;
-		BackStyle.Fill.Gradient=TVTest::Theme::GradientStyle(
-			TVTest::Theme::GRADIENT_NORMAL,
-			TVTest::Theme::DIRECTION_VERT,
-			Color1,Color2);
+		const Theme::ThemeColor Color2 = HSVToRGB(h, s1, v1);
+		BackStyle.Fill.Type = Theme::FillType::Gradient;
+		BackStyle.Fill.Gradient = Theme::GradientStyle(
+			Theme::GradientType::Normal,
+			Theme::GradientDirection::Vert,
+			Color1, Color2);
 	}
 
 #if 0
-	if ((Flags & CONTENT_STYLE_NOBORDER)!=0)
-		BackStyle.Border.Type=TVTest::Theme::BORDER_NONE;
+	if (!!(Flags & ContentStyleFlag::NoBorder))
+		BackStyle.Border.Type = Theme::BorderType::None;
 #endif
 
 	return BackStyle;
 }
+
+
+} // namespace TVTest

@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Titanium
+Base=light
 StatusBack=#aeaaa4
 StatusBack2=#cac8c4
 StatusText=#555555
@@ -54,11 +55,15 @@ TitleBarText=#555555
 TitleBarHighlightBack=#cac8c4
 TitleBarHighlightBack2=#dcd9d8
 TitleBarHighlightText=#666666
+EventInfoPopupBack=#cac8c4
+EventInfoPopupText=#666666
+EventInfoPopupEventTitle=#555555
 ProgramGuideBack=#dcd9d8
 ;ProgramGuideText=#555555
 ProgramGuideChannelBack=#aeaaa4
 ProgramGuideChannelBack2=#cac8c4
 ProgramGuideChannelText=#555555
+ProgramGuideChannelHighlightText=#444444
 ProgramGuideCurChannelBack=#cac8c4
 ProgramGuideCurChannelBack2=#dcd9d8
 ProgramGuideCurChannelText=#666666

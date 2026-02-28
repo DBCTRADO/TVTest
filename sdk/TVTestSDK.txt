@@ -1,71 +1,70 @@
+﻿
+
+    TVTest プラグイン SDK
 
 
-    TVTest �v���O�C�� SDK
+◆ はじめに
+
+  TVTest 用のプラグインを作成するためのヘッダとサンプルです。
+  ヘッダがドキュメント代わりになっていますので、プラグインの仕様については
+  TVTestPlugin.h ファイルを参照してください。
+
+  サンプルのソリューション(Samples.sln)とプロジェクトは Visual Studio 2017 以降用です。
 
 
-�� �͂��߂�
+◆ サンプル
 
-  TVTest �p�̃v���O�C�����쐬���邽�߂̃w�b�_�ƃT���v���ł��B
-  �w�b�_���h�L�������g����ɂȂ��Ă��܂��̂ŁA�v���O�C���̎d�l�ɂ��Ă�
-  TVTestPlugin.h �t�@�C�����Q�Ƃ��Ă��������B
+  Samples フォルダに以下のサンプルが含まれています。
 
-  �T���v���̃\�����[�V����(Samples.sln)�ƃv���W�F�N�g�� Visual Studio 2010 �p
-  �ł��B
+  ・AutoSnapShot
+  　一定間隔で画面キャプチャを行う
 
+  ・DiskRelay
+  　録画時に空き容量が少なくなった時、別のディスクに保存する
 
-�� �T���v��
+  ・Equalizer
+  　イコライザー
 
-  Samples �t�H���_�Ɉȉ��̃T���v�����܂܂�Ă��܂��B
+  ・GamePad
+  　ゲームパッドで操作できるようにする
 
-  �EAutoSnapShot
-  �@���Ԋu�ŉ�ʃL���v�`�����s��
+  ・HDUSRemocon
+  　HDUSリモコンで操作できるようにする
 
-  �EDiskRelay
-  �@�^�掞�ɋ󂫗e�ʂ����Ȃ��Ȃ������A�ʂ̃f�B�X�N�ɕۑ�����
+  ・LogoList
+  　局ロゴの一覧を表示する
 
-  �EEqualizer
-  �@�C�R���C�U�[
+  ・MemoryCapture
+  　映像から画像を取り込む
 
-  �EGamePad
-  �@�Q�[���p�b�h�ő���ł���悤�ɂ���
+  ・MiniProgramGuide
+  　小さい番組表を表示する
 
-  �EHDUSRemocon
-  �@HDUS�����R���ő���ł���悤�ɂ���
+  ・PacketCounter
+  　パケットの数をカウントする項目をステータスバーに追加する
 
-  �ELogoList
-  �@�ǃ��S�̈ꗗ��\������
+  ・SignalGraph
+  　信号レベルとビットレートをグラフ表示する
 
-  �EMemoryCapture
-  �@�f������摜����荞��
+  ・SleepTimer
+  　指定時間後にスリープする
 
-  �EMiniProgramGuide
-  �@�������ԑg�\��\������
+  ・SpectrumAnalyzer
+  　簡単なスペクトラムアナライザーを表示する
 
-  �EPacketCounter
-  �@�p�P�b�g�̐����J�E���g���鍀�ڂ��X�e�[�^�X�o�[�ɒǉ�����
+  ・TSInfo
+  　ストリームの情報を表示する
 
-  �ESignalGraph
-  �@�M�����x���ƃr�b�g���[�g���O���t�\������
-
-  �ESleepTimer
-  �@�w�莞�Ԍ�ɃX���[�v����
-
-  �ESpectrumAnalyzer
-  �@�ȒP�ȃX�y�N�g�����A�i���C�U�[��\������
-
-  �ETSInfo
-  �@�X�g���[���̏���\������
-
-  �ETunerPanel
-  �@�`���[�i�[/�`�����l����I������p�l����\������
+  ・TunerPanel
+  　チューナー/チャンネルを選択するパネルを表示する
 
 
-�� ���C�Z���X
+◆ ライセンス
 
-  �E�w�b�_�y�уT���v���͎��R�ɗ��p�E���ρE�Ĕz�z�ł��܂��B
-  �E�T���v���̒��쌠�͎咣���܂���B
-  �ESamples\SpectrumAnalyzer �ɂ��� fft4g.c �͑�Y��Ǝ��ɒ��쌠������܂��B
-    ���C�Z���X����Y���̒�߂����̂ɏ]���Ă��������B
+  ・ヘッダ及びサンプルは自由に利用・改変・再配布できます。
+  ・サンプルの著作権は主張しません。
+  ・Samples\SpectrumAnalyzer にある fft4g.c は大浦拓哉氏に著作権があります。
+    ライセンスも大浦氏の定めたものに従ってください。
     Copyright Takuya OOURA, 1996-2001
     http://www.kurims.kyoto-u.ac.jp/~ooura/fft-j.html
 

@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Chrome
+Base=light
 StatusBack=#f8fafd
 StatusBack2=#deeaf8
 StatusText=#4768a0
@@ -78,11 +79,15 @@ NotificationBarBack=#222222
 NotificationBarBack2=#333333
 NotificationBarText=#bbbbbb
 NotificationBarErrorText=#ff4444
+EventInfoPopupBack=#f8fafd
+EventInfoPopupText=#4768a0
+EventInfoPopupEventTitle=#4768a0
 ProgramGuideBack=#ffffff
 ProgramGuideText=#000000
 ProgramGuideChannelBack=#a8c8f0
 ProgramGuideChannelBack2=#98c0f0
 ProgramGuideChannelText=#4768a0
+ProgramGuideChannelHighlightText=#233450
 ProgramGuideCurChannelBack=#f8fafd
 ProgramGuideCurChannelBack2=#deeaf8
 ProgramGuideCurChannelText=#4768a0

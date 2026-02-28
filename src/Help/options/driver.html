@@ -1,59 +1,59 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<link rel="stylesheet" href="../default.css" type="text/css">
-	<title>BonDriver�ݒ�</title>
+	<title>BonDriver設定</title>
 </head>
 <body>
-<h1>BonDriver�ݒ�</h1>
+<h1>BonDriver設定</h1>
 
 <h2>BonDriver</h2>
-<p class="descript">�ݒ�̑ΏۂƂȂ� BonDriver ��I�����܂��B</p>
+<p class="descript">設定の対象となる BonDriver を選択します。</p>
 
-<h2>�����`�����l��</h2>
-<p class="descript">BonDriver ��ǂݍ��񂾍ۂɍŏ��ɕ\������`�����l�����w�肵�܂��B</p>
+<h2>初期チャンネル</h2>
+<p class="descript">BonDriver を読み込んだ際に最初に表示するチャンネルを指定します。</p>
 <div class="group">
-	<h2>�w��Ȃ�</h2>
-	<p class="descript">�`�����l�����w�肵�܂���B<br>
-	�ʏ퉽���\������܂��񂪁ABonDriver �ɂ���Ă̓f�t�H���g�łǂ����̃`�����l������M����ꍇ������܂��B</p>
+	<h2>指定なし</h2>
+	<p class="descript">チャンネルを指定しません。<br>
+	通常何も表示されませんが、BonDriver によってはデフォルトでどこかのチャンネルを受信する場合もあります。</p>
 
-	<h2>�O��I�����̃`�����l��</h2>
-	<p class="descript">�O��I�����ɕ\�����Ă����`�����l����\�����܂��B</p>
+	<h2>前回終了時のチャンネル</h2>
+	<p class="descript">前回終了時に表示していたチャンネルを表示します。</p>
 
-	<h2>�w�肵���`���[�j���O���/�`�����l��</h2>
-	<p class="descript">���X�g����I�������`�����l����\�����܂��B<br>
-	�`�����l�����u�w��Ȃ��v�ɂ���ƁA�`���[�j���O��Ԃ̂ݐݒ肳��܂��B</p>
+	<h2>指定したチューニング空間/チャンネル</h2>
+	<p class="descript">リストから選択したチャンネルを表示します。<br>
+	チャンネルを「指定なし」にすると、チューニング空間のみ設定されます。</p>
 </div>
 
-<h2>�M�����x���擾�s��</h2>
-<p class="descript">�`�F�b�N����ƁA�X�e�[�^�X�o�[�ȂǂɐM�����x�����\������Ȃ��Ȃ�܂��B<br>
-�M�����x�����擾�ł��Ȃ� BonDriver �̏ꍇ�`�F�b�N���Ă��������B</p>
+<h2>信号レベル取得不可</h2>
+<p class="descript">チェックすると、ステータスバーなどに信号レベルが表示されなくなります。<br>
+信号レベルが取得できない BonDriver の場合チェックしてください。</p>
 
-<h2>�ŏ��̃`�����l���ݒ�O�̃X�g���[���𖳎�����</h2>
-<p class="descript">TVTest ���� BonDriver �֍ŏ��̃`�����l���ݒ�̗v��������O�ɗ���X�g���[���𖳎����āA�������Ȃ��悤�ɂ��܂��B<br>
-BonDriver �ɂ���ăf�t�H���g�łǂ����̃`�����l������M���ꂽ��ԂɂȂ�ꍇ������A�ŏ��Ɉ�u���̃`�����l�����\������Ă��܂��̂�h�����߂̐ݒ�ł��B</p>
+<h2>最初のチャンネル設定前のストリームを無視する</h2>
+<p class="descript">TVTest から BonDriver へ最初のチャンネル設定の要求をする前に来るストリームを無視して、処理しないようにします。<br>
+BonDriver によってデフォルトでどこかのチャンネルが受信された状態になる場合があり、最初に一瞬そのチャンネルが表示されてしまうのを防ぐための設定です。</p>
 
-<h2>�`�����l���؂�ւ����ɃX�g���[����j������</h2>
-<p class="descript">�`�����l���؂�ւ��̍ۂɁA�X�g���[���̔j���������s���悤�ɂ��܂��B<br>
-�ʏ�� BonDriver �̑��ōs���̂Ń`�F�b�N����K�v�͂���܂���B</p>
+<h2>チャンネル切り替え時にストリームを破棄する</h2>
+<p class="descript">チャンネル切り替えの際に、ストリームの破棄処理を行うようにします。<br>
+通常は BonDriver の側で行うのでチェックする必要はありません。</p>
 
-<h2>�`�����l���؂�ւ����̃G���[�J�E���g�����Z�b�g����</h2>
-<p class="descript">�`�����l���؂�ւ��̌�ɁA�p�P�b�g�G���[�̃J�E���g�����Z�b�g����悤�ɂ��܂��B<br>
-�`���[�i�[�ɂ���ă`�����l���؂�ւ����Ƀp�P�b�g�G���[���J�E���g����܂����A��������Z�b�g�������ꍇ�Ɏw�肵�܂��B</p>
+<h2>チャンネル切り替え時のエラーカウントをリセットする</h2>
+<p class="descript">チャンネル切り替えの後に、パケットエラーのカウントをリセットするようにします。<br>
+チューナーによってチャンネル切り替え時にパケットエラーがカウントされますが、それをリセットしたい場合に指定します。</p>
 
-<h2>�X�g���[���̎擾���Đ��Ɠ�������</h2>
-<p class="descript">BonDriver ����̃X�g���[���̎擾���Đ��Ɠ��������܂��B<br>
-�ʏ�A�t�@�C���Đ��p�� BonDriver �Ŏw�肵�܂��B<br>
-����ȊO�� BonDriver �Ŏw�肷��ƁA�o�b�t�@���ɂ��x����h���b�v�̌����ƂȂ邱�Ƃ�����܂��B</p>
+<h2>ストリームの取得を再生と同期する</h2>
+<p class="descript">BonDriver からのストリームの取得を再生と同期させます。<br>
+通常、ファイル再生用の BonDriver で指定します。<br>
+それ以外の BonDriver で指定すると、バッファ溢れによる遅延やドロップの原因となることがあります。</p>
 
-<h2>�ŏ��̃`�����l���ݒ�҂�����</h2>
-<p class="descript">�`���[�i�[���J���Ă���A�ŏ��̃`�����l���ݒ���s���܂ł̑҂����Ԃ��A�~���b�P�ʂŎw�肵�܂��B<br>
-�`���[�i�[���J���Ă����Ƀ`�����l���ݒ������Ɩ��̏o��`���[�i�[�ł́A�҂����Ԃ𑝂₵�Ă��������B</p>
+<h2>最初のチャンネル設定待ち時間</h2>
+<p class="descript">チューナーを開いてから、最初のチャンネル設定を行うまでの待ち時間を、ミリ秒単位で指定します。<br>
+チューナーを開いてすぐにチャンネル設定をすると問題の出るチューナーでは、待ち時間を増やしてください。</p>
 
-<h2>�`�����l���؂�ւ��̍ŏ��Ԋu</h2>
-<p class="descript">�`�����l���؂�ւ����s���ŏ��̊Ԋu���A�~���b�P�ʂŎw�肵�܂��B<br>
-�f�����`�����l���ύX������Ɩ��̏o��`���[�i�[�ł́A�Ԋu���J����悤�ɂ��Ă��������B</p>
+<h2>チャンネル切り替えの最小間隔</h2>
+<p class="descript">チャンネル切り替えを行う最小の間隔を、ミリ秒単位で指定します。<br>
+素早くチャンネル変更をすると問題の出るチューナーでは、間隔を開けるようにしてください。</p>
 
 </body>
 </html>

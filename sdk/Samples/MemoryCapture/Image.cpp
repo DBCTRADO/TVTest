@@ -1,6 +1,10 @@
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <algorithm>
 #include <limits>
 #include <new>
 #include "Image.h"
@@ -38,26 +42,13 @@ inline BYTE Clamp8(int v)
 
 
 
-CImage::CImage()
-	: m_Width(0)
-	, m_Height(0)
-	, m_BitsPerPixel(0)
-	, m_AspectRatioX(0)
-	, m_AspectRatioY(0)
-	, m_FrameFlags(0)
-	, m_pPixels(nullptr)
-	, m_RowBytes(0)
-{
-}
-
-
 CImage::~CImage()
 {
 	Free();
 }
 
 
-// ‰æ‘œ‚Ìì¬
+// ç”»åƒã®ä½œæˆ
 bool CImage::Create(int Width, int Height, int BitsPerPixel, int AspectRatioX, int AspectRatioY)
 {
 	Free();
@@ -83,7 +74,7 @@ bool CImage::Create(int Width, int Height, int BitsPerPixel, int AspectRatioX, i
 }
 
 
-// ‰æ‘œ‚Ì‰ğ•ú
+// ç”»åƒã®è§£æ”¾
 void CImage::Free()
 {
 	if (m_pPixels != nullptr) {
@@ -101,7 +92,7 @@ void CImage::Free()
 }
 
 
-// ƒAƒXƒyƒNƒg”ä‚ğ”½‰f‚³‚¹‚½•‚ğæ“¾
+// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”ã‚’åæ˜ ã•ã›ãŸå¹…ã‚’å–å¾—
 int CImage::GetDisplayWidth() const
 {
 	if (m_AspectRatioX <= 1 || m_AspectRatioY <= 1)
@@ -110,13 +101,13 @@ int CImage::GetDisplayWidth() const
 }
 
 
-BYTE *CImage::GetRowPixels(int y)
+BYTE * CImage::GetRowPixels(int y)
 {
 	return m_pPixels + y * m_RowBytes;
 }
 
 
-const BYTE *CImage::GetRowPixels(int y) const
+const BYTE * CImage::GetRowPixels(int y) const
 {
 	return m_pPixels + y * m_RowBytes;
 }
@@ -132,7 +123,7 @@ bool CImage::ExtractRow24(int y, BYTE *pDest) const
 	BYTE *q = pDest;
 
 	if (m_BitsPerPixel == 24) {
-		::CopyMemory(q, p, Width * 3);
+		std::memcpy(q, p, Width * 3);
 	} else if (m_BitsPerPixel == 32) {
 		for (int x = 0; x < Width; x++) {
 			*q++ = p[0];
@@ -148,8 +139,8 @@ bool CImage::ExtractRow24(int y, BYTE *pDest) const
 }
 
 
-// ‰æ‘œ‚Ì•¡»
-CImage *CImage::Clone() const
+// ç”»åƒã®è¤‡è£½
+CImage * CImage::Clone() const
 {
 	if (m_pPixels == nullptr)
 		return nullptr;
@@ -161,7 +152,7 @@ CImage *CImage::Clone() const
 		return nullptr;
 	}
 
-	::CopyMemory(pImage->m_pPixels, m_pPixels, m_Height * m_RowBytes);
+	std::memcpy(pImage->m_pPixels, m_pPixels, m_Height * m_RowBytes);
 
 	pImage->m_FrameFlags = m_FrameFlags;
 
@@ -169,8 +160,8 @@ CImage *CImage::Clone() const
 }
 
 
-// ‰æ‘œ‚ÌƒŠƒTƒCƒY
-CImage *CImage::Resize(int Width, int Height, ResampleType Resample) const
+// ç”»åƒã®ãƒªã‚µã‚¤ã‚º
+CImage * CImage::Resize(int Width, int Height, ResampleType Resample) const
 {
 	if (m_pPixels == nullptr)
 		return nullptr;
@@ -188,24 +179,24 @@ CImage *CImage::Resize(int Width, int Height, ResampleType Resample) const
 	bool fResult;
 
 	switch (Resample) {
-	case Resample_NearestNeighbor:
+	case ResampleType::NearestNeighbor:
 		fResult = NearestNeighbor(pImage);
 		break;
 
-	case Resample_Bilinear:
+	case ResampleType::Bilinear:
 	default:
 		fResult = Bilinear(pImage);
 		break;
 
-	case Resample_Averaging:
+	case ResampleType::Averaging:
 		fResult = Averaging(pImage);
 		break;
 
-	case Resample_Lanczos2:
+	case ResampleType::Lanczos2:
 		fResult = GenericResample(pImage, Lanczos2, 2.0);
 		break;
 
-	case Resample_Lanczos3:
+	case ResampleType::Lanczos3:
 		fResult = GenericResample(pImage, Lanczos3, 3.0);
 		break;
 	}
@@ -221,7 +212,7 @@ CImage *CImage::Resize(int Width, int Height, ResampleType Resample) const
 }
 
 
-// Å‹ß–T–@
+// æœ€è¿‘å‚æ³•
 bool CImage::NearestNeighbor(CImage *pImage) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -252,7 +243,7 @@ bool CImage::NearestNeighbor(CImage *pImage) const
 }
 
 
-// üŒ`•âŠÔ–@
+// ç·šå½¢è£œé–“æ³•
 bool CImage::Bilinear(CImage *pImage) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -317,7 +308,7 @@ bool CImage::Bilinear(CImage *pImage) const
 }
 
 
-// •½‹Ï‰æ‘f–@
+// å¹³å‡ç”»ç´ æ³•
 bool CImage::Averaging(CImage *pImage) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -391,7 +382,7 @@ bool CImage::Averaging(CImage *pImage) const
 }
 
 
-// ”Ä—pÄƒTƒ“ƒvƒŠƒ“ƒO
+// æ±ç”¨å†ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°
 bool CImage::GenericResample(CImage *pImage, KernelFunc pKernelFunc, double KernelSize) const
 {
 	if ((m_BitsPerPixel != 24 && m_BitsPerPixel != 32)
@@ -408,14 +399,14 @@ bool CImage::GenericResample(CImage *pImage, KernelFunc pKernelFunc, double Kern
 
 	const double XScale = (double)OldWidth / (double)NewWidth;
 	const double YScale = (double)OldHeight / (double)NewHeight;
-	const double XWeightScale = min(1.0 / XScale, 1.0);
-	const double YWeightScale = min(1.0 / YScale, 1.0);
-	const double XRadius = max(KernelSize / XWeightScale, 0.5);
-	const double YRadius = max(KernelSize / YWeightScale, 0.5);
+	const double XWeightScale = std::min(1.0 / XScale, 1.0);
+	const double YWeightScale = std::min(1.0 / YScale, 1.0);
+	const double XRadius = std::max(KernelSize / XWeightScale, 0.5);
+	const double YRadius = std::max(KernelSize / YWeightScale, 0.5);
 	const int SrcPlanes = m_BitsPerPixel / 8;
 	const int DstPlanes = pImage->m_BitsPerPixel / 8;
 
-	double *pWeightTable = new(std::nothrow) double[(int)(max(XRadius, YRadius) * 2.0) + 3];
+	double *pWeightTable = new(std::nothrow) double[(int)(std::max(XRadius, YRadius) * 2.0) + 3];
 	if (pWeightTable == nullptr) {
 		delete [] pBuffer;
 		return false;
@@ -423,8 +414,8 @@ bool CImage::GenericResample(CImage *pImage, KernelFunc pKernelFunc, double Kern
 
 	for (int x = 0; x < NewWidth; x++) {
 		const double sx = ((double)x + 0.5) * XScale - 0.5;
-		const int x1 = max((int)(sx - XRadius + 0.5), 0);
-		const int x2 = min((int)(sx + XRadius + 0.5), OldWidth - 1);
+		const int x1 = std::max((int)(sx - XRadius + 0.5), 0);
+		const int x2 = std::min((int)(sx + XRadius + 0.5), OldWidth - 1);
 		const int Diameter = x2 - x1 + 1;
 		double Weight = 0.0;
 
@@ -458,8 +449,8 @@ bool CImage::GenericResample(CImage *pImage, KernelFunc pKernelFunc, double Kern
 
 	for (int y = 0; y < NewHeight; y++) {
 		const double sy = ((double)y + 0.5) * YScale - 0.5;
-		const int y1 = max((int)(sy - YRadius + 0.5), 0);
-		const int y2 = min((int)(sy + YRadius + 0.5), OldHeight - 1);
+		const int y1 = std::max((int)(sy - YRadius + 0.5), 0);
+		const int y2 = std::min((int)(sy + YRadius + 0.5), OldHeight - 1);
 		const int Diameter = y2 - y1 + 1;
 		double Weight = 0.0;
 

@@ -2,7 +2,7 @@
 #include "resource.h"
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-#pragma code_page(932)
+#pragma code_page(65001)
 
 
 IDI_MAIN        ICON   "Resources\\MemoryCapture.ico"
@@ -17,28 +17,28 @@ IDM_CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "Žæ‚èž‚Ý(&P)", CM_CAPTURE
-		MENUITEM "’Ç‰ÁŽæ‚èž‚Ý(&T)", CM_CAPTURE_ADD
+		MENUITEM "å–ã‚Šè¾¼ã¿(&P)", CM_CAPTURE
+		MENUITEM "è¿½åŠ å–ã‚Šè¾¼ã¿(&T)", CM_CAPTURE_ADD
 		MENUITEM SEPARATOR
-		MENUITEM "•Û‘¶(&S)", CM_SAVE
-		MENUITEM "–¼‘O‚ð•t‚¯‚Ä•Û‘¶(&A)...", CM_SAVE_AS
-		MENUITEM "‚·‚×‚Ä•Û‘¶(&L)", CM_SAVE_ALL
+		MENUITEM "ä¿å­˜(&S)", CM_SAVE
+		MENUITEM "åå‰ã‚’ä»˜ã‘ã¦ä¿å­˜(&A)...", CM_SAVE_AS
+		MENUITEM "ã™ã¹ã¦ä¿å­˜(&L)", CM_SAVE_ALL
 		MENUITEM SEPARATOR
-		MENUITEM "ƒRƒs[(&C)", CM_COPY
+		MENUITEM "ã‚³ãƒ”ãƒ¼(&C)", CM_COPY
 		MENUITEM SEPARATOR
-		POPUP "ƒLƒƒƒvƒ`ƒƒ[ƒTƒCƒY(&I)"
+		POPUP "ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒ¼ã‚µã‚¤ã‚º(&I)"
 		BEGIN
 			MENUITEM SEPARATOR	// Dummy
 		END
-		POPUP "ÄƒTƒ“ƒvƒŠƒ“ƒO(&R)"
+		POPUP "å†ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°(&R)"
 		BEGIN
-			MENUITEM "Å‹ß–T–@(&N)", CM_RESAMPLE_NEAREST
-			MENUITEM "üŒ`•âŠÔ–@(&B)", CM_RESAMPLE_BILINEAR
-			MENUITEM "•½‹Ï‰æ‘f–@(&A)", CM_RESAMPLE_AVERAGING
+			MENUITEM "æœ€è¿‘å‚æ³•(&N)", CM_RESAMPLE_NEAREST
+			MENUITEM "ç·šå½¢è£œé–“æ³•(&B)", CM_RESAMPLE_BILINEAR
+			MENUITEM "å¹³å‡ç”»ç´ æ³•(&A)", CM_RESAMPLE_AVERAGING
 			MENUITEM "Lanczos2(&2)", CM_RESAMPLE_LANCZOS2
 			MENUITEM "Lanczos3(&3)", CM_RESAMPLE_LANCZOS3
 		END
-		POPUP "ƒCƒ“ƒ^[ƒŒ[ƒX‰ðœ(&D)"
+		POPUP "ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ¬ãƒ¼ã‚¹è§£é™¤(&D)"
 		BEGIN
 			MENUITEM "Weave(&W)", CM_DEINTERLACE_WEAVE
 			MENUITEM "Blend(&B)", CM_DEINTERLACE_BLEND
@@ -48,9 +48,9 @@ BEGIN
 			MENUITEM "Yadif Bob(&A)", CM_DEINTERLACE_YADIF_BOB
 		END
 		MENUITEM SEPARATOR
-		POPUP "•\Ž¦”{—¦(&Z)"
+		POPUP "è¡¨ç¤ºå€çŽ‡(&Z)"
 		BEGIN
-			MENUITEM "ƒEƒBƒ“ƒhƒE‚É‡‚í‚¹‚é(&F)", CM_FIT_IMAGE_TO_WINDOW
+			MENUITEM "ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«åˆã‚ã›ã‚‹(&F)", CM_FIT_IMAGE_TO_WINDOW
 			MENUITEM "25%", CM_ZOOM_25
 			MENUITEM "33%", CM_ZOOM_33
 			MENUITEM "50%", CM_ZOOM_50
@@ -60,43 +60,43 @@ BEGIN
 			MENUITEM "150%", CM_ZOOM_150
 			MENUITEM "200%", CM_ZOOM_200
 		END
-		MENUITEM "ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ð‰æ‘œ‚É‡‚í‚¹‚é(&W)", CM_FIT_WINDOW_TO_IMAGE
+		MENUITEM "ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã‚’ç”»åƒã«åˆã‚ã›ã‚‹(&W)", CM_FIT_WINDOW_TO_IMAGE
 		MENUITEM SEPARATOR
-		MENUITEM "Ý’è(&E)...", CM_SETTINGS
+		MENUITEM "è¨­å®š(&E)...", CM_SETTINGS
 	END
 END
 
 STRINGTABLE
 BEGIN
-	CM_CAPTURE,             "Žæ‚èž‚Ý"
-	CM_CAPTURE_ADD,         "’Ç‰ÁŽæ‚èž‚Ý"
-	CM_SAVE,                "•Û‘¶"
-	CM_COPY,                "ƒRƒs["
-	CM_PREV_FRAME,          "‘O‚ÌƒtƒŒ[ƒ€"
-	CM_NEXT_FRAME,          "ŽŸ‚ÌƒtƒŒ[ƒ€"
-	CM_FIRST_FRAME,         "Å‰‚ÌƒtƒŒ[ƒ€"
-	CM_LAST_FRAME,          "ÅŒã‚ÌƒtƒŒ[ƒ€"
-	CM_SKIP_BACKWARD_FRAME, "‘O•û‚ÉƒXƒLƒbƒv"
-	CM_SKIP_FORWARD_FRAME,  "Œã•û‚ÉƒXƒLƒbƒv"
+	CM_CAPTURE,             "å–ã‚Šè¾¼ã¿"
+	CM_CAPTURE_ADD,         "è¿½åŠ å–ã‚Šè¾¼ã¿"
+	CM_SAVE,                "ä¿å­˜"
+	CM_COPY,                "ã‚³ãƒ”ãƒ¼"
+	CM_PREV_FRAME,          "å‰ã®ãƒ•ãƒ¬ãƒ¼ãƒ "
+	CM_NEXT_FRAME,          "æ¬¡ã®ãƒ•ãƒ¬ãƒ¼ãƒ "
+	CM_FIRST_FRAME,         "æœ€åˆã®ãƒ•ãƒ¬ãƒ¼ãƒ "
+	CM_LAST_FRAME,          "æœ€å¾Œã®ãƒ•ãƒ¬ãƒ¼ãƒ "
+	CM_SKIP_BACKWARD_FRAME, "å‰æ–¹ã«ã‚¹ã‚­ãƒƒãƒ—"
+	CM_SKIP_FORWARD_FRAME,  "å¾Œæ–¹ã«ã‚¹ã‚­ãƒƒãƒ—"
 END
 
 IDD_SETTINGS DIALOG 0, 0, 192, 90
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒƒ‚ƒŠ[ƒLƒƒƒvƒ`ƒƒ[Ý’è"
-FONT 9,"‚l‚r ‚oƒSƒVƒbƒN"
+CAPTION "ãƒ¡ãƒ¢ãƒªãƒ¼ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒ¼è¨­å®š"
+FONT 9, "Meiryo UI"
 BEGIN
 	DEFPUSHBUTTON "OK", IDOK, 84, 68, 48, 14
-	PUSHBUTTON "ƒLƒƒƒ“ƒZƒ‹",IDCANCEL, 136, 68, 48, 14
+	PUSHBUTTON "ã‚­ãƒ£ãƒ³ã‚»ãƒ«", IDCANCEL, 136, 68, 48, 14
 
-	LTEXT "‰f‘œƒƒ‚ƒŠ[ƒTƒCƒY(&M):",-1,8,10,80,8
+	LTEXT "æ˜ åƒãƒ¡ãƒ¢ãƒªãƒ¼ã‚µã‚¤ã‚º(&M):", -1, 8, 10, 80, 8
 	EDITTEXT IDC_SETTINGS_MEMORY_SIZE, 92, 8, 32, 12, ES_NUMBER | ES_AUTOHSCROLL
-	LTEXT "MB (1`40)", -1, 126, 10, 40, 8
+	LTEXT "MB (1ï½ž40)", -1, 126, 10, 40, 8
 
-	LTEXT "‰æ‘œƒƒ‚ƒŠ[„’èŽg—p—Ê:", -1, 8, 24, 80, 8
+	LTEXT "ç”»åƒãƒ¡ãƒ¢ãƒªãƒ¼æŽ¨å®šä½¿ç”¨é‡:", -1, 8, 24, 80, 8
 	LTEXT "", IDC_SETTINGS_ESTIMATE_MEMORY_USAGE, 92, 24, 32, 8
 
-	AUTOCHECKBOX "ƒEƒBƒ“ƒhƒE‚ð•\Ž¦‚µ‚Ä‚¢‚È‚¢Žž‚àƒf[ƒ^‚ð—­‚ß‚é(&A)", IDC_SETTINGS_ACCUMULATE_ALWAYS, 8, 36, 168, 9
+	AUTOCHECKBOX "ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã—ã¦ã„ãªã„æ™‚ã‚‚ãƒ‡ãƒ¼ã‚¿ã‚’æºœã‚ã‚‹(&A)", IDC_SETTINGS_ACCUMULATE_ALWAYS, 8, 36, 168, 9
 
-	LTEXT "ƒXƒLƒbƒv‘€ì‚Å”ò‚Î‚·ƒtƒŒ[ƒ€”(&S):", -1, 8, 50, 120, 8
+	LTEXT "ã‚¹ã‚­ãƒƒãƒ—æ“ä½œã§é£›ã°ã™ãƒ•ãƒ¬ãƒ¼ãƒ æ•°(&S):", -1, 8, 50, 120, 8
 	EDITTEXT IDC_SETTINGS_SKIP_FRAMES, 132, 48, 32, 12, ES_NUMBER | ES_AUTOHSCROLL
 END

@@ -1,28 +1,32 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ƒXƒgƒŠ[ƒ€‚ÌŠeíî•ñ‚ğ•\¦‚·‚é
+	ã‚¹ãƒˆãƒªãƒ¼ãƒ ã®å„ç¨®æƒ…å ±ã‚’è¡¨ç¤ºã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	Eƒ_ƒCƒAƒƒOƒeƒ“ƒvƒŒ[ƒg‚ğŒ³‚ÉƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
-	Eƒ`ƒƒƒ“ƒlƒ‹‚âƒT[ƒrƒX‚Ìî•ñ‚ğæ“¾‚·‚é
-	E”zF‚ğæ“¾‚µA”zF‚Ì•ÏX‚É’Ç]‚·‚é
+	ãƒ»ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆã‚’å…ƒã«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»ãƒãƒ£ãƒ³ãƒãƒ«ã‚„ã‚µãƒ¼ãƒ“ã‚¹ã®æƒ…å ±ã‚’å–å¾—ã™ã‚‹
+	ãƒ»é…è‰²ã‚’å–å¾—ã—ã€é…è‰²ã®å¤‰æ›´ã«è¿½å¾“ã™ã‚‹
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 #include "resource.h"
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CTSInfo : public TVTest::CTVTestPlugin
 {
-	HWND m_hwnd;
-	HBRUSH m_hbrBack;
+	HWND m_hwnd = nullptr;
+	HBRUSH m_hbrBack = nullptr;
 	COLORREF m_crTextColor;
 
 	static const LPCTSTR PROP_NAME;
@@ -30,71 +34,66 @@ class CTSInfo : public TVTest::CTVTestPlugin
 	void SetItemText(int ID,LPCTSTR pszText);
 	void UpdateItems();
 
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static INT_PTR CALLBACK DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
 
 public:
-	CTSInfo()
-		: m_hwnd(NULL)
-		, m_hbrBack(NULL)
-	{
-	}
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 
-const LPCTSTR CTSInfo::PROP_NAME=TEXT("52058115-8095-444B-B472-0DE1E8AB7A44");
+const LPCTSTR CTSInfo::PROP_NAME = TEXT("52058115-8095-444B-B472-0DE1E8AB7A44");
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CTSInfo::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"ƒ`ƒƒƒ“ƒlƒ‹‚Ìî•ñ";
+	pInfo->pszPluginName  = L"ãƒãƒ£ãƒ³ãƒãƒ«ã®æƒ…å ±";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ƒ`ƒƒƒ“ƒlƒ‹‚Ìî•ñ‚ğ•\¦‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ãƒãƒ£ãƒ³ãƒãƒ«ã®æƒ…å ±ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CTSInfo::Initialize()
 {
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
-	m_pApp->SetEventCallback(EventCallback,this);
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
+	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CTSInfo::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
-	if (m_hwnd!=NULL)
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
+	if (m_hwnd != nullptr)
 		::DestroyWindow(m_hwnd);
 
 	return true;
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
-LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
+LRESULT CALLBACK CTSInfo::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+	CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		{
-			bool fEnable=lParam1!=0;
+			bool fEnable = lParam1 != 0;
 
 			if (fEnable) {
-				if (pThis->m_hwnd==NULL) {
+				if (pThis->m_hwnd == nullptr) {
 					TVTest::ShowDialogInfo Info;
 
 					Info.Flags = TVTest::SHOW_DIALOG_FLAG_MODELESS;
@@ -104,31 +103,31 @@ LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2
 					Info.pClientData = pThis;
 					Info.hwndOwner = pThis->m_pApp->GetAppWindow();
 
-					if ((HWND)pThis->m_pApp->ShowDialog(&Info) == NULL)
+					if ((HWND)pThis->m_pApp->ShowDialog(&Info) == nullptr)
 						return FALSE;
 				}
 				pThis->UpdateItems();
 			}
-			::ShowWindow(pThis->m_hwnd,fEnable?SW_SHOW:SW_HIDE);
+			::ShowWindow(pThis->m_hwnd, fEnable ? SW_SHOW : SW_HIDE);
 			if (fEnable)
-				::SetTimer(pThis->m_hwnd,1,1000,NULL);
+				::SetTimer(pThis->m_hwnd, 1, 1000, nullptr);
 			else
-				::KillTimer(pThis->m_hwnd,1);
+				::KillTimer(pThis->m_hwnd, 1);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_COLORCHANGE:
-		// F‚Ìİ’è‚ª•Ï‰»‚µ‚½
-		if (pThis->m_hwnd!=NULL) {
-			HBRUSH hbrBack=::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
+		// è‰²ã®è¨­å®šãŒå¤‰åŒ–ã—ãŸ
+		if (pThis->m_hwnd != nullptr) {
+			HBRUSH hbrBack = ::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
 
-			if (hbrBack!=NULL) {
-				if (pThis->m_hbrBack!=NULL)
+			if (hbrBack != nullptr) {
+				if (pThis->m_hbrBack != nullptr)
 					::DeleteObject(pThis->m_hbrBack);
-				pThis->m_hbrBack=hbrBack;
+				pThis->m_hbrBack = hbrBack;
 			}
-			pThis->m_crTextColor=pThis->m_pApp->GetColor(L"PanelText");
-			::RedrawWindow(pThis->m_hwnd,NULL,NULL,RDW_INVALIDATE | RDW_UPDATENOW);
+			pThis->m_crTextColor = pThis->m_pApp->GetColor(L"PanelText");
+			::RedrawWindow(pThis->m_hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
 		return TRUE;
 	}
@@ -137,118 +136,132 @@ LRESULT CALLBACK CTSInfo::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2
 }
 
 
-// €–Ú‚Ì•¶š—ñ‚ğİ’è‚·‚é
-void CTSInfo::SetItemText(int ID,LPCTSTR pszText)
+// é …ç›®ã®æ–‡å­—åˆ—ã‚’è¨­å®šã™ã‚‹
+void CTSInfo::SetItemText(int ID, LPCTSTR pszText)
 {
 	TCHAR szCurText[256];
 
-	// ‘I‘ğ‚ª‰ğœ‚³‚ê‚é‚Ì‚Æ‚¿‚ç‚Â‚«–h~‚Ì‚½‚ß‚ÉA•Ï‰»‚ª‚ ‚Á‚½‚Ì‚İİ’è‚·‚é
-	::GetDlgItemText(m_hwnd,ID,szCurText,256);
-	if (::lstrcmp(szCurText,pszText)!=0)
-		::SetDlgItemText(m_hwnd,ID,pszText);
+	// é¸æŠãŒè§£é™¤ã•ã‚Œã‚‹ã®ã¨ã¡ã‚‰ã¤ãé˜²æ­¢ã®ãŸã‚ã«ã€å¤‰åŒ–ãŒã‚ã£ãŸæ™‚ã®ã¿è¨­å®šã™ã‚‹
+	::GetDlgItemText(m_hwnd, ID, szCurText, 256);
+	if (::lstrcmp(szCurText, pszText) != 0)
+		::SetDlgItemText(m_hwnd, ID, pszText);
 }
 
 
-// €–Ú‚ğXV‚·‚é
+// é …ç›®ã‚’æ›´æ–°ã™ã‚‹
 void CTSInfo::UpdateItems()
 {
 	TVTest::ChannelInfo ChannelInfo;
-	int CurService,NumServices;
+	int CurService, NumServices;
 	TVTest::ServiceInfo ServiceInfo;
 	TCHAR szText[256];
 
 	if (m_pApp->GetCurrentChannelInfo(&ChannelInfo)) {
 		TCHAR szSpaceName[32];
 
-		if (m_pApp->GetTuningSpaceName(ChannelInfo.Space,szSpaceName,32)==0)
-			::lstrcpy(szSpaceName,TEXT("???"));
-		::wsprintf(szText,TEXT("%d (%s)"),ChannelInfo.Space,szSpaceName);
-		SetItemText(IDC_SPACE,szText);
-		::wsprintf(szText,TEXT("%d (%s)"),ChannelInfo.Channel,ChannelInfo.szChannelName);
-		SetItemText(IDC_CHANNEL,szText);
-		::wsprintf(szText,TEXT("%#x"),ChannelInfo.NetworkID);
-		SetItemText(IDC_NETWORKID,szText);
-		SetItemText(IDC_NETWORKNAME,ChannelInfo.szNetworkName);
-		::wsprintf(szText,TEXT("%#x"),ChannelInfo.TransportStreamID);
-		SetItemText(IDC_TRANSPORTSTREAMID,szText);
-		SetItemText(IDC_TRANSPORTSTREAMNAME,ChannelInfo.szTransportStreamName);
-		if (ChannelInfo.RemoteControlKeyID!=0)
-			::wsprintf(szText,TEXT("%d"),ChannelInfo.RemoteControlKeyID);
+		if (m_pApp->GetTuningSpaceName(ChannelInfo.Space, szSpaceName, 32) == 0)
+			::lstrcpy(szSpaceName, TEXT("???"));
+		::wsprintf(szText, TEXT("%d (%s)"), ChannelInfo.Space, szSpaceName);
+		SetItemText(IDC_SPACE, szText);
+		::wsprintf(szText, TEXT("%d (%s)"), ChannelInfo.Channel, ChannelInfo.szChannelName);
+		SetItemText(IDC_CHANNEL, szText);
+		::wsprintf(szText, TEXT("%#x"), ChannelInfo.NetworkID);
+		SetItemText(IDC_NETWORKID, szText);
+		SetItemText(IDC_NETWORKNAME, ChannelInfo.szNetworkName);
+		::wsprintf(szText, TEXT("%#x"), ChannelInfo.TransportStreamID);
+		SetItemText(IDC_TRANSPORTSTREAMID, szText);
+		SetItemText(IDC_TRANSPORTSTREAMNAME, ChannelInfo.szTransportStreamName);
+		if (ChannelInfo.RemoteControlKeyID != 0)
+			::wsprintf(szText, TEXT("%d"), ChannelInfo.RemoteControlKeyID);
 		else
-			szText[0]='\0';
-		SetItemText(IDC_REMOTECONTROLKEYID,szText);
+			szText[0] = '\0';
+		SetItemText(IDC_REMOTECONTROLKEYID, szText);
 	}
 
-	CurService=m_pApp->GetService(&NumServices);
-	if (CurService>=0
-			&& m_pApp->GetServiceInfo(CurService,&ServiceInfo)) {
-		::wsprintf(szText,TEXT("%d / %d"),CurService+1,NumServices);
-		SetItemText(IDC_SERVICE,szText);
-		::wsprintf(szText,TEXT("%#x"),ServiceInfo.ServiceID);
-		SetItemText(IDC_SERVICEID,szText);
-		SetItemText(IDC_SERVICENAME,ServiceInfo.szServiceName);
-		::wsprintf(szText,TEXT("%#x"),ServiceInfo.VideoPID);
-		SetItemText(IDC_VIDEOPID,szText);
-		::wsprintf(szText,TEXT("%#x"),ServiceInfo.AudioPID[0]);
-		if (ServiceInfo.NumAudioPIDs>1) {
-			::wsprintf(szText+::lstrlen(szText),TEXT(" / %#x"),ServiceInfo.AudioPID[1]);
+	CurService = m_pApp->GetService(&NumServices);
+	if (CurService >= 0
+			&& m_pApp->GetServiceInfo(CurService, &ServiceInfo)) {
+		::wsprintf(szText, TEXT("%d / %d"), CurService + 1, NumServices);
+		SetItemText(IDC_SERVICE, szText);
+		::wsprintf(szText, TEXT("%#x"), ServiceInfo.ServiceID);
+		SetItemText(IDC_SERVICEID, szText);
+		SetItemText(IDC_SERVICENAME, ServiceInfo.szServiceName);
+		::wsprintf(szText, TEXT("%#x"), ServiceInfo.VideoPID);
+		SetItemText(IDC_VIDEOPID, szText);
+		::wsprintf(szText, TEXT("%#x"), ServiceInfo.AudioPID[0]);
+		if (ServiceInfo.NumAudioPIDs > 1) {
+			::wsprintf(szText + ::lstrlen(szText), TEXT(" / %#x"), ServiceInfo.AudioPID[1]);
 		}
-		SetItemText(IDC_AUDIOPID,szText);
-		if (ServiceInfo.SubtitlePID!=0)
-			::wsprintf(szText,TEXT("%#x"),ServiceInfo.SubtitlePID);
+		SetItemText(IDC_AUDIOPID, szText);
+		if (ServiceInfo.SubtitlePID != 0)
+			::wsprintf(szText, TEXT("%#x"), ServiceInfo.SubtitlePID);
 		else
-			::lstrcpy(szText,TEXT("<none>"));
-		SetItemText(IDC_SUBTITLEPID,szText);
+			::lstrcpy(szText, TEXT("<none>"));
+		SetItemText(IDC_SUBTITLEPID, szText);
 	}
 }
 
 
-// ƒ_ƒCƒAƒƒOƒvƒƒV[ƒWƒƒ
-INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
+// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
+INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
-			pThis->m_hwnd=hDlg;
-			pThis->m_hbrBack=::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
-			pThis->m_crTextColor=pThis->m_pApp->GetColor(L"PanelText");
+			pThis->m_hwnd = hDlg;
+			pThis->m_hbrBack = ::CreateSolidBrush(pThis->m_pApp->GetColor(L"PanelBack"));
+			pThis->m_crTextColor = pThis->m_pApp->GetColor(L"PanelText");
 		}
 		return TRUE;
 
 	case WM_TIMER:
 		{
-			// î•ñXV
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			// æƒ…å ±æ›´æ–°
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 			pThis->UpdateItems();
 		}
 		return TRUE;
 
 	case WM_CTLCOLORSTATIC:
-		// €–Ú‚Ì”wŒiF‚ğİ’è
+		// é …ç›®ã®èƒŒæ™¯è‰²ã‚’è¨­å®š
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
-			HDC hdc=reinterpret_cast<HDC>(wParam);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
+			HDC hdc = reinterpret_cast<HDC>(wParam);
 
-			::SetBkMode(hdc,TRANSPARENT);
-			::SetTextColor(hdc,pThis->m_crTextColor);
+			::SetBkMode(hdc, TRANSPARENT);
+			::SetTextColor(hdc, pThis->m_crTextColor);
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
 
+#if 0 // WM_CTLCOLORDLG ã¯ Windows 11 ã§æ©Ÿèƒ½ã—ãªã„
 	case WM_CTLCOLORDLG:
-		// ƒ_ƒCƒAƒƒO‚Ì”wŒiF‚ğİ’è
+		// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®èƒŒæ™¯è‰²ã‚’è¨­å®š
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 			return reinterpret_cast<INT_PTR>(pThis->m_hbrBack);
 		}
+#else
+	case WM_ERASEBKGND:
+		// ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®èƒŒæ™¯ã‚’å¡—ã‚Šã¤ã¶ã™
+		{
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
+			HDC hdc = reinterpret_cast<HDC>(wParam);
+			RECT rc;
+
+			::GetClientRect(hDlg, &rc);
+			::FillRect(hdc, &rc, pThis->m_hbrBack);
+			return TRUE;
+		}
+#endif
 
 	case WM_COMMAND:
-		if (LOWORD(wParam)==IDCANCEL) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+		if (LOWORD(wParam) == IDCANCEL) {
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
 			pThis->m_pApp->EnablePlugin(false);
 			return TRUE;
@@ -257,14 +270,14 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 	case WM_DESTROY:
 		{
-			CTSInfo *pThis=static_cast<CTSInfo*>(pClientData);
+			CTSInfo *pThis = static_cast<CTSInfo *>(pClientData);
 
-			::KillTimer(hDlg,1);
-			if (pThis->m_hbrBack!=NULL) {
+			::KillTimer(hDlg, 1);
+			if (pThis->m_hbrBack != nullptr) {
 				::DeleteObject(pThis->m_hbrBack);
-				pThis->m_hbrBack=NULL;
+				pThis->m_hbrBack = nullptr;
 			}
-			::RemoveProp(hDlg,PROP_NAME);
+			::RemoveProp(hDlg, PROP_NAME);
 		}
 		return TRUE;
 	}
@@ -275,8 +288,8 @@ INT_PTR CALLBACK CTSInfo::DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
-TVTest::CTVTestPlugin *CreatePluginClass()
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CTSInfo;
 }

@@ -1,19 +1,11 @@
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <shlwapi.h>
 #include <initguid.h>
 #include <dshow.h>
 #include "VideoDecoder.h"
-
-
-CVideoDecoder::CVideoDecoder()
-	: m_hLib(nullptr)
-	, m_pDecoder(nullptr)
-	, m_pFrameCapture(nullptr)
-	, m_pCreateInstance(nullptr)
-	, m_Deinterlace(Deinterlace_Blend)
-	, m_RefCount(1)
-{
-}
 
 
 CVideoDecoder::~CVideoDecoder()
@@ -27,7 +19,7 @@ bool CVideoDecoder::Initialize()
 	if (m_hLib == nullptr) {
 		TCHAR szPath[MAX_PATH];
 
-		// ‚Ü‚¸Àsƒtƒ@ƒCƒ‹‚Æ“¯‚¶ƒtƒHƒ‹ƒ_“à‚Ì TVTestVideoDecoder.ax ‚ğ’T‚·
+		// ã¾ãšå®Ÿè¡Œãƒ•ã‚¡ã‚¤ãƒ«ã¨åŒã˜ãƒ•ã‚©ãƒ«ãƒ€å†…ã® TVTestVideoDecoder.ax ã‚’æ¢ã™
 		DWORD Length = ::GetModuleFileName(nullptr, szPath, _countof(szPath));
 		if (Length > 0 && Length < _countof(szPath)) {
 			::PathRemoveFileSpec(szPath);
@@ -36,15 +28,17 @@ bool CVideoDecoder::Initialize()
 		}
 
 		if (m_hLib == nullptr) {
-			// ƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚éƒ‚ƒWƒ…[ƒ‹‚ğ’T‚·
+			// ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã‚‹ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚’æ¢ã™
 			HKEY hKey;
-			if (::RegOpenKeyEx(HKEY_CLASSES_ROOT,
-							   TEXT("CLSID\\{AE0BF9FF-EBCE-4412-9EFC-C6EE86B20855}\\InprocServer32"),
-							   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+			if (::RegOpenKeyEx(
+					HKEY_CLASSES_ROOT,
+					TEXT("CLSID\\{AE0BF9FF-EBCE-4412-9EFC-C6EE86B20855}\\InprocServer32"),
+					0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
 				DWORD Type, Size = sizeof(szPath);
 				::ZeroMemory(szPath, sizeof(szPath));
-				if (::RegQueryValueEx(hKey, nullptr, nullptr, &Type,
-									  reinterpret_cast<LPBYTE>(szPath), &Size) == ERROR_SUCCESS
+				if (::RegQueryValueEx(
+							hKey, nullptr, nullptr, &Type,
+							reinterpret_cast<LPBYTE>(szPath), &Size) == ERROR_SUCCESS
 						&& Type == REG_SZ)
 					m_hLib = ::LoadLibrary(szPath);
 				::RegCloseKey(hKey);
@@ -61,7 +55,7 @@ bool CVideoDecoder::Initialize()
 		if (pGetInfo == nullptr)
 			return false;
 
-		// ƒo[ƒWƒ‡ƒ“ƒ`ƒFƒbƒN
+		// ãƒãƒ¼ã‚¸ãƒ§ãƒ³ãƒã‚§ãƒƒã‚¯
 		TVTestVideoDecoderInfo Info;
 		Info.HostVersion = TVTVIDEODEC_HOST_VERSION;
 		if (!pGetInfo(&Info)
@@ -98,7 +92,7 @@ bool CVideoDecoder::Open(DWORD Format)
 	if (m_pCreateInstance == nullptr)
 		return false;
 
-	// Œ»İ MPEG-2 Video ‚Ì‚İ‘Î‰
+	// ç¾åœ¨ MPEG-2 Video ã®ã¿å¯¾å¿œ
 	if (Format != MAKEFOURCC('m', 'p', '2', 'v'))
 		return false;
 
@@ -153,13 +147,13 @@ void CVideoDecoder::SetDeinterlaceMethod(DeinterlaceMethod Deinterlace)
 
 STDMETHODIMP_(ULONG) CVideoDecoder::AddRef()
 {
-	return ::InterlockedIncrement(&m_RefCount);	// ƒ_ƒ~[
+	return ::InterlockedIncrement(&m_RefCount); // ãƒ€ãƒŸãƒ¼
 }
 
 
 STDMETHODIMP_(ULONG) CVideoDecoder::Release()
 {
-	return ::InterlockedDecrement(&m_RefCount);	// ƒ_ƒ~[
+	return ::InterlockedDecrement(&m_RefCount); // ãƒ€ãƒŸãƒ¼
 }
 
 
@@ -183,7 +177,7 @@ STDMETHODIMP CVideoDecoder::QueryInterface(REFIID riid, void **ppvObject)
 }
 
 
-// ƒtƒŒ[ƒ€‚Ìæ“¾
+// ãƒ•ãƒ¬ãƒ¼ãƒ ã®å–å¾—
 STDMETHODIMP CVideoDecoder::OnFrame(const TVTVIDEODEC_FrameInfo *pFrameInfo)
 {
 	if (m_pFrameCapture != nullptr) {

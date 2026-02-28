@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2020 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include "stdafx.h"
 #include "TVTest.h"
 #include "StyleUtil.h"
@@ -47,15 +67,16 @@ void SetFontInfoItem(HWND hDlg, int ID, const Style::Font &Font)
 	int Size;
 	TCHAR szText[LF_FACESIZE+16];
 
-	if (Font.Size.Unit == Style::UNIT_POINT && Font.Size.Value != 0) {
+	if (Font.Size.Unit == Style::UnitType::Point && Font.Size.Value != 0) {
 		Size = Font.Size.Value;
 	} else {
-		HDC hdc = ::GetDC(hDlg);
+		const HDC hdc = ::GetDC(hDlg);
 		Size = CalcFontPointHeight(hdc, &Font.LogFont);
 		::ReleaseDC(hDlg, hdc);
 	}
-	StdUtil::snprintf(szText, lengthof(szText), TEXT("%s, %d pt"),
-					  Font.LogFont.lfFaceName, Size);
+	StringFormat(
+		szText, TEXT("{}, {} pt"),
+		Font.LogFont.lfFaceName, Size);
 	SetDlgItemText(hDlg, ID, szText);
 }
 
@@ -69,14 +90,15 @@ bool ChooseStyleFont(HWND hwndOwner, Style::Font *pFont)
 		return false;
 
 	pFont->Size.Value /= 10;
-	pFont->Size.Unit = Style::UNIT_POINT;
+	pFont->Size.Unit = Style::UnitType::Point;
 
 	return true;
 }
 
 
-bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont,
-					  bool fCompatible, bool *pfPointSize)
+bool ReadFontSettings(
+	CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont,
+	bool fCompatible, bool *pfPointSize)
 {
 	if (pfPointSize != nullptr)
 		*pfPointSize = false;
@@ -87,7 +109,7 @@ bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pF
 	String Key;
 
 	if (!Settings.Read(pszValueName, &pFont->LogFont) && fCompatible) {
-		// 旧バージョンとの互換用
+		// 譌ｧ繝舌�ｼ繧ｸ繝ｧ繝ｳ縺ｨ縺ｮ莠呈鋤逕ｨ
 		TCHAR szFont[LF_FACESIZE];
 		int Value;
 
@@ -95,7 +117,7 @@ bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pF
 		Key += TEXT("Name");
 		if (Settings.Read(Key.c_str(), szFont, LF_FACESIZE)
 				&& szFont[0] != _T('\0')) {
-			::lstrcpyn(pFont->LogFont.lfFaceName, szFont, LF_FACESIZE);
+			StringCopy(pFont->LogFont.lfFaceName, szFont);
 			pFont->LogFont.lfEscapement = 0;
 			pFont->LogFont.lfOrientation = 0;
 			pFont->LogFont.lfUnderline = 0;
@@ -116,12 +138,12 @@ bool ReadFontSettings(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pF
 
 		Key = pszValueName;
 		Key += TEXT("Weight");
-		if (Settings.Read(TEXT("NotificationBarFontWeight"), &Value))
+		if (Settings.Read(Key.c_str(), &Value))
 			pFont->LogFont.lfWeight = Value;
 
 		Key = pszValueName;
 		Key += TEXT("Italic");
-		if (Settings.Read(TEXT("NotificationBarFontItalic"), &Value))
+		if (Settings.Read(Key.c_str(), &Value))
 			pFont->LogFont.lfItalic = Value;
 	}
 
@@ -160,9 +182,9 @@ bool ReadPointSize(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont
 		return false;
 
 	if (pFont->Size.Value != 0)
-		pFont->Size.Unit = Style::UNIT_POINT;
+		pFont->Size.Unit = Style::UnitType::Point;
 	else
-		pFont->Size.Unit = Style::UNIT_UNDEFINED;
+		pFont->Size.Unit = Style::UnitType::Undefined;
 
 	return true;
 }
@@ -170,10 +192,10 @@ bool ReadPointSize(CSettings &Settings, LPCTSTR pszValueName, Style::Font *pFont
 
 bool WritePointSize(CSettings &Settings, LPCTSTR pszValueName, const Style::Font &Font)
 {
-	return Settings.Write(pszValueName, Font.Size.Unit == Style::UNIT_POINT ? Font.Size.Value : 0);
+	return Settings.Write(pszValueName, Font.Size.Unit == Style::UnitType::Point ? Font.Size.Value : 0);
 }
 
 
-}	// namespace StyleUtil
+} // namespace StyleUtil
 
-}	// namespace TVTest
+} // namespace TVTest

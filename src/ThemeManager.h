@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2020 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_THEME_MANAGER_H
 #define TVTEST_THEME_MANAGER_H
 
@@ -75,17 +95,27 @@ namespace TVTest
 				STYLE_PROGRAMGUIDE_TIMEBAR_18_20,
 				STYLE_PROGRAMGUIDE_TIMEBAR_21_23,
 				STYLE_PROGRAMGUIDE_STATUS,
+				STYLE_PROGRAMGUIDE_DATEBUTTON,
+				STYLE_PROGRAMGUIDE_DATEBUTTON_CUR,
+				STYLE_PROGRAMGUIDE_DATEBUTTON_HOT,
+				STYLE_PROGRAMGUIDE_TIMEBUTTON,
+				STYLE_PROGRAMGUIDE_TIMEBUTTON_CUR,
+				STYLE_PROGRAMGUIDE_TIMEBUTTON_HOT,
+				STYLE_PROGRAMGUIDE_FAVORITEBUTTON,
+				STYLE_PROGRAMGUIDE_FAVORITEBUTTON_CUR,
+				STYLE_PROGRAMGUIDE_FAVORITEBUTTON_HOT,
 				NUM_STYLES
 			};
 
 			CThemeManager(const CColorScheme *pColorScheme);
+
 			ThemeColor GetColor(int Type) const;
 			ThemeColor GetColor(LPCTSTR pszName) const;
-			bool GetStyle(int Type,Style *pStyle) const;
-			bool GetFillStyle(int Type,FillStyle *pStyle) const;
-			bool GetBorderStyle(int Type,BorderStyle *pStyle) const;
-			bool GetBackgroundStyle(int Type,BackgroundStyle *pStyle) const;
-			bool GetForegroundStyle(int Type,ForegroundStyle *pStyle) const;
+			bool GetStyle(int Type, Style *pStyle) const;
+			bool GetFillStyle(int Type, FillStyle *pStyle) const;
+			bool GetBorderStyle(int Type, BorderStyle *pStyle) const;
+			bool GetBackgroundStyle(int Type, BackgroundStyle *pStyle) const;
+			bool GetForegroundStyle(int Type, ForegroundStyle *pStyle) const;
 			LPCTSTR GetStyleName(int Type) const;
 			int ParseStyleName(LPCTSTR pszName) const;
 
@@ -103,9 +133,9 @@ namespace TVTest
 			static const StyleInfo m_StyleList[NUM_STYLES];
 		};
 
-	}	// namespace Theme
+	} // namespace Theme
 
-}	// namespace TVTest
+} // namespace TVTest
 
 
 #endif

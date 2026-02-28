@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Platinum
+Base=light
 StatusBack=#dddddd
 StatusBack2=#bbbbbb
 StatusBackGradientDirection=vertical-mirror
@@ -148,12 +149,16 @@ SideBarHighlightBackGradientDirection=horizontal-mirror
 SideBarHighlightIcon=#000000
 SideBarHighlightBorder=#dddddd
 SideBarBorder=#dddddd
+EventInfoPopupBack=#dddddd
+EventInfoPopupText=#222222
+EventInfoPopupEventTitle=#222222
 ProgramGuideBack=#dddddd
 ;ProgramGuideText=#000000
 ProgramGuideChannelBack=#dddddd
 ProgramGuideChannelBack2=#bbbbbb
 ProgramGuideChannelBackGradientDirection=vertical-mirror
 ProgramGuideChannelText=#222222
+ProgramGuideChannelHighlightText=#555555
 ProgramGuideCurChannelBack=#bbbbbb
 ProgramGuideCurChannelBack2=#888888
 ProgramGuideCurChannelBackGradient=glossy

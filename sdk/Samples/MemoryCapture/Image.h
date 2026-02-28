@@ -4,21 +4,20 @@
 #include <cstddef>
 
 
-// ‰æ‘œƒNƒ‰ƒX
+// ç”»åƒã‚¯ãƒ©ã‚¹
 class CImage
 {
 public:
-	// ÄƒTƒ“ƒvƒŠƒ“ƒO‚Ìí—Ş
-	enum ResampleType
+	// å†ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°ã®ç¨®é¡
+	enum class ResampleType
 	{
-		Resample_NearestNeighbor, // Å‹ß–T–@
-		Resample_Bilinear,        // üŒ`•âŠÔ–@
-		Resample_Averaging,       // •½‹Ï‰æ‘f–@
-		Resample_Lanczos2,        // Lanczos2
-		Resample_Lanczos3         // Lanczos3
+		NearestNeighbor, // æœ€è¿‘å‚æ³•
+		Bilinear,        // ç·šå½¢è£œé–“æ³•
+		Averaging,       // å¹³å‡ç”»ç´ æ³•
+		Lanczos2,        // Lanczos2
+		Lanczos3,        // Lanczos3
 	};
 
-	CImage();
 	~CImage();
 
 	bool Create(int Width, int Height, int BitsPerPixel, int AspectRatioX, int AspectRatioY);
@@ -33,22 +32,22 @@ public:
 	void SetFrameFlags(unsigned int Flags) { m_FrameFlags = Flags; }
 	unsigned int GetFrameFlags() const { return m_FrameFlags; }
 	const BYTE *GetPixels() const { return m_pPixels; }
-	BYTE *GetRowPixels(int y);
+	BYTE * GetRowPixels(int y);
 	const BYTE *GetRowPixels(int y) const;
 	std::size_t GetRowBytes() const { return m_RowBytes; }
 	bool ExtractRow24(int y, BYTE *pDest) const;
-	CImage *Clone() const;
-	CImage *Resize(int Width, int Height, ResampleType Resample) const;
+	CImage * Clone() const;
+	CImage * Resize(int Width, int Height, ResampleType Resample) const;
 
 private:
-	int m_Width;
-	int m_Height;
-	int m_BitsPerPixel;
-	int m_AspectRatioX;
-	int m_AspectRatioY;
-	unsigned int m_FrameFlags;
-	BYTE *m_pPixels;
-	std::size_t m_RowBytes;
+	int m_Width = 0;
+	int m_Height = 0;
+	int m_BitsPerPixel = 0;
+	int m_AspectRatioX = 0;
+	int m_AspectRatioY = 0;
+	unsigned int m_FrameFlags = 0;
+	BYTE *m_pPixels = nullptr;
+	std::size_t m_RowBytes = 0;
 
 	typedef double (*KernelFunc)(double x);
 

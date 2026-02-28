@@ -1,7 +1,7 @@
 #pragma once
 
 
-// シークバークラス
+// 繧ｷ繝ｼ繧ｯ繝舌�ｼ繧ｯ繝ｩ繧ｹ
 class CSeekBar
 {
 public:
@@ -25,15 +25,15 @@ private:
 	static const LPCTSTR m_WindowClassName;
 	static HINSTANCE m_hinst;
 
-	TVTest::CTVTestApp *m_pApp;
-	HWND m_hwnd;
-	int m_DPI;
+	TVTest::CTVTestApp *m_pApp = nullptr;
+	HWND m_hwnd = nullptr;
+	int m_DPI = 96;
 	int m_Margin;
 	int m_BorderWidth;
 	int m_BarHeight;
-	int m_Min;
-	int m_Max;
-	int m_Pos;
+	int m_Min = 0;
+	int m_Max = -1;
+	int m_Pos = -1;
 	bool m_fHot;
 
 	void CalcMetrics();
@@ -42,6 +42,6 @@ private:
 	void OnLButtonDown(int x, int y);
 	void OnMouseMove(int x, int y);
 
-	static CSeekBar *GetThis(HWND hwnd);
+	static CSeekBar * GetThis(HWND hwnd);
 	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

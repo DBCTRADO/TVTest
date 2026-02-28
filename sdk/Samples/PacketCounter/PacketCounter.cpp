@@ -1,44 +1,42 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ƒpƒPƒbƒgƒJƒEƒ“ƒ^[
+	ãƒ‘ã‚±ãƒƒãƒˆã‚«ã‚¦ãƒ³ã‚¿ãƒ¼
 
-	ƒXƒe[ƒ^ƒXƒo[‚ÉƒpƒPƒbƒg‚ğ”‚¦‚é€–Ú‚ğ’Ç‰Á‚µ‚Ü‚·B
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚ÍAƒvƒ‰ƒOƒCƒ“‚Ì—LŒø/–³Œø‚Ìó‘Ô‚Æ
-	ƒXƒe[ƒ^ƒXƒo[‚Ì€–Ú‚Ì•\¦/”ñ•\¦‚Ìó‘Ô‚Ì“¯Šú‚ğ‚Æ‚Á‚Ä‚¢‚Ü‚·B
+	ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã«ãƒ‘ã‚±ãƒƒãƒˆã‚’æ•°ãˆã‚‹é …ç›®ã‚’è¿½åŠ ã—ã¾ã™ã€‚
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ã€ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹/ç„¡åŠ¹ã®çŠ¶æ…‹ã¨
+	ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã®é …ç›®ã®è¡¨ç¤º/éè¡¨ç¤ºã®çŠ¶æ…‹ã®åŒæœŸã‚’ã¨ã£ã¦ã„ã¾ã™ã€‚
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	ETS ‚ÌƒpƒPƒbƒg‚ğæ“¾‚·‚é
-	EƒXƒe[ƒ^ƒXƒo[€–Ú‚ğ’Ç‰Á‚·‚é
+	ãƒ»TS ã®ãƒ‘ã‚±ãƒƒãƒˆã‚’å–å¾—ã™ã‚‹
+	ãƒ»ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼é …ç›®ã‚’è¿½åŠ ã™ã‚‹
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 
 
-// ƒXƒe[ƒ^ƒX€–Ú‚Ì¯•Êq
-#define STATUS_ITEM_ID 1
-
-
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CPacketCounter : public TVTest::CTVTestPlugin
 {
-	LONG m_PacketCount;
+	// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã®è­˜åˆ¥å­
+	static constexpr int STATUS_ITEM_ID = 1;
+
+	LONG m_PacketCount = 0;
 
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static BOOL CALLBACK StreamCallback(BYTE *pData, void *pClientData);
 	void ShowItem(bool fShow);
 
 public:
-	CPacketCounter()
-		: m_PacketCount(0)
-	{
-	}
-
 	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
 	bool Initialize() override;
 	bool Finalize() override;
@@ -47,41 +45,41 @@ public:
 
 bool CPacketCounter::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
-	// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = 0;
-	pInfo->pszPluginName  = L"ƒpƒPƒbƒgƒJƒEƒ“ƒ^[";
+	pInfo->pszPluginName  = L"ãƒ‘ã‚±ãƒƒãƒˆã‚«ã‚¦ãƒ³ã‚¿ãƒ¼";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"ƒXƒe[ƒ^ƒXƒo[‚ÉƒpƒPƒbƒg‚ğ”‚¦‚é€–Ú‚ğ’Ç‰Á‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒãƒ¼ã«ãƒ‘ã‚±ãƒƒãƒˆã‚’æ•°ãˆã‚‹é …ç›®ã‚’è¿½åŠ ã—ã¾ã™ã€‚";
 	return true;
 }
 
 
 bool CPacketCounter::Initialize()
 {
-	// ‰Šú‰»ˆ—
+	// åˆæœŸåŒ–å‡¦ç†
 
-	// ƒXƒe[ƒ^ƒX€–Ú‚ğ“o˜^
+	// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã‚’ç™»éŒ²
 	TVTest::StatusItemInfo Item;
 	Item.Size         = sizeof(Item);
 	Item.Flags        = TVTest::STATUS_ITEM_FLAG_TIMERUPDATE;
 	Item.Style        = 0;
 	Item.ID           = STATUS_ITEM_ID;
 	Item.pszIDText    = L"PacketCounter";
-	Item.pszName      = L"ƒpƒPƒbƒgƒJƒEƒ“ƒ^[";
+	Item.pszName      = L"ãƒ‘ã‚±ãƒƒãƒˆã‚«ã‚¦ãƒ³ã‚¿ãƒ¼";
 	Item.MinWidth     = 0;
 	Item.MaxWidth     = -1;
 	Item.DefaultWidth = TVTest::StatusItemWidthByFontSize(6);
 	Item.MinHeight    = 0;
 	if (!m_pApp->RegisterStatusItem(&Item)) {
-		m_pApp->AddLog(L"ƒXƒe[ƒ^ƒX€–Ú‚ğ“o˜^‚Å‚«‚Ü‚¹‚ñB", TVTest::LOG_TYPE_ERROR);
+		m_pApp->AddLog(L"ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã‚’ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚", TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
-	// ƒXƒgƒŠ[ƒ€ƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetStreamCallback(0, StreamCallback, this);
 
 	return true;
@@ -90,83 +88,84 @@ bool CPacketCounter::Initialize()
 
 bool CPacketCounter::Finalize()
 {
-	// I—¹ˆ—
+	// çµ‚äº†å‡¦ç†
 
 	return true;
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
 LRESULT CALLBACK CPacketCounter::EventCallback(
 	UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CPacketCounter *pThis = static_cast<CPacketCounter*>(pClientData);
+	CPacketCounter *pThis = static_cast<CPacketCounter *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚Æ€–Ú‚Ì•\¦ó‘Ô‚ğ“¯Šú‚·‚é
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ã¨é …ç›®ã®è¡¨ç¤ºçŠ¶æ…‹ã‚’åŒæœŸã™ã‚‹
 		pThis->ShowItem(lParam1 != 0);
 		return TRUE;
 
 	case TVTest::EVENT_STATUSITEM_DRAW:
-		// ƒXƒe[ƒ^ƒX€–Ú‚Ì•`‰æ
+		// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã®æç”»
 		{
 			const TVTest::StatusItemDrawInfo *pInfo =
 				reinterpret_cast<const TVTest::StatusItemDrawInfo *>(lParam1);
 			WCHAR szText[32];
 
 			if ((pInfo->Flags & TVTest::STATUS_ITEM_DRAW_FLAG_PREVIEW) == 0) {
-				// ’Êí‚Ì€–Ú‚Ì•`‰æ
+				// é€šå¸¸ã®é …ç›®ã®æç”»
 				::_itow_s(pThis->m_PacketCount, szText, 10);
 			} else {
-				// ƒvƒŒƒrƒ…[(İ’èƒ_ƒCƒAƒƒO)‚Ì€–Ú‚Ì•`‰æ
+				// ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼(è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°)ã®é …ç›®ã®æç”»
 				::lstrcpyW(szText, L"123456");
 			}
-			pThis->m_pApp->ThemeDrawText(pInfo->pszStyle, pInfo->hdc, szText,
-										 pInfo->DrawRect,
-										 DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS,
-										 pInfo->Color);
+			pThis->m_pApp->ThemeDrawText(
+				pInfo->pszStyle, pInfo->hdc, szText,
+				pInfo->DrawRect,
+				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS,
+				pInfo->Color);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_STATUSITEM_NOTIFY:
-		// ƒXƒe[ƒ^ƒX€–Ú‚Ì’Ê’m
+		// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã®é€šçŸ¥
 		{
 			const TVTest::StatusItemEventInfo *pInfo =
 				reinterpret_cast<const TVTest::StatusItemEventInfo *>(lParam1);
 
 			switch (pInfo->Event) {
 			case TVTest::STATUS_ITEM_EVENT_CREATED:
-				// €–Ú‚ªì¬‚³‚ê‚½
-				// ƒvƒ‰ƒOƒCƒ“‚ª—LŒø‚Å‚ ‚ê‚Î€–Ú‚ğ•\¦ó‘Ô‚É‚·‚é
+				// é …ç›®ãŒä½œæˆã•ã‚ŒãŸ
+				// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒæœ‰åŠ¹ã§ã‚ã‚Œã°é …ç›®ã‚’è¡¨ç¤ºçŠ¶æ…‹ã«ã™ã‚‹
 				pThis->ShowItem(pThis->m_pApp->IsPluginEnabled());
 				return TRUE;
 
 			case TVTest::STATUS_ITEM_EVENT_VISIBILITYCHANGED:
-				// €–Ú‚Ì•\¦ó‘Ô‚ª•Ï‚í‚Á‚½
-				// €–Ú‚Ì•\¦ó‘Ô‚Æƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ğ“¯Šú‚·‚é
+				// é …ç›®ã®è¡¨ç¤ºçŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸ
+				// é …ç›®ã®è¡¨ç¤ºçŠ¶æ…‹ã¨ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ã‚’åŒæœŸã™ã‚‹
 				pThis->m_pApp->EnablePlugin(pInfo->Param != 0);
 				return TRUE;
 
 			case TVTest::STATUS_ITEM_EVENT_UPDATETIMER:
-				// XVƒ^ƒCƒ}[
-				return TRUE;	// TRUE ‚ğ•Ô‚·‚ÆÄ•`‰æ‚³‚ê‚é
+				// æ›´æ–°ã‚¿ã‚¤ãƒãƒ¼
+				return TRUE; // TRUE ã‚’è¿”ã™ã¨å†æç”»ã•ã‚Œã‚‹
 			}
 		}
 		return FALSE;
 
 	case TVTest::EVENT_STATUSITEM_MOUSE:
-		// ƒXƒe[ƒ^ƒX€–Ú‚Ìƒ}ƒEƒX‘€ì
+		// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã®ãƒã‚¦ã‚¹æ“ä½œ
 		{
 			const TVTest::StatusItemMouseEventInfo *pInfo =
 				reinterpret_cast<const TVTest::StatusItemMouseEventInfo *>(lParam1);
 
-			// ¶ƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚çƒŠƒZƒbƒg‚·‚é
+			// å·¦ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸã‚‰ãƒªã‚»ãƒƒãƒˆã™ã‚‹
 			if (pInfo->Action == TVTest::STATUS_ITEM_MOUSE_ACTION_LDOWN) {
 				::InterlockedExchange(&pThis->m_PacketCount, 0);
-				// €–Ú‚ğÄ•`‰æ
+				// é …ç›®ã‚’å†æç”»
 				pThis->m_pApp->StatusItemNotify(STATUS_ITEM_ID, TVTest::STATUS_ITEM_NOTIFY_REDRAW);
 				return TRUE;
 			}
@@ -178,19 +177,19 @@ LRESULT CALLBACK CPacketCounter::EventCallback(
 }
 
 
-// ƒXƒgƒŠ[ƒ€ƒR[ƒ‹ƒoƒbƒNŠÖ”
-// 188ƒoƒCƒg‚ÌƒpƒPƒbƒgƒf[ƒ^‚ª“n‚³‚ê‚é
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// 188ãƒã‚¤ãƒˆã®ãƒ‘ã‚±ãƒƒãƒˆãƒ‡ãƒ¼ã‚¿ãŒæ¸¡ã•ã‚Œã‚‹
 BOOL CALLBACK CPacketCounter::StreamCallback(BYTE *pData, void *pClientData)
 {
-	CPacketCounter *pThis = static_cast<CPacketCounter*>(pClientData);
+	CPacketCounter *pThis = static_cast<CPacketCounter *>(pClientData);
 
 	::InterlockedIncrement(&pThis->m_PacketCount);
 
-	return TRUE;	// FALSE‚ğ•Ô‚·‚ÆƒpƒPƒbƒg‚ª”jŠü‚³‚ê‚é
+	return TRUE; // FALSEã‚’è¿”ã™ã¨ãƒ‘ã‚±ãƒƒãƒˆãŒç ´æ£„ã•ã‚Œã‚‹
 }
 
 
-// ƒXƒe[ƒ^ƒX€–Ú‚Ì•\¦/”ñ•\¦‚ğØ‚è‘Ö‚¦‚é
+// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹é …ç›®ã®è¡¨ç¤º/éè¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
 void CPacketCounter::ShowItem(bool fShow)
 {
 	TVTest::StatusItemSetInfo Info;
@@ -207,7 +206,7 @@ void CPacketCounter::ShowItem(bool fShow)
 
 
 
-TVTest::CTVTestPlugin *CreatePluginClass()
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CPacketCounter;
 }

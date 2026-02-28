@@ -4,10 +4,10 @@
 ##  -a x86|x64
 ## CRT type
 ##  -c dynamic|static
+## Plugins
+##  -l all|useful
 ## Output directory
 ##  -o dir
-## Platform
-##  -p xp
 ## Archive
 ##  -r 7z|bz2
 ## Target
@@ -16,11 +16,11 @@
 arch=
 target=release
 crt_type=static
-platform=
+plugins=useful
 out_dir=package
 archive=7z
 
-while getopts a:c:o:p:r:t: arg
+while getopts a:c:l:o:r:t: arg
 do
     case $arg in
     a)
@@ -29,11 +29,11 @@ do
     c)
         crt_type=$OPTARG
         ;;
+    l)
+        plugins=$OPTARG
+        ;;
     o)
         out_dir=$OPTARG
-        ;;
-    p)
-        platform=$OPTARG
         ;;
     r)
         archive=$OPTARG
@@ -65,10 +65,6 @@ else
 fi
 
 src_bin_dir=src/${src_arch_dir}/${target}
-if [ "$platform" = xp ]
-then
-    src_bin_dir=${src_bin_dir}_XP
-fi
 if [ "$crt_type" = dynamic ]
 then
     src_bin_dir=${src_bin_dir}_MD
@@ -89,10 +85,11 @@ then
 fi
 
 cp -fp "${src_bin_dir}/TVTest_Image.dll" "${dst_dir}/TVTest_Image.dll"
+cp -fp "${src_bin_dir}/TVTest.chm" "${dst_dir}/TVTest.chm"
 
 cp -fp doc/* "${dst_dir}"
 
-data_files=(DRCSMap.sample.ini TVTest.chm TVTest.search.ini TVTest.style.ini TVTest.tuner.ini)
+data_files=(DRCSMap.sample.ini TVTest.search.ini TVTest.style.ini TVTest.tuner.ini)
 for data_file in ${data_files[@]}
 do
     cp -fp "data/${data_file}" "${dst_dir}/${data_file}"
@@ -102,13 +99,21 @@ if [ "$arch" = x86 ]
 then
     cp -fp data/TVTest_Logo.bmp "${dst_dir}/TVTest_Logo.bmp"
 else
-    cp -fp "data/${arch}/TVTest_Logo.bmp" "${dst_dir}/TVTest_Logo.bmp"
+    cp -fp "data/Data_${arch}/TVTest_Logo.bmp" "${dst_dir}/TVTest_Logo.bmp"
 fi
 
 cp -fp data/Themes/*.httheme ${dst_dir}/Themes
 
+if [ "$plugins" = all ]
+then
+    plugin_files=(AutoSnapShot.tvtp DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp MiniProgramGuide.tvtp PacketCounter.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TSInfo.tvtp TunerPanel.tvtp)
+fi
+
+if [ "$plugins" = useful ]
+then
 ## Copy only "useful" plugins
-plugin_files=(DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TunerPanel.tvtp)
+    plugin_files=(DiskRelay.tvtp Equalizer.tvtp GamePad.tvtp HDUSRemocon.tvtp HDUSRemocon_KeyHook.dll LogoList.tvtp MemoryCapture.tvtp SignalGraph.tvtp SleepTimer.tvtp SpectrumAnalyzer.tvtp TunerPanel.tvtp)
+fi
 
 plugin_src_dir=sdk/Samples/${src_arch_dir}/${target}
 if [ "$crt_type" = static ]
@@ -122,7 +127,7 @@ do
 done
 
 version=
-if [[ $(grep -aE ^#define[[:space:]]+VERSION_TEXT_A src/TVTest.h) =~ \"(.+)\"$ ]]
+if [[ $(grep -aE ^#define[[:space:]]+VERSION_TEXT_A src/TVTestVersion.h) =~ \"(.+)\"$ ]]
 then
     version=${BASH_REMATCH[1]}_
 fi

@@ -1,53 +1,73 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	ƒƒS‚Ìˆê——‚ğ•\¦‚·‚é
+	ãƒ­ã‚´ã®ä¸€è¦§ã‚’è¡¨ç¤ºã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	EƒT[ƒrƒX‚ğ—ñ‹“‚·‚é
-	E‹ÇƒƒS‚ğæ“¾‚·‚é
-	EƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
-	E”zF‚ğæ“¾‚µA”zF‚Ì•ÏX‚É’Ç]‚·‚é
-	EDPI ‚É‰‚¶‚ÄƒXƒP[ƒŠƒ“ƒO‚·‚é
+	ãƒ»ã‚µãƒ¼ãƒ“ã‚¹ã‚’åˆ—æŒ™ã™ã‚‹
+	ãƒ»å±€ãƒ­ã‚´ã‚’å–å¾—ã™ã‚‹
+	ãƒ»ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+	ãƒ»é…è‰²ã‚’å–å¾—ã—ã€é…è‰²ã®å¤‰æ›´ã«è¿½å¾“ã™ã‚‹
+	ãƒ»DPI ã«å¿œã˜ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã™ã‚‹
+	ãƒ»TVTest ã«åˆã‚ã›ã¦ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰ã«ã™ã‚‹
 */
 
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+
 #include <windows.h>
 #include <tchar.h>
+#include <algorithm>
+#include <memory>
 #include <vector>
-#define TVTEST_PLUGIN_CLASS_IMPLEMENT	// ƒNƒ‰ƒX‚Æ‚µ‚ÄÀ‘•
+
+#define TVTEST_PLUGIN_CLASS_IMPLEMENT // ã‚¯ãƒ©ã‚¹ã¨ã—ã¦å®Ÿè£…
 #include "TVTestPlugin.h"
 
 
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
-#define LOGO_LIST_WINDOW_CLASS TEXT("TV Logo List Window")
-
-// XV—pƒ^ƒCƒ}[‚Ì¯•Êq
-#define TIMER_UPDATELOGO	1
-
-// ƒƒS‚Ì‘å‚«‚³
+// ãƒ­ã‚´ã®å¤§ãã•
 static const struct {
 	int Width, Height;
 } LogoSizeList[] = {
-	{48, 24},	// logo_type 0
-	{36, 24},	// logo_type 1
-	{48, 27},	// logo_type 2
-	{72, 36},	// logo_type 3
-	{54, 36},	// logo_type 4
-	{64, 36},	// logo_type 5
+	{48, 24}, // logo_type 0
+	{36, 24}, // logo_type 1
+	{48, 27}, // logo_type 2
+	{72, 36}, // logo_type 3
+	{54, 36}, // logo_type 4
+	{64, 36}, // logo_type 5
 };
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CLogoList : public TVTest::CTVTestPlugin
 {
-	HWND m_hwnd;
-	HWND m_hwndList;
-	struct Position {
-		int Left,Top,Width,Height;
-		Position() : Left(0), Top(0), Width(0), Height(0) {}
+	struct Position
+	{
+		int Left = 0, Top = 0, Width = 0, Height = 0;
 	};
+
+	class CServiceInfo
+	{
+	public:
+		TCHAR m_szServiceName[64];
+		WORD m_NetworkID;
+		WORD m_ServiceID;
+		HBITMAP m_hbmLogo[6];
+		CServiceInfo(const TVTest::ChannelInfo &ChInfo);
+		~CServiceInfo();
+	};
+
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
+	static const LPCTSTR LOGO_LIST_WINDOW_CLASS;
+
+	// æ›´æ–°ç”¨ã‚¿ã‚¤ãƒãƒ¼ã®è­˜åˆ¥å­
+	static constexpr UINT TIMER_UPDATELOGO = 1;
+
+	bool m_fInitialized = false;
+	HWND m_hwnd = nullptr;
+	HWND m_hwndList = nullptr;
 	Position m_WindowPosition;
 	COLORREF m_crBackColor;
 	COLORREF m_crTextColor;
@@ -57,19 +77,9 @@ class CLogoList : public TVTest::CTVTestPlugin
 	int m_ServiceNameWidth;
 	int m_ItemWidth;
 	int m_ItemHeight;
-	HFONT m_hfont;
-	HBRUSH m_hbrBack;
-
-	class CServiceInfo {
-	public:
-		TCHAR m_szServiceName[64];
-		WORD m_NetworkID;
-		WORD m_ServiceID;
-		HBITMAP m_hbmLogo[6];
-		CServiceInfo(const TVTest::ChannelInfo &ChInfo);
-		~CServiceInfo();
-	};
-	std::vector<CServiceInfo*> m_ServiceList;
+	HFONT m_hfont = nullptr;
+	HBRUSH m_hbrBack = nullptr;
+	std::vector<std::unique_ptr<CServiceInfo>> m_ServiceList;
 
 	bool Enable(bool fEnable);
 	void GetServiceList();
@@ -78,53 +88,46 @@ class CLogoList : public TVTest::CTVTestPlugin
 	void GetColors();
 	void CalcMetrics();
 
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static CLogoList *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static CLogoList * GetThis(HWND hwnd);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
-	CLogoList();
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 
-CLogoList::CLogoList()
-	: m_hwnd(NULL)
-	, m_hwndList(NULL)
-	, m_hfont(NULL)
-	, m_hbrBack(NULL)
-{
-}
+const LPCTSTR CLogoList::LOGO_LIST_WINDOW_CLASS = TEXT("TV Logo List Window");
 
 
-// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 bool CLogoList::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = TVTest::PLUGIN_FLAG_DISABLEONSTART;
-	pInfo->pszPluginName  = L"‹ÇƒƒS‚Ìˆê——";
+	pInfo->pszPluginName  = L"å±€ãƒ­ã‚´ã®ä¸€è¦§";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"‹ÇƒƒS‚ğˆê——•\¦‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"å±€ãƒ­ã‚´ã‚’ä¸€è¦§è¡¨ç¤ºã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CLogoList::Initialize()
 {
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
 	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CLogoList::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚ğ”jŠü‚·‚é
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç ´æ£„ã™ã‚‹
 	if (m_hwnd)
 		::DestroyWindow(m_hwnd);
 
@@ -132,30 +135,40 @@ bool CLogoList::Finalize()
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
-LRESULT CALLBACK CLogoList::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
+LRESULT CALLBACK CLogoList::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CLogoList *pThis=static_cast<CLogoList*>(pClientData);
+	CLogoList *pThis = static_cast<CLogoList *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		return pThis->Enable(lParam1 != 0);
 
 	case TVTest::EVENT_STANDBY:
-		// ‘Ò‹@ó‘Ô‚ª•Ï‰»‚µ‚½
+		// å¾…æ©ŸçŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			// ‘Ò‹@ó‘Ô‚Ì‚ÍƒEƒBƒ“ƒhƒE‚ğ‰B‚·
+			// å¾…æ©ŸçŠ¶æ…‹ã®æ™‚ã¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éš ã™
 			::ShowWindow(pThis->m_hwnd, lParam1 != 0 ? SW_HIDE : SW_SHOW);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_COLORCHANGE:
-		// F‚Ìİ’è‚ª•Ï‰»‚µ‚½
-		if (pThis->m_hwndList != NULL) {
+		// è‰²ã®è¨­å®šãŒå¤‰åŒ–ã—ãŸ
+		if (pThis->m_hwndList != nullptr) {
 			pThis->GetColors();
-			::RedrawWindow(pThis->m_hwndList, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+			::RedrawWindow(pThis->m_hwndList, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+		}
+		return TRUE;
+
+	case TVTest::EVENT_MAINWINDOWDARKMODECHANGED:
+		// ãƒ¡ã‚¤ãƒ³ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰çŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸ
+		if (pThis->m_hwnd != nullptr) {
+			// ãƒ¡ã‚¤ãƒ³ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«åˆã‚ã›ã¦ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰çŠ¶æ…‹ã‚’å¤‰æ›´ã™ã‚‹
+			pThis->m_pApp->SetWindowDarkMode(
+				pThis->m_hwnd,
+				(pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK) != 0);
 		}
 		return TRUE;
 	}
@@ -164,14 +177,12 @@ LRESULT CALLBACK CLogoList::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPara
 }
 
 
-// —LŒøó‘Ô‚ª•Ï‚í‚Á‚½‚Ìˆ—
+// æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰ã‚ã£ãŸæ™‚ã®å‡¦ç†
 bool CLogoList::Enable(bool fEnable)
 {
 	if (fEnable) {
-		static bool fInitialized = false;
-
-		if (!fInitialized) {
-			// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+		if (!m_fInitialized) {
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 			WNDCLASS wc;
 
 			wc.style         = 0;
@@ -179,27 +190,26 @@ bool CLogoList::Enable(bool fEnable)
 			wc.cbClsExtra    = 0;
 			wc.cbWndExtra    = 0;
 			wc.hInstance     = g_hinstDLL;
-			wc.hIcon         = NULL;
-			wc.hCursor       = ::LoadCursor(NULL,IDC_ARROW);
-			wc.hbrBackground = NULL;
-			wc.lpszMenuName  = NULL;
+			wc.hIcon         = nullptr;
+			wc.hCursor       = ::LoadCursor(nullptr,IDC_ARROW);
+			wc.hbrBackground = nullptr;
+			wc.lpszMenuName  = nullptr;
 			wc.lpszClassName = LOGO_LIST_WINDOW_CLASS;
 			if (::RegisterClass(&wc) == 0)
 				return false;
-			fInitialized = true;
+			m_fInitialized = true;
 		}
 
-		if (m_hwnd == NULL) {
-			// ƒEƒBƒ“ƒhƒE‚Ìì¬
+		if (m_hwnd == nullptr) {
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
 			const DWORD Style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
 			const DWORD ExStyle = WS_EX_TOOLWINDOW;
-			if (::CreateWindowEx(ExStyle, LOGO_LIST_WINDOW_CLASS,
-								 TEXT("‹ÇƒƒS‚Ìˆê——"), Style,
-								 0, 0, 320, 320,
-								 m_pApp->GetAppWindow(), NULL, g_hinstDLL, this) == NULL)
+			if (::CreateWindowEx(
+					ExStyle, LOGO_LIST_WINDOW_CLASS, TEXT("å±€ãƒ­ã‚´ã®ä¸€è¦§"), Style,
+					0, 0, 320, 320, m_pApp->GetAppWindow(), nullptr, g_hinstDLL, this) == nullptr)
 				return false;
 
-			// ƒfƒtƒHƒ‹ƒgƒTƒCƒY‚ÌŒvZ
+			// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚µã‚¤ã‚ºã®è¨ˆç®—
 			if (m_WindowPosition.Width <= 0 || m_WindowPosition.Height <= 0) {
 				RECT rc;
 				rc.left = 0;
@@ -213,7 +223,7 @@ bool CLogoList::Enable(bool fEnable)
 					m_WindowPosition.Height = rc.bottom - rc.top;
 			}
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì•œŒ³
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®å¾©å…ƒ
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof(WINDOWPLACEMENT);
 			::GetWindowPlacement(m_hwnd, &wp);
@@ -228,7 +238,7 @@ bool CLogoList::Enable(bool fEnable)
 
 		::ShowWindow(m_hwnd, SW_SHOWNORMAL);
 	} else {
-		// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+		// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 		if (m_hwnd)
 			::DestroyWindow(m_hwnd);
 	}
@@ -237,63 +247,60 @@ bool CLogoList::Enable(bool fEnable)
 }
 
 
-// ŠeƒT[ƒrƒX‚ÌƒƒS‚Ìæ“¾
+// å„ã‚µãƒ¼ãƒ“ã‚¹ã®ãƒ­ã‚´ã®å–å¾—
 void CLogoList::GetServiceList()
 {
 	ClearServiceList();
 
-	// ƒT[ƒrƒX‚ÌƒŠƒXƒg‚ğæ“¾‚·‚é
+	// ã‚µãƒ¼ãƒ“ã‚¹ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹
 	int NumSpaces = 0;
 	int CurTuningSpace = m_pApp->GetTuningSpace(&NumSpaces);
 
 	TVTest::ChannelInfo ChInfo;
-	CServiceInfo *pServiceInfo;
 	if (CurTuningSpace >= 0) {
-		// Œ»İ‚Ìƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ‚Ìƒ`ƒƒƒ“ƒlƒ‹‚ğæ“¾‚·‚é
+		// ç¾åœ¨ã®ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã‚’å–å¾—ã™ã‚‹
 		for (int Channel = 0; m_pApp->GetChannelInfo(CurTuningSpace, Channel, &ChInfo); Channel++) {
-			pServiceInfo = new CServiceInfo(ChInfo);
-			m_ServiceList.push_back(pServiceInfo);
+			m_ServiceList.emplace_back(std::make_unique<CServiceInfo>(ChInfo));
 		}
 	} else {
-		// ‘S‚Ä‚Ìƒ`ƒ…[ƒjƒ“ƒO‹óŠÔ‚Ìƒ`ƒƒƒ“ƒlƒ‹‚ğæ“¾‚·‚é
+		// å…¨ã¦ã®ãƒãƒ¥ãƒ¼ãƒ‹ãƒ³ã‚°ç©ºé–“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã‚’å–å¾—ã™ã‚‹
 		for (int Space = 0; Space < NumSpaces; Space++) {
 			for (int Channel = 0; m_pApp->GetChannelInfo(Space, Channel, &ChInfo); Channel++) {
-				pServiceInfo = new CServiceInfo(ChInfo);
-				m_ServiceList.push_back(pServiceInfo);
+				m_ServiceList.emplace_back(std::make_unique<CServiceInfo>(ChInfo));
 			}
 		}
 	}
 
-	// ƒƒS‚ğæ“¾‚·‚é
+	// ãƒ­ã‚´ã‚’å–å¾—ã™ã‚‹
 	UpdateLogo();
 }
 
 
-// ƒƒS‚ÌXV
+// ãƒ­ã‚´ã®æ›´æ–°
 bool CLogoList::UpdateLogo()
 {
 	bool fUpdated = false;
 
-	for (size_t i = 0; i < m_ServiceList.size(); i++) {
-		CServiceInfo *pServiceInfo = m_ServiceList[i];
+	for (std::size_t i = 0; i < m_ServiceList.size(); i++) {
+		CServiceInfo *pServiceInfo = m_ServiceList[i].get();
 
 		UINT ExistsType = 0;
 		for (BYTE j = 0; j < 6; j++) {
-			if (pServiceInfo->m_hbmLogo[j] != NULL)
+			if (pServiceInfo->m_hbmLogo[j] != nullptr)
 				ExistsType |= 1U << j;
 		}
 		if ((ExistsType & 0x3F) != 0x3F) {
-			// ‚Ü‚¾æ“¾‚µ‚Ä‚¢‚È‚¢ƒƒS‚ª‚ ‚é
+			// ã¾ã å–å¾—ã—ã¦ã„ãªã„ãƒ­ã‚´ãŒã‚ã‚‹
 			UINT AvailableType =
 				m_pApp->GetAvailableLogoType(pServiceInfo->m_NetworkID, pServiceInfo->m_ServiceID);
 			if (AvailableType != ExistsType) {
-				// V‚µ‚­ƒƒS‚ªæ“¾‚³‚ê‚½‚Ì‚ÅXV‚·‚é
+				// æ–°ã—ããƒ­ã‚´ãŒå–å¾—ã•ã‚ŒãŸã®ã§æ›´æ–°ã™ã‚‹
 				for (BYTE j = 0; j < 6; j++) {
-					if (pServiceInfo->m_hbmLogo[j] == NULL
+					if (pServiceInfo->m_hbmLogo[j] == nullptr
 							&& (AvailableType & (1U << j)) != 0) {
 						pServiceInfo->m_hbmLogo[j] =
 							m_pApp->GetLogo(pServiceInfo->m_NetworkID, pServiceInfo->m_ServiceID, j);
-						if (pServiceInfo->m_hbmLogo[j] != NULL)
+						if (pServiceInfo->m_hbmLogo[j] != nullptr)
 							fUpdated = true;
 					}
 				}
@@ -305,33 +312,34 @@ bool CLogoList::UpdateLogo()
 }
 
 
-// ƒT[ƒrƒX‚ÌƒŠƒXƒg‚ğƒNƒŠƒA‚·‚é
+// ã‚µãƒ¼ãƒ“ã‚¹ã®ãƒªã‚¹ãƒˆã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
 void CLogoList::ClearServiceList()
 {
-	for (size_t i = 0; i < m_ServiceList.size(); i++)
-		delete m_ServiceList[i];
 	m_ServiceList.clear();
 }
 
 
-// ”zF‚ğæ“¾‚·‚é
+// é…è‰²ã‚’å–å¾—ã™ã‚‹
 void CLogoList::GetColors()
 {
 	m_crBackColor = m_pApp->GetColor(L"PanelBack");
 	m_crTextColor = m_pApp->GetColor(L"PanelText");
 
-	if (m_hbrBack != NULL)
+	if (m_hbrBack != nullptr)
 		::DeleteObject(m_hbrBack);
 	m_hbrBack = ::CreateSolidBrush(m_crBackColor);
+
+	if (m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_PANEL_SUPPORTED)
+		m_pApp->SetWindowDarkMode(m_hwndList, m_pApp->IsDarkModeColor(m_crBackColor));
 }
 
 
-// ¡–@‚ğŒvZ‚·‚é
+// å¯¸æ³•ã‚’è¨ˆç®—ã™ã‚‹
 void CLogoList::CalcMetrics()
 {
 	LOGFONT lf;
 	m_pApp->GetFont(L"PanelFont", &lf, m_DPI);
-	if (m_hfont != NULL)
+	if (m_hfont != nullptr)
 		::DeleteObject(m_hfont);
 	m_hfont = ::CreateFontIndirect(&lf);
 
@@ -350,25 +358,25 @@ void CLogoList::CalcMetrics()
 	for (int i = 0; i < 6; i++)
 		LogoWidth += LogoSizeList[i].Width;
 	m_ItemWidth = m_ServiceNameWidth + (m_ItemMargin * 2) + (m_LogoMargin * 6) + LogoWidth;
-	m_ItemHeight = max(36, tm.tmHeight) + (m_ItemMargin * 2);
+	m_ItemHeight = std::max<int>(36, tm.tmHeight) + (m_ItemMargin * 2);
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
-CLogoList *CLogoList::GetThis(HWND hwnd)
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
+CLogoList * CLogoList::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CLogoList*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
+	return reinterpret_cast<CLogoList *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
 LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
 			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CLogoList *pThis = static_cast<CLogoList*>(pcs->lpCreateParams);
+			CLogoList *pThis = static_cast<CLogoList *>(pcs->lpCreateParams);
 
 			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 			pThis->m_hwnd = hwnd;
@@ -379,23 +387,28 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 
 			pThis->CalcMetrics();
 
-			pThis->m_hwndList = ::CreateWindowEx(0, TEXT("LISTBOX"), NULL,
+			pThis->m_hwndList = ::CreateWindowEx(
+				0, TEXT("LISTBOX"), nullptr,
 				WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT,
-				0, 0, 0, 0, hwnd, NULL, g_hinstDLL, NULL);
+				0, 0, 0, 0, hwnd, nullptr, g_hinstDLL, nullptr);
 
 			pThis->GetColors();
 
 			pThis->GetServiceList();
 
-			// ƒAƒCƒeƒ€‚Ì‘å‚«‚³‚ğİ’è‚·‚é
+			// ã‚¢ã‚¤ãƒ†ãƒ ã®å¤§ãã•ã‚’è¨­å®šã™ã‚‹
 			::SendMessage(pThis->m_hwndList, LB_SETITEMHEIGHT, 0, pThis->m_ItemHeight);
 			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
 
-			for (size_t i = 0; i < pThis->m_ServiceList.size(); i++)
-				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i]));
+			for (std::size_t i = 0; i < pThis->m_ServiceList.size(); i++)
+				::SendMessage(pThis->m_hwndList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(pThis->m_ServiceList[i].get()));
 
-			// XV—pƒ^ƒCƒ}[İ’è
-			::SetTimer(hwnd, TIMER_UPDATELOGO, 60 * 1000, NULL);
+			// ãƒ¡ã‚¤ãƒ³ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰ã§ã‚ã‚Œã°ãã‚Œã«åˆã‚ã›ã¦ãƒ€ãƒ¼ã‚¯ãƒ¢ãƒ¼ãƒ‰ã«ã™ã‚‹
+			if (pThis->m_pApp->GetDarkModeStatus() & TVTest::DARK_MODE_STATUS_MAINWINDOW_DARK)
+				pThis->m_pApp->SetWindowDarkMode(hwnd, true);
+
+			// æ›´æ–°ç”¨ã‚¿ã‚¤ãƒãƒ¼è¨­å®š
+			::SetTimer(hwnd, TIMER_UPDATELOGO, 60 * 1000, nullptr);
 		}
 		return 0;
 
@@ -408,7 +421,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 		return 0;
 
 	case WM_DRAWITEM:
-		// ƒƒS‚ÌƒŠƒXƒg‚ÌƒAƒCƒeƒ€‚ğ•`‰æ
+		// ãƒ­ã‚´ã®ãƒªã‚¹ãƒˆã®ã‚¢ã‚¤ãƒ†ãƒ ã‚’æç”»
 		{
 			CLogoList *pThis = GetThis(hwnd);
 			LPDRAWITEMSTRUCT pdis = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
@@ -417,7 +430,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			if ((int)pdis->itemID < 0 || pdis->itemID >= pThis->m_ServiceList.size())
 				return TRUE;
 
-			const CServiceInfo *pService = pThis->m_ServiceList[pdis->itemID];
+			const CServiceInfo *pService = pThis->m_ServiceList[pdis->itemID].get();
 
 			HFONT hfontOld = static_cast<HFONT>(::SelectObject(pdis->hDC, pThis->m_hfont));
 			int OldBkMode = ::SetBkMode(pdis->hDC, TRANSPARENT);
@@ -429,8 +442,9 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			rc.top = pdis->rcItem.top + pThis->m_ItemMargin;
 			rc.right = rc.left + pThis->m_ServiceNameWidth;
 			rc.bottom = pdis->rcItem.bottom - pThis->m_ItemMargin;
-			::DrawText(pdis->hDC, pService->m_szServiceName, -1, &rc,
-					   DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
+			::DrawText(
+				pdis->hDC, pService->m_szServiceName, -1, &rc,
+				DT_LEFT | DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX | DT_END_ELLIPSIS);
 
 			::SetTextColor(pdis->hDC, OldTextColor);
 			::SetBkMode(pdis->hDC, OldBkMode);
@@ -440,12 +454,13 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			HGDIOBJ hOldBitmap = ::GetCurrentObject(hdcMemory, OBJ_BITMAP);
 			int x = rc.right + pThis->m_LogoMargin;
 			for (int i = 0; i < 6; i++) {
-				if (pService->m_hbmLogo[i] != NULL) {
+				if (pService->m_hbmLogo[i] != nullptr) {
 					::SelectObject(hdcMemory, pService->m_hbmLogo[i]);
-					::BitBlt(pdis->hDC,
-							 x, rc.top + ((rc.bottom - rc.top) - LogoSizeList[i].Height) / 2,
-							 LogoSizeList[i].Width, LogoSizeList[i].Height,
-							 hdcMemory, 0, 0, SRCCOPY);
+					::BitBlt(
+						pdis->hDC,
+						x, rc.top + ((rc.bottom - rc.top) - LogoSizeList[i].Height) / 2,
+						LogoSizeList[i].Width, LogoSizeList[i].Height,
+						hdcMemory, 0, 0, SRCCOPY);
 				}
 				x += LogoSizeList[i].Width + pThis->m_LogoMargin;
 			}
@@ -463,18 +478,18 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 		}
 
 	case WM_TIMER:
-		// ƒƒS‚ÌXV
+		// ãƒ­ã‚´ã®æ›´æ–°
 		if (wParam == TIMER_UPDATELOGO) {
 			CLogoList *pThis = GetThis(hwnd);
 
 			if (pThis->UpdateLogo())
-				::RedrawWindow(pThis->m_hwndList, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+				::RedrawWindow(pThis->m_hwndList, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 		}
 		return 0;
 
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xFFF0) == SC_CLOSE) {
-			// •Â‚¶‚é‚Íƒvƒ‰ƒOƒCƒ“‚ğ–³Œø‚É‚·‚é
+			// é–‰ã˜ã‚‹æ™‚ã¯ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚’ç„¡åŠ¹ã«ã™ã‚‹
 			CLogoList *pThis = GetThis(hwnd);
 
 			pThis->m_pApp->EnablePlugin(false);
@@ -486,10 +501,10 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 #define WM_DPICHANGED 0x02E0
 #endif
 	case WM_DPICHANGED:
-		// DPI ‚ª•Ï‚í‚Á‚½
+		// DPI ãŒå¤‰ã‚ã£ãŸ
 		{
 			CLogoList *pThis = GetThis(hwnd);
-			const RECT *prc = reinterpret_cast<const RECT*>(lParam);
+			const RECT *prc = reinterpret_cast<const RECT *>(lParam);
 
 			pThis->m_DPI = HIWORD(wParam);
 
@@ -499,11 +514,11 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 			::SendMessage(pThis->m_hwndList, LB_SETHORIZONTALEXTENT, pThis->m_ItemWidth, 0);
 
 			::SetWindowPos(
-				hwnd, NULL,
+				hwnd, nullptr,
 				prc->left, prc->top,
 				prc->right - prc->left, prc->bottom - prc->top,
 				SWP_NOZORDER | SWP_NOACTIVATE);
-			::InvalidateRect(pThis->m_hwndList, NULL, TRUE);
+			::InvalidateRect(pThis->m_hwndList, nullptr, TRUE);
 		}
 		break;
 
@@ -511,7 +526,7 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 		{
 			CLogoList *pThis = GetThis(hwnd);
 
-			// ƒEƒBƒ“ƒhƒEˆÊ’u‚Ì‹L‰¯
+			// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ä½ç½®ã®è¨˜æ†¶
 			WINDOWPLACEMENT wp;
 			wp.length = sizeof (WINDOWPLACEMENT);
 			if (::GetWindowPlacement(hwnd, &wp)) {
@@ -521,18 +536,18 @@ LRESULT CALLBACK CLogoList::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lPa
 				pThis->m_WindowPosition.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
 			}
 
-			// ƒŠƒ\[ƒX‰ğ•ú
-			if (pThis->m_hfont != NULL) {
+			// ãƒªã‚½ãƒ¼ã‚¹è§£æ”¾
+			if (pThis->m_hfont != nullptr) {
 				::DeleteObject(pThis->m_hfont);
-				pThis->m_hfont = NULL;
+				pThis->m_hfont = nullptr;
 			}
-			if (pThis->m_hbrBack != NULL) {
+			if (pThis->m_hbrBack != nullptr) {
 				::DeleteObject(pThis->m_hbrBack);
-				pThis->m_hbrBack = NULL;
+				pThis->m_hbrBack = nullptr;
 			}
 
-			pThis->m_hwnd = NULL;
-			pThis->m_hwndList = NULL;
+			pThis->m_hwnd = nullptr;
+			pThis->m_hwndList = nullptr;
 			pThis->ClearServiceList();
 		}
 		return 0;
@@ -550,14 +565,14 @@ CLogoList::CServiceInfo::CServiceInfo(const TVTest::ChannelInfo &ChInfo)
 	m_NetworkID = ChInfo.NetworkID;
 	m_ServiceID = ChInfo.ServiceID;
 	for (int i = 0; i < 6; i++)
-		m_hbmLogo[i] = NULL;
+		m_hbmLogo[i] = nullptr;
 }
 
 
 CLogoList::CServiceInfo::~CServiceInfo()
 {
 	for (int i = 0; i < 6; i++) {
-		if (m_hbmLogo[i] != NULL)
+		if (m_hbmLogo[i] != nullptr)
 			::DeleteObject(m_hbmLogo[i]);
 	}
 }
@@ -565,8 +580,8 @@ CLogoList::CServiceInfo::~CServiceInfo()
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
-TVTest::CTVTestPlugin *CreatePluginClass()
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CLogoList;
 }

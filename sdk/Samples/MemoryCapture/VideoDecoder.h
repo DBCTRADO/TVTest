@@ -4,23 +4,23 @@
 #include "ITVTestVideoDecoder.h"
 
 
-// ‰f‘œƒfƒR[ƒ_[ƒNƒ‰ƒX
+// æ˜ åƒãƒ‡ã‚³ãƒ¼ãƒ€ãƒ¼ã‚¯ãƒ©ã‚¹
 class CVideoDecoder
 	: protected ITVTestVideoDecoderFrameCapture
 {
 public:
-	// ƒCƒ“ƒ^[ƒŒ[ƒX‰ğœ•û–@(TVTVIDEODEC_DeinterlaceMethod ‚Æ“¯‚¶)
-	enum DeinterlaceMethod
+	// ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ¬ãƒ¼ã‚¹è§£é™¤æ–¹æ³•(TVTVIDEODEC_DeinterlaceMethod ã¨åŒã˜)
+	enum class DeinterlaceMethod
 	{
-		Deinterlace_Weave,
-		Deinterlace_Blend,
-		Deinterlace_Bob,
-		Deinterlace_ELA,
-		Deinterlace_Yadif,
-		Deinterlace_Yadif_Bob
+		Weave,
+		Blend,
+		Bob,
+		ELA,
+		Yadif,
+		Yadif_Bob,
 	};
 
-	// ƒtƒŒ[ƒ€‚Ìƒtƒ‰ƒO(TVTVIDEODEC_FRAME_* ‚Æ“¯‚¶)
+	// ãƒ•ãƒ¬ãƒ¼ãƒ ã®ãƒ•ãƒ©ã‚°(TVTVIDEODEC_FRAME_* ã¨åŒã˜)
 	enum {
 		FrameFlag_TopFieldFirst    = 0x00000001,
 		FrameFlag_RepeatFirstField = 0x00000002,
@@ -49,7 +49,6 @@ public:
 		virtual bool OnFrame(const FrameInfo &Frame) = 0;
 	};
 
-	CVideoDecoder();
 	~CVideoDecoder();
 
 	bool Initialize();
@@ -61,12 +60,12 @@ public:
 	void SetDeinterlaceMethod(DeinterlaceMethod Deinterlace);
 
 private:
-	HMODULE m_hLib;
-	ITVTestVideoFrameDecoder *m_pDecoder;
-	CFrameCapture *m_pFrameCapture;
-	decltype(TVTestVideoDecoder_CreateInstance) *m_pCreateInstance;
-	DeinterlaceMethod m_Deinterlace;
-	LONG m_RefCount;
+	HMODULE m_hLib = nullptr;
+	ITVTestVideoFrameDecoder *m_pDecoder = nullptr;
+	CFrameCapture *m_pFrameCapture = nullptr;
+	decltype(TVTestVideoDecoder_CreateInstance) *m_pCreateInstance = nullptr;
+	DeinterlaceMethod m_Deinterlace = DeinterlaceMethod::Blend;
+	LONG m_RefCount = 1;
 
 	STDMETHOD_(ULONG, AddRef)() override;
 	STDMETHOD_(ULONG, Release)() override;

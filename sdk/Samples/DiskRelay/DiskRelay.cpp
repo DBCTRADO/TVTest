@@ -1,158 +1,161 @@
 /*
-	TVTest ƒvƒ‰ƒOƒCƒ“ƒTƒ“ƒvƒ‹
+	TVTest ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚µãƒ³ãƒ—ãƒ«
 
-	‹ó‚«ƒfƒBƒXƒN—e—Ê‚ª­‚È‚­‚È‚Á‚½‚ç•Ê‚ÌƒtƒHƒ‹ƒ_‚É˜^‰æ‚·‚é
+	ç©ºããƒ‡ã‚£ã‚¹ã‚¯å®¹é‡ãŒå°‘ãªããªã£ãŸã‚‰åˆ¥ã®ãƒ•ã‚©ãƒ«ãƒ€ã«éŒ²ç”»ã™ã‚‹
 
-	‚±‚ÌƒTƒ“ƒvƒ‹‚Å‚Íå‚ÉˆÈ‰º‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
+	ã“ã®ã‚µãƒ³ãƒ—ãƒ«ã§ã¯ä¸»ã«ä»¥ä¸‹ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
 
-	E˜^‰æ‚Ìó‹µ‚ğæ“¾‚·‚é
-	E˜^‰æƒtƒ@ƒCƒ‹‚ğ•ÏX‚·‚é
-	Eİ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
+	ãƒ»éŒ²ç”»ã®çŠ¶æ³ã‚’å–å¾—ã™ã‚‹
+	ãƒ»éŒ²ç”»ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å¤‰æ›´ã™ã‚‹
+	ãƒ»è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
 */
 
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 
 #include <windows.h>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <tchar.h>
+
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "TVTestPlugin.h"
 #include "resource.h"
 
-#pragma comment(lib,"shlwapi.lib")
-#pragma comment(lib,"shell32.lib")
+#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "shell32.lib")
 
 
-// —\”õ‚ÌƒtƒHƒ‹ƒ_‚Ì”
-#define NUM_SPARE_FOLDERS 3
-
-// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX–¼
-#define DISKRELAY_WINDOW_CLASS TEXT("TVTest DiskRelay Window")
-
-// ‹ó‚«—e—Ê‚ğŠÄ‹‚·‚éƒ^ƒCƒ}[‚Ì¯•Êq
-#define WATCH_TIMER_ID 1
-// ‹ó‚«—e—Ê‚ğŠÄ‹‚·‚éŠÔŠu(ms)
-#define WATCH_INTERVAL 2000
-
-
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹
 class CDiskRelay : public TVTest::CTVTestPlugin
 {
-	bool m_fInitialized;				// ‰Šú‰»Ï‚İ‚©?
-	TCHAR m_szIniFileName[MAX_PATH];	// INIƒtƒ@ƒCƒ‹‚ÌƒpƒX
-	TCHAR m_szSpareFolder[NUM_SPARE_FOLDERS][MAX_PATH];	// —\”õ‚ÌƒtƒHƒ‹ƒ_
-	UINT m_LowFreeSpace;				// ‹ó‚«—e—Ê‚ª­‚È‚¢‚Æ”»’è‚·‚éè‡’l
-	HWND m_hwnd;						// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
-	bool m_fRecording;					// ˜^‰æ’†‚©?
-	int m_NextFolder;					// Ÿ‚Ì˜^‰ææƒtƒHƒ‹ƒ_
+	// äºˆå‚™ã®ãƒ•ã‚©ãƒ«ãƒ€ã®æ•°
+	static constexpr int NUM_SPARE_FOLDERS = 3;
+
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹å
+	static const LPCTSTR DISKRELAY_WINDOW_CLASS;
+
+	// ç©ºãå®¹é‡ã‚’ç›£è¦–ã™ã‚‹ã‚¿ã‚¤ãƒãƒ¼ã®è­˜åˆ¥å­
+	static constexpr UINT WATCH_TIMER_ID = 1;
+	// ç©ºãå®¹é‡ã‚’ç›£è¦–ã™ã‚‹é–“éš”(ms)
+	static constexpr DWORD WATCH_INTERVAL = 2000;
+
+	bool m_fInitialized = false;                        // åˆæœŸåŒ–æ¸ˆã¿ã‹?
+	TCHAR m_szIniFileName[MAX_PATH];                    // INIãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹
+	TCHAR m_szSpareFolder[NUM_SPARE_FOLDERS][MAX_PATH]; // äºˆå‚™ã®ãƒ•ã‚©ãƒ«ãƒ€
+	UINT m_LowFreeSpace = 64;                           // ç©ºãå®¹é‡ãŒå°‘ãªã„ã¨åˆ¤å®šã™ã‚‹é–¾å€¤
+	HWND m_hwnd = nullptr;                              // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
+	bool m_fRecording = false;                          // éŒ²ç”»ä¸­ã‹?
+	int m_NextFolder = 0;                               // æ¬¡ã®éŒ²ç”»å…ˆãƒ•ã‚©ãƒ«ãƒ€
 
 	bool InitializePlugin();
 	bool CheckFreeSpace();
 	bool SettingsDialog(HWND hwndOwner);
 	void SaveSettings();
-	static LRESULT CALLBACK EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData);
-	static CDiskRelay *GetThis(HWND hwnd);
-	static LRESULT CALLBACK WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam);
-	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData);
+	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
+	static CDiskRelay * GetThis(HWND hwnd);
+	static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData);
 
 public:
 	CDiskRelay();
-	virtual bool GetPluginInfo(TVTest::PluginInfo *pInfo);
-	virtual bool Initialize();
-	virtual bool Finalize();
+	bool GetPluginInfo(TVTest::PluginInfo *pInfo) override;
+	bool Initialize() override;
+	bool Finalize() override;
 };
 
 
+const LPCTSTR CDiskRelay::DISKRELAY_WINDOW_CLASS = TEXT("TVTest DiskRelay Window");
+
+
 CDiskRelay::CDiskRelay()
-	: m_fInitialized(false)
-	, m_LowFreeSpace(64)
-	, m_hwnd(NULL)
-	, m_fRecording(false)
 {
-	for (int i=0;i<NUM_SPARE_FOLDERS;i++)
-		m_szSpareFolder[i][0]='\0';
+	for (int i = 0; i < NUM_SPARE_FOLDERS; i++)
+		m_szSpareFolder[i][0] = '\0';
 }
 
 
 bool CDiskRelay::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
-	// ƒvƒ‰ƒOƒCƒ“‚Ìî•ñ‚ğ•Ô‚·
+	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æƒ…å ±ã‚’è¿”ã™
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
 	pInfo->Flags          = TVTest::PLUGIN_FLAG_HASSETTINGS;
-	pInfo->pszPluginName  = L"—\”õ‚Ì˜^‰ææ";
+	pInfo->pszPluginName  = L"äºˆå‚™ã®éŒ²ç”»å…ˆ";
 	pInfo->pszCopyright   = L"Public Domain";
-	pInfo->pszDescription = L"‹ó‚«—e—Ê‚ª­‚È‚­‚È‚Á‚½A—\”õ‚Ì˜^‰ææ‚É˜^‰æ‚µ‚Ü‚·B";
+	pInfo->pszDescription = L"ç©ºãå®¹é‡ãŒå°‘ãªããªã£ãŸæ™‚ã€äºˆå‚™ã®éŒ²ç”»å…ˆã«éŒ²ç”»ã—ã¾ã™ã€‚";
 	return true;
 }
 
 
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 bool CDiskRelay::Initialize()
 {
-	// ‘Î‰ó‹µ‚ğƒ`ƒFƒbƒN‚·‚é
+	// å¯¾å¿œçŠ¶æ³ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹
 	TVTest::HostInfo HostInfo;
 	if (!m_pApp->GetHostInfo(&HostInfo)
-			|| HostInfo.SupportedPluginVersion<TVTEST_PLUGIN_VERSION_(0,0,10)
+			|| HostInfo.SupportedPluginVersion < TVTEST_PLUGIN_VERSION_(0, 0, 10)
 			|| !m_pApp->QueryMessage(TVTest::MESSAGE_RELAYRECORD)) {
-		m_pApp->AddLog(L"‚±‚Ìƒo[ƒWƒ‡ƒ“‚Å‚Í—˜—p‚Å‚«‚Ü‚¹‚ñB",TVTest::LOG_TYPE_ERROR);
+		m_pApp->AddLog(L"ã“ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã§ã¯åˆ©ç”¨ã§ãã¾ã›ã‚“ã€‚", TVTest::LOG_TYPE_ERROR);
 		return false;
 	}
 
-	// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”‚ğ“o˜^
-	m_pApp->SetEventCallback(EventCallback,this);
+	// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
+	m_pApp->SetEventCallback(EventCallback, this);
 
 	return true;
 }
 
 
-// ƒvƒ‰ƒOƒCƒ“‚ª—LŒø‚É‚³‚ê‚½‚Ì‰Šú‰»ˆ—
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ãŒæœ‰åŠ¹ã«ã•ã‚ŒãŸæ™‚ã®åˆæœŸåŒ–å‡¦ç†
 bool CDiskRelay::InitializePlugin()
 {
 	if (m_fInitialized)
 		return true;
 
-	// İ’è‚Ì“Ç‚İ‚İ
-	::GetModuleFileName(g_hinstDLL,m_szIniFileName,MAX_PATH);
-	::PathRenameExtension(m_szIniFileName,TEXT(".ini"));
-	for (int i=0;i<NUM_SPARE_FOLDERS;i++) {
+	// è¨­å®šã®èª­ã¿è¾¼ã¿
+	::GetModuleFileName(g_hinstDLL, m_szIniFileName, MAX_PATH);
+	::PathRenameExtension(m_szIniFileName, TEXT(".ini"));
+	for (int i = 0; i < NUM_SPARE_FOLDERS; i++) {
 		TCHAR szKey[16];
-		::wsprintf(szKey,TEXT("Folder%d"),i);
-		::GetPrivateProfileString(TEXT("Settings"),szKey,NULL,
-								  m_szSpareFolder[i],MAX_PATH,m_szIniFileName);
+		::wsprintf(szKey, TEXT("Folder%d"), i);
+		::GetPrivateProfileString(
+			TEXT("Settings"), szKey, nullptr, m_szSpareFolder[i], MAX_PATH, m_szIniFileName);
 	}
-	m_LowFreeSpace=::GetPrivateProfileInt(TEXT("Settings"),TEXT("LowFreeSpace"),
-										  m_LowFreeSpace,m_szIniFileName);
+	m_LowFreeSpace = ::GetPrivateProfileInt(
+		TEXT("Settings"), TEXT("LowFreeSpace"), m_LowFreeSpace, m_szIniFileName);
 
-	// ƒEƒBƒ“ƒhƒEƒNƒ‰ƒX‚Ì“o˜^
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ©ã‚¹ã®ç™»éŒ²
 	WNDCLASS wc;
-	wc.style=0;
-	wc.lpfnWndProc=WndProc;
-	wc.cbClsExtra=0;
-	wc.cbWndExtra=0;
-	wc.hInstance=g_hinstDLL;
-	wc.hIcon=NULL;
-	wc.hCursor=NULL;
-	wc.hbrBackground=NULL;
-	wc.lpszMenuName=NULL;
-	wc.lpszClassName=DISKRELAY_WINDOW_CLASS;
-	if (::RegisterClass(&wc)==0)
+	wc.style = 0;
+	wc.lpfnWndProc = WndProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = g_hinstDLL;
+	wc.hIcon = nullptr;
+	wc.hCursor = nullptr;
+	wc.hbrBackground = nullptr;
+	wc.lpszMenuName = nullptr;
+	wc.lpszClassName = DISKRELAY_WINDOW_CLASS;
+	if (::RegisterClass(&wc) == 0)
 		return false;
 
-	// ƒEƒBƒ“ƒhƒE‚Ìì¬
-	m_hwnd=::CreateWindowEx(0,DISKRELAY_WINDOW_CLASS,NULL,WS_POPUP,
-							0,0,0,0,HWND_MESSAGE,NULL,g_hinstDLL,this);
-	if (m_hwnd==NULL)
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä½œæˆ
+	m_hwnd = ::CreateWindowEx(
+		0, DISKRELAY_WINDOW_CLASS, nullptr, WS_POPUP,
+		0, 0, 0, 0, HWND_MESSAGE, nullptr, g_hinstDLL, this);
+	if (m_hwnd == nullptr)
 		return false;
 
-	m_fInitialized=true;
+	m_fInitialized = true;
 	return true;
 }
 
 
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 bool CDiskRelay::Finalize()
 {
-	// ƒEƒBƒ“ƒhƒE‚Ì”jŠü
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ç ´æ£„
 	if (m_hwnd)
 		::DestroyWindow(m_hwnd);
 
@@ -162,102 +165,103 @@ bool CDiskRelay::Finalize()
 
 bool CDiskRelay::CheckFreeSpace()
 {
-	if (m_NextFolder>=NUM_SPARE_FOLDERS)
+	if (m_NextFolder >= NUM_SPARE_FOLDERS)
 		return false;
 
-	// ˜^‰æ‚Ìó‹µ‚ğæ“¾‚·‚é
+	// éŒ²ç”»ã®çŠ¶æ³ã‚’å–å¾—ã™ã‚‹
 	TVTest::RecordStatusInfo RecStat;
 	TCHAR szFileName[MAX_PATH];
-	RecStat.pszFileName=szFileName;
-	RecStat.MaxFileName=MAX_PATH;
+	RecStat.pszFileName = szFileName;
+	RecStat.MaxFileName = MAX_PATH;
 	if (m_pApp->GetRecordStatus(&RecStat)
-			&& RecStat.Status==TVTest::RECORD_STATUS_RECORDING) {
-		// ‹ó‚«—e—Ê‚ğæ“¾
-		TCHAR szPath[MAX_PATH+8];
-		::lstrcpy(szPath,szFileName);
-		*::PathFindFileName(szPath)='\0';
+			&& RecStat.Status == TVTest::RECORD_STATUS_RECORDING) {
+		// ç©ºãå®¹é‡ã‚’å–å¾—
+		TCHAR szPath[MAX_PATH + 8];
+		::lstrcpy(szPath, szFileName);
+		*::PathFindFileName(szPath) = '\0';
 		ULARGE_INTEGER FreeSpace;
-		if (::GetDiskFreeSpaceEx(szPath,&FreeSpace,NULL,NULL)
-				&& FreeSpace.QuadPart<=(ULONGLONG)m_LowFreeSpace*0x100000) {
-			m_pApp->AddLog(TEXT("‹ó‚«—e—Ê‚ª­‚È‚¢‚½‚ß‘±‚«‚ğ—\”õ‚ÌƒtƒHƒ‹ƒ_‚É˜^‰æ‚µ‚Ü‚·B"),
-						   TVTest::LOG_TYPE_WARNING);
-			for (;m_NextFolder<NUM_SPARE_FOLDERS;m_NextFolder++) {
-				if (m_szSpareFolder[m_NextFolder][0]!='\0'
+		if (::GetDiskFreeSpaceEx(szPath, &FreeSpace, nullptr, nullptr)
+				&& FreeSpace.QuadPart <= (ULONGLONG)m_LowFreeSpace * 0x100000) {
+			m_pApp->AddLog(
+				TEXT("ç©ºãå®¹é‡ãŒå°‘ãªã„ãŸã‚ç¶šãã‚’äºˆå‚™ã®ãƒ•ã‚©ãƒ«ãƒ€ã«éŒ²ç”»ã—ã¾ã™ã€‚"),
+				TVTest::LOG_TYPE_WARNING);
+			for (; m_NextFolder < NUM_SPARE_FOLDERS; m_NextFolder++) {
+				if (m_szSpareFolder[m_NextFolder][0] != '\0'
 						&& ::PathIsDirectory(m_szSpareFolder[m_NextFolder])) {
-					::lstrcpy(szPath,m_szSpareFolder[m_NextFolder]);
+					::lstrcpy(szPath, m_szSpareFolder[m_NextFolder]);
 					::PathAddBackslash(szPath);
-					if (::GetDiskFreeSpaceEx(szPath,&FreeSpace,NULL,NULL)
-							&& FreeSpace.QuadPart>(ULONGLONG)m_LowFreeSpace*0x100000) {
-						::lstrcat(szPath,::PathFindFileName(szFileName));
-						::wsprintf(::PathFindExtension(szPath),TEXT(".part%d%s"),
-								   m_NextFolder+2,
-								   ::PathFindExtension(szFileName));
+					if (::GetDiskFreeSpaceEx(szPath, &FreeSpace, nullptr, nullptr)
+							&& FreeSpace.QuadPart > (ULONGLONG)m_LowFreeSpace * 0x100000) {
+						::lstrcat(szPath, ::PathFindFileName(szFileName));
+						::wsprintf(
+							::PathFindExtension(szPath), TEXT(".part%d%s"),
+							m_NextFolder + 2,
+							::PathFindExtension(szFileName));
 						if (m_pApp->RelayRecord(szPath))
 							return true;
 					}
 				}
 			}
-			m_pApp->AddLog(TEXT("‹ó‚«—e—Ê‚Ì‚ ‚éƒtƒHƒ‹ƒ_‚ª‚ ‚è‚Ü‚¹‚ñB"),
-						   TVTest::LOG_TYPE_ERROR);
+			m_pApp->AddLog(TEXT("ç©ºãå®¹é‡ã®ã‚ã‚‹ãƒ•ã‚©ãƒ«ãƒ€ãŒã‚ã‚Šã¾ã›ã‚“ã€‚"), TVTest::LOG_TYPE_ERROR);
 		}
 	}
 	return false;
 }
 
 
-// ƒCƒxƒ“ƒgƒR[ƒ‹ƒoƒbƒNŠÖ”
-// ‰½‚©ƒCƒxƒ“ƒg‚ª‹N‚«‚é‚ÆŒÄ‚Î‚ê‚é
-LRESULT CALLBACK CDiskRelay::EventCallback(UINT Event,LPARAM lParam1,LPARAM lParam2,void *pClientData)
+// ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°
+// ä½•ã‹ã‚¤ãƒ™ãƒ³ãƒˆãŒèµ·ãã‚‹ã¨å‘¼ã°ã‚Œã‚‹
+LRESULT CALLBACK CDiskRelay::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CDiskRelay *pThis=static_cast<CDiskRelay*>(pClientData);
+	CDiskRelay *pThis = static_cast<CDiskRelay *>(pClientData);
 
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
-		// ƒvƒ‰ƒOƒCƒ“‚Ì—LŒøó‘Ô‚ª•Ï‰»‚µ‚½
-		if (lParam1!=0) {
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®æœ‰åŠ¹çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
+		if (lParam1 != 0) {
 			if (!pThis->InitializePlugin())
 				return FALSE;
 
-			// ‚Ü‚¾ƒtƒHƒ‹ƒ_‚ªİ’è‚³‚ê‚Ä‚¢‚È‚¯‚ê‚Îİ’èƒ_ƒCƒAƒƒO‚ğ•\¦‚·‚é
+			// ã¾ã ãƒ•ã‚©ãƒ«ãƒ€ãŒè¨­å®šã•ã‚Œã¦ã„ãªã‘ã‚Œã°è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹
 			int i;
-			for (i=0;i<NUM_SPARE_FOLDERS;i++) {
-				if (pThis->m_szSpareFolder[i][0]!='\0')
+			for (i = 0; i < NUM_SPARE_FOLDERS; i++) {
+				if (pThis->m_szSpareFolder[i][0] != '\0')
 					break;
 			}
-			if (i==NUM_SPARE_FOLDERS) {
+			if (i == NUM_SPARE_FOLDERS) {
 				if (!pThis->SettingsDialog(pThis->m_pApp->GetAppWindow()))
 					return FALSE;
 			}
 
 			if (pThis->m_fRecording)
-				::SetTimer(pThis->m_hwnd,WATCH_TIMER_ID,WATCH_INTERVAL,NULL);
+				::SetTimer(pThis->m_hwnd, WATCH_TIMER_ID, WATCH_INTERVAL, nullptr);
 		} else {
-			if (pThis->m_hwnd!=NULL && pThis->m_fRecording)
-				::KillTimer(pThis->m_hwnd,WATCH_TIMER_ID);
+			if (pThis->m_hwnd != nullptr && pThis->m_fRecording)
+				::KillTimer(pThis->m_hwnd, WATCH_TIMER_ID);
 		}
 		return TRUE;
 
 	case TVTest::EVENT_PLUGINSETTINGS:
-		// ƒvƒ‰ƒOƒCƒ“‚Ìİ’è‚ğs‚¤
+		// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã®è¨­å®šã‚’è¡Œã†
 		pThis->InitializePlugin();
 		return pThis->SettingsDialog(reinterpret_cast<HWND>(lParam1));
 
 	case TVTest::EVENT_RECORDSTATUSCHANGE:
-		// ˜^‰æó‘Ô‚ª•Ï‰»‚µ‚½
-		if (lParam1!=TVTest::RECORD_STATUS_NOTRECORDING) {
+		// éŒ²ç”»çŠ¶æ…‹ãŒå¤‰åŒ–ã—ãŸ
+		if (lParam1 != TVTest::RECORD_STATUS_NOTRECORDING) {
 			if (!pThis->m_fRecording) {
-				pThis->m_fRecording=true;
-				pThis->m_NextFolder=0;
+				pThis->m_fRecording = true;
+				pThis->m_NextFolder = 0;
 				if (pThis->m_pApp->IsPluginEnabled()) {
 					pThis->CheckFreeSpace();
-					::SetTimer(pThis->m_hwnd,WATCH_TIMER_ID,WATCH_INTERVAL,NULL);
+					::SetTimer(pThis->m_hwnd, WATCH_TIMER_ID, WATCH_INTERVAL, nullptr);
 				}
 			}
 		} else {
 			if (pThis->m_fRecording) {
-				pThis->m_fRecording=false;
-				if (pThis->m_hwnd!=NULL)
-					::KillTimer(pThis->m_hwnd,WATCH_TIMER_ID);
+				pThis->m_fRecording = false;
+				if (pThis->m_hwnd != nullptr)
+					::KillTimer(pThis->m_hwnd, WATCH_TIMER_ID);
 			}
 		}
 		return TRUE;
@@ -267,7 +271,7 @@ LRESULT CALLBACK CDiskRelay::EventCallback(UINT Event,LPARAM lParam1,LPARAM lPar
 }
 
 
-// İ’èƒ_ƒCƒAƒƒO‚Ì•\¦
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®è¡¨ç¤º
 bool CDiskRelay::SettingsDialog(HWND hwndOwner)
 {
 	TVTest::ShowDialogInfo Info;
@@ -283,69 +287,68 @@ bool CDiskRelay::SettingsDialog(HWND hwndOwner)
 }
 
 
-// İ’è‚Ì•Û‘¶
+// è¨­å®šã®ä¿å­˜
 void CDiskRelay::SaveSettings()
 {
-	for (int i=0;i<NUM_SPARE_FOLDERS;i++) {
+	for (int i = 0; i < NUM_SPARE_FOLDERS; i++) {
 		TCHAR szKey[16];
-		::wsprintf(szKey,TEXT("Folder%d"),i);
-		::WritePrivateProfileString(TEXT("Settings"),szKey,m_szSpareFolder[i],m_szIniFileName);
+		::wsprintf(szKey, TEXT("Folder%d"), i);
+		::WritePrivateProfileString(TEXT("Settings"), szKey, m_szSpareFolder[i], m_szIniFileName);
 	}
 	TCHAR szValue[16];
-	::wsprintf(szValue,TEXT("%u"),m_LowFreeSpace);
-	::WritePrivateProfileString(TEXT("Settings"),TEXT("LowFreeSpace"),szValue,m_szIniFileName);
+	::wsprintf(szValue, TEXT("%u"), m_LowFreeSpace);
+	::WritePrivateProfileString(TEXT("Settings"), TEXT("LowFreeSpace"), szValue, m_szIniFileName);
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹‚©‚çthis‚ğæ“¾‚·‚é
-CDiskRelay *CDiskRelay::GetThis(HWND hwnd)
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«ã‹ã‚‰thisã‚’å–å¾—ã™ã‚‹
+CDiskRelay * CDiskRelay::GetThis(HWND hwnd)
 {
-	return reinterpret_cast<CDiskRelay*>(::GetWindowLongPtr(hwnd,GWLP_USERDATA));
+	return reinterpret_cast<CDiskRelay *>(::GetWindowLongPtr(hwnd, GWLP_USERDATA));
 }
 
 
-// ƒEƒBƒ“ƒhƒEƒvƒƒV[ƒWƒƒ
-// ’P‚Éƒ^ƒCƒ}[‚ğˆ—‚·‚é‚¾‚¯
-LRESULT CALLBACK CDiskRelay::WndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
+// å˜ã«ã‚¿ã‚¤ãƒãƒ¼ã‚’å‡¦ç†ã™ã‚‹ã ã‘
+LRESULT CALLBACK CDiskRelay::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 	case WM_CREATE:
 		{
-			LPCREATESTRUCT pcs=reinterpret_cast<LPCREATESTRUCT>(lParam);
-			CDiskRelay *pThis=static_cast<CDiskRelay*>(pcs->lpCreateParams);
+			LPCREATESTRUCT pcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
+			CDiskRelay *pThis = static_cast<CDiskRelay *>(pcs->lpCreateParams);
 
-			::SetWindowLongPtr(hwnd,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(pThis));
+			::SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
 		}
 		return TRUE;
 
 	case WM_TIMER:
 		{
-			CDiskRelay *pThis=GetThis(hwnd);
+			CDiskRelay *pThis = GetThis(hwnd);
 
 			pThis->CheckFreeSpace();
 		}
 		return 0;
 	}
 
-	return ::DefWindowProc(hwnd,uMsg,wParam,lParam);
+	return ::DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 
-int CALLBACK BrowseFolderCallback(HWND hwnd,UINT uMsg,LPARAM lpData,LPARAM lParam)
+int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lpData, LPARAM lParam)
 {
 	switch (uMsg) {
 	case BFFM_INITIALIZED:
 		{
-			// ƒtƒHƒ‹ƒ_QÆ‚Ì‰ŠúƒtƒHƒ‹ƒ_‚ğİ’è‚·‚é
-			LPCTSTR pszDirectory=reinterpret_cast<LPCTSTR>(lParam);
+			// ãƒ•ã‚©ãƒ«ãƒ€å‚ç…§æ™‚ã®åˆæœŸãƒ•ã‚©ãƒ«ãƒ€ã‚’è¨­å®šã™ã‚‹
+			LPCTSTR pszDirectory = reinterpret_cast<LPCTSTR>(lParam);
 
-			if (pszDirectory[0]!='\0') {
+			if (pszDirectory[0] != '\0') {
 				TCHAR szFolder[MAX_PATH];
 
-				lstrcpy(szFolder,pszDirectory);
+				lstrcpy(szFolder, pszDirectory);
 				PathRemoveBackslash(szFolder);
-				SendMessage(hwnd,BFFM_SETSELECTION,
-							TRUE,reinterpret_cast<LPARAM>(szFolder));
+				SendMessage(hwnd, BFFM_SETSELECTION, TRUE, reinterpret_cast<LPARAM>(szFolder));
 			}
 		}
 		break;
@@ -354,49 +357,49 @@ int CALLBACK BrowseFolderCallback(HWND hwnd,UINT uMsg,LPARAM lpData,LPARAM lPara
 	return 0;
 }
 
-// ƒtƒHƒ‹ƒ_QÆƒ_ƒCƒAƒƒO
-bool BrowseFolderDialog(HWND hwndOwner,LPTSTR pszDirectory,LPCTSTR pszTitle)
+// ãƒ•ã‚©ãƒ«ãƒ€å‚ç…§ãƒ€ã‚¤ã‚¢ãƒ­ã‚°
+bool BrowseFolderDialog(HWND hwndOwner, LPTSTR pszDirectory, LPCTSTR pszTitle)
 {
 	BROWSEINFO bi;
 	PIDLIST_ABSOLUTE pidl;
 	BOOL fRet;
 
-	bi.hwndOwner=hwndOwner;
-	bi.pidlRoot=NULL;
-	bi.pszDisplayName=pszDirectory;
-	bi.lpszTitle=pszTitle;
-	// BIF_NEWDIALOGSTYLE ‚ğg‚Á‚Ä‚é‚ªACoInitialize ‚Í TVTest –{‘Ì‚ÅŒÄ‚ñ‚Å‚¢‚é‚Ì‚Å•s—v
-	bi.ulFlags=BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-	bi.lpfn=BrowseFolderCallback;
-	bi.lParam=reinterpret_cast<LPARAM>(pszDirectory);
-	pidl=SHBrowseForFolder(&bi);
-	if (pidl==NULL)
+	bi.hwndOwner = hwndOwner;
+	bi.pidlRoot = nullptr;
+	bi.pszDisplayName = pszDirectory;
+	bi.lpszTitle = pszTitle;
+	// BIF_NEWDIALOGSTYLE ã‚’ä½¿ã£ã¦ã‚‹ãŒã€CoInitialize ã¯ TVTest æœ¬ä½“ã§å‘¼ã‚“ã§ã„ã‚‹ã®ã§ä¸è¦
+	bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+	bi.lpfn = BrowseFolderCallback;
+	bi.lParam = reinterpret_cast<LPARAM>(pszDirectory);
+	pidl = SHBrowseForFolder(&bi);
+	if (pidl == nullptr)
 		return false;
-	fRet=SHGetPathFromIDList(pidl,pszDirectory);
+	fRet = SHGetPathFromIDList(pidl, pszDirectory);
 	CoTaskMemFree(pidl);
-	return fRet==TRUE;
+	return fRet != FALSE;
 }
 
 
-// İ’èƒ_ƒCƒAƒƒOƒvƒƒV[ƒWƒƒ
-INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam,void *pClientData)
+// è¨­å®šãƒ€ã‚¤ã‚¢ãƒ­ã‚°ãƒ—ãƒ­ã‚·ãƒ¼ã‚¸ãƒ£
+INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam, void *pClientData)
 {
 	switch (uMsg) {
 	case WM_INITDIALOG:
 		{
-			CDiskRelay *pThis=static_cast<CDiskRelay*>(pClientData);
+			CDiskRelay *pThis = static_cast<CDiskRelay *>(pClientData);
 
-			// ƒfƒtƒHƒ‹ƒg‚Ì˜^‰æƒtƒHƒ‹ƒ_‚ğæ“¾‚·‚é
+			// ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®éŒ²ç”»ãƒ•ã‚©ãƒ«ãƒ€ã‚’å–å¾—ã™ã‚‹
 			TCHAR szDefaultFolder[MAX_PATH];
-			if (pThis->m_pApp->GetSetting(L"RecordFolder",szDefaultFolder,MAX_PATH)>0)
-				::SetDlgItemText(hDlg,IDC_SETTINGS_DEFAULTFOLDER,szDefaultFolder);
+			if (pThis->m_pApp->GetSetting(L"RecordFolder", szDefaultFolder, MAX_PATH) > 0)
+				::SetDlgItemText(hDlg, IDC_SETTINGS_DEFAULTFOLDER, szDefaultFolder);
 
-			for (int i=0;i<NUM_SPARE_FOLDERS;i++) {
-				::SendDlgItemMessage(hDlg,IDC_SETTINGS_FOLDER1+i*3,EM_LIMITTEXT,MAX_PATH-1,0);
-				::SetDlgItemText(hDlg,IDC_SETTINGS_FOLDER1+i*3,pThis->m_szSpareFolder[i]);
+			for (int i = 0; i < NUM_SPARE_FOLDERS; i++) {
+				::SendDlgItemMessage(hDlg, IDC_SETTINGS_FOLDER1 + i * 3, EM_LIMITTEXT, MAX_PATH - 1, 0);
+				::SetDlgItemText(hDlg, IDC_SETTINGS_FOLDER1 + i * 3, pThis->m_szSpareFolder[i]);
 			}
 
-			::SetDlgItemInt(hDlg,IDC_SETTINGS_LOWSPACE,pThis->m_LowFreeSpace,FALSE);
+			::SetDlgItemInt(hDlg, IDC_SETTINGS_LOWSPACE, pThis->m_LowFreeSpace, FALSE);
 		}
 		return TRUE;
 
@@ -406,42 +409,35 @@ INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 		case IDC_SETTINGS_FOLDER2_BROWSE:
 		case IDC_SETTINGS_FOLDER3_BROWSE:
 			{
-				int EditID=LOWORD(wParam)-1;
+				int EditID = LOWORD(wParam) - 1;
 				TCHAR szFolder[MAX_PATH];
 
-				::GetDlgItemText(hDlg,EditID,szFolder,MAX_PATH);
-				if (BrowseFolderDialog(hDlg,szFolder,TEXT("—\”õ‚ÌƒtƒHƒ‹ƒ_‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢"))) {
-					::SetDlgItemText(hDlg,EditID,szFolder);
+				::GetDlgItemText(hDlg, EditID, szFolder, MAX_PATH);
+				if (BrowseFolderDialog(hDlg, szFolder, TEXT("äºˆå‚™ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’é¸æŠã—ã¦ãã ã•ã„"))) {
+					::SetDlgItemText(hDlg, EditID, szFolder);
 				}
 			}
 			return TRUE;
 
 		case IDOK:
 			{
-				CDiskRelay *pThis=static_cast<CDiskRelay*>(pClientData);
+				CDiskRelay *pThis = static_cast<CDiskRelay *>(pClientData);
 
-				// ƒtƒHƒ‹ƒ_‚ª‚ ‚é‚©ƒ`ƒFƒbƒN‚·‚é
-				for (int i=0;i<NUM_SPARE_FOLDERS;i++) {
+				// ãƒ•ã‚©ãƒ«ãƒ€ãŒã‚ã‚‹ã‹ãƒã‚§ãƒƒã‚¯ã™ã‚‹
+				for (int i = 0; i < NUM_SPARE_FOLDERS; i++) {
 					TCHAR szFolder[MAX_PATH];
-					::GetDlgItemText(hDlg,IDC_SETTINGS_FOLDER1+i*3,szFolder,MAX_PATH);
-					if (szFolder[0]!='\0' && !::PathIsDirectory(szFolder)) {
-						TCHAR szMessage[MAX_PATH+80];
-						::wsprintf(szMessage,
-								   TEXT("ƒtƒHƒ‹ƒ_ \"%s\" ‚ª‚ ‚è‚Ü‚¹‚ñB\nì¬‚µ‚Ü‚·‚©?"),
-								   szFolder);
-						switch (::MessageBox(hDlg,szMessage,
-											 TEXT("ƒtƒHƒ‹ƒ_ì¬‚ÌŠm”F"),
-											 MB_YESNOCANCEL | MB_ICONQUESTION)) {
+					::GetDlgItemText(hDlg, IDC_SETTINGS_FOLDER1 + i * 3, szFolder, MAX_PATH);
+					if (szFolder[0] != '\0' && !::PathIsDirectory(szFolder)) {
+						TCHAR szMessage[MAX_PATH + 80];
+						::wsprintf(szMessage, TEXT("ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒã‚ã‚Šã¾ã›ã‚“ã€‚\nä½œæˆã—ã¾ã™ã‹?"), szFolder);
+						switch (::MessageBox(hDlg, szMessage, TEXT("ãƒ•ã‚©ãƒ«ãƒ€ä½œæˆã®ç¢ºèª"), MB_YESNOCANCEL | MB_ICONQUESTION)) {
 						case IDYES:
 							{
-								int Result=::SHCreateDirectoryEx(hDlg,szFolder,NULL);
-								if (Result!=ERROR_SUCCESS
-										&& Result!=ERROR_ALREADY_EXISTS) {
-									::wsprintf(szMessage,
-											   TEXT("ƒtƒHƒ‹ƒ_ \"%s\" ‚ªì¬‚Å‚«‚Ü‚¹‚ñB"),
-											   szFolder);
-									::MessageBox(hDlg,szMessage,NULL,
-												 MB_OK | MB_ICONEXCLAMATION);
+								int Result = ::SHCreateDirectoryEx(hDlg, szFolder, nullptr);
+								if (Result != ERROR_SUCCESS
+										&& Result != ERROR_ALREADY_EXISTS) {
+									::wsprintf(szMessage, TEXT("ãƒ•ã‚©ãƒ«ãƒ€ \"%s\" ãŒä½œæˆã§ãã¾ã›ã‚“ã€‚"), szFolder);
+									::MessageBox(hDlg, szMessage, nullptr, MB_OK | MB_ICONEXCLAMATION);
 									return TRUE;
 								}
 							}
@@ -454,18 +450,17 @@ INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 					}
 				}
 
-				for (int i=0;i<NUM_SPARE_FOLDERS;i++) {
-					::GetDlgItemText(hDlg,IDC_SETTINGS_FOLDER1+i*3,
-									 pThis->m_szSpareFolder[i],MAX_PATH);
+				for (int i = 0; i < NUM_SPARE_FOLDERS; i++) {
+					::GetDlgItemText(hDlg, IDC_SETTINGS_FOLDER1 + i * 3, pThis->m_szSpareFolder[i], MAX_PATH);
 				}
 
-				pThis->m_LowFreeSpace=
-					::GetDlgItemInt(hDlg,IDC_SETTINGS_LOWSPACE,NULL,FALSE);
+				pThis->m_LowFreeSpace =
+					::GetDlgItemInt(hDlg, IDC_SETTINGS_LOWSPACE, nullptr, FALSE);
 
 				pThis->SaveSettings();
 			}
 		case IDCANCEL:
-			::EndDialog(hDlg,LOWORD(wParam));
+			::EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
 		return TRUE;
@@ -477,8 +472,8 @@ INT_PTR CALLBACK CDiskRelay::SettingsDlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,L
 
 
 
-// ƒvƒ‰ƒOƒCƒ“ƒNƒ‰ƒX‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
-TVTest::CTVTestPlugin *CreatePluginClass()
+// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ã‚¯ãƒ©ã‚¹ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
+TVTest::CTVTestPlugin * CreatePluginClass()
 {
 	return new CDiskRelay;
 }

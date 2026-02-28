@@ -1,7 +1,6 @@
 #!/bin/awk -f
+
 # scripts/options.awk - library build configuration control
-#
-# last changed in libpng version 1.6.11 - June 5, 2014
 #
 # Copyright (c) 1998-2014 Glenn Randers-Pehrson
 #
@@ -40,7 +39,7 @@ BEGIN{
    # the lines, for example by inserting spaces around operators, and all
    # C preprocessors notice lines that start with '#', most remove comments.
    # The technique adopted here is to make the final output lines into
-   # C strings (enclosed in double quotes), preceeded by PNG_DFN.  As a
+   # C strings (enclosed in double quotes), preceded by PNG_DFN.  As a
    # consequence the output cannot contain a 'raw' double quote - instead put
    # @' in, this will be replaced by a single " afterward.  See the parser
    # script dfn.awk for more capabilities (not required here).  Note that if
@@ -243,7 +242,7 @@ $1 == "file" && NF >= 2{
 
 # option NAME ( (requires|enables|if) NAME* | on | off | disabled |
 #                sets SETTING VALUE+ )*
-#     
+#
 #   Declares an option 'NAME' and describes its default setting (disabled)
 #   and its relationship to other options.  The option is disabled
 #   unless *all* the options listed after 'requires' are set and at
@@ -336,7 +335,7 @@ $1 == "option" && NF >= 2{
 
 # chunk NAME [requires OPT] [enables LIST] [on|off|disabled]
 #   Expands to the 'option' settings appropriate to the reading and
-#   writing of an ancilliary PNG chunk 'NAME':
+#   writing of an ancillary PNG chunk 'NAME':
 #
 #   option READ_NAME requires READ_ANCILLARY_CHUNKS [READ_OPT]
 #   option READ_NAME enables NAME LIST
@@ -805,8 +804,8 @@ END{
    print comment, "end of options", cend >out
 
    # Do the 'setting' values second, the algorithm the standard
-   # tree walk (O(1)) done in an O(2) while/for loop; interations
-   # settings x depth, outputing the deepest required macros
+   # tree walk (O(1)) done in an O(2) while/for loop; iterations
+   # settings x depth, outputting the deepest required macros
    # first.
    print "" >out
    print "/* SETTINGS */" >out

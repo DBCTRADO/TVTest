@@ -1,3 +1,23 @@
+/*
+  TVTest
+  Copyright(c) 2008-2020 DBCTRADO
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #ifndef TVTEST_CHANNEL_INPUT_H
 #define TVTEST_CHANNEL_INPUT_H
 
@@ -11,25 +31,23 @@ namespace TVTest
 	class CChannelInputOptions
 	{
 	public:
-		enum KeyInputModeType {
-			KEYINPUTMODE_DISABLED,
-			KEYINPUTMODE_SINGLEKEY,
-			KEYINPUTMODE_MULTIPLEKEYS
+		enum class KeyInputModeType {
+			Disabled,
+			SingleKey,
+			MultipleKeys,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
-		static const KeyInputModeType KEYINPUTMODE_FIRST = KEYINPUTMODE_DISABLED;
-		static const KeyInputModeType KEYINPUTMODE_LAST  = KEYINPUTMODE_MULTIPLEKEYS;
 
-		enum KeyType {
-			KEY_DIGIT,
-			KEY_NUMPAD,
-			KEY_FUNCTION
+		enum class KeyType {
+			Digit,
+			NumPad,
+			Function,
+			TVTEST_ENUM_CLASS_TRAILER
 		};
-		static const KeyType KEY_FIRST = KEY_DIGIT;
-		static const KeyType KEY_LAST  = KEY_FUNCTION;
 
-		KeyInputModeType KeyInputMode[KEY_LAST+1];
-		unsigned int KeyTimeout;
-		bool fKeyTimeoutCancel;
+		KeyInputModeType KeyInputMode[static_cast<size_t>(KeyType::Trailer_)];
+		unsigned int KeyTimeout = 2000;
+		bool fKeyTimeoutCancel = false;
 
 		CChannelInputOptions();
 	};
@@ -37,15 +55,16 @@ namespace TVTest
 	class CChannelInput
 	{
 	public:
-		enum KeyDownResult {
-			KEYDOWN_NOTPROCESSED,
-			KEYDOWN_BEGIN,
-			KEYDOWN_COMPLETED,
-			KEYDOWN_CANCELLED,
-			KEYDOWN_CONTINUE
+		enum class KeyDownResult {
+			NotProcessed,
+			Begin,
+			Completed,
+			Cancelled,
+			Continue,
 		};
 
 		CChannelInput(const CChannelInputOptions &Options);
+
 		bool BeginInput(int MaxDigits);
 		void EndInput();
 		bool IsInputting() const { return m_fInputting; }
@@ -57,13 +76,14 @@ namespace TVTest
 
 	private:
 		const CChannelInputOptions &m_Options;
-		bool m_fInputting;
-		int m_MaxDigits;
-		int m_CurDigits;
-		int m_Number;
+		bool m_fInputting = false;
+		int m_MaxDigits = 0;
+		int m_CurDigits = 0;
+		int m_Number = 0;
 	};
 
-	class CChannelInputOptionsDialog : public CBasicDialog
+	class CChannelInputOptionsDialog
+		: public CBasicDialog
 	{
 	public:
 		CChannelInputOptionsDialog(CChannelInputOptions &Options);
@@ -73,11 +93,11 @@ namespace TVTest
 
 	private:
 	// CBasicDialog
-		INT_PTR DlgProc(HWND hDlg,UINT uMsg,WPARAM wParam,LPARAM lParam) override;
+		INT_PTR DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 
 		CChannelInputOptions &m_Options;
 	};
 
-}	// namespace TVTest
+} // namespace TVTest
 
 #endif

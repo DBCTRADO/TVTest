@@ -1,5 +1,6 @@
 [ColorScheme]
 Name=Plastic
+Base=light
 StatusBack=#ffffff
 StatusBack2=#aaaaaa
 StatusBackGradient=glossy
@@ -82,12 +83,16 @@ TitleBarHighlightBack1=#ccffe0
 TitleBarHighlightBack2=#00bf4c
 TitleBarHighlightBackGradient=glossy
 TitleBarHighlightIcon=#555555
+EventInfoPopupBack=#666666
+EventInfoPopupText=#dddddd
+EventInfoPopupEventTitle=#ffffff
 ProgramGuideBack=#ffffff
 ;ProgramGuideText=#000000
 ProgramGuideChannelBack=#ffffff
 ProgramGuideChannelBack2=#aaaaaa
 ProgramGuideChannelBackGradient=glossy
 ProgramGuideChannelText=#666666
+ProgramGuideChannelHighlightText=#333333
 ProgramGuideCurChannelBack=#ccffe0
 ProgramGuideCurChannelBack2=#00bf4c
 ProgramGuideCurChannelBackGradient=glossy
