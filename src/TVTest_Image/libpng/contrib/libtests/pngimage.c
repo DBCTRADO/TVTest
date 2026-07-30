@@ -1,7 +1,6 @@
-
 /* pngimage.c
  *
- * Copyright (c) 2021 Cosmin Truta
+ * Copyright (c) 2021-2025 Cosmin Truta
  * Copyright (c) 2015,2016 John Cunningham Bowler
  *
  * This code is released under the libpng license.
@@ -40,7 +39,7 @@
 /* 1.6.1 added support for the configure test harness, which uses 77 to indicate
  * a skipped test, in earlier versions we need to succeed on a skipped test, so:
  */
-#if PNG_LIBPNG_VER >= 10601 && defined(HAVE_CONFIG_H)
+#if defined(HAVE_CONFIG_H)
 #  define SKIP 77
 #else
 #  define SKIP 0
@@ -374,11 +373,11 @@ struct buffer_list
 
 struct buffer
 {
-   struct buffer_list  *last;       /* last buffer in use */
-   size_t               end_count;  /* bytes in the last buffer */
-   struct buffer_list  *current;    /* current buffer being read */
-   size_t               read_count; /* count of bytes read from current */
-   struct buffer_list   first;      /* the very first buffer */
+   struct buffer_list *last;       /* last buffer in use */
+   size_t              end_count;  /* bytes in the last buffer */
+   struct buffer_list *current;    /* current buffer being read */
+   size_t              read_count; /* count of bytes read from current */
+   struct buffer_list  first;      /* the very first buffer */
 };
 
 static void
@@ -543,6 +542,7 @@ typedef enum
 struct display
 {
    jmp_buf        error_return;      /* Where to go to on error */
+   error_level    error_code;        /* Set before longjmp */
 
    const char    *filename;          /* The name of the original file */
    const char    *operation;         /* Operation being performed */
@@ -763,7 +763,10 @@ display_log(struct display *dp, error_level level, const char *fmt, ...)
 
    /* Errors cause this routine to exit to the fail code */
    if (level > APP_FAIL || (level > ERRORS && !(dp->options & CONTINUE)))
+   {
+      dp->error_code = level;
       longjmp(dp->error_return, level);
+    }
 }
 
 /* error handler callbacks for libpng */
@@ -868,7 +871,7 @@ read_png(struct display *dp, struct buffer *bp, const char *operation,
    int transforms)
 {
    png_structp pp;
-   png_infop   ip;
+   png_infop ip;
 
    /* This cleans out any previous read and sets operation and transforms to
     * empty.
@@ -928,7 +931,7 @@ update_display(struct display *dp)
     */
 {
    png_structp pp;
-   png_infop   ip;
+   png_infop ip;
 
    /* Now perform the initial read with a 0 transform. */
    read_png(dp, &dp->original_file, "original read", 0/*no transform*/);
@@ -1019,7 +1022,12 @@ compare_read(struct display *dp, int applied_transforms)
    C(height);
    C(bit_depth);
    C(color_type);
-   C(interlace_method);
+#  ifdef PNG_WRITE_INTERLACING_SUPPORTED
+      /* If write interlace has been disabled, the PNG file is still
+       * written correctly, but as a regular (not-interlaced) PNG.
+       */
+      C(interlace_method);
+#  endif
    C(compression_method);
    C(filter_method);
 
@@ -1566,18 +1574,19 @@ static int
 do_test(struct display *dp, const char *file)
    /* Exists solely to isolate the setjmp clobbers */
 {
-   int ret = setjmp(dp->error_return);
+   dp->error_code = VERBOSE; /* The "lowest" level */
 
-   if (ret == 0)
+   if (setjmp(dp->error_return) == 0)
    {
       test_one_file(dp, file);
       return 0;
    }
 
-   else if (ret < ERRORS) /* shouldn't longjmp on warnings */
-      display_log(dp, INTERNAL_ERROR, "unexpected return code %d", ret);
+   else if (dp->error_code < ERRORS) /* shouldn't longjmp on warnings */
+      display_log(dp, INTERNAL_ERROR, "unexpected return code %d",
+                  dp->error_code);
 
-   return ret;
+   return dp->error_code;
 }
 
 int
@@ -1677,7 +1686,11 @@ main(int argc, char **argv)
             int ret = do_test(&d, argv[i]);
 
             if (ret > QUIET) /* abort on user or internal error */
+            {
+               display_clean(&d);
+               display_destroy(&d);
                return 99;
+            }
          }
 
          /* Here on any return, including failures, except user/internal issues
