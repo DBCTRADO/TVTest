@@ -482,10 +482,13 @@ bool CRichEditLinkHandler::OnMsgFilter(MSGFILTER *pMsgFilter)
 		return true;
 
 	case WM_MOUSEMOVE:
-		m_ClickPos.x = -1;
-		m_ClickPos.y = -1;
 		{
 			const POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
+
+			if (m_ClickPos != pt) {
+				m_ClickPos.x = -1;
+				m_ClickPos.y = -1;
+			}
 
 			if (CRichEditUtil::LinkHitTest(m_hwndEdit, pt, m_LinkList) >= 0) {
 				m_fCursorOverLink = true;
