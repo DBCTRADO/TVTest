@@ -480,7 +480,6 @@ bool CRichEditLinkHandler::OnMsgFilter(MSGFILTER *pMsgFilter)
 		m_ClickPos.x = GET_X_LPARAM(pMsgFilter->lParam);
 		m_ClickPos.y = GET_Y_LPARAM(pMsgFilter->lParam);
 		return true;
-		break;
 
 	case WM_MOUSEMOVE:
 		m_ClickPos.x = -1;
