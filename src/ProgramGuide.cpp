@@ -2634,7 +2634,7 @@ void CProgramGuide::Scroll(int XScroll, int YScroll)
 
 void CProgramGuide::SetScrollPos(const POINT &Pos)
 {
-	if (Pos.x != m_ScrollPos.x || Pos.y != m_ScrollPos.y)
+	if (Pos != m_ScrollPos)
 		Scroll(Pos.x - m_ScrollPos.x, Pos.y - m_ScrollPos.y);
 }
 

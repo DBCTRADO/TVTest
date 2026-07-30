@@ -2215,7 +2215,7 @@ void CMainWindow::OnMouseMove(int x, int y)
 	if (m_fDragMoveTrigger) {
 		POINT pt = {x, y};
 		::ClientToScreen(m_hwnd, &pt);
-		if (pt.x != m_ptDragStartPos.x || pt.y != m_ptDragStartPos.y) {
+		if (pt != m_ptDragStartPos) {
 			m_fDragMoveTrigger = false;
 			m_fDragging = true;
 			::ReleaseCapture();

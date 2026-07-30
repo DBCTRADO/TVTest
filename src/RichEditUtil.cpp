@@ -503,7 +503,7 @@ bool CRichEditLinkHandler::OnMsgFilter(MSGFILTER *pMsgFilter)
 		{
 			const POINT pt = {GET_X_LPARAM(pMsgFilter->lParam), GET_Y_LPARAM(pMsgFilter->lParam)};
 
-			if (m_ClickPos.x == pt.x && m_ClickPos.y == pt.y)
+			if (m_ClickPos == pt)
 				CRichEditUtil::HandleLinkClick(m_hwndEdit, pt, m_LinkList);
 		}
 		return true;
