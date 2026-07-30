@@ -1,6 +1,34 @@
 CHANGE LOG for Independent JPEG Group's JPEG software
 
 
+Version 10  25-Jan-2026
+-----------------------
+
+jmorecfg.h: add JPEG_DATA_PRECISION parameter alongside and independent
+of BITS_IN_JSAMPLE, enabling higher bit depth support with backward
+compatibility and preparing the next standard for file interchange.
+
+Add lossless negate function in jpegtran.
+Thank to Ulf-Dietrich Braumann for suggestion.
+
+Enable processing of images using reversible color tranform
+with various bit depths by jpegtran.
+
+Add Windows 64 Bit (Modern) platform support in the C++Builder/RAD Studio
+build, remove ARM (32-bit) platform support in the Visual Studio build.
+
+
+Version 9f  14-Jan-2024
+-----------------------
+
+Add build system for C++Builder/RAD Studio.
+
+Add build system for Xcode (beside configure).
+
+Add ARM64EC (Emulation Compatible) platform support in the
+Visual Studio build.
+
+
 Version 9e  16-Jan-2022
 -----------------------
 
