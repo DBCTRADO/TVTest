@@ -34,6 +34,11 @@ namespace TVTest
 		typedef BOOL (WINAPI *SaveImageFunc)(const TVTest::ImageLib::ImageSaveInfo *pInfo);
 		typedef HGLOBAL (WINAPI *LoadAribPngFromMemoryFunc)(const void *pData, SIZE_T DataSize);
 		typedef HGLOBAL (WINAPI *LoadAribPngFromFileFunc)(LPCTSTR pszFileName);
+		typedef HGLOBAL (WINAPI *CropImageFunc)(
+			const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect, int BitsPerPixel);
+		typedef HGLOBAL (WINAPI *ResizeImageFunc)(
+			const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect,
+			int Width, int Height, int BitsPerPixel, TVTest::ImageLib::ResizeInterpolation Interpolation);
 
 	}
 

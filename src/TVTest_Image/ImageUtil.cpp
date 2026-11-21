@@ -25,25 +25,28 @@
 namespace TVTest
 {
 
+namespace
+{
 
-void CopyToRGB24(
+
+template<int R, int G, int B> void CopyPixelsToRGB24(
 	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
-	const RGBQUAD *prgb, int Length)
+	const RGBQUAD *pPalette, int Length)
 {
 	const BYTE *p = static_cast<const BYTE*>(pSrcBits);
 	BYTE *q = static_cast<BYTE*>(pDstBits);
-	const BYTE *pEnd = q + Length * 3;
 
 	switch (SrcBitsPerPixel) {
 	case 1:
 		{
 			int Shift = 7;
 
-			while (q < pEnd) {
+			for (int x = 0; x < Length; x++) {
 				const int i = (*p >> Shift) & 1;
-				*q++ = prgb[i].rgbRed;
-				*q++ = prgb[i].rgbGreen;
-				*q++ = prgb[i].rgbBlue;
+				q[R] = pPalette[i].rgbRed;
+				q[G] = pPalette[i].rgbGreen;
+				q[B] = pPalette[i].rgbBlue;
+				q += 3;
 				Shift--;
 				if (Shift < 0) {
 					Shift = 7;
@@ -52,45 +55,175 @@ void CopyToRGB24(
 			}
 		}
 		break;
+
 	case 4:
-		while (q < pEnd) {
+		for (int x = 0; x < Length; x++) {
 			int i = *p >> 4;
-			*q++ = prgb[i].rgbRed;
-			*q++ = prgb[i].rgbGreen;
-			*q++ = prgb[i].rgbBlue;
-			if (q == pEnd)
+			q[R] = pPalette[i].rgbRed;
+			q[G] = pPalette[i].rgbGreen;
+			q[B] = pPalette[i].rgbBlue;
+			q += 3;
+			x++;
+			if (x == Length)
 				break;
 			i = *p++ & 0x0F;
-			*q++ = prgb[i].rgbRed;
-			*q++ = prgb[i].rgbGreen;
-			*q++ = prgb[i].rgbBlue;
+			q[R] = pPalette[i].rgbRed;
+			q[G] = pPalette[i].rgbGreen;
+			q[B] = pPalette[i].rgbBlue;
+			q += 3;
 		}
 		break;
+
 	case 8:
-		while (q < pEnd) {
+		for (int x = 0; x < Length; x++) {
 			const int i = *p++;
-			*q++ = prgb[i].rgbRed;
-			*q++ = prgb[i].rgbGreen;
-			*q++ = prgb[i].rgbBlue;
+			q[R] = pPalette[i].rgbRed;
+			q[G] = pPalette[i].rgbGreen;
+			q[B] = pPalette[i].rgbBlue;
+			q += 3;
 		}
 		break;
+
 	case 24:
-		while (q < pEnd) {
-			*q++ = p[2];
-			*q++ = p[1];
-			*q++ = p[0];
+		for (int x = 0; x < Length; x++) {
+			q[R] = p[2];
+			q[G] = p[1];
+			q[B] = p[0];
 			p += 3;
+			q += 3;
 		}
 		break;
+
 	case 32:
-		while (q < pEnd) {
-			*q++ = p[2];
-			*q++ = p[1];
-			*q++ = p[0];
+		for (int x = 0; x < Length; x++) {
+			q[R] = p[2];
+			q[G] = p[1];
+			q[B] = p[0];
 			p += 4;
+			q += 3;
 		}
 		break;
 	}
+}
+
+
+template<int R, int G, int B, int A> void CopyPixelsToRGBA32(
+	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+	const RGBQUAD *pPalette, int Length)
+{
+	const BYTE *p = static_cast<const BYTE*>(pSrcBits);
+	BYTE *q = static_cast<BYTE*>(pDstBits);
+
+	switch (SrcBitsPerPixel) {
+	case 1:
+		{
+			int Shift = 7;
+
+			for (int x = 0; x < Length; x++) {
+				const int i = (*p >> Shift) & 1;
+				q[R] = pPalette[i].rgbRed;
+				q[G] = pPalette[i].rgbGreen;
+				q[B] = pPalette[i].rgbBlue;
+				q[A] = 0xFF;
+				q += 4;
+				Shift--;
+				if (Shift < 0) {
+					Shift = 7;
+					p++;
+				}
+			}
+		}
+		break;
+
+	case 4:
+		for (int x = 0; x < Length; x++) {
+			int i = *p >> 4;
+			q[R] = pPalette[i].rgbRed;
+			q[G] = pPalette[i].rgbGreen;
+			q[B] = pPalette[i].rgbBlue;
+			q[A] = 0xFF;
+			q += 4;
+			x++;
+			if (x == Length)
+				break;
+			i = *p++ & 0x0F;
+			q[R] = pPalette[i].rgbRed;
+			q[G] = pPalette[i].rgbGreen;
+			q[B] = pPalette[i].rgbBlue;
+			q[A] = 0xFF;
+			q += 4;
+		}
+		break;
+
+	case 8:
+		for (int x = 0; x < Length; x++) {
+			const int i = *p++;
+			q[R] = pPalette[i].rgbRed;
+			q[G] = pPalette[i].rgbGreen;
+			q[B] = pPalette[i].rgbBlue;
+			q[A] = 0xFF;
+			q += 4;
+		}
+		break;
+
+	case 24:
+		for (int x = 0; x < Length; x++) {
+			q[R] = p[2];
+			q[G] = p[1];
+			q[B] = p[0];
+			q[A] = 0xFF;
+			p += 3;
+			q += 4;
+		}
+		break;
+
+	case 32:
+		for (int x = 0; x < Length; x++) {
+			q[R] = p[2];
+			q[G] = p[1];
+			q[B] = p[0];
+			q[A] = p[3];
+			p += 4;
+			q += 4;
+		}
+		break;
+	}
+}
+
+
+} // namespace
+
+
+void CopyPixels(
+	void *pDstBits, int DstBitsPerPixel,
+	const void *pSrcBits, int SrcBitsPerPixel,
+	const RGBQUAD *pPalette, int Length)
+{
+	switch (DstBitsPerPixel) {
+	case 24:
+		CopyPixelsToRGB24<2, 1, 0>(pDstBits, pSrcBits, SrcBitsPerPixel, pPalette, Length);
+		break;
+
+	case 32:
+		CopyPixelsToRGBA32<2, 1, 0, 3>(pDstBits, pSrcBits, SrcBitsPerPixel, pPalette, Length);
+		break;
+	}
+}
+
+
+void CopyToRGB24(
+	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+	const RGBQUAD *pPalette, int Length)
+{
+	CopyPixelsToRGB24<0, 1, 2>(pDstBits, pSrcBits, SrcBitsPerPixel, pPalette, Length);
+}
+
+
+void CopyToRGBA32(
+	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+	const RGBQUAD *pPalette, int Length)
+{
+	CopyPixelsToRGBA32<0, 1, 2, 3>(pDstBits, pSrcBits, SrcBitsPerPixel, pPalette, Length);
 }
 
 

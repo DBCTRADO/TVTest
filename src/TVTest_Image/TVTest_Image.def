@@ -4,3 +4,5 @@ EXPORTS
 	SaveImage
 	LoadAribPngFromMemory
 	LoadAribPngFromFile
+	CropImage
+	ResizeImage

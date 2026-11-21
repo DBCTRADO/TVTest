@@ -30,10 +30,16 @@ namespace TVTest
 */
 #define DIB_ROW_BYTES(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
 
-
-void CopyToRGB24(
-	void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
-	const RGBQUAD *prgb, int Length);
+	void CopyPixels(
+		void *pDstBits, int DstBitsPerPixel,
+		const void *pSrcBits, int SrcBitsPerPixel,
+		const RGBQUAD *pPalette, int Length);
+	void CopyToRGB24(
+		void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+		const RGBQUAD *pPalette, int Length);
+	void CopyToRGBA32(
+		void *pDstBits, const void *pSrcBits, int SrcBitsPerPixel,
+		const RGBQUAD *pPalette, int Length);
 
 }
 

@@ -40,9 +40,13 @@ namespace TVTest
 		bool SaveImage(const ImageSaveInfo *pInfo);
 		HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize);
 		HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName);
+		HGLOBAL CropImage(const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect, int BitsPerPixel);
 
 	}
 }
+
+
+#include "ImageResize.h"
 
 
 #endif

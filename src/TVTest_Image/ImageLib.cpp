@@ -22,6 +22,7 @@
 #include <tchar.h>
 #include <memory>
 #include "ImageLib.h"
+#include "ImageUtil.h"
 #include "Codec_BMP.h"
 #include "Codec_JPEG.h"
 #include "Codec_PNG.h"
@@ -85,6 +86,64 @@ HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName)
 	}
 	::CloseHandle(hFile);
 	return LoadAribPng(Data.get(), FileSize.LowPart);
+}
+
+
+HGLOBAL CropImage(const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect, int BitsPerPixel)
+{
+	if (pbmi == nullptr || pBits == nullptr || pRect == nullptr
+			|| (BitsPerPixel != 24 && BitsPerPixel != 32))
+		return nullptr;
+
+	const BITMAPINFOHEADER &bmih = pbmi->bmiHeader;
+
+	if (bmih.biSize < sizeof(BITMAPINFOHEADER)
+			|| (bmih.biBitCount != 24 && bmih.biBitCount != 32)
+			|| bmih.biCompression != BI_RGB)
+		return nullptr;
+
+	if (pRect->left >= pRect->right || pRect->top >= pRect->bottom
+			|| pRect->left < 0 || pRect->left >= bmih.biWidth
+			|| pRect->top < 0 || pRect->top >= std::abs(bmih.biHeight)
+			|| pRect->right > bmih.biWidth
+			|| pRect->bottom > std::abs(bmih.biHeight))
+		return nullptr;
+
+	const int DstWidth = pRect->right - pRect->left;
+	const int DstHeight = pRect->bottom - pRect->top;
+	const std::size_t DstRowBytes = DIB_ROW_BYTES(DstWidth, BitsPerPixel);
+
+	HGLOBAL hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + DstRowBytes * DstHeight);
+	if (hGlobal == nullptr)
+		return nullptr;
+	BITMAPINFOHEADER *pbmihDst = static_cast<BITMAPINFOHEADER*>(::GlobalLock(hGlobal));
+	if (pbmihDst == nullptr) {
+		::GlobalFree(hGlobal);
+		return nullptr;
+	}
+
+	std::memcpy(pbmihDst, pbmi, sizeof(BITMAPINFOHEADER));
+	pbmihDst->biSize = sizeof(BITMAPINFOHEADER);
+	pbmihDst->biWidth = DstWidth;
+	pbmihDst->biHeight = bmih.biHeight > 0 ? DstHeight : -DstHeight;
+	pbmihDst->biBitCount = BitsPerPixel;
+
+	const std::size_t SrcRowBytes = DIB_ROW_BYTES(bmih.biWidth, bmih.biBitCount);
+	const BYTE *pSrc = static_cast<const BYTE*>(pBits) +
+		((bmih.biHeight > 0) ?
+			bmih.biHeight - pRect->bottom : pRect->top) * SrcRowBytes +
+		pRect->left * bmih.biBitCount / 8;
+	BYTE *pDst = reinterpret_cast<BYTE*>(pbmihDst + 1);
+
+	for (int y = 0; y < DstHeight; y++) {
+		CopyPixels(pDst, BitsPerPixel, pSrc, bmih.biBitCount, nullptr, DstWidth);
+		pSrc += SrcRowBytes;
+		pDst += DstRowBytes;
+	}
+
+	::GlobalUnlock(hGlobal);
+
+	return hGlobal;
 }
 
 

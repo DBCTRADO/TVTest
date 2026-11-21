@@ -58,3 +58,19 @@ extern "C" __declspec(dllexport) HGLOBAL WINAPI LoadAribPngFromFile(LPCTSTR pszF
 {
 	return TVTest::ImageLib::LoadAribPngFromFile(pszFileName);
 }
+
+
+extern "C" __declspec(dllexport) HGLOBAL WINAPI CropImage(
+	const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect, int BitsPerPixel)
+{
+	return TVTest::ImageLib::CropImage(pbmi, pBits, pRect, BitsPerPixel);
+}
+
+
+extern "C" __declspec(dllexport) HGLOBAL WINAPI ResizeImage(
+	const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect,
+	int Width, int Height, int BitsPerPixel,
+	TVTest::ImageLib::ResizeInterpolation Interpolation)
+{
+	return TVTest::ImageLib::ResizeImage(pbmi, pBits, pRect, Width, Height, BitsPerPixel, Interpolation);
+}

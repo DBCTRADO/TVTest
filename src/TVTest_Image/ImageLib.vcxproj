@@ -397,6 +397,7 @@
     <ClCompile Include="Codec_JPEG.cpp" />
     <ClCompile Include="Codec_PNG.cpp" />
     <ClCompile Include="ImageLib.cpp" />
+    <ClCompile Include="ImageResize.cpp" />
     <ClCompile Include="ImageUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -404,6 +405,7 @@
     <ClInclude Include="Codec_JPEG.h" />
     <ClInclude Include="Codec_PNG.h" />
     <ClInclude Include="ImageLib.h" />
+    <ClInclude Include="ImageResize.h" />
     <ClInclude Include="ImageUtil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
