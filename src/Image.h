@@ -45,9 +45,6 @@ namespace TVTest
 	size_t CalcDIBInfoSize(const BITMAPINFOHEADER *pbmih);
 	size_t CalcDIBBitsSize(const BITMAPINFOHEADER *pbmih);
 	size_t CalcDIBSize(const BITMAPINFOHEADER *pbmih);
-	HGLOBAL ResizeImage(
-		const BITMAPINFO *pbmiSrc, const void *pSrcData,
-		const RECT *pSrcRect, int Width, int Height);
 
 
 	class CImageCodec
@@ -68,6 +65,11 @@ namespace TVTest
 		int FormatNameToIndex(LPCTSTR pszName) const;
 		HGLOBAL LoadAribPngFromMemory(const void *pData, size_t DataSize);
 		HGLOBAL LoadAribPngFromFile(LPCTSTR pszFileName);
+
+		HGLOBAL CropImage(const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect, int BitsPerPixel);
+		HGLOBAL ResizeImage(
+			const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect,
+			int Width, int Height, int BitsPerPixel, ImageLib::ResizeInterpolation Interpolation);
 
 #ifndef TVTEST_IMAGE_STATIC
 	private:

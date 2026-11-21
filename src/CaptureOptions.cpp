@@ -196,6 +196,13 @@ bool CCaptureOptions::ReadSettings(CSettings &Settings)
 			}
 		}
 	}
+
+	if (int Interpolation;
+			Settings.Read(TEXT("CaptureResizeInterpolation"), &Interpolation)
+				&& Interpolation >= 0
+				&& Interpolation <= static_cast<int>(ImageLib::ResizeInterpolation::Last_))
+		m_ResizeInterpolation = static_cast<ImageLib::ResizeInterpolation>(Interpolation);
+
 	return true;
 }
 
@@ -215,6 +222,7 @@ bool CCaptureOptions::WriteSettings(CSettings &Settings)
 	Settings.Write(TEXT("CaptureHeight"), static_cast<int>(m_SizeList[m_CaptureSize].cy));
 	Settings.Write(TEXT("CaptureRatioNum"), m_PercentageList[m_CapturePercentage].Num);
 	Settings.Write(TEXT("CaptureRatioDenom"), m_PercentageList[m_CapturePercentage].Denom);
+	Settings.Write(TEXT("CaptureResizeInterpolation"), static_cast<int>(m_ResizeInterpolation));
 	return true;
 }
 
@@ -395,6 +403,22 @@ bool CCaptureOptions::SaveImage(CCaptureImage *pImage)
 }
 
 
+CCaptureImage * CCaptureOptions::ResizeImage(
+	const BITMAPINFO *pbmi, const void *pBits, const RECT &Rect, int Width, int Height)
+{
+	HGLOBAL hGlobal;
+	if (Rect.right - Rect.left == Width && Rect.bottom - Rect.top == Height)
+		hGlobal = m_ImageCodec.CropImage(pbmi, pBits, &Rect, 24);
+	else
+		hGlobal = m_ImageCodec.ResizeImage(pbmi, pBits, &Rect, Width, Height, 24, m_ResizeInterpolation);
+	if (hGlobal == nullptr)
+		return nullptr;
+
+	CCaptureImage *pImage = new CCaptureImage(hGlobal);
+	return pImage;
+}
+
+
 int CCaptureOptions::TranslateCommand(int Command)
 {
 	if (Command == CM_CAPTURE)
@@ -467,6 +491,18 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				break;
 			}
 			DlgComboBox_SetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE, Sel);
+
+			static const LPCTSTR ResizeInterpolationText[] = {
+				TEXT("最近傍法"),
+				TEXT("線形補間法"),
+				TEXT("平均画素法"),
+				TEXT("Lanczos2"),
+				TEXT("Lanczos3"),
+				TEXT("Bicubic"),
+			};
+			for (LPCTSTR pszText : ResizeInterpolationText)
+				DlgComboBox_AddString(hDlg, IDC_CAPTUREOPTIONS_RESIZEINTERPOLATION, pszText);
+			DlgComboBox_SetCurSel(hDlg, IDC_CAPTUREOPTIONS_RESIZEINTERPOLATION, static_cast<int>(m_ResizeInterpolation));
 
 			LPCTSTR pszFormat;
 			for (int i = 0; (pszFormat = m_ImageCodec.EnumSaveFormat(i)) != nullptr; i++)
@@ -613,6 +649,8 @@ INT_PTR CCaptureOptions::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 				SetPresetCaptureSize(
 					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_SIZE)));
+				m_ResizeInterpolation =
+					static_cast<ImageLib::ResizeInterpolation>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_RESIZEINTERPOLATION));
 				m_SaveFormat =
 					static_cast<int>(DlgComboBox_GetCurSel(hDlg, IDC_CAPTUREOPTIONS_FORMAT));
 				m_JPEGQuality =

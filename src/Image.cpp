@@ -61,134 +61,6 @@ size_t CalcDIBSize(const BITMAPINFOHEADER *pbmih)
 }
 
 
-static void CropImage(
-	const BITMAPINFO *pbmiSrc, const void *pSrcData,
-	int Left, int Top, int Width, int Height, void *pDstData)
-{
-	const std::size_t SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
-	const std::size_t DstRowBytes = DIB_ROW_BYTES(Width, 24);
-	BYTE *q = static_cast<BYTE*>(pDstData) + (Height - 1) * DstRowBytes;
-
-	for (int y = 0; y < Height; y++) {
-		const BYTE *p = static_cast<const BYTE*>(pSrcData) +
-			((pbmiSrc->bmiHeader.biHeight > 0) ?
-				(pbmiSrc->bmiHeader.biHeight - 1 - (Top + y)) : (Top + y)) * SrcRowBytes +
-			Left * pbmiSrc->bmiHeader.biBitCount / 8;
-		if (pbmiSrc->bmiHeader.biBitCount == 24) {
-			std::memcpy(q, p, Width * 3);
-		} else {
-			BYTE *r = q;
-
-			for (int x = 0; x < Width; x++) {
-				*r++ = *p++;
-				*r++ = *p++;
-				*r++ = *p++;
-				p++;
-			}
-		}
-		q -= DstRowBytes;
-	}
-}
-
-
-HGLOBAL ResizeImage(
-	const BITMAPINFO *pbmiSrc, const void *pSrcData,
-	const RECT *pSrcRect, int Width, int Height)
-{
-	if (pbmiSrc->bmiHeader.biBitCount != 24 && pbmiSrc->bmiHeader.biBitCount != 32)
-		return nullptr;
-
-	const HGLOBAL hGlobal = GlobalAlloc(
-		GMEM_MOVEABLE | GMEM_SHARE,
-		sizeof(BITMAPINFOHEADER) + DIB_ROW_BYTES(Width, 24) * Height);
-	if (hGlobal == nullptr)
-		return nullptr;
-	BITMAPINFOHEADER *pbmihDst = static_cast<BITMAPINFOHEADER*>(GlobalLock(hGlobal));
-	pbmihDst->biSize = sizeof(BITMAPINFOHEADER);
-	pbmihDst->biWidth = Width;
-	pbmihDst->biHeight = Height;
-	pbmihDst->biPlanes = 1;
-	pbmihDst->biBitCount = 24;
-	pbmihDst->biCompression = BI_RGB;
-	pbmihDst->biSizeImage = 0;
-	pbmihDst->biXPelsPerMeter = 0;
-	pbmihDst->biYPelsPerMeter = 0;
-	pbmihDst->biClrUsed = 0;
-	pbmihDst->biClrImportant = 0;
-	void *pDstData = pbmihDst + 1;
-
-	int SrcLeft, SrcTop, SrcWidth, SrcHeight;
-	if (pSrcRect != nullptr) {
-		SrcLeft = pSrcRect->left;
-		SrcTop = pSrcRect->top;
-		SrcWidth = pSrcRect->right - pSrcRect->left;
-		SrcHeight = pSrcRect->bottom - pSrcRect->top;
-	} else {
-		SrcLeft = SrcTop = 0;
-		SrcWidth = pbmiSrc->bmiHeader.biWidth;
-		SrcHeight = std::abs(pbmiSrc->bmiHeader.biHeight);
-	}
-	if (SrcWidth == Width && SrcHeight == Height) {
-		CropImage(pbmiSrc, pSrcData, SrcLeft, SrcTop, Width, Height, pDstData);
-		GlobalUnlock(hGlobal);
-		return hGlobal;
-	}
-
-	const int SrcPlanes = pbmiSrc->bmiHeader.biBitCount / 8;
-	std::unique_ptr<int[]> SrcPos(new int[Width]);
-	const int SrcXCenter = ((SrcWidth - 1) << 8) / 2;
-	const int SrcYCenter = ((SrcHeight - 1) << 8) / 2;
-	const int DstXCenter = ((Width - 1) << 8) / 2;
-	const int DstYCenter = ((Height - 1) << 8) / 2;
-
-	for (int x = 0; x < Width; x++) {
-		SrcPos[x] = ((x << 8) - DstXCenter) * SrcWidth / Width + SrcXCenter;
-		if (SrcPos[x] < 0)
-			SrcPos[x] = 0;
-		else if (SrcPos[x] > (SrcWidth - 1) << 8)
-			SrcPos[x] = (SrcWidth - 1) << 8;
-	}
-	const std::size_t SrcRowBytes = DIB_ROW_BYTES(pbmiSrc->bmiHeader.biWidth, pbmiSrc->bmiHeader.biBitCount);
-	const std::size_t DstPadBytes = DIB_ROW_BYTES(Width, 24) - Width * 3;
-	if (SrcTop > 0)
-		pSrcData = static_cast<const BYTE*>(pSrcData) +
-			(pbmiSrc->bmiHeader.biHeight > 0 ? (pbmiSrc->bmiHeader.biHeight - (SrcHeight + SrcTop)) : SrcTop) * SrcRowBytes;
-	BYTE *q = static_cast<BYTE*>(pDstData);
-	for (int y = 0; y < Height; y++) {
-		int y1 = ((y << 8) - DstYCenter) * SrcHeight / Height + SrcYCenter;
-		if (y1 < 0)
-			y1 = 0;
-		else if (y1 > (SrcHeight - 1) << 8)
-			y1 = (SrcHeight - 1) << 8;
-		const int dy2 = y1 & 0xFF;
-		const int dy1 = 0x100 - dy2;
-		const std::size_t YOffset = dy2 > 0 ? SrcRowBytes : 0;
-		for (int x = 0; x < Width; x++) {
-			const int x1 = SrcPos[x];
-			const int dx2 = x1 & 0xFF;
-			const int dx1 = 0x100 - dx2;
-			const BYTE *p = static_cast<const BYTE*>(pSrcData) + (y1 >> 8) * SrcRowBytes +
-				((x1 >> 8) + SrcLeft) * SrcPlanes;
-			const BYTE *p1 = p + ((dx2 + 0xFF) >> 8) * SrcPlanes;
-			int b = (p[0] * dx1 + p1[0] * dx2) * dy1;
-			int g = (p[1] * dx1 + p1[1] * dx2) * dy1;
-			int r = (p[2] * dx1 + p1[2] * dx2) * dy1;
-			p += YOffset;
-			p1 += YOffset;
-			b += (p[0] * dx1 + p1[0] * dx2) * dy2;
-			g += (p[1] * dx1 + p1[1] * dx2) * dy2;
-			r += (p[2] * dx1 + p1[2] * dx2) * dy2;
-			*q++ = b >> 16;
-			*q++ = g >> 16;
-			*q++ = r >> 16;
-		}
-		q += DstPadBytes;
-	}
-	GlobalUnlock(hGlobal);
-	return hGlobal;
-}
-
-
 
 
 CImageCodec::~CImageCodec()
@@ -204,7 +76,13 @@ bool CImageCodec::Init()
 {
 #ifndef TVTEST_IMAGE_STATIC
 	if (m_hLib == nullptr) {
-		m_hLib = ::LoadLibrary(TEXT("TVTest_Image.dll"));
+		TCHAR szPath[MAX_PATH];
+		const DWORD Length = ::GetModuleFileName(nullptr, szPath, _countof(szPath));
+		if (Length > 0 && Length < _countof(szPath)) {
+			::PathRemoveFileSpec(szPath);
+			if (::PathAppend(szPath, TEXT("TVTest_Image.dll")))
+				m_hLib = ::LoadLibrary(szPath);
+		}
 		if (m_hLib == nullptr)
 			return false;
 		m_pSaveImage = reinterpret_cast<ImageDLL::SaveImageFunc>(::GetProcAddress(m_hLib, "SaveImage"));
@@ -307,6 +185,40 @@ HGLOBAL CImageCodec::LoadAribPngFromFile(LPCTSTR pszFileName)
 	return pLoadAribPngFromFile(pszFileName);
 #else
 	return ImageLib::LoadAribPngFromFile(pszFileName);
+#endif
+}
+
+
+HGLOBAL CImageCodec::CropImage(const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect, int BitsPerPixel)
+{
+#ifndef TVTEST_IMAGE_STATIC
+	if (m_hLib == nullptr && !Init())
+		return nullptr;
+	const auto pCropImage =
+		reinterpret_cast<ImageDLL::CropImageFunc>(::GetProcAddress(m_hLib, "CropImage"));
+	if (pCropImage == nullptr)
+		return nullptr;
+	return pCropImage(pbmi, pBits, pRect, BitsPerPixel);
+#else
+	return ImageLib::CropImage(pbmi, pBits, pRect, BitsPerPixel);
+#endif
+}
+
+
+HGLOBAL CImageCodec::ResizeImage(
+	const BITMAPINFO *pbmi, const void *pBits, const RECT *pRect,
+	int Width, int Height, int BitsPerPixel, ImageLib::ResizeInterpolation Interpolation)
+{
+#ifndef TVTEST_IMAGE_STATIC
+	if (m_hLib == nullptr && !Init())
+		return nullptr;
+	const auto pResizeImage =
+		reinterpret_cast<ImageDLL::ResizeImageFunc>(::GetProcAddress(m_hLib, "ResizeImage"));
+	if (pResizeImage == nullptr)
+		return nullptr;
+	return pResizeImage(pbmi, pBits, pRect, Width, Height, BitsPerPixel, Interpolation);
+#else
+	return ImageLib::ResizeImage(pbmi, pBits, pRect, Width, Height, BitsPerPixel, Interpolation);
 #endif
 }
 

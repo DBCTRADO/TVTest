@@ -862,16 +862,13 @@ bool CAppCommand::CaptureCopySave(CCommandManager::InvokeParameters &Params)
 		break;
 	}
 
-	const HGLOBAL hGlobal = ResizeImage(
-		reinterpret_cast<const BITMAPINFO*>(pbmih),
-		pDib + CalcDIBInfoSize(pbmih), &rc, Width, Height);
+	CCaptureImage *pImage = m_App.CaptureOptions.ResizeImage(
+		reinterpret_cast<const BITMAPINFO*>(pbmih), pDib + CalcDIBInfoSize(pbmih),
+		rc, Width, Height);
 	Image.reset();
 	::SetCursor(hcurOld);
-	if (hGlobal == nullptr) {
+	if (pImage == nullptr)
 		return true;
-	}
-
-	CCaptureImage *pImage = new CCaptureImage(hGlobal);
 
 	if (m_App.CaptureOptions.GetWriteComment()) {
 		String Comment;

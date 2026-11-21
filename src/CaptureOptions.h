@@ -92,6 +92,7 @@ namespace TVTest
 		bool GetOptionText(LPTSTR pszOption, int MaxLength) const;
 		bool GetCommentText(String *pComment, const CCaptureImage *pImage) const;
 		bool SaveImage(CCaptureImage *pImage);
+		CCaptureImage * ResizeImage(const BITMAPINFO *pbmi, const void *pBits, const RECT &Rect, int Width, int Height);
 		int TranslateCommand(int Command);
 		bool OpenSaveFolder() const;
 
@@ -113,6 +114,7 @@ namespace TVTest
 #endif
 			;
 		int m_CapturePercentage = PERCENTAGE_50;
+		ImageLib::ResizeInterpolation m_ResizeInterpolation = ImageLib::ResizeInterpolation::Default_;
 		CImageCodec m_ImageCodec;
 
 	// CBasicDialog
