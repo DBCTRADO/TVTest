@@ -23,6 +23,7 @@ public:
 	LPCWSTR GetFormatExtensions(FormatType Format) const;
 	void SetJpegQuality(int Quality) { m_JpegQuality = Quality; }
 	void SetPngCompressionLevel(int Level) { m_PngCompressionLevel = Level; }
+	bool ResizeImage(const CImage *pSrcImage, CImage *pDstImage, CImage::ResampleType Resample);
 
 private:
 	HMODULE m_hLib = nullptr;

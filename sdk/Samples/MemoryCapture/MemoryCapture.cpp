@@ -170,7 +170,7 @@ private:
 	CSeekBar m_SeekBar;
 	CToolbar m_Toolbar;
 	CaptureSizeInfo m_CaptureSize;
-	CImage::ResampleType m_Resample = CImage::ResampleType::Lanczos3;
+	CImage::ResampleType m_Resample = CImage::ResampleType::Default_;
 	CVideoDecoder::DeinterlaceMethod m_Deinterlace = CVideoDecoder::DeinterlaceMethod::Blend;
 	CLocalLock m_WindowLock;
 

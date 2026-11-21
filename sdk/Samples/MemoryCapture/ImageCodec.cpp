@@ -3,23 +3,9 @@
 
 #include <windows.h>
 #include <shlwapi.h>
+#include <cstring>
 #include <new>
 #include "ImageCodec.h"
-
-
-struct ImageSaveInfo
-{
-	LPCWSTR pszFileName;
-	LPCWSTR pszFormat;
-	LPCWSTR pszOption;
-	const BITMAPINFO *pbmi;
-	const void *pBits;
-	LPCWSTR pszComment;
-};
-
-BOOL WINAPI SaveImage(const ImageSaveInfo *pInfo);
-
-
 
 
 const LPCTSTR CImageCodec::m_FormatStringList[] =
@@ -50,7 +36,7 @@ bool CImageCodec::SaveImageToFile(
 	}
 
 	auto pSaveImage =
-		reinterpret_cast<decltype(SaveImage)*>(::GetProcAddress(m_hLib, "SaveImage"));
+		reinterpret_cast<TVTest::ImageDLL::SaveImageFunc>(::GetProcAddress(m_hLib, "SaveImage"));
 	if (pSaveImage == nullptr)
 		return false;
 
@@ -63,7 +49,7 @@ bool CImageCodec::SaveImageToFile(
 	for (int y = 0; y < Height; y++)
 		pImage->ExtractRow24(Height - 1 - y, pBuffer + (y * RowBytes));
 
-	ImageSaveInfo SaveInfo = {};
+	TVTest::ImageLib::ImageSaveInfo SaveInfo = {};
 	BITMAPINFO bmi = {};
 	WCHAR szOption[16];
 
@@ -118,6 +104,51 @@ LPCWSTR CImageCodec::GetFormatExtensions(FormatType Format) const
 	case FormatType::PNG:  return L".png";
 	}
 	return nullptr;
+}
+
+
+bool CImageCodec::ResizeImage(const CImage *pSrcImage, CImage *pDstImage, CImage::ResampleType Resample)
+{
+	if (pSrcImage == nullptr || pDstImage == nullptr)
+		return false;
+
+	if (m_hLib == nullptr) {
+		if (!LoadModule())
+			return false;
+	}
+
+	auto pResizeImage =
+		reinterpret_cast<TVTest::ImageDLL::ResizeImageFunc>(::GetProcAddress(m_hLib, "ResizeImage"));
+	if (pResizeImage == nullptr)
+		return false;
+
+	BITMAPINFO bmi = {};
+
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = pSrcImage->GetWidth();
+	bmi.bmiHeader.biHeight = -pSrcImage->GetHeight();
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = pSrcImage->GetBitsPerPixel();
+
+	HGLOBAL hGlobal = pResizeImage(
+		&bmi, pSrcImage->GetPixels(), nullptr,
+		pDstImage->GetWidth(), pDstImage->GetHeight(), pDstImage->GetBitsPerPixel(),
+		Resample);
+	if (hGlobal == nullptr)
+		return false;
+
+	const BITMAPINFOHEADER *pbmih = static_cast<const BITMAPINFOHEADER*>(::GlobalLock(hGlobal));
+	if (pbmih == nullptr) {
+		::GlobalFree(hGlobal);
+		return false;
+	}
+
+	std::memcpy(pDstImage->GetPixels(), pbmih + 1, pDstImage->GetRowBytes() * pDstImage->GetHeight());
+
+	::GlobalUnlock(hGlobal);
+	::GlobalFree(hGlobal);
+
+	return true;
 }
 
 
